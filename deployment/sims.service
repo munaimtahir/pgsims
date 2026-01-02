@@ -1,0 +1,64 @@
+# Systemd service file for SIMS
+# 
+# Installation:
+# 1. Copy this file to: /etc/systemd/system/sims.service
+# 2. Update paths and environment variables below
+# 3. Reload systemd: sudo systemctl daemon-reload
+# 4. Enable service: sudo systemctl enable sims
+# 5. Start service: sudo systemctl start sims
+# 6. Check status: sudo systemctl status sims
+#
+# Note: For Ubuntu VPS deployment, adjust paths as follows:
+# - WorkingDirectory: /home/sims/app (or your app directory)
+# - virtualenv: /home/sims/env (or your venv path)
+# - User: sims (or your deployment user)
+
+[Unit]
+Description=SIMS Gunicorn Application Server
+Documentation=https://github.com/munaimtahir/sims
+After=network.target postgresql.service redis.service
+Wants=postgresql.service redis.service
+
+[Service]
+Type=notify
+User=sims
+Group=sims
+WorkingDirectory=/home/sims/app
+Environment="PATH=/home/sims/env/bin"
+Environment="DJANGO_SETTINGS_MODULE=sims_project.settings"
+
+# Load environment variables from .env file
+EnvironmentFile=/home/sims/app/.env
+
+# Gunicorn execution
+ExecStart=/home/sims/env/bin/gunicorn \
+          --workers 3 \
+          --bind unix:/home/sims/app/sims.sock \
+          --timeout 60 \
+          --access-logfile /home/sims/app/logs/gunicorn_access.log \
+          --error-logfile /home/sims/app/logs/gunicorn_error.log \
+          --log-level info \
+          sims_project.wsgi:application
+
+# Reload command (graceful restart)
+ExecReload=/bin/kill -s HUP $MAINPID
+
+# Process management
+Restart=always
+RestartSec=5
+KillMode=mixed
+TimeoutStopSec=10
+PrivateTmp=true
+
+# Security hardening
+NoNewPrivileges=true
+ProtectSystem=full
+ProtectHome=true
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=sims
+
+[Install]
+WantedBy=multi-user.target

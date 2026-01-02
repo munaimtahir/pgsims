@@ -1,0 +1,102 @@
+Files Structure
+```jsx
+sims_project/
+│
+├── manage.py
+├── sims_project/
+│   ├── __init__.py
+│   ├── asgi.py
+│   ├── settings.py
+│   ├── urls.py
+│   └── wsgi.py
+│
+├── sims/
+│   ├── __init__.py
+│   │
+│   ├── users/
+│   │   ├── __init__.py
+│   │   ├── admin.py
+│   │   ├── apps.py
+│   │   ├── models.py
+│   │   ├── views.py
+│   │   ├── urls.py
+│   │   ├── forms.py
+│   │   └── tests.py
+│   │
+│   ├── rotations/
+│   │   ├── __init__.py
+│   │   ├── admin.py
+│   │   ├── apps.py
+│   │   ├── models.py
+│   │   ├── views.py
+│   │   ├── urls.py
+│   │   ├── forms.py
+│   │   └── tests.py
+│   │
+│   ├── certificates/
+│   │   ├── __init__.py
+│   │   ├── admin.py
+│   │   ├── apps.py
+│   │   ├── models.py
+│   │   ├── views.py
+│   │   ├── urls.py
+│   │   ├── forms.py
+│   │   └── tests.py
+│   │
+│   ├── workshops/
+│   │   ├── __init__.py
+│   │   ├── admin.py
+│   │   ├── apps.py
+│   │   ├── models.py
+│   │   ├── views.py
+│   │   ├── urls.py
+│   │   ├── forms.py
+│   │   └── tests.py
+│   │
+│   ├── logbook/
+│   │   ├── __init__.py
+│   │   ├── admin.py
+│   │   ├── apps.py
+│   │   ├── models.py
+│   │   ├── views.py
+│   │   ├── urls.py
+│   │   ├── forms.py
+│   │   └── tests.py
+│   │
+│   ├── cases/
+│   │   ├── __init__.py
+│   │   ├── admin.py
+│   │   ├── apps.py
+│   │   ├── models.py
+│   │   ├── views.py
+│   │   ├── urls.py
+│   │   ├── forms.py
+│   │   └── tests.py
+│   │
+│   ├── analytics/
+│   │   ├── __init__.py
+│   │   ├── admin.py
+│   │   ├── apps.py
+│   │   ├── views.py
+│   │   ├── urls.py
+│   │   └── tests.py
+│   │
+│   └── notifications/
+│       ├── __init__.py
+│       ├── apps.py
+│       ├── utils.py
+│       ├── urls.py
+│       └── tests.py
+│
+├── templates/
+│   ├── base.html
+│   ├── ... (other per-app HTML files)
+│
+├── static/
+│   └── ...
+│
+├── media/
+│   └── ...
+│
+└── requirements.txt
+```
