@@ -531,9 +531,11 @@ else:
 
     # Use environment variables for sensitive data
     SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", SECRET_KEY)
-    ALLOWED_HOSTS = os.environ.get(
-        "DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1"
-    ).split(",")
+    # ALLOWED_HOSTS is already set at the top of the file from ALLOWED_HOSTS env var
+    # Only override if DJANGO_ALLOWED_HOSTS is explicitly set
+    django_allowed_hosts = os.environ.get("DJANGO_ALLOWED_HOSTS")
+    if django_allowed_hosts:
+        ALLOWED_HOSTS = [host.strip() for host in django_allowed_hosts.split(",") if host.strip()]
 
     # Database from environment (SQLite for now, PostgreSQL for full production)
     if os.environ.get("DB_NAME"):
