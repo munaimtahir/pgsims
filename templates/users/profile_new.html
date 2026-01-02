@@ -1,0 +1,258 @@
+{% extends 'base/base.html' %}
+
+{% block title %}{{ profile_user.get_full_name }} - Profile - SIMS{% endblock %}
+
+{% block breadcrumb %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'users:dashboard' %}">Dashboard</a></li>
+        <li class="breadcrumb-item active">Profile</li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block page_header %}
+<div class="d-flex justify-content-between align-items-start mb-4">
+    <div>
+        <h2>
+            <i class="fas fa-user me-2"></i>User Profile
+        </h2>
+        <p class="text-muted">View and manage your profile information</p>
+    </div>
+    <div class="btn-group" role="group">
+        <a href="{% url 'users:profile_edit' %}" class="btn btn-primary">
+            <i class="fas fa-edit me-2"></i>Edit Profile
+        </a>
+        <a href="{% url 'users:password_change' %}" class="btn btn-outline-secondary">
+            <i class="fas fa-key me-2"></i>Change Password
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Profile Information -->
+    <div class="col-lg-8">
+        <!-- Basic Information -->
+        <div class="card mb-4">
+            <div class="card-header d-flex align-items-center">
+                <i class="fas fa-id-card me-2"></i>
+                <h5 class="mb-0">Basic Information</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <dl class="row">
+                            <dt class="col-sm-4">Full Name:</dt>
+                            <dd class="col-sm-8">{{ profile_user.get_full_name|default:"Not provided" }}</dd>
+                            
+                            <dt class="col-sm-4">Username:</dt>
+                            <dd class="col-sm-8">{{ profile_user.username }}</dd>
+                            
+                            <dt class="col-sm-4">Email:</dt>
+                            <dd class="col-sm-8">{{ profile_user.email|default:"Not provided" }}</dd>
+                            
+                            <dt class="col-sm-4">Role:</dt>
+                            <dd class="col-sm-8">
+                                <span class="badge bg-primary">{{ profile_user.get_role_display }}</span>
+                            </dd>
+                        </dl>
+                    </div>
+                    <div class="col-md-6">
+                        <dl class="row">
+                            {% if profile_user.phone_number %}
+                            <dt class="col-sm-4">Phone:</dt>
+                            <dd class="col-sm-8">{{ profile_user.phone_number }}</dd>
+                            {% endif %}
+                            
+                            {% if profile_user.specialty %}
+                            <dt class="col-sm-4">Specialty:</dt>
+                            <dd class="col-sm-8">{{ profile_user.get_specialty_display }}</dd>
+                            {% endif %}
+                            
+                            {% if profile_user.registration_number %}
+                            <dt class="col-sm-4">Registration:</dt>
+                            <dd class="col-sm-8">{{ profile_user.registration_number }}</dd>
+                            {% endif %}
+                            
+                            <dt class="col-sm-4">Status:</dt>
+                            <dd class="col-sm-8">
+                                {% if profile_user.is_active %}
+                                    <span class="badge bg-success">Active</span>
+                                {% else %}
+                                    <span class="badge bg-danger">Inactive</span>
+                                {% endif %}
+                            </dd>
+                            
+                            <dt class="col-sm-4">Joined:</dt>
+                            <dd class="col-sm-8">{{ profile_user.date_joined|date:"F d, Y" }}</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Professional Information -->
+        {% if profile_user.role == 'pg' or profile_user.role == 'supervisor' %}
+        <div class="card mb-4">
+            <div class="card-header d-flex align-items-center">
+                <i class="fas fa-stethoscope me-2"></i>
+                <h5 class="mb-0">Professional Information</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <dl class="row">
+                            {% if profile_user.specialty %}
+                            <dt class="col-sm-4">Specialty:</dt>
+                            <dd class="col-sm-8">{{ profile_user.get_specialty_display }}</dd>
+                            {% endif %}
+                            
+                            {% if profile_user.year %}
+                            <dt class="col-sm-4">Training Year:</dt>
+                            <dd class="col-sm-8">{{ profile_user.get_year_display }}</dd>
+                            {% endif %}
+                            
+                            {% if profile_user.supervisor %}
+                            <dt class="col-sm-4">Supervisor:</dt>
+                            <dd class="col-sm-8">
+                                <a href="{% url 'users:profile_detail' profile_user.supervisor.pk %}">
+                                    {{ profile_user.supervisor.get_display_name }}
+                                </a>
+                            </dd>
+                            {% endif %}
+                        </dl>
+                    </div>
+                    <div class="col-md-6">
+                        <dl class="row">
+                            {% if profile_user.registration_number %}
+                            <dt class="col-sm-4">Registration #:</dt>
+                            <dd class="col-sm-8">{{ profile_user.registration_number }}</dd>
+                            {% endif %}
+                            
+                            {% if profile_user.role == 'supervisor' %}
+                            <dt class="col-sm-4">Assigned PGs:</dt>
+                            <dd class="col-sm-8">{{ profile_user.get_assigned_pgs.count }}</dd>
+                            {% endif %}
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Activity Information -->
+        <div class="card mb-4">
+            <div class="card-header d-flex align-items-center">
+                <i class="fas fa-chart-line me-2"></i>
+                <h5 class="mb-0">Activity Information</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <dl class="row">
+                            <dt class="col-sm-4">Account Status:</dt>
+                            <dd class="col-sm-8">
+                                {% if profile_user.is_active %}
+                                    <span class="badge bg-success">Active</span>
+                                {% else %}
+                                    <span class="badge bg-danger">Inactive</span>
+                                {% endif %}
+                            </dd>
+                            
+                            <dt class="col-sm-4">Date Joined:</dt>
+                            <dd class="col-sm-8">{{ profile_user.date_joined|date:"F d, Y" }}</dd>
+                            
+                            <dt class="col-sm-4">Last Login:</dt>
+                            <dd class="col-sm-8">
+                                {% if profile_user.last_login %}
+                                    {{ profile_user.last_login|date:"F d, Y" }}
+                                {% else %}
+                                    Never
+                                {% endif %}
+                            </dd>
+                        </dl>
+                    </div>
+                    <div class="col-md-6">
+                        {% if profile_user.role == 'pg' %}
+                        <dl class="row">
+                            <dt class="col-sm-4">Documents:</dt>
+                            <dd class="col-sm-8">{{ profile_user.get_documents_submitted_count }}</dd>
+                        </dl>
+                        {% elif profile_user.role == 'supervisor' %}
+                        <dl class="row">
+                            <dt class="col-sm-4">Pending Reviews:</dt>
+                            <dd class="col-sm-8">{{ profile_user.get_documents_pending_count }}</dd>
+                        </dl>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="col-lg-4">
+        <!-- Quick Actions -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-bolt me-2"></i>Quick Actions
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{% url 'users:profile_edit' %}" class="btn btn-outline-primary">
+                        <i class="fas fa-edit me-2"></i>Edit Profile
+                    </a>
+                    <a href="{% url 'users:password_change' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-key me-2"></i>Change Password
+                    </a>
+                    {% if profile_user.phone_number %}
+                    <a href="tel:{{ profile_user.phone_number }}" class="btn btn-outline-success">
+                        <i class="fas fa-phone me-2"></i>Call
+                    </a>
+                    {% endif %}
+                    <a href="mailto:{{ profile_user.email }}" class="btn btn-outline-info">
+                        <i class="fas fa-envelope me-2"></i>Email
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Role Information -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-info-circle me-2"></i>Role Information
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="text-center mb-3">
+                    <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center" 
+                         style="width: 80px; height: 80px; font-size: 2rem;">
+                        {% if profile_user.role == 'admin' %}
+                            <i class="fas fa-crown"></i>
+                        {% elif profile_user.role == 'supervisor' %}
+                            <i class="fas fa-user-tie"></i>
+                        {% elif profile_user.role == 'pg' %}
+                            <i class="fas fa-graduation-cap"></i>
+                        {% endif %}
+                    </div>
+                </div>
+                <h6 class="text-center">{{ profile_user.get_role_display }}</h6>
+                <p class="text-muted text-center small">
+                    {% if profile_user.role == 'admin' %}
+                        System administrator with full access to all features and user management.
+                    {% elif profile_user.role == 'supervisor' %}
+                        Medical supervisor responsible for overseeing postgraduate training.
+                    {% elif profile_user.role == 'pg' %}
+                        Postgraduate medical trainee in the SIMS program.
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

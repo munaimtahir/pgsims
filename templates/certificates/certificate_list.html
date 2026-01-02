@@ -1,0 +1,227 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Certificates - SIMS{% endblock %}
+
+{% block breadcrumb %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'users:dashboard' %}">Dashboard</a></li>
+        <li class="breadcrumb-item active">Certificates</li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block page_header %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2><i class="fas fa-certificate me-2"></i>Certificates</h2>
+        <p class="text-muted">Manage training certificates and compliance documentation</p>
+    </div>
+    <div>
+        {% if user.role == 'pg' or user.role == 'supervisor' or user.role == 'admin' %}
+        <a href="{% url 'certificates:create' %}" class="btn btn-primary">
+            <i class="fas fa-plus me-2"></i>Add Certificate
+        </a>
+        {% endif %}
+        <a href="{% url 'certificates:dashboard' %}" class="btn btn-outline-secondary ms-2">
+            <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<!-- Filter Section -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-3">
+                <label for="search" class="form-label">Search</label>
+                <input type="text" class="form-control" id="search" name="search" 
+                       value="{{ request.GET.search }}" placeholder="Certificate name or PG name">
+            </div>
+            <div class="col-md-2">
+                <label for="status" class="form-label">Status</label>
+                <select class="form-select" id="status" name="status">
+                    <option value="">All Statuses</option>
+                    <option value="active" {% if request.GET.status == 'active' %}selected{% endif %}>Active</option>
+                    <option value="expired" {% if request.GET.status == 'expired' %}selected{% endif %}>Expired</option>
+                    <option value="expiring_soon" {% if request.GET.status == 'expiring_soon' %}selected{% endif %}>Expiring Soon</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label for="type" class="form-label">Type</label>
+                <select class="form-select" id="type" name="type">
+                    <option value="">All Types</option>
+                    <option value="training" {% if request.GET.type == 'training' %}selected{% endif %}>Training</option>
+                    <option value="certification" {% if request.GET.type == 'certification' %}selected{% endif %}>Certification</option>
+                    <option value="license" {% if request.GET.type == 'license' %}selected{% endif %}>License</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="pg" class="form-label">PG</label>
+                <select class="form-select" id="pg" name="pg">
+                    <option value="">All PGs</option>
+                    {% for pg_user in pgs %}
+                    <option value="{{ pg_user.id }}" {% if request.GET.pg == pg_user.id|stringformat:"s" %}selected{% endif %}>
+                        {{ pg_user.get_full_name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button type="submit" class="btn btn-outline-primary me-2">
+                    <i class="fas fa-search me-1"></i>Filter
+                </button>
+                <a href="{% url 'certificates:list' %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-undo me-1"></i>Clear
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Certificates List -->
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Certificates List</h5>
+        <div class="pagination-info">
+            {% if is_paginated %}
+                Showing {{ page_obj.start_index }} to {{ page_obj.end_index }} of {{ page_obj.paginator.count }} certificates
+            {% else %}
+                {{ certificates|length }} certificates total
+            {% endif %}
+        </div>
+    </div>
+    <div class="card-body">
+        {% if certificates %}
+            <div class="row">
+                {% for certificate in certificates %}
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="card certificate-card h-100">
+                        <div class="card-header d-flex justify-content-between align-items-start">
+                            <div>
+                                <h6 class="card-title mb-1">{{ certificate.name|truncatechars:40 }}</h6>
+                                <small class="text-muted">{{ certificate.certificate_type|title }}</small>
+                            </div>
+                            <span class="badge bg-{% if certificate.is_expired %}danger{% elif certificate.is_expiring_soon %}warning{% else %}success{% endif %}">
+                                {% if certificate.is_expired %}Expired{% elif certificate.is_expiring_soon %}Expiring Soon{% else %}Active{% endif %}
+                            </span>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-2">
+                                <strong>PG:</strong> {{ certificate.pg.get_full_name }}
+                            </div>
+                            <div class="mb-2">
+                                <strong>Issued:</strong> {{ certificate.issue_date|date:"M d, Y" }}
+                            </div>
+                            {% if certificate.expiry_date %}
+                            <div class="mb-2">
+                                <strong>Expires:</strong> {{ certificate.expiry_date|date:"M d, Y" }}
+                            </div>
+                            {% endif %}
+                            {% if certificate.issuing_authority %}
+                            <div class="mb-2">
+                                <strong>Authority:</strong> {{ certificate.issuing_authority|truncatechars:30 }}
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="card-footer">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <small class="text-muted">
+                                    Updated {{ certificate.updated_at|timesince }} ago
+                                </small>
+                                <div class="btn-group" role="group">
+                                    <a href="{% url 'certificates:detail' certificate.pk %}" class="btn btn-sm btn-outline-primary" title="View Details">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    {% if user == certificate.pg or user.role == 'supervisor' or user.role == 'admin' %}
+                                    <a href="{% url 'certificates:edit' certificate.pk %}" class="btn btn-sm btn-outline-secondary" title="Edit">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    {% endif %}
+                                    {% if certificate.certificate_file %}
+                                    <a href="{{ certificate.certificate_file.url }}" target="_blank" class="btn btn-sm btn-outline-success" title="Download">
+                                        <i class="fas fa-download"></i>
+                                    </a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            
+            <!-- Pagination -->
+            {% if is_paginated %}
+            <nav aria-label="Certificate pagination">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page=1{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">First</a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">Previous</a>
+                        </li>
+                    {% endif %}
+                    
+                    <li class="page-item active">
+                        <span class="page-link">{{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+                    </li>
+                    
+                    {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">Next</a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">Last</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+        {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-certificate fa-4x text-muted mb-3"></i>
+                <h4 class="text-muted">No Certificates Found</h4>
+                <p class="text-muted">
+                    {% if request.GET.search %}
+                        No certificates match your search criteria. Try different keywords or clear the filters.
+                    {% else %}
+                        Get started by adding your first certificate.
+                    {% endif %}
+                </p>
+                {% if user.role == 'pg' or user.role == 'supervisor' or user.role == 'admin' %}
+                <a href="{% url 'certificates:create' %}" class="btn btn-primary">
+                    <i class="fas fa-plus me-2"></i>Add Your First Certificate
+                </a>
+                {% endif %}
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.certificate-card {
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.certificate-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.btn-group .btn {
+    border-radius: 0.25rem !important;
+    margin-left: 2px;
+}
+
+.btn-group .btn:first-child {
+    margin-left: 0;
+}
+</style>
+{% endblock %}

@@ -1,0 +1,284 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}Logged Out - SIMS{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --pmc-primary: #667eea;
+        --pmc-secondary: #764ba2;
+        --pmc-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+
+    body {
+        background: var(--pmc-gradient);
+        min-height: 100vh;
+    }
+
+    .logout-wrapper {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem 1rem;
+    }
+
+    .logout-container {
+        max-width: 600px;
+        width: 100%;
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 20px;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+        backdrop-filter: blur(15px);
+        text-align: center;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        padding: 3rem 2rem;
+        animation: fadeInUp 0.6s ease-out;
+    }
+    
+    .logout-icon {
+        width: 120px;
+        height: 120px;
+        background: var(--pmc-gradient);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 2rem;
+        color: white;
+        font-size: 3rem;
+        box-shadow: 0 15px 35px rgba(102, 126, 234, 0.3);
+        animation: bounceIn 0.8s ease-out 0.3s both;
+    }
+    
+    .logout-title {
+        color: #2c3e50;
+        font-size: 2.2rem;
+        font-weight: 700;
+        margin-bottom: 1rem;
+        background: var(--pmc-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    
+    .logout-message {
+        color: #6c757d;
+        font-size: 1.15rem;
+        margin-bottom: 2.5rem;
+        line-height: 1.6;
+    }
+    
+    .action-buttons {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        flex-wrap: wrap;
+        margin-top: 2rem;
+    }
+    
+    .btn-login-again {
+        background: var(--pmc-gradient);
+        border: none;
+        border-radius: 12px;
+        padding: 14px 28px;
+        color: white;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        box-shadow: 0 6px 16px rgba(102, 126, 234, 0.3);
+        font-size: 1rem;
+    }
+    
+    .btn-login-again:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 12px 25px rgba(102, 126, 234, 0.4);
+        color: white;
+        text-decoration: none;
+    }
+    
+    .btn-home {
+        background: transparent;
+        border: 2px solid #667eea;
+        border-radius: 12px;
+        padding: 12px 26px;
+        color: #667eea;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 1rem;
+    }
+    
+    .btn-home:hover {
+        background: #667eea;
+        color: white;
+        transform: translateY(-3px);
+        text-decoration: none;
+        box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+    }
+    
+    .security-note {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        border-radius: 15px;
+        padding: 1.5rem;
+        margin-top: 2.5rem;
+        border-left: 4px solid #28a745;
+        text-align: left;
+    }
+    
+    .security-note i {
+        color: #28a745;
+        margin-right: 0.5rem;
+        font-size: 1.1rem;
+    }
+    
+    .security-note .note-title {
+        font-weight: 600;
+        color: #2c3e50;
+        margin-bottom: 0.5rem;
+    }
+    
+    .security-note .note-text {
+        color: #6c757d;
+        font-size: 0.95rem;
+        line-height: 1.5;
+    }
+    
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes bounceIn {
+        0% {
+            opacity: 0;
+            transform: scale(0.3);
+        }
+        50% {
+            opacity: 1;
+            transform: scale(1.05);
+        }
+        70% {
+            transform: scale(0.9);
+        }
+        100% {
+            opacity: 1;
+            transform: scale(1);
+        }
+    }
+    
+    @media (max-width: 768px) {
+        .logout-container {
+            margin: 1rem;
+            padding: 2rem 1.5rem;
+        }
+        
+        .logout-title {
+            font-size: 1.8rem;
+        }
+        
+        .action-buttons {
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .btn-login-again,
+        .btn-home {
+            width: 100%;
+            justify-content: center;
+            max-width: 280px;
+        }
+
+        .logout-icon {
+            width: 100px;
+            height: 100px;
+            font-size: 2.5rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="logout-wrapper">
+    <div class="logout-container">
+        <div class="logout-icon">
+            <i class="fas fa-sign-out-alt"></i>
+        </div>
+        
+        <h1 class="logout-title">
+            Successfully Logged Out
+        </h1>
+        
+        <p class="logout-message">
+            You have been securely logged out of the Student Information Management System (SIMS). 
+            Your session has been terminated and all sensitive data has been cleared from this browser.
+        </p>
+        
+        <div class="action-buttons">
+            <a href="{% url 'users:login' %}" class="btn-login-again">
+                <i class="fas fa-sign-in-alt"></i>
+                Log In Again
+            </a>
+            
+            <a href="{% url 'home' %}" class="btn-home">
+                <i class="fas fa-home"></i>
+                Return to Homepage
+            </a>
+        </div>
+        
+        <div class="security-note">
+            <div class="note-title">
+                <i class="fas fa-shield-alt"></i>
+                Security Notice
+            </div>
+            <div class="note-text">
+                For your security, please close your browser window if you are using a shared or public computer. 
+                If you did not initiate this logout, please contact your system administrator immediately.
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Auto-redirect after 30 seconds of inactivity
+    let redirectTimer = setTimeout(function() {
+        if (confirm('You will be redirected to the login page for security. Click OK to continue or Cancel to stay on this page.')) {
+            window.location.href = "{% url 'users:login' %}";
+        }
+    }, 30000);
+
+    // Clear timer if user interacts with the page
+    $(document).on('click keypress', function() {
+        clearTimeout(redirectTimer);
+    });
+
+    // Add loading states to buttons
+    $('.btn-login-again, .btn-home').on('click', function() {
+        let $btn = $(this);
+        let originalText = $btn.html();
+        $btn.html('<i class="fas fa-spinner fa-spin me-2"></i>Loading...');
+        
+        // Restore text after a delay (in case navigation fails)
+        setTimeout(function() {
+            $btn.html(originalText);
+        }, 3000);
+    });
+});
+</script>
+{% endblock %}

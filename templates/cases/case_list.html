@@ -1,0 +1,296 @@
+{% extends 'base/base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Clinical Cases - SIMS{% endblock %}
+
+{% block breadcrumb %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'users:dashboard' %}">Dashboard</a></li>
+        <li class="breadcrumb-item active">Clinical Cases</li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block page_header %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2><i class="fas fa-stethoscope me-2"></i>Clinical Cases</h2>
+        <p class="text-muted">Manage and review clinical cases for postgraduate training</p>
+    </div>
+    <div>
+        {% if user.role == 'pg' or user.role == 'supervisor' or user.role == 'admin' %}
+        <a href="{% url 'cases:case_create' %}" class="btn btn-primary">
+            <i class="fas fa-plus me-2"></i>New Case
+        </a>
+        {% endif %}
+        {% if user.role == 'admin' or user.role == 'supervisor' %}
+        <a href="{% url 'cases:case_export' %}" class="btn btn-outline-secondary ms-2">
+            <i class="fas fa-download me-2"></i>Export
+        </a>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<!-- Statistics Cards -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card card-stats">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h5 class="card-title text-muted">Total Cases</h5>
+                        <h3 class="mb-0">{{ cases|length }}</h3>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-file-medical fa-2x text-primary"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    {% if user_stats %}
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h5 class="card-title text-muted">My Cases</h5>
+                        <h3 class="mb-0">{{ user_stats.total_cases }}</h3>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-user-md fa-2x text-success"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h5 class="card-title text-muted">Approved</h5>
+                        <h3 class="mb-0">{{ user_stats.approved_cases }}</h3>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-check-circle fa-2x text-success"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h5 class="card-title text-muted">Pending Review</h5>
+                        <h3 class="mb-0">{{ user_stats.pending_cases }}</h3>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-clock fa-2x text-warning"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Search and Filter Section -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0">
+            <i class="fas fa-search me-2"></i>Search & Filter
+            <button class="btn btn-sm btn-outline-primary ms-2" type="button" data-bs-toggle="collapse" data-bs-target="#searchForm">
+                <i class="fas fa-filter"></i>
+            </button>
+        </h5>
+    </div>
+    <div class="collapse show" id="searchForm">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-4">
+                    {{ search_form.search_query|as_crispy_field }}
+                </div>
+                <div class="col-md-2">
+                    {{ search_form.status|as_crispy_field }}
+                </div>
+                <div class="col-md-2">
+                    {{ search_form.category|as_crispy_field }}
+                </div>
+                <div class="col-md-2">
+                    {{ search_form.date_from|as_crispy_field }}
+                </div>
+                <div class="col-md-2">
+                    {{ search_form.date_to|as_crispy_field }}
+                </div>
+                <div class="col-12">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-search me-2"></i>Search
+                    </button>
+                    <a href="{% url 'cases:case_list' %}" class="btn btn-outline-secondary ms-2">
+                        <i class="fas fa-undo me-2"></i>Clear
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Cases List -->
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Clinical Cases</h5>
+        <div class="pagination-info">
+            {% if is_paginated %}
+                Showing {{ page_obj.start_index }} to {{ page_obj.end_index }} of {{ page_obj.paginator.count }} cases
+            {% else %}
+                {{ cases|length }} cases total
+            {% endif %}
+        </div>
+    </div>
+    <div class="card-body">
+        {% if cases %}
+            <div class="row">
+                {% for case in cases %}
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="card case-card h-100 role-{{ case.pg.role|default:'pg' }}">
+                        <div class="card-header d-flex justify-content-between align-items-start">
+                            <div>
+                                <h6 class="card-title mb-1">{{ case.case_title|truncatechars:50 }}</h6>
+                                <small class="text-muted">{{ case.date|date:"M d, Y" }}</small>
+                            </div>
+                            <span class="badge bg-{% if case.status == 'approved' %}success{% elif case.status == 'submitted' %}warning{% elif case.status == 'under_review' %}info{% elif case.status == 'needs_revision' %}danger{% else %}secondary{% endif %} status-badge">
+                                {{ case.get_status_display }}
+                            </span>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-2">
+                                <strong>Patient:</strong> {{ case.patient_initials }}, {{ case.patient_age }}y {{ case.get_patient_gender_display }}
+                            </div>
+                            <div class="mb-2">
+                                <strong>Diagnosis:</strong> {{ case.primary_diagnosis.name|default:"Not specified" }}
+                            </div>
+                            {% if case.category %}
+                            <div class="mb-2">
+                                <span class="badge" style="background-color: '{{ case.category.color_code|default_if_none:'#6c757d' }}';">
+                                    {{ case.category.name }}
+                                </span>
+                            </div>
+                            {% endif %}
+                            <div class="mb-2">
+                                <strong>PG:</strong> {{ case.pg.get_full_name }}
+                            </div>
+                            {% if case.supervisor %}
+                            <div class="mb-2">
+                                <strong>Supervisor:</strong> {{ case.supervisor.get_full_name }}
+                            </div>
+                            {% endif %}
+                            {% if case.learning_points %}
+                            <div class="learning-points">
+                                <small><strong>Learning Points:</strong></small>
+                                <p class="small mb-0">{{ case.learning_points|truncatechars:100 }}</p>
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="card-footer">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <small class="text-muted">
+                                    Updated {{ case.updated_at|timesince }} ago
+                                </small>
+                                <div class="btn-group" role="group">
+                                    <a href="{% url 'cases:case_detail' case.pk %}" class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    {% if case.can_edit_case %}
+                                    <a href="{% url 'cases:case_update' case.pk %}" class="btn btn-sm btn-outline-secondary">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    {% endif %}
+                                    {% if case.can_delete_case %}
+                                    <a href="{% url 'cases:case_delete' case.pk %}" class="btn btn-sm btn-outline-danger delete-confirm">
+                                        <i class="fas fa-trash"></i>
+                                    </a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            
+            <!-- Pagination -->
+            {% if is_paginated %}
+            <nav aria-label="Cases pagination">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page=1{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">First</a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">Previous</a>
+                        </li>
+                    {% endif %}
+                    
+                    <li class="page-item active">
+                        <span class="page-link">{{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+                    </li>
+                    
+                    {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">Next</a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">Last</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+        {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-file-medical fa-4x text-muted mb-3"></i>
+                <h4 class="text-muted">No Clinical Cases Found</h4>
+                <p class="text-muted">
+                    {% if request.GET.search %}
+                        No cases match your search criteria. Try different keywords or clear the filters.
+                    {% else %}
+                        Get started by creating your first clinical case.
+                    {% endif %}
+                </p>
+                {% if user.role == 'pg' or user.role == 'supervisor' or user.role == 'admin' %}
+                <a href="{% url 'cases:case_create' %}" class="btn btn-primary">
+                    <i class="fas fa-plus me-2"></i>Create First Case
+                </a>
+                {% endif %}
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Initialize date pickers
+    $('input[type="date"]').each(function() {
+        if (!$(this).val()) {
+            $(this).attr('placeholder', 'YYYY-MM-DD');
+        }
+    });
+    
+    // Auto-submit form on filter change
+    $('.auto-submit').change(function() {
+        $(this).closest('form').submit();
+    });
+});
+</script>
+{% endblock %}

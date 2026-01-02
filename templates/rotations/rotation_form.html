@@ -1,0 +1,417 @@
+{% extends 'base/base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}{% if form.instance.pk %}Edit{% else %}Create{% endif %} Rotation - SIMS{% endblock %}
+
+{% block breadcrumb %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'users:dashboard' %}">Dashboard</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'rotations:list' %}">Rotations</a></li>
+        {% if form.instance.pk %}
+        <li class="breadcrumb-item"><a href="{% url 'rotations:detail' form.instance.pk %}">{{ form.instance.name|truncatechars:30 }}</a></li>
+        <li class="breadcrumb-item active">Edit</li>
+        {% else %}
+        <li class="breadcrumb-item active">New Rotation</li>
+        {% endif %}
+    </ol>
+</nav>
+{% endblock %}
+
+{% block page_header %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2>
+            <i class="fas fa-{% if form.instance.pk %}edit{% else %}plus{% endif %} me-2"></i>
+            {% if form.instance.pk %}Edit Rotation{% else %}Create New Rotation{% endif %}
+        </h2>
+        <p class="text-muted">
+            {% if form.instance.pk %}
+                Update the details of this clinical rotation
+            {% else %}
+                Set up a new clinical rotation assignment
+            {% endif %}
+        </p>
+    </div>
+    <div>
+        {% if form.instance.pk %}
+        <a href="{% url 'rotations:detail' form.instance.pk %}" class="btn btn-outline-secondary">
+            <i class="fas fa-eye me-2"></i>View Rotation
+        </a>
+        {% endif %}
+        <a href="{% url 'rotations:list' %}" class="btn btn-outline-primary">
+            <i class="fas fa-list me-2"></i>Back to List
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8">
+        <!-- Main Form -->
+        <form method="post" class="needs-validation" novalidate>
+            {% csrf_token %}
+            
+            <!-- Basic Information -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Rotation Details</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            {{ form.department|as_crispy_field }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.hospital|as_crispy_field }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Assignment -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-user-tie me-2"></i>Assignment</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            {{ form.pg|as_crispy_field }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.supervisor|as_crispy_field }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Schedule -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-calendar-alt me-2"></i>Schedule</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            {{ form.start_date|as_crispy_field }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.end_date|as_crispy_field }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Learning Content -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-bullseye me-2"></i>Learning Content</h5>
+                </div>
+                <div class="card-body">
+                    {{ form.objectives|as_crispy_field }}
+                    {{ form.learning_outcomes|as_crispy_field }}
+                    {{ form.requirements|as_crispy_field }}
+                </div>
+            </div>
+
+            <!-- Additional Information -->
+            <!-- Status -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-flag me-2"></i>Status</h5>
+                </div>
+                <div class="card-body">
+                    {{ form.status|as_crispy_field }}
+                </div>
+            </div>
+
+            <!-- Form Actions -->
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'rotations:list' %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-times me-2"></i>Cancel
+                        </a>
+                        <div>
+                            {% if form.instance.pk %}
+                            <button type="submit" name="action" value="save" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>Update Rotation
+                            </button>
+                            {% else %}
+                            <button type="submit" name="action" value="save" class="btn btn-success">
+                                <i class="fas fa-plus me-2"></i>Create Rotation
+                            </button>
+                            {% endif %}
+                            {% if user.role == 'admin' %}
+                            <button type="submit" name="action" value="save_and_notify" class="btn btn-info ms-2">
+                                <i class="fas fa-bell me-2"></i>Save & Notify
+                            </button>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <div class="col-lg-4">
+        <!-- Quick Tips -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="fas fa-lightbulb me-2"></i>Rotation Setup Tips</h6>
+            </div>
+            <div class="card-body">
+                <div class="accordion" id="tipsAccordion">
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#tipsDuration">
+                                Duration Planning
+                            </button>
+                        </h2>
+                        <div id="tipsDuration" class="accordion-collapse collapse" data-bs-parent="#tipsAccordion">
+                            <div class="accordion-body">
+                                <small>
+                                    • Standard rotations: 4-8 weeks<br>
+                                    • Subspecialty rotations: 2-4 weeks<br>
+                                    • Consider exam schedules and holidays<br>
+                                    • Allow transition time between rotations
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#tipsObjectives">
+                                Learning Objectives
+                            </button>
+                        </h2>
+                        <div id="tipsObjectives" class="accordion-collapse collapse" data-bs-parent="#tipsAccordion">
+                            <div class="accordion-body">
+                                <small>
+                                    • Set specific, measurable goals<br>
+                                    • Align with curriculum requirements<br>
+                                    • Include both clinical and non-clinical skills<br>
+                                    • Consider PG's current level and needs
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#tipsAssessment">
+                                Assessment Criteria
+                            </button>
+                        </h2>
+                        <div id="tipsAssessment" class="accordion-collapse collapse" data-bs-parent="#tipsAccordion">
+                            <div class="accordion-body">
+                                <small>
+                                    • Define clear evaluation methods<br>
+                                    • Include both formative and summative assessments<br>
+                                    • Specify required competency levels<br>
+                                    • Plan regular feedback sessions
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Rotation Overview -->
+        {% if form.instance.pk %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="fas fa-info me-2"></i>Rotation Overview</h6>
+            </div>
+            <div class="card-body">
+                <div class="text-center">
+                    <span class="badge bg-{{ form.instance.status_color }} fs-6 mb-2">
+                        {{ form.instance.get_status_display }}
+                    </span>
+                    <div class="small text-muted">
+                        Duration: {{ form.instance.duration_weeks }} weeks<br>
+                        Progress: {{ form.instance.progress_percentage }}%<br>
+                        {% if form.instance.days_remaining > 0 %}
+                        Days remaining: {{ form.instance.days_remaining }}
+                        {% elif form.instance.days_until_start > 0 %}
+                        Starts in: {{ form.instance.days_until_start }} days
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Calendar Integration -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="fas fa-calendar me-2"></i>Schedule Integration</h6>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <button type="button" class="btn btn-outline-primary" onclick="calculateDuration()">
+                        <i class="fas fa-calculator me-2"></i>Calculate Duration
+                    </button>
+                    <button type="button" class="btn btn-outline-info" onclick="checkConflicts()">
+                        <i class="fas fa-exclamation-triangle me-2"></i>Check Conflicts
+                    </button>
+                    {% if form.instance.pk %}
+                    <a href="#" class="btn btn-outline-success" onclick="exportToCalendar()">
+                        <i class="fas fa-download me-2"></i>Export to Calendar
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="fas fa-bolt me-2"></i>Quick Actions</h6>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{% url 'rotations:dashboard' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-chart-bar me-2"></i>View Dashboard
+                    </a>
+                    <a href="{% url 'rotations:list' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-list me-2"></i>All Rotations
+                    </a>
+                    {% if user.role == 'admin' %}
+                    <a href="{% url 'rotations:bulk_assignment' %}" class="btn btn-outline-info">
+                        <i class="fas fa-users me-2"></i>Bulk Assignment
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Date validation
+    $('#id_start_date, #id_end_date').change(function() {
+        const startDate = new Date($('#id_start_date').val());
+        const endDate = new Date($('#id_end_date').val());
+        
+        if (startDate && endDate && startDate >= endDate) {
+            alert('End date must be after start date');
+            $('#id_end_date').val('');
+        }
+        
+        calculateDuration();
+    });
+    
+    // Auto-calculate total hours when hours per week changes
+    $('#id_hours_per_week').change(function() {
+        calculateTotalHours();
+    });
+    
+    // Form validation
+    $('.needs-validation').on('submit', function(e) {
+        if (!this.checkValidity()) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        $(this).addClass('was-validated');
+    });
+});
+
+function calculateDuration() {
+    const startDate = new Date($('#id_start_date').val());
+    const endDate = new Date($('#id_end_date').val());
+    
+    if (startDate && endDate && startDate < endDate) {
+        const diffTime = Math.abs(endDate - startDate);
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        const weeks = Math.ceil(diffDays / 7);
+        
+        // Update UI with calculated duration
+        const info = `<small class="text-info">Duration: ${diffDays} days (${weeks} weeks)</small>`;
+        $('#duration-info').remove();
+        $('#id_end_date').parent().append(`<div id="duration-info">${info}</div>`);
+        
+        calculateTotalHours();
+    }
+}
+
+function calculateTotalHours() {
+    const startDate = new Date($('#id_start_date').val());
+    const endDate = new Date($('#id_end_date').val());
+    const hoursPerWeek = parseInt($('#id_hours_per_week').val()) || 0;
+    
+    if (startDate && endDate && hoursPerWeek > 0) {
+        const diffTime = Math.abs(endDate - startDate);
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        const weeks = Math.ceil(diffDays / 7);
+        const totalHours = weeks * hoursPerWeek;
+        
+        $('#id_total_hours').val(totalHours);
+    }
+}
+
+function checkConflicts() {
+    const pgId = $('#id_pg').val();
+    const startDate = $('#id_start_date').val();
+    const endDate = $('#id_end_date').val();
+    
+    if (!pgId || !startDate || !endDate) {
+        alert('Please select PG and dates first');
+        return;
+    }
+    
+    // AJAX call to check for conflicts
+    $.ajax({
+        url: '/rotations/check-conflicts/',
+        method: 'POST',
+        data: {
+            'pg': pgId,
+            'start_date': startDate,
+            'end_date': endDate,
+            'csrfmiddlewaretoken': $('[name=csrfmiddlewaretoken]').val()
+        },
+        success: function(response) {
+            if (response.conflicts && response.conflicts.length > 0) {
+                let message = 'Conflicts found:\n';
+                response.conflicts.forEach(conflict => {
+                    message += `- ${conflict.name} (${conflict.start_date} to ${conflict.end_date})\n`;
+                });
+                alert(message);
+            } else {
+                alert('No conflicts found!');
+            }
+        },
+        error: function() {
+            alert('Error checking conflicts. Please try again.');
+        }
+    });
+}
+
+function exportToCalendar() {
+    // Generate calendar event
+    const name = $('#id_name').val();
+    const startDate = $('#id_start_date').val();
+    const endDate = $('#id_end_date').val();
+    const description = $('#id_description').val();
+    
+    if (!name || !startDate || !endDate) {
+        alert('Please fill in required fields first');
+        return;
+    }
+    
+    // Create calendar URL (Google Calendar format)
+    const start = startDate.replace(/-/g, '');
+    const end = endDate.replace(/-/g, '');
+    const url = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(name)}&dates=${start}/${end}&details=${encodeURIComponent(description)}`;
+    
+    window.open(url, '_blank');
+}
+</script>
+{% endblock %}

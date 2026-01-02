@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Login - SIMS | Faisalabad Medical University</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css">
+    
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            position: relative;
+            padding-bottom: 80px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        
+        /* SIMS Home Button - Top Left Corner with Scroll Trigger */
+        .sims-home-button {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1050;
+            background: rgba(255, 255, 255, 0.95);
+            color: #667eea;
+            padding: 12px 20px;
+            border-radius: 25px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            backdrop-filter: blur(10px);
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        
+        .sims-home-button.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        .sims-home-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+            color: #764ba2;
+            text-decoration: none;
+            background: white;
+        }
+        
+        .main-content {
+            display: flex;
+            align-items: center;
+            min-height: 100vh;
+            padding-top: 60px;
+            padding-bottom: 40px;
+        }
+        
+        .user-login-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.1);
+            overflow: hidden;
+            max-width: 900px;
+            width: 100%;
+            margin: 0 auto;
+        }
+        
+        .user-branding {
+            background: linear-gradient(rgba(102, 126, 234, 0.9), rgba(118, 75, 162, 0.9)), 
+                        linear-gradient(135deg, #16a085 0%, #2980b9 50%, #3498db 100%);
+            color: white;
+            padding: 60px 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .user-branding::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path d="M0,50 Q25,30 50,50 T100,50 L100,100 L0,100 Z" fill="rgba(255,255,255,0.05)"/></svg>');
+            background-size: 200px 100px;
+            animation: wave 20s ease-in-out infinite;
+        }
+        
+        @keyframes wave {
+            0%, 100% { transform: translateX(0px); }
+            50% { transform: translateX(-50px); }
+        }
+        
+        .user-logo {
+            display: inline-flex;
+            align-items: center;
+            gap: 14px;
+            padding: 12px 16px;
+            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.08);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+            position: relative;
+            z-index: 2;
+            margin-bottom: 16px;
+        }
+
+        .user-logo-image {
+            width: 72px;
+            height: 72px;
+            object-fit: contain;
+            background: white;
+            border-radius: 12px;
+            padding: 8px;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+        }
+
+        .user-logo-text {
+            text-align: left;
+        }
+
+        .user-logo-title {
+            font-size: 1.6rem;
+            font-weight: 800;
+            line-height: 1.2;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .user-logo-subtitle {
+            font-size: 0.95rem;
+            opacity: 0.9;
+            margin-top: 2px;
+        }
+        
+        .user-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+            position: relative;
+            z-index: 2;
+        }
+        
+        .user-subtitle {
+            font-size: 1rem;
+            opacity: 0.9;
+            margin-bottom: 30px;
+            position: relative;
+            z-index: 2;
+        }
+        
+        .user-features-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 30px;
+            position: relative;
+            z-index: 2;
+        }
+        
+        .user-feature-item {
+            display: flex;
+            align-items: flex-start;
+            text-align: left;
+        }
+        
+        .user-feature-icon {
+            background: rgba(255,255,255,0.2);
+            border-radius: 12px;
+            width: 45px;
+            height: 45px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            font-size: 1.2rem;
+            flex-shrink: 0;
+        }
+        
+        .user-form {
+            padding: 60px 40px;
+        }
+        
+        .form-control {
+            border-radius: 12px;
+            border: 2px solid #e9ecef;
+            padding: 14px 18px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: #fafafa;
+        }
+        
+        .form-control:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+            background: white;
+        }
+        
+        .btn-user-login {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 12px;
+            padding: 14px;
+            font-weight: 600;
+            font-size: 1rem;
+            color: white;
+            width: 100%;
+            transition: all 0.3s ease;
+            text-transform: none;
+            letter-spacing: 0.5px;
+        }
+        
+        .btn-user-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+            color: white;
+        }
+        
+        .form-check-input:checked {
+            background-color: #667eea;
+            border-color: #667eea;
+        }
+        
+        .text-link {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        
+        .text-link:hover {
+            color: #764ba2;
+        }
+        
+        /* Footer styling */
+        .page-footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(102, 126, 234, 0.95);
+            color: white;
+            padding: 15px 0;
+            text-align: center;
+            font-size: 0.9rem;
+            z-index: 1040;
+            backdrop-filter: blur(10px);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .page-footer a {
+            color: #e0e7ff;
+            text-decoration: none;
+        }
+        
+        .page-footer a:hover {
+            color: white;
+            text-decoration: underline;
+        }
+        
+        /* Enhanced error styling */
+        .errorlist {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            color: #dc3545;
+            font-size: 0.875rem;
+        }
+        
+        .errorlist li {
+            margin-bottom: 5px;
+        }
+        
+        .is-invalid {
+            border-color: #dc3545;
+        }
+        
+        .invalid-feedback {
+            display: block;
+        }
+        
+        /* Welcome badge */
+        .welcome-badge {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 15px;
+            padding: 8px 12px;
+            font-size: 0.8rem;
+            margin-top: 20px;
+            position: relative;
+            z-index: 2;
+        }
+        
+        /* Mobile responsiveness */
+        @media (max-width: 768px) {
+            .user-features-container {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+            
+            .sims-home-button {
+                font-size: 0.8rem;
+                padding: 10px 16px;
+            }
+            
+            .page-footer {
+                font-size: 0.8rem;
+                padding: 12px 0;
+            }
+            
+            .main-content {
+                padding-top: 80px;
+                padding-left: 10px;
+                padding-right: 10px;
+            }
+            
+            .user-login-container {
+                margin: 0 auto;
+                border-radius: 15px;
+            }
+            
+            .user-branding {
+                padding: 40px 30px;
+            }
+            
+            .user-form {
+                padding: 40px 30px;
+            }
+            
+            .user-logo {
+                gap: 10px;
+            }
+            
+            .user-logo-image {
+                width: 60px;
+                height: 60px;
+            }
+            
+            .user-logo-title {
+                font-size: 1.3rem;
+            }
+            
+            .user-logo-subtitle {
+                font-size: 0.85rem;
+            }
+            
+            .user-title {
+                font-size: 1.3rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- SIMS Home Button - Top Left -->
+    <a href="/" class="sims-home-button">
+        <i class="bi bi-house-fill"></i>
+        Back to Home
+    </a>
+
+    <div class="main-content">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-12">
+                    <div class="user-login-container row g-0">
+                        <!-- Left Side - User Branding -->
+                        <div class="col-lg-6 user-branding">
+                            <div>
+                                <div class="user-logo">
+                                    <img src="{% static 'images/FMU logo.png' %}" alt="Faisalabad Medical University logo" class="user-logo-image">
+                                    <div class="user-logo-text">
+                                        <div class="user-logo-title">Faisalabad Medical University</div>
+                                        <div class="user-logo-subtitle">School Information Management System (SIMS)</div>
+                                    </div>
+                                </div>
+                                <div class="user-title">User Portal</div>
+                                <div class="user-subtitle">Access your postgraduate medical training dashboard</div>
+                                
+                                <div class="user-features-container">
+                                    <div class="user-feature-item">
+                                        <div class="user-feature-icon">
+                                            <i class="bi bi-journal-medical"></i>
+                                        </div>
+                                        <div>
+                                            <strong>Logbook Management</strong><br>
+                                            <small>Track your clinical cases</small>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="user-feature-item">
+                                        <div class="user-feature-icon">
+                                            <i class="bi bi-calendar-check"></i>
+                                        </div>
+                                        <div>
+                                            <strong>Rotation Schedule</strong><br>
+                                            <small>View training rotations</small>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="user-feature-item">
+                                        <div class="user-feature-icon">
+                                            <i class="bi bi-award"></i>
+                                        </div>
+                                        <div>
+                                            <strong>Assessments</strong><br>
+                                            <small>Submit and track progress</small>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="user-feature-item">
+                                        <div class="user-feature-icon">
+                                            <i class="bi bi-graph-up"></i>
+                                        </div>
+                                        <div>
+                                            <strong>Progress Reports</strong><br>
+                                            <small>Monitor your development</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="welcome-badge">
+                                    <i class="bi bi-mortarboard-fill me-2"></i>
+                                    Postgraduate Medical Training Platform
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Right Side - User Login Form -->
+                        <div class="col-lg-6 user-form">
+                            <div class="text-center mb-4">
+                                <h2 class="fw-bold text-dark">User Access</h2>
+                                <p class="text-muted">Enter your credentials to access your training dashboard</p>
+                            </div>
+                            
+                            {% if form.errors %}
+                                <div class="alert alert-danger" role="alert">
+                                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                                    <strong>Login Failed</strong><br>
+                                    Please check your credentials and try again.
+                                    {% if form.non_field_errors %}
+                                        {% for error in form.non_field_errors %}
+                                            <br>{{ error }}
+                                        {% endfor %}
+                                    {% endif %}
+                                </div>
+                            {% endif %}
+                            
+                            <form method="post" id="userLoginForm">
+                                {% csrf_token %}
+                                
+                                <div class="mb-3">
+                                    <label for="id_username" class="form-label">
+                                        <i class="bi bi-person me-2"></i>Username or Email
+                                    </label>
+                                    <input type="text" 
+                                           class="form-control {% if form.username.errors %}is-invalid{% endif %}" 
+                                           id="id_username" 
+                                           name="username" 
+                                           value="{{ form.username.value|default:'' }}"
+                                           placeholder="Enter your username or email"
+                                           required>
+                                    {% if form.username.errors %}
+                                        <div class="invalid-feedback">
+                                            {% for error in form.username.errors %}{{ error }}{% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="mb-4">
+                                    <label for="id_password" class="form-label">
+                                        <i class="bi bi-key me-2"></i>Password
+                                    </label>
+                                    <input type="password" 
+                                           class="form-control {% if form.password.errors %}is-invalid{% endif %}" 
+                                           id="id_password" 
+                                           name="password" 
+                                           placeholder="Enter your password"
+                                           required>
+                                    {% if form.password.errors %}
+                                        <div class="invalid-feedback">
+                                            {% for error in form.password.errors %}{{ error }}{% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="remember_me" name="remember_me">
+                                        <label class="form-check-label" for="remember_me">
+                                            Remember me for 7 days
+                                        </label>
+                                    </div>
+                                </div>
+                                
+                                <button type="submit" class="btn btn-user-login mb-3">
+                                    <i class="bi bi-box-arrow-in-right me-2"></i>Sign In
+                                </button>
+                                
+                                <div class="text-center">
+                                    <small class="text-muted">
+                                        <i class="bi bi-info-circle me-1"></i>
+                                        Need help? Contact your program administrator
+                                    </small>
+                                </div>
+                                
+                                {% if request.GET.next %}
+                                    <input type="hidden" name="next" value="{{ request.GET.next }}">
+                                {% endif %}
+                            </form>
+                            
+                            <hr class="my-4">
+                            
+                            <div class="text-center">
+                                <small class="text-muted">
+                                    <i class="bi bi-building me-1"></i>
+                                    Faisalabad Medical University<br>
+                                    SIMS - Postgraduate Medical Training System
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="page-footer">
+        <div class="container">
+            © {% now "Y" %} Faisalabad Medical University. 
+            <a href="/">SIMS</a> - Postgraduate Medical Training System. 
+            All rights reserved.
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Scroll-triggered home button visibility
+        window.addEventListener('scroll', function() {
+            const homeButton = document.querySelector('.sims-home-button');
+            if (window.scrollY > 100) {
+                homeButton.classList.add('visible');
+            } else {
+                homeButton.classList.remove('visible');
+            }
+        });
+        
+        // Show home button immediately if already scrolled
+        document.addEventListener('DOMContentLoaded', function() {
+            const homeButton = document.querySelector('.sims-home-button');
+            if (window.scrollY > 100) {
+                homeButton.classList.add('visible');
+            }
+            
+            // Focus on username field
+            document.getElementById('id_username').focus();
+        });
+        
+        // Form validation enhancement
+        const form = document.getElementById('userLoginForm');
+        const inputs = form.querySelectorAll('input[required]');
+        
+        inputs.forEach(input => {
+            input.addEventListener('blur', function() {
+                if (this.value.trim() === '') {
+                    this.classList.add('is-invalid');
+                } else {
+                    this.classList.remove('is-invalid');
+                }
+            });
+            
+            input.addEventListener('input', function() {
+                if (this.classList.contains('is-invalid') && this.value.trim() !== '') {
+                    this.classList.remove('is-invalid');
+                }
+            });
+        });
+        
+        // Enhanced form submission
+        form.addEventListener('submit', function(e) {
+            let isValid = true;
+            
+            inputs.forEach(input => {
+                if (input.value.trim() === '') {
+                    input.classList.add('is-invalid');
+                    isValid = false;
+                }
+            });
+            
+            if (!isValid) {
+                e.preventDefault();
+                // Focus on first invalid input
+                const firstInvalid = form.querySelector('.is-invalid');
+                if (firstInvalid) {
+                    firstInvalid.focus();
+                }
+            } else {
+                // Show loading state
+                const submitBtn = form.querySelector('button[type="submit"]');
+                const originalText = submitBtn.innerHTML;
+                submitBtn.innerHTML = '<i class="bi bi-arrow-clockwise me-2 spinner-border spinner-border-sm"></i>Signing In...';
+                submitBtn.disabled = true;
+                
+                // Re-enable button after 10 seconds (in case of slow response)
+                setTimeout(() => {
+                    submitBtn.innerHTML = originalText;
+                    submitBtn.disabled = false;
+                }, 10000);
+            }
+        });
+        
+        // Security warning for caps lock
+        document.getElementById('id_password').addEventListener('keydown', function(e) {
+            if (e.getModifierState && e.getModifierState('CapsLock')) {
+                if (!document.querySelector('.caps-warning')) {
+                    const warning = document.createElement('div');
+                    warning.className = 'caps-warning alert alert-warning mt-2';
+                    warning.innerHTML = '<i class="bi bi-capslock me-2"></i>Caps Lock is on';
+                    this.parentNode.appendChild(warning);
+                }
+            } else {
+                const warning = document.querySelector('.caps-warning');
+                if (warning) {
+                    warning.remove();
+                }
+            }
+        });
+    </script>
+</body>
+</html>

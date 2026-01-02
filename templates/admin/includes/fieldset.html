@@ -1,0 +1,213 @@
+{% load i18n %}
+
+<fieldset class="module aligned {{ fieldset.classes }}">
+    {% if fieldset.name %}
+        <h2>
+            {% if fieldset.name|lower == 'personal information' %}
+                <i class="fas fa-user me-2"></i>
+            {% elif fieldset.name|lower == 'permissions' %}
+                <i class="fas fa-shield-alt me-2"></i>
+            {% elif fieldset.name|lower == 'important dates' %}
+                <i class="fas fa-calendar me-2"></i>
+            {% elif fieldset.name|lower == 'contact information' %}
+                <i class="fas fa-address-book me-2"></i>
+            {% elif fieldset.name|lower == 'academic information' %}
+                <i class="fas fa-graduation-cap me-2"></i>
+            {% elif fieldset.name|lower == 'medical information' %}
+                <i class="fas fa-stethoscope me-2"></i>
+            {% else %}
+                <i class="fas fa-cog me-2"></i>
+            {% endif %}
+            {{ fieldset.name }}
+        </h2>
+    {% endif %}
+
+    {% if fieldset.description %}
+        <div class="description">
+            <i class="fas fa-info-circle me-2 text-primary"></i>
+            {{ fieldset.description }}
+        </div>
+    {% endif %}
+
+    <div class="form-content">
+        {% for line in fieldset %}
+            <div class="form-row{% if line.fields|length_is:'1' and line.errors %} errors{% endif %}{% if not line.has_visible_field %} hidden{% endif %}{% for field in line %} field-{{ field.field.name }}{% endfor %}">
+                {% if line.fields|length_is:'1' %}
+                    {{ line.as_ul }}
+                {% else %}
+                    <ul class="form-row-multi">
+                        {{ line.as_ul }}
+                    </ul>
+                {% endif %}
+            </div>
+        {% endfor %}
+    </div>
+</fieldset>
+
+<style>
+    .fieldset {
+        border: 2px solid #e9ecef;
+        border-radius: 12px;
+        margin: 1.5rem 0;
+        padding: 0;
+        background: white;
+        overflow: hidden;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        transition: all 0.3s ease;
+    }
+    
+    .fieldset:hover {
+        box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+        transform: translateY(-2px);
+    }
+    
+    .fieldset h2 {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        color: #2c3e50;
+        padding: 1rem 1.5rem;
+        margin: 0;
+        font-size: 1.1rem;
+        font-weight: 600;
+        border-bottom: 2px solid #e9ecef;
+        display: flex;
+        align-items: center;
+    }
+    
+    .fieldset .description {
+        background: #e7f3ff;
+        color: #0c5aa6;
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid #e9ecef;
+        display: flex;
+        align-items: center;
+        font-size: 0.9rem;
+        line-height: 1.5;
+    }
+    
+    .fieldset .form-content {
+        padding: 1.5rem;
+    }
+    
+    .fieldset .form-row {
+        margin-bottom: 1.5rem;
+        padding: 1rem;
+        background: #f8f9fa;
+        border-radius: 10px;
+        border-left: 4px solid #667eea;
+        transition: all 0.3s ease;
+        position: relative;
+    }
+    
+    .fieldset .form-row:hover {
+        background: #e9ecef;
+        transform: translateX(5px);
+    }
+    
+    .fieldset .form-row.errors {
+        border-left-color: #dc3545;
+        background: #f8d7da;
+    }
+    
+    .fieldset .form-row.errors:hover {
+        background: #f1b0b7;
+    }
+    
+    .fieldset .form-row ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    
+    .fieldset .form-row li {
+        margin-bottom: 0.5rem;
+    }
+    
+    .fieldset .form-row label {
+        font-weight: 600;
+        color: #2c3e50;
+        margin-bottom: 0.5rem;
+        display: block;
+    }
+    
+    .fieldset .form-row .help {
+        color: #6c757d;
+        font-size: 0.875rem;
+        margin-top: 0.25rem;
+        display: block;
+    }
+    
+    .fieldset .form-row .errorlist {
+        background: #f8d7da;
+        color: #721c24;
+        padding: 0.5rem;
+        border-radius: 5px;
+        margin-top: 0.5rem;
+        list-style: none;
+        border-left: 4px solid #dc3545;
+    }
+    
+    .fieldset .form-row input[type="text"],
+    .fieldset .form-row input[type="email"],
+    .fieldset .form-row input[type="password"],
+    .fieldset .form-row input[type="number"],
+    .fieldset .form-row input[type="date"],
+    .fieldset .form-row input[type="datetime-local"],
+    .fieldset .form-row textarea,
+    .fieldset .form-row select {
+        width: 100%;
+        padding: 0.75rem;
+        border: 2px solid #e9ecef;
+        border-radius: 8px;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        background: white;
+    }
+    
+    .fieldset .form-row input:focus,
+    .fieldset .form-row textarea:focus,
+    .fieldset .form-row select:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        outline: none;
+    }
+    
+    .fieldset .form-row-multi {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1rem;
+    }
+    
+    .fieldset .form-row-multi li {
+        margin-bottom: 0;
+    }
+    
+    .fieldset .form-row .vCheckboxLabel {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-weight: 500;
+    }
+    
+    .fieldset .form-row input[type="checkbox"] {
+        width: auto;
+        margin-right: 0.5rem;
+        transform: scale(1.2);
+        accent-color: #667eea;
+    }
+    
+    .fieldset .form-row .checkbox-row {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem;
+        background: white;
+        border-radius: 6px;
+        border: 1px solid #e9ecef;
+        transition: all 0.3s ease;
+    }
+    
+    .fieldset .form-row .checkbox-row:hover {
+        background: #f8f9fa;
+        border-color: #667eea;
+    }
+</style>

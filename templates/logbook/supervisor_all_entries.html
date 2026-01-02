@@ -1,0 +1,341 @@
+{% extends "base/base.html" %}
+{% load humanize %}
+{% load crispy_forms_tags %}
+
+{% block title %}
+    {{ page_title|default:"All PG Logbook Entries" }} - {{ block.super }}
+{% endblock title %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0">
+            <i class="fas fa-clipboard-list me-2"></i>{{ page_title|default:"All PG Logbook Entries" }}
+        </h2>
+        <div>
+            <a href="{% url 'logbook:supervisor_logbook_dashboard' %}" class="btn btn-outline-primary">
+                <i class="fas fa-clock me-2"></i>Pending Reviews Only
+            </a>
+            <a href="{% url 'logbook:supervisor_bulk_review' %}" class="btn btn-warning ms-2">
+                <i class="fas fa-tasks me-2"></i>Bulk Review
+            </a>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-2">
+            <div class="card text-center border-primary">
+                <div class="card-body py-2">
+                    <h5 class="card-title text-primary mb-0">{{ stats.total }}</h5>
+                    <small class="text-muted">Total Entries</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card text-center border-warning">
+                <div class="card-body py-2">
+                    <h5 class="card-title text-warning mb-0">{{ stats.pending }}</h5>
+                    <small class="text-muted">Pending Review</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card text-center border-success">
+                <div class="card-body py-2">
+                    <h5 class="card-title text-success mb-0">{{ stats.approved }}</h5>
+                    <small class="text-muted">Approved</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card text-center border-info">
+                <div class="card-body py-2">
+                    <h5 class="card-title text-info mb-0">{{ stats.returned }}</h5>
+                    <small class="text-muted">Returned</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card text-center border-danger">
+                <div class="card-body py-2">
+                    <h5 class="card-title text-danger mb-0">{{ stats.rejected }}</h5>
+                    <small class="text-muted">Rejected</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card text-center border-secondary">
+                <div class="card-body py-2">
+                    <h5 class="card-title text-secondary mb-0">{{ stats.draft }}</h5>
+                    <small class="text-muted">In Draft</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h6 class="mb-0">
+                <i class="fas fa-filter me-2"></i>Filters
+                <button class="btn btn-sm btn-outline-secondary float-end" type="button" data-bs-toggle="collapse" data-bs-target="#filtersCollapse" aria-expanded="false">
+                    <i class="fas fa-chevron-down"></i>
+                </button>
+            </h6>
+        </div>
+        <div class="collapse" id="filtersCollapse">
+            <div class="card-body">
+                <form method="get" class="row g-3">
+                    <!-- Search -->
+                    <div class="col-md-3">
+                        <label for="search" class="form-label">Search</label>
+                        <input type="text" class="form-control" id="search" name="search" 
+                               value="{{ current_filters.search }}" 
+                               placeholder="Case title, PG name, diagnosis...">
+                    </div>
+                    
+                    <!-- Status Filter -->
+                    <div class="col-md-2">
+                        <label for="status" class="form-label">Status</label>
+                        <select class="form-select" id="status" name="status">
+                            <option value="">All Statuses</option>
+                            <option value="draft" {% if current_filters.status == 'draft' %}selected{% endif %}>Draft</option>
+                            <option value="pending" {% if current_filters.status == 'pending' %}selected{% endif %}>Pending Review</option>
+                            <option value="approved" {% if current_filters.status == 'approved' %}selected{% endif %}>Approved</option>
+                            <option value="rejected" {% if current_filters.status == 'rejected' %}selected{% endif %}>Rejected</option>
+                            <option value="returned" {% if current_filters.status == 'returned' %}selected{% endif %}>Returned</option>
+                        </select>
+                    </div>
+                    
+                    <!-- PG Filter -->
+                    <div class="col-md-2">
+                        <label for="pg" class="form-label">Postgraduate</label>
+                        <select class="form-select" id="pg" name="pg">
+                            <option value="">All PGs</option>
+                            {% for pg in assigned_pgs %}
+                                <option value="{{ pg.id }}" {% if current_filters.pg == pg.id|stringformat:"s" %}selected{% endif %}>
+                                    {{ pg.get_full_name|default:pg.username }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <!-- Review Status -->
+                    <div class="col-md-2">
+                        <label for="review_status" class="form-label">Review Status</label>
+                        <select class="form-select" id="review_status" name="review_status">
+                            <option value="">All</option>
+                            <option value="pending" {% if current_filters.review_status == 'pending' %}selected{% endif %}>Pending Review</option>
+                            <option value="reviewed" {% if current_filters.review_status == 'reviewed' %}selected{% endif %}>Reviewed</option>
+                            <option value="needs_action" {% if current_filters.review_status == 'needs_action' %}selected{% endif %}>Needs Action</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Date Range -->
+                    <div class="col-md-1">
+                        <label for="start_date" class="form-label">From</label>
+                        <input type="date" class="form-control" id="start_date" name="start_date" 
+                               value="{{ current_filters.start_date }}">
+                    </div>
+                    <div class="col-md-1">
+                        <label for="end_date" class="form-label">To</label>
+                        <input type="date" class="form-control" id="end_date" name="end_date" 
+                               value="{{ current_filters.end_date }}">
+                    </div>
+                    
+                    <!-- Sort -->
+                    <div class="col-md-1">
+                        <label for="sort" class="form-label">Sort</label>
+                        <select class="form-select" id="sort" name="sort">
+                            <option value="-submitted_to_supervisor_at" {% if current_filters.sort == '-submitted_to_supervisor_at' %}selected{% endif %}>Latest Submitted</option>
+                            <option value="submitted_to_supervisor_at" {% if current_filters.sort == 'submitted_to_supervisor_at' %}selected{% endif %}>Oldest Submitted</option>
+                            <option value="-date" {% if current_filters.sort == '-date' %}selected{% endif %}>Latest Case Date</option>
+                            <option value="date" {% if current_filters.sort == 'date' %}selected{% endif %}>Oldest Case Date</option>
+                            <option value="pg__last_name" {% if current_filters.sort == 'pg__last_name' %}selected{% endif %}>PG Name</option>
+                            <option value="status" {% if current_filters.sort == 'status' %}selected{% endif %}>Status</option>
+                        </select>
+                    </div>
+                    
+                    <div class="col-12">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-search me-2"></i>Apply Filters
+                        </button>
+                        <a href="{% url 'logbook:supervisor_all_entries' %}" class="btn btn-outline-secondary ms-2">
+                            <i class="fas fa-times me-2"></i>Clear Filters
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Entries Table -->
+    {% if entries %}
+        <div class="card">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Postgraduate</th>
+                                <th>Case Title</th>
+                                <th>Case Date</th>
+                                <th>Status</th>
+                                <th>Submitted On</th>
+                                <th>Last Action</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for entry in entries %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="me-2">
+                                                <i class="fas fa-user-graduate text-muted"></i>
+                                            </div>
+                                            <div>
+                                                <div class="fw-bold">{{ entry.pg.get_full_name|default:entry.pg.username }}</div>
+                                                <small class="text-muted">{{ entry.pg.specialty|default:"" }}</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'logbook:detail' pk=entry.pk %}" class="text-decoration-none">
+                                            {{ entry.case_title|truncatewords:8 }}
+                                        </a>
+                                        {% if entry.primary_diagnosis %}
+                                            <br><small class="text-muted">{{ entry.primary_diagnosis.name }}</small>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ entry.date|date:"d M Y" }}</td>
+                                    <td>
+                                        {% if entry.status == 'pending' %}
+                                            <span class="badge bg-warning text-dark">
+                                                <i class="fas fa-clock me-1"></i>Pending Review
+                                            </span>
+                                        {% elif entry.status == 'approved' %}
+                                            <span class="badge bg-success">
+                                                <i class="fas fa-check me-1"></i>Approved
+                                            </span>
+                                        {% elif entry.status == 'rejected' %}
+                                            <span class="badge bg-danger">
+                                                <i class="fas fa-times me-1"></i>Rejected
+                                            </span>
+                                        {% elif entry.status == 'returned' %}
+                                            <span class="badge bg-info">
+                                                <i class="fas fa-undo me-1"></i>Returned
+                                            </span>
+                                        {% elif entry.status == 'draft' %}
+                                            <span class="badge bg-secondary">
+                                                <i class="fas fa-edit me-1"></i>Draft
+                                            </span>
+                                        {% else %}
+                                            <span class="badge bg-light text-dark">{{ entry.get_status_display }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if entry.submitted_to_supervisor_at %}
+                                            {{ entry.submitted_to_supervisor_at|naturaltime }}
+                                            <br><small class="text-muted">{{ entry.submitted_to_supervisor_at|date:"d M Y, H:i" }}</small>
+                                        {% else %}
+                                            <span class="text-muted">Not submitted</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if entry.supervisor_action_at %}
+                                            {{ entry.supervisor_action_at|naturaltime }}
+                                            <br><small class="text-muted">{{ entry.supervisor_action_at|date:"d M Y, H:i" }}</small>
+                                        {% else %}
+                                            <span class="text-muted">No action yet</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <a href="{% url 'logbook:detail' pk=entry.pk %}" 
+                                               class="btn btn-sm btn-outline-primary" title="View Details">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            {% if entry.status == 'pending' %}
+                                                <a href="{% url 'logbook:supervisor_logbook_review_action' entry_pk=entry.pk %}" 
+                                                   class="btn btn-sm btn-warning" title="Review Entry">
+                                                    <i class="fas fa-clipboard-check"></i>
+                                                </a>
+                                            {% elif entry.status == 'returned' %}
+                                                <span class="btn btn-sm btn-outline-info" title="Waiting for PG updates">
+                                                    <i class="fas fa-hourglass-half"></i>
+                                                </span>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pagination -->
+        {% if is_paginated %}
+            <nav aria-label="Page navigation" class="mt-4">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page=1{% if request.GET.urlencode %}&{{ request.GET.urlencode }}{% endif %}">&laquo; First</a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.urlencode %}&{{ request.GET.urlencode }}{% endif %}">Previous</a>
+                        </li>
+                    {% endif %}
+
+                    <li class="page-item disabled">
+                        <span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+                    </li>
+
+                    {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.urlencode %}&{{ request.GET.urlencode }}{% endif %}">Next</a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.urlencode %}&{{ request.GET.urlencode }}{% endif %}">Last &raquo;</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        {% endif %}
+
+    {% else %}
+        <div class="alert alert-info text-center" role="alert">
+            <i class="fas fa-info-circle me-2"></i>
+            No logbook entries found matching your criteria.
+            {% if current_filters.status or current_filters.pg or current_filters.search %}
+                <br><a href="{% url 'logbook:supervisor_all_entries' %}" class="btn btn-outline-primary btn-sm mt-2">
+                    <i class="fas fa-times me-2"></i>Clear Filters
+                </a>
+            {% endif %}
+        </div>
+    {% endif %}
+</div>
+
+<!-- Django data for JavaScript -->
+<script id="django-data" type="application/json">
+{
+    "hasActiveFilters": {% if current_filters.status or current_filters.pg or current_filters.search or current_filters.review_status or current_filters.start_date or current_filters.end_date %}true{% else %}false{% endif %}
+}
+</script>
+
+<script>
+// Auto-expand filters if any are active
+document.addEventListener('DOMContentLoaded', function() {
+    const djangoData = JSON.parse(document.getElementById('django-data').textContent);
+    
+    if (djangoData.hasActiveFilters) {
+        const filtersCollapse = new bootstrap.Collapse(document.getElementById('filtersCollapse'), {
+            show: true
+        });
+    }
+});
+</script>
+{% endblock content %}

@@ -1,0 +1,397 @@
+{% extends 'base/base.html' %}
+
+{% block title %}{{ rotation.name }} - Rotation Details - SIMS{% endblock %}
+
+{% block breadcrumb %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'users:dashboard' %}">Dashboard</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'rotations:list' %}">Rotations</a></li>
+        <li class="breadcrumb-item active">{{ rotation.name|truncatechars:50 }}</li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block page_header %}
+<div class="d-flex justify-content-between align-items-start mb-4">
+    <div>
+        <h2><i class="fas fa-sync-alt me-2"></i>{{ rotation.name }}</h2>
+        <div class="d-flex align-items-center mt-2">
+            <span class="badge bg-{{ rotation.status_color }} me-2">
+                {{ rotation.get_status_display }}
+            </span>
+            <small class="text-muted">{{ rotation.department.name }} • {{ rotation.specialty.name }}</small>
+        </div>
+    </div>
+    <div>
+        {% if user == rotation.pg or user.role == 'supervisor' or user.role == 'admin' %}
+        <a href="{% url 'rotations:edit' rotation.pk %}" class="btn btn-outline-primary">
+            <i class="fas fa-edit me-2"></i>Edit
+        </a>
+        {% endif %}
+        {% if user.role == 'supervisor' or user.role == 'admin' %}
+        <a href="{% url 'rotations:evaluate' rotation.pk %}" class="btn btn-success ms-2">
+            <i class="fas fa-star me-2"></i>Evaluate
+        </a>
+        {% endif %}
+        <a href="{% url 'rotations:list' %}" class="btn btn-outline-secondary ms-2">
+            <i class="fas fa-list me-2"></i>Back to List
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8">
+        <!-- Rotation Overview -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Rotation Overview</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <dl class="row">
+                            <dt class="col-sm-5">Rotation Name:</dt>
+                            <dd class="col-sm-7">{{ rotation.name }}</dd>
+                            
+                            <dt class="col-sm-5">Department:</dt>
+                            <dd class="col-sm-7">{{ rotation.department.name }}</dd>
+                            
+                            <dt class="col-sm-5">Specialty:</dt>
+                            <dd class="col-sm-7">{{ rotation.specialty.name }}</dd>
+                            
+                            <dt class="col-sm-5">Location:</dt>
+                            <dd class="col-sm-7">{{ rotation.location|default:"Not specified" }}</dd>
+                        </dl>
+                    </div>
+                    <div class="col-md-6">
+                        <dl class="row">
+                            <dt class="col-sm-5">Start Date:</dt>
+                            <dd class="col-sm-7">{{ rotation.start_date|date:"F d, Y" }}</dd>
+                            
+                            <dt class="col-sm-5">End Date:</dt>
+                            <dd class="col-sm-7">{{ rotation.end_date|date:"F d, Y" }}</dd>
+                            
+                            <dt class="col-sm-5">Duration:</dt>
+                            <dd class="col-sm-7">{{ rotation.duration_weeks }} weeks</dd>
+                            
+                            <dt class="col-sm-5">Hours/Week:</dt>
+                            <dd class="col-sm-7">{{ rotation.hours_per_week|default:"Not specified" }}</dd>
+                        </dl>
+                    </div>
+                </div>
+                
+                {% if rotation.description %}
+                <div class="mt-3">
+                    <h6>Description:</h6>
+                    <p class="text-muted">{{ rotation.description }}</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Assignment Details -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-user-tie me-2"></i>Assignment Details</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="avatar bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px;">
+                                {{ rotation.pg.first_name.0 }}{{ rotation.pg.last_name.0 }}
+                            </div>
+                            <div>
+                                <h6 class="mb-0">{{ rotation.pg.get_full_name }}</h6>
+                                <small class="text-muted">Postgraduate • {{ rotation.pg.specialty|default:"Not specified" }}</small>
+                            </div>
+                        </div>
+                    </div>
+                    {% if rotation.supervisor %}
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="avatar bg-success text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px;">
+                                {{ rotation.supervisor.first_name.0 }}{{ rotation.supervisor.last_name.0 }}
+                            </div>
+                            <div>
+                                <h6 class="mb-0">{{ rotation.supervisor.get_full_name }}</h6>
+                                <small class="text-muted">Supervisor</small>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Learning Objectives -->
+        {% if rotation.learning_objectives %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-bullseye me-2"></i>Learning Objectives</h5>
+            </div>
+            <div class="card-body">
+                <p>{{ rotation.learning_objectives }}</p>
+                
+                {% if rotation.competencies_to_achieve %}
+                <h6 class="mt-4">Competencies to Achieve:</h6>
+                <p>{{ rotation.competencies_to_achieve }}</p>
+                {% endif %}
+                
+                {% if rotation.assessment_criteria %}
+                <h6 class="mt-4">Assessment Criteria:</h6>
+                <p>{{ rotation.assessment_criteria }}</p>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Progress Tracking -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-chart-line me-2"></i>Progress Tracking</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Overall Progress</span>
+                        <span class="fw-bold">{{ rotation.progress_percentage }}%</span>
+                    </div>
+                    <div class="progress" style="height: 20px;">
+                        <div class="progress-bar bg-{{ rotation.status_color }}" role="progressbar" 
+                             style="width: {{ rotation.progress_percentage }}%">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row text-center">
+                    <div class="col-4">
+                        <div class="border rounded p-3">
+                            <h6 class="text-primary">{{ rotation.days_completed|default:0 }}</h6>
+                            <small class="text-muted">Days Completed</small>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="border rounded p-3">
+                            <h6 class="text-warning">{{ rotation.days_remaining|default:0 }}</h6>
+                            <small class="text-muted">Days Remaining</small>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="border rounded p-3">
+                            <h6 class="text-success">{{ rotation.total_days|default:0 }}</h6>
+                            <small class="text-muted">Total Days</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Evaluations -->
+        {% if evaluations %}
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-star me-2"></i>Evaluations</h5>
+            </div>
+            <div class="card-body">
+                {% for evaluation in evaluations %}
+                <div class="d-flex mb-3 {% if not forloop.last %}border-bottom pb-3{% endif %}">
+                    <div class="flex-shrink-0">
+                        <div class="avatar bg-success text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                            {{ evaluation.evaluator.first_name.0 }}{{ evaluation.evaluator.last_name.0 }}
+                        </div>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h6 class="mb-1">{{ evaluation.evaluator.get_full_name }}</h6>
+                                <small class="text-muted">{{ evaluation.evaluation_date|date:"M d, Y" }}</small>
+                            </div>
+                            <div class="text-end">
+                                <span class="badge bg-primary">{{ evaluation.overall_score }}/5</span>
+                            </div>
+                        </div>
+                        {% if evaluation.comments %}
+                        <p class="mb-0 mt-2">{{ evaluation.comments }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="col-lg-4">
+        <!-- Status Card -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="fas fa-flag me-2"></i>Rotation Status</h6>
+            </div>
+            <div class="card-body">
+                <div class="text-center">
+                    <div class="mb-3">
+                        <span class="badge bg-{{ rotation.status_color }} fs-6">
+                            {{ rotation.get_status_display }}
+                        </span>
+                    </div>
+                    
+                    {% if rotation.status == 'upcoming' %}
+                    <div class="text-info mb-2">
+                        <i class="fas fa-clock fa-2x"></i>
+                    </div>
+                    <h6 class="text-info">Starting Soon</h6>
+                    <p class="text-muted small">Rotation starts in {{ rotation.days_until_start }} days</p>
+                    
+                    {% elif rotation.status == 'active' %}
+                    <div class="text-success mb-2">
+                        <i class="fas fa-play fa-2x"></i>
+                    </div>
+                    <h6 class="text-success">In Progress</h6>
+                    <p class="text-muted small">{{ rotation.days_remaining }} days remaining</p>
+                    
+                    {% elif rotation.status == 'completed' %}
+                    <div class="text-primary mb-2">
+                        <i class="fas fa-check-circle fa-2x"></i>
+                    </div>
+                    <h6 class="text-primary">Completed</h6>
+                    <p class="text-muted small">Finished {{ rotation.completion_date|timesince }} ago</p>
+                    
+                    {% elif rotation.status == 'cancelled' %}
+                    <div class="text-danger mb-2">
+                        <i class="fas fa-times-circle fa-2x"></i>
+                    </div>
+                    <h6 class="text-danger">Cancelled</h6>
+                    <p class="text-muted small">Rotation was cancelled</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="fas fa-bolt me-2"></i>Quick Actions</h6>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    {% if user == rotation.pg or user.role == 'supervisor' or user.role == 'admin' %}
+                    <a href="{% url 'rotations:edit' rotation.pk %}" class="btn btn-outline-primary">
+                        <i class="fas fa-edit me-2"></i>Edit Rotation
+                    </a>
+                    {% endif %}
+                    
+                    {% if user.role == 'supervisor' or user.role == 'admin' %}
+                    <a href="{% url 'rotations:evaluate' rotation.pk %}" class="btn btn-outline-success">
+                        <i class="fas fa-star me-2"></i>Add Evaluation
+                    </a>
+                    {% endif %}
+                    
+                    <a href="{% url 'rotations:list' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-list me-2"></i>All Rotations
+                    </a>
+                    
+                    <button onclick="exportRotation()" class="btn btn-outline-info">
+                        <i class="fas fa-download me-2"></i>Export Details
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Contact Information -->
+        {% if rotation.contact_information %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="fas fa-phone me-2"></i>Contact Information</h6>
+            </div>
+            <div class="card-body">
+                <p class="mb-0">{{ rotation.contact_information }}</p>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Additional Notes -->
+        {% if rotation.special_requirements or rotation.additional_notes %}
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="fas fa-sticky-note me-2"></i>Additional Information</h6>
+            </div>
+            <div class="card-body">
+                {% if rotation.special_requirements %}
+                <h6>Special Requirements:</h6>
+                <p>{{ rotation.special_requirements }}</p>
+                {% endif %}
+                
+                {% if rotation.additional_notes %}
+                <h6>Additional Notes:</h6>
+                <p class="mb-0">{{ rotation.additional_notes }}</p>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.avatar {
+    font-weight: bold;
+    font-size: 1.2rem;
+}
+
+.progress {
+    border-radius: 10px;
+}
+
+.progress-bar {
+    border-radius: 10px;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function exportRotation() {
+    // Generate rotation summary for export
+    const rotationData = {
+        name: '{{ rotation.name|escapejs }}',
+        department: '{{ rotation.department.name|escapejs }}',
+        pg: '{{ rotation.pg.get_full_name|escapejs }}',
+        supervisor: '{{ rotation.supervisor.get_full_name|default:""|escapejs }}',
+        startDate: '{{ rotation.start_date|date:"Y-m-d" }}',
+        endDate: '{{ rotation.end_date|date:"Y-m-d" }}',
+        status: '{{ rotation.get_status_display|escapejs }}',
+        progress: '{{ rotation.progress_percentage }}'
+    };
+    
+    // Create downloadable content
+    const content = `Rotation Summary
+================
+Name: ${rotationData.name}
+Department: ${rotationData.department}
+Postgraduate: ${rotationData.pg}
+Supervisor: ${rotationData.supervisor}
+Duration: ${rotationData.startDate} to ${rotationData.endDate}
+Status: ${rotationData.status}
+Progress: ${rotationData.progress}%
+
+Generated on: ${new Date().toLocaleDateString()}
+`;
+    
+    // Download as text file
+    const blob = new Blob([content], { type: 'text/plain' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `rotation_${rotationData.name.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+}
+</script>
+{% endblock %}

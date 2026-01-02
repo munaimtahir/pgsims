@@ -1,0 +1,2984 @@
+{% extends "admin/base.html" %}
+{% load i18n static %}
+
+{% block extrahead %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+{% endblock %}
+
+{% block title %}{% trans 'SIMS Administration Dashboard' %}{% endblock %}
+
+{% block branding %}
+<h1 id="site-name">
+    <a href="{% url 'admin:index' %}" class="text-white text-decoration-none">
+        <i class="fas fa-hospital-user me-2"></i>
+        SIMS Administration
+    </a>
+</h1>
+{% endblock %}
+
+{% block content %}
+<!-- Enhanced Dashboard Header with Medical Theme -->
+<div class="dashboard-header mb-5">
+    <div class="container-fluid">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <h1 class="display-5 fw-bold text-primary mb-2">
+                    <i class="fas fa-user-md me-3 text-info"></i>
+                    SIMS Administration Dashboard
+                </h1>
+                <p class="lead text-muted mb-0">
+                    Professional Medical Training Management System
+                </p>
+                <small class="text-white">Faisalabad Medical University</small>
+            </div>
+            <div class="col-lg-4 text-end">
+                <div class="admin-welcome-card-custom">
+                    <div class="welcome-content-wrapper">
+                        <div class="user-avatar-custom">
+                            <i class="fas fa-user-shield fa-2x"></i>
+                        </div>
+                        <div class="welcome-text-wrapper">
+                            <h6 class="welcome-title">Welcome back!</h6>
+                            <div class="user-name-display">
+                                {% if user.get_full_name %}
+                                    {% if user.first_name and user.last_name %}
+                                        {{ user.first_name }} {{ user.last_name }}
+                                    {% else %}
+                                        {{ user.get_full_name }}
+                                    {% endif %}
+                                {% elif user.username %}
+                                    {{ user.username|title }}
+                                {% else %}
+                                    Administrator
+                                {% endif %}
+                            </div>
+                            <div class="role-badge-wrapper">
+                                <span class="role-badge {% if user.is_superuser %}role-super{% else %}role-admin{% endif %}">
+                                    {% if user.is_superuser %}
+                                        <i class="fas fa-crown"></i> Super Administrator
+                                    {% elif user.is_staff %}
+                                        <i class="fas fa-user-cog"></i> Administrator
+                                    {% else %}
+                                        <i class="fas fa-user"></i> User
+                                    {% endif %}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+    <!-- Key Metrics Cards with Medical Theme -->
+    <div class="row mb-5">
+        <div class="col-lg-3 col-md-6 mb-4">
+            <div class="stats-card stats-card-primary">
+                <div class="stats-card-body">
+                    <div class="stats-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="stats-content">
+                        <h3 class="stats-number" id="total-users">{{ total_users|default:"0" }}</h3>
+                        <p class="stats-label">Total Users</p>
+                        <div class="stats-trend">
+                            <i class="fas fa-arrow-up text-success me-1"></i>
+                            <span class="text-success small">Active</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6 mb-4">
+            <div class="stats-card stats-card-success">
+                <div class="stats-card-body">
+                    <div class="stats-icon">
+                        <i class="fas fa-user-graduate"></i>
+                    </div>
+                    <div class="stats-content">
+                        <h3 class="stats-number" id="total-pgs">{{ total_pgs|default:"0" }}</h3>
+                        <p class="stats-label">Postgraduates</p>
+                        <div class="stats-trend">
+                            <i class="fas fa-graduation-cap text-info me-1"></i>
+                            <span class="text-info small">Training</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6 mb-4">
+            <div class="stats-card stats-card-info">
+                <div class="stats-card-body">
+                    <div class="stats-icon">
+                        <i class="fas fa-user-tie"></i>
+                    </div>
+                    <div class="stats-content">
+                        <h3 class="stats-number" id="total-supervisors">{{ total_supervisors|default:"0" }}</h3>
+                        <p class="stats-label">Supervisors</p>
+                        <div class="stats-trend">
+                            <i class="fas fa-stethoscope text-primary me-1"></i>
+                            <span class="text-primary small">Teaching</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6 mb-4">
+            <div class="stats-card stats-card-warning">
+                <div class="stats-card-body">
+                    <div class="stats-icon">
+                        <i class="fas fa-user-plus"></i>
+                    </div>
+                    <div class="stats-content">
+                        <h3 class="stats-number" id="new-users">{{ new_users_this_month|default:"0" }}</h3>
+                        <p class="stats-label">New This Month</p>
+                        <div class="stats-trend">
+                            <i class="fas fa-calendar text-warning me-1"></i>
+                            <span class="text-warning small">Recent</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Enhanced Analytics and Quick Actions Row -->
+<div class="row mb-5">
+    <!-- Enhanced Specialty Distribution Analytics -->
+    <div class="col-lg-8 mb-4">
+        <div class="modern-card" style="max-height: 700px; overflow-y: auto;">
+            <div class="card-header-modern">
+                <h5 class="card-title-modern">
+                    <i class="fas fa-chart-pie me-2"></i>
+                    Specialty Distribution Analytics
+                </h5>
+                <div class="d-flex align-items-center gap-2">
+                    <span class="badge bg-success" id="total-specialties">-</span>
+                    <span class="badge bg-info">Live Data</span>
+                </div>
+            </div>
+            <div class="card-body-modern">
+                <!-- Enhanced Analytics Filters -->
+                <div class="analytics-filters-enhanced mb-4">
+                    <div class="analytics-filters-header mb-3">
+                        <h6 class="analytics-filters-title">
+                            <i class="fas fa-filter me-2"></i>
+                            Analytics Filters
+                        </h6>
+                        <span class="analytics-filters-subtitle">Customize your data view</span>
+                    </div>
+                    
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <div class="filter-group">
+                                <div class="filter-label-wrapper">
+                                    <i class="fas fa-users filter-icon"></i>
+                                    <label class="filter-label">View By Role</label>
+                                </div>
+                                <div class="custom-select-wrapper">
+                                    <select class="custom-select" id="roleFilter">
+                                        <option value="all">All Users</option>
+                                        <option value="pg" selected>Postgraduates Only</option>
+                                        <option value="supervisor">Supervisors Only</option>
+                                    </select>
+                                    <i class="fas fa-chevron-down select-arrow"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="filter-group">
+                                <div class="filter-label-wrapper">
+                                    <i class="fas fa-chart-pie filter-icon"></i>
+                                    <label class="filter-label">Chart Type</label>
+                                </div>
+                                <div class="custom-select-wrapper">
+                                    <select class="custom-select" id="chartTypeFilter">
+                                        <option value="doughnut" selected>Doughnut Chart</option>
+                                        <option value="pie">Pie Chart</option>
+                                        <option value="bar">Bar Chart</option>
+                                    </select>
+                                    <i class="fas fa-chevron-down select-arrow"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="filter-group">
+                                <div class="filter-label-wrapper">
+                                    <i class="fas fa-calendar-alt filter-icon"></i>
+                                    <label class="filter-label">Data Period</label>
+                                </div>
+                                <div class="custom-select-wrapper">
+                                    <select class="custom-select" id="periodFilter">
+                                        <option value="all" selected>All Time</option>
+                                        <option value="year">This Year</option>
+                                        <option value="month">This Month</option>
+                                    </select>
+                                    <i class="fas fa-chevron-down select-arrow"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chart Container -->
+                <div class="chart-container position-relative">
+                    <canvas id="specialtyChart" width="800" height="400"></canvas>
+                    <div id="chart-loading" class="text-center py-5">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="mt-3 text-muted">Loading specialty analytics...</p>
+                    </div>
+                    
+                    <!-- Chart Summary -->
+                    <div id="chart-summary" class="mt-3" style="display: none;">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                                    <span class="text-muted">Total Specialties:</span>
+                                    <span class="fw-bold" id="summary-total-specialties">-</span>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                                    <span class="text-muted">Total Users:</span>
+                                    <span class="fw-bold" id="summary-total-users">-</span>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center py-2">
+                                    <span class="text-muted">Most Popular:</span>
+                                    <span class="fw-bold text-primary" id="summary-most-popular">-</span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                                    <span class="text-muted">Average per Specialty:</span>
+                                    <span class="fw-bold" id="summary-average">-</span>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                                    <span class="text-muted">Unspecified Users:</span>
+                                    <span class="fw-bold text-warning" id="summary-unspecified">-</span>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center py-2">
+                                    <span class="text-muted">Last Updated:</span>
+                                    <span class="fw-bold text-success" id="summary-last-updated">Just now</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Detailed Breakdown Table -->
+                <div class="specialty-breakdown mt-4" id="specialty-breakdown" style="display: none;">
+                    <h6 class="fw-bold text-primary mb-3">
+                        <i class="fas fa-table me-2"></i>Detailed Breakdown
+                    </h6>
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th width="5%">#</th>
+                                    <th width="40%">Specialty</th>
+                                    <th width="15%">Count</th>
+                                    <th width="15%">Percentage</th>
+                                    <th width="25%">Progress</th>
+                                </tr>
+                            </thead>
+                            <tbody id="specialty-breakdown-table">
+                                <!-- Dynamic content -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Enhanced Quick Actions -->
+    <div class="col-lg-4 mb-4">
+        <div class="modern-card">
+            <div class="card-header-modern">
+                <h5 class="card-title-modern">
+                    <i class="fas fa-bolt me-2"></i>
+                    Quick Actions
+                </h5>
+            </div>
+            <div class="card-body-modern">
+                <div class="quick-actions-grid">
+                    <a href="{% url 'admin:users_user_add' %}" class="quick-action-btn quick-action-primary">
+                        <i class="fas fa-user-plus"></i>
+                        <span>Add New User</span>
+                    </a>
+                    <a href="{% url 'admin:users_user_changelist' %}" class="quick-action-btn quick-action-success">
+                        <i class="fas fa-users"></i>
+                        <span>Manage Users</span>
+                    </a>
+                    
+                    <!-- Optional apps with error handling -->
+                    {% url 'admin:cases_clinicalcase_changelist' as cases_url %}
+                    {% if cases_url %}
+                    <a href="{{ cases_url }}" class="quick-action-btn quick-action-info">
+                        <i class="fas fa-stethoscope"></i>
+                        <span>Clinical Cases</span>
+                    </a>
+                    {% endif %}
+                    
+                    {% url 'admin:logbook_logbookentry_changelist' as logbook_url %}
+                    {% if logbook_url %}
+                    <a href="{{ logbook_url }}" class="quick-action-btn quick-action-warning">
+                        <i class="fas fa-book-medical"></i>
+                        <span>Logbook Entries</span>
+                    </a>
+                    {% endif %}
+                    
+                    {% url 'admin:rotations_rotation_changelist' as rotations_url %}
+                    {% if rotations_url %}
+                    <a href="{{ rotations_url }}" class="quick-action-btn quick-action-secondary">
+                        <i class="fas fa-calendar-alt"></i>
+                        <span>Rotations</span>
+                    </a>
+                    {% endif %}
+                </div>
+                
+                <!-- Advanced Features -->
+                <div class="advanced-features mt-4">
+                    <h6 class="text-white mb-3">
+                        <i class="fas fa-cogs me-2"></i>Advanced Features
+                    </h6>
+                    <div class="advanced-actions">
+                        {% url 'users:pg_bulk_upload' as bulk_upload_url %}
+                        {% if bulk_upload_url %}
+                        <a href="{{ bulk_upload_url }}" class="advanced-action-link">
+                            <i class="fas fa-upload text-success me-2"></i>Bulk Upload PGs
+                        </a>
+                        {% endif %}
+                        
+                        {% url 'users:user_reports' as reports_url %}
+                        {% if reports_url %}
+                        <a href="{{ reports_url }}" class="advanced-action-link">
+                            <i class="fas fa-chart-bar text-info me-2"></i>View Reports
+                        </a>
+                        {% endif %}
+                        
+                        {% url 'users:activity_log' as activity_url %}
+                        {% if activity_url %}
+                        <a href="{{ activity_url }}" class="advanced-action-link">
+                            <i class="fas fa-history text-warning me-2"></i>Activity Log
+                        </a>
+                        {% endif %}
+                        
+                        {% url 'users:admin_analytics' as analytics_url %}
+                        {% if analytics_url %}
+                        <a href="{{ analytics_url }}" class="advanced-action-link">
+                            <i class="fas fa-chart-line text-primary me-2"></i>Admin Analytics
+                        </a>
+                        {% endif %}
+                        
+                        {% url 'home' as home_url %}
+                        {% if home_url %}
+                        <a href="{{ home_url }}" target="_blank" class="advanced-action-link">
+                            <i class="fas fa-external-link-alt text-secondary me-2"></i>View Site
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Activity and System Status -->
+<div class="row mb-5">
+    <!-- Recent Users -->
+    <div class="col-lg-6 mb-4">
+        <div class="modern-card">
+            <div class="card-header-modern">
+                <h5 class="card-title-modern">
+                    <i class="fas fa-clock me-2"></i>
+                    Recent Users
+                </h5>
+                <span class="badge bg-success">Live</span>
+            </div>
+            <div class="card-body-modern">
+                <div id="recent-users-list" class="recent-users-container">
+                    <div class="text-center py-4">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="mt-2 text-muted">Loading recent users...</p>
+                    </div>
+                </div>
+                <div class="text-center mt-3">
+                    <a href="{% url 'admin:users_user_changelist' %}" class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-list me-1"></i>View All Users
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- System Status -->
+    <div class="col-lg-6 mb-4">
+        <div class="modern-card">
+            <div class="card-header-modern">
+                <h5 class="card-title-modern">
+                    <i class="fas fa-heartbeat me-2"></i>
+                    System Status
+                </h5>
+                <span class="badge bg-success">Healthy</span>
+            </div>
+            <div class="card-body-modern">
+                <div class="system-status-grid">
+                    <div class="status-item">
+                        <div class="status-indicator bg-success"></div>
+                        <div class="status-content">
+                            <span class="status-label">
+                                <i class="fas fa-database me-2 text-primary"></i>
+                                Database Connection
+                            </span>
+                            <span class="status-value">Active</span>
+                        </div>
+                    </div>
+                    <div class="status-item">
+                        <div class="status-indicator bg-success"></div>
+                        <div class="status-content">
+                            <span class="status-label">
+                                <i class="fas fa-folder-open me-2 text-primary"></i>
+                                File Storage
+                            </span>
+                            <span class="status-value">Available</span>
+                        </div>
+                    </div>
+                    <div class="status-item">
+                        <div class="status-indicator bg-success"></div>
+                        <div class="status-content">
+                            <span class="status-label">
+                                <i class="fas fa-envelope me-2 text-primary"></i>
+                                Email Service
+                            </span>
+                            <span class="status-value">Operational</span>
+                        </div>
+                    </div>
+                    <div class="status-item">
+                        <div class="status-indicator bg-info"></div>
+                        <div class="status-content">
+                            <span class="status-label">
+                                <i class="fas fa-user-shield me-2 text-primary"></i>
+                                Admin Session
+                            </span>
+                            <span class="status-value">Active</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="text-center mt-3 pt-3 border-top">
+                    <small class="text-muted">
+                        <i class="fas fa-sync-alt me-1"></i>
+                        Last updated: <span id="last-updated">Just now</span>
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if app_list %}
+    <!-- Django Admin Models Section -->
+    <div class="admin-modules-section mb-5">
+        <div class="section-header mb-4">
+            <h3 class="section-title">
+                <i class="fas fa-database me-2 text-primary"></i>
+                System Modules
+            </h3>
+            <p class="section-description text-muted">
+                Manage your application data and configurations
+            </p>
+        </div>
+        
+        <div class="row">
+            {% for app in app_list %}
+            <div class="col-lg-6 mb-4">
+                <div class="module-card">
+                    <div class="module-header">
+                        <div class="module-icon">
+                            {% if app.app_label == 'users' %}
+                                <i class="fas fa-users"></i>
+                            {% elif app.app_label == 'logbook' %}
+                                <i class="fas fa-book-medical"></i>
+                            {% elif app.app_label == 'cases' %}
+                                <i class="fas fa-stethoscope"></i>
+                            {% elif app.app_label == 'certificates' %}
+                                <i class="fas fa-certificate"></i>
+                            {% elif app.app_label == 'rotations' %}
+                                <i class="fas fa-sync-alt"></i>
+                            {% elif app.app_label == 'auth' %}
+                                <i class="fas fa-shield-alt"></i>
+                            {% else %}
+                                <i class="fas fa-cog"></i>
+                            {% endif %}
+                        </div>
+                        <div class="module-title">
+                            <h4>{{ app.name }}</h4>
+                        </div>
+                    </div>
+                    <div class="module-body">
+                        {% for model in app.models %}
+                            <div class="model-item-modern">
+                                <div class="model-info">
+                                    <div class="model-icon">
+                                        {% if model.object_name == 'User' %}
+                                            <i class="fas fa-user"></i>
+                                        {% elif model.object_name == 'Profile' %}
+                                            <i class="fas fa-id-card"></i>
+                                        {% elif model.object_name == 'Logbook Entry' %}
+                                            <i class="fas fa-file-medical"></i>
+                                        {% elif model.object_name == 'Clinical Case' %}
+                                            <i class="fas fa-diagnoses"></i>
+                                        {% elif model.object_name == 'Certificate' %}
+                                            <i class="fas fa-award"></i>
+                                        {% elif model.object_name == 'Rotation' %}
+                                            <i class="fas fa-calendar-alt"></i>
+                                        {% else %}
+                                            <i class="fas fa-database"></i>
+                                        {% endif %}
+                                    </div>
+                                    <div class="model-details">
+                                        <h6 class="model-name">{{ model.name }}</h6>
+                                        <span class="model-description">Manage {{ model.name|lower }} records</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="model-actions-modern">
+                                    {% if model.admin_url %}
+                                        {% if model.add_url %}
+                                            <a href="{{ model.add_url }}" class="action-btn action-add" title="Add {{ model.name }}">
+                                                <i class="fas fa-plus"></i>
+                                            </a>
+                                        {% endif %}
+                                        {% if model.admin_url %}
+                                            <a href="{{ model.admin_url }}" class="action-btn action-view" title="{% if model.view_only %}View{% else %}Manage{% endif %} {{ model.name }}">
+                                                <i class="fas fa-list"></i>
+                                            </a>
+                                        {% endif %}
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+{% else %}
+    <div class="alert alert-info border-0 shadow-sm">
+        <div class="d-flex align-items-center">
+            <i class="fas fa-info-circle fa-2x text-info me-3"></i>
+            <div>
+                <h5 class="alert-heading mb-1">No Permissions</h5>
+                <p class="mb-0">{% trans "You don't have permission to view or edit anything." %}</p>
+            </div>
+        </div>
+    </div>
+{% endif %}
+
+<!-- System Information -->
+<div class="system-info-section">
+    <div class="system-info-card">
+        <div class="system-info-header">
+            <h5 class="system-info-title">
+                <i class="fas fa-info-circle me-2"></i>
+                System Information
+            </h5>
+        </div>
+        <div class="system-info-body">
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="info-group">
+                        <h6 class="info-group-title">System Details</h6>
+                        <div class="info-items">
+                            <div class="info-item">
+                                <span class="info-label">System:</span>
+                                <span class="info-value">SIMS v2.1.0</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Institution:</span>
+                                <span class="info-value">Faisalabad Medical University</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Environment:</span>
+                                {% if debug %}
+                                    <span class="badge bg-warning">Development</span>
+                                {% else %}
+                                    <span class="badge bg-success">Production</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="info-group">
+                        <h6 class="info-group-title">Session Information</h6>
+                        <div class="info-items">
+                            <div class="info-item">
+                                <span class="info-label">User:</span>
+                                <span class="info-value">{{ user.get_full_name|default:user.username }}</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Role:</span>
+                                {% if user.is_superuser %}
+                                    <span class="badge bg-danger">Super Admin</span>
+                                {% elif user.is_staff %}
+                                    <span class="badge bg-primary">Staff</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">User</span>
+                                {% endif %}
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Login Time:</span>
+                                <span class="info-value">{{ user.last_login|date:"M d, Y g:i A"|default:"N/A" }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="info-group">
+                        <h6 class="info-group-title">Quick Links</h6>
+                        <div class="quick-links">
+                            <a href="{% url 'home' %}" target="_blank" class="quick-link">
+                                <i class="fas fa-home me-2"></i>Homepage
+                            </a>
+                            <a href="{% url 'admin:users_user_changelist' %}" class="quick-link">
+                                <i class="fas fa-users me-2"></i>All Users
+                            </a>
+                            <a href="{% url 'admin:logout' %}" class="quick-link">
+                                <i class="fas fa-sign-out-alt me-2"></i>Logout
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Targeted bullet and list-style removal for admin dashboard */
+.system-status-grid, .system-status-grid *, 
+.status-item, .status-item *, 
+.status-label, .status-label *,
+.status-content, .status-content * {
+    list-style: none !important;
+    list-style-type: none !important;
+}
+
+/* Enhanced Medical Admin Dashboard - Blue/Teal Theme */
+:root {
+    /* Primary Medical Blue/Teal Palette */
+    --medical-blue-primary: #0d6efd;
+    --medical-blue-secondary: #3b82f6;
+    --medical-teal-primary: #14b8a6;
+    --medical-teal-secondary: #06b6d4;
+    --medical-navy: #1e3a8a;
+    --medical-sky: #0ea5e9;
+    
+    /* Supporting Colors */
+    --success-color: #10b981;
+    --warning-color: #f59e0b;
+    --danger-color: #ef4444;
+    --info-color: #3b82f6;
+    
+    /* Neutral Colors */
+    --white: #ffffff;
+    --light-bg: #f8fafc;
+    --lighter-bg: #f1f5f9;
+    --border-color: #e2e8f0;
+    --text-primary: #1e293b;
+    --text-secondary: #475569;
+    --text-muted: #64748b;
+    --text-dark: #0f172a;
+    
+    /* Shadows */
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    
+    /* Medical Theme Gradients */
+    --gradient-primary: linear-gradient(135deg, var(--medical-blue-primary) 0%, var(--medical-teal-primary) 100%);
+    --gradient-secondary: linear-gradient(135deg, var(--medical-blue-secondary) 0%, var(--medical-sky) 100%);
+    --gradient-success: linear-gradient(135deg, var(--success-color) 0%, var(--medical-teal-primary) 100%);
+    --gradient-info: linear-gradient(135deg, var(--medical-sky) 0%, var(--medical-teal-secondary) 100%);
+    --gradient-warning: linear-gradient(135deg, var(--warning-color) 0%, #fbbf24 100%);
+}
+
+/* Remove unwanted list bullets and markers */
+ul, ol, li {
+    list-style: none !important;
+    list-style-type: none !important;
+    padding: 0;
+    margin: 0;
+}
+
+.user-item, .model-item-modern,
+.specialty-breakdown td, .analytics-filters-enhanced li {
+    list-style: none !important;
+}
+
+.user-item::before, .model-item-modern::before,
+.specialty-breakdown td::before, .analytics-filters-enhanced li::before {
+    content: none !important;
+    display: none !important;
+}
+
+/* Additional bullet removal for system status */
+.system-status-grid, .system-status-grid * {
+    list-style: none !important;
+    list-style-type: none !important;
+}
+
+/* Additional bullet removal for system status */
+.system-status-grid, .system-status-grid * {
+    list-style: none !important;
+    list-style-type: none !important;
+}
+
+body {
+    background: linear-gradient(135deg, var(--light-bg) 0%, var(--lighter-bg) 100%);
+    font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+    color: var(--text-primary);
+    min-height: 100vh;
+}
+
+/* Enhanced Dashboard Header */
+.dashboard-header {
+    background: var(--gradient-primary);
+    border-radius: 16px;
+    padding: 2.5rem;
+    box-shadow: var(--shadow-lg);
+    margin-bottom: 2rem;
+    color: white;
+    position: relative;
+    overflow: hidden;
+}
+
+.dashboard-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%);
+    pointer-events: none;
+}
+
+.dashboard-header h1 {
+    color: white !important;
+}
+
+.dashboard-header .lead {
+    color: rgba(255,255,255,0.9) !important;
+}
+
+.admin-welcome-card {
+    background: rgba(255,255,255,0.15);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 12px;
+    padding: 1.5rem;
+}
+
+.user-avatar {
+    width: 60px;
+    height: 60px;
+    background: var(--gradient-secondary);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    box-shadow: var(--shadow);
+}
+
+/* Enhanced Stats Cards */
+.stats-card {
+    background: var(--white);
+    border: none;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border-left: 4px solid transparent;
+}
+
+.stats-card:hover {
+    transform: translateY(-8px);
+    box-shadow: var(--shadow-xl);
+}
+
+.stats-card-primary {
+    border-left-color: var(--medical-blue-primary);
+}
+
+.stats-card-success {
+    border-left-color: var(--success-color);
+}
+
+.stats-card-info {
+    border-left-color: var(--medical-teal-primary);
+}
+
+.stats-card-warning {
+    border-left-color: var(--warning-color);
+}
+
+.stats-card-body {
+    padding: 2rem;
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.stats-icon {
+    width: 80px;
+    height: 80px;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    color: white;
+}
+
+.stats-card-primary .stats-icon { 
+    background: var(--gradient-primary);
+    box-shadow: 0 4px 12px rgba(13, 110, 253, 0.3);
+}
+
+.stats-card-success .stats-icon { 
+    background: var(--gradient-success);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.stats-card-info .stats-icon { 
+    background: var(--gradient-info);
+    box-shadow: 0 4px 12px rgba(20, 184, 166, 0.3);
+}
+
+.stats-card-warning .stats-icon { 
+    background: var(--gradient-warning);
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+}
+
+.stats-number {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin: 0;
+    color: var(--text-primary);
+    background: var(--gradient-primary);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.stats-label {
+    font-size: 1rem;
+    color: var(--text-secondary);
+    margin: 0.5rem 0;
+    font-weight: 500;
+}
+
+.stats-trend {
+    display: flex;
+    align-items: center;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+/* Enhanced Modern Cards */
+.modern-card {
+    background: var(--white) !important;
+    border: none !important;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.modern-card .card-header,
+.modern-card .card-header-modern {
+    background: var(--gradient-primary) !important;
+    border: none !important;
+    border-bottom: none !important;
+    color: white !important;
+}
+
+.modern-card:hover {
+    box-shadow: var(--shadow-xl);
+    transform: translateY(-4px);
+}
+
+.card-header-modern {
+    background: var(--gradient-primary) !important;
+    color: white !important;
+    padding: 1.5rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+    border: none !important;
+    border-bottom: none !important;
+}
+
+.card-header-modern::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%);
+    pointer-events: none;
+}
+
+.card-title-modern {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 600;
+    flex: 1;
+    color: white !important;
+    position: relative;
+    z-index: 1;
+}
+
+.card-body-modern {
+    padding: 2rem;
+}
+
+/* Enhanced Quick Actions */
+.quick-actions-grid {
+    display: grid;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.quick-action-btn {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem 1.5rem;
+    border: 2px solid var(--border-color);
+    border-radius: 12px;
+    text-decoration: none;
+    color: var(--text-primary);
+    background: var(--white);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.quick-action-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    transition: left 0.5s;
+}
+
+.quick-action-btn:hover::before {
+    left: 100%;
+}
+
+.quick-action-btn:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+    text-decoration: none;
+    color: var(--text-primary);
+}
+
+.quick-action-primary:hover { 
+    border-color: var(--medical-blue-primary); 
+    background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+    box-shadow: 0 8px 25px rgba(13, 110, 253, 0.15);
+}
+
+.quick-action-success:hover { 
+    border-color: var(--success-color); 
+    background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+    box-shadow: 0 8px 25px rgba(16, 185, 129, 0.15);
+}
+
+.quick-action-info:hover { 
+    border-color: var(--medical-teal-primary); 
+    background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 100%);
+    box-shadow: 0 8px 25px rgba(20, 184, 166, 0.15);
+}
+
+.quick-action-warning:hover { 
+    border-color: var(--warning-color); 
+    background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+    box-shadow: 0 8px 25px rgba(245, 158, 11, 0.15);
+}
+
+.quick-action-secondary:hover { 
+    border-color: var(--medical-blue-secondary); 
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    box-shadow: 0 8px 25px rgba(59, 130, 246, 0.15);
+}
+
+.advanced-features {
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+    padding-top: 1.5rem;
+}
+
+.advanced-features h6 {
+    color: white !important;
+}
+
+.advanced-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.advanced-action-link {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    text-decoration: none;
+    color: var(--text-secondary);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.advanced-action-link:hover {
+    background: var(--light-bg);
+    color: var(--medical-blue-primary);
+    text-decoration: none;
+    transform: translateX(4px);
+}
+
+/* Enhanced Recent Users */
+.recent-users-container {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.user-item {
+    display: flex;
+    align-items: center;
+    padding: 1rem 0;
+    border-bottom: 1px solid var(--border-color);
+    transition: all 0.2s ease;
+}
+
+.user-item:hover {
+    background: var(--light-bg);
+    margin: 0 -1rem;
+    padding: 1rem;
+    border-radius: 8px;
+}
+
+.user-item:last-child {
+    border-bottom: none;
+}
+
+.user-avatar-small {
+    width: 40px;
+    height: 40px;
+    background: var(--gradient-secondary);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    margin-right: 1rem;
+    box-shadow: var(--shadow-sm);
+}
+
+/* Enhanced System Status */
+.system-status-grid {
+    display: grid;
+    gap: 1rem;
+    list-style: none !important;
+    list-style-type: none !important;
+}
+
+.system-status-grid * {
+    list-style: none !important;
+    list-style-type: none !important;
+}
+
+.status-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background: var(--light-bg);
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    transition: all 0.3s ease;
+    list-style: none !important;
+    list-style-type: none !important;
+}
+
+.status-item:hover {
+    background: var(--white);
+    box-shadow: var(--shadow);
+    transform: translateY(-2px);
+}
+
+.status-indicator {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    box-shadow: 0 0 0 2px var(--white), 0 0 8px rgba(0,0,0,0.1);
+}
+
+.status-indicator.status-online {
+    background: var(--success-color);
+    box-shadow: 0 0 0 2px var(--white), 0 0 8px rgba(16, 185, 129, 0.4);
+}
+
+.status-indicator.status-warning {
+    background: var(--warning-color);
+    box-shadow: 0 0 0 2px var(--white), 0 0 8px rgba(245, 158, 11, 0.4);
+}
+
+.status-indicator.status-error {
+    background: var(--danger-color);
+    box-shadow: 0 0 0 2px var(--white), 0 0 8px rgba(239, 68, 68, 0.4);
+}
+
+.status-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+}
+
+.status-label {
+    font-weight: 500;
+    color: var(--text-primary);
+    list-style: none !important;
+    list-style-type: none !important;
+    display: flex;
+    align-items: center;
+}
+
+/* Preserve FontAwesome icons while removing bullets */
+.status-label i.fas {
+    display: inline-block !important;
+    font-family: "Font Awesome 5 Free" !important;
+    font-weight: 900 !important;
+}
+
+.status-value {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+/* Enhanced Module Cards */
+.admin-modules-section {
+    margin-top: 3rem;
+}
+
+.section-header {
+    text-align: center;
+    margin-bottom: 3rem;
+}
+
+.section-title {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+    background: var(--gradient-primary);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.section-description {
+    font-size: 1.125rem;
+    color: var(--text-secondary);
+}
+
+.module-card {
+    background: var(--white);
+    border: none;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.module-card:hover {
+    transform: translateY(-8px);
+    box-shadow: var(--shadow-xl);
+}
+
+.module-header {
+    background: var(--gradient-primary);
+    color: white;
+    padding: 2rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    position: relative;
+}
+
+.module-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%);
+    pointer-events: none;
+}
+
+.module-icon {
+    width: 60px;
+    height: 60px;
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px);
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    box-shadow: var(--shadow);
+}
+
+.module-title h4 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 600;
+    position: relative;
+    z-index: 1;
+}
+
+.module-count {
+    font-size: 0.875rem;
+    opacity: 0.9;
+    position: relative;
+    z-index: 1;
+}
+
+.module-body {
+    padding: 2rem;
+}
+
+.model-item-modern {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    margin-bottom: 1rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    background: var(--white);
+}
+
+.model-item-modern:hover {
+    background: var(--light-bg);
+    transform: translateX(8px);
+    box-shadow: var(--shadow);
+    border-color: var(--medical-blue-primary);
+}
+
+.model-item-modern:last-child {
+    margin-bottom: 0;
+}
+
+.model-info {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.model-icon {
+    width: 40px;
+    height: 40px;
+    background: var(--gradient-secondary);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    box-shadow: var(--shadow-sm);
+}
+
+.model-name {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.model-description {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+}
+
+.model-actions-modern {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.action-btn {
+    width: 36px;
+    height: 36px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    color: var(--text-secondary);
+    background: var(--white);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.action-add:hover {
+    background: var(--success-color);
+    border-color: var(--success-color);
+    color: white;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+    transform: translateY(-2px);
+}
+
+.action-view:hover {
+    background: var(--medical-blue-primary);
+    border-color: var(--medical-blue-primary);
+    color: white;
+    box-shadow: 0 4px 12px rgba(13, 110, 253, 0.3);
+    transform: translateY(-2px);
+}
+
+/* Enhanced System Info */
+.system-info-section {
+    margin-top: 3rem;
+}
+
+.system-info-card {
+    background: var(--white);
+    border: none;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+}
+
+.system-info-header {
+    background: var(--gradient-primary);
+    color: white;
+    padding: 1.5rem 2rem;
+    position: relative;
+}
+
+.system-info-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%);
+    pointer-events: none;
+}
+
+.system-info-title {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 600;
+    position: relative;
+    z-index: 1;
+    color: white !important;
+}
+
+.system-info-body {
+    padding: 2rem;
+}
+
+.info-group {
+    margin-bottom: 2rem;
+}
+
+.info-group:last-child {
+    margin-bottom: 0;
+}
+
+.info-group-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 1rem;
+    border-bottom: 2px solid var(--medical-blue-primary);
+    padding-bottom: 0.5rem;
+    position: relative;
+}
+
+.info-group-title::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 30%;
+    height: 2px;
+    background: var(--medical-teal-primary);
+}
+
+.info-items {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.info-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid rgba(226, 232, 240, 0.5);
+}
+
+.info-item:last-child {
+    border-bottom: none;
+}
+
+.info-label {
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.info-value {
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+.quick-links {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.quick-link {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    text-decoration: none;
+    color: var(--text-secondary);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 1px solid transparent;
+}
+
+.quick-link:hover {
+    background: var(--light-bg);
+    color: var(--medical-blue-primary);
+    text-decoration: none;
+    border-color: var(--border-color);
+    transform: translateX(4px);
+}
+
+/* Enhanced Analytics Filters Styling */
+.analytics-filters-enhanced {
+    background: linear-gradient(135deg, var(--white) 0%, var(--lighter-bg) 100%);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 2rem;
+    box-shadow: var(--shadow);
+    position: relative;
+    overflow: hidden;
+}
+
+.analytics-filters-enhanced::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: var(--gradient-primary);
+}
+
+.analytics-filters-header {
+    text-align: center;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.analytics-filters-title {
+    color: var(--text-primary);
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin: 0 0 0.5rem 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.analytics-filters-title i {
+    color: var(--medical-blue-primary);
+    font-size: 1rem;
+}
+
+.analytics-filters-subtitle {
+    color: var(--text-muted);
+    font-size: 0.875rem;
+    font-weight: 400;
+}
+
+.filter-group {
+    background: var(--white);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1.25rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    height: 100%;
+}
+
+.filter-group:hover {
+    box-shadow: 0 8px 25px rgba(13, 110, 253, 0.2);
+    transform: translateY(-4px);
+    border-color: var(--medical-blue-primary);
+    background: linear-gradient(135deg, #f0f4ff 0%, #e0ebff 100%);
+}
+
+.filter-label-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.filter-icon {
+    width: 32px;
+    height: 32px;
+    background: linear-gradient(135deg, rgba(13, 110, 253, 0.1) 0%, rgba(20, 184, 166, 0.1) 100%);
+    border: 2px solid var(--medical-blue-primary);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--medical-blue-primary);
+    font-size: 0.875rem;
+    box-shadow: var(--shadow-sm);
+    transition: all 0.3s ease;
+}
+
+.filter-group:hover .filter-icon {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(248, 250, 255, 0.9) 100%);
+    color: var(--medical-navy);
+    transform: scale(1.1);
+    box-shadow: 0 8px 25px rgba(13, 110, 253, 0.4);
+    border-color: var(--medical-blue-primary);
+}
+
+.filter-label {
+    color: var(--text-primary);
+    font-weight: 600;
+    font-size: 0.9rem;
+    margin: 0;
+    letter-spacing: 0.3px;
+}
+
+.custom-select-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.custom-select {
+    width: 100%;
+    min-height: 44px;
+    padding: 0.75rem 2.75rem 0.75rem 1rem;
+    border: 2px solid var(--border-color);
+    border-radius: 10px;
+    background: var(--white);
+    color: var(--text-primary);
+    font-size: 0.875rem;
+    font-weight: 500;
+    line-height: 1.35;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    outline: none;
+}
+
+.custom-select:hover {
+    border-color: var(--medical-blue-primary);
+    box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.1);
+}
+
+.custom-select:focus {
+    border-color: var(--medical-blue-primary);
+    box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.15);
+    background: linear-gradient(135deg, var(--white) 0%, #f8faff 100%);
+}
+
+.select-arrow {
+    position: absolute;
+    right: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    pointer-events: none;
+    transition: all 0.3s ease;
+}
+
+.custom-select-wrapper:hover .select-arrow {
+    color: var(--medical-blue-primary);
+    transform: translateY(-50%) scale(1.1);
+}
+
+.custom-select:focus + .select-arrow {
+    color: var(--medical-blue-primary);
+    transform: translateY(-50%) rotate(180deg);
+}
+
+/* Custom option styling for modern browsers */
+.custom-select option {
+    padding: 0.5rem;
+    background: var(--white);
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+.custom-select option:hover,
+.custom-select option:checked {
+    background: var(--medical-blue-primary);
+    color: white;
+}
+
+/* Loading and interactive states */
+.filter-group.loading {
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+.filter-group.loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 20px;
+    height: 20px;
+    margin: -10px 0 0 -10px;
+    border: 2px solid var(--border-color);
+    border-top-color: var(--medical-blue-primary);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Responsive design for filters */
+@media (max-width: 768px) {
+    .analytics-filters-enhanced {
+        padding: 1.5rem;
+    }
+    
+    .analytics-filters-header {
+        text-align: left;
+    }
+    
+    .analytics-filters-title {
+        justify-content: flex-start;
+        font-size: 1rem;
+    }
+    
+    .filter-group {
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .filter-label-wrapper {
+        gap: 0.5rem;
+        margin-bottom: 0.75rem;
+        padding-bottom: 0.5rem;
+    }
+    
+    .filter-icon {
+        width: 28px;
+        height: 28px;
+        font-size: 0.75rem;
+    }
+    
+    .filter-label {
+        font-size: 0.85rem;
+    }
+    
+    .custom-select {
+        padding: 0.625rem 2.25rem 0.625rem 0.875rem;
+        font-size: 0.8rem;
+    }
+}
+
+.chart-container {
+    min-height: 400px;
+    max-height: 500px;
+    background: var(--white) !important;
+    border: none !important;
+    border-radius: 12px;
+    padding: 1rem;
+    overflow: hidden;
+}
+
+.chart-container canvas {
+    background: transparent !important;
+    max-height: 400px !important;
+    width: 100% !important;
+    height: auto !important;
+}
+
+#chart-summary {
+    background: var(--light-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-top: 1rem;
+}
+
+.specialty-breakdown {
+    background: white;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1.5rem;
+}
+
+.specialty-breakdown .table {
+    margin-bottom: 0;
+}
+
+.specialty-breakdown .table th {
+    border-top: none;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-secondary);
+    font-weight: 600;
+    padding: 0.75rem 1rem;
+}
+
+.specialty-breakdown .table td {
+    padding: 1rem;
+    vertical-align: middle;
+    border-color: rgba(226, 232, 240, 0.5);
+}
+
+.specialty-color-bar {
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    transition: all 0.2s ease;
+}
+
+.specialty-color-bar:hover {
+    transform: scaleY(1.1);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.progress {
+    background-color: rgba(226, 232, 240, 0.3);
+    border-radius: 4px;
+}
+
+.badge {
+    font-size: 0.75rem;
+    padding: 0.5rem 0.75rem;
+    border-radius: 6px;
+}
+
+/* Specific badge styling to ensure proper colors */
+.badge.bg-danger {
+    background: var(--danger-color) !important;
+    background-color: var(--danger-color) !important;
+    color: white !important;
+}
+
+.badge.bg-primary {
+    background: var(--medical-blue-primary) !important;
+    background-color: var(--medical-blue-primary) !important;
+    color: white !important;
+}
+
+.badge.bg-secondary {
+    background: var(--text-muted) !important;
+    background-color: var(--text-muted) !important;
+    color: white !important;
+}
+
+.badge.bg-success {
+    background: var(--success-color) !important;
+    background-color: var(--success-color) !important;
+    color: white !important;
+}
+
+.badge.bg-info {
+    background: var(--medical-teal-primary) !important;
+    background-color: var(--medical-teal-primary) !important;
+    color: white !important;
+}
+
+.badge.bg-warning {
+    background: var(--warning-color) !important;
+    background-color: var(--warning-color) !important;
+    color: var(--text-dark) !important;
+}
+
+/* IMPORTANT: Force remove ALL grey backgrounds and bars */
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
+/* Ensure text readability - force white text on dark backgrounds */
+.dashboard-header,
+.dashboard-header *,
+.card-header-modern,
+.card-header-modern *,
+.module-header,
+.module-header *,
+.system-info-header,
+.system-info-header * {
+    color: white !important;
+}
+
+/* Make sure user name and institution text are white */
+.dashboard-header .text-white,
+.dashboard-header .text-white-50,
+.admin-welcome-card,
+.admin-welcome-card *,
+.admin-welcome-card .text-white,
+.admin-welcome-card .text-white-50,
+.dashboard-header small {
+    color: white !important;
+}
+
+/* Force white text for specific elements in header */
+.dashboard-header .lead,
+.dashboard-header small,
+.admin-welcome-card h6,
+.admin-welcome-card p,
+.admin-welcome-card .text-white {
+    color: white !important;
+}
+
+/* Ensure welcome card is properly styled */
+.admin-welcome-card {
+    background: rgba(255,255,255,0.15) !important;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.2) !important;
+    border-radius: 12px !important;
+    padding: 1.5rem !important;
+    text-align: center !important;
+}
+
+.admin-welcome-card .user-avatar i {
+    color: white !important;
+}
+
+.admin-welcome-card .badge {
+    font-weight: 500 !important;
+    padding: 0.5rem 0.75rem !important;
+}
+
+/* Center content in welcome card */
+.admin-welcome-card .d-flex {
+    justify-content: center !important;
+}
+
+.admin-welcome-card h6,
+.admin-welcome-card p,
+.admin-welcome-card .badge {
+    text-align: center !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+}
+
+/* Hide any unwanted admin text */
+.admin-welcome-card .small-text,
+.admin-welcome-card .admin-text,
+.admin-welcome-card .user-text {
+    display: none !important;
+}
+
+/* Hide any Django admin default text that might appear */
+.admin-welcome-card *:not(h6):not(p):not(.badge):not(i):not(div) {
+    font-size: 0 !important;
+    line-height: 0 !important;
+    opacity: 0 !important;
+}
+
+/* Custom Welcome Card - Clean and Centered */
+.admin-welcome-card-custom {
+    background: rgba(255,255,255,0.15) !important;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.2) !important;
+    border-radius: 12px !important;
+    padding: 1.5rem !important;
+    text-align: center !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.welcome-content-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    width: 100%;
+}
+
+.user-avatar-custom {
+    width: 60px;
+    height: 60px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.user-avatar-custom i {
+    color: white !important;
+    font-size: 1.5rem;
+}
+
+.welcome-text-wrapper {
+    text-align: center;
+    width: 100%;
+}
+
+.welcome-title {
+    color: white !important;
+    font-weight: 600 !important;
+    font-size: 1.1rem !important;
+    margin: 0 0 0.5rem 0 !important;
+    text-align: center !important;
+}
+
+.user-name-display {
+    color: white !important;
+    font-size: 0.9rem !important;
+    margin: 0 0 0.75rem 0 !important;
+    text-align: center !important;
+    font-weight: 500 !important;
+}
+
+.role-badge-wrapper {
+    display: flex;
+    justify-content: center;
+    margin-top: 0.5rem;
+}
+
+.role-badge {
+    padding: 0.4rem 0.75rem !important;
+    border-radius: 6px !important;
+    font-size: 0.75rem !important;
+    font-weight: 500 !important;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.role-badge.role-super {
+    background: #dc3545 !important;
+    color: white !important;
+}
+
+.role-badge.role-admin {
+    background: #198754 !important;
+    color: white !important;
+}
+
+.role-badge i {
+    font-size: 0.7rem;
+}
+
+/* Remove any grey backgrounds from Bootstrap or Django admin */
+.modern-card,
+.modern-card *,
+.card,
+.card *,
+.chart-container,
+.chart-container *,
+.analytics-filters-enhanced,
+.analytics-filters-enhanced *,
+.form-select,
+.form-control,
+.alert,
+.table,
+.table *,
+.list-group,
+.list-group-item,
+canvas,
+#specialtyChart,
+#chart-loading,
+#chart-summary,
+#specialty-breakdown {
+    background: transparent !important;
+    background-color: transparent !important;
+}
+
+/* Note: Badges are excluded from the above transparent override 
+   and have their own specific styling defined elsewhere */
+
+/* Only allow specific white backgrounds */
+.modern-card {
+    background: var(--white) !important;
+    background-color: var(--white) !important;
+}
+
+.modern-card .card-body-modern {
+    background: var(--white) !important;
+    background-color: var(--white) !important;
+}
+
+.analytics-filters-enhanced {
+    background: var(--light-bg) !important;
+    background-color: var(--light-bg) !important;
+}
+
+.analytics-filters-enhanced .custom-select {
+    background: var(--white) !important;
+    background-color: var(--white) !important;
+}
+.card,
+.card-header,
+.table-light,
+.thead-light,
+.table thead th,
+.form-select,
+.form-control,
+.form-label,
+.alert,
+.progress,
+.progress-bar,
+.badge,
+.list-group,
+.list-group-item {
+    background: transparent !important;
+    background-color: transparent !important;
+}
+
+.modern-card .card-body,
+.modern-card .card-body-modern {
+    background: var(--white) !important;
+    border: none !important;
+}
+
+.table-light th {
+    background: var(--light-bg) !important;
+    border-color: var(--border-color) !important;
+}
+
+/* Force remove any Bootstrap card styling and grey bars */
+.modern-card,
+.modern-card *,
+.modern-card .card-body,
+.modern-card .card-body-modern {
+    background-color: transparent !important;
+}
+
+.modern-card {
+    background: var(--white) !important;
+    border: 1px solid var(--border-color) !important;
+    box-shadow: var(--shadow-lg) !important;
+}
+
+.modern-card .card-header-modern {
+    background: var(--gradient-primary) !important;
+    border-bottom: none !important;
+}
+
+.modern-card .card-body-modern {
+    background: var(--white) !important;
+    border: none !important;
+}
+
+/* Analytics specific styling - remove all grey backgrounds */
+.analytics-filters-enhanced {
+    background: var(--light-bg) !important;
+    border: 1px solid var(--border-color) !important;
+    border-radius: 8px !important;
+    padding: 1rem !important;
+}
+
+.analytics-filters-enhanced .custom-select {
+    background: var(--white) !important;
+    border: 1px solid var(--border-color) !important;
+    color: var(--text-primary) !important;
+}
+
+/* Remove grey backgrounds from analytics elements */
+#chart-summary,
+#specialty-breakdown {
+    background: transparent !important;
+}
+
+#chart-summary .border-bottom {
+    border-color: var(--border-color) !important;
+}
+
+.table-responsive {
+    background: transparent !important;
+}
+
+.table,
+.table tbody,
+.table tbody tr,
+.table tbody td,
+.table thead,
+.table thead tr,
+.table thead th {
+    background: transparent !important;
+    background-color: transparent !important;
+}
+
+/* Specific overrides for chart loading and summary */
+#chart-loading {
+    background: transparent !important;
+}
+
+.alert {
+    background: var(--light-bg) !important;
+    border: 1px solid var(--border-color) !important;
+    color: var(--text-primary) !important;
+}
+
+.alert-warning {
+    background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%) !important;
+    color: #92400e !important;
+    border-color: #f59e0b !important;
+}
+
+.alert-info {
+    background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%) !important;
+    color: #1e40af !important;
+    border-color: #3b82f6 !important;
+}
+
+/* Chart responsive improvements */
+@media (max-width: 768px) {
+    .analytics-filters-enhanced .row > div {
+        margin-bottom: 1rem;
+    }
+    
+    .chart-container {
+        min-height: 300px;
+        max-height: 400px;
+        padding: 0.5rem;
+    }
+    
+    .chart-container canvas {
+        max-height: 300px !important;
+    }
+}
+    
+    .chart-container {
+        min-height: 300px;
+        padding: 0.5rem;
+    }
+    
+    #chart-summary .row > div {
+        margin-bottom: 1rem;
+    }
+    
+    .specialty-breakdown .table-responsive {
+        font-size: 0.875rem;
+    }
+    
+    .specialty-breakdown .table th,
+    .specialty-breakdown .table td {
+        padding: 0.5rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .dashboard-header {
+        text-align: center;
+        padding: 1.5rem;
+    }
+    
+    .stats-card-body {
+        padding: 1.5rem;
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .stats-icon {
+        width: 60px;
+        height: 60px;
+        font-size: 1.5rem;
+    }
+    
+    .stats-number {
+        font-size: 2rem;
+    }
+    
+    .card-body-modern {
+        padding: 1.5rem;
+    }
+    
+    .module-header {
+        padding: 1.5rem;
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .module-body {
+        padding: 1.5rem;
+    }
+    
+    .model-item-modern {
+        flex-direction: column;
+        gap: 1rem;
+        text-align: center;
+    }
+}
+
+/* Animation keyframes */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.modern-card,
+.stats-card,
+.module-card {
+    animation: fadeInUp 0.6s ease-out;
+}
+
+/* Scrollbar styling */
+.recent-users-container::-webkit-scrollbar {
+    width: 6px;
+}
+
+.recent-users-container::-webkit-scrollbar-track {
+    background: var(--light-bg);
+    border-radius: 3px;
+}
+
+.recent-users-container::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+    border-radius: 3px;
+}
+
+.recent-users-container::-webkit-scrollbar-thumb:hover {
+    background: var(--text-muted);
+}
+</style>
+
+<!-- Chart.js and Analytics Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
+
+<script>
+// Ensure jQuery is loaded before running scripts
+document.addEventListener('DOMContentLoaded', function() {
+    // If jQuery is not available, load it or provide fallback
+    if (typeof $ === 'undefined') {
+        console.warn('jQuery not loaded, using vanilla JavaScript fallback');
+        loadAnalyticsDataVanilla();
+    } else {
+        // jQuery is available
+        $(document).ready(function() {
+            // Load analytics data
+            loadAnalyticsData();
+            
+            // Add fade-in animation to cards
+            $('.card, .modern-card, .stats-card').each(function(index) {
+                $(this).css('opacity', '0').delay(index * 100).animate({
+                    opacity: 1
+                }, 300);
+            });
+            
+            // Update timestamp
+            updateTimestamp();
+            setInterval(updateTimestamp, 60000); // Update every minute
+        });
+    }
+});
+
+function loadAnalyticsData() {
+    console.log('Loading analytics data...');
+    
+    // Get current filter values
+    const roleFilter = document.getElementById('roleFilter')?.value || 'pg';
+    const periodFilter = document.getElementById('periodFilter')?.value || 'all';
+    
+    console.log('Filters:', { role: roleFilter, period: periodFilter });
+    
+    // Show loading state
+    const chartLoading = document.getElementById('chart-loading');
+    const chartCanvas = document.getElementById('specialtyChart');
+    const chartSummary = document.getElementById('chart-summary');
+    
+    if (chartLoading) {
+        chartLoading.style.display = 'block';
+        chartLoading.innerHTML = `
+            <div class="text-center py-5">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-3 text-muted">Loading specialty analytics...</p>
+            </div>
+        `;
+    }
+    
+    if (chartCanvas) chartCanvas.style.display = 'none';
+    if (chartSummary) chartSummary.style.display = 'none';
+    
+    // Load user statistics with filters
+    $.ajax({
+        url: '/users/api/admin/stats/',
+        method: 'GET',
+        data: {
+            role: roleFilter,
+            period: periodFilter
+        },
+        timeout: 15000,
+        headers: {
+            'X-CSRFToken': $('[name=csrfmiddlewaretoken]').val() || '{{ csrf_token }}',
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        success: function(data) {
+            console.log('Enhanced analytics data loaded successfully:', data);
+            
+            try {
+                // Update basic stats with fallback values
+                $('#total-users').text(data.total_users || '0');
+                $('#total-pgs').text(data.total_pgs || '0');
+                $('#total-supervisors').text(data.total_supervisors || '0');
+                $('#new-users').text(data.new_users_this_month || '0');
+                
+                // Update specialty count badge
+                const totalSpecialties = data.summary?.total_specialties || 0;
+                $('#total-specialties').text(totalSpecialties + ' Specialties');
+                
+                // Load recent users
+                loadRecentUsers(data.recent_users || []);
+                
+                // Load enhanced specialty chart
+                const specialtyStats = data.specialty_stats || [];
+                console.log('Specialty stats:', specialtyStats);
+                
+                if (specialtyStats.length > 0) {
+                    loadEnhancedSpecialtyChart(specialtyStats, data.summary || {});
+                    // Update summary information
+                    updateChartSummary(data.summary || {}, data.filter_applied || {});
+                    // Load detailed breakdown table
+                    loadSpecialtyBreakdown(specialtyStats);
+                } else {
+                    // No data available
+                    if (chartLoading) {
+                        chartLoading.innerHTML = `
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle me-2"></i>
+                                No specialty data available for the selected filters. 
+                                ${roleFilter === 'pg' ? 'Try selecting "All Users" to see if there is any data.' : ''}
+                                <br><small class="mt-2">
+                                    <button class="btn btn-sm btn-primary" onclick="loadMockData()">
+                                        <i class="fas fa-data me-1"></i>Load Test Data
+                                    </button>
+                                </small>
+                            </div>
+                        `;
+                    }
+                }
+                
+            } catch (error) {
+                console.error('Error processing analytics data:', error);
+                showAnalyticsError('Error processing data: ' + error.message);
+            }
+        },
+        error: function(xhr, status, error) {
+            console.error('Analytics data failed to load:', {
+                status: status,
+                error: error,
+                responseText: xhr.responseText
+            });
+            
+            let errorMessage = 'Analytics temporarily unavailable.';
+            
+            if (xhr.status === 403) {
+                errorMessage = 'Access denied. Please ensure you are logged in as an admin.';
+            } else if (xhr.status === 404) {
+                errorMessage = 'Analytics endpoint not found.';
+            } else if (xhr.status === 500) {
+                errorMessage = 'Server error. Please try again later.';
+            } else if (status === 'timeout') {
+                errorMessage = 'Request timed out. Please try again.';
+            }
+            
+            showAnalyticsError(errorMessage);
+        }
+    });
+}
+
+function showAnalyticsError(message) {
+    // Fallback to basic counts
+    $('#total-users').text('N/A');
+    $('#total-pgs').text('N/A');
+    $('#total-supervisors').text('N/A');
+    $('#new-users').text('N/A');
+    $('#total-specialties').text('Error');
+    
+    const chartLoading = document.getElementById('chart-loading');
+    if (chartLoading) {
+        chartLoading.innerHTML = `
+            <div class="alert alert-warning">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                ${message}
+                <br><small class="mt-2">
+                    <a href="javascript:void(0)" onclick="loadAnalyticsData()" class="text-decoration-none">
+                        <i class="fas fa-refresh me-1"></i>Try Again
+                    </a>
+                </small>
+            </div>
+        `;
+    }
+    
+    const recentContainer = document.getElementById('recent-users-list');
+    if (recentContainer) {
+        recentContainer.innerHTML = '<p class="text-muted text-center py-3">Recent users temporarily unavailable</p>';
+    }
+}
+
+// Vanilla JavaScript fallback
+function loadAnalyticsDataVanilla() {
+    console.log('Loading analytics data with vanilla JavaScript...');
+    
+    const roleFilter = document.getElementById('roleFilter')?.value || 'pg';
+    const periodFilter = document.getElementById('periodFilter')?.value || 'all';
+    
+    console.log('Filters (vanilla):', { role: roleFilter, period: periodFilter });
+    
+    // Show loading state
+    const chartLoading = document.getElementById('chart-loading');
+    const chartCanvas = document.getElementById('specialtyChart');
+    const chartSummary = document.getElementById('chart-summary');
+    
+    if (chartLoading) {
+        chartLoading.style.display = 'block';
+        chartLoading.innerHTML = `
+            <div class="text-center py-5">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-3 text-muted">Loading specialty analytics...</p>
+            </div>
+        `;
+    }
+    
+    if (chartCanvas) chartCanvas.style.display = 'none';
+    if (chartSummary) chartSummary.style.display = 'none';
+    
+    fetch('/users/api/admin/stats/?' + new URLSearchParams({
+        role: roleFilter,
+        period: periodFilter
+    }), {
+        method: 'GET',
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value || '{{ csrf_token }}',
+            'X-Requested-With': 'XMLHttpRequest',
+            'Content-Type': 'application/json'
+        }
+    })
+        .then(response => {
+            console.log('Response status:', response.status);
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('Analytics data loaded (vanilla):', data);
+            
+            try {
+                // Update basic stats with fallback values
+                const totalUsers = document.getElementById('total-users');
+                const totalPgs = document.getElementById('total-pgs');
+                const totalSupervisors = document.getElementById('total-supervisors');
+                const newUsers = document.getElementById('new-users');
+                const totalSpecialties = document.getElementById('total-specialties');
+                
+                if (totalUsers) totalUsers.textContent = data.total_users || '0';
+                if (totalPgs) totalPgs.textContent = data.total_pgs || '0';
+                if (totalSupervisors) totalSupervisors.textContent = data.total_supervisors || '0';
+                if (newUsers) newUsers.textContent = data.new_users_this_month || '0';
+                if (totalSpecialties) {
+                    const count = data.summary?.total_specialties || 0;
+                    totalSpecialties.textContent = count + ' Specialties';
+                }
+                
+                // Load enhanced specialty chart
+                const specialtyStats = data.specialty_stats || [];
+                console.log('Specialty stats (vanilla):', specialtyStats);
+                
+                if (specialtyStats.length > 0) {
+                    loadEnhancedSpecialtyChart(specialtyStats, data.summary || {});
+                    // Update summary information
+                    updateChartSummary(data.summary || {}, data.filter_applied || {});
+                    // Load detailed breakdown table
+                    loadSpecialtyBreakdown(specialtyStats);
+                } else {
+                    // No data available
+                    if (chartLoading) {
+                        chartLoading.innerHTML = `
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle me-2"></i>
+                                No specialty data available for the selected filters.
+                                ${roleFilter === 'pg' ? 'Try selecting "All Users" to see if there is any data.' : ''}
+                            </div>
+                        `;
+                    }
+                }
+                
+            } catch (error) {
+                console.error('Error processing analytics data (vanilla):', error);
+                showAnalyticsErrorVanilla('Error processing data: ' + error.message);
+            }
+        })
+        .catch(error => {
+            console.error('Analytics data failed to load (vanilla):', error);
+            
+            let errorMessage = 'Analytics temporarily unavailable.';
+            
+            if (error.message.includes('403')) {
+                errorMessage = 'Access denied. Please ensure you are logged in as an admin.';
+            } else if (error.message.includes('404')) {
+                errorMessage = 'Analytics endpoint not found.';
+            } else if (error.message.includes('500')) {
+                errorMessage = 'Server error. Please try again later.';
+            } else if (error.message.includes('NetworkError') || error.message.includes('Failed to fetch')) {
+                errorMessage = 'Network error. Please check your connection and try again.';
+            }
+            
+            showAnalyticsErrorVanilla(errorMessage);
+        });
+}
+
+function showAnalyticsErrorVanilla(message) {
+    // Fallback to basic counts
+    const totalUsers = document.getElementById('total-users');
+    const totalPgs = document.getElementById('total-pgs');
+    const totalSupervisors = document.getElementById('total-supervisors');
+    const newUsers = document.getElementById('new-users');
+    const totalSpecialties = document.getElementById('total-specialties');
+    
+    if (totalUsers) totalUsers.textContent = 'N/A';
+    if (totalPgs) totalPgs.textContent = 'N/A';
+    if (totalSupervisors) totalSupervisors.textContent = 'N/A';
+    if (newUsers) newUsers.textContent = 'N/A';
+    if (totalSpecialties) totalSpecialties.textContent = 'Error';
+    
+    // Show error message in chart area
+    const chartLoading = document.getElementById('chart-loading');
+    if (chartLoading) {
+        chartLoading.innerHTML = `
+            <div class="alert alert-warning">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                ${message}
+                <br><small class="mt-2">
+                    <a href="javascript:void(0)" onclick="loadAnalyticsDataVanilla()" class="text-decoration-none">
+                        <i class="fas fa-refresh me-1"></i>Try Again
+                    </a>
+                </small>
+            </div>
+        `;
+    }
+    
+    const recentContainer = document.getElementById('recent-users-list');
+    if (recentContainer) {
+        recentContainer.innerHTML = '<p class="text-muted text-center py-3">Recent users temporarily unavailable</p>';
+    }
+}
+
+function loadRecentUsers(users) {
+    const container = $('#recent-users-list');
+    
+    if (users.length === 0) {
+        container.html('<p class="text-muted text-center py-3">No recent users found.</p>');
+        return;
+    }
+    
+    let html = '<div class="list-group list-group-flush">';
+    users.forEach(function(user) {
+        html += `
+            <div class="list-group-item border-0 px-0">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="mb-1">${user.full_name || user.username}</h6>
+                        <small class="text-muted">${user.role_display} - ${user.specialty || 'No specialty'}</small>
+                    </div>
+                    <small class="text-muted">${user.date_joined_display}</small>
+                </div>
+            </div>
+        `;
+    });
+    html += '</div>';
+    
+    container.html(html);
+}
+
+// Generate color for specialty if not provided
+function generateColorForSpecialty(specialty) {
+    // Vibrant color palette - NO GREY COLORS
+    const colorPalette = [
+        '#3b82f6', '#ef4444', '#10b981', '#ec4899', '#8b5cf6',
+        '#06b6d4', '#f59e0b', '#dc2626', '#059669', '#be123c',
+        '#7c3aed', '#a855f7', '#0ea5e9', '#84cc16', '#6366f1',
+        '#f97316', '#14b8a6', '#8b5a3c', '#db2777', '#7c2d12',
+        '#16a34a', '#ea580c', '#7c73e6', '#e11d48', '#0891b2'
+    ];
+    
+    // Use specialty name to generate consistent color
+    let hash = 0;
+    for (let i = 0; i < specialty.length; i++) {
+        hash = specialty.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    return colorPalette[Math.abs(hash) % colorPalette.length];
+}
+
+function loadEnhancedSpecialtyChart(specialtyStats, summary) {
+    const canvas = document.getElementById('specialtyChart');
+    const loadingDiv = document.getElementById('chart-loading');
+    const chartSummary = document.getElementById('chart-summary');
+    
+    if (!canvas) {
+        console.error('Chart canvas not found');
+        return;
+    }
+    
+    if (specialtyStats.length === 0) {
+        loadingDiv.innerHTML = '<div class="alert alert-info"><i class="fas fa-info-circle me-2"></i>No specialty data available for the selected filters</div>';
+        chartSummary.style.display = 'none';
+        return;
+    }
+    
+    // Hide loading indicator and show chart
+    loadingDiv.style.display = 'none';
+    canvas.style.display = 'block';
+    chartSummary.style.display = 'block';
+    
+    // Get chart type from filter
+    const chartType = document.getElementById('chartTypeFilter')?.value || 'doughnut';
+    
+    // Safely destroy existing chart if it exists
+    if (window.specialtyChart && typeof window.specialtyChart.destroy === 'function') {
+        try {
+            window.specialtyChart.destroy();
+            window.specialtyChart = null;
+        } catch (error) {
+            console.warn('Error destroying previous chart:', error);
+            window.specialtyChart = null;
+        }
+    }
+    
+    const ctx = canvas.getContext('2d');
+    
+    // Generate colors for chart - ensure colors are always applied and NEVER grey
+    const defaultColors = [
+        '#3b82f6', '#ef4444', '#10b981', '#ec4899', '#8b5cf6',
+        '#06b6d4', '#f59e0b', '#dc2626', '#059669', '#be123c',
+        '#7c3aed', '#a855f7', '#0ea5e9', '#84cc16', '#6366f1',
+        '#f97316', '#14b8a6', '#8b5a3c', '#db2777', '#7c2d12',
+        '#16a34a', '#ea580c', '#7c73e6', '#e11d48', '#0891b2'
+    ];
+    
+    const colors = specialtyStats.map((stat, index) => {
+        // If the backend provided a color and it's not grey, use it
+        if (stat.color && stat.color !== '#6b7280' && stat.color !== '#64748b' && stat.color !== '#374151' && stat.color !== '#9ca3af') {
+            return stat.color;
+        }
+        // Otherwise use vibrant default colors
+        return defaultColors[index % defaultColors.length];
+    });
+    
+    console.log('Chart colors being used:', colors); // Debug log
+    
+    const chartData = {
+        labels: specialtyStats.map(stat => stat.specialty),
+        datasets: [{
+            data: specialtyStats.map(stat => stat.count),
+            backgroundColor: colors,
+            borderWidth: 3,
+            borderColor: '#ffffff',
+            hoverBorderWidth: 4,
+            hoverBorderColor: '#ffffff',
+            hoverBackgroundColor: colors.map(color => color + 'dd') // Add transparency on hover
+        }]
+    };
+
+    const chartOptions = {
+        responsive: true,
+        maintainAspectRatio: true,
+        aspectRatio: 2,
+        layout: {
+            padding: 10
+        },
+        animation: {
+            animateRotate: true,
+            animateScale: true,
+            duration: 1000
+        },
+        plugins: {
+            legend: {
+                position: chartType === 'bar' ? 'top' : 'right',
+                labels: {
+                    padding: 20,
+                    usePointStyle: true,
+                    pointStyle: 'circle',
+                    font: {
+                        size: 12,
+                        weight: '500'
+                    },
+                    color: '#374151',
+                    generateLabels: function(chart) {
+                        const data = chart.data;
+                        if (data.labels.length && data.datasets.length) {
+                            return data.labels.map((label, i) => {
+                                const count = data.datasets[0].data[i];
+                                const percentage = specialtyStats[i]?.percentage || 0;
+                                return {
+                                    text: `${label} (${count} - ${percentage}%)`,
+                                    fillStyle: data.datasets[0].backgroundColor[i],
+                                    strokeStyle: '#ffffff',
+                                    lineWidth: 2,
+                                    pointStyle: 'circle',
+                                    hidden: false,
+                                    index: i
+                                };
+                            });
+                        }
+                        return [];
+                    }
+                }
+            },
+            tooltip: {
+                backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                titleColor: '#ffffff',
+                bodyColor: '#ffffff',
+                borderColor: '#e5e7eb',
+                borderWidth: 1,
+                cornerRadius: 8,
+                displayColors: true,
+                callbacks: {
+                    label: function(context) {
+                        const label = context.label || '';
+                        const value = context.parsed;
+                        const percentage = specialtyStats[context.dataIndex]?.percentage || 0;
+                        return `${label}: ${value} users (${percentage}%)`;
+                    }
+                }
+            }
+        },
+        elements: {
+            arc: {
+                borderWidth: 3,
+                borderColor: '#ffffff',
+                hoverBorderWidth: 4
+            }
+        }
+    };
+
+    // Add scales for bar chart
+    if (chartType === 'bar') {
+        chartOptions.scales = {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    stepSize: 1
+                }
+            },
+            x: {
+                ticks: {
+                    maxRotation: 45
+                }
+            }
+        };
+    }
+
+    try {
+        window.specialtyChart = new Chart(ctx, {
+            type: chartType,
+            data: chartData,
+            options: chartOptions
+        });
+    } catch (error) {
+        console.error('Error creating chart:', error);
+        loadingDiv.innerHTML = '<div class="alert alert-danger"><i class="fas fa-exclamation-triangle me-2"></i>Error creating chart. Please try refreshing the page.</div>';
+    }
+}
+
+function updateChartSummary(summary, filterApplied) {
+    document.getElementById('summary-total-specialties').textContent = summary.total_specialties || '0';
+    document.getElementById('summary-total-users').textContent = filterApplied.total_filtered || '0';
+    document.getElementById('summary-most-popular').textContent = summary.most_popular || 'None';
+    document.getElementById('summary-average').textContent = summary.average_per_specialty || '0';
+    document.getElementById('summary-unspecified').textContent = summary.unspecified_count || '0';
+    document.getElementById('summary-last-updated').textContent = new Date().toLocaleTimeString();
+}
+
+function loadSpecialtyBreakdown(specialtyStats) {
+    const tableBody = document.getElementById('specialty-breakdown-table');
+    const breakdownSection = document.getElementById('specialty-breakdown');
+    
+    if (!tableBody || specialtyStats.length === 0) {
+        if (breakdownSection) breakdownSection.style.display = 'none';
+        return;
+    }
+    
+    breakdownSection.style.display = 'block';
+    
+    let html = '';
+    specialtyStats.forEach((stat, index) => {
+        const percentage = stat.percentage || 0;
+        const progressBarClass = percentage > 20 ? 'bg-success' : percentage > 10 ? 'bg-warning' : 'bg-info';
+        
+        html += `
+            <tr>
+                <td class="fw-bold text-muted">${index + 1}</td>
+                <td>
+                    <div class="d-flex align-items-center">
+                        <div class="specialty-color-bar me-2" style="width: 4px; height: 20px; background-color: ${stat.color}; border-radius: 2px;"></div>
+                        <span class="fw-medium">${stat.specialty}</span>
+                    </div>
+                </td>
+                <td><span class="badge bg-primary">${stat.count}</span></td>
+                <td><span class="fw-bold">${percentage}%</span></td>
+                <td>
+                    <div class="progress" style="height: 8px;">
+                        <div class="progress-bar ${progressBarClass}" role="progressbar" style="width: ${percentage}%" aria-valuenow="${percentage}" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                </td>
+            </tr>
+        `;
+    });
+    
+    tableBody.innerHTML = html;
+}
+
+// Add event listeners for filters
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM loaded, initializing analytics...');
+    
+    // Set up filter change handlers
+    ['roleFilter', 'chartTypeFilter', 'periodFilter'].forEach(filterId => {
+        const element = document.getElementById(filterId);
+        if (element) {
+            console.log('Setting up listener for:', filterId, 'Current value:', element.value);
+            element.addEventListener('change', function() {
+                console.log('Filter changed:', filterId, 'new value:', this.value);
+                if (typeof $ !== 'undefined' && $.ajax) {
+                    loadAnalyticsData();
+                } else {
+                    loadAnalyticsDataVanilla();
+                }
+            });
+        } else {
+            console.warn('Element not found:', filterId);
+        }
+    });
+    
+    // Initial load
+    setTimeout(() => {
+        console.log('Starting initial analytics load...');
+        if (typeof $ !== 'undefined' && $.ajax) {
+            console.log('Loading analytics with jQuery...');
+            loadAnalyticsData();
+        } else {
+            console.log('jQuery not available, loading analytics with vanilla JS...');
+            loadAnalyticsDataVanilla();
+        }
+    }, 1000);
+});
+
+// Add a manual refresh function for debugging
+function refreshAnalytics() {
+    console.log('Manual refresh triggered...');
+    
+    if (typeof $ !== 'undefined' && $.ajax) {
+        loadAnalyticsData();
+    } else {
+        loadAnalyticsDataVanilla();
+    }
+}
+
+// Load mock data for testing
+function loadMockData() {
+    console.log('Loading mock specialty data...');
+    
+    const mockData = {
+        specialty_stats: [
+            { specialty: 'Internal Medicine', count: 8, percentage: 30.8, color: '#3b82f6' },
+            { specialty: 'Surgery', count: 6, percentage: 23.1, color: '#ef4444' },
+            { specialty: 'Pediatrics', count: 4, percentage: 15.4, color: '#10b981' },
+            { specialty: 'Cardiology', count: 3, percentage: 11.5, color: '#be123c' },
+            { specialty: 'Neurology', count: 2, percentage: 7.7, color: '#7c3aed' },
+            { specialty: 'Radiology', count: 3, percentage: 11.5, color: '#06b6d4' }
+        ],
+        summary: {
+            total_specialties: 6,
+            most_popular: 'Internal Medicine',
+            average_per_specialty: 4.3,
+            unspecified_count: 0
+        },
+        filter_applied: {
+            role: 'all',
+            period: 'all',
+            total_filtered: 26
+        }
+    };
+    
+    console.log('Mock data with vibrant colors:', mockData.specialty_stats);
+    
+    // Update stats with mock data
+    $('#total-users').text('26');
+    $('#total-pgs').text('18');
+    $('#total-supervisors').text('8');
+    $('#new-users').text('3');
+    $('#total-specialties').text('6 Specialties');
+    
+    // Load chart with mock data
+    loadEnhancedSpecialtyChart(mockData.specialty_stats, mockData.summary);
+    updateChartSummary(mockData.summary, mockData.filter_applied);
+    loadSpecialtyBreakdown(mockData.specialty_stats);
+}
+
+function updateTimestamp() {
+    const now = new Date();
+    const timeString = now.toLocaleTimeString();
+    $('#last-updated').text(timeString);
+}
+</script>
+{% endblock %}

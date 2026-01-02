@@ -1,0 +1,400 @@
+{% extends 'base/base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}{{ case.case_title }} - Clinical Cases - SIMS{% endblock %}
+
+{% block breadcrumb %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'users:dashboard' %}">Dashboard</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'cases:case_list' %}">Clinical Cases</a></li>
+        <li class="breadcrumb-item active">{{ case.case_title|truncatechars:50 }}</li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block page_header %}
+<div class="d-flex justify-content-between align-items-start mb-4">
+    <div>
+        <h2><i class="fas fa-file-medical me-2"></i>{{ case.case_title }}</h2>
+        <div class="d-flex align-items-center mt-2">
+            <span class="badge bg-{% if case.status == 'approved' %}success{% elif case.status == 'submitted' %}warning{% elif case.status == 'under_review' %}info{% elif case.status == 'needs_revision' %}danger{% else %}secondary{% endif %} me-2">
+                {{ case.get_status_display }}
+            </span>
+            {% if case.category %}
+            <span class="badge me-2" style="background-color: {{ case.category.color_code|default:"'#6c757d'" }};">
+                {{ case.category.name }}
+            </span>
+            {% endif %}
+            <small class="text-muted">Created {{ case.created_at|date:"M d, Y" }} | Updated {{ case.updated_at|timesince }} ago</small>
+        </div>
+    </div>
+    <div class="btn-group" role="group">
+        {% if case.can_edit_case %}
+        <a href="{% url 'cases:case_update' case.pk %}" class="btn btn-outline-primary">
+            <i class="fas fa-edit me-2"></i>Edit
+        </a>
+        {% endif %}
+        
+        {% if case.can_submit_case and case.status == 'draft' %}
+        <a href="{% url 'cases:case_submit' case.pk %}" class="btn btn-success" onclick="return confirm('Are you sure you want to submit this case for review?')">
+            <i class="fas fa-paper-plane me-2"></i>Submit for Review
+        </a>
+        {% endif %}
+        
+        {% if case.can_review_case and case.status == 'submitted' %}
+        <a href="{% url 'cases:case_review' case.pk %}" class="btn btn-info">
+            <i class="fas fa-clipboard-check me-2"></i>Review Case
+        </a>
+        {% endif %}
+        
+        {% if case.can_delete_case %}
+        <a href="{% url 'cases:case_delete' case.pk %}" class="btn btn-outline-danger delete-confirm">
+            <i class="fas fa-trash me-2"></i>Delete
+        </a>
+        {% endif %}
+        
+        <button class="btn btn-outline-secondary" onclick="window.print()">
+            <i class="fas fa-print me-2"></i>Print
+        </button>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Main Content -->
+    <div class="col-lg-8">
+        <!-- Patient Information -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-user me-2"></i>Patient Information</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <dl class="row">
+                            <dt class="col-sm-4">Initials:</dt>
+                            <dd class="col-sm-8">{{ case.patient_initials }}</dd>
+                            
+                            <dt class="col-sm-4">Age:</dt>
+                            <dd class="col-sm-8">{{ case.patient_age }} years</dd>
+                            
+                            <dt class="col-sm-4">Gender:</dt>
+                            <dd class="col-sm-8">{{ case.get_patient_gender_display }}</dd>
+                            
+                            <dt class="col-sm-4">MRN:</dt>
+                            <dd class="col-sm-8">{{ case.patient_mrn|default:"Not provided" }}</dd>
+                        </dl>
+                    </div>
+                    <div class="col-md-6">
+                        <dl class="row">
+                            <dt class="col-sm-4">Date:</dt>
+                            <dd class="col-sm-8">{{ case.date|date:"F d, Y" }}</dd>
+                            
+                            <dt class="col-sm-4">Location:</dt>
+                            <dd class="col-sm-8">{{ case.location|default:"Not specified" }}</dd>
+                            
+                            {% if case.rotation %}
+                            <dt class="col-sm-4">Rotation:</dt>
+                            <dd class="col-sm-8">{{ case.rotation.department.name }} - {{ case.rotation.hospital.name }}</dd>
+                            {% endif %}
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Clinical Information -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-stethoscope me-2"></i>Clinical Information</h5>
+            </div>
+            <div class="card-body">
+                {% if case.chief_complaint %}
+                <div class="mb-3">
+                    <strong>Chief Complaint:</strong>
+                    <p class="mt-1">{{ case.chief_complaint }}</p>
+                </div>
+                {% endif %}
+
+                {% if case.history_present_illness %}
+                <div class="mb-3">
+                    <strong>History of Present Illness:</strong>
+                    <p class="mt-1">{{ case.history_present_illness|linebreaks }}</p>
+                </div>
+                {% endif %}
+
+                {% if case.past_medical_history %}
+                <div class="mb-3">
+                    <strong>Past Medical History:</strong>
+                    <p class="mt-1">{{ case.past_medical_history|linebreaks }}</p>
+                </div>
+                {% endif %}
+
+                {% if case.physical_examination %}
+                <div class="mb-3">
+                    <strong>Physical Examination:</strong>
+                    <p class="mt-1">{{ case.physical_examination|linebreaks }}</p>
+                </div>
+                {% endif %}
+
+                {% if case.investigation_results %}
+                <div class="mb-3">
+                    <strong>Investigation Results:</strong>
+                    <p class="mt-1">{{ case.investigation_results|linebreaks }}</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Diagnoses and Procedures -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-diagnoses me-2"></i>Diagnoses & Procedures</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Primary Diagnosis</h6>
+                        {% if case.primary_diagnosis %}
+                            <span class="badge bg-primary mb-2">{{ case.primary_diagnosis.name }}</span>
+                            {% if case.primary_diagnosis.code %}
+                                <small class="text-muted d-block">Code: {{ case.primary_diagnosis.code }}</small>
+                            {% endif %}
+                        {% else %}
+                            <p class="text-muted">Not specified</p>
+                        {% endif %}
+
+                        {% if case.secondary_diagnoses.exists %}
+                        <h6 class="mt-3">Secondary Diagnoses</h6>
+                        {% for diagnosis in case.secondary_diagnoses.all %}
+                            <span class="badge bg-secondary me-1 mb-1">{{ diagnosis.name }}</span>
+                        {% endfor %}
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        {% if case.procedures_performed.exists %}
+                        <h6>Procedures Performed</h6>
+                        {% for procedure in case.procedures_performed.all %}
+                            <div class="mb-2">
+                                <span class="badge bg-info">{{ procedure.name }}</span>
+                                {% if procedure.difficulty_level %}
+                                    <small class="text-muted">Level {{ procedure.difficulty_level }}</small>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Management and Learning -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-clipboard-list me-2"></i>Management & Learning</h5>
+            </div>
+            <div class="card-body">
+                {% if case.management_plan %}
+                <div class="mb-3">
+                    <strong>Management Plan:</strong>
+                    <p class="mt-1">{{ case.management_plan|linebreaks }}</p>
+                </div>
+                {% endif %}
+
+                {% if case.clinical_reasoning %}
+                <div class="mb-3">
+                    <strong>Clinical Reasoning:</strong>
+                    <p class="mt-1">{{ case.clinical_reasoning|linebreaks }}</p>
+                </div>
+                {% endif %}
+
+                {% if case.learning_points %}
+                <div class="learning-points">
+                    <strong>Learning Points:</strong>
+                    <p class="mt-1">{{ case.learning_points|linebreaks }}</p>
+                </div>
+                {% endif %}
+
+                {% if case.complications_encountered %}
+                <div class="mb-3">
+                    <div class="alert alert-warning">
+                        <strong><i class="fas fa-exclamation-triangle me-2"></i>Complications Encountered:</strong>
+                        <p class="mt-1 mb-0">{{ case.complications_encountered|linebreaks }}</p>
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if case.follow_up_required %}
+                <div class="mb-3">
+                    <div class="alert alert-info">
+                        <strong><i class="fas fa-calendar-check me-2"></i>Follow-up Required:</strong>
+                        <p class="mt-1 mb-0">{{ case.follow_up_required|linebreaks }}</p>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Attachments -->
+        {% if case.supporting_documents or case.images %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-paperclip me-2"></i>Attachments</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% if case.supporting_documents %}
+                    <div class="col-md-6">
+                        <h6>Supporting Documents</h6>
+                        <a href="{{ case.supporting_documents.url }}" target="_blank" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-file-pdf me-2"></i>View Document
+                        </a>
+                    </div>
+                    {% endif %}
+                    
+                    {% if case.images %}
+                    <div class="col-md-6">
+                        <h6>Images</h6>
+                        <a href="{{ case.images.url }}" target="_blank" class="btn btn-outline-info btn-sm">
+                            <i class="fas fa-image me-2"></i>View Images
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Review History -->
+        {% if reviews %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-history me-2"></i>Review History</h5>
+            </div>
+            <div class="card-body">
+                {% for review in reviews %}
+                <div class="border-start border-3 border-{% if review.is_approved %}success{% else %}warning{% endif %} ps-3 mb-3">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <strong>{{ review.reviewer.get_full_name }}</strong>
+                            <span class="badge bg-{% if review.is_approved %}success{% else %}warning{% endif %} ms-2">
+                                {% if review.is_approved %}Approved{% else %}Needs Revision{% endif %}
+                            </span>
+                        </div>
+                        <small class="text-muted">{{ review.reviewed_at|date:"M d, Y H:i" }}</small>
+                    </div>
+                    
+                    {% if review.clinical_accuracy_score %}
+                    <div class="mt-2">
+                        <small class="text-muted">Clinical Accuracy: {{ review.clinical_accuracy_score }}/10</small>
+                    </div>
+                    {% endif %}
+                    
+                    {% if review.comments %}
+                    <p class="mt-2 mb-0">{{ review.comments|linebreaks }}</p>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Sidebar -->
+    <div class="col-lg-4">
+        <!-- Case Details -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="fas fa-info-circle me-2"></i>Case Details</h6>
+            </div>
+            <div class="card-body">
+                <dl class="row small">
+                    <dt class="col-5">PG:</dt>
+                    <dd class="col-7">{{ case.pg.get_full_name }}</dd>
+                    
+                    {% if case.supervisor %}
+                    <dt class="col-5">Supervisor:</dt>
+                    <dd class="col-7">{{ case.supervisor.get_full_name }}</dd>
+                    {% endif %}
+                    
+                    <dt class="col-5">Status:</dt>
+                    <dd class="col-7">{{ case.get_status_display }}</dd>
+                    
+                    {% if case.complexity_level %}
+                    <dt class="col-5">Complexity:</dt>
+                    <dd class="col-7">{{ case.get_complexity_level_display }}</dd>
+                    {% endif %}
+                    
+                    <dt class="col-5">Created:</dt>
+                    <dd class="col-7">{{ case.created_at|date:"M d, Y H:i" }}</dd>
+                    
+                    <dt class="col-5">Updated:</dt>
+                    <dd class="col-7">{{ case.updated_at|date:"M d, Y H:i" }}</dd>
+                </dl>
+            </div>
+        </div>
+
+        <!-- Related Cases -->
+        {% if related_cases %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="fas fa-link me-2"></i>Related Cases</h6>
+            </div>
+            <div class="card-body">
+                {% for related_case in related_cases %}
+                <div class="mb-2">
+                    <a href="{% url 'cases:case_detail' related_case.pk %}" class="text-decoration-none">
+                        <small class="d-block">{{ related_case.case_title|truncatechars:40 }}</small>
+                        <small class="text-muted">{{ related_case.date|date:"M d, Y" }}</small>
+                    </a>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Quick Actions -->
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="fas fa-bolt me-2"></i>Quick Actions</h6>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{% url 'cases:case_list' %}" class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-list me-2"></i>Back to List
+                    </a>
+                    
+                    {% if user.role == 'pg' or user.role == 'supervisor' or user.role == 'admin' %}
+                    <a href="{% url 'cases:case_create' %}" class="btn btn-outline-success btn-sm">
+                        <i class="fas fa-plus me-2"></i>New Case
+                    </a>
+                    {% endif %}
+                    
+                    <button class="btn btn-outline-secondary btn-sm" onclick="window.print()">
+                        <i class="fas fa-print me-2"></i>Print Case
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+@media print {
+    .btn, .card-header, nav, .sidebar {
+        display: none !important;
+    }
+    .card {
+        border: none !important;
+        box-shadow: none !important;
+    }
+    .card-body {
+        padding: 0 !important;
+    }
+}
+</style>
+{% endblock %}

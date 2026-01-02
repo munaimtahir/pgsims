@@ -1,0 +1,373 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static %}
+
+{% block title %}{% trans 'Server Error (500)' %} | {{ site_title|default:_('Django site admin') }}{% endblock %}
+
+{% block extra_css %}
+{{ block.super }}
+<style>
+    .error-container {
+        max-width: 700px;
+        margin: 3rem auto;
+        padding: 3rem;
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 20px;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        backdrop-filter: blur(10px);
+        text-align: center;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .error-icon {
+        width: 150px;
+        height: 150px;
+        background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 2rem;
+        color: white;
+        font-size: 4rem;
+        box-shadow: 0 15px 35px rgba(220, 53, 69, 0.3);
+        position: relative;
+    }
+    
+    .error-icon::before {
+        content: '';
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+        animation: pulse 2s infinite;
+        z-index: -1;
+    }
+    
+    .error-code {
+        font-size: 6rem;
+        font-weight: 900;
+        color: #2c3e50;
+        margin: 0;
+        background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        text-shadow: 0 5px 15px rgba(220, 53, 69, 0.3);
+    }
+    
+    .error-title {
+        color: #2c3e50;
+        font-size: 2rem;
+        font-weight: 700;
+        margin: 1rem 0;
+    }
+    
+    .error-message {
+        color: #6c757d;
+        font-size: 1.1rem;
+        margin-bottom: 2.5rem;
+        line-height: 1.6;
+    }
+    
+    .error-details {
+        background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+        border: 2px solid #ffc107;
+        border-radius: 15px;
+        padding: 2rem;
+        margin: 2rem 0;
+        text-align: left;
+        border-left: 4px solid #ff6b6b;
+    }
+    
+    .error-details h3 {
+        color: #856404;
+        margin-bottom: 1rem;
+        font-size: 1.2rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .error-details ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    
+    .error-details li {
+        padding: 0.5rem 0;
+        color: #856404;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .error-details li::before {
+        content: '⚠️';
+        font-size: 1.1rem;
+    }
+    
+    .support-info {
+        background: linear-gradient(135deg, #e7f3ff 0%, #b3d9ff 100%);
+        border: 2px solid #0c5aa6;
+        border-radius: 15px;
+        padding: 2rem;
+        margin: 2rem 0;
+        text-align: left;
+        border-left: 4px solid #007bff;
+    }
+    
+    .support-info h3 {
+        color: #0c5aa6;
+        margin-bottom: 1rem;
+        font-size: 1.2rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .support-info p {
+        color: #0c5aa6;
+        margin: 0.5rem 0;
+        line-height: 1.6;
+    }
+    
+    .action-buttons {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        flex-wrap: wrap;
+        margin-top: 2rem;
+    }
+    
+    .btn-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        border-radius: 12px;
+        padding: 12px 24px;
+        color: white;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    }
+    
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+        color: white;
+        text-decoration: none;
+    }
+    
+    .btn-secondary {
+        background: transparent;
+        border: 2px solid #667eea;
+        border-radius: 12px;
+        padding: 10px 22px;
+        color: #667eea;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .btn-secondary:hover {
+        background: #667eea;
+        color: white;
+        transform: translateY(-2px);
+        text-decoration: none;
+    }
+    
+    .btn-danger {
+        background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+        border: none;
+        border-radius: 12px;
+        padding: 12px 24px;
+        color: white;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+    }
+    
+    .btn-danger:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(220, 53, 69, 0.4);
+        color: white;
+        text-decoration: none;
+    }
+    
+    .fade-in {
+        animation: fadeIn 0.8s ease-in-out;
+    }
+    
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    @keyframes pulse {
+        0% {
+            transform: scale(1);
+            opacity: 1;
+        }
+        50% {
+            transform: scale(1.1);
+            opacity: 0.7;
+        }
+        100% {
+            transform: scale(1);
+            opacity: 1;
+        }
+    }
+    
+    @media (max-width: 768px) {
+        .error-container {
+            margin: 1rem;
+            padding: 2rem;
+        }
+        
+        .error-code {
+            font-size: 4rem;
+        }
+        
+        .error-title {
+            font-size: 1.5rem;
+        }
+        
+        .error-icon {
+            width: 120px;
+            height: 120px;
+            font-size: 3rem;
+        }
+        
+        .action-buttons {
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .btn-primary,
+        .btn-secondary,
+        .btn-danger {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="error-container fade-in">
+    <div class="error-icon">
+        <i class="fas fa-exclamation-triangle"></i>
+    </div>
+    
+    <h1 class="error-code">500</h1>
+    
+    <h2 class="error-title">
+        {% trans 'Internal Server Error' %}
+    </h2>
+    
+    <p class="error-message">
+        {% trans "Something went wrong on our server. The error has been logged and we're working to fix it. Please try again in a few moments." %}
+    </p>
+    
+    <div class="error-details">
+        <h3>
+            <i class="fas fa-cogs"></i>
+            {% trans 'Technical Details' %}
+        </h3>
+        <ul>
+            <li>{% trans 'A server error occurred while processing your request' %}</li>
+            <li>{% trans 'The error has been automatically logged for investigation' %}</li>
+            <li>{% trans 'Our technical team has been notified' %}</li>
+            <li>{% trans 'This issue is likely temporary and should resolve soon' %}</li>
+        </ul>
+    </div>
+    
+    <div class="support-info">
+        <h3>
+            <i class="fas fa-life-ring"></i>
+            {% trans 'Need Immediate Help?' %}
+        </h3>
+        <p>
+            <strong>{% trans 'Error Time:' %}</strong> {% now "F j, Y, g:i A" %}
+        </p>
+        <p>
+            {% trans 'If this error persists, please contact your system administrator with the error time above.' %}
+        </p>
+        <p>
+            {% trans 'For urgent issues, you can also try accessing the system through a different browser or clearing your browser cache.' %}
+        </p>
+    </div>
+    
+    <div class="action-buttons">
+        <a href="{% url 'admin:index' %}" class="btn-primary">
+            <i class="fas fa-home"></i>
+            {% trans 'Back to Dashboard' %}
+        </a>
+        
+        <a href="javascript:location.reload()" class="btn-secondary">
+            <i class="fas fa-redo"></i>
+            {% trans 'Try Again' %}
+        </a>
+        
+        <a href="javascript:history.back()" class="btn-danger">
+            <i class="fas fa-arrow-left"></i>
+            {% trans 'Go Back' %}
+        </a>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-retry after 30 seconds
+    let retryCount = 0;
+    const maxRetries = 3;
+    
+    function autoRetry() {
+        if (retryCount < maxRetries) {
+            retryCount++;
+            setTimeout(() => {
+                console.log(`Auto-retry attempt ${retryCount}/${maxRetries}`);
+                location.reload();
+            }, 30000); // 30 seconds
+        }
+    }
+    
+    // Start auto-retry timer
+    autoRetry();
+    
+    // Add keyboard shortcuts
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'r' || event.key === 'R') {
+            location.reload();
+        } else if (event.key === 'Escape') {
+            history.back();
+        } else if (event.key === 'Enter') {
+            window.location.href = '{% url "admin:index" %}';
+        }
+    });
+    
+    // Focus on main action button
+    document.querySelector('.btn-primary').focus();
+});
+</script>
+{% endblock %}

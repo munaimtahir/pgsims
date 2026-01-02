@@ -1,0 +1,451 @@
+{% extends 'base/base.html' %}
+{% load humanize %}
+
+{% block title %}Rotation Dashboard - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="h3 mb-3">
+                <i class="fas fa-sync-alt me-2 text-primary"></i>
+                Rotation Dashboard
+            </h1>
+            <p class="text-muted">Manage and track rotation assignments and progress</p>
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="row mb-4">
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card h-100 border-start border-primary border-4">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="card-title text-primary mb-1">{{ stats.total_rotations|intcomma }}</h5>
+                            <p class="card-text text-muted mb-0">Total Rotations</p>
+                        </div>
+                        <div class="text-primary">
+                            <i class="fas fa-sync-alt fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card h-100 border-start border-success border-4">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="card-title text-success mb-1">{{ stats.ongoing_rotations|intcomma }}</h5>
+                            <p class="card-text text-muted mb-0">Currently Ongoing</p>
+                        </div>
+                        <div class="text-success">
+                            <i class="fas fa-play-circle fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card h-100 border-start border-info border-4">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="card-title text-info mb-1">{{ stats.upcoming_rotations|intcomma }}</h5>
+                            <p class="card-text text-muted mb-0">Upcoming</p>
+                        </div>
+                        <div class="text-info">
+                            <i class="fas fa-calendar-alt fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card h-100 border-start border-warning border-4">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="card-title text-warning mb-1">{{ stats.pending_approvals|intcomma }}</h5>
+                            <p class="card-text text-muted mb-0">Pending Approval</p>
+                        </div>
+                        <div class="text-warning">
+                            <i class="fas fa-clock fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-light">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-bolt me-2"></i>
+                        Quick Actions
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3 mb-2">
+                            <a href="{% url 'rotations:create' %}" class="btn btn-primary w-100">
+                                <i class="fas fa-plus me-2"></i>Plan Rotation
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <a href="{% url 'rotations:list' %}" class="btn btn-success w-100">
+                                <i class="fas fa-list me-2"></i>View All
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <a href="{% url 'rotations:list' %}" class="btn btn-info w-100">
+                                <i class="fas fa-star me-2"></i>Add Evaluation
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-2">                            <a href="{% url 'rotations:list' %}" class="btn btn-secondary w-100">
+                                <i class="fas fa-list me-2"></i>View All
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content Row -->
+    <div class="row">
+        <!-- Current Rotations -->
+        <div class="col-lg-8 mb-4">
+            <div class="card">
+                <div class="card-header bg-light">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-play-circle me-2"></i>
+                        Current Rotations
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if current_rotations %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>PG</th>
+                                        <th>Department</th>
+                                        <th>Hospital</th>
+                                        <th>Supervisor</th>
+                                        <th>Duration</th>
+                                        <th>Progress</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for rotation in current_rotations %}
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="avatar bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 35px; height: 35px;">
+                                                    {{ rotation.pg.first_name.0 }}{{ rotation.pg.last_name.0 }}
+                                                </div>
+                                                <div>
+                                                    <strong>{{ rotation.pg.get_full_name }}</strong>
+                                                    <br>
+                                                    <small class="text-muted">{{ rotation.pg.specialty|default:"Not specified" }}</small>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <strong>{{ rotation.department.name }}</strong>
+                                            {% if rotation.department.specialties %}
+                                                <br><small class="text-muted">{{ rotation.department.specialties }}</small>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ rotation.hospital.name }}</td>
+                                        <td>
+                                            {% if rotation.supervisor %}
+                                                {{ rotation.supervisor.get_full_name }}
+                                            {% else %}
+                                                <span class="text-muted">Not assigned</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {{ rotation.start_date|date:"M d" }} - {{ rotation.end_date|date:"M d, Y" }}
+                                            <br>
+                                            <small class="text-muted">{{ rotation.duration_weeks }} weeks</small>
+                                        </td>
+                                        <td>                                            {% with days_completed=rotation.get_progress_days total_days=rotation.get_total_days %}
+                                            {% widthratio days_completed total_days 100 as progress_percentage %}
+                                            <div class="progress mb-1" style="height: 8px;">
+                                                <div class="progress-bar bg-success" role="progressbar" 
+                                                     data-progress="{{ progress_percentage }}"
+                                                     aria-valuenow="{{ progress_percentage }}" 
+                                                     aria-valuemin="0" 
+                                                     aria-valuemax="100"></div>
+                                            </div>
+                                            <small class="text-muted">{{ days_completed }}/{{ total_days }} days</small>
+                                            {% endwith %}
+                                        </td>
+                                        <td>
+                                            <div class="btn-group" role="group">                                                <a href="{% url 'rotations:detail' rotation.pk %}" 
+                                                   class="btn btn-sm btn-outline-primary">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                                {% if user.role != 'pg' %}
+                                                <a href="{% url 'rotations:detail' rotation.pk %}" 
+                                                   class="btn btn-sm btn-outline-success">
+                                                    <i class="fas fa-star"></i>
+                                                </a>
+                                                {% endif %}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-sync-alt fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">No Current Rotations</h5>
+                            <p class="text-muted">No rotations are currently in progress.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Upcoming Rotations -->
+            <div class="card mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-calendar-alt me-2"></i>
+                        Upcoming Rotations
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if upcoming_rotations %}
+                        {% for rotation in upcoming_rotations %}
+                        <div class="card border-info mb-3">
+                            <div class="card-body p-3">
+                                <h6 class="card-title mb-1">{{ rotation.pg.get_full_name }}</h6>
+                                <p class="card-text small mb-1">
+                                    <strong>{{ rotation.department.name }}</strong>
+                                    <br>
+                                    {{ rotation.hospital.name }}
+                                </p>
+                                <p class="card-text small">
+                                    <strong>Starts:</strong> {{ rotation.start_date|date:"M d, Y" }}
+                                    <br>
+                                    <span class="text-info">
+                                        in {{ rotation.start_date|timeuntil }}
+                                    </span>
+                                </p>                                <a href="{% url 'rotations:detail' rotation.pk %}" 
+                                   class="btn btn-sm btn-outline-info">
+                                    View Details
+                                </a>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center py-3">
+                            <i class="fas fa-calendar-check fa-2x text-muted mb-2"></i>
+                            <p class="text-muted mb-0">No upcoming rotations</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Performance Metrics (for Admins) -->
+            {% if user.role == 'admin' and performance_metrics %}
+            <div class="card mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-chart-bar me-2"></i>
+                        Performance Metrics
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-6 mb-3">
+                            <h4 class="text-success">{{ performance_metrics.average_score|floatformat:1 }}</h4>
+                            <p class="text-muted mb-0 small">Avg. Score</p>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <h4 class="text-info">{{ performance_metrics.total_evaluations }}</h4>
+                            <p class="text-muted mb-0 small">Evaluations</p>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <h4 class="text-warning">{{ performance_metrics.passing_rate|floatformat:1 }}%</h4>
+                            <p class="text-muted mb-0 small">Pass Rate</p>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <h4 class="text-primary">{{ performance_metrics.excellence_rate|floatformat:1 }}%</h4>
+                            <p class="text-muted mb-0 small">Excellence</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Overdue Rotations -->
+            {% if overdue_rotations %}
+            <div class="card">
+                <div class="card-header bg-light">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Overdue Rotations
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% for rotation in overdue_rotations %}
+                    <div class="card border-danger mb-3">
+                        <div class="card-body p-3">
+                            <h6 class="card-title mb-1">{{ rotation.pg.get_full_name }}</h6>
+                            <p class="card-text small mb-1">
+                                <strong>{{ rotation.department.name }}</strong>
+                                <br>
+                                {{ rotation.hospital.name }}
+                            </p>
+                            <p class="card-text small">
+                                <strong>Ended:</strong> {{ rotation.end_date|date:"M d, Y" }}
+                                <br>
+                                <span class="text-danger">
+                                    {{ rotation.end_date|timesince }} overdue
+                                </span>
+                            </p>                            <a href="{% url 'rotations:detail' rotation.pk %}" 
+                               class="btn btn-sm btn-outline-danger">
+                                Review
+                            </a>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Recent Evaluations (for Supervisors/Admins) -->
+    {% if user.role != 'pg' and recent_evaluations %}
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-light">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-star me-2"></i>
+                        Recent Evaluations
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>PG</th>
+                                    <th>Rotation</th>
+                                    <th>Evaluator</th>
+                                    <th>Score</th>
+                                    <th>Date</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for evaluation in recent_evaluations %}
+                                <tr>
+                                    <td>{{ evaluation.rotation.pg.get_full_name }}</td>
+                                    <td>
+                                        {{ evaluation.rotation.department.name }}
+                                        <br>
+                                        <small class="text-muted">{{ evaluation.rotation.hospital.name }}</small>
+                                    </td>
+                                    <td>{{ evaluation.evaluator.get_full_name }}</td>
+                                    <td>
+                                        {% if evaluation.score %}
+                                            <span class="badge 
+                                                {% if evaluation.score >= 90 %}bg-success
+                                                {% elif evaluation.score >= 70 %}bg-warning
+                                                {% elif evaluation.score >= 60 %}bg-info
+                                                {% else %}bg-danger{% endif %}">
+                                                {{ evaluation.score }}%
+                                            </span>
+                                        {% else %}
+                                            <span class="text-muted">Not scored</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ evaluation.created_at|date:"M d, Y" }}</td>
+                                    <td>
+                                        <a href="{% url 'rotations:evaluation_detail' evaluation.pk %}" 
+                                           class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.avatar {
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.card {
+    transition: transform 0.2s;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Set progress bar widths from data attributes
+    $('.progress-bar[data-progress]').each(function() {
+        const progress = $(this).data('progress');
+        $(this).css('width', progress + '%');
+    });
+    
+    // Load additional rotation data
+    loadRotationStats();
+    
+    // Auto-refresh every 10 minutes
+    setInterval(loadRotationStats, 600000);
+});
+
+function loadRotationStats() {
+    $.ajax({
+        url: '{% url "rotations:quick_stats_api" %}',
+        method: 'GET',
+        success: function(data) {
+            console.log('Rotation stats loaded successfully', data);
+            // Update any dynamic content here if needed
+        },
+        error: function() {
+            console.warn('Failed to load rotation statistics');
+        }
+    });
+}
+</script>
+{% endblock %}

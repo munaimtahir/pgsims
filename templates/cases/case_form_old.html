@@ -1,0 +1,411 @@
+{% extends 'base/base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}{% if form.instance.pk %}Edit{% else %}Create{% endif %} Clinical Case - SIMS{% endblock %}
+
+{% block breadcrumb %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'users:dashboard' %}">Dashboard</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'cases:case_list' %}">Clinical Cases</a></li>
+        {% if form.instance.pk %}
+        <li class="breadcrumb-item"><a href="{% url 'cases:case_detail' form.instance.pk %}">{{ form.instance.case_title|truncatechars:30 }}</a></li>
+        <li class="breadcrumb-item active">Edit</li>
+        {% else %}
+        <li class="breadcrumb-item active">Create New Case</li>
+        {% endif %}
+    </ol>
+</nav>
+{% endblock %}
+
+{% block page_header %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2>
+            <i class="fas fa-{% if form.instance.pk %}edit{% else %}plus{% endif %} me-2"></i>
+            {% if form.instance.pk %}Edit Clinical Case{% else %}Create New Clinical Case{% endif %}
+        </h2>
+        <p class="text-muted">
+            {% if form.instance.pk %}
+                Update the details of this clinical case
+            {% else %}
+                Document a new clinical case for your training portfolio
+            {% endif %}
+        </p>
+    </div>
+    <div>
+        {% if form.instance.pk %}
+        <a href="{% url 'cases:case_detail' form.instance.pk %}" class="btn btn-outline-secondary">
+            <i class="fas fa-eye me-2"></i>View Case
+        </a>
+        {% endif %}
+        <a href="{% url 'cases:case_list' %}" class="btn btn-outline-primary">
+            <i class="fas fa-list me-2"></i>Back to List
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<form method="post" enctype="multipart/form-data" id="caseForm">
+    {% csrf_token %}
+    
+    <div class="row">
+        <!-- Main Form -->
+        <div class="col-lg-8">
+            <!-- Basic Information -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Basic Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-12 mb-3">
+                            {{ form.case_title|as_crispy_field }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.date|as_crispy_field }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.location|as_crispy_field }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.category|as_crispy_field }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.complexity_level|as_crispy_field }}
+                        </div>
+                        {% if user.role == 'admin' or user.role == 'supervisor' %}
+                        <div class="col-md-6">
+                            {{ form.rotation|as_crispy_field }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.supervisor|as_crispy_field }}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Patient Information -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-user me-2"></i>Patient Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            {{ form.patient_initials|as_crispy_field }}
+                        </div>
+                        <div class="col-md-4">
+                            {{ form.patient_age|as_crispy_field }}
+                        </div>
+                        <div class="col-md-4">
+                            {{ form.patient_gender|as_crispy_field }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.patient_mrn|as_crispy_field }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Clinical History -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-clipboard-list me-2"></i>Clinical History</h5>
+                </div>
+                <div class="card-body">
+                    {{ form.chief_complaint|as_crispy_field }}
+                    {{ form.history_present_illness|as_crispy_field }}
+                    {{ form.past_medical_history|as_crispy_field }}
+                    {{ form.physical_examination|as_crispy_field }}
+                    {{ form.investigation_results|as_crispy_field }}
+                </div>
+            </div>
+
+            <!-- Diagnoses and Procedures -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-diagnoses me-2"></i>Diagnoses & Procedures</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            {{ form.primary_diagnosis|as_crispy_field }}
+                            {{ form.secondary_diagnoses|as_crispy_field }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.procedures_performed|as_crispy_field }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Management and Learning -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-brain me-2"></i>Management & Learning</h5>
+                </div>
+                <div class="card-body">
+                    {{ form.management_plan|as_crispy_field }}
+                    {{ form.clinical_reasoning|as_crispy_field }}
+                    {{ form.learning_points|as_crispy_field }}
+                    {{ form.complications_encountered|as_crispy_field }}
+                    {{ form.follow_up_required|as_crispy_field }}
+                </div>
+            </div>
+
+            <!-- File Attachments -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-paperclip me-2"></i>Attachments</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            {{ form.supporting_documents|as_crispy_field }}
+                            {% if form.instance.supporting_documents %}
+                            <div class="mt-2">
+                                <small class="text-muted">Current file: 
+                                    <a href="{{ form.instance.supporting_documents.url }}" target="_blank">
+                                        {{ form.instance.supporting_documents.name }}
+                                    </a>
+                                </small>
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.images|as_crispy_field }}
+                            {% if form.instance.images %}
+                            <div class="mt-2">
+                                <small class="text-muted">Current file: 
+                                    <a href="{{ form.instance.images.url }}" target="_blank">
+                                        {{ form.instance.images.name }}
+                                    </a>
+                                </small>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="alert alert-info mt-3">
+                        <small>
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>File Upload Guidelines:</strong>
+                            <ul class="mb-0 mt-2">
+                                <li>Supporting documents: PDF files up to 10MB</li>
+                                <li>Images: JPG, PNG files up to 5MB</li>
+                                <li>Ensure all patient information is de-identified</li>
+                            </ul>
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Form Actions -->
+            <div class="card mb-4 sticky-top" style="top: 20px;">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="fas fa-save me-2"></i>Save Options</h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <button type="submit" name="action" value="save" class="btn btn-primary">
+                            <i class="fas fa-save me-2"></i>Save as Draft
+                        </button>
+                        
+                        {% if user.role == 'pg' %}
+                        <button type="submit" name="action" value="submit" class="btn btn-success" 
+                                onclick="return confirm('Are you sure you want to submit this case for review? You will not be able to edit it after submission.')">
+                            <i class="fas fa-paper-plane me-2"></i>Submit for Review
+                        </button>
+                        {% endif %}
+                        
+                        <a href="{% url 'cases:case_list' %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-times me-2"></i>Cancel
+                        </a>
+                    </div>
+                    
+                    {% if form.instance.pk %}
+                    <hr>
+                    <div class="text-center">
+                        <small class="text-muted">
+                            Case ID: {{ form.instance.pk }}<br>
+                            Status: {{ form.instance.get_status_display }}<br>
+                            Last updated: {{ form.instance.updated_at|timesince }} ago
+                        </small>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Form Help -->
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="fas fa-question-circle me-2"></i>Help & Tips</h6>
+                </div>
+                <div class="card-body">
+                    <div class="accordion" id="helpAccordion">
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#helpPatient">
+                                    Patient Information
+                                </button>
+                            </h2>
+                            <div id="helpPatient" class="accordion-collapse collapse" data-bs-parent="#helpAccordion">
+                                <div class="accordion-body">
+                                    <small>
+                                        <strong>Patient Initials:</strong> Use only initials to maintain privacy (e.g., J.D.)<br>
+                                        <strong>Age:</strong> Patient's age at time of case<br>
+                                        <strong>MRN:</strong> Medical record number (optional, can be anonymized)
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#helpClinical">
+                                    Clinical Documentation
+                                </button>
+                            </h2>
+                            <div id="helpClinical" class="accordion-collapse collapse" data-bs-parent="#helpAccordion">
+                                <div class="accordion-body">
+                                    <small>
+                                        <strong>Clinical Reasoning:</strong> Document your thought process, differential diagnoses, and decision-making<br>
+                                        <strong>Learning Points:</strong> Key takeaways, new knowledge gained, or skills developed<br>
+                                        <strong>Management:</strong> Treatment plan, interventions, and follow-up care
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#helpSubmission">
+                                    Submission Process
+                                </button>
+                            </h2>
+                            <div id="helpSubmission" class="accordion-collapse collapse" data-bs-parent="#helpAccordion">
+                                <div class="accordion-body">
+                                    <small>
+                                        <strong>Draft:</strong> Save your progress, can be edited anytime<br>
+                                        <strong>Submit:</strong> Send for supervisor review - cannot be edited after submission<br>
+                                        <strong>Review:</strong> Supervisor will provide feedback and approval
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Initialize Select2 for multi-select fields
+    $('#id_secondary_diagnoses, #id_procedures_performed').select2({
+        theme: 'bootstrap-5',
+        width: '100%',
+        placeholder: 'Select multiple items...'
+    });
+    
+    // Auto-resize textareas
+    $('textarea').each(function() {
+        this.setAttribute('style', 'height:' + (this.scrollHeight) + 'px;overflow-y:hidden;');
+    }).on('input', function() {
+        this.style.height = 'auto';
+        this.style.height = (this.scrollHeight) + 'px';
+    });
+    
+    // Form validation
+    $('#caseForm').on('submit', function(e) {
+        var isValid = true;
+        var requiredFields = ['case_title', 'date', 'patient_initials', 'patient_age', 'patient_gender'];
+        
+        requiredFields.forEach(function(field) {
+            var input = $('#id_' + field);
+            if (!input.val()) {
+                input.addClass('is-invalid');
+                isValid = false;
+            } else {
+                input.removeClass('is-invalid');
+            }
+        });
+        
+        if (!isValid) {
+            e.preventDefault();
+            alert('Please fill in all required fields.');
+            $('html, body').animate({
+                scrollTop: $('.is-invalid').first().offset().top - 100
+            }, 500);
+        }
+    });
+    
+    // Remove validation styling on input
+    $('input, textarea, select').on('input change', function() {
+        $(this).removeClass('is-invalid');
+    });
+    
+    // File upload preview
+    $('input[type="file"]').on('change', function() {
+        var file = this.files[0];
+        var $preview = $(this).siblings('.file-preview');
+        
+        if (file) {
+            var fileName = file.name;
+            var fileSize = (file.size / 1024 / 1024).toFixed(2);
+            
+            if ($preview.length === 0) {
+                $preview = $('<div class="file-preview mt-2 small text-muted"></div>');
+                $(this).after($preview);
+            }
+            
+            $preview.html('<i class="fas fa-file me-1"></i>' + fileName + ' (' + fileSize + ' MB)');
+        } else {
+            $preview.remove();
+        }
+    });
+    
+    // Autosave functionality (save draft every 5 minutes)
+    var autosaveInterval = setInterval(function() {
+        if ($('#caseForm input, #caseForm textarea, #caseForm select').filter(':invalid').length === 0) {
+            // Create a hidden form to submit as draft
+            var formData = new FormData($('#caseForm')[0]);
+            formData.set('action', 'autosave');
+            
+            $.ajax({
+                url: $('#caseForm').attr('action'),
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function(response) {
+                    console.log('Autosaved at ' + new Date().toLocaleTimeString());
+                    // Show a subtle indicator
+                    var $indicator = $('<div class="alert alert-info auto-dismiss">Draft autosaved</div>');
+                    $('.main-content').prepend($indicator);
+                    setTimeout(function() {
+                        $indicator.fadeOut();
+                    }, 2000);
+                },
+                error: function() {
+                    console.log('Autosave failed');
+                }
+            });
+        }
+    }, 300000); // 5 minutes
+    
+    // Clear autosave on page unload
+    $(window).on('beforeunload', function() {
+        clearInterval(autosaveInterval);
+    });
+});
+</script>
+{% endblock %}

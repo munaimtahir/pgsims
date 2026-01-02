@@ -1,0 +1,295 @@
+{% extends 'base/base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block title %}
+    {% if form.instance.pk %}Edit Case{% else %}Create New Case{% endif %} - SIMS
+{% endblock %}
+
+{% block breadcrumb %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'users:dashboard' %}">Dashboard</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'cases:case_list' %}">Cases</a></li>
+        <li class="breadcrumb-item active">
+            {% if form.instance.pk %}Edit Case{% else %}Create Case{% endif %}
+        </li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <form method="post" enctype="multipart/form-data" id="caseForm">
+                {% csrf_token %}
+                
+                <!-- Case Information -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-info-circle me-2"></i>
+                            Case Information
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                {{ form.case_title|as_crispy_field }}
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.date_encountered|as_crispy_field }}
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.category|as_crispy_field }}
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.rotation|as_crispy_field }}
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.supervisor|as_crispy_field }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Patient Information -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-user me-2"></i>
+                            Patient Information
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                {{ form.patient_age|as_crispy_field }}
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.patient_gender|as_crispy_field }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Clinical Details -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-stethoscope me-2"></i>
+                            Clinical Details
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        {{ form.chief_complaint|as_crispy_field }}
+                        {{ form.history_of_present_illness|as_crispy_field }}
+                        {{ form.physical_examination|as_crispy_field }}
+                    </div>
+                </div>
+
+                <!-- Diagnosis and Management -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-diagnoses me-2"></i>
+                            Diagnosis and Management
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                {{ form.primary_diagnosis|as_crispy_field }}
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.differential_diagnosis|as_crispy_field }}
+                            </div>
+                        </div>
+                        {{ form.management_plan|as_crispy_field }}
+                    </div>
+                </div>
+
+                <!-- Learning Aspects -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-graduation-cap me-2"></i>
+                            Learning and Reflection
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        {{ form.learning_objectives|as_crispy_field }}
+                        {{ form.clinical_reasoning|as_crispy_field }}
+                        {{ form.learning_points|as_crispy_field }}
+                        {{ form.challenges_faced|as_crispy_field }}
+                    </div>
+                </div>
+
+                <!-- Outcome and Follow-up -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-chart-line me-2"></i>
+                            Outcome and Follow-up
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        {{ form.outcome|as_crispy_field }}
+                        {{ form.follow_up_plan|as_crispy_field }}
+                    </div>
+                </div>
+
+                <!-- File Attachments -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-paperclip me-2"></i>
+                            Attachments
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                {{ form.case_files|as_crispy_field }}
+                                {% if form.instance.case_files %}
+                                <div class="mt-2">
+                                    <small class="text-muted">Current file: 
+                                        <a href="{{ form.instance.case_files.url }}" target="_blank">
+                                            {{ form.instance.case_files.name }}
+                                        </a>
+                                    </small>
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.case_images|as_crispy_field }}
+                                {% if form.instance.case_images %}
+                                <div class="mt-2">
+                                    <small class="text-muted">Current file: 
+                                        <a href="{{ form.instance.case_images.url }}" target="_blank">
+                                            {{ form.instance.case_images.name }}
+                                        </a>
+                                    </small>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Form Actions -->
+                <div class="card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'cases:case_list' %}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left me-1"></i>Cancel
+                            </a>
+                            <div>
+                                <button type="submit" name="action" value="save_draft" class="btn btn-outline-primary me-2">
+                                    <i class="fas fa-save me-1"></i>Save as Draft
+                                </button>
+                                <button type="submit" name="action" value="submit" class="btn btn-primary">
+                                    <i class="fas fa-paper-plane me-1"></i>Submit for Review
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .card {
+        border: none;
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        margin-bottom: 1.5rem;
+    }
+    
+    .card-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-bottom: none;
+    }
+    
+    .card-header h5 {
+        margin: 0;
+        font-weight: 500;
+    }
+    
+    .form-control:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+    }
+    
+    .btn-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+    }
+    
+    .btn-primary:hover {
+        background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+    }
+    
+    .btn-outline-primary {
+        color: #667eea;
+        border-color: #667eea;
+    }
+    
+    .btn-outline-primary:hover {
+        background-color: #667eea;
+        border-color: #667eea;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Form validation
+    $('#caseForm').on('submit', function(e) {
+        let isValid = true;
+        
+        // Validate required fields
+        const requiredFields = ['case_title', 'date_encountered', 'patient_age', 'chief_complaint', 'history_of_present_illness', 'physical_examination', 'management_plan', 'clinical_reasoning', 'learning_points'];
+        
+        // Clear previous error states
+        $('.is-invalid').removeClass('is-invalid');
+        
+        requiredFields.forEach(function(fieldName) {
+            const field = $('#id_' + fieldName);
+            if (field.length && !field.val().trim()) {
+                field.addClass('is-invalid');
+                if (isValid) {
+                    field.focus();
+                    isValid = false;
+                }
+            }
+        });
+        
+        if (!isValid) {
+            e.preventDefault();
+            alert('Please fill in all required fields.');
+            return false;
+        }
+    });
+    
+    // Remove invalid class when user starts typing
+    $('.form-control').on('input', function() {
+        $(this).removeClass('is-invalid');
+    });
+    
+    // Auto-resize textareas
+    $('textarea').each(function() {
+        this.setAttribute('style', 'height:' + (this.scrollHeight) + 'px;overflow-y:hidden;');
+    }).on('input', function() {
+        this.style.height = 'auto';
+        this.style.height = (this.scrollHeight) + 'px';
+    });
+});
+</script>
+{% endblock %}

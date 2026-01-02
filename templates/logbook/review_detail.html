@@ -1,0 +1,290 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Review Details - SIMS{% endblock %}
+
+{% block breadcrumb %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'users:dashboard' %}">Dashboard</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'logbook:list' %}">Logbook</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'logbook:detail' review.entry.pk %}">{{ review.entry.title|truncatechars:30 }}</a></li>
+        <li class="breadcrumb-item active">Review</li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-clipboard-check me-2"></i>
+                            Review Details
+                        </h5>
+                        <div class="d-flex gap-2">
+                            {% if review.status == 'draft' and review.reviewer == request.user %}
+                            <a href="{% url 'logbook:review' review.entry.pk %}" class="btn btn-outline-primary btn-sm">
+                                <i class="fas fa-edit me-1"></i>Edit Review
+                            </a>
+                            {% endif %}
+                            <a href="{% url 'logbook:detail' review.entry.pk %}" class="btn btn-outline-secondary btn-sm">
+                                <i class="fas fa-arrow-left me-1"></i>Back to Entry
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <!-- Review Header -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h6 class="fw-bold mb-3">Review Information</h6>
+                            <div class="row">
+                                <div class="col-sm-4"><strong>Reviewer:</strong></div>
+                                <div class="col-sm-8">{{ review.reviewer.get_full_name }}</div>
+                            </div>
+                            <div class="row">
+                                <div class="col-sm-4"><strong>Review Date:</strong></div>
+                                <div class="col-sm-8">{{ review.created_at|date:"F d, Y \a\t g:i A" }}</div>
+                            </div>
+                            <div class="row">
+                                <div class="col-sm-4"><strong>Status:</strong></div>
+                                <div class="col-sm-8">
+                                    <span class="badge badge-{{ review.status|default:'secondary' }}">
+                                        {{ review.get_status_display }}
+                                    </span>
+                                </div>
+                            </div>
+                            {% if review.rating %}
+                            <div class="row">
+                                <div class="col-sm-4"><strong>Rating:</strong></div>
+                                <div class="col-sm-8">
+                                    <div class="rating-stars">
+                                        {% for i in "12345" %}
+                                            {% if forloop.counter <= review.rating %}
+                                                <i class="fas fa-star text-warning"></i>
+                                            {% else %}
+                                                <i class="far fa-star text-muted"></i>
+                                            {% endif %}
+                                        {% endfor %}
+                                        <span class="ms-2 text-muted">({{ review.rating }}/5)</span>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="fw-bold mb-3">Entry Information</h6>
+                            <div class="row">
+                                <div class="col-sm-4"><strong>Title:</strong></div>
+                                <div class="col-sm-8">{{ review.entry.title }}</div>
+                            </div>
+                            <div class="row">
+                                <div class="col-sm-4"><strong>Student:</strong></div>
+                                <div class="col-sm-8">{{ review.entry.pg.get_full_name }}</div>
+                            </div>
+                            <div class="row">
+                                <div class="col-sm-4"><strong>Date:</strong></div>
+                                <div class="col-sm-8">{{ review.entry.date|date:"F d, Y" }}</div>
+                            </div>
+                            <div class="row">
+                                <div class="col-sm-4"><strong>Category:</strong></div>
+                                <div class="col-sm-8">{{ review.entry.category.name }}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Review Content -->
+                    <div class="row">
+                        <div class="col-12">
+                            {% if review.comments %}
+                            <div class="mb-4">
+                                <h6 class="fw-bold">Comments</h6>
+                                <div class="bg-light p-3 rounded">
+                                    {{ review.comments|linebreaks }}
+                                </div>
+                            </div>
+                            {% endif %}
+
+                            <div class="row">
+                                {% if review.strengths %}
+                                <div class="col-md-6 mb-3">
+                                    <h6 class="fw-bold text-success">
+                                        <i class="fas fa-check-circle me-2"></i>Strengths
+                                    </h6>
+                                    <div class="bg-light p-3 rounded">
+                                        {{ review.strengths|linebreaks }}
+                                    </div>
+                                </div>
+                                {% endif %}
+
+                                {% if review.areas_for_improvement %}
+                                <div class="col-md-6 mb-3">
+                                    <h6 class="fw-bold text-warning">
+                                        <i class="fas fa-exclamation-triangle me-2"></i>Areas for Improvement
+                                    </h6>
+                                    <div class="bg-light p-3 rounded">
+                                        {{ review.areas_for_improvement|linebreaks }}
+                                    </div>
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            {% if review.learning_objectives_met %}
+                            <div class="mb-3">
+                                <h6 class="fw-bold">Learning Objectives Assessment</h6>
+                                <div class="bg-light p-3 rounded">
+                                    {{ review.learning_objectives_met|linebreaks }}
+                                </div>
+                            </div>
+                            {% endif %}
+
+                            {% if review.competencies_demonstrated %}
+                            <div class="mb-3">
+                                <h6 class="fw-bold">Competencies Demonstrated</h6>
+                                <div class="bg-light p-3 rounded">
+                                    {{ review.competencies_demonstrated|linebreaks }}
+                                </div>
+                            </div>
+                            {% endif %}
+
+                            {% if review.recommendations %}
+                            <div class="mb-3">
+                                <h6 class="fw-bold text-primary">
+                                    <i class="fas fa-lightbulb me-2"></i>Recommendations
+                                </h6>
+                                <div class="bg-light p-3 rounded">
+                                    {{ review.recommendations|linebreaks }}
+                                </div>
+                            </div>
+                            {% endif %}
+
+                            {% if review.attachments.exists %}
+                            <div class="mb-3">
+                                <h6 class="fw-bold">Attachments</h6>
+                                <div class="list-group">
+                                    {% for attachment in review.attachments.all %}
+                                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <i class="fas fa-paperclip me-2"></i>
+                                            <a href="{{ attachment.file.url }}" target="_blank">{{ attachment.filename }}</a>
+                                            <small class="text-muted d-block">{{ attachment.file.size|filesizeformat }}</small>
+                                        </div>
+                                        <a href="{{ attachment.file.url }}" class="btn btn-outline-primary btn-sm" download>
+                                            <i class="fas fa-download"></i>
+                                        </a>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            {% endif %}
+
+                            {% if review.is_final_review %}
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle me-2"></i>
+                                This is marked as a final review for this logbook entry.
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Review History -->
+                    {% if review.entry.logbook_reviews.count > 1 %}
+                    <div class="mt-4">
+                        <h6 class="fw-bold">Review History</h6>
+                        <div class="timeline">
+                            {% for entry_review in review.entry.logbook_reviews.all %}
+                            <div class="timeline-item {% if entry_review.pk == review.pk %}active{% endif %}">
+                                <div class="timeline-marker"></div>
+                                <div class="timeline-content">
+                                    <div class="d-flex justify-content-between">
+                                        <strong>{{ entry_review.reviewer.get_full_name }}</strong>
+                                        <small class="text-muted">{{ entry_review.created_at|date:"M d, Y" }}</small>
+                                    </div>
+                                    {% if entry_review.rating %}
+                                    <div class="rating-stars small">
+                                        {% for i in "12345" %}
+                                            {% if forloop.counter <= entry_review.rating %}
+                                                <i class="fas fa-star text-warning"></i>
+                                            {% else %}
+                                                <i class="far fa-star text-muted"></i>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </div>
+                                    {% endif %}
+                                    <p class="small mb-0">{{ entry_review.comments|truncatechars:150 }}</p>
+                                    {% if entry_review.pk != review.pk %}
+                                    <a href="{% url 'logbook:review_detail' entry_review.pk %}" class="small">View Full Review</a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.rating-stars {
+    font-size: 1rem;
+}
+
+.timeline {
+    position: relative;
+    padding-left: 30px;
+}
+
+.timeline-item {
+    position: relative;
+    margin-bottom: 20px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.timeline-item:last-child {
+    border-bottom: none;
+}
+
+.timeline-marker {
+    position: absolute;
+    left: -35px;
+    top: 5px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background-color: #6c757d;
+    border: 3px solid #fff;
+    box-shadow: 0 0 0 3px #e9ecef;
+}
+
+.timeline-item.active .timeline-marker {
+    background-color: #007bff;
+    box-shadow: 0 0 0 3px #cce7ff;
+}
+
+.timeline::before {
+    content: '';
+    position: absolute;
+    left: -30px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background-color: #e9ecef;
+}
+
+.badge-draft { background-color: #6c757d; }
+.badge-submitted { background-color: #17a2b8; }
+.badge-approved { background-color: #28a745; }
+.badge-needs_revision { background-color: #ffc107; color: #212529; }
+</style>
+{% endblock %}
+{% endblock %}

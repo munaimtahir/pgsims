@@ -1,0 +1,267 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static %}
+
+{% block title %}{% trans 'Page not found' %} | {{ site_title|default:_('Django site admin') }}{% endblock %}
+
+{% block extra_css %}
+{{ block.super }}
+<style>
+    .error-container {
+        max-width: 600px;
+        margin: 3rem auto;
+        padding: 3rem;
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 20px;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        backdrop-filter: blur(10px);
+        text-align: center;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .error-icon {
+        width: 150px;
+        height: 150px;
+        background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 2rem;
+        color: white;
+        font-size: 4rem;
+        box-shadow: 0 15px 35px rgba(255, 107, 107, 0.3);
+    }
+    
+    .error-code {
+        font-size: 6rem;
+        font-weight: 900;
+        color: #2c3e50;
+        margin: 0;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        text-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+    }
+    
+    .error-title {
+        color: #2c3e50;
+        font-size: 2rem;
+        font-weight: 700;
+        margin: 1rem 0;
+    }
+    
+    .error-message {
+        color: #6c757d;
+        font-size: 1.1rem;
+        margin-bottom: 2.5rem;
+        line-height: 1.6;
+    }
+    
+    .suggestions {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        border-radius: 15px;
+        padding: 2rem;
+        margin: 2rem 0;
+        text-align: left;
+        border-left: 4px solid #667eea;
+    }
+    
+    .suggestions h3 {
+        color: #2c3e50;
+        margin-bottom: 1rem;
+        font-size: 1.2rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .suggestions ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    
+    .suggestions li {
+        padding: 0.5rem 0;
+        color: #6c757d;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .suggestions li::before {
+        content: '•';
+        color: #667eea;
+        font-weight: bold;
+        font-size: 1.2rem;
+    }
+    
+    .action-buttons {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        flex-wrap: wrap;
+        margin-top: 2rem;
+    }
+    
+    .btn-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        border-radius: 12px;
+        padding: 12px 24px;
+        color: white;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    }
+    
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+        color: white;
+        text-decoration: none;
+    }
+    
+    .btn-secondary {
+        background: transparent;
+        border: 2px solid #667eea;
+        border-radius: 12px;
+        padding: 10px 22px;
+        color: #667eea;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .btn-secondary:hover {
+        background: #667eea;
+        color: white;
+        transform: translateY(-2px);
+        text-decoration: none;
+    }
+    
+    .fade-in {
+        animation: fadeIn 0.8s ease-in-out;
+    }
+    
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .float {
+        animation: float 3s ease-in-out infinite;
+    }
+    
+    @keyframes float {
+        0%, 100% { transform: translateY(0px); }
+        50% { transform: translateY(-10px); }
+    }
+    
+    @media (max-width: 768px) {
+        .error-container {
+            margin: 1rem;
+            padding: 2rem;
+        }
+        
+        .error-code {
+            font-size: 4rem;
+        }
+        
+        .error-title {
+            font-size: 1.5rem;
+        }
+        
+        .error-icon {
+            width: 120px;
+            height: 120px;
+            font-size: 3rem;
+        }
+        
+        .action-buttons {
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .btn-primary,
+        .btn-secondary {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="error-container fade-in">
+    <div class="error-icon float">
+        <i class="fas fa-search"></i>
+    </div>
+    
+    <h1 class="error-code">404</h1>
+    
+    <h2 class="error-title">
+        {% trans 'Page Not Found' %}
+    </h2>
+    
+    <p class="error-message">
+        {% trans "The page you are looking for doesn't exist or has been moved. This might be due to a mistyped URL or the page may have been deleted." %}
+    </p>
+    
+    <div class="suggestions">
+        <h3>
+            <i class="fas fa-lightbulb"></i>
+            {% trans 'What can you do?' %}
+        </h3>
+        <ul>
+            <li>{% trans 'Check the URL for typos and try again' %}</li>
+            <li>{% trans 'Use the navigation menu to find what you need' %}</li>
+            <li>{% trans 'Return to the admin dashboard' %}</li>
+            <li>{% trans 'Contact your system administrator if the problem persists' %}</li>
+        </ul>
+    </div>
+    
+    <div class="action-buttons">
+        <a href="{% url 'admin:index' %}" class="btn-primary">
+            <i class="fas fa-tachometer-alt"></i>
+            {% trans 'Back to Dashboard' %}
+        </a>
+        
+        <a href="javascript:history.back()" class="btn-secondary">
+            <i class="fas fa-arrow-left"></i>
+            {% trans 'Go Back' %}
+        </a>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Add keyboard shortcuts
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape' || event.key === 'Backspace') {
+            history.back();
+        } else if (event.key === 'Enter') {
+            window.location.href = '{% url "admin:index" %}';
+        }
+    });
+    
+    // Focus on main action button
+    document.querySelector('.btn-primary').focus();
+});
+</script>
+{% endblock %}

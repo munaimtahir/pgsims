@@ -1,0 +1,373 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}My Progress Analytics - SIMS{% endblock %}
+
+{% block breadcrumb %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'users:pg_dashboard' %}">Dashboard</a></li>
+        <li class="breadcrumb-item active">Analytics</li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block page_header %}
+<div class="d-flex justify-content-between align-items-start mb-4">
+    <div>
+        <h2>
+            <i class="fas fa-chart-area me-2"></i>My Progress Analytics
+        </h2>
+        <p class="text-muted">Track your academic and clinical progress</p>
+    </div>
+    <div>
+        <a href="{% url 'users:pg_dashboard' %}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<!-- Progress Overview Cards -->
+<div class="row mb-4">
+    <div class="col-xl-2 col-md-4 col-sm-6 mb-4">
+        <div class="card border-left-primary shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                            Certificates
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ my_certificates }}</div>
+                        <div class="small text-success">+{{ certificates_this_month }} this month</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-certificate fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-2 col-md-4 col-sm-6 mb-4">
+        <div class="card border-left-success shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                            Logbook Entries
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ my_logbook_entries }}</div>
+                        <div class="small text-success">+{{ entries_this_month }} this month</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-book fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-2 col-md-4 col-sm-6 mb-4">
+        <div class="card border-left-info shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                            Rotations
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ my_rotations }}</div>
+                        <div class="small text-info">{{ completed_rotations }} completed</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-sync-alt fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-2 col-md-4 col-sm-6 mb-4">
+        <div class="card border-left-warning shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                            Clinical Cases
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ my_cases }}</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-stethoscope fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-4 col-md-8 col-sm-12 mb-4">
+        <div class="card border-left-success shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                            Overall Progress
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ completion_percentage }}%</div>
+                        <div class="progress progress-sm">
+                            <div class="progress-bar bg-success" role="progressbar" 
+                                 style="width: {{ completion_percentage }}%" 
+                                 aria-valuenow="{{ completion_percentage }}" 
+                                 aria-valuemin="0" aria-valuemax="100">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-chart-pie fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Current Rotation Status -->
+{% if current_rotation %}
+<div class="row mb-4">
+    <div class="col-lg-12">
+        <div class="card shadow">
+            <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                <h6 class="m-0 font-weight-bold text-primary">Current Rotation</h6>
+                <span class="badge badge-success">Active</span>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-8">
+                        <h5>{{ current_rotation.department|default:"Current Rotation" }}</h5>
+                        <p class="text-muted">{{ current_rotation.description|default:"Active rotation in progress" }}</p>
+                        <p><strong>Duration:</strong> {{ current_rotation.start_date }} - {{ current_rotation.end_date }}</p>
+                    </div>
+                    <div class="col-md-4 text-right">
+                        <div class="circular-progress">
+                            <div class="progress-circle">
+                                <span class="progress-text">75%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Charts Row -->
+<div class="row">
+    <!-- Monthly Progress Chart -->
+    <div class="col-xl-8 col-lg-7 mb-4">
+        <div class="card shadow">
+            <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                <h6 class="m-0 font-weight-bold text-primary">Monthly Progress (Last 6 Months)</h6>
+            </div>
+            <div class="card-body">
+                <div class="chart-area">
+                    <canvas id="monthlyProgressChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Activity Distribution -->
+    <div class="col-xl-4 col-lg-5 mb-4">
+        <div class="card shadow">
+            <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                <h6 class="m-0 font-weight-bold text-primary">Activity Distribution</h6>
+            </div>
+            <div class="card-body">
+                <div class="chart-pie">
+                    <canvas id="activityChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Goals and Targets -->
+<div class="row">
+    <div class="col-lg-12 mb-4">
+        <div class="card shadow">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Progress Breakdown</h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="text-primary">Academic Progress</h6>
+                        <div class="mb-2">
+                            <div class="d-flex justify-content-between">
+                                <span>Certificates Earned</span>
+                                <span>{{ my_certificates }}/20</span>
+                            </div>
+                            <div class="progress">
+                                <div class="progress-bar" role="progressbar" 
+                                     style="width: {% widthratio my_certificates 20 100 %}%">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-2">
+                            <div class="d-flex justify-content-between">
+                                <span>Logbook Entries</span>
+                                <span>{{ my_logbook_entries }}/100</span>
+                            </div>
+                            <div class="progress">
+                                <div class="progress-bar bg-success" role="progressbar" 
+                                     style="width: {% widthratio my_logbook_entries 100 100 %}%">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-primary">Clinical Progress</h6>
+                        <div class="mb-2">
+                            <div class="d-flex justify-content-between">
+                                <span>Rotations Completed</span>
+                                <span>{{ completed_rotations }}/12</span>
+                            </div>
+                            <div class="progress">
+                                <div class="progress-bar bg-info" role="progressbar" 
+                                     style="width: {% widthratio completed_rotations 12 100 %}%">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-2">
+                            <div class="d-flex justify-content-between">
+                                <span>Clinical Cases</span>
+                                <span>{{ my_cases }}/50</span>
+                            </div>
+                            <div class="progress">
+                                <div class="progress-bar bg-warning" role="progressbar" 
+                                     style="width: {% widthratio my_cases 50 100 %}%">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// Monthly Progress Line Chart
+const monthlyCtx = document.getElementById('monthlyProgressChart').getContext('2d');
+const monthlyData = {
+    labels: [
+        {% for month in monthly_progress %}
+        '{{ month.month }}'{% if not forloop.last %},{% endif %}
+        {% endfor %}
+    ],
+    datasets: [{
+        label: 'Logbook Entries',
+        data: [
+            {% for month in monthly_progress %}
+            {{ month.count }}{% if not forloop.last %},{% endif %}
+            {% endfor %}
+        ],
+        borderColor: '#4e73df',
+        backgroundColor: 'rgba(78, 115, 223, 0.1)',
+        tension: 0.4
+    }]
+};
+
+new Chart(monthlyCtx, {
+    type: 'line',
+    data: monthlyData,
+    options: {
+        responsive: true,
+        plugins: {
+            legend: {
+                display: false
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true
+            }
+        }
+    }
+});
+
+// Activity Distribution Pie Chart
+const activityCtx = document.getElementById('activityChart').getContext('2d');
+const activityData = {
+    labels: ['Certificates', 'Logbook Entries', 'Rotations', 'Clinical Cases'],
+    datasets: [{
+        data: [{{ my_certificates }}, {{ my_logbook_entries }}, {{ my_rotations }}, {{ my_cases }}],
+        backgroundColor: ['#4e73df', '#1cc88a', '#36b9cc', '#f6c23e']
+    }]
+};
+
+new Chart(activityCtx, {
+    type: 'doughnut',
+    data: activityData,
+    options: {
+        responsive: true,
+        plugins: {
+            legend: {
+                position: 'bottom'
+            }
+        }
+    }
+});
+</script>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.border-left-primary {
+    border-left: 0.25rem solid #4e73df !important;
+}
+.border-left-success {
+    border-left: 0.25rem solid #1cc88a !important;
+}
+.border-left-info {
+    border-left: 0.25rem solid #36b9cc !important;
+}
+.border-left-warning {
+    border-left: 0.25rem solid #f6c23e !important;
+}
+.text-gray-800 {
+    color: #5a5c69 !important;
+}
+.text-gray-300 {
+    color: #dddfeb !important;
+}
+.progress-sm {
+    height: 0.5rem;
+}
+.circular-progress {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.progress-circle {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    border: 8px solid #e9ecef;
+    border-top: 8px solid #1cc88a;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.progress-text {
+    font-weight: bold;
+    color: #5a5c69;
+}
+</style>
+{% endblock %}

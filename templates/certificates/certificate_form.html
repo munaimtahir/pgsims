@@ -1,0 +1,325 @@
+{% extends 'base/base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}{% if form.instance.pk %}Edit{% else %}Add{% endif %} Certificate - SIMS{% endblock %}
+
+{% block breadcrumb %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'users:dashboard' %}">Dashboard</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'certificates:list' %}">Certificates</a></li>
+        {% if form.instance.pk %}
+        <li class="breadcrumb-item"><a href="{% url 'certificates:detail' form.instance.pk %}">{{ form.instance.title|truncatechars:30 }}</a></li>
+        <li class="breadcrumb-item active">Edit</li>
+        {% else %}
+        <li class="breadcrumb-item active">Add Certificate</li>
+        {% endif %}
+    </ol>
+</nav>
+{% endblock %}
+
+{% block page_header %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2>
+            <i class="fas fa-{% if form.instance.pk %}edit{% else %}plus{% endif %} me-2"></i>
+            {% if form.instance.pk %}Edit Certificate{% else %}Add New Certificate{% endif %}
+        </h2>
+        <p class="text-muted">
+            {% if form.instance.pk %}
+                Update the details of this certificate
+            {% else %}
+                Add a new training certificate to your portfolio
+            {% endif %}
+        </p>
+    </div>
+    <div>
+        {% if form.instance.pk %}
+        <a href="{% url 'certificates:detail' form.instance.pk %}" class="btn btn-outline-secondary">
+            <i class="fas fa-eye me-2"></i>View Certificate
+        </a>
+        {% endif %}
+        <a href="{% url 'certificates:list' %}" class="btn btn-outline-primary">
+            <i class="fas fa-list me-2"></i>Back to List
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8">
+        <!-- Main Form -->
+        <form method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
+            {% csrf_token %}
+            
+            <!-- Basic Information -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Certificate Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-8">
+                            {{ form.title|as_crispy_field }}
+                        </div>
+                        <div class="col-md-4">
+                            {{ form.certificate_type|as_crispy_field }}
+                        </div>
+                    </div>
+                    {{ form.description|as_crispy_field }}
+                    {{ form.issuing_organization|as_crispy_field }}
+                    {{ form.skills_acquired|as_crispy_field }}
+                </div>
+            </div>
+
+            <!-- Dates and Validity -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-calendar-alt me-2"></i>Dates & Validity</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            {{ form.issue_date|as_crispy_field }}
+                        </div>
+                        <div class="col-md-4">
+                            {{ form.expiry_date|as_crispy_field }}
+                        </div>
+                        <div class="col-md-4">
+                            {{ form.certificate_number|as_crispy_field }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Credits and Points -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-award me-2"></i>Credits & Points</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            {{ form.cme_points_earned|as_crispy_field }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.cpd_credits_earned|as_crispy_field }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Verification -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-check-circle me-2"></i>Verification</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-8">
+                            {{ form.verification_url|as_crispy_field }}
+                        </div>
+                        <div class="col-md-4">
+                            {{ form.verification_code|as_crispy_field }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- File Upload -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-upload me-2"></i>Certificate Files</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            {% if form.instance.certificate_file %}
+                            <div class="alert alert-info">
+                                <i class="fas fa-file-pdf me-2"></i>
+                                Current file: <a href="{{ form.instance.certificate_file.url }}" target="_blank">{{ form.instance.certificate_file.name }}</a>
+                                <small class="d-block text-muted">Upload a new file to replace the current one</small>
+                            </div>
+                            {% endif %}
+                            {{ form.certificate_file|as_crispy_field }}
+                            <small class="text-muted">
+                                Supported formats: PDF, JPG, PNG. Maximum file size: 10MB
+                            </small>
+                        </div>
+                        <div class="col-md-6">
+                            {% if form.instance.additional_documents %}
+                            <div class="alert alert-info">
+                                <i class="fas fa-file me-2"></i>
+                                Current additional file: <a href="{{ form.instance.additional_documents.url }}" target="_blank">{{ form.instance.additional_documents.name }}</a>
+                                <small class="d-block text-muted">Upload a new file to replace the current one</small>
+                            </div>
+                            {% endif %}
+                            {{ form.additional_documents|as_crispy_field }}
+                            <small class="text-muted">
+                                Optional additional documents (PDF, DOC, DOCX, images)
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PG Assignment (Admin/Supervisor only) -->
+            {% if user.role == 'admin' or user.role == 'supervisor' %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-user-graduate me-2"></i>Assignment</h5>
+                </div>
+                <div class="card-body">
+                    {{ form.pg|as_crispy_field }}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Form Actions -->
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'certificates:list' %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-times me-2"></i>Cancel
+                        </a>
+                        <div>
+                            {% if form.instance.pk %}
+                            <button type="submit" name="action" value="save" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>Update Certificate
+                            </button>
+                            {% else %}
+                            <button type="submit" name="action" value="save" class="btn btn-success">
+                                <i class="fas fa-plus me-2"></i>Add Certificate
+                            </button>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <div class="col-lg-4">
+        <!-- Help & Information -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="fas fa-question-circle me-2"></i>Help & Tips</h6>
+            </div>
+            <div class="card-body">
+                <div class="accordion" id="helpAccordion">
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#helpTypes">
+                                Certificate Types
+                            </button>
+                        </h2>
+                        <div id="helpTypes" class="accordion-collapse collapse" data-bs-parent="#helpAccordion">
+                            <div class="accordion-body">
+                                <small>
+                                    <strong>Training:</strong> Certificates from courses, workshops, seminars<br>
+                                    <strong>Certification:</strong> Professional certifications (BLS, ACLS, etc.)<br>
+                                    <strong>License:</strong> Medical licenses and registrations
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#helpUpload">
+                                File Upload
+                            </button>
+                        </h2>
+                        <div id="helpUpload" class="accordion-collapse collapse" data-bs-parent="#helpAccordion">
+                            <div class="accordion-body">
+                                <small>
+                                    • Scan certificates in high quality<br>
+                                    • Use PDF format when possible<br>
+                                    • Ensure all text is readable<br>
+                                    • Maximum file size: 10MB
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#helpCompliance">
+                                Compliance Tracking
+                            </button>
+                        </h2>
+                        <div id="helpCompliance" class="accordion-collapse collapse" data-bs-parent="#helpAccordion">
+                            <div class="accordion-body">
+                                <small>
+                                    • Set expiry dates for automatic reminders<br>
+                                    • Update certificates before they expire<br>
+                                    • Keep digital copies of all certificates<br>
+                                    • Notify supervisors of new certifications
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Certificate Status -->
+        {% if form.instance.pk %}
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="fas fa-info me-2"></i>Certificate Status</h6>
+            </div>
+            <div class="card-body">
+                <div class="text-center">
+                    <span class="badge bg-{% if form.instance.is_expired %}danger{% elif form.instance.is_expiring_soon %}warning{% else %}success{% endif %} fs-6 mb-2">
+                        {% if form.instance.is_expired %}Expired{% elif form.instance.is_expiring_soon %}Expiring Soon{% else %}Active{% endif %}
+                    </span>
+                    <div class="text-center">
+                        <small class="text-muted">
+                            Certificate ID: {{ form.instance.pk }}<br>
+                            Last updated: {{ form.instance.updated_at|timesince }} ago
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Initialize date pickers
+    $('input[type="date"]').each(function() {
+        if ($(this).val() === '') {
+            $(this).val(new Date().toISOString().split('T')[0]);
+        }
+    });
+    
+    // File upload preview
+    $('#id_certificate_file').change(function() {
+        const file = this.files[0];
+        if (file) {
+            const fileSize = file.size / 1024 / 1024; // MB
+            if (fileSize > 10) {
+                alert('File size must be less than 10MB');
+                $(this).val('');
+                return;
+            }
+        }
+    });
+    
+    // Form validation
+    $('.needs-validation').on('submit', function(e) {
+        if (!this.checkValidity()) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        $(this).addClass('was-validated');
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,588 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}SIMS - Postgraduate Medical Training System | Faisalabad Medical University{% endblock %}
+
+{% block extra_css %}
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css">
+<style>    body {
+        min-height: 100vh;
+        margin: 0;
+        padding: 0;
+        background: linear-gradient(135deg, #2c5282 0%, #3182ce 50%, #4299e1 100%);
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        /* Remove flex centering from body */
+    }
+    
+    /* SIMS Login Button - Top Left Corner with Scroll Trigger */
+    .sims-login-button {
+        position: fixed;
+        top: 20px;
+        left: 20px;
+        z-index: 1050;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 12px 20px;
+        border-radius: 25px;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 0.9rem;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    
+    .sims-login-button.visible {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    
+    .sims-login-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        color: white;
+        text-decoration: none;
+    }    /* Main container adjustments - centered */
+    .homepage-container {
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 25px 60px rgba(0,0,0,0.15);
+        overflow: hidden;
+        max-width: 1100px;
+        width: 100%;
+        min-height: 650px;
+        margin: 40px auto 0 auto;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: stretch;
+    }
+    
+    .hero-section {
+        background: linear-gradient(135deg, #2c5282 0%, #3182ce 50%, #4299e1 100%);
+        color: white;
+        padding: 60px 40px;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .hero-section::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path d="M0,50 Q25,30 50,50 T100,50 L100,100 L0,100 Z" fill="rgba(255,255,255,0.05)"/></svg>');
+        background-size: 200px 100px;
+        animation: wave 20s ease-in-out infinite;
+    }
+    
+    @keyframes wave {
+        0%, 100% { transform: translateX(0); }
+        50% { transform: translateX(-50px); }
+    }
+    
+    .fmu-logo {
+        font-size: 4rem;
+        margin-bottom: 20px;
+        position: relative;
+        z-index: 2;
+    }
+    
+    .university-name {
+        font-size: 1.8rem;
+        font-weight: 300;
+        margin-bottom: 10px;
+        position: relative;
+        z-index: 2;
+    }
+    
+    .system-title {
+        font-size: 2.8rem;
+        font-weight: bold;
+        margin: 20px 0;
+        position: relative;
+        z-index: 2;
+    }
+    
+    .system-subtitle {
+        font-size: 1.2rem;
+        opacity: 0.9;
+        margin-bottom: 30px;
+        position: relative;
+        z-index: 2;
+    }
+    
+    .content-section {
+        padding: 60px 40px;
+    }
+      /* Feature grid - Two columns layout */
+    .feature-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 30px;
+        margin: 40px auto;
+        max-width: 900px;
+        justify-content: center;
+    }
+    
+    .feature-card {
+        background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+        border-radius: 15px;
+        padding: 30px;
+        text-align: center;
+        transition: all 0.3s ease;
+        border: 1px solid #e2e8f0;
+    }
+    
+    .feature-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 35px rgba(44, 82, 130, 0.1);
+        border-color: #3182ce;
+    }
+    
+    .feature-icon {
+        background: linear-gradient(135deg, #3182ce 0%, #4299e1 100%);
+        color: white;
+        width: 70px;
+        height: 70px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.8rem;
+        margin: 0 auto 20px;
+        box-shadow: 0 10px 25px rgba(49, 130, 206, 0.3);
+    }
+    
+    .feature-title {
+        font-size: 1.3rem;
+        font-weight: 600;
+        color: #2d3748;
+        margin-bottom: 10px;
+    }
+    
+    .feature-description {
+        color: #4a5568;
+        font-size: 0.95rem;
+        line-height: 1.6;
+    }
+    
+    .login-section {
+        background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+        padding: 40px;
+        text-align: center;
+        border-top: 1px solid #e2e8f0;
+    }
+    
+    .btn-login {
+        background: linear-gradient(135deg, #3182ce 0%, #4299e1 100%);
+        border: none;
+        border-radius: 12px;
+        padding: 15px 40px;
+        color: white;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-block;
+        box-shadow: 0 8px 20px rgba(49, 130, 206, 0.3);
+    }
+    
+    .btn-login:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 30px rgba(49, 130, 206, 0.4);
+        color: white;
+    }
+    
+    .system-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 20px;
+        margin-top: 30px;
+    }
+    
+    .stat-item {
+        text-align: center;
+        padding: 20px;
+        background: white;
+        border-radius: 10px;
+        border: 1px solid #e2e8f0;
+    }
+    
+    .stat-icon {
+        color: #3182ce;
+        font-size: 1.5rem;
+        margin-bottom: 8px;
+    }
+    
+    .stat-label {
+        font-size: 0.85rem;
+        color: #4a5568;
+        font-weight: 500;
+    }
+    
+    .stat-value {
+        color: #2d3748;
+        font-weight: 600;
+    }
+    
+    .university-info {
+        background: linear-gradient(135deg, #2c5282 0%, #3182ce 100%);
+        color: white;
+        padding: 30px;
+        border-radius: 15px;
+        margin: 30px 0;
+        text-align: center;
+    }    /* Footer styling - at bottom but not fixed */
+    .page-footer {
+        background: rgba(44, 82, 130, 0.95);
+        color: white;
+        padding: 20px 0;
+        text-align: center;
+        font-size: 0.9rem;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        margin-top: 40px;
+        width: 100vw;
+        position: relative;
+        left: 50%;
+        transform: translateX(-50%);
+    }
+    
+    .page-footer a {
+        color: #a0c4ff;
+        text-decoration: none;
+    }
+    
+    .page-footer a:hover {
+        color: white;
+        text-decoration: underline;
+    }
+    
+      @media (max-width: 768px) {
+        .homepage-container {
+            margin: 80px 10px 20px;
+            border-radius: 15px;
+        }
+        
+        .hero-section, .content-section, .login-section {
+            padding: 40px 20px;
+        }
+        
+        .system-title {
+            font-size: 2.2rem;
+        }
+        
+        .feature-grid {
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+        
+        .sims-login-button {
+            font-size: 0.8rem;
+            padding: 10px 16px;
+        }
+        
+        .page-footer {
+            font-size: 0.8rem;
+            padding: 12px 0;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block body_class %}{% endblock %}
+
+{% block content %}
+<!-- SIMS Login Button - Top Left -->
+<a href="{% url 'users:login' %}" class="sims-login-button">
+    <i class="bi bi-box-arrow-in-right"></i>
+    Sign In to SIMS
+</a>
+
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-12">
+            <div class="homepage-container">
+                <!-- Hero Section -->
+                <div class="hero-section">
+                    <div class="fmu-logo">
+                        <i class="bi bi-hospital"></i>
+                    </div>
+                    <div class="university-name">{{ university_name }}</div>
+                    <div class="system-title">
+                        <i class="bi bi-heart-pulse-fill"></i> SIMS
+                    </div>
+                    <div class="system-subtitle">
+                        Specialized Information Management System<br>
+                        <small>Postgraduate Medical Training Platform</small>
+                    </div>
+                </div>
+                
+                <!-- Content Section -->
+                <div class="content-section">
+                    <div class="text-center mb-4">
+                        <h2 class="fw-bold text-dark mb-3">Advanced Medical Training Management</h2>
+                        <p class="text-muted lead">
+                            Comprehensive digital platform designed to streamline postgraduate medical education,
+                            clinical case management, and professional development tracking.
+                        </p>
+                    </div>
+                    
+                    <!-- Feature Grid -->
+                    <div class="feature-grid">
+                        <div class="feature-card">
+                            <div class="feature-icon">
+                                <i class="bi bi-journal-medical"></i>
+                            </div>
+                            <div class="feature-title">Digital Logbook</div>
+                            <div class="feature-description">
+                                Comprehensive case tracking system with detailed procedure logging,
+                                patient management, and clinical competency assessment.
+                            </div>
+                        </div>
+                        
+                        <div class="feature-card">
+                            <div class="feature-icon">
+                                <i class="bi bi-graph-up-arrow"></i>
+                            </div>
+                            <div class="feature-title">Progress Analytics</div>
+                            <div class="feature-description">
+                                Real-time performance monitoring with advanced analytics,
+                                competency tracking, and personalized learning insights.
+                            </div>
+                        </div>
+                        
+                        <div class="feature-card">
+                            <div class="feature-icon">
+                                <i class="bi bi-people-fill"></i>
+                            </div>
+                            <div class="feature-title">Supervisor Network</div>
+                            <div class="feature-description">
+                                Seamless collaboration between residents and supervisors with
+                                integrated feedback systems and mentorship tracking.
+                            </div>
+                        </div>
+                        
+                        <div class="feature-card">
+                            <div class="feature-icon">
+                                <i class="bi bi-award-fill"></i>
+                            </div>
+                            <div class="feature-title">Certification</div>
+                            <div class="feature-description">
+                                Automated certificate generation, milestone tracking,
+                                and comprehensive training documentation.
+                            </div>
+                        </div>
+                        
+                        <div class="feature-card">
+                            <div class="feature-icon">
+                                <i class="bi bi-calendar-check"></i>
+                            </div>
+                            <div class="feature-title">Rotation Management</div>
+                            <div class="feature-description">
+                                Intelligent scheduling system for clinical rotations,
+                                department assignments, and training requirements.
+                            </div>
+                        </div>
+                        
+                        <div class="feature-card">
+                            <div class="feature-icon">
+                                <i class="fas fa-shield-alt"></i>
+                            </div>
+                            <div class="feature-title">Secure Platform</div>
+                            <div class="feature-description">
+                                Enterprise-grade security with HIPAA compliance,
+                                data encryption, and comprehensive audit trails.
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- University Information -->
+                    <div class="university-info">
+                        <h4 class="mb-3">
+                            <i class="bi bi-mortarboard-fill me-2"></i>
+                            Faisalabad Medical University
+                        </h4>
+                        <p class="mb-0">
+                            A leading institution in medical education, research, and healthcare delivery.
+                            Committed to excellence in training the next generation of medical professionals
+                            through innovative technology and comprehensive clinical programs.
+                        </p>
+                    </div>
+                    
+                    <!-- System Statistics -->
+                    <div class="system-stats">
+                        <div class="stat-item">
+                            <div class="stat-icon">
+                                <i class="bi bi-shield-fill-check text-primary"></i>
+                            </div>
+                            <div class="stat-value">Secure</div>
+                            <div class="stat-label">SSL Protected</div>
+                        </div>
+                        
+                        <div class="stat-item">
+                            <div class="stat-icon">
+                                <i class="bi bi-clock-fill text-info"></i>
+                            </div>
+                            <div class="stat-value">24/7</div>
+                            <div class="stat-label">Support Available</div>
+                        </div>
+                        
+                        <div class="stat-item">
+                            <div class="stat-icon">
+                                <i class="bi bi-speedometer2 text-warning"></i>
+                            </div>
+                            <div class="stat-value">v{{ system_version }}</div>
+                            <div class="stat-label">Current Version</div>
+                        </div>
+                    </div>                </div>
+                
+                <!-- Remove the old login section since we moved it to top-left -->
+              </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Page Footer -->
+<footer class="page-footer">
+    <div class="container">
+        <p class="mb-0">
+            © {{ current_year }} SIMS - Postgraduate Medical Training System. All rights reserved. Created by Muhammad Ibrahim(MBBS) |
+            <a href="{% url 'admin:index' %}">Admin</a> |
+            SIMS v{{ system_version }} |
+            {{ university_name }}
+        </p>
+    </div>
+</footer>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Animate feature cards on scroll
+    const observerOptions = {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px'
+    };
+    
+    const observer = new IntersectionObserver(function(entries) {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.style.opacity = '1';
+                entry.target.style.transform = 'translateY(0)';
+            }
+        });
+    }, observerOptions);
+    
+    // Initially hide feature cards
+    const featureCards = document.querySelectorAll('.feature-card');
+    featureCards.forEach((card, index) => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(30px)';
+        card.style.transition = `opacity 0.6s ease ${index * 0.1}s, transform 0.6s ease ${index * 0.1}s`;
+        observer.observe(card);
+    });
+    
+    // System status check
+    checkSystemHealth();
+    
+    // Update time-based content
+    updateTimeBasedContent();
+    
+    // Keyboard navigation
+    document.addEventListener('keydown', function(e) {
+        // Ctrl + L to go to login
+        if (e.ctrlKey && e.key === 'l') {
+            e.preventDefault();
+            window.location.href = "{% url 'users:login' %}";
+        }
+        
+        // Escape to scroll to top
+        if (e.key === 'Escape') {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    });
+});
+
+function checkSystemHealth() {
+    // Simulate system health check
+    const statusIndicator = document.querySelector('.status-indicator');
+    const systemStats = document.querySelectorAll('.stat-value');
+    
+    // You can replace this with actual API calls
+    setTimeout(() => {
+        console.log('System health check completed');
+        
+        // Update system metrics if needed
+        // This is where you would fetch real-time data
+    }, 1000);
+}
+
+function updateTimeBasedContent() {
+    const now = new Date();
+    const hours = now.getHours();
+    
+    // You can add time-based greetings or content here
+    let greeting = '';
+    if (hours < 12) greeting = 'Good Morning';
+    else if (hours < 18) greeting = 'Good Afternoon';
+    else greeting = 'Good Evening';
+    
+    // Could be used to personalize the experience
+    console.log(`${greeting}! Welcome to SIMS`);
+}
+
+// Smooth scrolling for any internal links
+document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+    anchor.addEventListener('click', function (e) {
+        e.preventDefault();
+        const target = document.querySelector(this.getAttribute('href'));
+        if (target) {
+            target.scrollIntoView({
+                behavior: 'smooth',
+                block: 'start'
+            });
+        }
+    });
+});
+
+// Add some interactive feedback
+document.querySelectorAll('.feature-card').forEach(card => {
+    card.addEventListener('mouseenter', function() {
+        this.style.transform = 'translateY(-8px) scale(1.02)';
+    });
+    
+    card.addEventListener('mouseleave', function() {
+        this.style.transform = 'translateY(-5px) scale(1)';
+    });
+});
+
+// Performance monitoring
+window.addEventListener('load', function() {
+    const loadTime = performance.now();
+    console.log(`Page loaded in ${loadTime.toFixed(2)}ms`);
+});
+
+// Scroll-triggered button logic
+window.addEventListener('scroll', function() {
+    var loginBtn = document.querySelector('.sims-login-button');
+    if (!loginBtn) return;
+    if (window.scrollY > 60) {
+        loginBtn.classList.add('visible');
+    } else {
+        loginBtn.classList.remove('visible');
+    }
+});
+</script>
+{% endblock %}

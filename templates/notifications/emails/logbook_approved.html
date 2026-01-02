@@ -1,0 +1,3 @@
+<p>Congratulations {{ recipient.get_full_name|default:recipient.username }},</p>
+<p>Your logbook entry "{{ entry.case_title }}" has been approved by {{ entry.supervisor.get_full_name|default:entry.supervisor.username }}.</p>
+<p>Keep up the great work!</p>

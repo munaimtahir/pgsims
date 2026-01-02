@@ -1,0 +1,471 @@
+{% extends 'base/base.html' %}
+
+{% block title %}{{ entry.case_title }} - Logbook Entry - SIMS{% endblock %}
+
+{% block breadcrumb %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'users:dashboard' %}">Dashboard</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'logbook:list' %}">Logbook</a></li>
+        <li class="breadcrumb-item active">{{ entry.case_title|truncatechars:50 }}</li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block page_header %}
+<div class="d-flex justify-content-between align-items-start mb-4">
+    <div>
+        <h2><i class="fas fa-book me-2"></i>{{ entry.case_title }}</h2>
+        <div class="d-flex align-items-center mt-2">
+            <span class="badge bg-{% if entry.status == 'approved' %}success{% elif entry.status == 'submitted' %}warning{% elif entry.status == 'draft' %}secondary{% else %}danger{% endif %} me-2">
+                {{ entry.get_status_display }}
+            </span>
+            <small class="text-muted">{{ entry.date|date:"F d, Y" }} • {{ entry.get_specialty_display }}</small>
+        </div>
+    </div>
+    <div>
+        {% if user == entry.pg or user.role == 'supervisor' or user.role == 'admin' %}
+        <a href="{% url 'logbook:edit' entry.pk %}" class="btn btn-outline-primary">
+            <i class="fas fa-edit me-2"></i>Edit
+        </a>
+        {% endif %}
+        {% if user.role == 'supervisor' or user.role == 'admin' %}
+        <a href="{% url 'logbook:review' entry.pk %}" class="btn btn-success ms-2">
+            <i class="fas fa-clipboard-check me-2"></i>Review
+        </a>
+        {% endif %}
+        <a href="{% url 'logbook:list' %}" class="btn btn-outline-secondary ms-2">
+            <i class="fas fa-list me-2"></i>Back to List
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8">
+        <!-- Case Overview -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Case Overview</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <dl class="row">
+                            <dt class="col-sm-5">Case Title:</dt>
+                            <dd class="col-sm-7">{{ entry.case_title }}</dd>
+                            
+                            <dt class="col-sm-5">Date:</dt>
+                            <dd class="col-sm-7">{{ entry.date|date:"F d, Y" }}</dd>
+                            
+                            <dt class="col-sm-5">Specialty:</dt>
+                            <dd class="col-sm-7">{{ entry.get_specialty_display }}</dd>
+                            
+                            <dt class="col-sm-5">Setting:</dt>
+                            <dd class="col-sm-7">{{ entry.get_clinical_setting_display|default:"Not specified" }}</dd>
+                        </dl>
+                    </div>
+                    <div class="col-md-6">
+                        <dl class="row">
+                            <dt class="col-sm-5">Postgraduate:</dt>
+                            <dd class="col-sm-7">{{ entry.pg.get_full_name }}</dd>
+                            
+                            {% if entry.supervisor %}
+                            <dt class="col-sm-5">Supervisor:</dt>
+                            <dd class="col-sm-7">{{ entry.supervisor.get_full_name }}</dd>
+                            {% endif %}
+                            
+                            <dt class="col-sm-5">Competency Level:</dt>
+                            <dd class="col-sm-7">
+                                <span class="badge bg-info">{{ entry.get_competency_level_display|default:"Not specified" }}</span>
+                            </dd>
+                            
+                            <dt class="col-sm-5">Status:</dt>
+                            <dd class="col-sm-7">
+                                <span class="badge bg-{% if entry.status == 'approved' %}success{% elif entry.status == 'submitted' %}warning{% elif entry.status == 'draft' %}secondary{% else %}danger{% endif %}">
+                                    {{ entry.get_status_display }}
+                                </span>
+                            </dd>
+                        </dl>
+                    </div>
+                </div>
+                
+                {% if entry.case_summary %}
+                <div class="mt-3">
+                    <h6>Case Summary:</h6>
+                    <p class="text-muted">{{ entry.case_summary }}</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Patient Information -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-user-injured me-2"></i>Patient Information</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <h6>Demographics</h6>
+                        <p class="mb-1"><strong>Age:</strong> {{ entry.patient_age|default:"Not specified" }}</p>
+                        <p class="mb-1"><strong>Gender:</strong> {{ entry.get_patient_gender_display|default:"Not specified" }}</p>
+                    </div>
+                    <div class="col-md-8">
+                        <h6>Presenting Complaint</h6>
+                        <p class="mb-0">{{ entry.patient_presenting_complaint|default:"Not documented" }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Clinical Details -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-stethoscope me-2"></i>Clinical Details</h5>
+            </div>
+            <div class="card-body">
+                {% if entry.primary_diagnosis %}
+                <div class="mb-3">
+                    <h6>Primary Diagnosis:</h6>
+                    <p>{{ entry.primary_diagnosis }}</p>
+                </div>
+                {% endif %}
+                
+                {% if entry.secondary_diagnoses %}
+                <div class="mb-3">
+                    <h6>Secondary Diagnoses:</h6>
+                    <p>{{ entry.secondary_diagnoses }}</p>
+                </div>
+                {% endif %}
+                
+                {% if entry.procedure_performed %}
+                <div class="mb-3">
+                    <h6>Procedures Performed:</h6>
+                    <p>{{ entry.procedure_performed }}</p>
+                </div>
+                {% endif %}
+                
+                {% if entry.investigations_performed %}
+                <div class="mb-3">
+                    <h6>Investigations:</h6>
+                    <p>{{ entry.investigations_performed }}</p>
+                </div>
+                {% endif %}
+                
+                {% if entry.management_plan %}
+                <div class="mb-0">
+                    <h6>Management Plan:</h6>
+                    <p class="mb-0">{{ entry.management_plan }}</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Learning and Reflection -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-brain me-2"></i>Learning & Reflection</h5>
+            </div>
+            <div class="card-body">
+                {% if entry.learning_points %}
+                <div class="learning-points mb-3">
+                    <h6><i class="fas fa-lightbulb me-2"></i>Learning Points:</h6>
+                    <p>{{ entry.learning_points }}</p>
+                </div>
+                {% endif %}
+                
+                {% if entry.difficulties_encountered %}
+                <div class="mb-3">
+                    <h6>Difficulties Encountered:</h6>
+                    <p>{{ entry.difficulties_encountered }}</p>
+                </div>
+                {% endif %}
+                
+                {% if entry.supervisor_feedback %}
+                <div class="mb-0">
+                    <h6>Supervisor Feedback:</h6>
+                    <div class="alert alert-info">
+                        <i class="fas fa-comment me-2"></i>
+                        {{ entry.supervisor_feedback }}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Additional Notes -->
+        {% if entry.additional_notes %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-sticky-note me-2"></i>Additional Notes</h5>
+            </div>
+            <div class="card-body">
+                <p class="mb-0">{{ entry.additional_notes }}</p>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Attachments -->
+        {% if entry.attachments.exists %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-paperclip me-2"></i>Attachments</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% for attachment in entry.attachments.all %}
+                    <div class="col-md-6 mb-3">
+                        <div class="border rounded p-3">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <i class="fas fa-file me-2"></i>
+                                    <span>{{ attachment.name|truncatechars:30 }}</span>
+                                </div>
+                                <a href="{{ attachment.file.url }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-download"></i>
+                                </a>
+                            </div>
+                            <small class="text-muted">{{ attachment.file.size|filesizeformat }}</small>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Reviews -->
+        {% if reviews %}
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-comments me-2"></i>Reviews & Feedback</h5>
+            </div>
+            <div class="card-body">
+                {% for review in reviews %}
+                <div class="d-flex mb-3 {% if not forloop.last %}border-bottom pb-3{% endif %}">
+                    <div class="flex-shrink-0">
+                        <div class="avatar bg-success text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                            {{ review.reviewer.first_name.0 }}{{ review.reviewer.last_name.0 }}
+                        </div>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h6 class="mb-1">{{ review.reviewer.get_full_name }}</h6>
+                                <small class="text-muted">{{ review.created_at|timesince }} ago</small>
+                            </div>
+                            <span class="badge bg-{{ review.status_color }}">{{ review.get_status_display }}</span>
+                        </div>
+                        {% if review.comments %}
+                        <p class="mb-0 mt-2">{{ review.comments }}</p>
+                        {% endif %}
+                        {% if review.score %}
+                        <div class="mt-2">
+                            <small class="text-muted">Score: </small>
+                            <span class="badge bg-primary">{{ review.score }}/5</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="col-lg-4">
+        <!-- Entry Status -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="fas fa-flag me-2"></i>Entry Status</h6>
+            </div>
+            <div class="card-body">
+                <div class="text-center">
+                    <div class="mb-3">
+                        <span class="badge bg-{% if entry.status == 'approved' %}success{% elif entry.status == 'submitted' %}warning{% elif entry.status == 'draft' %}secondary{% else %}danger{% endif %} fs-6">
+                            {{ entry.get_status_display }}
+                        </span>
+                    </div>
+                    
+                    {% if entry.status == 'draft' %}
+                    <div class="text-secondary mb-2">
+                        <i class="fas fa-edit fa-2x"></i>
+                    </div>
+                    <h6 class="text-secondary">Draft Entry</h6>
+                    <p class="text-muted small">Complete and submit for review when ready</p>
+                    
+                    {% elif entry.status == 'submitted' %}
+                    <div class="text-warning mb-2">
+                        <i class="fas fa-clock fa-2x"></i>
+                    </div>
+                    <h6 class="text-warning">Under Review</h6>
+                    <p class="text-muted small">Awaiting supervisor review and approval</p>
+                    
+                    {% elif entry.status == 'approved' %}
+                    <div class="text-success mb-2">
+                        <i class="fas fa-check-circle fa-2x"></i>
+                    </div>
+                    <h6 class="text-success">Approved</h6>
+                    <p class="text-muted small">Entry has been reviewed and approved</p>
+                    
+                    {% elif entry.status == 'needs_revision' %}
+                    <div class="text-danger mb-2">
+                        <i class="fas fa-exclamation-triangle fa-2x"></i>
+                    </div>
+                    <h6 class="text-danger">Needs Revision</h6>
+                    <p class="text-muted small">Review feedback and make necessary changes</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="fas fa-bolt me-2"></i>Quick Actions</h6>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    {% if user == entry.pg or user.role == 'supervisor' or user.role == 'admin' %}
+                    <a href="{% url 'logbook:edit' entry.pk %}" class="btn btn-outline-primary">
+                        <i class="fas fa-edit me-2"></i>Edit Entry
+                    </a>
+                    {% endif %}
+                    
+                    {% if user.role == 'supervisor' or user.role == 'admin' %}
+                    <a href="{% url 'logbook:review' entry.pk %}" class="btn btn-outline-success">
+                        <i class="fas fa-clipboard-check me-2"></i>Add Review
+                    </a>
+                    {% endif %}
+                    
+                    <a href="{% url 'logbook:list' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-list me-2"></i>All Entries
+                    </a>
+                    
+                    <button onclick="exportEntry()" class="btn btn-outline-info">
+                        <i class="fas fa-download me-2"></i>Export Entry
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Learning Metrics -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Learning Metrics</h6>
+            </div>
+            <div class="card-body">
+                <div class="small">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Competency Level:</span>
+                        <span class="fw-bold">{{ entry.get_competency_level_display|default:"N/A" }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Clinical Setting:</span>
+                        <span>{{ entry.get_clinical_setting_display|default:"N/A" }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Specialty:</span>
+                        <span>{{ entry.get_specialty_display }}</span>
+                    </div>
+                    {% if entry.cme_points %}
+                    <div class="d-flex justify-content-between">
+                        <span>CME Points:</span>
+                        <span class="fw-bold text-success">{{ entry.cme_points }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Entry Details -->
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="fas fa-info me-2"></i>Entry Details</h6>
+            </div>
+            <div class="card-body">
+                <div class="small">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Entry ID:</span>
+                        <span class="fw-bold">#{{ entry.pk }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Created:</span>
+                        <span>{{ entry.created_at|date:"M d, Y" }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span>Last Updated:</span>
+                        <span>{{ entry.updated_at|timesince }} ago</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.avatar {
+    font-weight: bold;
+    font-size: 1rem;
+}
+
+.learning-points {
+    background-color: #fff3cd;
+    border-left: 4px solid #ffc107;
+    padding: 1rem;
+    border-radius: 0.25rem;
+}
+
+.badge {
+    font-size: 0.75rem;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function exportEntry() {
+    // Generate entry summary for export
+    const entryData = {
+        title: '{{ entry.case_title|escapejs }}',
+        date: '{{ entry.date|date:"Y-m-d" }}',
+        pg: '{{ entry.pg.get_full_name|escapejs }}',
+        supervisor: '{{ entry.supervisor.get_full_name|default:""|escapejs }}',
+        specialty: '{{ entry.get_specialty_display|escapejs }}',
+        diagnosis: '{{ entry.primary_diagnosis|default:""|escapejs }}',
+        procedure: '{{ entry.procedure_performed|default:""|escapejs }}',
+        status: '{{ entry.get_status_display|escapejs }}'
+    };
+    
+    // Create downloadable content
+    const content = `Logbook Entry Summary
+====================
+Title: ${entryData.title}
+Date: ${entryData.date}
+Postgraduate: ${entryData.pg}
+Supervisor: ${entryData.supervisor}
+Specialty: ${entryData.specialty}
+Primary Diagnosis: ${entryData.diagnosis}
+Procedure: ${entryData.procedure}
+Status: ${entryData.status}
+
+Generated on: ${new Date().toLocaleDateString()}
+`;
+    
+    // Download as text file
+    const blob = new Blob([content], { type: 'text/plain' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `logbook_entry_${entryData.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+}
+</script>
+{% endblock %}

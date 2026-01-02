@@ -1,0 +1,92 @@
+{% extends "base/base.html" %}
+{% load crispy_forms_tags %}
+
+{% block title %}
+    {{ page_title|default:"Edit Logbook Entry" }} - {{ block.super }}
+{% endblock title %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-10 offset-md-1 col-lg-8 offset-lg-2">
+            <div class="card shadow-sm">
+                <div class="card-header bg-warning text-dark"> {# Changed color for editing returned items #}
+                    <h4 class="mb-0">{{ page_title|default:"Edit Logbook Entry" }}</h4>
+                </div>
+                <div class="card-body">
+                    {% if form.errors %}
+                        <div class="alert alert-danger">
+                            <strong>Please correct the errors below:</strong>
+                            {{ form.non_field_errors }}
+                            {% for field in form %}
+                                {% if field.errors %}
+                                    <div>{{ field.label }}: {{ field.errors|striptags }}</div>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+
+                        {# Display supervisor feedback if the field exists in the form #}
+                        {% if form.supervisor_feedback_display %}
+                            <div class="mb-3">
+                                {{ form.supervisor_feedback_display|as_crispy_field }}
+                            </div>
+                            <hr/>
+                        {% elif logbook_entry.supervisor_feedback and logbook_entry.status == 'returned' %}
+                             <div class="alert alert-info">
+                                <h5>Supervisor Feedback:</h5>
+                                <p>{{ logbook_entry.supervisor_feedback|linebreaksbr }}</p>
+                            </div>
+                            <hr/>
+                        {% endif %}
+
+                        {# Render the rest of the form fields, excluding the supervisor_feedback_display if already handled #}
+                        {% for field in form %}
+                            {% if field.name != 'supervisor_feedback_display' %}
+                                {{ field|as_crispy_field }}
+                            {% endif %}
+                        {% endfor %}
+
+                        <div class="mt-4">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>Save Changes
+                            </button>
+                             {% if logbook_entry.status == 'draft' and logbook_entry.pg.supervisor %}
+                                <button type="submit" name="submit_for_review" value="true" class="btn btn-success">
+                                    <i class="fas fa-paper-plane me-2"></i>Save and Submit for Review
+                                </button>
+                            {% endif %}
+                            <a href="{% url 'logbook:list' %}" class="btn btn-outline-secondary ms-2"> {# Added ms-2 for spacing #}
+                                <i class="fas fa-times me-2"></i>Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+             <div class="mt-3 text-muted small">
+                <p><strong>Instructions:</strong></p>
+                <ul>
+                    <li>Review supervisor feedback (if any) and make necessary changes.</li>
+                    <li>Saving changes to a 'Returned' entry will resubmit it as 'Pending'.</li>
+                    <li>Saving changes to a 'Draft' entry will keep it as a draft unless you use "Save and Submit".</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}
+
+{% block extra_js %}
+{{ block.super }}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const dateInput = document.querySelector('input[type="date"][name="date"]');
+    if (dateInput && !dateInput.max) {
+        dateInput.max = new Date().toISOString().split("T")[0];
+    }
+});
+</script>
+{% endblock extra_js %}

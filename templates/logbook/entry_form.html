@@ -1,0 +1,392 @@
+{% extends 'base/base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}{% if form.instance.pk %}Edit{% else %}Create{% endif %} Logbook Entry - SIMS{% endblock %}
+
+{% block breadcrumb %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'users:dashboard' %}">Dashboard</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'logbook:list' %}">Logbook</a></li>
+        {% if form.instance.pk %}
+        <li class="breadcrumb-item"><a href="{% url 'logbook:detail' form.instance.pk %}">{{ form.instance.case_title|truncatechars:30 }}</a></li>
+        <li class="breadcrumb-item active">Edit</li>
+        {% else %}
+        <li class="breadcrumb-item active">New Entry</li>
+        {% endif %}
+    </ol>
+</nav>
+{% endblock %}
+
+{% block page_header %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2>
+            <i class="fas fa-{% if form.instance.pk %}edit{% else %}plus{% endif %} me-2"></i>
+            {% if form.instance.pk %}Edit Logbook Entry{% else %}Create New Logbook Entry{% endif %}
+        </h2>
+        <p class="text-muted">
+            {% if form.instance.pk %}
+                Update the details of this logbook entry
+            {% else %}
+                Document a new clinical case for your learning portfolio
+            {% endif %}
+        </p>
+    </div>
+    <div>
+        {% if form.instance.pk %}
+        <a href="{% url 'logbook:detail' form.instance.pk %}" class="btn btn-outline-secondary">
+            <i class="fas fa-eye me-2"></i>View Entry
+        </a>
+        {% endif %}
+        <a href="{% url 'logbook:list' %}" class="btn btn-outline-primary">
+            <i class="fas fa-list me-2"></i>Back to List
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8">
+        <!-- Main Form -->
+        <form method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
+            {% csrf_token %}
+            
+            <!-- Basic Information -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Case Information</h5>
+                </div>
+                <div class="card-body">
+                    {{ form.case_title|as_crispy_field }}
+                    <div class="row">
+                        <div class="col-md-6">
+                            {{ form.date|as_crispy_field }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.specialty|as_crispy_field }}
+                        </div>
+                    </div>
+                    {{ form.case_summary|as_crispy_field }}
+                </div>
+            </div>
+
+            <!-- Patient Information -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-user-injured me-2"></i>Patient Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            {{ form.patient_age|as_crispy_field }}
+                        </div>
+                        <div class="col-md-4">
+                            {{ form.patient_gender|as_crispy_field }}
+                        </div>
+                        <div class="col-md-4">
+                            {{ form.patient_presenting_complaint|as_crispy_field }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Clinical Details -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-stethoscope me-2"></i>Clinical Details</h5>
+                </div>
+                <div class="card-body">
+                    {{ form.primary_diagnosis|as_crispy_field }}
+                    {{ form.secondary_diagnoses|as_crispy_field }}
+                    {{ form.procedure_performed|as_crispy_field }}
+                    {{ form.investigations_performed|as_crispy_field }}
+                    {{ form.management_plan|as_crispy_field }}
+                </div>
+            </div>
+
+            <!-- Learning and Reflection -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-brain me-2"></i>Learning & Reflection</h5>
+                </div>
+                <div class="card-body">
+                    {{ form.learning_points|as_crispy_field }}
+                    {{ form.difficulties_encountered|as_crispy_field }}
+                    {{ form.supervisor_feedback|as_crispy_field }}
+                    <div class="row">
+                        <div class="col-md-6">
+                            {{ form.competency_level|as_crispy_field }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.clinical_setting|as_crispy_field }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Files and Attachments -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-paperclip me-2"></i>Attachments</h5>
+                </div>
+                <div class="card-body">
+                    {% if form.instance.attachments.exists %}
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Current attachments:
+                        <ul class="mb-0 mt-2">
+                            {% for attachment in form.instance.attachments.all %}
+                            <li><a href="{{ attachment.file.url }}" target="_blank">{{ attachment.name }}</a></li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% endif %}
+                    {{ form.additional_notes|as_crispy_field }}
+                    <small class="text-muted">
+                        You can add files like images, reports, or documents after saving the entry.
+                    </small>
+                </div>
+            </div>
+
+            <!-- Supervisor Assignment (if applicable) -->
+            {% if user.role == 'admin' or user.role == 'supervisor' %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-user-tie me-2"></i>Assignment</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            {{ form.pg|as_crispy_field }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.supervisor|as_crispy_field }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Form Actions -->
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'logbook:list' %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-times me-2"></i>Cancel
+                        </a>
+                        <div>
+                            <button type="submit" name="action" value="save_draft" class="btn btn-outline-primary me-2">
+                                <i class="fas fa-save me-2"></i>Save as Draft
+                            </button>
+                            {% if form.instance.pk %}
+                            <button type="submit" name="action" value="save" class="btn btn-primary">
+                                <i class="fas fa-check me-2"></i>Update Entry
+                            </button>
+                            {% else %}
+                            <button type="submit" name="action" value="save" class="btn btn-success">
+                                <i class="fas fa-plus me-2"></i>Create Entry
+                            </button>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <div class="col-lg-4">
+        <!-- Help & Guidelines -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="fas fa-question-circle me-2"></i>Guidelines & Tips</h6>
+            </div>
+            <div class="card-body">
+                <div class="accordion" id="helpAccordion">
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#helpCaseTitle">
+                                Case Title
+                            </button>
+                        </h2>
+                        <div id="helpCaseTitle" class="accordion-collapse collapse" data-bs-parent="#helpAccordion">
+                            <div class="accordion-body">
+                                <small>
+                                    Use a descriptive title that captures the essence of the case.
+                                    Example: "Acute MI in 65-year-old male with diabetes"
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#helpLearning">
+                                Learning Points
+                            </button>
+                        </h2>
+                        <div id="helpLearning" class="accordion-collapse collapse" data-bs-parent="#helpAccordion">
+                            <div class="accordion-body">
+                                <small>
+                                    Reflect on what you learned from this case:
+                                    <ul class="mb-0 mt-2">
+                                        <li>New clinical knowledge</li>
+                                        <li>Skills developed</li>
+                                        <li>Clinical reasoning insights</li>
+                                        <li>Communication lessons</li>
+                                    </ul>
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#helpCompetency">
+                                Competency Levels
+                            </button>
+                        </h2>
+                        <div id="helpCompetency" class="accordion-collapse collapse" data-bs-parent="#helpAccordion">
+                            <div class="accordion-body">
+                                <small>
+                                    <strong>Observer:</strong> Watched procedure/case<br>
+                                    <strong>Assistant:</strong> Helped with case management<br>
+                                    <strong>Performer:</strong> Led case under supervision<br>
+                                    <strong>Teacher:</strong> Taught others about the case
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Entry Status -->
+        {% if form.instance.pk %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="fas fa-info me-2"></i>Entry Status</h6>
+            </div>
+            <div class="card-body">
+                <div class="text-center">
+                    <span class="badge bg-{% if form.instance.status == 'approved' %}success{% elif form.instance.status == 'submitted' %}warning{% elif form.instance.status == 'draft' %}secondary{% else %}danger{% endif %} fs-6 mb-2">
+                        {{ form.instance.get_status_display }}
+                    </span>
+                    <div class="text-center">
+                        <small class="text-muted">
+                            Entry ID: {{ form.instance.pk }}<br>
+                            Last updated: {{ form.instance.updated_at|timesince }} ago
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Quick Actions -->
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="fas fa-bolt me-2"></i>Quick Actions</h6>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{% url 'logbook:quick_create' %}" class="btn btn-outline-success">
+                        <i class="fas fa-lightning me-2"></i>Quick Entry Mode
+                    </a>
+                    <a href="{% url 'logbook:dashboard' %}" class="btn btn-outline-info">
+                        <i class="fas fa-chart-bar me-2"></i>View Dashboard
+                    </a>
+                    <a href="{% url 'logbook:list' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-list me-2"></i>All Entries
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Initialize date picker
+    $('input[type="date"]').each(function() {
+        if ($(this).val() === '') {
+            $(this).val(new Date().toISOString().split('T')[0]);
+        }
+    });
+    
+    // Auto-save functionality (every 2 minutes)
+    let autoSaveInterval;
+    function startAutoSave() {
+        autoSaveInterval = setInterval(function() {
+            // Save as draft automatically
+            const formData = new FormData($('form')[0]);
+            formData.set('action', 'auto_save');
+            
+            $.ajax({
+                url: window.location.href,
+                method: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function(response) {
+                    console.log('Auto-saved at', new Date().toLocaleTimeString());
+                    // Show subtle notification
+                    if (response.success) {
+                        showAutoSaveNotification();
+                    }
+                },
+                error: function() {
+                    console.log('Auto-save failed');
+                }
+            });
+        }, 120000); // 2 minutes
+    }
+    
+    function showAutoSaveNotification() {
+        const notification = $('<div class="alert alert-success alert-dismissible fade show position-fixed" style="top: 20px; right: 20px; z-index: 9999;"><small><i class="fas fa-check me-1"></i>Auto-saved</small></div>');
+        $('body').append(notification);
+        setTimeout(() => notification.fadeOut(() => notification.remove()), 2000);
+    }
+    
+    // Start auto-save if this is an existing entry
+    {% if form.instance.pk %}
+    startAutoSave();
+    {% endif %}
+    
+    // Form validation
+    $('.needs-validation').on('submit', function(e) {
+        if (!this.checkValidity()) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        $(this).addClass('was-validated');
+        
+        // Clear auto-save interval
+        if (autoSaveInterval) {
+            clearInterval(autoSaveInterval);
+        }
+    });
+    
+    // Character count for text areas
+    $('textarea').each(function() {
+        const maxLength = $(this).attr('maxlength');
+        if (maxLength) {
+            const counter = $('<small class="text-muted float-end"></small>');
+            $(this).after(counter);
+            
+            const updateCounter = () => {
+                const remaining = maxLength - $(this).val().length;
+                counter.text(`${remaining} characters remaining`);
+                counter.toggleClass('text-danger', remaining < 50);
+            };
+            
+            $(this).on('input', updateCounter);
+            updateCounter();
+        }
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+{% load i18n static %}
+<html lang="{{ LANGUAGE_CODE|default:"en-us" }}" dir="{{ LANGUAGE_BIDI|yesno:'rtl,ltr' }}">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}{{ title }} | SIMS Administration{% endblock %}</title>
+    
+    <!-- PMC Theme Assets -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- Default admin styles -->
+    <link rel="stylesheet" type="text/css" href="{% static "admin/css/base.css" %}">
+    {% block extrastyle %}{% endblock %}
+    
+    <!-- PMC Custom Admin Styles -->
+    <style>
+        :root {
+            --pmc-primary: #667eea;
+            --pmc-secondary: #764ba2;
+            --pmc-success: #28a745;
+            --pmc-info: #17a2b8;
+            --pmc-warning: #ffc107;
+            --pmc-danger: #dc3545;
+            --pmc-light: #f8f9fa;
+            --pmc-dark: #343a40;
+            --pmc-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        /* Override Django admin header */
+        #header {
+            background: var(--pmc-gradient) !important;
+            color: white !important;
+            padding: 15px 20px !important;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1) !important;
+        }
+
+        #branding h1, #branding h1 a:link, #branding h1 a:visited {
+            color: white !important;
+            font-weight: 700 !important;
+            font-size: 1.5rem !important;
+            text-decoration: none !important;
+        }
+
+        #branding h1 a:hover {
+            color: rgba(255,255,255,0.9) !important;
+        }
+
+        /* User tools styling */
+        #user-tools {
+            color: white !important;
+            font-weight: 500 !important;
+        }
+
+        #user-tools a {
+            color: white !important;
+            text-decoration: none !important;
+            padding: 5px 10px !important;
+            border-radius: 15px !important;
+            transition: all 0.3s ease !important;
+        }
+
+        #user-tools a:hover {
+            background: rgba(255,255,255,0.2) !important;
+            color: white !important;
+        }
+
+        /* Welcome message */
+        .welcome-msg {
+            color: rgba(255,255,255,0.9) !important;
+            margin-right: 15px !important;
+        }
+
+        /* Navigation breadcrumbs */
+        .breadcrumbs {
+            background: var(--pmc-light) !important;
+            padding: 12px 20px !important;
+            border-bottom: 1px solid #dee2e6 !important;
+        }
+
+        .breadcrumbs a {
+            color: var(--pmc-primary) !important;
+            text-decoration: none !important;
+        }
+
+        .breadcrumbs a:hover {
+            color: var(--pmc-secondary) !important;
+            text-decoration: underline !important;
+        }
+
+        /* Content area */
+        #content {
+            padding: 20px !important;
+            background: #f8f9fa !important;
+        }
+
+        /* Cards for modules */
+        .module {
+            background: white !important;
+            border: none !important;
+            border-radius: 10px !important;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1) !important;
+            margin-bottom: 20px !important;
+            overflow: hidden !important;
+        }
+
+        .module h2 {
+            background: var(--pmc-gradient) !important;
+            color: white !important;
+            padding: 15px 20px !important;
+            margin: 0 !important;
+            font-size: 1.1rem !important;
+            font-weight: 600 !important;
+        }
+
+        .module h3 {
+            background: var(--pmc-light) !important;
+            color: var(--pmc-dark) !important;
+            padding: 12px 20px !important;
+            margin: 0 !important;
+            font-size: 1rem !important;
+            font-weight: 600 !important;
+            border-bottom: 1px solid #dee2e6 !important;
+        }
+
+        /* Tables */
+        .results table {
+            background: white !important;
+            border-radius: 8px !important;
+            overflow: hidden !important;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1) !important;
+        }
+
+        .results th {
+            background: var(--pmc-gradient) !important;
+            color: white !important;
+            font-weight: 600 !important;
+            padding: 12px !important;
+        }
+
+        .results td {
+            padding: 12px !important;
+            border-bottom: 1px solid #f1f3f4 !important;
+        }
+
+        .results tr:hover {
+            background: var(--pmc-light) !important;
+        }
+
+        /* Buttons */
+        .button, input[type=submit], input[type=button], .submit-row input, button {
+            background: var(--pmc-primary) !important;
+            color: white !important;
+            border: none !important;
+            padding: 8px 16px !important;
+            border-radius: 5px !important;
+            font-weight: 500 !important;
+            transition: all 0.3s ease !important;
+            text-decoration: none !important;
+            display: inline-block !important;
+        }
+
+        .button:hover, input[type=submit]:hover, input[type=button]:hover, .submit-row input:hover, button:hover {
+            background: var(--pmc-secondary) !important;
+            color: white !important;
+            transform: translateY(-1px) !important;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2) !important;
+        }
+
+        .button.default, .default {
+            background: var(--pmc-success) !important;
+        }
+
+        .button.default:hover, .default:hover {
+            background: #218838 !important;
+        }
+
+        /* Delete buttons */
+        .deletelink, .deletelink-box {
+            background: var(--pmc-danger) !important;
+        }
+
+        .deletelink:hover, .deletelink-box:hover {
+            background: #c82333 !important;
+        }
+
+        /* Form styling */
+        .form-row {
+            padding: 15px 0 !important;
+            border-bottom: 1px solid #f1f3f4 !important;
+        }
+
+        .form-row label {
+            font-weight: 600 !important;
+            color: var(--pmc-dark) !important;
+        }
+
+        input[type=text], input[type=password], input[type=email], input[type=url], 
+        input[type=number], input[type=tel], textarea, select {
+            border: 2px solid #e9ecef !important;
+            border-radius: 5px !important;
+            padding: 8px 12px !important;
+            transition: border-color 0.3s ease !important;
+        }
+
+        input[type=text]:focus, input[type=password]:focus, input[type=email]:focus, 
+        input[type=url]:focus, input[type=number]:focus, input[type=tel]:focus, 
+        textarea:focus, select:focus {
+            border-color: var(--pmc-primary) !important;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25) !important;
+            outline: none !important;
+        }
+
+        /* Sidebar styling */
+        .sidebar h2 {
+            background: var(--pmc-gradient) !important;
+            color: white !important;
+            padding: 12px 15px !important;
+            margin: 0 0 15px 0 !important;
+            border-radius: 5px !important;
+            font-size: 1rem !important;
+        }
+
+        .sidebar h3 {
+            color: var(--pmc-primary) !important;
+            font-weight: 600 !important;
+            margin: 15px 0 8px 0 !important;
+        }
+
+        /* Dashboard icons */
+        .addlink:before {
+            content: "\f067";
+            font-family: "Font Awesome 6 Free";
+            font-weight: 900;
+            margin-right: 8px;
+            color: var(--pmc-success);
+        }
+
+        .changelink:before {
+            content: "\f044";
+            font-family: "Font Awesome 6 Free";
+            font-weight: 900;
+            margin-right: 8px;
+            color: var(--pmc-primary);
+        }
+
+        .deletelink:before {
+            content: "\f2ed";
+            font-family: "Font Awesome 6 Free";
+            font-weight: 900;
+            margin-right: 8px;
+            color: var(--pmc-danger);
+        }
+
+        /* Messages */
+        .messagelist {
+            margin: 0 0 20px 0 !important;
+        }
+
+        .messagelist li {
+            background: white !important;
+            border-left: 4px solid var(--pmc-info) !important;
+            padding: 15px 20px !important;
+            margin-bottom: 10px !important;
+            border-radius: 0 5px 5px 0 !important;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1) !important;
+        }
+
+        .messagelist .success {
+            border-left-color: var(--pmc-success) !important;
+        }
+
+        .messagelist .warning {
+            border-left-color: var(--pmc-warning) !important;
+        }
+
+        .messagelist .error {
+            border-left-color: var(--pmc-danger) !important;
+        }
+
+        /* Pagination */
+        .paginator {
+            background: white !important;
+            padding: 15px 20px !important;
+            border-radius: 5px !important;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1) !important;
+            margin-top: 20px !important;
+        }
+
+        .paginator a {
+            color: var(--pmc-primary) !important;
+            padding: 5px 10px !important;
+            border-radius: 3px !important;
+            text-decoration: none !important;
+            margin: 0 2px !important;
+        }
+
+        .paginator a:hover {
+            background: var(--pmc-light) !important;
+        }
+
+        .paginator .this-page {
+            background: var(--pmc-primary) !important;
+            color: white !important;
+            padding: 5px 10px !important;
+            border-radius: 3px !important;
+            margin: 0 2px !important;
+        }
+
+        /* Footer */
+        #footer {
+            background: var(--pmc-dark) !important;
+            color: white !important;
+            text-align: center !important;
+            padding: 20px !important;
+            margin-top: 40px !important;
+        }
+
+        /* PMC Branding Enhancement */
+        #branding h1:before {
+            content: "\f0c0";
+            font-family: "Font Awesome 6 Free";
+            font-weight: 900;
+            margin-right: 10px;
+            font-size: 1.2rem;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            #header {
+                padding: 10px 15px !important;
+            }
+            
+            #branding h1 {
+                font-size: 1.2rem !important;
+            }
+            
+            #content {
+                padding: 15px !important;
+            }
+            
+            .module h2 {
+                padding: 12px 15px !important;
+                font-size: 1rem !important;
+            }
+        }
+
+        /* Dark mode support */
+        @media (prefers-color-scheme: dark) {
+            #content {
+                background: #1a1a1a !important;
+            }
+            
+            .module {
+                background: #2d2d2d !important;
+                color: #f8f9fa !important;
+            }
+        }
+    </style>
+
+    {% block extrahead %}{% endblock %}
+</head>
+
+<body class="{% if is_popup %}popup {% endif %}{% block bodyclass %}{% endblock %}"
+  data-admin-utc-offset="{% now "Z" %}">
+
+<!-- Container -->
+<div id="container">
+
+    {% if not is_popup %}
+    <!-- Header -->
+    <div id="header">
+        <div id="branding">
+            <h1 id="site-name">
+                <a href="{% url 'admin:index' %}">
+                    SIMS Administration
+                </a>
+            </h1>
+        </div>
+        {% if user.is_active and user.is_staff %}
+        <div id="user-tools">
+            <span class="welcome-msg">
+                <i class="fas fa-user-circle me-2"></i>
+                {% firstof user.get_short_name user.get_username %}
+            </span>
+            <a href="{% url 'admin:password_change' %}">
+                <i class="fas fa-key me-1"></i>{% trans 'Change password' %}
+            </a>
+            /
+            <a href="{% url 'admin:logout' %}">
+                <i class="fas fa-sign-out-alt me-1"></i>{% trans 'Log out' %}
+            </a>
+            /
+            <a href="{% url 'home' %}" target="_blank">
+                <i class="fas fa-external-link-alt me-1"></i>{% trans 'View site' %}
+            </a>
+        </div>
+        {% endif %}
+    </div>
+    <!-- END Header -->
+
+    {% block breadcrumbs %}
+    <div class="breadcrumbs">
+        <a href="{% url 'admin:index' %}">
+            <i class="fas fa-home me-1"></i>{% trans 'Home' %}
+        </a>
+        {% if title %} &rsaquo; {{ title }}{% endif %}
+    </div>
+    {% endblock %}
+    {% endif %}
+
+    {% block messages %}
+        {% if messages %}
+        <ul class="messagelist">
+            {% for message in messages %}
+            <li class="{% if message.tags %}{{ message.tags }}{% endif %}">
+                {% if message.level == DEFAULT_MESSAGE_LEVELS.ERROR %}
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                {% elif message.level == DEFAULT_MESSAGE_LEVELS.WARNING %}
+                    <i class="fas fa-exclamation-circle me-2"></i>
+                {% elif message.level == DEFAULT_MESSAGE_LEVELS.SUCCESS %}
+                    <i class="fas fa-check-circle me-2"></i>
+                {% elif message.level == DEFAULT_MESSAGE_LEVELS.INFO %}
+                    <i class="fas fa-info-circle me-2"></i>
+                {% endif %}
+                {{ message|capfirst }}
+            </li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+    {% endblock messages %}
+
+    <!-- Content -->
+    <div id="content" class="{% block coltype %}colM{% endblock %}">
+        {% block pretitle %}{% endblock %}
+        {% block content_title %}{% if title %}<h1>{{ title }}</h1>{% endif %}{% endblock %}
+        {% block content %}
+        {% block object-tools %}{% endblock %}
+        {{ content }}
+        {% endblock %}
+        {% block sidebar %}{% endblock %}
+        <br class="clear">
+    </div>
+    <!-- END Content -->
+
+    {% if not is_popup %}
+    <div id="footer">
+        <p>
+            <i class="fas fa-university me-2"></i>
+            {% trans 'SIMS - Postgraduate Medical Training System' %} | 
+            {% trans 'Faisalabad Medical University' %} | 
+            <i class="fas fa-copyright me-1"></i>{% now "Y" %}
+        </p>
+    </div>
+    {% endif %}
+
+</div>
+<!-- END Container -->
+
+<!-- JavaScript -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<script>
+$(document).ready(function() {
+    // Enhanced admin interface interactions
+    
+    // Add loading states to buttons
+    $('.button, input[type=submit]').on('click', function() {
+        const $this = $(this);
+        const originalText = $this.text();
+        $this.html('<i class="fas fa-spinner fa-spin me-2"></i>Processing...');
+        
+        setTimeout(function() {
+            $this.text(originalText);
+        }, 2000);
+    });
+    
+    // Auto-hide messages after 5 seconds
+    setTimeout(function() {
+        $('.messagelist').fadeOut('slow');
+    }, 5000);
+    
+    // Add confirmation for delete actions
+    $('.deletelink').on('click', function(e) {
+        if (!confirm('Are you sure you want to delete this item? This action cannot be undone.')) {
+            e.preventDefault();
+        }
+    });
+    
+    // Enhanced table interactions
+    $('.results tr').hover(
+        function() {
+            $(this).find('td').css('background-color', '#f8f9fa');
+        },
+        function() {
+            $(this).find('td').css('background-color', '');
+        }
+    );
+});
+</script>
+
+{% block extrajs %}{% endblock %}
+
+</body>
+</html>

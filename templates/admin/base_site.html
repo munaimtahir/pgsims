@@ -1,0 +1,49 @@
+{% extends "admin/base.html" %}
+
+{% block title %}{{ title }} | {{ site_title|default:_('Django site admin') }}{% endblock %}
+
+{% block branding %}
+<div class="admin-branding">
+    <h1 id="site-name">
+        <a href="{% url 'admin:index' %}">
+            <i class="fas fa-graduation-cap me-2"></i>
+            {{ site_header|default:_('Django administration') }}
+        </a>
+    </h1>
+</div>
+
+<style>
+.admin-branding {
+    padding: 0;
+    margin: 0;
+}
+
+#site-name {
+    margin: 0;
+    padding: 0;
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+#site-name a {
+    color: white;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    transition: all 0.3s ease;
+}
+
+#site-name a:hover {
+    color: rgba(255, 255, 255, 0.9);
+    transform: translateX(5px);
+}
+
+#site-name a:focus {
+    outline: 2px solid rgba(255, 255, 255, 0.5);
+    outline-offset: 2px;
+    border-radius: 4px;
+}
+</style>
+{% endblock %}
+
+{% block nav-global %}{% endblock %}

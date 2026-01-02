@@ -1,0 +1,385 @@
+{% extends 'base/base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Review Case: {{ case.case_title }} - SIMS{% endblock %}
+
+{% block breadcrumb %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'users:dashboard' %}">Dashboard</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'cases:case_list' %}">Clinical Cases</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'cases:case_detail' case.pk %}">{{ case.case_title|truncatechars:30 }}</a></li>
+        <li class="breadcrumb-item active">Review</li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block page_header %}
+<div class="d-flex justify-content-between align-items-start mb-4">
+    <div>
+        <h2><i class="fas fa-clipboard-check me-2"></i>Review Clinical Case</h2>
+        <p class="text-muted">Provide feedback and assessment for this clinical case</p>
+        <div class="mt-2">
+            <span class="badge bg-warning">{{ case.get_status_display }}</span>
+            <span class="badge bg-secondary ms-1">{{ case.category.name|default:"No Category" }}</span>
+        </div>
+    </div>
+    <div>
+        <a href="{% url 'cases:case_detail' case.pk %}" class="btn btn-outline-primary">
+            <i class="fas fa-eye me-2"></i>View Full Case
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Case Summary -->
+    <div class="col-lg-8">
+        <!-- Case Overview -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-file-medical me-2"></i>{{ case.case_title }}</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <dl class="row">
+                            <dt class="col-sm-4">Patient:</dt>
+                            <dd class="col-sm-8">{{ case.patient_initials }}, {{ case.patient_age }}y {{ case.get_patient_gender_display }}</dd>
+                            
+                            <dt class="col-sm-4">Date:</dt>
+                            <dd class="col-sm-8">{{ case.date|date:"F d, Y" }}</dd>
+                            
+                            <dt class="col-sm-4">PG:</dt>
+                            <dd class="col-sm-8">{{ case.pg.get_full_name }}</dd>
+                            
+                            <dt class="col-sm-4">Location:</dt>
+                            <dd class="col-sm-8">{{ case.location|default:"Not specified" }}</dd>
+                        </dl>
+                    </div>
+                    <div class="col-md-6">
+                        <dl class="row">
+                            <dt class="col-sm-5">Primary Diagnosis:</dt>
+                            <dd class="col-sm-7">{{ case.primary_diagnosis.name|default:"Not specified" }}</dd>
+                            
+                            {% if case.complexity_level %}
+                            <dt class="col-sm-5">Complexity:</dt>
+                            <dd class="col-sm-7">{{ case.get_complexity_level_display }}</dd>
+                            {% endif %}
+                            
+                            {% if case.rotation %}
+                            <dt class="col-sm-5">Rotation:</dt>
+                            <dd class="col-sm-7">{{ case.rotation.department.name }}</dd>
+                            {% endif %}
+                        </dl>
+                    </div>
+                </div>
+
+                <!-- Key Case Information -->
+                {% if case.chief_complaint %}
+                <div class="mt-3">
+                    <strong>Chief Complaint:</strong>
+                    <p class="mt-1">{{ case.chief_complaint }}</p>
+                </div>
+                {% endif %}
+
+                {% if case.clinical_reasoning %}
+                <div class="mt-3">
+                    <strong>Clinical Reasoning:</strong>
+                    <p class="mt-1">{{ case.clinical_reasoning|linebreaks }}</p>
+                </div>
+                {% endif %}
+
+                {% if case.learning_points %}
+                <div class="mt-3 learning-points">
+                    <strong>Learning Points:</strong>
+                    <p class="mt-1">{{ case.learning_points|linebreaks }}</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Review Form -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-star me-2"></i>Review & Assessment</h5>
+            </div>
+            <div class="card-body">
+                <form method="post" id="reviewForm">
+                    {% csrf_token %}
+                    
+                    <!-- Assessment Scores -->
+                    <div class="row mb-4">
+                        <div class="col-md-4">
+                            {{ form.clinical_accuracy_score|as_crispy_field }}
+                            <small class="text-muted">Rate the accuracy of clinical assessment and diagnosis</small>
+                        </div>
+                        <div class="col-md-4">
+                            {{ form.learning_quality_score|as_crispy_field }}
+                            <small class="text-muted">Assess the quality of learning points and reflection</small>
+                        </div>
+                        <div class="col-md-4">
+                            {{ form.documentation_quality_score|as_crispy_field }}
+                            <small class="text-muted">Rate the completeness and clarity of documentation</small>
+                        </div>
+                    </div>
+
+                    <!-- Assessment Categories -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h6>Clinical Assessment</h6>
+                            <div class="mb-3">
+                                {{ form.assessment_completeness|as_crispy_field }}
+                            </div>
+                            <div class="mb-3">
+                                {{ form.diagnostic_accuracy|as_crispy_field }}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Professional Development</h6>
+                            <div class="mb-3">
+                                {{ form.reflection_quality|as_crispy_field }}
+                            </div>
+                            <div class="mb-3">
+                                {{ form.learning_objectives_met|as_crispy_field }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Feedback and Comments -->
+                    <div class="mb-4">
+                        {{ form.comments|as_crispy_field }}
+                    </div>
+
+                    <div class="mb-4">
+                        {{ form.suggestions_for_improvement|as_crispy_field }}
+                    </div>
+
+                    <!-- Approval Decision -->
+                    <div class="card bg-light mb-4">
+                        <div class="card-body">
+                            <h6 class="card-title">Review Decision</h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    {{ form.is_approved|as_crispy_field }}
+                                </div>
+                                <div class="col-md-6">
+                                    {{ form.requires_revision|as_crispy_field }}
+                                </div>
+                            </div>
+                            
+                            <div id="revisionRequirements" style="display: none;">
+                                {{ form.revision_requirements|as_crispy_field }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <button type="submit" name="action" value="save_draft" class="btn btn-outline-primary">
+                                <i class="fas fa-save me-2"></i>Save Draft
+                            </button>
+                        </div>
+                        <div>
+                            <button type="submit" name="action" value="submit_review" class="btn btn-success" id="submitReview">
+                                <i class="fas fa-check me-2"></i>Submit Review
+                            </button>
+                            <a href="{% url 'cases:case_detail' case.pk %}" class="btn btn-outline-secondary ms-2">
+                                <i class="fas fa-times me-2"></i>Cancel
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="col-lg-4">
+        <!-- Review Guidelines -->
+        <div class="card mb-4 sticky-top" style="top: 20px;">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="fas fa-lightbulb me-2"></i>Review Guidelines</h6>
+            </div>
+            <div class="card-body">
+                <div class="accordion" id="guidelinesAccordion">
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#clinicalAccuracy">
+                                Clinical Accuracy
+                            </button>
+                        </h2>
+                        <div id="clinicalAccuracy" class="accordion-collapse collapse show" data-bs-parent="#guidelinesAccordion">
+                            <div class="accordion-body">
+                                <small>
+                                    <strong>Excellent (9-10):</strong> Accurate diagnosis, appropriate investigations, sound clinical reasoning<br>
+                                    <strong>Good (7-8):</strong> Minor inaccuracies, mostly appropriate management<br>
+                                    <strong>Satisfactory (5-6):</strong> Some errors, requires guidance<br>
+                                    <strong>Needs Work (1-4):</strong> Significant errors, major gaps in understanding
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#learningQuality">
+                                Learning Quality
+                            </button>
+                        </h2>
+                        <div id="learningQuality" class="accordion-collapse collapse" data-bs-parent="#guidelinesAccordion">
+                            <div class="accordion-body">
+                                <small>
+                                    Assess the depth of reflection, identification of learning gaps, and insight into professional development. Consider whether the PG has identified relevant learning points and demonstrated understanding of the case's educational value.
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#documentation">
+                                Documentation Quality
+                            </button>
+                        </h2>
+                        <div id="documentation" class="accordion-collapse collapse" data-bs-parent="#guidelinesAccordion">
+                            <div class="accordion-body">
+                                <small>
+                                    Evaluate completeness, clarity, organization, and appropriate medical terminology. Documentation should be comprehensive enough for educational review and professional development.
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Previous Reviews -->
+        {% if previous_reviews %}
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="fas fa-history me-2"></i>Previous Reviews</h6>
+            </div>
+            <div class="card-body">
+                {% for review in previous_reviews %}
+                <div class="border-start border-3 border-info ps-3 mb-3">
+                    <div class="d-flex justify-content-between">
+                        <strong>{{ review.reviewer.get_full_name }}</strong>
+                        <small class="text-muted">{{ review.reviewed_at|date:"M d, Y" }}</small>
+                    </div>
+                    {% if review.clinical_accuracy_score %}
+                    <small class="text-muted">Score: {{ review.clinical_accuracy_score }}/10</small>
+                    {% endif %}
+                    {% if review.comments %}
+                    <p class="small mt-1 mb-0">{{ review.comments|truncatechars:150 }}</p>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Show/hide revision requirements based on checkbox
+    $('#id_requires_revision').change(function() {
+        if ($(this).is(':checked')) {
+            $('#revisionRequirements').slideDown();
+            $('#id_revision_requirements').prop('required', true);
+        } else {
+            $('#revisionRequirements').slideUp();
+            $('#id_revision_requirements').prop('required', false);
+        }
+    });
+    
+    // Auto-check requires_revision if not approved
+    $('#id_is_approved').change(function() {
+        if (!$(this).is(':checked')) {
+            $('#id_requires_revision').prop('checked', true).trigger('change');
+        }
+    });
+    
+    // Form validation
+    $('#reviewForm').on('submit', function(e) {
+        var isApproved = $('#id_is_approved').is(':checked');
+        var requiresRevision = $('#id_requires_revision').is(':checked');
+        var comments = $('#id_comments').val().trim();
+        
+        if (!isApproved && !requiresRevision) {
+            e.preventDefault();
+            alert('Please indicate whether the case is approved or requires revision.');
+            return false;
+        }
+        
+        if (requiresRevision && !$('#id_revision_requirements').val().trim()) {
+            e.preventDefault();
+            alert('Please specify what revisions are required.');
+            $('#id_revision_requirements').focus();
+            return false;
+        }
+        
+        if (!comments && $(e.target.activeElement).attr('name') === 'action' && $(e.target.activeElement).val() === 'submit_review') {
+            if (!confirm('You have not provided any comments. Are you sure you want to submit the review?')) {
+                e.preventDefault();
+                return false;
+            }
+        }
+        
+        // Confirm submission
+        if ($(e.target.activeElement).attr('name') === 'action' && $(e.target.activeElement).val() === 'submit_review') {
+            if (!confirm('Are you sure you want to submit this review? This action cannot be undone.')) {
+                e.preventDefault();
+                return false;
+            }
+        }
+    });
+    
+    // Score indicators
+    $('input[type="number"]').on('input', function() {
+        var value = parseInt($(this).val());
+        var $indicator = $(this).siblings('.score-indicator');
+        
+        if ($indicator.length === 0) {
+            $indicator = $('<span class="score-indicator small ms-2"></span>');
+            $(this).after($indicator);
+        }
+        
+        var text = '';
+        var className = '';
+        
+        if (value >= 9) {
+            text = 'Excellent';
+            className = 'text-success';
+        } else if (value >= 7) {
+            text = 'Good';
+            className = 'text-primary';
+        } else if (value >= 5) {
+            text = 'Satisfactory';
+            className = 'text-warning';
+        } else if (value >= 1) {
+            text = 'Needs Work';
+            className = 'text-danger';
+        }
+        
+        $indicator.text(text).attr('class', 'score-indicator small ms-2 ' + className);
+    });
+    
+    // Initialize score indicators for existing values
+    $('input[type="number"]').trigger('input');
+    
+    // Auto-resize textareas
+    $('textarea').each(function() {
+        this.setAttribute('style', 'height:' + (this.scrollHeight) + 'px;overflow-y:hidden;');
+    }).on('input', function() {
+        this.style.height = 'auto';
+        this.style.height = (this.scrollHeight) + 'px';
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,368 @@
+{% extends 'base/base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block title %}Review Logbook Entry - SIMS{% endblock %}
+
+{% block breadcrumb %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'users:dashboard' %}">Dashboard</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'logbook:list' %}">Logbook</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'logbook:detail' entry.pk %}">{{ entry.title|truncatechars:30 }}</a></li>
+        <li class="breadcrumb-item active">Review</li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Entry Summary -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="card-title mb-0">
+                        <i class="fas fa-book-medical me-2"></i>
+                        Entry Summary
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <h6 class="fw-bold">{{ entry.title }}</h6>
+                    <p class="text-muted small mb-2">{{ entry.date|date:"F d, Y" }}</p>
+                    
+                    <div class="mb-3">
+                        <strong>Category:</strong> {{ entry.category.name }}<br>
+                        <strong>Complexity:</strong> 
+                        <span class="badge badge-{{ entry.complexity|default:'secondary' }}">
+                            {{ entry.get_complexity_display }}
+                        </span><br>
+                        <strong>Current Status:</strong> 
+                        <span class="badge badge-{{ entry.status|default:'secondary' }}">
+                            {{ entry.get_status_display }}
+                        </span>
+                    </div>
+
+                    {% if entry.learning_objectives %}
+                    <div class="mb-3">
+                        <strong>Learning Objectives:</strong>
+                        <p class="small text-muted">{{ entry.learning_objectives|truncatechars:200 }}</p>
+                    </div>
+                    {% endif %}
+
+                    {% if entry.reflection %}
+                    <div class="mb-3">
+                        <strong>Student Reflection:</strong>
+                        <p class="small text-muted">{{ entry.reflection|truncatechars:200 }}</p>
+                    </div>
+                    {% endif %}
+
+                    <a href="{% url 'logbook:detail' entry.pk %}" class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-eye me-1"></i>View Full Entry
+                    </a>
+                </div>
+            </div>
+
+            {% if entry.logbook_reviews.exists %}
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h6 class="card-title mb-0">
+                        <i class="fas fa-comments me-2"></i>
+                        Previous Reviews
+                    </h6>
+                </div>
+                <div class="card-body">
+                    {% for review in entry.logbook_reviews.all|slice:":3" %}
+                    <div class="border-bottom pb-2 mb-2">
+                        <div class="d-flex justify-content-between">
+                            <small class="fw-bold">{{ review.reviewer.get_full_name }}</small>
+                            <small class="text-muted">{{ review.created_at|date:"M d" }}</small>
+                        </div>
+                        <p class="small mb-1">{{ review.comments|truncatechars:100 }}</p>
+                        {% if review.rating %}
+                        <div class="rating-stars small">
+                            {% for i in "12345" %}
+                                {% if forloop.counter <= review.rating %}
+                                    <i class="fas fa-star text-warning"></i>
+                                {% else %}
+                                    <i class="far fa-star text-muted"></i>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Review Form -->
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-clipboard-check me-2"></i>
+                        Submit Review
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        {% if not form %}
+                            <div class="alert alert-danger">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                Form is not available. Please try again or contact support.
+                            </div>
+                        {% else %}
+                            <div class="row">
+                                <div class="col-md-6">
+                                    {% if form.overall_score %}
+                                        <div class="mb-3">
+                                            <label for="{{ form.overall_score.id_for_label }}" class="form-label">{{ form.overall_score.label }}</label>
+                                            {{ form.overall_score }}
+                                            {% if form.overall_score.help_text %}
+                                                <div class="form-text">{{ form.overall_score.help_text }}</div>
+                                            {% endif %}
+                                            {% if form.overall_score.errors %}
+                                                <div class="invalid-feedback d-block">{{ form.overall_score.errors }}</div>
+                                            {% endif %}
+                                        </div>
+                                    {% else %}
+                                        <div class="alert alert-warning">Overall score field not available</div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-6">
+                                    {% if form.status %}
+                                        <div class="mb-3">
+                                            <label for="{{ form.status.id_for_label }}" class="form-label">{{ form.status.label }}</label>
+                                            {{ form.status }}
+                                            {% if form.status.help_text %}
+                                                <div class="form-text">{{ form.status.help_text }}</div>
+                                            {% endif %}
+                                            {% if form.status.errors %}
+                                                <div class="invalid-feedback d-block">{{ form.status.errors }}</div>
+                                            {% endif %}
+                                        </div>
+                                    {% else %}
+                                        <div class="alert alert-warning">Status field not available</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% endif %}
+
+                        {% if form and form.feedback %}
+                            <div class="mb-3">
+                                <label for="{{ form.feedback.id_for_label }}" class="form-label">{{ form.feedback.label }}</label>
+                                {{ form.feedback }}
+                                {% if form.feedback.help_text %}
+                                    <div class="form-text">{{ form.feedback.help_text }}</div>
+                                {% endif %}
+                                {% if form.feedback.errors %}
+                                    <div class="invalid-feedback d-block">{{ form.feedback.errors }}</div>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+                        
+                        {% if form %}
+                            <div class="row">
+                                <div class="col-md-6">
+                                    {% if form.strengths_identified %}
+                                        <div class="mb-3">
+                                            <label for="{{ form.strengths_identified.id_for_label }}" class="form-label">{{ form.strengths_identified.label }}</label>
+                                            {{ form.strengths_identified }}
+                                            {% if form.strengths_identified.help_text %}
+                                                <div class="form-text">{{ form.strengths_identified.help_text }}</div>
+                                            {% endif %}
+                                            {% if form.strengths_identified.errors %}
+                                                <div class="invalid-feedback d-block">{{ form.strengths_identified.errors }}</div>
+                                            {% endif %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-6">
+                                    {% if form.areas_for_improvement %}
+                                        <div class="mb-3">
+                                            <label for="{{ form.areas_for_improvement.id_for_label }}" class="form-label">{{ form.areas_for_improvement.label }}</label>
+                                            {{ form.areas_for_improvement }}
+                                            {% if form.areas_for_improvement.help_text %}
+                                                <div class="form-text">{{ form.areas_for_improvement.help_text }}</div>
+                                            {% endif %}
+                                            {% if form.areas_for_improvement.errors %}
+                                                <div class="invalid-feedback d-block">{{ form.areas_for_improvement.errors }}</div>
+                                            {% endif %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-4">
+                                    {% if form.clinical_knowledge_score %}
+                                        <div class="mb-3">
+                                            <label for="{{ form.clinical_knowledge_score.id_for_label }}" class="form-label">{{ form.clinical_knowledge_score.label }}</label>
+                                            {{ form.clinical_knowledge_score }}
+                                            {% if form.clinical_knowledge_score.help_text %}
+                                                <div class="form-text">{{ form.clinical_knowledge_score.help_text }}</div>
+                                            {% endif %}
+                                            {% if form.clinical_knowledge_score.errors %}
+                                                <div class="invalid-feedback d-block">{{ form.clinical_knowledge_score.errors }}</div>
+                                            {% endif %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-4">
+                                    {% if form.clinical_skills_score %}
+                                        <div class="mb-3">
+                                            <label for="{{ form.clinical_skills_score.id_for_label }}" class="form-label">{{ form.clinical_skills_score.label }}</label>
+                                            {{ form.clinical_skills_score }}
+                                            {% if form.clinical_skills_score.help_text %}
+                                                <div class="form-text">{{ form.clinical_skills_score.help_text }}</div>
+                                            {% endif %}
+                                            {% if form.clinical_skills_score.errors %}
+                                                <div class="invalid-feedback d-block">{{ form.clinical_skills_score.errors }}</div>
+                                            {% endif %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-4">
+                                    {% if form.professionalism_score %}
+                                        <div class="mb-3">
+                                            <label for="{{ form.professionalism_score.id_for_label }}" class="form-label">{{ form.professionalism_score.label }}</label>
+                                            {{ form.professionalism_score }}
+                                            {% if form.professionalism_score.help_text %}
+                                                <div class="form-text">{{ form.professionalism_score.help_text }}</div>
+                                            {% endif %}
+                                            {% if form.professionalism_score.errors %}
+                                                <div class="invalid-feedback d-block">{{ form.professionalism_score.errors }}</div>
+                                            {% endif %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            {% if form.recommendations %}
+                                <div class="mb-3">
+                                    <label for="{{ form.recommendations.id_for_label }}" class="form-label">{{ form.recommendations.label }}</label>
+                                    {{ form.recommendations }}
+                                    {% if form.recommendations.help_text %}
+                                        <div class="form-text">{{ form.recommendations.help_text }}</div>
+                                    {% endif %}
+                                    {% if form.recommendations.errors %}
+                                        <div class="invalid-feedback d-block">{{ form.recommendations.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            {% endif %}
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    {% if form.review_date %}
+                                        <div class="mb-3">
+                                            <label for="{{ form.review_date.id_for_label }}" class="form-label">{{ form.review_date.label }}</label>
+                                            {{ form.review_date }}
+                                            {% if form.review_date.help_text %}
+                                                <div class="form-text">{{ form.review_date.help_text }}</div>
+                                            {% endif %}
+                                            {% if form.review_date.errors %}
+                                                <div class="invalid-feedback d-block">{{ form.review_date.errors }}</div>
+                                            {% endif %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-6">
+                                    {% if form.follow_up_required %}
+                                        <div class="mb-3">
+                                            <div class="form-check">
+                                                {{ form.follow_up_required }}
+                                                <label for="{{ form.follow_up_required.id_for_label }}" class="form-check-label">{{ form.follow_up_required.label }}</label>
+                                            </div>
+                                            {% if form.follow_up_required.help_text %}
+                                                <div class="form-text">{{ form.follow_up_required.help_text }}</div>
+                                            {% endif %}
+                                            {% if form.follow_up_required.errors %}
+                                                <div class="invalid-feedback d-block">{{ form.follow_up_required.errors }}</div>
+                                            {% endif %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% endif %}
+
+                        <div class="d-flex justify-content-between mt-4">
+                            <a href="{% url 'logbook:detail' entry.pk %}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left me-2"></i>Cancel
+                            </a>
+                            <div>
+                                <button type="submit" name="action" value="save_draft" class="btn btn-outline-primary me-2">
+                                    <i class="fas fa-save me-2"></i>Save Draft
+                                </button>
+                                <button type="submit" name="action" value="submit_review" class="btn btn-primary">
+                                    <i class="fas fa-paper-plane me-2"></i>Submit Review
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.rating-stars {
+    font-size: 0.9rem;
+}
+
+.badge-simple { background-color: #28a745; }
+.badge-moderate { background-color: #ffc107; color: #212529; }
+.badge-complex { background-color: #fd7e14; }
+.badge-highly_complex { background-color: #dc3545; }
+
+.badge-draft { background-color: #6c757d; }
+.badge-submitted { background-color: #17a2b8; }
+.badge-approved { background-color: #28a745; }
+.badge-needs_revision { background-color: #ffc107; color: #212529; }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Auto-save functionality
+    let autoSaveTimeout;
+    $('form textarea, form input').on('input', function() {
+        clearTimeout(autoSaveTimeout);
+        autoSaveTimeout = setTimeout(function() {
+            // Auto-save draft logic could go here
+            console.log('Auto-saving draft...');
+        }, 5000);
+    });
+
+    // Rating stars interaction
+    $('.rating-select').on('change', function() {
+        const rating = $(this).val();
+        $(this).next('.rating-display').html(
+            Array.from({length: 5}, (_, i) => 
+                `<i class="fas fa-star ${i < rating ? 'text-warning' : 'text-muted'}"></i>`
+            ).join('')
+        );
+    });
+
+    // Form validation
+    $('form').on('submit', function(e) {
+        const action = $(e.originalEvent.submitter).val();
+        if (action === 'submit_review') {
+            if (!$('#id_comments').val().trim()) {
+                e.preventDefault();
+                alert('Please provide comments before submitting the review.');
+                $('#id_comments').focus();
+                return false;
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

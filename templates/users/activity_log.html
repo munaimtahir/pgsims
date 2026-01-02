@@ -1,0 +1,447 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Activity Log - SIMS{% endblock %}
+
+{% block breadcrumb %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'users:dashboard' %}">Dashboard</a></li>
+        <li class="breadcrumb-item active">Activity Log</li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Activity Overview -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h5 class="card-title">{{ total_activities }}</h5>
+                            <p class="card-text">Total Activities</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-list fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h5 class="card-title">{{ today_activities }}</h5>
+                            <p class="card-text">Today's Activities</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-calendar-day fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h5 class="card-title">{{ active_users }}</h5>
+                            <p class="card-text">Active Users</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-users fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h5 class="card-title">{{ this_week_activities }}</h5>
+                            <p class="card-text">This Week</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-calendar-week fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="card-title mb-0">
+                        <i class="fas fa-filter me-2"></i>Filter Activities
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <form method="get" id="filterForm">
+                        <div class="row">
+                            <div class="col-md-2">
+                                <label class="form-label">User</label>
+                                <select class="form-select" name="user" id="filterUser">
+                                    <option value="">All Users</option>
+                                    {% for user in users %}
+                                    <option value="{{ user.pk }}" {% if request.GET.user == user.pk|stringformat:"s" %}selected{% endif %}>
+                                        {{ user.get_full_name }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">Activity Type</label>
+                                <select class="form-select" name="activity_type" id="filterType">
+                                    <option value="">All Types</option>
+                                    <option value="login" {% if request.GET.activity_type == "login" %}selected{% endif %}>Login</option>
+                                    <option value="logout" {% if request.GET.activity_type == "logout" %}selected{% endif %}>Logout</option>
+                                    <option value="create" {% if request.GET.activity_type == "create" %}selected{% endif %}>Create</option>
+                                    <option value="update" {% if request.GET.activity_type == "update" %}selected{% endif %}>Update</option>
+                                    <option value="delete" {% if request.GET.activity_type == "delete" %}selected{% endif %}>Delete</option>
+                                    <option value="submit" {% if request.GET.activity_type == "submit" %}selected{% endif %}>Submit</option>
+                                    <option value="approve" {% if request.GET.activity_type == "approve" %}selected{% endif %}>Approve</option>
+                                    <option value="review" {% if request.GET.activity_type == "review" %}selected{% endif %}>Review</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">Module</label>
+                                <select class="form-select" name="module" id="filterModule">
+                                    <option value="">All Modules</option>
+                                    <option value="logbook" {% if request.GET.module == "logbook" %}selected{% endif %}>Logbook</option>
+                                    <option value="cases" {% if request.GET.module == "cases" %}selected{% endif %}>Cases</option>
+                                    <option value="certificates" {% if request.GET.module == "certificates" %}selected{% endif %}>Certificates</option>
+                                    <option value="rotations" {% if request.GET.module == "rotations" %}selected{% endif %}>Rotations</option>
+                                    <option value="users" {% if request.GET.module == "users" %}selected{% endif %}>Users</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">Date From</label>
+                                <input type="date" class="form-control" name="date_from" value="{{ request.GET.date_from }}">
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">Date To</label>
+                                <input type="date" class="form-control" name="date_to" value="{{ request.GET.date_to }}">
+                            </div>
+                            <div class="col-md-2 d-flex align-items-end">
+                                <button type="submit" class="btn btn-primary me-2">
+                                    <i class="fas fa-search me-1"></i>Filter
+                                </button>
+                                <a href="{% url 'users:activity_log' %}" class="btn btn-outline-secondary">
+                                    <i class="fas fa-times me-1"></i>Clear
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Activity Timeline -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h6 class="card-title mb-0">
+                            <i class="fas fa-clock me-2"></i>
+                            Activity Timeline
+                            {% if activities %}
+                            <small class="text-muted">({{ activities|length }} activities)</small>
+                            {% endif %}
+                        </h6>
+                        <div class="btn-group btn-group-sm">
+                            <a href="?export=csv{{ request.GET.urlencode|default:'' }}" class="btn btn-outline-primary">
+                                <i class="fas fa-file-csv me-1"></i>Export CSV
+                            </a>
+                            <button type="button" class="btn btn-outline-info" id="autoRefresh">
+                                <i class="fas fa-sync me-1"></i>Auto Refresh
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if activities %}
+                    <div class="activity-timeline">
+                        {% for activity in activities %}
+                        <div class="activity-item" data-type="{{ activity.activity_type }}" data-module="{{ activity.module }}">
+                            <div class="activity-marker activity-{{ activity.activity_type }}"></div>
+                            <div class="activity-content">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div class="flex-grow-1">
+                                        <div class="d-flex align-items-center mb-1">
+                                            {% if activity.user.profile.avatar %}
+                                            <img src="{{ activity.user.profile.avatar.url }}" alt="{{ activity.user.get_full_name }}" 
+                                                 class="rounded-circle me-2" width="30" height="30" style="object-fit: cover;">
+                                            {% else %}
+                                            <div class="avatar-placeholder rounded-circle me-2 d-flex align-items-center justify-content-center"
+                                                 style="width: 30px; height: 30px; background: linear-gradient(135deg, #007bff 0%, #6610f2 100%); color: white; font-size: 0.75rem; font-weight: bold;">
+                                                {{ activity.user.first_name.0|upper }}{{ activity.user.last_name.0|upper }}
+                                            </div>
+                                            {% endif %}
+                                            <div>
+                                                <strong>{{ activity.user.get_full_name }}</strong>
+                                                <span class="badge badge-{{ activity.activity_type }} ms-2">{{ activity.get_activity_type_display }}</span>
+                                                <span class="badge badge-outline-{{ activity.module }} ms-1">{{ activity.module|title }}</span>
+                                            </div>
+                                        </div>
+                                        <p class="mb-1 text-muted">{{ activity.description }}</p>
+                                        {% if activity.details %}
+                                        <small class="text-muted">{{ activity.details|truncatechars:100 }}</small>
+                                        {% endif %}
+                                        {% if activity.ip_address %}
+                                        <small class="text-muted d-block">IP: {{ activity.ip_address }}</small>
+                                        {% endif %}
+                                    </div>
+                                    <div class="text-end">
+                                        <small class="text-muted">{{ activity.timestamp|date:"M d, Y" }}</small>
+                                        <small class="text-muted d-block">{{ activity.timestamp|time:"g:i A" }}</small>
+                                        {% if activity.timestamp|timesince %}
+                                        <small class="text-muted d-block">{{ activity.timestamp|timesince }} ago</small>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <!-- Pagination -->
+                    {% if is_paginated %}
+                    <nav aria-label="Activity pagination" class="mt-4">
+                        <ul class="pagination justify-content-center">
+                            {% if page_obj.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{{ request.GET.urlencode|default:'' }}">
+                                    <i class="fas fa-chevron-left"></i> Previous
+                                </a>
+                            </li>
+                            {% endif %}
+                            
+                            {% for num in page_obj.paginator.page_range %}
+                            {% if page_obj.number == num %}
+                            <li class="page-item active">
+                                <span class="page-link">{{ num }}</span>
+                            </li>
+                            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ num }}{{ request.GET.urlencode|default:'' }}">{{ num }}</a>
+                            </li>
+                            {% endif %}
+                            {% endfor %}
+                            
+                            {% if page_obj.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.next_page_number }}{{ request.GET.urlencode|default:'' }}">
+                                    Next <i class="fas fa-chevron-right"></i>
+                                </a>
+                            </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                    {% endif %}
+
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-history fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">No Activities Found</h5>
+                        <p class="text-muted">No activities match the current filters or there are no activities to display.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.activity-timeline {
+    position: relative;
+    padding-left: 30px;
+}
+
+.activity-timeline::before {
+    content: '';
+    position: absolute;
+    left: 15px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: linear-gradient(to bottom, #e9ecef 0%, #dee2e6 100%);
+}
+
+.activity-item {
+    position: relative;
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+}
+
+.activity-item:last-child {
+    margin-bottom: 0;
+}
+
+.activity-marker {
+    position: absolute;
+    left: -37px;
+    top: 8px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 3px solid #fff;
+    box-shadow: 0 0 0 3px #e9ecef;
+}
+
+.activity-marker.activity-login { background-color: #28a745; }
+.activity-marker.activity-logout { background-color: #6c757d; }
+.activity-marker.activity-create { background-color: #007bff; }
+.activity-marker.activity-update { background-color: #ffc107; }
+.activity-marker.activity-delete { background-color: #dc3545; }
+.activity-marker.activity-submit { background-color: #17a2b8; }
+.activity-marker.activity-approve { background-color: #28a745; }
+.activity-marker.activity-review { background-color: #6f42c1; }
+
+.activity-content {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 15px;
+    border-left: 4px solid #007bff;
+    transition: all 0.3s ease;
+}
+
+.activity-content:hover {
+    background: #e9ecef;
+    transform: translateX(2px);
+}
+
+.badge-login { background-color: #28a745; }
+.badge-logout { background-color: #6c757d; }
+.badge-create { background-color: #007bff; }
+.badge-update { background-color: #ffc107; color: #212529; }
+.badge-delete { background-color: #dc3545; }
+.badge-submit { background-color: #17a2b8; }
+.badge-approve { background-color: #28a745; }
+.badge-review { background-color: #6f42c1; }
+
+.badge-outline-logbook { background-color: transparent; border: 1px solid #007bff; color: #007bff; }
+.badge-outline-cases { background-color: transparent; border: 1px solid #28a745; color: #28a745; }
+.badge-outline-certificates { background-color: transparent; border: 1px solid #ffc107; color: #ffc107; }
+.badge-outline-rotations { background-color: transparent; border: 1px solid #fd7e14; color: #fd7e14; }
+.badge-outline-users { background-color: transparent; border: 1px solid #6f42c1; color: #6f42c1; }
+
+.avatar-placeholder {
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+}
+
+@media (max-width: 768px) {
+    .activity-timeline {
+        padding-left: 20px;
+    }
+    
+    .activity-marker {
+        left: -27px;
+    }
+    
+    .activity-content {
+        padding: 10px;
+    }
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    let autoRefreshInterval;
+    let isAutoRefreshActive = false;
+
+    // Auto refresh functionality
+    $('#autoRefresh').on('click', function() {
+        if (isAutoRefreshActive) {
+            clearInterval(autoRefreshInterval);
+            $(this).removeClass('btn-info').addClass('btn-outline-info')
+                   .html('<i class="fas fa-sync me-1"></i>Auto Refresh');
+            isAutoRefreshActive = false;
+        } else {
+            autoRefreshInterval = setInterval(function() {
+                location.reload();
+            }, 30000); // Refresh every 30 seconds
+            $(this).removeClass('btn-outline-info').addClass('btn-info')
+                   .html('<i class="fas fa-sync-alt me-1"></i>Auto Refresh ON');
+            isAutoRefreshActive = true;
+        }
+    });
+
+    // Filter form submission
+    $('#filterForm').on('change', 'select, input', function() {
+        // Optional: Auto-submit on filter change
+        // $(this).closest('form').submit();
+    });
+
+    // Real-time activity highlighting
+    $('.activity-item').each(function(index) {
+        $(this).css('opacity', '0').delay(index * 100).animate({
+            opacity: 1
+        }, 300);
+    });
+
+    // Activity type color coding
+    $('.activity-item').each(function() {
+        const type = $(this).data('type');
+        const module = $(this).data('module');
+        
+        // Add type-specific styling
+        switch(type) {
+            case 'create':
+                $(this).find('.activity-content').css('border-left-color', '#007bff');
+                break;
+            case 'update':
+                $(this).find('.activity-content').css('border-left-color', '#ffc107');
+                break;
+            case 'delete':
+                $(this).find('.activity-content').css('border-left-color', '#dc3545');
+                break;
+            case 'login':
+                $(this).find('.activity-content').css('border-left-color', '#28a745');
+                break;
+            case 'logout':
+                $(this).find('.activity-content').css('border-left-color', '#6c757d');
+                break;
+        }
+    });
+
+    // Smooth scroll to top
+    $(window).scroll(function() {
+        if ($(this).scrollTop() > 100) {
+            if (!$('#scrollTop').length) {
+                $('body').append(`
+                    <button id="scrollTop" class="btn btn-primary rounded-circle position-fixed" 
+                            style="bottom: 20px; right: 20px; z-index: 1000; width: 50px; height: 50px;">
+                        <i class="fas fa-arrow-up"></i>
+                    </button>
+                `);
+            }
+        } else {
+            $('#scrollTop').remove();
+        }
+    });
+
+    $(document).on('click', '#scrollTop', function() {
+        $('html, body').animate({scrollTop: 0}, 500);
+    });
+});
+</script>
+{% endblock %}

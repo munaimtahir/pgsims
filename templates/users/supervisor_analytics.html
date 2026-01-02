@@ -1,0 +1,309 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Supervisor Analytics - SIMS{% endblock %}
+
+{% block breadcrumb %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'users:supervisor_dashboard' %}">Dashboard</a></li>
+        <li class="breadcrumb-item active">Analytics</li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block page_header %}
+<div class="d-flex justify-content-between align-items-start mb-4">
+    <div>
+        <h2>
+            <i class="fas fa-chart-line me-2"></i>My Supervision Analytics
+        </h2>
+        <p class="text-muted">Track progress of your assigned PGs</p>
+    </div>
+    <div>
+        <a href="{% url 'users:supervisor_dashboard' %}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<!-- Overview Cards -->
+<div class="row mb-4">
+    <div class="col-xl-4 col-md-6 mb-4">
+        <div class="card border-left-primary shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                            Assigned PGs
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ assigned_pgs_count }}</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-user-graduate fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-4 col-md-6 mb-4">
+        <div class="card border-left-success shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                            Entries This Month
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ monthly_entries }}</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-book fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-4 col-md-6 mb-4">
+        <div class="card border-left-info shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                            Certificates This Month
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ monthly_certificates }}</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-certificate fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- PG Progress Overview -->
+<div class="row">
+    <div class="col-lg-12 mb-4">
+        <div class="card shadow">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">PG Progress Overview</h6>
+            </div>
+            <div class="card-body">
+                {% if pg_progress_stats %}
+                <div class="table-responsive">
+                    <table class="table table-bordered" width="100%" cellspacing="0">
+                        <thead>
+                            <tr>
+                                <th>PG Name</th>
+                                <th>Certificates</th>
+                                <th>Logbook Entries</th>
+                                <th>Rotations</th>
+                                <th>Progress</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for pg_stat in pg_progress_stats %}
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="mr-3">
+                                            {% if pg_stat.pg.profile.profile_picture %}
+                                                <img src="{{ pg_stat.pg.profile.profile_picture.url }}" 
+                                                     class="rounded-circle" width="40" height="40" alt="Profile">
+                                            {% else %}
+                                                <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center" 
+                                                     style="width: 40px; height: 40px;">
+                                                    <i class="fas fa-user text-white"></i>
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                        <div>
+                                            <div class="font-weight-bold">{{ pg_stat.pg.get_full_name }}</div>
+                                            <div class="small text-gray-600">{{ pg_stat.pg.specialty|default:"Not specified" }}</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge badge-primary">{{ pg_stat.certificates }}</span>
+                                </td>
+                                <td>
+                                    <span class="badge badge-success">{{ pg_stat.logbook_entries }}</span>
+                                </td>
+                                <td>
+                                    <span class="badge badge-info">{{ pg_stat.rotations }}</span>
+                                </td>
+                                <td>
+                                    <div class="progress" style="height: 20px;">
+                                        <div class="progress-bar" role="progressbar" 
+                                             style="width: {{ pg_stat.completion_percentage }}%"
+                                             aria-valuenow="{{ pg_stat.completion_percentage }}" 
+                                             aria-valuemin="0" aria-valuemax="100">
+                                            {{ pg_stat.completion_percentage }}%
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <a href="{% url 'users:profile_detail' pg_stat.pg.pk %}" 
+                                       class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-eye"></i> View
+                                    </a>
+                                    <a href="{% url 'users:pg_progress' pg_stat.pg.pk %}" 
+                                       class="btn btn-sm btn-outline-success">
+                                        <i class="fas fa-chart-line"></i> Progress
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-users fa-3x text-gray-300 mb-3"></i>
+                    <h5 class="text-gray-600">No PGs Assigned</h5>
+                    <p class="text-gray-500">You don't have any PGs assigned to you yet.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Progress Charts -->
+{% if pg_progress_stats %}
+<div class="row">
+    <div class="col-xl-6 col-lg-6 mb-4">
+        <div class="card shadow">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">PG Activity Distribution</h6>
+            </div>
+            <div class="card-body">
+                <div class="chart-area">
+                    <canvas id="pgActivityChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-6 col-lg-6 mb-4">
+        <div class="card shadow">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Progress Comparison</h6>
+            </div>
+            <div class="card-body">
+                <div class="chart-bar">
+                    <canvas id="progressChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% if pg_progress_stats %}
+<script>
+// PG Activity Distribution Chart
+const activityCtx = document.getElementById('pgActivityChart').getContext('2d');
+const totalCertificates = {% for pg in pg_progress_stats %}{{ pg.certificates }}{% if not forloop.last %}+{% endif %}{% endfor %};
+const totalLogbook = {% for pg in pg_progress_stats %}{{ pg.logbook_entries }}{% if not forloop.last %}+{% endif %}{% endfor %};
+const totalRotations = {% for pg in pg_progress_stats %}{{ pg.rotations }}{% if not forloop.last %}+{% endif %}{% endfor %};
+
+const activityData = {
+    labels: ['Certificates', 'Logbook Entries', 'Rotations'],
+    datasets: [{
+        data: [totalCertificates, totalLogbook, totalRotations],
+        backgroundColor: ['#4e73df', '#1cc88a', '#36b9cc']
+    }]
+};
+
+new Chart(activityCtx, {
+    type: 'doughnut',
+    data: activityData,
+    options: {
+        responsive: true,
+        plugins: {
+            legend: {
+                position: 'bottom'
+            }
+        }
+    }
+});
+
+// Progress Comparison Chart
+const progressCtx = document.getElementById('progressChart').getContext('2d');
+const progressData = {
+    labels: [
+        {% for pg in pg_progress_stats %}
+        '{{ pg.pg.get_full_name|truncatechars:15 }}'{% if not forloop.last %},{% endif %}
+        {% endfor %}
+    ],
+    datasets: [{
+        label: 'Completion %',
+        data: [
+            {% for pg in pg_progress_stats %}
+            {{ pg.completion_percentage }}{% if not forloop.last %},{% endif %}
+            {% endfor %}
+        ],
+        backgroundColor: '#4e73df'
+    }]
+};
+
+new Chart(progressCtx, {
+    type: 'bar',
+    data: progressData,
+    options: {
+        responsive: true,
+        plugins: {
+            legend: {
+                display: false
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                max: 100
+            }
+        }
+    }
+});
+</script>
+{% endif %}
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.border-left-primary {
+    border-left: 0.25rem solid #4e73df !important;
+}
+.border-left-success {
+    border-left: 0.25rem solid #1cc88a !important;
+}
+.border-left-info {
+    border-left: 0.25rem solid #36b9cc !important;
+}
+.text-gray-800 {
+    color: #5a5c69 !important;
+}
+.text-gray-300 {
+    color: #dddfeb !important;
+}
+.text-gray-600 {
+    color: #858796 !important;
+}
+.text-gray-500 {
+    color: #b7b9cc !important;
+}
+.badge {
+    font-size: 0.875em;
+}
+</style>
+{% endblock %}

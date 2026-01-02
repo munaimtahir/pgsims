@@ -1,0 +1,184 @@
+{% extends 'base/base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block title %}Edit Profile - SIMS{% endblock %}
+
+{% block breadcrumb %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'users:dashboard' %}">Dashboard</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'users:profile' %}">Profile</a></li>
+        <li class="breadcrumb-item active">Edit</li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-user-edit me-2"></i>
+                        Edit Profile
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+
+                    <form method="post" id="profileForm">
+                        {% csrf_token %}
+                        
+                        <!-- Profile Information -->
+                        <div class="row mb-4">
+                            <div class="col-md-3 text-center">
+                                <div class="avatar-placeholder rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center"
+                                     style="width: 120px; height: 120px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; font-size: 2.5rem;">
+                                    {{ user.first_name.0|upper }}{{ user.last_name.0|upper }}
+                                </div>
+                                <div class="text-muted small">
+                                    {{ user.get_role_display }}
+                                    {% if user.specialty %}
+                                        <br>{{ user.get_specialty_display }}
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-9">
+                                <!-- Basic Information -->
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            {{ form.first_name|as_crispy_field }}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            {{ form.last_name|as_crispy_field }}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="mb-3">
+                                    {{ form.email|as_crispy_field }}
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            {{ form.phone_number|as_crispy_field }}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            {{ form.registration_number|as_crispy_field }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Form Actions -->
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'users:profile' %}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left me-1"></i>Cancel
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-1"></i>Save Changes
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .avatar-placeholder {
+        border: 3px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .form-control:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+    }
+    
+    .btn-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+    }
+    
+    .btn-primary:hover {
+        background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Form validation
+    $('#profileForm').on('submit', function(e) {
+        let isValid = true;
+        
+        // Validate required fields
+        const firstName = $('#id_first_name').val().trim();
+        const lastName = $('#id_last_name').val().trim();
+        const email = $('#id_email').val().trim();
+        
+        // Clear previous error states
+        $('.is-invalid').removeClass('is-invalid');
+        
+        if (!firstName) {
+            $('#id_first_name').addClass('is-invalid');
+            $('#id_first_name').focus();
+            isValid = false;
+        }
+        
+        if (!lastName) {
+            $('#id_last_name').addClass('is-invalid');
+            if (isValid) $('#id_last_name').focus();
+            isValid = false;
+        }
+        
+        if (!email) {
+            $('#id_email').addClass('is-invalid');
+            if (isValid) $('#id_email').focus();
+            isValid = false;
+        } else if (!isValidEmail(email)) {
+            $('#id_email').addClass('is-invalid');
+            if (isValid) $('#id_email').focus();
+            isValid = false;
+        }
+        
+        if (!isValid) {
+            e.preventDefault();
+            return false;
+        }
+    });
+    
+    // Email validation function
+    function isValidEmail(email) {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return emailRegex.test(email);
+    }
+    
+    // Remove invalid class when user starts typing
+    $('.form-control').on('input', function() {
+        $(this).removeClass('is-invalid');
+    });
+});
+</script>
+{% endblock %}

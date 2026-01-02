@@ -1,0 +1,522 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Case Statistics - Clinical Cases - SIMS{% endblock %}
+
+{% block breadcrumb %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'users:dashboard' %}">Dashboard</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'cases:case_list' %}">Clinical Cases</a></li>
+        <li class="breadcrumb-item active">Statistics</li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block page_header %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2><i class="fas fa-chart-bar me-2"></i>Case Statistics & Analytics</h2>
+        <p class="text-muted">Overview of clinical case activities and performance metrics</p>
+    </div>
+    <div>
+        <a href="{% url 'cases:case_export' %}" class="btn btn-outline-primary">
+            <i class="fas fa-download me-2"></i>Export Data
+        </a>
+        <a href="{% url 'cases:case_list' %}" class="btn btn-outline-secondary ms-2">
+            <i class="fas fa-list me-2"></i>Back to Cases
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<!-- Summary Statistics -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <i class="fas fa-file-medical fa-3x text-primary mb-3"></i>
+                <h3 class="mb-1" id="totalCases">0</h3>
+                <p class="text-muted mb-0">Total Cases</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+                <h3 class="mb-1" id="approvedCases">0</h3>
+                <p class="text-muted mb-0">Approved Cases</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <i class="fas fa-clock fa-3x text-warning mb-3"></i>
+                <h3 class="mb-1" id="pendingCases">0</h3>
+                <p class="text-muted mb-0">Pending Review</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <i class="fas fa-users fa-3x text-info mb-3"></i>
+                <h3 class="mb-1" id="activePGs">0</h3>
+                <p class="text-muted mb-0">Active PGs</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Row -->
+<div class="row mb-4">
+    <!-- Status Distribution -->
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-pie-chart me-2"></i>Case Status Distribution</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="statusChart" width="400" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Monthly Activity -->
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-line-chart me-2"></i>Monthly Case Activity</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="activityChart" width="400" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Category and Complexity Analysis -->
+<div class="row mb-4">
+    <!-- Case Categories -->
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-tags me-2"></i>Cases by Category</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="categoryChart" width="400" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Complexity Levels -->
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-layer-group me-2"></i>Complexity Distribution</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="complexityChart" width="400" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Performance Metrics -->
+{% if user.role in 'admin,supervisor' %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-trophy me-2"></i>PG Performance Overview</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover" id="performanceTable">
+                        <thead>
+                            <tr>
+                                <th>PG Name</th>
+                                <th>Total Cases</th>
+                                <th>Approved</th>
+                                <th>Pending</th>
+                                <th>Avg. Score</th>
+                                <th>Last Activity</th>
+                                <th>Progress</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Data will be loaded via AJAX -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Recent Activity -->
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-clock me-2"></i>Recent Case Activity</h5>
+            </div>
+            <div class="card-body">
+                <div id="recentActivity">
+                    <!-- Activity timeline will be loaded here -->
+                    <div class="text-center py-4">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <!-- Top Diagnoses -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="fas fa-diagnoses me-2"></i>Top Diagnoses</h6>
+            </div>
+            <div class="card-body">
+                <div id="topDiagnoses">
+                    <div class="text-center py-3">
+                        <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Top Procedures -->
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="fas fa-procedures me-2"></i>Top Procedures</h6>
+            </div>
+            <div class="card-body">
+                <div id="topProcedures">
+                    <div class="text-center py-3">
+                        <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Initialize charts
+    initializeCharts();
+    
+    // Load statistics data
+    loadStatistics();
+    
+    // Load performance data if admin/supervisor
+    {% if user.role == 'admin' or user.role == 'supervisor' %}
+    loadPerformanceData();
+    {% endif %}
+    
+    // Load recent activity
+    loadRecentActivity();
+    
+    // Load top diagnoses and procedures
+    loadTopItems();
+});
+
+function initializeCharts() {
+    // Status Distribution Chart
+    const statusCtx = document.getElementById('statusChart').getContext('2d');
+    window.statusChart = new Chart(statusCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Draft', 'Submitted', 'Under Review', 'Approved', 'Needs Revision'],
+            datasets: [{
+                data: [0, 0, 0, 0, 0],
+                backgroundColor: [
+                    '#6c757d', '#ffc107', '#17a2b8', '#28a745', '#dc3545'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+    
+    // Monthly Activity Chart
+    const activityCtx = document.getElementById('activityChart').getContext('2d');
+    window.activityChart = new Chart(activityCtx, {
+        type: 'line',
+        data: {
+            labels: [],
+            datasets: [{
+                label: 'Cases Created',
+                data: [],
+                borderColor: '#007bff',
+                backgroundColor: 'rgba(0, 123, 255, 0.1)',
+                tension: 0.1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+    
+    // Category Chart
+    const categoryCtx = document.getElementById('categoryChart').getContext('2d');
+    window.categoryChart = new Chart(categoryCtx, {
+        type: 'bar',
+        data: {
+            labels: [],
+            datasets: [{
+                label: 'Number of Cases',
+                data: [],
+                backgroundColor: 'rgba(0, 123, 255, 0.8)'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+    
+    // Complexity Chart
+    const complexityCtx = document.getElementById('complexityChart').getContext('2d');
+    window.complexityChart = new Chart(complexityCtx, {
+        type: 'bar',
+        data: {
+            labels: ['Low', 'Medium', 'High', 'Very High'],
+            datasets: [{
+                label: 'Number of Cases',
+                data: [0, 0, 0, 0],
+                backgroundColor: ['#28a745', '#ffc107', '#fd7e14', '#dc3545']
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+}
+
+function loadStatistics() {
+    // Simulate API call - replace with actual endpoint
+    $.ajax({
+        url: '{% url "cases:case_statistics" %}',
+        method: 'GET',
+        data: {
+            'format': 'json'
+        },
+        success: function(data) {
+            // Update summary cards
+            $('#totalCases').text(data.total_cases || 0);
+            $('#approvedCases').text(data.approved_cases || 0);
+            $('#pendingCases').text(data.pending_cases || 0);
+            $('#activePGs').text(data.active_pgs || 0);
+            
+            // Update charts
+            if (data.status_distribution) {
+                window.statusChart.data.datasets[0].data = Object.values(data.status_distribution);
+                window.statusChart.update();
+            }
+            
+            if (data.monthly_activity) {
+                window.activityChart.data.labels = data.monthly_activity.labels;
+                window.activityChart.data.datasets[0].data = data.monthly_activity.data;
+                window.activityChart.update();
+            }
+            
+            if (data.category_distribution) {
+                window.categoryChart.data.labels = Object.keys(data.category_distribution);
+                window.categoryChart.data.datasets[0].data = Object.values(data.category_distribution);
+                window.categoryChart.update();
+            }
+            
+            if (data.complexity_distribution) {
+                window.complexityChart.data.datasets[0].data = Object.values(data.complexity_distribution);
+                window.complexityChart.update();
+            }
+        },
+        error: function() {
+            console.error('Failed to load statistics');
+            // Show mock data for demonstration
+            $('#totalCases').text('42');
+            $('#approvedCases').text('28');
+            $('#pendingCases').text('8');
+            $('#activePGs').text('15');
+        }
+    });
+}
+
+{% if user.role == 'admin' or user.role == 'supervisor' %}
+function loadPerformanceData() {
+    // Mock performance data - replace with actual API call
+    const mockData = [
+        {
+            name: 'Dr. John Smith',
+            total_cases: 15,
+            approved: 12,
+            pending: 2,
+            avg_score: 8.5,
+            last_activity: '2 days ago',
+            progress: 85
+        },
+        {
+            name: 'Dr. Sarah Johnson',
+            total_cases: 22,
+            approved: 18,
+            pending: 3,
+            avg_score: 9.1,
+            last_activity: '1 day ago',
+            progress: 92
+        },
+        // Add more mock data as needed
+    ];
+    
+    const tbody = $('#performanceTable tbody');
+    tbody.empty();
+    
+    mockData.forEach(function(pg) {
+        const row = `
+            <tr>
+                <td>${pg.name}</td>
+                <td>${pg.total_cases}</td>
+                <td><span class="badge bg-success">${pg.approved}</span></td>
+                <td><span class="badge bg-warning">${pg.pending}</span></td>
+                <td>${pg.avg_score.toFixed(1)}</td>
+                <td>${pg.last_activity}</td>
+                <td>
+                    <div class="progress" style="height: 20px;">
+                        <div class="progress-bar" role="progressbar" style="width: ${pg.progress}%" 
+                             aria-valuenow="${pg.progress}" aria-valuemin="0" aria-valuemax="100">
+                            ${pg.progress}%
+                        </div>
+                    </div>
+                </td>
+            </tr>
+        `;
+        tbody.append(row);
+    });
+}
+{% endif %}
+
+function loadRecentActivity() {
+    // Mock recent activity data
+    setTimeout(function() {
+        const activities = [
+            {
+                icon: 'fa-plus',
+                color: 'success',
+                title: 'New case created',
+                description: 'Dr. Smith created "Acute MI Management"',
+                time: '2 hours ago'
+            },
+            {
+                icon: 'fa-check',
+                color: 'primary',
+                title: 'Case approved',
+                description: 'Dr. Johnson\'s case "Diabetic Ketoacidosis" was approved',
+                time: '4 hours ago'
+            },
+            {
+                icon: 'fa-edit',
+                color: 'info',
+                title: 'Case updated',
+                description: 'Dr. Wilson updated "Pneumonia Treatment"',
+                time: '6 hours ago'
+            }
+        ];
+        
+        let html = '';
+        activities.forEach(function(activity) {
+            html += `
+                <div class="d-flex align-items-center mb-3">
+                    <div class="flex-shrink-0">
+                        <i class="fas ${activity.icon} fa-2x text-${activity.color}"></i>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <h6 class="mb-1">${activity.title}</h6>
+                        <p class="mb-1">${activity.description}</p>
+                        <small class="text-muted">${activity.time}</small>
+                    </div>
+                </div>
+            `;
+        });
+        
+        $('#recentActivity').html(html);
+    }, 1000);
+}
+
+function loadTopItems() {
+    // Mock top diagnoses and procedures
+    setTimeout(function() {
+        const topDiagnoses = [
+            { name: 'Acute Myocardial Infarction', count: 8 },
+            { name: 'Pneumonia', count: 6 },
+            { name: 'Diabetes Mellitus', count: 5 },
+            { name: 'Hypertension', count: 4 },
+            { name: 'COPD', count: 3 }
+        ];
+        
+        const topProcedures = [
+            { name: 'Endotracheal Intubation', count: 12 },
+            { name: 'Central Line Insertion', count: 8 },
+            { name: 'Lumbar Puncture', count: 6 },
+            { name: 'Chest Tube Insertion', count: 4 },
+            { name: 'Arterial Line', count: 3 }
+        ];
+        
+        let diagnosesHtml = '';
+        topDiagnoses.forEach(function(diagnosis) {
+            diagnosesHtml += `
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="small">${diagnosis.name}</span>
+                    <span class="badge bg-primary">${diagnosis.count}</span>
+                </div>
+            `;
+        });
+        
+        let proceduresHtml = '';
+        topProcedures.forEach(function(procedure) {
+            proceduresHtml += `
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="small">${procedure.name}</span>
+                    <span class="badge bg-info">${procedure.count}</span>
+                </div>
+            `;
+        });
+        
+        $('#topDiagnoses').html(diagnosesHtml);
+        $('#topProcedures').html(proceduresHtml);
+    }, 1500);
+}
+</script>
+{% endblock %}

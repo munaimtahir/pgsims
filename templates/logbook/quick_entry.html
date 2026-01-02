@@ -1,0 +1,208 @@
+{% extends 'base/base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block title %}Quick Logbook Entry - SIMS{% endblock %}
+
+{% block breadcrumb %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'users:dashboard' %}">Dashboard</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'logbook:list' %}">Logbook</a></li>
+        <li class="breadcrumb-item active">Quick Entry</li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-plus-circle me-2"></i>
+                        Quick Logbook Entry
+                    </h5>
+                    <small class="text-muted">Create a basic logbook entry quickly. You can add more details later.</small>
+                </div>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data" id="quickEntryForm">
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <div class="col-md-8">
+                                {{ form.title|as_crispy_field }}
+                            </div>
+                            <div class="col-md-4">
+                                {{ form.date|as_crispy_field }}
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                {{ form.category|as_crispy_field }}
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.complexity|as_crispy_field }}
+                            </div>
+                        </div>
+
+                        {{ form.brief_description|as_crispy_field }}
+                        
+                        <div class="row">
+                            <div class="col-md-4">
+                                {{ form.patient_age|as_crispy_field }}
+                            </div>
+                            <div class="col-md-4">
+                                {{ form.patient_gender|as_crispy_field }}
+                            </div>
+                            <div class="col-md-4">
+                                {{ form.duration_minutes|as_crispy_field }}
+                            </div>
+                        </div>
+
+                        {{ form.learning_objectives|as_crispy_field }}
+
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>Quick Entry Mode:</strong> This form captures the essential details. 
+                            You can add more comprehensive information, attachments, and detailed reflections 
+                            by editing the entry after creation.
+                        </div>
+
+                        <div class="d-flex justify-content-between mt-4">
+                            <a href="{% url 'logbook:list' %}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left me-2"></i>Cancel
+                            </a>
+                            <div>
+                                <button type="submit" name="action" value="save_draft" class="btn btn-outline-primary me-2">
+                                    <i class="fas fa-save me-2"></i>Save as Draft
+                                </button>
+                                <button type="submit" name="action" value="save_and_edit" class="btn btn-info me-2">
+                                    <i class="fas fa-edit me-2"></i>Save & Continue Editing
+                                </button>
+                                <button type="submit" name="action" value="save_and_submit" class="btn btn-primary">
+                                    <i class="fas fa-paper-plane me-2"></i>Save & Submit
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Quick Tips Card -->
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h6 class="card-title mb-0">
+                        <i class="fas fa-lightbulb me-2"></i>
+                        Quick Entry Tips
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="fw-bold">Essential Information</h6>
+                            <ul class="small">
+                                <li>Choose a descriptive but concise title</li>
+                                <li>Select the appropriate complexity level</li>
+                                <li>Include basic patient demographics</li>
+                                <li>Note the duration for time tracking</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="fw-bold">After Creation</h6>
+                            <ul class="small">
+                                <li>Add detailed case description</li>
+                                <li>Upload relevant images/documents</li>
+                                <li>Write comprehensive reflection</li>
+                                <li>Link to related cases or procedures</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.card-title {
+    color: #007bff;
+}
+
+.alert-info {
+    border-left: 4px solid #17a2b8;
+}
+
+.complexity-simple { color: #28a745; }
+.complexity-moderate { color: #ffc107; }
+.complexity-complex { color: #fd7e14; }
+.complexity-highly_complex { color: #dc3545; }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Auto-save functionality
+    let autoSaveTimeout;
+    $('#quickEntryForm input, #quickEntryForm textarea, #quickEntryForm select').on('input change', function() {
+        clearTimeout(autoSaveTimeout);
+        autoSaveTimeout = setTimeout(function() {
+            // Auto-save logic could go here
+            console.log('Auto-saving quick entry...');
+        }, 3000);
+    });
+
+    // Dynamic complexity color coding
+    $('#id_complexity').on('change', function() {
+        const complexity = $(this).val();
+        $(this).removeClass('complexity-simple complexity-moderate complexity-complex complexity-highly_complex')
+               .addClass('complexity-' + complexity);
+    });
+
+    // Date default to today
+    if (!$('#id_date').val()) {
+        $('#id_date').val(new Date().toISOString().split('T')[0]);
+    }
+
+    // Form validation
+    $('#quickEntryForm').on('submit', function(e) {
+        const title = $('#id_title').val().trim();
+        const category = $('#id_category').val();
+        
+        if (!title) {
+            e.preventDefault();
+            alert('Please provide a title for the logbook entry.');
+            $('#id_title').focus();
+            return false;
+        }
+        
+        if (!category) {
+            e.preventDefault();
+            alert('Please select a category for the logbook entry.');
+            $('#id_category').focus();
+            return false;
+        }
+    });
+
+    // Character counter for title
+    $('#id_title').on('input', function() {
+        const maxLength = 200;
+        const currentLength = $(this).val().length;
+        const remaining = maxLength - currentLength;
+        
+        if (!$(this).next('.char-counter').length) {
+            $(this).after(`<small class="char-counter text-muted"></small>`);
+        }
+        
+        $(this).next('.char-counter').text(`${remaining} characters remaining`)
+               .toggleClass('text-danger', remaining < 20)
+               .toggleClass('text-muted', remaining >= 20);
+    });
+});
+</script>
+{% endblock %}

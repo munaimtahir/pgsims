@@ -1,0 +1,86 @@
+{% extends "base/base.html" %}
+{% load crispy_forms_tags %}
+{% load humanize %}
+
+{% block title %}
+    {{ page_title|default:"Review Logbook Entry" }} - {{ block.super }}
+{% endblock title %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-10 col-xl-8">
+            <h2 class="mb-4">{{ page_title }}</h2>
+
+            <div class="card shadow-sm mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Entry Details (Submitted by: {{ logbook_entry.pg.get_full_name|default:logbook_entry.pg.username }})</h5>
+                </div>
+                <div class="card-body">
+                    <dl class="row">
+                        <dt class="col-sm-4">Case Title:</dt>
+                        <dd class="col-sm-8">{{ logbook_entry.case_title }}</dd>
+
+                        <dt class="col-sm-4">Date of Case:</dt>
+                        <dd class="col-sm-8">{{ logbook_entry.date|date:"D, d M Y" }}</dd>
+
+                        <dt class="col-sm-4">Location:</dt>
+                        <dd class="col-sm-8">{{ logbook_entry.location_of_activity|default:"N/A" }}</dd>
+
+                        <dt class="col-sm-4">Topic/Subtopic:</dt>
+                        <dd class="col-sm-8">{{ logbook_entry.topic_subtopic|default:"N/A" }}</dd>
+
+                        <dt class="col-sm-4">Submitted:</dt>
+                        <dd class="col-sm-8">{{ logbook_entry.submitted_to_supervisor_at|naturaltime }} ({{ logbook_entry.submitted_to_supervisor_at|date:"d M Y, H:i" }})</dd>
+                    </dl>
+                    <hr>
+                    <h5>Brief History:</h5>
+                    <p class="card-text bg-light p-3 rounded">{{ logbook_entry.patient_history_summary|linebreaksbr }}</p>
+
+                    <h5>Management Action:</h5>
+                    <p class="card-text bg-light p-3 rounded">{{ logbook_entry.management_action|linebreaksbr }}</p>
+
+                    {% if logbook_entry.primary_diagnosis %}
+                        <hr>
+                        <h5>Primary Diagnosis:</h5>
+                        <p>{{ logbook_entry.primary_diagnosis.name }}</p>
+                    {% endif %}
+
+                    {% if logbook_entry.procedures.exists %}
+                        <hr>
+                        <h5>Procedures:</h5>
+                        <ul>
+                        {% for proc in logbook_entry.procedures.all %}
+                            <li>{{ proc.name }}</li>
+                        {% endfor %}
+                        </ul>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-edit me-2"></i>Your Review & Action</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+                        {{ form|crispy }}
+                        <div class="form-text mb-3">
+                            Note: Comments are required if rejecting or returning an entry for edits.
+                        </div>
+                        <div class="mt-4">
+                            <button type="submit" class="btn btn-success btn-lg">
+                                <i class="fas fa-check-circle me-2"></i>Submit Review
+                            </button>
+                            <a href="{% url 'logbook:supervisor_logbook_dashboard' %}" class="btn btn-outline-secondary ms-2">
+                                <i class="fas fa-times me-2"></i>Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}

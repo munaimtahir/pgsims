@@ -1,0 +1,293 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}PG Students - {{ supervisor.get_full_name }} - SIMS{% endblock %}
+
+{% block breadcrumb %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'users:dashboard' %}">Dashboard</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'users:supervisor_list' %}">Supervisors</a></li>
+        <li class="breadcrumb-item active">{{ supervisor.get_full_name }} - PGs</li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Supervisor Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        {% if supervisor.profile.avatar %}
+                        <img src="{{ supervisor.profile.avatar.url }}" alt="{{ supervisor.get_full_name }}" 
+                             class="rounded-circle me-3" width="60" height="60" style="object-fit: cover;">
+                        {% else %}
+                        <div class="avatar-placeholder rounded-circle me-3 d-flex align-items-center justify-content-center"
+                             style="width: 60px; height: 60px; background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; font-size: 1.5rem; font-weight: bold;">
+                            {{ supervisor.first_name.0|upper }}{{ supervisor.last_name.0|upper }}
+                        </div>
+                        {% endif %}
+                        <div class="flex-grow-1">
+                            <h5 class="mb-1">{{ supervisor.get_full_name }}</h5>
+                            <p class="text-muted mb-1">{{ supervisor.profile.designation|default:"Supervisor" }}</p>
+                            <small class="text-muted">
+                                {{ supervisor.profile.department|default:"Department not specified" }}
+                                {% if supervisor.profile.specialization %}
+                                • {{ supervisor.profile.specialization }}
+                                {% endif %}
+                            </small>
+                        </div>
+                        <div class="text-end">
+                            <h4 class="text-primary mb-0">{{ pgs.count }}</h4>
+                            <small class="text-muted">PG Student{{ pgs.count|pluralize }}</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PG Students Grid -->
+    <div class="row">
+        {% for pg in pgs %}
+        <div class="col-lg-6 col-xl-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-start">
+                        {% if pg.profile.avatar %}
+                        <img src="{{ pg.profile.avatar.url }}" alt="{{ pg.get_full_name }}" 
+                             class="rounded-circle me-3" width="50" height="50" style="object-fit: cover;">
+                        {% else %}
+                        <div class="avatar-placeholder rounded-circle me-3 d-flex align-items-center justify-content-center"
+                             style="width: 50px; height: 50px; background: linear-gradient(135deg, #007bff 0%, #6610f2 100%); color: white; font-size: 1.2rem; font-weight: bold;">
+                            {{ pg.first_name.0|upper }}{{ pg.last_name.0|upper }}
+                        </div>
+                        {% endif %}
+                        <div class="flex-grow-1">
+                            <h6 class="card-title mb-1">
+                                <a href="{% url 'users:profile_detail' pg.profile.pk %}" class="text-decoration-none">
+                                    {{ pg.get_full_name }}
+                                </a>
+                            </h6>
+                            <p class="card-text text-muted small mb-2">
+                                {% if pg.profile.year_of_residency %}
+                                Year {{ pg.profile.year_of_residency }}
+                                {% endif %}
+                                {% if pg.profile.specialization %}
+                                • {{ pg.profile.specialization }}
+                                {% endif %}
+                            </p>
+                            
+                            <!-- Quick Stats -->
+                            <div class="row text-center small">
+                                <div class="col-4">
+                                    <div class="text-primary fw-bold">{{ pg.logbook_entries.count }}</div>
+                                    <div class="text-muted">Logbook</div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="text-success fw-bold">{{ pg.cases.count }}</div>
+                                    <div class="text-muted">Cases</div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="text-info fw-bold">{{ pg.certificates.count }}</div>
+                                    <div class="text-muted">Certificates</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-light">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small class="text-muted">
+                            Last activity: 
+                            {% if pg.last_login %}
+                            {{ pg.last_login|timesince }} ago
+                            {% else %}
+                            Never
+                            {% endif %}
+                        </small>
+                        <div class="btn-group btn-group-sm">
+                            <a href="{% url 'users:profile_detail' pg.profile.pk %}" 
+                               class="btn btn-outline-primary btn-sm" title="View Profile">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            <a href="{% url 'logbook:list' %}?pg={{ pg.pk }}" 
+                               class="btn btn-outline-success btn-sm" title="View Logbook">
+                                <i class="fas fa-book"></i>
+                            </a>
+                            <a href="{% url 'cases:case_list' %}?pg={{ pg.pk }}" 
+                               class="btn btn-outline-info btn-sm" title="View Cases">
+                                <i class="fas fa-stethoscope"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body text-center py-5">
+                    <i class="fas fa-user-graduate fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">No PG Students Assigned</h5>
+                    <p class="text-muted">This supervisor currently has no PG students assigned.</p>
+                    {% if request.user.is_staff %}
+                    <a href="{% url 'users:assign_supervisor' %}" class="btn btn-primary">
+                        <i class="fas fa-plus me-2"></i>Assign PG Students
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Performance Summary -->
+    {% if pgs %}
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="card-title mb-0">
+                        <i class="fas fa-chart-bar me-2"></i>
+                        Performance Summary
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-md-3">
+                            <div class="border-end">
+                                <h4 class="text-primary mb-1">{{ total_logbook_entries }}</h4>
+                                <small class="text-muted">Total Logbook Entries</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="border-end">
+                                <h4 class="text-success mb-1">{{ total_cases }}</h4>
+                                <small class="text-muted">Total Cases</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="border-end">
+                                <h4 class="text-info mb-1">{{ total_certificates }}</h4>
+                                <small class="text-muted">Total Certificates</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <h4 class="text-warning mb-1">{{ average_performance|floatformat:1 }}%</h4>
+                            <small class="text-muted">Average Performance</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activities -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h6 class="card-title mb-0">
+                            <i class="fas fa-clock me-2"></i>
+                            Recent Activities
+                        </h6>
+                        <a href="{% url 'users:activity_log' %}?supervisor={{ supervisor.pk }}" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-list me-1"></i>View All
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if recent_activities %}
+                    <div class="list-group list-group-flush">
+                        {% for activity in recent_activities|slice:":10" %}
+                        <div class="list-group-item d-flex justify-content-between align-items-center border-0">
+                            <div class="d-flex align-items-center">
+                                <div class="avatar-placeholder rounded-circle me-3 d-flex align-items-center justify-content-center"
+                                     style="width: 35px; height: 35px; background: linear-gradient(135deg, #007bff 0%, #6610f2 100%); color: white; font-size: 0.8rem; font-weight: bold;">
+                                    {{ activity.user.first_name.0|upper }}{{ activity.user.last_name.0|upper }}
+                                </div>
+                                <div>
+                                    <div class="fw-bold small">{{ activity.user.get_full_name }}</div>
+                                    <div class="text-muted small">{{ activity.description }}</div>
+                                </div>
+                            </div>
+                            <small class="text-muted">{{ activity.created_at|timesince }} ago</small>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-3">
+                        <i class="fas fa-history fa-2x text-muted mb-2"></i>
+                        <p class="text-muted mb-0">No recent activities to display</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.avatar-placeholder {
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+}
+
+.card-title a:hover {
+    color: #0056b3 !important;
+}
+
+.border-end {
+    border-right: 1px solid #dee2e6 !important;
+}
+
+@media (max-width: 768px) {
+    .border-end {
+        border-right: none !important;
+        border-bottom: 1px solid #dee2e6 !important;
+        margin-bottom: 1rem;
+        padding-bottom: 1rem;
+    }
+}
+
+.btn-group-sm .btn {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+}
+
+.list-group-item {
+    padding: 0.75rem 0;
+}
+
+.list-group-item:last-child {
+    border-bottom: none !important;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Performance chart initialization could go here
+    
+    // Tooltip initialization
+    $('[title]').tooltip();
+    
+    // Filter functionality
+    $('#searchPGs').on('input', function() {
+        const searchTerm = $(this).val().toLowerCase();
+        $('.pg-card').each(function() {
+            const pgName = $(this).find('.card-title a').text().toLowerCase();
+            $(this).toggle(pgName.includes(searchTerm));
+        });
+    });
+});
+</script>
+{% endblock %}

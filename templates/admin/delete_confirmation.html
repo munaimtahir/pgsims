@@ -1,0 +1,363 @@
+{% extends "admin/base_site.html" %}
+{% load i18n admin_urls static %}
+
+{% block title %}{% trans 'Are you sure?' %} | {{ site_title|default:_('Django site admin') }}{% endblock %}
+
+{% block extra_css %}
+{{ block.super }}
+<style>
+    .delete-confirmation-container {
+        max-width: 700px;
+        margin: 2rem auto;
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 20px;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        overflow: hidden;
+    }
+    
+    .delete-header {
+        background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+        color: white;
+        padding: 2rem;
+        text-align: center;
+    }
+    
+    .delete-icon {
+        width: 100px;
+        height: 100px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1.5rem;
+        font-size: 2.5rem;
+        border: 3px solid rgba(255, 255, 255, 0.3);
+    }
+    
+    .delete-title {
+        font-size: 2rem;
+        font-weight: 700;
+        margin: 0;
+    }
+    
+    .delete-subtitle {
+        margin-top: 0.5rem;
+        opacity: 0.9;
+        font-size: 1.1rem;
+    }
+    
+    .delete-content {
+        padding: 2rem;
+    }
+    
+    .object-info {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        border-left: 4px solid #dc3545;
+    }
+    
+    .object-info h3 {
+        color: #2c3e50;
+        margin-bottom: 1rem;
+        font-size: 1.2rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .object-details {
+        background: white;
+        border-radius: 8px;
+        padding: 1rem;
+        border: 2px solid #e9ecef;
+    }
+    
+    .object-details strong {
+        color: #dc3545;
+        font-weight: 600;
+    }
+    
+    .related-objects {
+        margin-bottom: 2rem;
+    }
+    
+    .related-objects h4 {
+        color: #dc3545;
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .related-objects ul {
+        background: #fff3cd;
+        border: 2px solid #ffeaa7;
+        border-radius: 8px;
+        padding: 1rem;
+        margin: 0;
+        max-height: 200px;
+        overflow-y: auto;
+    }
+    
+    .related-objects li {
+        padding: 0.5rem 0;
+        border-bottom: 1px solid #ffeaa7;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .related-objects li:last-child {
+        border-bottom: none;
+    }
+    
+    .warning-box {
+        background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+        border: 2px solid #ffc107;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        border-left: 4px solid #ff6b6b;
+    }
+    
+    .warning-box h4 {
+        color: #856404;
+        margin-bottom: 1rem;
+        font-size: 1.1rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .warning-box p {
+        color: #856404;
+        margin: 0;
+        line-height: 1.6;
+    }
+    
+    .action-buttons {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        padding: 2rem;
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        border-top: 2px solid #e9ecef;
+    }
+    
+    .btn-delete {
+        background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+        color: white;
+        border: none;
+        padding: 1rem 2rem;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+        text-decoration: none;
+    }
+    
+    .btn-delete:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(220, 53, 69, 0.4);
+        color: white;
+        text-decoration: none;
+    }
+    
+    .btn-cancel {
+        background: transparent;
+        color: #667eea;
+        border: 2px solid #667eea;
+        padding: 1rem 2rem;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        text-decoration: none;
+    }
+    
+    .btn-cancel:hover {
+        background: #667eea;
+        color: white;
+        transform: translateY(-2px);
+        text-decoration: none;
+    }
+    
+    .fade-in {
+        animation: fadeIn 0.6s ease-in-out;
+    }
+    
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .shake {
+        animation: shake 0.5s ease-in-out;
+    }
+    
+    @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        25% { transform: translateX(-5px); }
+        75% { transform: translateX(5px); }
+    }
+    
+    @media (max-width: 768px) {
+        .delete-confirmation-container {
+            margin: 1rem;
+        }
+        
+        .delete-header,
+        .delete-content,
+        .action-buttons {
+            padding: 1.5rem;
+        }
+        
+        .action-buttons {
+            flex-direction: column;
+        }
+        
+        .btn-delete,
+        .btn-cancel {
+            width: 100%;
+            justify-content: center;
+        }
+        
+        .delete-title {
+            font-size: 1.5rem;
+        }
+        
+        .delete-icon {
+            width: 80px;
+            height: 80px;
+            font-size: 2rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="delete-confirmation-container fade-in">
+    <div class="delete-header">
+        <div class="delete-icon">
+            <i class="fas fa-exclamation-triangle"></i>
+        </div>
+        <h1 class="delete-title">{% trans "Are you sure?" %}</h1>
+        <p class="delete-subtitle">{% trans "This action cannot be undone" %}</p>
+    </div>
+
+    <div class="delete-content">
+        <div class="object-info">
+            <h3>
+                <i class="fas fa-trash-alt"></i>
+                {% trans "You are about to delete:" %}
+            </h3>
+            <div class="object-details">
+                <strong>{{ object }}</strong>
+            </div>
+        </div>
+
+        {% if deleted_objects %}
+            <div class="related-objects">
+                <h4>
+                    <i class="fas fa-link"></i>
+                    {% trans "Deleting this will also delete the following related objects:" %}
+                </h4>
+                <ul>
+                    {% for deletable_object in deleted_objects %}
+                        <li>
+                            <i class="fas fa-arrow-right text-danger"></i>
+                            {{ deletable_object }}
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
+
+        <div class="warning-box">
+            <h4>
+                <i class="fas fa-exclamation-circle"></i>
+                {% trans "Warning" %}
+            </h4>
+            <p>
+                {% trans "This action is permanent and cannot be reversed. All data associated with this item will be permanently lost." %}
+            </p>
+        </div>
+    </div>
+
+    <div class="action-buttons">
+        <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="post" value="yes">
+            {% if preserved_filters_encoded %}
+                <input type="hidden" name="{{ preserved_filters_encoded }}">
+            {% endif %}
+            
+            <button type="submit" class="btn-delete" onclick="confirmDelete(event)">
+                <i class="fas fa-trash-alt"></i>
+                {% trans "Yes, I'm sure" %}
+            </button>
+        </form>
+        
+        <a href="../" class="btn-cancel">
+            <i class="fas fa-arrow-left"></i>
+            {% trans "No, take me back" %}
+        </a>
+    </div>
+</div>
+
+<script>
+function confirmDelete(event) {
+    const button = event.target.closest('button');
+    const confirmed = confirm('{% trans "Are you absolutely sure you want to delete this item? This action cannot be undone." %}');
+    
+    if (confirmed) {
+        button.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>{% trans "Deleting..." %}';
+        button.disabled = true;
+        return true;
+    } else {
+        event.preventDefault();
+        // Add shake animation to container
+        const container = document.querySelector('.delete-confirmation-container');
+        container.classList.add('shake');
+        setTimeout(() => container.classList.remove('shake'), 500);
+        return false;
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Add keyboard shortcut for cancel (Escape key)
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape') {
+            window.location.href = '../';
+        }
+    });
+    
+    // Focus on cancel button by default
+    document.querySelector('.btn-cancel').focus();
+});
+</script>
+{% endblock %}

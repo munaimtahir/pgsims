@@ -1,0 +1,250 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Logbook Entries - SIMS{% endblock %}
+
+{% block breadcrumb %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'users:dashboard' %}">Dashboard</a></li>
+        <li class="breadcrumb-item active">Logbook</li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block page_header %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2><i class="fas fa-book me-2"></i>Logbook Entries</h2>
+        <p class="text-muted">Track and manage clinical cases and learning experiences</p>
+    </div>
+    <div>
+        {% if user.role == 'pg' %}
+        <a href="{% url 'logbook:create' %}" class="btn btn-primary">
+            <i class="fas fa-plus me-2"></i>New Entry
+        </a>
+        <a href="{% url 'logbook:quick_create' %}" class="btn btn-outline-success ms-2">
+            <i class="fas fa-lightning me-2"></i>Quick Entry
+        </a>
+        {% endif %}
+        <a href="{% url 'logbook:dashboard' %}" class="btn btn-outline-secondary ms-2">
+            <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<!-- Filter Section -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-3">
+                <label for="search" class="form-label">Search</label>
+                <input type="text" class="form-control" id="search" name="search" 
+                       value="{{ request.GET.search }}" placeholder="Case title, procedure, or diagnosis">
+            </div>
+            <div class="col-md-2">
+                <label for="status" class="form-label">Status</label>
+                <select class="form-select" id="status" name="status">
+                    <option value="">All Statuses</option>
+                    <option value="draft" {% if request.GET.status == 'draft' %}selected{% endif %}>Draft</option>
+                    <option value="submitted" {% if request.GET.status == 'submitted' %}selected{% endif %}>Submitted</option>
+                    <option value="approved" {% if request.GET.status == 'approved' %}selected{% endif %}>Approved</option>
+                    <option value="needs_revision" {% if request.GET.status == 'needs_revision' %}selected{% endif %}>Needs Revision</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label for="specialty" class="form-label">Specialty</label>
+                <select class="form-select" id="specialty" name="specialty">
+                    <option value="">All Specialties</option>
+                    {% for specialty in specialties %}
+                    <option value="{{ specialty.code }}" {% if request.GET.specialty == specialty.code %}selected{% endif %}>
+                        {{ specialty.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="pg" class="form-label">Postgraduate</label>
+                <select class="form-select" id="pg" name="pg">
+                    <option value="">All PGs</option>
+                    {% for pg_user in pgs %}
+                    <option value="{{ pg_user.id }}" {% if request.GET.pg == pg_user.id|stringformat:"s" %}selected{% endif %}>
+                        {{ pg_user.get_full_name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button type="submit" class="btn btn-outline-primary me-2">
+                    <i class="fas fa-search me-1"></i>Filter
+                </button>
+                <a href="{% url 'logbook:list' %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-undo me-1"></i>Clear
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Entries List -->
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Logbook Entries</h5>
+        <div class="pagination-info">
+            {% if is_paginated %}
+                Showing {{ page_obj.start_index }} to {{ page_obj.end_index }} of {{ page_obj.paginator.count }} entries
+            {% else %}
+                {{ entries|length }} entries total
+            {% endif %}
+        </div>
+    </div>
+    <div class="card-body">
+        {% if entries %}
+            <div class="row">
+                {% for entry in entries %}
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="card entry-card h-100 role-{{ entry.pg.role|default:'pg' }}">
+                        <div class="card-header d-flex justify-content-between align-items-start">
+                            <div>
+                                <h6 class="card-title mb-1">{{ entry.case_title|truncatechars:40 }}</h6>
+                                <small class="text-muted">{{ entry.date|date:"M d, Y" }}</small>
+                            </div>
+                            <span class="badge bg-{% if entry.status == 'approved' %}success{% elif entry.status == 'submitted' %}warning{% elif entry.status == 'draft' %}secondary{% else %}danger{% endif %} status-badge">
+                                {{ entry.get_status_display }}
+                            </span>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-2">
+                                <strong>PG:</strong> {{ entry.pg.get_full_name }}
+                            </div>
+                            {% if entry.primary_diagnosis %}
+                            <div class="mb-2">
+                                <strong>Diagnosis:</strong> {{ entry.primary_diagnosis|truncatechars:30 }}
+                            </div>
+                            {% endif %}
+                            {% if entry.procedure_performed %}
+                            <div class="mb-2">
+                                <strong>Procedure:</strong> {{ entry.procedure_performed|truncatechars:30 }}
+                            </div>
+                            {% endif %}
+                            {% if entry.specialty %}
+                            <div class="mb-2">
+                                <strong>Specialty:</strong>
+                                <span class="badge bg-info">{{ entry.get_specialty_display }}</span>
+                            </div>
+                            {% endif %}
+                            {% if entry.learning_points %}
+                            <div class="learning-points">
+                                <small><strong>Learning Points:</strong></small>
+                                <p class="small mb-0">{{ entry.learning_points|truncatechars:100 }}</p>
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="card-footer">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <small class="text-muted">
+                                    Updated {{ entry.updated_at|timesince }} ago
+                                </small>
+                                <div class="btn-group" role="group">
+                                    <a href="{% url 'logbook:detail' entry.pk %}" class="btn btn-sm btn-outline-primary" title="View Details">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    {% if user == entry.pg or user.role == 'supervisor' or user.role == 'admin' %}
+                                    <a href="{% url 'logbook:edit' entry.pk %}" class="btn btn-sm btn-outline-secondary" title="Edit">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    {% endif %}
+                                    {% if user.role == 'supervisor' or user.role == 'admin' %}
+                                    <a href="{% url 'logbook:review' entry.pk %}" class="btn btn-sm btn-outline-info" title="Review">
+                                        <i class="fas fa-clipboard-check"></i>
+                                    </a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            
+            <!-- Pagination -->
+            {% if is_paginated %}
+            <nav aria-label="Logbook pagination">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page=1{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">First</a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">Previous</a>
+                        </li>
+                    {% endif %}
+                    
+                    <li class="page-item active">
+                        <span class="page-link">{{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+                    </li>
+                    
+                    {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">Next</a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">Last</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+        {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-book fa-4x text-muted mb-3"></i>
+                <h4 class="text-muted">No Logbook Entries Found</h4>
+                <p class="text-muted">
+                    {% if request.GET.search %}
+                        No entries match your search criteria. Try different keywords or clear the filters.
+                    {% else %}
+                        Get started by creating your first logbook entry.
+                    {% endif %}
+                </p>
+                {% if user.role == 'pg' %}
+                <a href="{% url 'logbook:create' %}" class="btn btn-primary">
+                    <i class="fas fa-plus me-2"></i>Create Your First Entry
+                </a>
+                {% endif %}
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.entry-card {
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.entry-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.btn-group .btn {
+    border-radius: 0.25rem !important;
+    margin-left: 2px;
+}
+
+.btn-group .btn:first-child {
+    margin-left: 0;
+}
+
+.learning-points {
+    background-color: #fff3cd;
+    border-left: 4px solid #ffc107;
+    padding: 0.5rem;
+    margin: 0.5rem 0;
+    border-radius: 0.25rem;
+}
+</style>
+{% endblock %}

@@ -1,0 +1,597 @@
+{% extends "admin/base_site.html" %}
+{% load i18n admin_urls static admin_list %}
+
+{% block title %}{{ title }} | {{ site_title|default:_('Django site admin') }}{% endblock %}
+
+{% block extra_css %}
+{{ block.super }}
+<style>
+    .change-list-container {
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        margin: 1rem;
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        overflow: hidden;
+    }
+    
+    .list-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 1.5rem 2rem;
+        margin-bottom: 0;
+    }
+    
+    .list-header h1 {
+        margin: 0;
+        font-size: 1.75rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    
+    .list-header .breadcrumbs {
+        margin-top: 0.5rem;
+        opacity: 0.9;
+    }
+    
+    .list-header .breadcrumbs a {
+        color: rgba(255, 255, 255, 0.8);
+        text-decoration: none;
+    }
+    
+    .list-header .breadcrumbs a:hover {
+        color: white;
+    }
+    
+    .actions-bar {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        padding: 1rem 2rem;
+        border-bottom: 2px solid #e9ecef;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+    
+    .add-button {
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        color: white;
+        text-decoration: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+    }
+    
+    .add-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(40, 167, 69, 0.4);
+        color: white;
+        text-decoration: none;
+    }
+    
+    .search-form {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+    }
+    
+    .search-form input[type="text"] {
+        padding: 0.5rem 1rem;
+        border: 2px solid #e9ecef;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        transition: all 0.3s ease;
+        min-width: 200px;
+    }
+    
+    .search-form input[type="text"]:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        outline: none;
+    }
+    
+    .search-form button {
+        background: #667eea;
+        color: white;
+        border: none;
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .search-form button:hover {
+        background: #5a6fd8;
+        transform: translateY(-1px);
+    }
+    
+    .filters {
+        background: #f8f9fa;
+        padding: 1rem 2rem;
+        border-bottom: 1px solid #e9ecef;
+    }
+    
+    .filters h3 {
+        color: #2c3e50;
+        margin-bottom: 1rem;
+        font-size: 1rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .filters ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+    
+    .filters li a {
+        display: block;
+        padding: 0.5rem 1rem;
+        background: white;
+        color: #667eea;
+        text-decoration: none;
+        border-radius: 20px;
+        border: 2px solid #667eea;
+        transition: all 0.3s ease;
+        font-size: 0.875rem;
+        font-weight: 500;
+    }
+    
+    .filters li.selected a,
+    .filters li a:hover {
+        background: #667eea;
+        color: white;
+        transform: translateY(-1px);
+    }
+    
+    .result-list {
+        margin: 0;
+        padding: 2rem;
+    }
+    
+    .result-list table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+        background: white;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    
+    .result-list th {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 1rem;
+        text-align: left;
+        font-weight: 600;
+        border: none;
+        position: relative;
+    }
+    
+    .result-list th a {
+        color: white;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .result-list th a:hover {
+        color: rgba(255, 255, 255, 0.8);
+    }
+    
+    .result-list td {
+        padding: 1rem;
+        border-bottom: 1px solid #e9ecef;
+        transition: all 0.3s ease;
+    }
+    
+    .result-list tr:hover td {
+        background: #f8f9fa;
+    }
+    
+    .result-list tr:last-child td {
+        border-bottom: none;
+    }
+    
+    .result-list .action-checkbox-column {
+        width: 50px;
+        text-align: center;
+    }
+    
+    .result-list .action-checkbox {
+        transform: scale(1.2);
+        accent-color: #667eea;
+    }
+    
+    .actions {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        padding: 1rem 2rem;
+        border-top: 2px solid #e9ecef;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+    
+    .actions select {
+        padding: 0.5rem 1rem;
+        border: 2px solid #e9ecef;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        background: white;
+    }
+    
+    .actions button {
+        background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+        color: white;
+        border: none;
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .actions button:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+    }
+    
+    .paginator {
+        padding: 1.5rem 2rem;
+        text-align: center;
+        background: #f8f9fa;
+    }
+    
+    .paginator .page-links {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+    
+    .paginator a,
+    .paginator .this-page {
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        min-width: 40px;
+        text-align: center;
+    }
+    
+    .paginator a {
+        background: white;
+        color: #667eea;
+        border: 2px solid #667eea;
+    }
+    
+    .paginator a:hover {
+        background: #667eea;
+        color: white;
+        transform: translateY(-1px);
+    }
+    
+    .paginator .this-page {
+        background: #667eea;
+        color: white;
+    }
+    
+    .fade-in {
+        animation: fadeIn 0.6s ease-in-out;
+    }
+    
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    @media (max-width: 768px) {
+        .change-list-container {
+            margin: 0.5rem;
+        }
+        
+        .list-header,
+        .actions-bar,
+        .result-list,
+        .actions,
+        .paginator {
+            padding: 1rem;
+        }
+        
+        .actions-bar {
+            flex-direction: column;
+            align-items: stretch;
+        }
+        
+        .search-form {
+            width: 100%;
+        }
+        
+        .search-form input[type="text"] {
+            flex: 1;
+            min-width: auto;
+        }
+        
+        .result-list table {
+            font-size: 0.875rem;
+        }
+        
+        .result-list th,
+        .result-list td {
+            padding: 0.75rem 0.5rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="change-list-container fade-in">
+    <div class="list-header">
+        <h1>
+            <i class="fas fa-list"></i>
+            {{ title }}
+        </h1>
+        {% if breadcrumbs %}
+            <div class="breadcrumbs">
+                {% for breadcrumb in breadcrumbs %}
+                    {% if not forloop.last %}
+                        <a href="{{ breadcrumb.url }}">{{ breadcrumb.title }}</a> &rsaquo;
+                    {% else %}
+                        {{ breadcrumb.title }}
+                    {% endif %}
+                {% endfor %}
+            </div>
+        {% endif %}
+    </div>
+
+    <div class="actions-bar">
+        {% if has_add_permission %}
+            <a href="add/" class="add-button">
+                <i class="fas fa-plus"></i>
+                {% blocktrans with name=opts.verbose_name %}Add {{ name }}{% endblocktrans %}
+            </a>
+        {% endif %}
+
+        {% if cl.search_form_class %}
+            <form class="search-form" method="get">
+                <input type="text" 
+                       name="{{ search_var }}" 
+                       value="{{ cl.query }}" 
+                       placeholder="{% trans 'Search' %} {{ opts.verbose_name_plural|lower }}..."
+                       aria-label="{% trans 'Search' %}">
+                <button type="submit">
+                    <i class="fas fa-search"></i>
+                </button>
+                {% if cl.has_filters %}
+                    {% for spec in cl.filter_specs %}{{ spec.form.as_p }}{% endfor %}
+                {% endif %}
+            </form>
+        {% endif %}
+    </div>
+
+    {% if cl.has_filters %}
+        <div class="filters">
+            <h3><i class="fas fa-filter me-2"></i>{% trans 'Filter' %}</h3>
+            {% for spec in cl.filter_specs %}
+                {% admin_list_filter cl spec %}
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <div class="result-list">
+        {% if action_form and actions_on_top and cl.result_count %}
+            <form method="post">
+                {% csrf_token %}
+                <div class="actions">
+                    <label for="action-toggle">{% trans "Action:" %}</label>
+                    {{ action_form.action }}
+                    <input type="hidden" name="index" value="{{ cl.formset.prefix }}-TOTAL_FORMS">
+                    <input type="hidden" name="{{ cl.formset.prefix }}-INITIAL_FORMS" value="{{ cl.formset.initial_form_count }}">
+                    <input type="hidden" name="{{ cl.formset.prefix }}-MIN_NUM_FORMS" value="{{ cl.formset.min_num }}">
+                    <input type="hidden" name="{{ cl.formset.prefix }}-MAX_NUM_FORMS" value="{{ cl.formset.max_num }}">
+                    <button type="submit" class="button" title="{% trans 'Run the selected action' %}" name="index" value="{{ action_index }}">
+                        <i class="fas fa-play me-1"></i>{% trans "Go" %}
+                    </button>
+                </div>
+        {% endif %}
+
+        {% if cl.result_count %}
+            <div class="results">
+                <table id="result_list">
+                    <thead>
+                        <tr>
+                            {% if action_form and actions_on_top %}
+                                <th scope="col" class="action-checkbox-column">
+                                    <div class="text">
+                                        <span><input id="action-toggle" class="action-checkbox" type="checkbox"></span>
+                                    </div>
+                                </th>
+                            {% endif %}
+                            {% for header in result_headers %}
+                                <th scope="col" {{ header.class_attrib }}>
+                                    {% if header.sortable %}
+                                        {% if header.sort_priority > 0 %}
+                                            <div class="sortoptions">
+                                                <a class="sortremove" href="{{ header.url_remove }}" title="{% trans 'Remove from sorting' %}"></a>
+                                                {% if num_sorted_fields > 1 %}<span class="sortpriority" title="{% blocktrans with priority_number=header.sort_priority %}Sorting priority: {{ priority_number }}{% endblocktrans %}">{{ header.sort_priority }}</span>{% endif %}
+                                                <a href="{{ header.url_toggle }}" class="toggle {{ header.ascending|yesno:'ascending,descending' }}" title="{% trans 'Toggle sorting' %}">
+                                                    {{ header.text|capfirst }}
+                                                    {% if header.ascending %}
+                                                        <i class="fas fa-sort-up"></i>
+                                                    {% else %}
+                                                        <i class="fas fa-sort-down"></i>
+                                                    {% endif %}
+                                                </a>
+                                            </div>
+                                        {% else %}
+                                            <div class="text">
+                                                <a href="{{ header.url_primary }}">
+                                                    {{ header.text|capfirst }}
+                                                    <i class="fas fa-sort"></i>
+                                                </a>
+                                            </div>
+                                        {% endif %}
+                                    {% else %}
+                                        <div class="text">
+                                            <span>{{ header.text|capfirst }}</span>
+                                        </div>
+                                    {% endif %}
+                                </th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for result in cl.result_list %}
+                            {% cycle 'row1' 'row2' as rowcolors silent %}
+                            <tr class="{{ rowcolors }}">
+                                {% if action_form and actions_on_top %}
+                                    <td class="action-checkbox">
+                                        {% if action_form %}{{ action_form.selection_counter.as_hidden }}{% endif %}
+                                        {% for form in cl.formset.forms %}
+                                            {% if forloop.counter0 == forloop.parentloop.counter0 %}{{ form.as_p }}{% endif %}
+                                        {% endfor %}
+                                    </td>
+                                {% endif %}
+                                {% if result.0 %}
+                                    {% comment %}Result is iterable (list of field values){% endcomment %}
+                                    {% for item in result %}
+                                        {% if item.class_attrib %}
+                                            <td{{ item.class_attrib }}>{{ item }}</td>
+                                        {% else %}
+                                            <td>{{ item }}</td>
+                                        {% endif %}
+                                    {% endfor %}
+                                {% else %}
+                                    {% comment %}Result might be a single object - extract fields manually{% endcomment %}
+                                    <td>{{ result.username|default:result }}</td>
+                                    <td>{{ result.email|default:"" }}</td>
+                                    <td>{{ result.first_name|default:"" }}</td>
+                                    <td>{{ result.last_name|default:"" }}</td>
+                                    <td>{{ result.get_role_display|default:result.role|default:"" }}</td>
+                                    <td>{{ result.specialty|default:"" }}</td>
+                                    <td>{{ result.year|default:"" }}</td>
+                                    <td>{{ result.supervisor|default:"" }}</td>
+                                    <td>{% if result.is_active %}<span class="text-success">✓</span>{% else %}<span class="text-danger">✗</span>{% endif %}</td>
+                                    <td>{{ result.date_joined|date:"M d, Y" }}</td>
+                                {% endif %}
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div style="padding: 3rem; text-align: center; color: #6c757d;">
+                <i class="fas fa-inbox fa-3x mb-3"></i>
+                <h3>{% trans 'No results found' %}</h3>
+                <p>{% trans 'No' %} {{ opts.verbose_name_plural|lower }} {% trans 'match your search criteria.' %}</p>
+                {% if has_add_permission %}
+                    <a href="add/" class="add-button">
+                        <i class="fas fa-plus"></i>
+                        {% blocktrans with name=opts.verbose_name %}Add the first {{ name }}{% endblocktrans %}
+                    </a>
+                {% endif %}
+            </div>
+        {% endif %}
+
+        {% if action_form and actions_on_top and cl.result_count %}
+            </form>
+        {% endif %}
+    </div>
+
+    {% if cl.result_count %}
+        <div class="paginator">
+            <p class="paginator-info">
+                {% if cl.result_count == 1 %}
+                    1 {{ opts.verbose_name }}
+                {% else %}
+                    {{ cl.result_count }} {{ opts.verbose_name_plural }}
+                {% endif %}
+                {% if cl.full_result_count != cl.result_count %}
+                    <span class="small quiet">
+                        ({{ cl.full_result_count }} total)
+                    </span>
+                {% endif %}
+            </p>
+
+            {% if cl.has_previous or cl.has_next %}
+                <div class="page-links">
+                    {% if cl.has_previous %}
+                        <a href="{{ cl.get_query_string|add:'&amp;p='|add:cl.page_num|add:'-1' }}" class="prev">
+                            <i class="fas fa-chevron-left"></i> {% trans 'previous' %}
+                        </a>
+                    {% endif %}
+                    
+                    {% for page_number in cl.page_range %}
+                        {% if page_number == cl.page_num %}
+                            <span class="this-page">{{ page_number }}</span>
+                        {% else %}
+                            <a href="{{ cl.get_query_string|add:'&amp;p='|add:page_number }}">{{ page_number }}</a>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% if cl.has_next %}
+                        <a href="{{ cl.get_query_string|add:'&amp;p='|add:cl.page_num|add:'+1' }}" class="next">
+                            {% trans 'next' %} <i class="fas fa-chevron-right"></i>
+                        </a>
+                    {% endif %}
+                </div>
+            {% endif %}
+        </div>
+    {% endif %}
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Select all checkbox functionality
+    const toggleCheckbox = document.getElementById('action-toggle');
+    const actionCheckboxes = document.querySelectorAll('.action-checkbox');
+    
+    if (toggleCheckbox) {
+        toggleCheckbox.addEventListener('change', function() {
+            actionCheckboxes.forEach(checkbox => {
+                if (checkbox !== toggleCheckbox) {
+                    checkbox.checked = toggleCheckbox.checked;
+                }
+            });
+        });
+    }
+    
+    // Add loading state to action buttons
+    document.querySelectorAll('.actions button').forEach(btn => {
+        btn.addEventListener('click', function() {
+            this.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>' + this.textContent.trim();
+            this.disabled = true;
+        });
+    });
+});
+</script>
+{% endblock %}

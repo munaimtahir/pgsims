@@ -1,0 +1,309 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Admin Analytics - SIMS{% endblock %}
+
+{% block breadcrumb %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'users:admin_dashboard' %}">Dashboard</a></li>
+        <li class="breadcrumb-item active">Analytics</li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block page_header %}
+<div class="d-flex justify-content-between align-items-start mb-4">
+    <div>
+        <h2>
+            <i class="fas fa-chart-bar me-2"></i>System Analytics
+        </h2>
+        <p class="text-muted">Comprehensive system statistics and insights</p>
+    </div>
+    <div>
+        <a href="{% url 'users:admin_dashboard' %}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<!-- System Overview Cards -->
+<div class="row mb-4">
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-primary shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                            Total Users
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_users }}</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-users fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-success shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                            Active Users
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ active_users }}</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-user-check fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-info shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                            Total PGs
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_pgs }}</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-user-graduate fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-warning shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                            Total Supervisors
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_supervisors }}</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-chalkboard-teacher fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Row -->
+<div class="row">
+    <!-- Specialty Distribution Chart -->
+    <div class="col-xl-6 col-lg-6 mb-4">
+        <div class="card shadow h-100">
+            <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                <h6 class="m-0 font-weight-bold text-primary">Specialty Distribution</h6>
+            </div>
+            <div class="card-body">
+                <div class="chart-area">
+                    <canvas id="specialtyChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- User Activity Chart -->
+    <div class="col-xl-6 col-lg-6 mb-4">
+        <div class="card shadow h-100">
+            <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                <h6 class="m-0 font-weight-bold text-primary">User Activity Overview</h6>
+            </div>
+            <div class="card-body">
+                <div class="chart-bar">
+                    <canvas id="activityChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Data Tables -->
+<div class="row">
+    <div class="col-lg-12 mb-4">
+        <div class="card shadow">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Specialty Breakdown</h6>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered" width="100%" cellspacing="0">
+                        <thead>
+                            <tr>
+                                <th>Specialty</th>
+                                <th>Number of Users</th>
+                                <th>Percentage</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for specialty in specialty_distribution %}
+                            <tr>
+                                <td>{{ specialty.specialty|default:"Not Specified" }}</td>
+                                <td>{{ specialty.count }}</td>
+                                <td>
+                                    {% widthratio specialty.count total_users 100 %}%
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="3" class="text-center text-muted">No data available</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// Specialty Distribution Pie Chart
+const specialtyCtx = document.getElementById('specialtyChart').getContext('2d');
+const specialtyData = {
+    labels: [
+        {% for specialty in specialty_distribution %}
+        '{{ specialty.specialty|default:"Not Specified" }}'{% if not forloop.last %},{% endif %}
+        {% endfor %}
+    ],
+    datasets: [{
+        data: [
+            {% for specialty in specialty_distribution %}
+            {{ specialty.count }}{% if not forloop.last %},{% endif %}
+            {% endfor %}
+        ],
+        backgroundColor: [
+            '#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b',
+            '#858796', '#fd7e14', '#20c997', '#6f42c1', '#e83e8c'
+        ]
+    }]
+};
+
+new Chart(specialtyCtx, {
+    type: 'doughnut',
+    data: specialtyData,
+    options: {
+        responsive: true,
+        plugins: {
+            legend: {
+                position: 'bottom'
+            }
+        }
+    }
+});
+
+// User Activity Bar Chart
+const activityCtx = document.getElementById('activityChart').getContext('2d');
+const activityData = {
+    labels: ['Total Users', 'Active Users', 'PGs', 'Supervisors'],
+    datasets: [{
+        label: 'Count',
+        data: [{{ total_users }}, {{ active_users }}, {{ total_pgs }}, {{ total_supervisors }}],
+        backgroundColor: ['#4e73df', '#1cc88a', '#36b9cc', '#f6c23e']
+    }]
+};
+
+new Chart(activityCtx, {
+    type: 'bar',
+    data: activityData,
+    options: {
+        responsive: true,
+        plugins: {
+            legend: {
+                display: false
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true
+            }
+        }
+    }
+});
+</script>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+/* FMU Branding and Modern UI for Analytics */
+body {
+    background: linear-gradient(135deg, #2c5282 0%, #3182ce 50%, #4299e1 100%);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+.card {
+    border-radius: 18px;
+    box-shadow: 0 8px 32px rgba(44, 82, 130, 0.08);
+    border: none;
+}
+.card-title {
+    font-weight: 700;
+    font-size: 1.5rem;
+}
+.card-text {
+    font-size: 1rem;
+}
+.page-footer {
+    background: rgba(44, 82, 130, 0.95);
+    color: white;
+    padding: 20px 0;
+    text-align: center;
+    font-size: 0.9rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    margin-top: 40px;
+    width: 100%;
+}
+@media (max-width: 768px) {
+    .card-title { font-size: 1.1rem; }
+    .card-text { font-size: 0.9rem; }
+}
+.border-left-primary {
+    border-left: 0.25rem solid #4e73df !important;
+}
+.border-left-success {
+    border-left: 0.25rem solid #1cc88a !important;
+}
+.border-left-info {
+    border-left: 0.25rem solid #36b9cc !important;
+}
+.border-left-warning {
+    border-left: 0.25rem solid #f6c23e !important;
+}
+.text-gray-800 {
+    color: #5a5c69 !important;
+}
+.text-gray-300 {
+    color: #dddfeb !important;
+}
+</style>
+{% endblock %}
+
+<footer class="page-footer">
+    <div class="container">
+        <p class="mb-0">
+            © 2025 SIMS - Postgraduate Medical Training System. All rights reserved. |
+            <a href="/admin/">Admin</a> |
+            SIMS v2.1.0 |
+            Faisalabad Medical University
+        </p>
+    </div>
+</footer>

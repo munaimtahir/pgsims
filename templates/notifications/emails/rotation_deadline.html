@@ -1,0 +1,4 @@
+<p>Hello {{ recipient.get_full_name|default:recipient.username }},</p>
+<p>The rotation in <strong>{{ rotation.department.name }}</strong> at {{ rotation.hospital.name }} is scheduled to end on {{ rotation.end_date|date:"d M Y" }}.</p>
+<p>Days remaining: <strong>{{ days }}</strong></p>
+<p>Please ensure all evaluations and documentation are completed before the deadline.</p>

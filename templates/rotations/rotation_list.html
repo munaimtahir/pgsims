@@ -1,0 +1,270 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Rotations - SIMS{% endblock %}
+
+{% block breadcrumb %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'users:dashboard' %}">Dashboard</a></li>
+        <li class="breadcrumb-item active">Rotations</li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block page_header %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2><i class="fas fa-sync-alt me-2"></i>Clinical Rotations</h2>
+        <p class="text-muted">Manage and track clinical rotation assignments and progress</p>
+    </div>
+    <div>
+        {% if user.role == 'admin' or user.role == 'supervisor' %}
+        <a href="{% url 'rotations:create' %}" class="btn btn-primary">
+            <i class="fas fa-plus me-2"></i>New Rotation
+        </a>
+        <a href="{% url 'rotations:bulk_assignment' %}" class="btn btn-outline-info ms-2">
+            <i class="fas fa-users me-2"></i>Bulk Assignment
+        </a>
+        {% endif %}
+        <a href="{% url 'rotations:dashboard' %}" class="btn btn-outline-secondary ms-2">
+            <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<!-- Filter Section -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-3">
+                <label for="search" class="form-label">Search</label>
+                <input type="text" class="form-control" id="search" name="search" 
+                       value="{{ request.GET.search }}" placeholder="Rotation name or department">
+            </div>
+            <div class="col-md-2">
+                <label for="status" class="form-label">Status</label>
+                <select class="form-select" id="status" name="status">
+                    <option value="">All Statuses</option>
+                    <option value="upcoming" {% if request.GET.status == 'upcoming' %}selected{% endif %}>Upcoming</option>
+                    <option value="active" {% if request.GET.status == 'active' %}selected{% endif %}>Active</option>
+                    <option value="completed" {% if request.GET.status == 'completed' %}selected{% endif %}>Completed</option>
+                    <option value="cancelled" {% if request.GET.status == 'cancelled' %}selected{% endif %}>Cancelled</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label for="department" class="form-label">Department</label>
+                <select class="form-select" id="department" name="department">
+                    <option value="">All Departments</option>
+                    {% for dept in departments %}
+                    <option value="{{ dept.code }}" {% if request.GET.department == dept.code %}selected{% endif %}>
+                        {{ dept.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="pg" class="form-label">Postgraduate</label>
+                <select class="form-select" id="pg" name="pg">
+                    <option value="">All PGs</option>
+                    {% for pg_user in pgs %}
+                    <option value="{{ pg_user.id }}" {% if request.GET.pg == pg_user.id|stringformat:"s" %}selected{% endif %}>
+                        {{ pg_user.get_full_name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button type="submit" class="btn btn-outline-primary me-2">
+                    <i class="fas fa-search me-1"></i>Filter
+                </button>
+                <a href="{% url 'rotations:list' %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-undo me-1"></i>Clear
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Rotations List -->
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Clinical Rotations</h5>
+        <div class="pagination-info">
+            {% if is_paginated %}
+                Showing {{ page_obj.start_index }} to {{ page_obj.end_index }} of {{ page_obj.paginator.count }} rotations
+            {% else %}
+                {{ rotations|length }} rotations total
+            {% endif %}
+        </div>
+    </div>
+    <div class="card-body">
+        {% if rotations %}
+            <div class="row">
+                {% for rotation in rotations %}
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="card rotation-card h-100 border-{{ rotation.status_color }}">
+                        <div class="card-header d-flex justify-content-between align-items-start">
+                            <div>
+                                <h6 class="card-title mb-1">{{ rotation.name|truncatechars:40 }}</h6>
+                                <small class="text-muted">{{ rotation.department.name }}</small>
+                            </div>
+                            <span class="badge bg-{{ rotation.status_color }} status-badge">
+                                {{ rotation.get_status_display }}
+                            </span>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-2">
+                                <strong>PG:</strong> {{ rotation.pg.get_full_name }}
+                            </div>
+                            <div class="mb-2">
+                                <strong>Duration:</strong> {{ rotation.start_date|date:"M d" }} - {{ rotation.end_date|date:"M d, Y" }}
+                            </div>
+                            {% if rotation.supervisor %}
+                            <div class="mb-2">
+                                <strong>Supervisor:</strong> {{ rotation.supervisor.get_full_name }}
+                            </div>
+                            {% endif %}
+                            <div class="mb-2">
+                                <strong>Department:</strong>
+                                <span class="badge bg-info">{{ rotation.department.name }}</span>
+                            </div>
+                            {% if rotation.learning_objectives %}
+                            <div class="mb-2">
+                                <small><strong>Objectives:</strong></small>
+                                <p class="small text-muted mb-0">{{ rotation.learning_objectives|truncatechars:80 }}</p>
+                            </div>
+                            {% endif %}
+                            
+                            <!-- Progress Bar -->
+                            <div class="mt-3">
+                                <div class="d-flex justify-content-between mb-1">
+                                    <small class="text-muted">Progress</small>
+                                    <small class="text-muted">{{ rotation.progress_percentage }}%</small>
+                                </div>
+                                <div class="progress" style="height: 6px;">
+                                    <div class="progress-bar bg-{{ rotation.status_color }}" role="progressbar" 
+                                         style="width: {{ rotation.progress_percentage }}%"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-footer">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <small class="text-muted">
+                                    {% if rotation.status == 'upcoming' %}
+                                        Starts in {{ rotation.days_until_start }} days
+                                    {% elif rotation.status == 'active' %}
+                                        {{ rotation.days_remaining }} days remaining
+                                    {% else %}
+                                        Updated {{ rotation.updated_at|timesince }} ago
+                                    {% endif %}
+                                </small>
+                                <div class="btn-group" role="group">
+                                    <a href="{% url 'rotations:detail' rotation.pk %}" class="btn btn-sm btn-outline-primary" title="View Details">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    {% if user.role == 'admin' or user.role == 'supervisor' or user == rotation.pg %}
+                                    <a href="{% url 'rotations:edit' rotation.pk %}" class="btn btn-sm btn-outline-secondary" title="Edit">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    {% endif %}
+                                    {% if user.role == 'supervisor' or user.role == 'admin' %}
+                                    <a href="{% url 'rotations:evaluate' rotation.pk %}" class="btn btn-sm btn-outline-success" title="Evaluate">
+                                        <i class="fas fa-star"></i>
+                                    </a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            
+            <!-- Pagination -->
+            {% if is_paginated %}
+            <nav aria-label="Rotation pagination">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page=1{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">First</a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">Previous</a>
+                        </li>
+                    {% endif %}
+                    
+                    <li class="page-item active">
+                        <span class="page-link">{{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+                    </li>
+                    
+                    {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">Next</a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">Last</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+        {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-sync-alt fa-4x text-muted mb-3"></i>
+                <h4 class="text-muted">No Rotations Found</h4>
+                <p class="text-muted">
+                    {% if request.GET.search %}
+                        No rotations match your search criteria. Try different keywords or clear the filters.
+                    {% else %}
+                        {% if user.role == 'admin' or user.role == 'supervisor' %}
+                        Get started by creating rotation assignments for postgraduates.
+                        {% else %}
+                        No rotations have been assigned to you yet. Contact your supervisor for rotation assignments.
+                        {% endif %}
+                    {% endif %}
+                </p>
+                {% if user.role == 'admin' or user.role == 'supervisor' %}
+                <a href="{% url 'rotations:create' %}" class="btn btn-primary">
+                    <i class="fas fa-plus me-2"></i>Create First Rotation
+                </a>
+                {% endif %}
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.rotation-card {
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.rotation-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.border-primary { border-left: 4px solid #007bff !important; }
+.border-success { border-left: 4px solid #28a745 !important; }
+.border-warning { border-left: 4px solid #ffc107 !important; }
+.border-danger { border-left: 4px solid #dc3545 !important; }
+.border-secondary { border-left: 4px solid #6c757d !important; }
+
+.btn-group .btn {
+    border-radius: 0.25rem !important;
+    margin-left: 2px;
+}
+
+.btn-group .btn:first-child {
+    margin-left: 0;
+}
+
+.progress {
+    background-color: #f8f9fa;
+}
+</style>
+{% endblock %}

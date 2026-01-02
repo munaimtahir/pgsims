@@ -1,0 +1,320 @@
+{% extends "admin/base.html" %}
+{% load i18n static %}
+
+{% block title %}{{ title }} | {% trans 'Add/Edit' %} | {{ site_title|default:_('Django site admin') }}{% endblock %}
+
+{% block extra_css %}
+{{ block.super }}
+<style>
+    body {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        margin: 0;
+        padding: 20px;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .popup-container {
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 15px;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        width: 100%;
+        max-width: 800px;
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+    
+    .popup-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 1.5rem 2rem;
+        border-radius: 15px 15px 0 0;
+        margin-bottom: 0;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
+    
+    .popup-header h1 {
+        margin: 0;
+        font-size: 1.4rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    
+    .popup-header .close-btn {
+        position: absolute;
+        top: 1rem;
+        right: 1.5rem;
+        background: none;
+        border: none;
+        color: white;
+        font-size: 1.5rem;
+        cursor: pointer;
+        opacity: 0.8;
+        transition: all 0.3s ease;
+        padding: 0.5rem;
+        border-radius: 50%;
+    }
+    
+    .popup-header .close-btn:hover {
+        opacity: 1;
+        background: rgba(255, 255, 255, 0.2);
+        transform: rotate(90deg);
+    }
+    
+    .popup-content {
+        padding: 2rem;
+    }
+    
+    .form-row {
+        margin-bottom: 1.5rem;
+        padding: 1rem;
+        background: #f8f9fa;
+        border-radius: 10px;
+        border-left: 4px solid #667eea;
+        transition: all 0.3s ease;
+    }
+    
+    .form-row:hover {
+        background: #e9ecef;
+        transform: translateX(5px);
+    }
+    
+    .form-row label {
+        font-weight: 600;
+        color: #2c3e50;
+        margin-bottom: 0.5rem;
+        display: block;
+    }
+    
+    .form-row input[type="text"],
+    .form-row input[type="email"],
+    .form-row input[type="password"],
+    .form-row input[type="number"],
+    .form-row input[type="date"],
+    .form-row input[type="datetime-local"],
+    .form-row textarea,
+    .form-row select {
+        width: 100%;
+        padding: 0.75rem;
+        border: 2px solid #e9ecef;
+        border-radius: 8px;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        background: white;
+    }
+    
+    .form-row input:focus,
+    .form-row textarea:focus,
+    .form-row select:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        outline: none;
+    }
+    
+    .popup-footer {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        padding: 1.5rem 2rem;
+        border-radius: 0 0 15px 15px;
+        border-top: 2px solid #e9ecef;
+        display: flex;
+        gap: 1rem;
+        justify-content: flex-end;
+        align-items: center;
+        position: sticky;
+        bottom: 0;
+    }
+    
+    .btn-save {
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        color: white;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+    }
+    
+    .btn-save:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(40, 167, 69, 0.4);
+    }
+    
+    .btn-cancel {
+        background: transparent;
+        color: #6c757d;
+        border: 2px solid #6c757d;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        text-decoration: none;
+    }
+    
+    .btn-cancel:hover {
+        background: #6c757d;
+        color: white;
+        transform: translateY(-2px);
+        text-decoration: none;
+    }
+    
+    .fade-in {
+        animation: fadeIn 0.5s ease-in-out;
+    }
+    
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: scale(0.9);
+        }
+        to {
+            opacity: 1;
+            transform: scale(1);
+        }
+    }
+    
+    @media (max-width: 768px) {
+        body {
+            padding: 10px;
+        }
+        
+        .popup-container {
+            max-height: 95vh;
+        }
+        
+        .popup-header,
+        .popup-content,
+        .popup-footer {
+            padding: 1rem;
+        }
+        
+        .popup-footer {
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        .btn-save,
+        .btn-cancel {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block bodyclass %}{{ block.super }} popup{% endblock %}
+
+{% block nav-global %}{% endblock %}
+
+{% block content %}
+<div class="popup-container fade-in">
+    <div class="popup-header">
+        <h1>
+            <i class="fas fa-edit"></i>
+            {{ title }}
+        </h1>
+        <button type="button" class="close-btn" onclick="window.close()">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+
+    <form method="post" enctype="multipart/form-data" class="popup-content">
+        {% csrf_token %}
+        
+        {% if errors %}
+            <div class="alert alert-danger" role="alert">
+                <h4><i class="fas fa-exclamation-triangle me-2"></i>Please correct the errors below:</h4>
+                {{ errors }}
+            </div>
+        {% endif %}
+
+        {% for fieldset in adminform %}
+            {% include "admin/includes/fieldset.html" %}
+        {% endfor %}
+
+        {% for inline_admin_formset in inline_admin_formsets %}
+            {% include inline_admin_formset.opts.template %}
+        {% endfor %}
+    </form>
+
+    <div class="popup-footer">
+        <button type="button" class="btn-cancel" onclick="window.close()">
+            <i class="fas fa-times"></i>
+            {% trans "Cancel" %}
+        </button>
+        
+        <button type="submit" form="popup-form" class="btn-save">
+            <i class="fas fa-save"></i>
+            {% trans "Save" %}
+        </button>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Add form ID for submit button
+    const form = document.querySelector('form');
+    if (form) {
+        form.id = 'popup-form';
+    }
+    
+    // Auto-resize popup based on content
+    function resizePopup() {
+        if (window.opener) {
+            const container = document.querySelector('.popup-container');
+            const height = container.scrollHeight + 40;
+            const width = Math.min(container.scrollWidth + 40, 900);
+            window.resizeTo(width, Math.min(height, window.screen.height * 0.9));
+        }
+    }
+    
+    // Initial resize
+    setTimeout(resizePopup, 100);
+    
+    // Handle form submission
+    document.getElementById('popup-form').addEventListener('submit', function(e) {
+        const submitBtn = document.querySelector('.btn-save');
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>{% trans "Saving..." %}';
+        submitBtn.disabled = true;
+    });
+    
+    // Close popup on Escape key
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape') {
+            window.close();
+        }
+    });
+    
+    // Focus first input
+    const firstInput = document.querySelector('input, select, textarea');
+    if (firstInput) {
+        firstInput.focus();
+    }
+});
+
+// Handle popup closure and refresh parent
+function closeAndRefresh() {
+    if (window.opener) {
+        window.opener.location.reload();
+    }
+    window.close();
+}
+</script>
+{% endblock %}

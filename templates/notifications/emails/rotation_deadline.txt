@@ -1,0 +1,7 @@
+Hello {{ recipient.get_full_name|default:recipient.username }},
+
+The rotation in {{ rotation.department.name }} at {{ rotation.hospital.name }} is scheduled to end on {{ rotation.end_date|date:"d M Y" }}.
+
+Days remaining: {{ days }}
+
+Please ensure all evaluations and documentation are completed before the deadline.

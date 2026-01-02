@@ -1,0 +1,172 @@
+# Docker Compose configuration for SIMS
+# Production-ready multi-service setup
+#
+# SECURITY WARNING: This configuration uses environment variables for sensitive data.
+# You MUST set the following environment variables before running in production:
+#   - SECRET_KEY: A secure Django secret key
+#   - DB_PASSWORD: A strong database password
+#   - DB_USER: Database username (default: sims_user)
+#   - DB_NAME: Database name (default: sims_db)
+#   - ALLOWED_HOSTS: Comma-separated list of allowed hostnames
+#
+# Create a .env file in the project root with these values.
+# NEVER commit .env to version control.
+#
+# NOTE: This compose file is suitable for VPS deployment with external reverse proxy.
+# For Coolify/Traefik deployment, use docker-compose.coolify.yml
+# For local development, use docker-compose.local.yml
+
+version: '3.9'
+
+services:
+  # PostgreSQL Database
+  db:
+    image: postgres:15-alpine
+    container_name: sims_db
+    environment:
+      # WARNING: Set DB_PASSWORD in .env file - never use default in production
+      POSTGRES_DB: ${DB_NAME:-sims_db}
+      POSTGRES_USER: ${DB_USER:-sims_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-sims_user}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - sims_network
+
+  # Redis Cache & Message Broker
+  redis:
+    image: redis:7-alpine
+    container_name: sims_redis
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - sims_network
+
+  # Django Web Application
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: sims_web
+    command: >
+      sh -c "python manage.py migrate --noinput &&
+             python manage.py collectstatic --noinput &&
+             gunicorn sims_project.wsgi:application --bind 0.0.0.0:8000 --workers 4 --timeout 60"
+    environment:
+      - DEBUG=${DEBUG:-False}
+      # WARNING: SECRET_KEY is REQUIRED - set it in .env file
+      - SECRET_KEY=${SECRET_KEY}
+      - ALLOWED_HOSTS=${ALLOWED_HOSTS:-139.162.9.224,172.237.95.120,localhost,127.0.0.1}
+      # WARNING: DB_PASSWORD is REQUIRED - set it in .env file
+      - DATABASE_URL=postgresql://${DB_USER:-sims_user}:${DB_PASSWORD}@db:5432/${DB_NAME:-sims_db}
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/1
+      - CELERY_RESULT_BACKEND=redis://redis:6379/1
+      # Reverse proxy SSL header support
+      - USE_PROXY_HEADERS=${USE_PROXY_HEADERS:-True}
+      - SECURE_SSL_REDIRECT=${SECURE_SSL_REDIRECT:-False}
+      - CSRF_TRUSTED_ORIGINS=${CSRF_TRUSTED_ORIGINS:-}
+      - EMAIL_BACKEND=${EMAIL_BACKEND:-django.core.mail.backends.console.EmailBackend}
+      - EMAIL_HOST=${EMAIL_HOST:-}
+      - EMAIL_PORT=${EMAIL_PORT:-587}
+      - EMAIL_USE_TLS=${EMAIL_USE_TLS:-True}
+      - EMAIL_HOST_USER=${EMAIL_HOST_USER:-}
+      - EMAIL_HOST_PASSWORD=${EMAIL_HOST_PASSWORD:-}
+    ports:
+      - "8000:8000"  # Expose for direct access (optional, can be removed if using reverse proxy)
+    volumes:
+      - static_volume:/app/staticfiles
+      - media_volume:/app/media
+      - ./logs:/app/logs
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/healthz/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+    networks:
+      - sims_network
+
+  # Celery Worker
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: sims_worker
+    command: celery -A sims_project worker -l info --concurrency=2
+    environment:
+      - DEBUG=${DEBUG:-False}
+      # WARNING: SECRET_KEY is REQUIRED - set it in .env file
+      - SECRET_KEY=${SECRET_KEY}
+      # WARNING: DB_PASSWORD is REQUIRED - set it in .env file
+      - DATABASE_URL=postgresql://${DB_USER:-sims_user}:${DB_PASSWORD}@db:5432/${DB_NAME:-sims_db}
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/1
+      - CELERY_RESULT_BACKEND=redis://redis:6379/1
+    volumes:
+      - media_volume:/app/media
+      - ./logs:/app/logs
+    depends_on:
+      - db
+      - redis
+    healthcheck:
+      disable: true
+    restart: unless-stopped
+    networks:
+      - sims_network
+
+  # Celery Beat (Scheduler)
+  beat:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: sims_beat
+    command: celery -A sims_project beat -l info --scheduler django_celery_beat.schedulers:DatabaseScheduler
+    environment:
+      - DEBUG=${DEBUG:-False}
+      # WARNING: SECRET_KEY is REQUIRED - set it in .env file
+      - SECRET_KEY=${SECRET_KEY}
+      # WARNING: DB_PASSWORD is REQUIRED - set it in .env file
+      - DATABASE_URL=postgresql://${DB_USER:-sims_user}:${DB_PASSWORD}@db:5432/${DB_NAME:-sims_db}
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/1
+      - CELERY_RESULT_BACKEND=redis://redis:6379/1
+    volumes:
+      - ./logs:/app/logs
+    depends_on:
+      - db
+      - redis
+    healthcheck:
+      disable: true
+    restart: unless-stopped
+    networks:
+      - sims_network
+
+volumes:
+  postgres_data:
+  redis_data:
+  static_volume:
+  media_volume:
+
+networks:
+  sims_network:
+    driver: bridge

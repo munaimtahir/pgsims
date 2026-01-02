@@ -1,0 +1,322 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Profile - {{ profile_user.get_full_name }} - SIMS{% endblock %}
+
+{% block breadcrumb %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'users:dashboard' %}">Dashboard</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'users:user_list' %}">Users</a></li>
+        <li class="breadcrumb-item active">{{ profile_user.get_full_name }}</li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Profile Overview -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body text-center">
+                    {% if profile_user.avatar %}
+                    <img src="{{ profile_user.avatar.url }}" alt="{{ profile_user.get_full_name }}" 
+                         class="rounded-circle mb-3" width="120" height="120" style="object-fit: cover;">
+                    {% else %}
+                    <div class="avatar-placeholder rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center"
+                         style="width: 120px; height: 120px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; font-size: 2.5rem;">
+                        {{ profile_user.first_name.0|upper }}{{ profile_user.last_name.0|upper }}
+                    </div>
+                    {% endif %}
+                    
+                    <h5 class="card-title">{{ profile_user.get_full_name }}</h5>
+                    <p class="card-text text-muted">{{ profile_user.get_role_display|default:profile_user.role|title }}</p>
+                    
+                    {% if profile_user.email %}
+                    <p class="card-text">
+                        <i class="fas fa-envelope me-2"></i>
+                        <a href="mailto:{{ profile_user.email }}">{{ profile_user.email }}</a>
+                    </p>
+                    {% endif %}
+                    
+                    {% if profile_user.phone_number %}
+                    <p class="card-text">
+                        <i class="fas fa-phone me-2"></i>
+                        {{ profile_user.phone_number }}
+                    </p>
+                    {% endif %}
+                    
+                    <div class="d-flex gap-2 justify-content-center">
+                        {% if request.user == profile_user %}
+                        <a href="{% url 'users:profile_edit' %}" class="btn btn-primary btn-sm">
+                            <i class="fas fa-edit me-1"></i>Edit Profile
+                        </a>
+                        {% endif %}
+                        {% if request.user.is_staff %}
+                        <a href="{% url 'users:user_edit' profile_user.pk %}" class="btn btn-warning btn-sm">
+                            <i class="fas fa-user-cog me-1"></i>Admin Edit
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Status Card -->
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h6 class="card-title mb-0">
+                        <i class="fas fa-info-circle me-2"></i>Status
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-6">
+                            <div class="border-end">
+                                <h6 class="mb-1">Account</h6>
+                                <span class="badge bg-{{ profile_user.is_active|yesno:'success,danger' }}">
+                                    {{ profile_user.is_active|yesno:'Active,Inactive' }}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <h6 class="mb-1">Joined</h6>
+                            <small class="text-muted">{{ profile_user.date_joined|date:"M Y" }}</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Detailed Information -->
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="card-title mb-0">
+                        <i class="fas fa-user me-2"></i>Personal Information
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="fw-bold">Basic Information</h6>
+                            <table class="table table-sm">
+                                <tr>
+                                    <td class="fw-bold">First Name:</td>
+                                    <td>{{ profile_user.first_name|default:"Not provided" }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold">Last Name:</td>
+                                    <td>{{ profile_user.last_name|default:"Not provided" }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold">Username:</td>
+                                    <td>{{ profile_user.username }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold">Email:</td>
+                                    <td>{{ profile_user.email|default:"Not provided" }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold">Role:</td>
+                                    <td>
+                                        <span class="badge bg-{{ profile_user.role }}">
+                                            {{ profile_user.get_role_display|default:profile_user.role|title }}
+                                        </span>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="fw-bold">Professional Information</h6>
+                            <table class="table table-sm">
+                                {% if profile_user.registration_number %}
+                                <tr>
+                                    <td class="fw-bold">Registration Number:</td>
+                                    <td>{{ profile_user.registration_number }}</td>
+                                </tr>
+                                {% endif %}
+                                {% if profile_user.phone_number %}
+                                <tr>
+                                    <td class="fw-bold">Phone Number:</td>
+                                    <td>{{ profile_user.phone_number }}</td>
+                                </tr>
+                                {% endif %}
+                                {% if profile_user.specialty %}
+                                <tr>
+                                    <td class="fw-bold">Specialty:</td>
+                                    <td>{{ profile_user.get_specialty_display|default:profile_user.specialty }}</td>
+                                </tr>
+                                {% endif %}
+                                {% if profile_user.year %}
+                                <tr>
+                                    <td class="fw-bold">Training Year:</td>
+                                    <td>{{ profile_user.get_year_display|default:profile_user.year }}</td>
+                                </tr>
+                                {% endif %}
+                                {% if profile_user.supervisor %}
+                                <tr>
+                                    <td class="fw-bold">Supervisor:</td>
+                                    <td>
+                                        <a href="{% url 'users:profile_detail' profile_user.supervisor.pk %}">
+                                            {{ profile_user.supervisor.get_full_name }}
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endif %}
+                            </table>
+                        </div>
+                    </div>
+
+                    {% if profile_user.role == 'pg' and profile_user.assigned_pgs.exists %}
+                    <div class="mt-3">
+                        <h6 class="fw-bold">Supervised PGs</h6>
+                        <div class="list-group list-group-flush">
+                            {% for pg in profile_user.assigned_pgs.all %}
+                            <div class="list-group-item">
+                                <a href="{% url 'users:profile_detail' pg.pk %}">{{ pg.get_full_name }}</a>
+                                <small class="text-muted">- {{ pg.get_specialty_display|default:pg.specialty }}</small>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Activity Summary -->
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h6 class="card-title mb-0">
+                        <i class="fas fa-chart-line me-2"></i>Activity Summary
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-md-3">
+                            <div class="border-end">
+                                <h5 class="text-primary mb-1">
+                                    {% if profile_user.logbook_entries %}{{ profile_user.logbook_entries.count }}{% else %}0{% endif %}
+                                </h5>
+                                <small class="text-muted">Logbook Entries</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="border-end">
+                                <h5 class="text-success mb-1">
+                                    {% if profile_user.cases %}{{ profile_user.cases.count }}{% else %}0{% endif %}
+                                </h5>
+                                <small class="text-muted">Cases</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="border-end">
+                                <h5 class="text-info mb-1">
+                                    {% if profile_user.certificates %}{{ profile_user.certificates.count }}{% else %}0{% endif %}
+                                </h5>
+                                <small class="text-muted">Certificates</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <h5 class="text-warning mb-1">
+                                {% if profile_user.rotations %}{{ profile_user.rotations.count }}{% else %}0{% endif %}
+                            </h5>
+                            <small class="text-muted">Rotations</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Activity -->
+            {% if recent_activities %}
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h6 class="card-title mb-0">
+                        <i class="fas fa-clock me-2"></i>Recent Activity
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="list-group list-group-flush">
+                        {% for activity in recent_activities|slice:":5" %}
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <i class="fas fa-{{ activity.icon }} me-2 text-{{ activity.color }}"></i>
+                                {{ activity.description }}
+                            </div>
+                            <small class="text-muted">{{ activity.created_at|timesince }} ago</small>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.bg-pg { background-color: #007bff !important; color: white; }
+.bg-supervisor { background-color: #28a745 !important; color: white; }
+.bg-admin { background-color: #dc3545 !important; color: white; }
+.bg-staff { background-color: #6f42c1 !important; color: white; }
+
+.badge.bg-success { background-color: #28a745 !important; }
+.badge.bg-danger { background-color: #dc3545 !important; }
+
+.avatar-placeholder {
+    font-weight: bold;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+}
+
+.table td {
+    border: none;
+    padding: 0.5rem 0;
+}
+
+.table td.fw-bold {
+    width: 40%;
+}
+
+.border-end {
+    border-right: 1px solid #dee2e6 !important;
+}
+
+.card {
+    border: none;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    margin-bottom: 1.5rem;
+}
+
+.card-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-bottom: none;
+}
+
+.list-group-item {
+    border-left: none;
+    border-right: none;
+    border-top: none;
+    padding: 0.75rem 0;
+}
+
+.list-group-item:last-child {
+    border-bottom: none;
+}
+
+.list-group-item:first-child {
+    padding-top: 0;
+}
+
+@media (max-width: 768px) {
+    .border-end {
+        border-right: none !important;
+        border-bottom: 1px solid #dee2e6 !important;
+        margin-bottom: 1rem;
+        padding-bottom: 1rem;
+    }
+}
+</style>
+{% endblock %}

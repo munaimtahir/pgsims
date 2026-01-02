@@ -1,0 +1,7 @@
+<p>Hello {{ recipient.get_full_name|default:recipient.username }},</p>
+<p><strong>{{ entry.pg.get_full_name|default:entry.pg.username }}</strong> has submitted a logbook entry titled "{{ entry.case_title }}" for your review.</p>
+<ul>
+  <li>Status: {{ entry.get_status_display }}</li>
+  <li>Submitted: {{ entry.submitted_to_supervisor_at|default:entry.created_at|date:"d M Y H:i" }}</li>
+</ul>
+<p>Please review the entry at your earliest convenience.</p>

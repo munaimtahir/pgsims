@@ -1,0 +1,305 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Case Statistics - SIMS{% endblock %}
+
+{% block breadcrumb %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'users:dashboard' %}">Dashboard</a></li>
+        <li class="breadcrumb-item active">Case Statistics</li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-chart-bar me-2"></i>
+                        Case Statistics
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if user.role == 'pg' %}
+                        <!-- PG Statistics -->
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="card bg-primary text-white">
+                                    <div class="card-body">
+                                        <div class="d-flex align-items-center">
+                                            <i class="fas fa-folder-open fa-2x me-3"></i>
+                                            <div>
+                                                <h4 class="mb-0">{{ user_stats.total_cases|default:0 }}</h4>
+                                                <small>Total Cases</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card bg-success text-white">
+                                    <div class="card-body">
+                                        <div class="d-flex align-items-center">
+                                            <i class="fas fa-check-circle fa-2x me-3"></i>
+                                            <div>
+                                                <h4 class="mb-0">{{ user_stats.approved_cases|default:0 }}</h4>
+                                                <small>Approved Cases</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card bg-warning text-white">
+                                    <div class="card-body">
+                                        <div class="d-flex align-items-center">
+                                            <i class="fas fa-clock fa-2x me-3"></i>
+                                            <div>
+                                                <h4 class="mb-0">{{ user_stats.pending_cases|default:0 }}</h4>
+                                                <small>Pending Review</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card bg-info text-white">
+                                    <div class="card-body">
+                                        <div class="d-flex align-items-center">
+                                            <i class="fas fa-edit fa-2x me-3"></i>
+                                            <div>
+                                                <h4 class="mb-0">{{ user_stats.draft_cases|default:0 }}</h4>
+                                                <small>Draft Cases</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mt-4">
+                            <div class="col-md-6">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h6 class="card-title mb-0">Performance Metrics</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="mb-3">
+                                            <label class="form-label">Average Self Score</label>
+                                            <div class="progress">
+                                                <div class="progress-bar" role="progressbar" 
+                                                     data-width="{% widthratio user_stats.average_self_score|default:0 10 100 %}">
+                                                    {{ user_stats.average_self_score|default:0|floatformat:1 }}/10
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Average Supervisor Score</label>
+                                            <div class="progress">
+                                                <div class="progress-bar bg-success" role="progressbar" 
+                                                     data-width="{% widthratio user_stats.average_supervisor_score|default:0 10 100 %}">
+                                                    {{ user_stats.average_supervisor_score|default:0|floatformat:1 }}/10
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Completion Rate</label>
+                                            <div class="progress">
+                                                <div class="progress-bar bg-info" role="progressbar" 
+                                                     data-width="{{ user_stats.completion_rate|default:0|floatformat:0 }}">
+                                                    {{ user_stats.completion_rate|default:0|floatformat:1 }}%
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h6 class="card-title mb-0">Recent Cases</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        {% if recent_cases %}
+                                            <div class="list-group list-group-flush">
+                                                {% for case in recent_cases %}
+                                                <div class="list-group-item">
+                                                    <div class="d-flex w-100 justify-content-between">
+                                                        <h6 class="mb-1">{{ case.case_title|truncatechars:50 }}</h6>
+                                                        <small class="text-muted">{{ case.date_encountered }}</small>
+                                                    </div>
+                                                    <p class="mb-1">{{ case.chief_complaint|truncatechars:80 }}</p>
+                                                    <small class="text-muted">Status: 
+                                                        <span class="badge bg-{{ case.status|default:'secondary' }}">
+                                                            {{ case.get_status_display }}
+                                                        </span>
+                                                    </small>
+                                                </div>
+                                                {% endfor %}
+                                            </div>
+                                        {% else %}
+                                            <p class="text-muted">No cases found.</p>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    {% elif user.role == 'supervisor' %}
+                        <!-- Supervisor Statistics -->
+                        <div class="row">
+                            <div class="col-md-12">
+                                <h6>Supervisor Statistics</h6>
+                                <p class="text-muted">Statistics for cases under your supervision.</p>
+                                
+                                {% if supervisor_stats %}
+                                    <div class="row">
+                                        <div class="col-md-4">
+                                            <div class="card bg-primary text-white">
+                                                <div class="card-body text-center">
+                                                    <h3>{{ supervisor_stats.total_pgs }}</h3>
+                                                    <p class="mb-0">Total PGs</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="card bg-success text-white">
+                                                <div class="card-body text-center">
+                                                    <h3>{{ supervisor_stats.total_cases }}</h3>
+                                                    <p class="mb-0">Total Cases</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="card bg-warning text-white">
+                                                <div class="card-body text-center">
+                                                    <h3>{{ supervisor_stats.pending_reviews }}</h3>
+                                                    <p class="mb-0">Pending Reviews</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% else %}
+                                    <p>No statistics available.</p>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                    {% elif user.role == 'admin' %}
+                        <!-- Admin Statistics -->
+                        <div class="row">
+                            <div class="col-md-12">
+                                <h6>System-wide Case Statistics</h6>
+                                
+                                {% if system_stats %}
+                                    <div class="row">
+                                        <div class="col-md-3">
+                                            <div class="card bg-primary text-white">
+                                                <div class="card-body text-center">
+                                                    <h3>{{ system_stats.total_cases }}</h3>
+                                                    <p class="mb-0">Total Cases</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="card bg-success text-white">
+                                                <div class="card-body text-center">
+                                                    <h3>{{ system_stats.total_pgs }}</h3>
+                                                    <p class="mb-0">Total PGs</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="card bg-info text-white">
+                                                <div class="card-body text-center">
+                                                    <h3>{{ system_stats.total_supervisors }}</h3>
+                                                    <p class="mb-0">Total Supervisors</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="card bg-warning text-white">
+                                                <div class="card-body text-center">
+                                                    <h3>{{ system_stats.pending_reviews }}</h3>
+                                                    <p class="mb-0">Pending Reviews</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .card {
+        border: none;
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        margin-bottom: 1.5rem;
+    }
+    
+    .card-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-bottom: none;
+    }
+    
+    .progress {
+        height: 1.5rem;
+        background-color: #e9ecef;
+    }
+    
+    .progress-bar {
+        transition: width 0.6s ease;
+    }
+    
+    .list-group-item {
+        border-left: none;
+        border-right: none;
+        border-top: none;
+        padding: 0.75rem 0;
+    }
+    
+    .list-group-item:last-child {
+        border-bottom: none;
+    }
+    
+    .list-group-item:first-child {
+        padding-top: 0;
+    }
+    
+    .badge {
+        font-size: 0.75em;
+    }
+    
+    .bg-draft { background-color: #6c757d !important; }
+    .bg-submitted { background-color: #fd7e14 !important; }
+    .bg-approved { background-color: #198754 !important; }
+    .bg-needs_revision { background-color: #dc3545 !important; }
+    .bg-archived { background-color: #6f42c1 !important; }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Set progress bar widths from data attributes
+    const progressBars = document.querySelectorAll('.progress-bar[data-width]');
+    progressBars.forEach(function(bar) {
+        const width = bar.getAttribute('data-width');
+        bar.style.width = width + '%';
+    });
+});
+</script>
+{% endblock %}

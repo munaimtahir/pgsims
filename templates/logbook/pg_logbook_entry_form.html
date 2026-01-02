@@ -1,0 +1,76 @@
+{% extends "base/base.html" %}
+{% load crispy_forms_tags %}
+
+{% block title %}
+    {{ page_title|default:"Create Logbook Entry" }} - {{ block.super }}
+{% endblock title %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-10 offset-md-1 col-lg-8 offset-lg-2">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">{{ page_title|default:"Create New Logbook Entry" }}</h4>
+                </div>
+                <div class="card-body">
+                    {% if form.errors %}
+                        <div class="alert alert-danger">
+                            <strong>Please correct the errors below:</strong>
+                            {{ form.non_field_errors }}
+                            {% for field in form %}
+                                {% if field.errors %}
+                                    <div>{{ field.label }}: {{ field.errors|striptags }}</div>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+
+                        {{ form|crispy }}
+
+                        <div class="mt-4">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>Save Entry
+                            </button>
+                            <a href="{% url 'logbook:list' %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times me-2"></i>Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="mt-3 text-muted small">
+                <p><strong>Instructions:</strong></p>
+                <ul>
+                    <li>Fill in all required fields accurately.</li>
+                    <li>If your supervisor is assigned, this entry will be submitted for their review upon saving.</li>
+                    <li>If no supervisor is assigned to you yet, the entry will be saved as a draft.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}
+
+{% block extra_js %}
+{{ block.super }}
+{# Add any specific JS for this form if needed #}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Example: Auto-focus on the first form field
+    // var firstInput = document.querySelector('form input:not([type=hidden]), form textarea, form select');
+    // if (firstInput) {
+    //     firstInput.focus();
+    // }
+
+    // Ensure date picker max date is set if not handled by widget
+    const dateInput = document.querySelector('input[type="date"][name="date"]');
+    if (dateInput && !dateInput.max) {
+        dateInput.max = new Date().toISOString().split("T")[0];
+    }
+});
+</script>
+{% endblock extra_js %}

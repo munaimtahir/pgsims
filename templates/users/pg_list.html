@@ -1,0 +1,456 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}PG List{% endblock %}
+
+{% block page_header %}
+<div class="d-flex justify-content-between align-items-center">
+    <h1 class="h3 mb-0">
+        <i class="fas fa-user-graduate me-2"></i>
+        {% if user.role == 'supervisor' %}
+            Your Assigned PGs
+        {% else %}
+            All Postgraduates
+        {% endif %}
+    </h1>
+    <div>
+        {% if user.role == 'admin' %}
+        <a href="{% url 'users:user_create' %}" class="btn btn-primary">
+            <i class="fas fa-plus me-2"></i>Add PG
+        </a>
+        <a href="{% url 'users:pg_bulk_upload' %}" class="btn btn-outline-secondary ms-2">
+            <i class="fas fa-upload me-2"></i>Bulk Upload
+        </a>
+        {% endif %}
+        <a href="{% url 'users:user_reports' %}" class="btn btn-outline-info ms-2">
+            <i class="fas fa-chart-bar me-2"></i>Reports
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<!-- Statistics Cards -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <i class="fas fa-users fa-3x text-primary mb-3"></i>
+                <h3 class="mb-1">{{ total_pgs|default:0 }}</h3>
+                <p class="text-muted mb-0">Total PGs</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <i class="fas fa-user-check fa-3x text-success mb-3"></i>
+                <h3 class="mb-1">{{ page_obj.paginator.count|default:0 }}</h3>
+                <p class="text-muted mb-0">
+                    {% if user.role == 'supervisor' %}
+                        Assigned to You
+                    {% else %}
+                        Active PGs
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <i class="fas fa-graduation-cap fa-3x text-info mb-3"></i>
+                <h3 class="mb-1" id="specialtyCount">0</h3>
+                <p class="text-muted mb-0">Specialties</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <i class="fas fa-calendar fa-3x text-warning mb-3"></i>
+                <h3 class="mb-1" id="newThisMonth">0</h3>
+                <p class="text-muted mb-0">New This Month</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Search and Filter Section -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0">
+            <i class="fas fa-search me-2"></i>Search & Filter
+            <button class="btn btn-sm btn-outline-primary ms-2" type="button" data-bs-toggle="collapse" data-bs-target="#searchForm">
+                <i class="fas fa-filter"></i>
+            </button>
+        </h5>
+    </div>
+    <div class="collapse show" id="searchForm">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-4">
+                    <label for="search" class="form-label">Search</label>
+                    <input type="text" class="form-control" id="search" name="search" 
+                           value="{{ request.GET.search }}" placeholder="Name or username...">
+                </div>
+                <div class="col-md-3">
+                    <label for="specialty" class="form-label">Specialty</label>
+                    <select class="form-select" id="specialty" name="specialty">
+                        <option value="">All Specialties</option>
+                        <option value="internal_medicine" {% if request.GET.specialty == 'internal_medicine' %}selected{% endif %}>Internal Medicine</option>
+                        <option value="surgery" {% if request.GET.specialty == 'surgery' %}selected{% endif %}>Surgery</option>
+                        <option value="pediatrics" {% if request.GET.specialty == 'pediatrics' %}selected{% endif %}>Pediatrics</option>
+                        <option value="obstetrics_gynecology" {% if request.GET.specialty == 'obstetrics_gynecology' %}selected{% endif %}>Obstetrics & Gynecology</option>
+                        <option value="psychiatry" {% if request.GET.specialty == 'psychiatry' %}selected{% endif %}>Psychiatry</option>
+                        <option value="radiology" {% if request.GET.specialty == 'radiology' %}selected{% endif %}>Radiology</option>
+                        <option value="anesthesiology" {% if request.GET.specialty == 'anesthesiology' %}selected{% endif %}>Anesthesiology</option>
+                        <option value="emergency_medicine" {% if request.GET.specialty == 'emergency_medicine' %}selected{% endif %}>Emergency Medicine</option>
+                        <option value="family_medicine" {% if request.GET.specialty == 'family_medicine' %}selected{% endif %}>Family Medicine</option>
+                        <option value="pathology" {% if request.GET.specialty == 'pathology' %}selected{% endif %}>Pathology</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label for="year" class="form-label">Year</label>
+                    <select class="form-select" id="year" name="year">
+                        <option value="">All Years</option>
+                        <option value="1" {% if request.GET.year == '1' %}selected{% endif %}>Year 1</option>
+                        <option value="2" {% if request.GET.year == '2' %}selected{% endif %}>Year 2</option>
+                        <option value="3" {% if request.GET.year == '3' %}selected{% endif %}>Year 3</option>
+                        <option value="4" {% if request.GET.year == '4' %}selected{% endif %}>Year 4</option>
+                        <option value="5" {% if request.GET.year == '5' %}selected{% endif %}>Year 5</option>
+                    </select>
+                </div>
+                {% if user.role == 'admin' %}
+                <div class="col-md-3">
+                    <label for="supervisor" class="form-label">Supervisor</label>
+                    <select class="form-select" id="supervisor" name="supervisor">
+                        <option value="">All Supervisors</option>
+                        <option value="unassigned" {% if request.GET.supervisor == 'unassigned' %}selected{% endif %}>Unassigned</option>
+                        <!-- Supervisor options would be populated from backend -->
+                    </select>
+                </div>
+                {% endif %}
+                <div class="col-12">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-search me-2"></i>Search
+                    </button>
+                    <a href="{% url 'users:pg_list' %}" class="btn btn-outline-secondary ms-2">
+                        <i class="fas fa-undo me-2"></i>Clear
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- PG List -->
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Postgraduates</h5>
+        <div class="pagination-info">
+            {% if page_obj %}
+                Showing {{ page_obj.start_index }} to {{ page_obj.end_index }} of {{ page_obj.paginator.count }} PGs
+            {% else %}
+                {{ total_pgs }} PGs total
+            {% endif %}
+        </div>
+    </div>
+    <div class="card-body">
+        {% if page_obj %}
+            <div class="row">
+                {% for pg in page_obj %}
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="card pg-card h-100 border-start border-primary border-3">
+                        <div class="card-header d-flex justify-content-between align-items-start">
+                            <div class="d-flex align-items-center">
+                                <div class="avatar bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 45px; height: 45px;">
+                                    {{ pg.first_name.0 }}{{ pg.last_name.0 }}
+                                </div>
+                                <div>
+                                    <h6 class="mb-0">{{ pg.get_full_name }}</h6>
+                                    <small class="text-muted">{{ pg.username }}</small>
+                                </div>
+                            </div>
+                            <span class="badge bg-primary">Year {{ pg.year|default:"N/A" }}</span>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-2">
+                                <strong>Specialty:</strong> 
+                                <span class="text-muted">{{ pg.get_specialty_display|default:"Not specified" }}</span>
+                            </div>
+                            {% if pg.supervisor %}
+                            <div class="mb-2">
+                                <strong>Supervisor:</strong> 
+                                <a href="{% url 'users:profile_detail' pg.supervisor.pk %}" class="text-decoration-none">
+                                    {{ pg.supervisor.get_full_name }}
+                                </a>
+                            </div>
+                            {% else %}
+                            <div class="mb-2">
+                                <strong>Supervisor:</strong> 
+                                <span class="text-warning">Unassigned</span>
+                                {% if user.role == 'admin' %}
+                                <a href="{% url 'users:assign_supervisor' %}?pg={{ pg.pk }}" class="btn btn-sm btn-outline-warning ms-1">
+                                    <i class="fas fa-plus"></i>
+                                </a>
+                                {% endif %}
+                            </div>
+                            {% endif %}
+                            
+                            <div class="mb-2">
+                                <strong>Email:</strong> 
+                                <a href="mailto:{{ pg.email }}" class="text-decoration-none">{{ pg.email }}</a>
+                            </div>
+                            
+                            {% if pg.phone %}
+                            <div class="mb-2">
+                                <strong>Phone:</strong> {{ pg.phone }}
+                            </div>
+                            {% endif %}
+                            
+                            <div class="mb-2">
+                                <strong>Joined:</strong> {{ pg.date_joined|date:"M d, Y" }}
+                            </div>
+                            
+                            <div class="mb-3">
+                                <strong>Status:</strong>
+                                {% if pg.is_active %}
+                                    <span class="badge bg-success">Active</span>
+                                {% else %}
+                                    <span class="badge bg-danger">Inactive</span>
+                                {% endif %}
+                            </div>
+                            
+                            <!-- Progress Indicators -->
+                            <div class="progress-section">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <small class="text-muted">Training Progress</small>
+                                    <small class="text-muted" id="progress-{{ pg.pk }}">Loading...</small>
+                                </div>
+                                <div class="progress" style="height: 8px;">
+                                    <div class="progress-bar bg-primary" role="progressbar" 
+                                         style="width: 0%" id="progressBar-{{ pg.pk }}"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-footer">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <small class="text-muted">
+                                    Last login: {{ pg.last_login|timesince|default:"Never" }} ago
+                                </small>
+                                <div class="btn-group" role="group">
+                                    <a href="{% url 'users:profile_detail' pg.pk %}" class="btn btn-sm btn-outline-primary" title="View Profile">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="{% url 'users:pg_progress' pg.pk %}" class="btn btn-sm btn-outline-info" title="View Progress">
+                                        <i class="fas fa-chart-line"></i>
+                                    </a>
+                                    {% if user.role == 'admin' %}
+                                    <a href="{% url 'users:user_edit' pg.pk %}" class="btn btn-sm btn-outline-secondary" title="Edit">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    {% endif %}
+                                    <a href="{% url 'logbook:list' %}?pg={{ pg.pk }}" class="btn btn-sm btn-outline-success" title="View Logbook">
+                                        <i class="fas fa-book"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            
+            <!-- Pagination -->
+            {% if page_obj.has_other_pages %}
+            <nav aria-label="PG pagination">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page=1{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.specialty %}&specialty={{ request.GET.specialty }}{% endif %}{% if request.GET.year %}&year={{ request.GET.year }}{% endif %}">First</a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.specialty %}&specialty={{ request.GET.specialty }}{% endif %}{% if request.GET.year %}&year={{ request.GET.year }}{% endif %}">Previous</a>
+                        </li>
+                    {% endif %}
+                    
+                    <li class="page-item active">
+                        <span class="page-link">{{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+                    </li>
+                    
+                    {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.specialty %}&specialty={{ request.GET.specialty }}{% endif %}{% if request.GET.year %}&year={{ request.GET.year }}{% endif %}">Next</a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.specialty %}&specialty={{ request.GET.specialty }}{% endif %}{% if request.GET.year %}&year={{ request.GET.year }}{% endif %}">Last</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+        {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-user-graduate fa-4x text-muted mb-3"></i>
+                <h4 class="text-muted">No PGs Found</h4>
+                <p class="text-muted">
+                    {% if request.GET.search %}
+                        No PGs match your search criteria. Try different keywords or clear the filters.
+                    {% elif user.role == 'supervisor' %}
+                        You don't have any PGs assigned to you yet. Contact an administrator.
+                    {% else %}
+                        No PGs have been added to the system yet.
+                    {% endif %}
+                </p>
+                {% if user.role == 'admin' %}
+                <a href="{% url 'users:user_create' %}" class="btn btn-primary">
+                    <i class="fas fa-plus me-2"></i>Add First PG
+                </a>
+                {% endif %}
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Django data for JavaScript -->
+{{ block.super }}
+<script id="django-data" type="application/json">
+{
+    "pg_ids": [{% if page_obj %}{% for pg in page_obj %}{{ pg.pk }}{% if not forloop.last %},{% endif %}{% endfor %}{% endif %}],
+    "urls": {
+        "user_list_stats_api": "{% url 'users:user_list_stats_api' %}",
+        "user_stats_api": "{% url 'users:user_stats_api' 0 %}"
+    }
+}
+</script>
+
+<script>
+$(document).ready(function() {
+    // Get Django data
+    const djangoData = JSON.parse(document.getElementById('django-data').textContent);
+    
+    // Load statistics
+    loadStatistics();
+    
+    // Load progress for each PG
+    djangoData.pg_ids.forEach(function(pgId) {
+        loadPGProgress(pgId);
+    });
+    
+    // Initialize tooltips
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+});
+
+function loadStatistics() {
+    // Load general statistics
+    const djangoData = JSON.parse(document.getElementById('django-data').textContent);
+    $.get(djangoData.urls.user_list_stats_api)
+        .done(function(data) {
+            $('#specialtyCount').text(data.specialty_count || 0);
+            $('#newThisMonth').text(data.new_this_month || 0);
+        })
+        .fail(function() {
+            console.error('Failed to load statistics');
+        });
+}
+
+function loadPGProgress(pgId) {
+    // Load individual PG progress
+    const djangoData = JSON.parse(document.getElementById('django-data').textContent);
+    const url = djangoData.urls.user_stats_api.replace('0', pgId);
+    $.get(url)
+        .done(function(data) {
+            const progressPercent = data.overall_progress || 0;
+            $(`#progress-${pgId}`).text(`${progressPercent}%`);
+            $(`#progressBar-${pgId}`).css('width', `${progressPercent}%`);
+            
+            // Update progress bar color based on progress
+            const progressBar = $(`#progressBar-${pgId}`);
+            progressBar.removeClass('bg-primary bg-warning bg-danger bg-success');
+            
+            if (progressPercent >= 80) {
+                progressBar.addClass('bg-success');
+            } else if (progressPercent >= 60) {
+                progressBar.addClass('bg-primary');
+            } else if (progressPercent >= 40) {
+                progressBar.addClass('bg-warning');
+            } else {
+                progressBar.addClass('bg-danger');
+            }
+        })
+        .fail(function() {
+            $(`#progress-${pgId}`).text('N/A');
+        });
+}
+
+// Filter form enhancements
+$('#specialty, #year, #supervisor').change(function() {
+    // Auto-submit form when filters change (optional)
+    // $(this).closest('form').submit();
+});
+
+// Search with Enter key
+$('#search').keypress(function(e) {
+    if (e.which == 13) {
+        $(this).closest('form').submit();
+        return false;
+    }
+});
+</script>
+
+<style>
+.pg-card {
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.pg-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.avatar {
+    font-weight: bold;
+    font-size: 1.1rem;
+}
+
+.progress-section {
+    margin-top: 1rem;
+}
+
+.pagination-info {
+    font-size: 0.875rem;
+    color: #6c757d;
+}
+
+.btn-group .btn {
+    border-radius: 0.25rem !important;
+    margin-left: 2px;
+}
+
+.btn-group .btn:first-child {
+    margin-left: 0;
+}
+
+.card-header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.badge {
+    font-size: 0.75rem;
+}
+
+.text-decoration-none:hover {
+    text-decoration: underline !important;
+}
+</style>
+{% endblock %}

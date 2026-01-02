@@ -1,0 +1,373 @@
+{% extends 'base/base.html' %}
+{% load humanize %}
+
+{% block title %}Supervisor Dashboard - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="h3 mb-3">
+                <i class="fas fa-user-tie me-2 text-primary"></i>
+                Supervisor Dashboard
+            </h1>
+            <p class="text-muted">Welcome back, Dr. {{ user.get_full_name }}!</p>
+        </div>
+    </div>
+
+    <!-- Key Metrics Cards -->
+    <div class="row mb-4">
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card h-100 border-start border-primary border-4">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="card-title text-primary mb-1">{{ assigned_pgs_count|intcomma }}</h5>
+                            <p class="card-text text-muted mb-0">Assigned PGs</p>
+                        </div>
+                        <div class="text-primary">
+                            <i class="fas fa-user-graduate fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card h-100 border-start border-warning border-4">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="card-title text-warning mb-1" id="pendingReviews">{{ pending_documents|intcomma }}</h5>
+                            <p class="card-text text-muted mb-0">Pending Reviews</p>
+                        </div>
+                        <div class="text-warning">
+                            <i class="fas fa-clock fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card h-100 border-start border-success border-4">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="card-title text-success mb-1" id="completedReviews">Loading...</h5>
+                            <p class="card-text text-muted mb-0">Completed Reviews</p>
+                        </div>
+                        <div class="text-success">
+                            <i class="fas fa-check-circle fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card h-100 border-start border-info border-4">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="card-title text-info mb-1" id="activePGs">Loading...</h5>
+                            <p class="card-text text-muted mb-0">Active This Month</p>
+                        </div>
+                        <div class="text-info">
+                            <i class="fas fa-chart-line fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Action Buttons -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-light">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-bolt me-2"></i>
+                        Quick Actions
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3 mb-2">
+                            <a href="{% url 'users:pg_list' %}" class="btn btn-primary w-100">
+                                <i class="fas fa-users me-2"></i>My PGs
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <button class="btn btn-secondary w-100" disabled title="Logbook functionality coming soon">
+                                <i class="fas fa-clipboard-check me-2"></i>Review Logbooks
+                            </button>
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <a href="{% url 'users:supervisor_analytics' %}" class="btn btn-success w-100">
+                                <i class="fas fa-chart-line me-2"></i>My Analytics
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <a href="{% url 'cases:case_list' %}" class="btn btn-info w-100">
+                                <i class="fas fa-stethoscope me-2"></i>Clinical Cases
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <a href="{% url 'certificates:dashboard' %}" class="btn btn-warning w-100">
+                                <i class="fas fa-certificate me-2"></i>Certificates
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content Row -->
+    <div class="row">
+        <!-- Assigned PGs Overview -->
+        <div class="col-lg-8 mb-4">
+            <div class="card">
+                <div class="card-header bg-light">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-users me-2"></i>
+                        My Assigned PGs
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if assigned_pgs %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Specialty</th>
+                                        <th>Year</th>
+                                        <th>Progress</th>
+                                        <th>Last Activity</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for pg in assigned_pgs %}
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="avatar bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 35px; height: 35px;">
+                                                    {{ pg.first_name.0 }}{{ pg.last_name.0 }}
+                                                </div>
+                                                <div>
+                                                    <strong>{{ pg.get_full_name }}</strong>
+                                                    <br>
+                                                    <small class="text-muted">{{ pg.username }}</small>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>{{ pg.specialty|default:"Not specified" }}</td>
+                                        <td>{{ pg.year|default:"N/A" }}</td>
+                                        <td>
+                                            <div class="progress" style="height: 20px;">
+                                                <div class="progress-bar bg-success" role="progressbar" 
+                                                     style="width: 75%" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100">
+                                                    75%
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>{{ pg.last_login|timesince|default:"Never" }} ago</td>
+                                        <td>
+                                            <div class="btn-group" role="group">
+                                                <a href="{% url 'users:pg_progress' pg.pk %}" class="btn btn-sm btn-outline-primary">
+                                                    <i class="fas fa-chart-line"></i>
+                                                </a>
+                                                <a href="{% url 'users:profile_detail' pg.pk %}" class="btn btn-sm btn-outline-info">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        {% if assigned_pgs_count > 5 %}
+                        <div class="text-center mt-3">
+                            <a href="{% url 'users:pg_list' %}" class="btn btn-outline-primary">
+                                View All {{ assigned_pgs_count }} PGs
+                            </a>
+                        </div>
+                        {% endif %}
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-user-graduate fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">No PGs Assigned</h5>
+                            <p class="text-muted">You don't have any PGs assigned to you yet.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Pending Reviews and Recent Activity -->
+        <div class="col-lg-4">
+            <!-- Pending Reviews -->
+            <div class="card mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-clock me-2"></i>
+                        Pending Reviews
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div id="pendingReviewsList">
+                        <div class="text-center py-3">
+                            <div class="spinner-border spinner-border-sm text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Activity -->
+            <div class="card">
+                <div class="card-header bg-light">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-history me-2"></i>
+                        Recent Activity
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if recent_submissions %}
+                        <div class="timeline">
+                            {% for submission in recent_submissions %}
+                            <div class="timeline-item">
+                                <div class="timeline-marker bg-primary"></div>
+                                <div class="timeline-content">
+                                    <h6 class="mb-1">{{ submission.title }}</h6>
+                                    <small class="text-muted">{{ submission.created_at|timesince }} ago</small>
+                                    <p class="mb-0 small">{{ submission.description|truncatechars:100 }}</p>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-3">
+                            <i class="fas fa-history fa-2x text-muted mb-2"></i>
+                            <p class="text-muted mb-0">No recent activity</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.timeline {
+    position: relative;
+    padding-left: 30px;
+}
+
+.timeline-item {
+    position: relative;
+    margin-bottom: 20px;
+}
+
+.timeline-item:not(:last-child)::before {
+    content: '';
+    position: absolute;
+    left: -25px;
+    top: 20px;
+    height: calc(100% + 20px);
+    width: 2px;
+    background-color: #dee2e6;
+}
+
+.timeline-marker {
+    position: absolute;
+    left: -30px;
+    top: 5px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    border: 2px solid #fff;
+    box-shadow: 0 0 0 2px #007bff;
+}
+
+.avatar {
+    font-size: 12px;
+    font-weight: bold;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Load dashboard statistics
+    loadDashboardStats();
+    
+    // Load pending reviews
+    loadPendingReviews();
+    
+    // Auto-refresh every 5 minutes
+    setInterval(function() {
+        loadDashboardStats();
+        loadPendingReviews();
+    }, 300000);
+});
+
+function loadDashboardStats() {
+    $.ajax({
+        url: '{% url "users:user_stats_api" user.pk %}',
+        method: 'GET',
+        success: function(data) {
+            $('#completedReviews').text(data.completed_reviews || 0);
+            $('#activePGs').text(data.active_pgs || 0);
+        },
+        error: function() {
+            console.error('Failed to load dashboard statistics');
+            // Show fallback data
+            $('#completedReviews').text('--');
+            $('#activePGs').text('--');
+        }
+    });
+}
+
+function loadPendingReviews() {
+    // TODO: Replace with actual pending reviews API when logbook app is implemented
+    $.ajax({
+        url: '{% url "users:user_list_stats_api" %}',
+        method: 'GET',
+        success: function(data) {
+            const container = $('#pendingReviewsList');
+            container.empty();
+            
+            // Show placeholder message for now
+            container.html(`
+                <div class="text-center text-muted p-3">
+                    <i class="fas fa-clock fa-2x mb-2"></i>
+                    <p>Pending reviews will appear here when logbook functionality is implemented.</p>
+                </div>
+            `);
+        },
+        error: function() {
+            console.error('Failed to load pending reviews');
+            const container = $('#pendingReviewsList');
+            container.html(`
+                <div class="text-center text-muted p-3">
+                    <i class="fas fa-exclamation-triangle fa-2x mb-2"></i>
+                    <p>Unable to load pending reviews at this time.</p>
+                </div>
+            `);
+        }
+    });
+}
+</script>
+{% endblock %}

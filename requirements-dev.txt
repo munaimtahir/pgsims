@@ -1,0 +1,6 @@
+pytest>=8.3
+pytest-django>=4.9
+coverage>=7.6
+factory-boy>=3.3
+black>=25.9
+flake8>=7.3

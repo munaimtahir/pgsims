@@ -1,0 +1,469 @@
+{% extends 'base/base.html' %}
+{% load humanize %}
+
+{% block title %}Logbook Analytics - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="h3 mb-3">
+                <i class="fas fa-chart-line me-2 text-primary"></i>
+                Logbook Analytics
+            </h1>
+            <p class="text-muted">Comprehensive analytics for logbook entries and performance metrics</p>
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="row mb-4">
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card h-100 border-start border-primary border-4">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="card-title text-primary mb-1">{{ monthly_trends.total_entries|intcomma }}</h5>
+                            <p class="card-text text-muted mb-0">Total Entries</p>
+                        </div>
+                        <div class="text-primary">
+                            <i class="fas fa-book fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card h-100 border-start border-success border-4">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="card-title text-success mb-1">{{ pg_performance|length|intcomma }}</h5>
+                            <p class="card-text text-muted mb-0">Active PGs</p>
+                        </div>
+                        <div class="text-success">
+                            <i class="fas fa-user-graduate fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card h-100 border-start border-info border-4">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="card-title text-info mb-1">{{ procedure_analytics|length|intcomma }}</h5>
+                            <p class="card-text text-muted mb-0">Unique Procedures</p>
+                        </div>
+                        <div class="text-info">
+                            <i class="fas fa-procedures fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card h-100 border-start border-warning border-4">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="card-title text-warning mb-1">{{ quality_metrics.average_score|floatformat:1|default:"N/A" }}</h5>
+                            <p class="card-text text-muted mb-0">Average Score</p>
+                        </div>
+                        <div class="text-warning">
+                            <i class="fas fa-star fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="row mb-4">
+        <!-- Monthly Trends -->
+        <div class="col-lg-8 mb-4">
+            <div class="card">
+                <div class="card-header bg-light">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-chart-line me-2"></i>
+                        Entry Trends (Last 12 Months)
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="trendsChart" height="300"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Weekly Activity Pattern -->
+        <div class="col-lg-4 mb-4">
+            <div class="card">
+                <div class="card-header bg-light">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-calendar-week me-2"></i>
+                        Weekly Activity
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="weeklyChart" height="300"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Performance Analytics -->
+    {% if user.role == 'admin' or user.role == 'supervisor' %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-light">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-trophy me-2"></i>
+                        PG Performance Analytics
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover" id="performanceTable">
+                            <thead>
+                                <tr>
+                                    <th>PG Name</th>
+                                    <th>Total Entries</th>
+                                    <th>Completion Rate</th>
+                                    <th>Avg. Score</th>
+                                    <th>CME Points</th>
+                                    <th>Last Entry</th>
+                                    <th>Progress</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for pg in pg_performance %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="avatar bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 35px; height: 35px;">
+                                                {{ pg.pg.first_name.0 }}{{ pg.pg.last_name.0 }}
+                                            </div>
+                                            <div>
+                                                <strong>{{ pg.pg.get_full_name }}</strong>
+                                                <br>
+                                                <small class="text-muted">{{ pg.pg.specialty|default:"Not specified" }}</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>{{ pg.total_entries }}</td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="progress me-2" style="width: 60px; height: 8px;">
+                                                <div class="progress-bar 
+                                                    {% if pg.completion_rate >= 80 %}bg-success
+                                                    {% elif pg.completion_rate >= 60 %}bg-warning
+                                                    {% else %}bg-danger{% endif %}" 
+                                                    role="progressbar" style="width: {{ pg.completion_rate }}%"></div>
+                                            </div>
+                                            <span class="small">{{ pg.completion_rate|floatformat:1 }}%</span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        {% if pg.average_score %}
+                                            <span class="badge {% if pg.average_score >= 8 %}bg-success{% elif pg.average_score >= 6 %}bg-warning{% else %}bg-danger{% endif %}">
+                                                {{ pg.average_score|floatformat:1 }}
+                                            </span>
+                                        {% else %}
+                                            <span class="text-muted">N/A</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ pg.cme_points|default:0 }}</td>
+                                    <td>
+                                        {% if pg.last_entry %}
+                                            {{ pg.last_entry.date|timesince }} ago
+                                        {% else %}
+                                            <span class="text-muted">No entries</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <a href="{% url 'users:pg_progress' pg.pg.pk %}" class="btn btn-sm btn-outline-primary">
+                                                <i class="fas fa-chart-line"></i>
+                                            </a>
+                                            <a href="{% url 'logbook:list' %}?pg={{ pg.pg.pk }}" class="btn btn-sm btn-outline-info">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Procedure and Diagnosis Analytics -->
+    <div class="row mb-4">
+        <!-- Top Procedures -->
+        <div class="col-lg-6 mb-4">
+            <div class="card">
+                <div class="card-header bg-light">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-procedures me-2"></i>
+                        Top Procedures
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="proceduresChart" height="300"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Top Diagnoses -->
+        <div class="col-lg-6 mb-4">
+            <div class="card">
+                <div class="card-header bg-light">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-diagnoses me-2"></i>
+                        Top Diagnoses
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="diagnosesChart" height="300"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quality Metrics -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-light">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-medal me-2"></i>
+                        Quality Metrics
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3 text-center">
+                            <div class="p-3">
+                                <h4 class="text-success">{{ quality_metrics.completion_rate|floatformat:1|default:"0" }}%</h4>
+                                <p class="text-muted mb-0">Completion Rate</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3 text-center">
+                            <div class="p-3">
+                                <h4 class="text-info">{{ quality_metrics.on_time_rate|floatformat:1|default:"0" }}%</h4>
+                                <p class="text-muted mb-0">On-Time Submissions</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3 text-center">
+                            <div class="p-3">
+                                <h4 class="text-warning">{{ quality_metrics.revision_rate|floatformat:1|default:"0" }}%</h4>
+                                <p class="text-muted mb-0">Revision Rate</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3 text-center">
+                            <div class="p-3">
+                                <h4 class="text-primary">{{ quality_metrics.average_review_time|default:"0" }}</h4>
+                                <p class="text-muted mb-0">Avg. Review Time (days)</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    initializeCharts();
+});
+
+function initializeCharts() {
+    // Monthly Trends Chart
+    const trendsCtx = document.getElementById('trendsChart').getContext('2d');
+    new Chart(trendsCtx, {
+        type: 'line',
+        data: {
+            labels: [
+                {% for month in monthly_trends.labels %}
+                '{{ month }}'{% if not forloop.last %},{% endif %}
+                {% endfor %}
+            ],
+            datasets: [{
+                label: 'Entries',
+                data: [
+                    {% for count in monthly_trends.data %}
+                    {{ count }}{% if not forloop.last %},{% endif %}
+                    {% endfor %}
+                ],
+                borderColor: '#007bff',
+                backgroundColor: 'rgba(0, 123, 255, 0.1)',
+                borderWidth: 2,
+                fill: true,
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: 'rgba(0,0,0,0.1)'
+                    }
+                },
+                x: {
+                    grid: {
+                        display: false
+                    }
+                }
+            }
+        }
+    });
+
+    // Weekly Activity Chart
+    const weeklyCtx = document.getElementById('weeklyChart').getContext('2d');
+    new Chart(weeklyCtx, {
+        type: 'radar',
+        data: {
+            labels: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
+            datasets: [{
+                label: 'Activity',
+                data: [
+                    {% for day in weekly_activity %}
+                    {{ day.count }}{% if not forloop.last %},{% endif %}
+                    {% endfor %}
+                ],
+                borderColor: '#28a745',
+                backgroundColor: 'rgba(40, 167, 69, 0.2)',
+                pointBackgroundColor: '#28a745',
+                pointBorderColor: '#fff',
+                pointHoverBackgroundColor: '#fff',
+                pointHoverBorderColor: '#28a745'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                r: {
+                    beginAtZero: true,
+                    grid: {
+                        color: 'rgba(0,0,0,0.1)'
+                    }
+                }
+            }
+        }
+    });
+
+    // Procedures Chart
+    const proceduresCtx = document.getElementById('proceduresChart').getContext('2d');
+    new Chart(proceduresCtx, {
+        type: 'bar',
+        data: {
+            labels: [
+                {% for proc in procedure_analytics|slice:":10" %}
+                '{{ proc.procedures__name|truncatechars:20 }}'{% if not forloop.last %},{% endif %}
+                {% endfor %}
+            ],
+            datasets: [{
+                label: 'Usage Count',
+                data: [
+                    {% for proc in procedure_analytics|slice:":10" %}
+                    {{ proc.usage_count }}{% if not forloop.last %},{% endif %}
+                    {% endfor %}
+                ],
+                backgroundColor: 'rgba(255, 193, 7, 0.8)',
+                borderColor: '#ffc107',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true
+                },
+                x: {
+                    ticks: {
+                        maxRotation: 45
+                    }
+                }
+            }
+        }
+    });
+
+    // Diagnoses Chart
+    const diagnosesCtx = document.getElementById('diagnosesChart').getContext('2d');
+    new Chart(diagnosesCtx, {
+        type: 'bar',
+        data: {
+            labels: [
+                {% for diag in diagnosis_analytics|slice:":10" %}
+                '{{ diag.primary_diagnosis__name|truncatechars:20 }}'{% if not forloop.last %},{% endif %}
+                {% endfor %}
+            ],
+            datasets: [{
+                label: 'Usage Count',
+                data: [
+                    {% for diag in diagnosis_analytics|slice:":10" %}
+                    {{ diag.usage_count }}{% if not forloop.last %},{% endif %}
+                    {% endfor %}
+                ],
+                backgroundColor: 'rgba(23, 162, 184, 0.8)',
+                borderColor: '#17a2b8',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true
+                },
+                x: {
+                    ticks: {
+                        maxRotation: 45
+                    }
+                }
+            }
+        }
+    });
+}
+</script>
+{% endblock %}

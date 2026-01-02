@@ -1,0 +1,309 @@
+{% extends "base/base.html" %}
+{% load crispy_forms_tags %}
+
+{% block title %}
+    {% if form.instance.pk %}Edit{% else %}Create{% endif %} Logbook Entry - SIMS
+{% endblock title %}
+
+{% block breadcrumb %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'users:dashboard' %}">Dashboard</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'logbook:list' %}">Logbook</a></li>
+        {% if form.instance.pk %}
+        <li class="breadcrumb-item"><a href="{% url 'logbook:detail' form.instance.pk %}">{{ form.instance.case_title|truncatechars:30 }}</a></li>
+        <li class="breadcrumb-item active">Edit</li>
+        {% else %}
+        <li class="breadcrumb-item active">New Entry</li>
+        {% endif %}
+    </ol>
+</nav>
+{% endblock %}
+
+{% block page_header %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2>
+            <i class="fas fa-{% if form.instance.pk %}edit{% else %}plus{% endif %} me-2"></i>
+            {% if form.instance.pk %}Edit Logbook Entry{% else %}Create New Logbook Entry{% endif %}
+        </h2>
+        <p class="text-muted">
+            {% if form.instance.pk %}
+                Update the details of this logbook entry
+            {% else %}
+                Document a new clinical case for your learning portfolio
+            {% endif %}
+        </p>
+    </div>
+    <div>
+        {% if form.instance.pk %}
+        <a href="{% url 'logbook:detail' form.instance.pk %}" class="btn btn-outline-secondary">
+            <i class="fas fa-eye me-2"></i>View Entry
+        </a>
+        {% endif %}
+        <a href="{% url 'logbook:list' %}" class="btn btn-outline-primary">
+            <i class="fas fa-list me-2"></i>Back to List
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8">
+        <!-- Main Form -->
+        <form method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
+            {% csrf_token %}
+            
+            <!-- Basic Information -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Case Information</h5>
+                </div>
+                <div class="card-body">
+                    {{ form.case_title|as_crispy_field }}
+                    <div class="row">
+                        <div class="col-md-6">
+                            {{ form.date|as_crispy_field }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.location_of_activity|as_crispy_field }}
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            {{ form.specialty|as_crispy_field }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.clinical_setting|as_crispy_field }}
+                        </div>
+                    </div>
+                    {{ form.topic_subtopic|as_crispy_field }}
+                </div>
+            </div>
+
+            <!-- Patient Information -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-user-injured me-2"></i>Patient Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            {{ form.patient_age|as_crispy_field }}
+                        </div>
+                        <div class="col-md-4">
+                            {{ form.patient_gender|as_crispy_field }}
+                        </div>
+                        <div class="col-md-4">
+                            {{ form.competency_level|as_crispy_field }}
+                        </div>
+                    </div>
+                    {{ form.patient_chief_complaint|as_crispy_field }}
+                    {{ form.patient_history_summary|as_crispy_field }}
+                </div>
+            </div>
+
+            <!-- Clinical Details -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-stethoscope me-2"></i>Clinical Details</h5>
+                </div>
+                <div class="card-body">
+                    {{ form.primary_diagnosis|as_crispy_field }}
+                    {{ form.secondary_diagnosis|as_crispy_field }}
+                    {{ form.procedure_performed|as_crispy_field }}
+                    {{ form.investigations_ordered|as_crispy_field }}
+                    {{ form.management_action|as_crispy_field }}
+                    {{ form.management_plan|as_crispy_field }}
+                </div>
+            </div>
+
+            <!-- Learning and Reflection -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-brain me-2"></i>Learning & Reflection</h5>
+                </div>
+                <div class="card-body">
+                    {{ form.learning_points|as_crispy_field }}
+                    {{ form.challenges_faced|as_crispy_field }}
+                    {{ form.follow_up_required|as_crispy_field }}
+                    <div class="row">
+                        <div class="col-md-6">
+                            {{ form.self_assessment_score|as_crispy_field }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.cme_points|as_crispy_field }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Form Actions -->
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'logbook:list' %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-times me-2"></i>Cancel
+                        </a>
+                        <div>
+                            <button type="submit" name="action" value="save_draft" class="btn btn-outline-primary me-2">
+                                <i class="fas fa-save me-2"></i>Save as Draft
+                            </button>
+                            {% if form.instance.pk %}
+                            <button type="submit" name="action" value="save" class="btn btn-primary">
+                                <i class="fas fa-check me-2"></i>Update Entry
+                            </button>
+                            {% else %}
+                            <button type="submit" name="action" value="submit" class="btn btn-success">
+                                <i class="fas fa-paper-plane me-2"></i>Create & Submit
+                            </button>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <div class="col-lg-4">
+        <!-- Help & Guidelines -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="fas fa-question-circle me-2"></i>Guidelines</h6>
+            </div>
+            <div class="card-body">
+                <div class="small">
+                    <h6>Required Fields:</h6>
+                    <ul class="mb-3">
+                        <li>Case Title</li>
+                        <li>Date of Case</li>
+                        <li>Location of Activity</li>
+                        <li>Patient History Summary</li>
+                        <li>Management Action</li>
+                    </ul>
+                    
+                    <h6>Optional but Recommended:</h6>
+                    <ul class="mb-3">
+                        <li>Patient Demographics</li>
+                        <li>Primary Diagnosis</li>
+                        <li>Learning Points</li>
+                        <li>Self Assessment Score</li>
+                    </ul>
+                    
+                    <div class="alert alert-info alert-sm">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Tip:</strong> Complete entries with all relevant details will provide better learning value and easier review by supervisors.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Progress Indicator -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="fas fa-tasks me-2"></i>Entry Status</h6>
+            </div>
+            <div class="card-body text-center">
+                {% if form.instance.pk %}
+                    <div class="mb-3">
+                        <span class="badge bg-{% if form.instance.status == 'approved' %}success{% elif form.instance.status == 'pending' %}warning{% elif form.instance.status == 'draft' %}secondary{% else %}danger{% endif %} fs-6">
+                            {{ form.instance.get_status_display }}
+                        </span>
+                    </div>
+                    <p class="text-muted small">Current status of this entry</p>
+                {% else %}
+                    <div class="mb-3">
+                        <i class="fas fa-plus-circle fa-2x text-primary"></i>
+                    </div>
+                    <h6 class="text-primary">New Entry</h6>
+                    <p class="text-muted small">Creating a new logbook entry</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Learning Metrics -->
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Learning Focus</h6>
+            </div>
+            <div class="card-body">
+                <div class="small">
+                    <p><strong>Consider documenting:</strong></p>
+                    <ul class="mb-0">
+                        <li>Clinical reasoning process</li>
+                        <li>Decision-making challenges</li>
+                        <li>Skills demonstrated</li>
+                        <li>Knowledge gaps identified</li>
+                        <li>Areas for improvement</li>
+                        <li>Feedback received</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.alert-sm {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+}
+
+.badge.fs-6 {
+    font-size: 0.875rem !important;
+}
+
+.card-header h5,
+.card-header h6 {
+    color: #495057;
+    font-weight: 600;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.btn-group-sm > .btn, .btn-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+    border-radius: 0.2rem;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-save draft functionality (optional)
+    const form = document.querySelector('form');
+    const draftBtn = document.querySelector('button[value="save_draft"]');
+    
+    // Form validation feedback
+    const inputs = form.querySelectorAll('input, textarea, select');
+    inputs.forEach(input => {
+        input.addEventListener('blur', function() {
+            if (this.required && !this.value.trim()) {
+                this.classList.add('is-invalid');
+            } else {
+                this.classList.remove('is-invalid');
+                this.classList.add('is-valid');
+            }
+        });
+    });
+    
+    // Save confirmation
+    form.addEventListener('submit', function(e) {
+        const submitBtn = e.submitter;
+        if (submitBtn && submitBtn.value === 'submit') {
+            if (!confirm('Are you sure you want to submit this entry for supervisor review?')) {
+                e.preventDefault();
+                return false;
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

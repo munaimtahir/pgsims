@@ -1,0 +1,281 @@
+{% extends 'base/base.html' %}
+
+{% block title %}{{ certificate.name }} - Certificate Details - SIMS{% endblock %}
+
+{% block breadcrumb %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'users:dashboard' %}">Dashboard</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'certificates:list' %}">Certificates</a></li>
+        <li class="breadcrumb-item active">{{ certificate.name|truncatechars:50 }}</li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block page_header %}
+<div class="d-flex justify-content-between align-items-start mb-4">
+    <div>
+        <h2><i class="fas fa-certificate me-2"></i>{{ certificate.name }}</h2>
+        <div class="d-flex align-items-center mt-2">
+            <span class="badge bg-{% if certificate.is_expired %}danger{% elif certificate.is_expiring_soon %}warning{% else %}success{% endif %} me-2">
+                {% if certificate.is_expired %}Expired{% elif certificate.is_expiring_soon %}Expiring Soon{% else %}Active{% endif %}
+            </span>
+            <small class="text-muted">{{ certificate.certificate_type|title }} Certificate</small>
+        </div>
+    </div>
+    <div>
+        {% if user == certificate.pg or user.role == 'supervisor' or user.role == 'admin' %}
+        <a href="{% url 'certificates:edit' certificate.pk %}" class="btn btn-outline-primary">
+            <i class="fas fa-edit me-2"></i>Edit
+        </a>
+        {% endif %}
+        {% if certificate.certificate_file %}
+        <a href="{{ certificate.certificate_file.url }}" target="_blank" class="btn btn-success ms-2">
+            <i class="fas fa-download me-2"></i>Download
+        </a>
+        {% endif %}
+        <a href="{% url 'certificates:list' %}" class="btn btn-outline-secondary ms-2">
+            <i class="fas fa-list me-2"></i>Back to List
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8">
+        <!-- Certificate Details -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Certificate Information</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <dl class="row">
+                            <dt class="col-sm-5">Certificate Name:</dt>
+                            <dd class="col-sm-7">{{ certificate.name }}</dd>
+                            
+                            <dt class="col-sm-5">Type:</dt>
+                            <dd class="col-sm-7">
+                                <span class="badge bg-secondary">{{ certificate.get_certificate_type_display }}</span>
+                            </dd>
+                            
+                            <dt class="col-sm-5">Certificate Number:</dt>
+                            <dd class="col-sm-7">{{ certificate.certificate_number|default:"Not specified" }}</dd>
+                            
+                            <dt class="col-sm-5">Issuing Authority:</dt>
+                            <dd class="col-sm-7">{{ certificate.issuing_authority|default:"Not specified" }}</dd>
+                        </dl>
+                    </div>
+                    <div class="col-md-6">
+                        <dl class="row">
+                            <dt class="col-sm-5">Issue Date:</dt>
+                            <dd class="col-sm-7">{{ certificate.issue_date|date:"F d, Y" }}</dd>
+                            
+                            {% if certificate.expiry_date %}
+                            <dt class="col-sm-5">Expiry Date:</dt>
+                            <dd class="col-sm-7">
+                                {{ certificate.expiry_date|date:"F d, Y" }}
+                                {% if certificate.is_expired %}
+                                <span class="badge bg-danger ms-2">Expired</span>
+                                {% elif certificate.is_expiring_soon %}
+                                <span class="badge bg-warning ms-2">Expiring Soon</span>
+                                {% endif %}
+                            </dd>
+                            
+                            <dt class="col-sm-5">Days Until Expiry:</dt>
+                            <dd class="col-sm-7">
+                                {% if certificate.is_expired %}
+                                <span class="text-danger">Expired {{ certificate.days_until_expiry|abs }} days ago</span>
+                                {% else %}
+                                <span class="{% if certificate.is_expiring_soon %}text-warning{% else %}text-success{% endif %}">
+                                    {{ certificate.days_until_expiry }} days
+                                </span>
+                                {% endif %}
+                            </dd>
+                            {% endif %}
+                            
+                            <dt class="col-sm-5">Postgraduate:</dt>
+                            <dd class="col-sm-7">
+                                <a href="{% url 'users:profile_detail' certificate.pg.pk %}">
+                                    {{ certificate.pg.get_full_name }}
+                                </a>
+                            </dd>
+                        </dl>
+                    </div>
+                </div>
+                
+                {% if certificate.description %}
+                <div class="mt-3">
+                    <h6>Description:</h6>
+                    <p class="text-muted">{{ certificate.description }}</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Certificate File Preview -->
+        {% if certificate.certificate_file %}
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-file-pdf me-2"></i>Certificate Document</h5>
+                <a href="{{ certificate.certificate_file.url }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                    <i class="fas fa-external-link-alt me-1"></i>Open in New Tab
+                </a>
+            </div>
+            <div class="card-body">
+                {% if certificate.certificate_file.name|slice:"-4:" == ".pdf" %}
+                <div class="text-center">
+                    <embed src="{{ certificate.certificate_file.url }}" type="application/pdf" width="100%" height="600px">
+                    <p class="mt-2"><a href="{{ certificate.certificate_file.url }}" target="_blank">View PDF in full screen</a></p>
+                </div>
+                {% else %}
+                <div class="text-center">
+                    <img src="{{ certificate.certificate_file.url }}" class="img-fluid rounded" alt="Certificate" style="max-height: 600px;">
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Reviews and Comments -->
+        {% if reviews %}
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-comments me-2"></i>Reviews & Comments</h5>
+            </div>
+            <div class="card-body">
+                {% for review in reviews %}
+                <div class="d-flex mb-3 {% if not forloop.last %}border-bottom pb-3{% endif %}">
+                    <div class="flex-shrink-0">
+                        <div class="avatar bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                            {{ review.reviewer.first_name.0 }}{{ review.reviewer.last_name.0 }}
+                        </div>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h6 class="mb-1">{{ review.reviewer.get_full_name }}</h6>
+                                <small class="text-muted">{{ review.created_at|timesince }} ago</small>
+                            </div>
+                            <span class="badge bg-{{ review.status_color }}">{{ review.get_status_display }}</span>
+                        </div>
+                        {% if review.comments %}
+                        <p class="mb-0 mt-2">{{ review.comments }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="col-lg-4">
+        <!-- Quick Actions -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="fas fa-bolt me-2"></i>Quick Actions</h6>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    {% if user == certificate.pg or user.role == 'supervisor' or user.role == 'admin' %}
+                    <a href="{% url 'certificates:edit' certificate.pk %}" class="btn btn-outline-primary">
+                        <i class="fas fa-edit me-2"></i>Edit Certificate
+                    </a>
+                    {% endif %}
+                    
+                    {% if certificate.certificate_file %}
+                    <a href="{{ certificate.certificate_file.url }}" target="_blank" class="btn btn-outline-success">
+                        <i class="fas fa-download me-2"></i>Download File
+                    </a>
+                    {% endif %}
+                    
+                    {% if user.role == 'supervisor' or user.role == 'admin' %}
+                    <a href="{% url 'certificates:review' certificate.pk %}" class="btn btn-outline-info">
+                        <i class="fas fa-clipboard-check me-2"></i>Add Review
+                    </a>
+                    {% endif %}
+                    
+                    <a href="{% url 'certificates:list' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-list me-2"></i>View All Certificates
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Certificate Status -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="fas fa-shield-alt me-2"></i>Compliance Status</h6>
+            </div>
+            <div class="card-body">
+                <div class="text-center">
+                    {% if certificate.is_expired %}
+                    <div class="text-danger mb-2">
+                        <i class="fas fa-exclamation-triangle fa-2x"></i>
+                    </div>
+                    <h6 class="text-danger">Certificate Expired</h6>
+                    <p class="text-muted small">This certificate expired {{ certificate.days_until_expiry|abs }} days ago. Please renew to maintain compliance.</p>
+                    {% elif certificate.is_expiring_soon %}
+                    <div class="text-warning mb-2">
+                        <i class="fas fa-clock fa-2x"></i>
+                    </div>
+                    <h6 class="text-warning">Expiring Soon</h6>
+                    <p class="text-muted small">This certificate will expire in {{ certificate.days_until_expiry }} days. Consider renewing soon.</p>
+                    {% else %}
+                    <div class="text-success mb-2">
+                        <i class="fas fa-check-circle fa-2x"></i>
+                    </div>
+                    <h6 class="text-success">Certificate Valid</h6>
+                    <p class="text-muted small">This certificate is currently valid and compliant.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Certificate Information -->
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="fas fa-info me-2"></i>Certificate Details</h6>
+            </div>
+            <div class="card-body">
+                <div class="small">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Certificate ID:</span>
+                        <span class="fw-bold">#{{ certificate.pk }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Created:</span>
+                        <span>{{ certificate.created_at|date:"M d, Y" }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Last Updated:</span>
+                        <span>{{ certificate.updated_at|timesince }} ago</span>
+                    </div>
+                    {% if certificate.certificate_file %}
+                    <div class="d-flex justify-content-between">
+                        <span>File Size:</span>
+                        <span>{{ certificate.certificate_file.size|filesizeformat }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.avatar {
+    font-weight: bold;
+    font-size: 1rem;
+}
+
+.badge {
+    font-size: 0.75rem;
+}
+</style>
+{% endblock %}

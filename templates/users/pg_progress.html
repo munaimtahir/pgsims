@@ -1,0 +1,425 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}PG Progress Tracking - SIMS{% endblock %}
+
+{% block breadcrumb %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'users:dashboard' %}">Dashboard</a></li>
+        <li class="breadcrumb-item active">PG Progress</li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Overview Stats -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h5 class="card-title">{{ total_pgs }}</h5>
+                            <p class="card-text">Total PG Students</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-user-graduate fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h5 class="card-title">{{ active_pgs }}</h5>
+                            <p class="card-text">Active Students</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-check-circle fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h5 class="card-title">{{ average_completion|floatformat:1 }}%</h5>
+                            <p class="card-text">Avg Completion</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-chart-line fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h5 class="card-title">{{ pending_reviews }}</h5>
+                            <p class="card-text">Pending Reviews</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-clock fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Progress Filter and Search -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <label class="form-label">Search Students</label>
+                            <input type="text" class="form-control" id="searchStudents" placeholder="Enter name or ID...">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Year</label>
+                            <select class="form-select" id="filterYear">
+                                <option value="">All Years</option>
+                                <option value="1">Year 1</option>
+                                <option value="2">Year 2</option>
+                                <option value="3">Year 3</option>
+                                <option value="4">Year 4</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Specialization</label>
+                            <select class="form-select" id="filterSpecialization">
+                                <option value="">All Specializations</option>
+                                {% for spec in specializations %}
+                                <option value="{{ spec }}">{{ spec }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Progress</label>
+                            <select class="form-select" id="filterProgress">
+                                <option value="">All Progress</option>
+                                <option value="low">Low (&lt; 25%)</option>
+                                <option value="medium">Medium (25-75%)</option>
+                                <option value="high">High (&gt; 75%)</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3 d-flex align-items-end">
+                            <button type="button" class="btn btn-primary me-2" id="applyFilters">
+                                <i class="fas fa-filter me-1"></i>Apply
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary" id="clearFilters">
+                                <i class="fas fa-times me-1"></i>Clear
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Progress Cards -->
+    <div class="row" id="progressContainer">
+        {% for pg_stats in pg_progress_stats %}
+        <div class="col-lg-6 col-xl-4 mb-4 progress-card" 
+             data-year="{{ pg_stats.year }}" 
+             data-specialization="{{ pg_stats.specialization|default:'' }}"
+             data-progress="{{ pg_stats.overall_progress }}"
+             data-name="{{ pg_stats.pg.get_full_name|lower }}">
+            <div class="card h-100">
+                <div class="card-header">
+                    <div class="d-flex align-items-center">
+                        {% if pg_stats.pg.profile.avatar %}
+                        <img src="{{ pg_stats.pg.profile.avatar.url }}" alt="{{ pg_stats.pg.get_full_name }}" 
+                             class="rounded-circle me-3" width="40" height="40" style="object-fit: cover;">
+                        {% else %}
+                        <div class="avatar-placeholder rounded-circle me-3 d-flex align-items-center justify-content-center"
+                             style="width: 40px; height: 40px; background: linear-gradient(135deg, #007bff 0%, #6610f2 100%); color: white; font-size: 1rem; font-weight: bold;">
+                            {{ pg_stats.pg.first_name.0|upper }}{{ pg_stats.pg.last_name.0|upper }}
+                        </div>
+                        {% endif %}
+                        <div class="flex-grow-1">
+                            <h6 class="card-title mb-0">
+                                <a href="{% url 'users:profile_detail' pg_stats.pg.profile.pk %}" class="text-decoration-none">
+                                    {{ pg_stats.pg.get_full_name }}
+                                </a>
+                            </h6>
+                            <small class="text-muted">
+                                Year {{ pg_stats.year|default:"N/A" }}
+                                {% if pg_stats.specialization %}
+                                • {{ pg_stats.specialization }}
+                                {% endif %}
+                            </small>
+                        </div>
+                        <div class="text-end">
+                            <span class="badge badge-{{ pg_stats.progress_level }}">
+                                {{ pg_stats.overall_progress|floatformat:0 }}%
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <!-- Overall Progress Bar -->
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <small class="fw-bold">Overall Progress</small>
+                            <small class="text-muted">{{ pg_stats.overall_progress|floatformat:1 }}%</small>
+                        </div>
+                        <div class="progress" style="height: 8px;">
+                            <div class="progress-bar bg-{{ pg_stats.progress_level }}" 
+                                 style="width: {{ pg_stats.overall_progress }}%"></div>
+                        </div>
+                    </div>
+
+                    <!-- Activity Breakdown -->
+                    <div class="row text-center small">
+                        <div class="col-3">
+                            <div class="fw-bold text-primary">{{ pg_stats.logbook_count }}</div>
+                            <div class="text-muted">Logbook</div>
+                            <div class="progress mt-1" style="height: 4px;">
+                                <div class="progress-bar bg-primary" style="width: {{ pg_stats.logbook_progress }}%"></div>
+                            </div>
+                        </div>
+                        <div class="col-3">
+                            <div class="fw-bold text-success">{{ pg_stats.cases_count }}</div>
+                            <div class="text-muted">Cases</div>
+                            <div class="progress mt-1" style="height: 4px;">
+                                <div class="progress-bar bg-success" style="width: {{ pg_stats.cases_progress }}%"></div>
+                            </div>
+                        </div>
+                        <div class="col-3">
+                            <div class="fw-bold text-info">{{ pg_stats.certificates_count }}</div>
+                            <div class="text-muted">Certificates</div>
+                            <div class="progress mt-1" style="height: 4px;">
+                                <div class="progress-bar bg-info" style="width: {{ pg_stats.certificates_progress }}%"></div>
+                            </div>
+                        </div>
+                        <div class="col-3">
+                            <div class="fw-bold text-warning">{{ pg_stats.rotations_count }}</div>
+                            <div class="text-muted">Rotations</div>
+                            <div class="progress mt-1" style="height: 4px;">
+                                <div class="progress-bar bg-warning" style="width: {{ pg_stats.rotations_progress }}%"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Recent Activity -->
+                    {% if pg_stats.recent_activity %}
+                    <div class="mt-3">
+                        <small class="fw-bold">Recent Activity:</small>
+                        <small class="text-muted d-block">{{ pg_stats.recent_activity|truncatechars:60 }}</small>
+                        <small class="text-muted">{{ pg_stats.last_activity_date|timesince }} ago</small>
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="card-footer bg-light">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small class="text-muted">
+                            {% if pg_stats.next_milestone %}
+                            Next: {{ pg_stats.next_milestone }}
+                            {% else %}
+                            All milestones completed
+                            {% endif %}
+                        </small>
+                        <div class="btn-group btn-group-sm">
+                            <a href="{% url 'users:profile_detail' pg_stats.pg.profile.pk %}" 
+                               class="btn btn-outline-primary" title="View Profile">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            <a href="{% url 'logbook:list' %}?pg={{ pg_stats.pg.pk }}" 
+                               class="btn btn-outline-success" title="View Logbook">
+                                <i class="fas fa-book"></i>
+                            </a>
+                            <a href="{% url 'cases:case_list' %}?pg={{ pg_stats.pg.pk }}" 
+                               class="btn btn-outline-info" title="View Cases">
+                                <i class="fas fa-stethoscope"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body text-center py-5">
+                    <i class="fas fa-user-graduate fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">No PG Students Found</h5>
+                    <p class="text-muted">No postgraduate students match the current filters.</p>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Export Options -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="card-title mb-0">
+                        <i class="fas fa-download me-2"></i>Export Progress Reports
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex flex-wrap gap-2">
+                        <a href="?export=csv" class="btn btn-outline-primary">
+                            <i class="fas fa-file-csv me-2"></i>Export as CSV
+                        </a>
+                        <a href="?export=excel" class="btn btn-outline-success">
+                            <i class="fas fa-file-excel me-2"></i>Export as Excel
+                        </a>
+                        <a href="?export=pdf" class="btn btn-outline-danger">
+                            <i class="fas fa-file-pdf me-2"></i>Export as PDF
+                        </a>
+                        <button type="button" class="btn btn-outline-info" id="printReport">
+                            <i class="fas fa-print me-2"></i>Print Report
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.badge-high { background-color: #28a745; }
+.badge-medium { background-color: #ffc107; color: #212529; }
+.badge-low { background-color: #dc3545; }
+
+.bg-high { background-color: #28a745 !important; }
+.bg-medium { background-color: #ffc107 !important; }
+.bg-low { background-color: #dc3545 !important; }
+
+.avatar-placeholder {
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+}
+
+.progress {
+    border-radius: 10px;
+}
+
+.progress-bar {
+    border-radius: 10px;
+}
+
+.card-title a:hover {
+    color: #0056b3 !important;
+}
+
+@media print {
+    .btn, .card-footer, .breadcrumb {
+        display: none !important;
+    }
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Filter functionality
+    function applyFilters() {
+        const searchTerm = $('#searchStudents').val().toLowerCase();
+        const yearFilter = $('#filterYear').val();
+        const specFilter = $('#filterSpecialization').val();
+        const progressFilter = $('#filterProgress').val();
+
+        $('.progress-card').each(function() {
+            const name = $(this).data('name');
+            const year = $(this).data('year').toString();
+            const specialization = $(this).data('specialization');
+            const progress = parseFloat($(this).data('progress'));
+            
+            let show = true;
+
+            // Search filter
+            if (searchTerm && !name.includes(searchTerm)) {
+                show = false;
+            }
+
+            // Year filter
+            if (yearFilter && year !== yearFilter) {
+                show = false;
+            }
+
+            // Specialization filter
+            if (specFilter && specialization !== specFilter) {
+                show = false;
+            }
+
+            // Progress filter
+            if (progressFilter) {
+                if (progressFilter === 'low' && progress >= 25) show = false;
+                if (progressFilter === 'medium' && (progress < 25 || progress > 75)) show = false;
+                if (progressFilter === 'high' && progress <= 75) show = false;
+            }
+
+            $(this).toggle(show);
+        });
+
+        // Update visible count
+        const visibleCount = $('.progress-card:visible').length;
+        updateResultsCount(visibleCount);
+    }
+
+    function updateResultsCount(count) {
+        if (!$('#resultsCount').length) {
+            $('#progressContainer').before(
+                `<div class="alert alert-info" id="resultsCount">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Showing <strong>${count}</strong> students
+                </div>`
+            );
+        } else {
+            $('#resultsCount').html(
+                `<i class="fas fa-info-circle me-2"></i>
+                Showing <strong>${count}</strong> students`
+            );
+        }
+    }
+
+    // Event handlers
+    $('#applyFilters').on('click', applyFilters);
+    
+    $('#clearFilters').on('click', function() {
+        $('#searchStudents, #filterYear, #filterSpecialization, #filterProgress').val('');
+        $('.progress-card').show();
+        $('#resultsCount').remove();
+    });
+
+    $('#searchStudents').on('input', function() {
+        clearTimeout(window.searchTimeout);
+        window.searchTimeout = setTimeout(applyFilters, 500);
+    });
+
+    $('#filterYear, #filterSpecialization, #filterProgress').on('change', applyFilters);
+
+    // Print functionality
+    $('#printReport').on('click', function() {
+        window.print();
+    });
+
+    // Tooltip initialization
+    $('[title]').tooltip();
+
+    // Initialize results count
+    const totalVisible = $('.progress-card:visible').length;
+    updateResultsCount(totalVisible);
+});
+</script>
+{% endblock %}

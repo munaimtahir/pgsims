@@ -1,0 +1,8 @@
+Hello {{ recipient.get_full_name|default:recipient.username }},
+
+{{ entry.pg.get_full_name|default:entry.pg.username }} has submitted a logbook entry titled "{{ entry.case_title }}" for your review.
+
+Current status: {{ entry.get_status_display }}
+Submitted on: {{ entry.submitted_to_supervisor_at|default:entry.created_at|date:"d M Y H:i" }}
+
+Please review the entry at your earliest convenience.
