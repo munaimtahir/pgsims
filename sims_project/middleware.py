@@ -19,7 +19,7 @@ class HostDebugMiddleware(MiddlewareMixin):
     LOG_PATH = "/opt/sims_project/.cursor/debug.log"
 
     def process_request(self, request):
-        host = request.META.get("HTTP_HOST", request.get_raw_host())
+        host = request.META.get("HTTP_HOST", request.get_host())
         # #region agent log
         try:
             payload = {
