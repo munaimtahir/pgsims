@@ -45,11 +45,11 @@ DEBUG = os.environ.get("DEBUG", "False").lower() in ("true", "1", "yes")
 
 # ALLOWED_HOSTS - Support both localhost and VPS deployments
 # For localhost: localhost,127.0.0.1
-# For VPS: 139.162.9.224,172.237.95.120,phc.alshifalab.pk,localhost,127.0.0.1
+# For VPS: 139.162.9.224,172.237.95.120,34.124.150.231,phc.alshifalab.pk,localhost,127.0.0.1
 ALLOWED_HOSTS = [
     host.strip()
     for host in os.environ.get(
-        "ALLOWED_HOSTS", "139.162.9.224,172.237.95.120,phc.alshifalab.pk,localhost,127.0.0.1"
+        "ALLOWED_HOSTS", "139.162.9.224,172.237.95.120,34.124.150.231,phc.alshifalab.pk,localhost,127.0.0.1"
     ).split(",")
     if host.strip()
 ]

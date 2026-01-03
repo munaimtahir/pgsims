@@ -4,7 +4,9 @@
 import multiprocessing
 
 # Server socket
-bind = "127.0.0.1:8014"
+# For Docker: bind to 0.0.0.0 to accept connections from Caddy
+# For direct deployment: use 127.0.0.1
+bind = "0.0.0.0:8014"
 backlog = 2048
 
 # Worker processes
