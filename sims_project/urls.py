@@ -11,7 +11,8 @@ Author: SMIB2012
 
 from django.conf import settings
 from django.conf.urls.static import static
-from django.contrib import admin
+from django.contrib import admin, messages
+from django.contrib.auth import authenticate, login
 from django.contrib.auth.views import LogoutView
 from django.http import HttpResponse
 from django.shortcuts import redirect
@@ -37,11 +38,44 @@ def admin_logout_view(request):
 
 def home_view(request):
     """
-    Home page view - redirects authenticated users to dashboard,
-    shows landing page for anonymous users
+    Home page view with integrated login functionality.
+    Redirects authenticated users to dashboard,
+    shows landing page with login form for anonymous users
     """
+    # Redirect authenticated users to dashboard
     if request.user.is_authenticated:
         return redirect("users:dashboard")
+
+    # Handle login POST request
+    login_error = None
+    if request.method == "POST":
+        username = request.POST.get("username")
+        password = request.POST.get("password")
+
+        if username and password:
+            user = authenticate(request, username=username, password=password)
+            if user is not None:
+                if user.is_active and not user.is_archived:
+                    login(request, user)
+
+                    # Role-based redirection
+                    if user.is_admin():
+                        messages.success(request, f"Welcome back, Admin {user.get_display_name()}!")
+                        return redirect("admin:index")
+                    elif user.is_supervisor():
+                        messages.success(request, f"Welcome back, Dr. {user.get_display_name()}!")
+                        return redirect("users:supervisor_dashboard")
+                    elif user.is_pg():
+                        messages.success(request, f"Welcome back, {user.get_display_name()}!")
+                        return redirect("users:pg_dashboard")
+                    else:
+                        return redirect("users:profile")
+                else:
+                    login_error = "Your account is inactive. Please contact admin."
+            else:
+                login_error = "Invalid username or password."
+        else:
+            login_error = "Please provide both username and password."
 
     # Render the homepage template with context
     context = {
@@ -49,6 +83,7 @@ def home_view(request):
         "university_name": "Faisalabad Medical University",
         "current_year": "2025",
         "system_status": "online",
+        "login_error": login_error,
     }
     return TemplateResponse(request, "home/index.html", context)
 
