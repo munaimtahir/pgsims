@@ -23,11 +23,19 @@ function getApiUrl(): string {
     const hostname = window.location.hostname;
     const port = window.location.port;
 
-    // VPS deployment (139.162.9.224, 172.237.95.120 or port 81)
-    if (hostname === '139.162.9.224' || hostname === '172.237.95.120' || port === '81') {
+    // PHC domain deployment (phc.alshifalab.pk)
+    if (hostname === 'phc.alshifalab.pk') {
+      return `https://phc.alshifalab.pk`;
+    }
+
+    // VPS deployment (139.162.9.224, 172.237.95.120, 34.124.150.231 or port 81)
+    if (hostname === '139.162.9.224' || hostname === '172.237.95.120' || hostname === '34.124.150.231' || port === '81') {
       // Return API URL based on detected hostname
       if (hostname === '172.237.95.120') {
         return `http://172.237.95.120:81`;
+      }
+      if (hostname === '34.124.150.231') {
+        return `https://phc.alshifalab.pk`;
       }
       return `http://139.162.9.224:81`;
     }

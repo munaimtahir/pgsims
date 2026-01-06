@@ -1,0 +1,91 @@
+# Caddyfile configuration for PHC (PGSIMS) deployment
+# This file should be placed in /etc/caddy/Caddyfile or your Caddy configuration directory
+# Caddy will automatically handle SSL/TLS certificates via Let's Encrypt
+#
+# Domain: phc.alshifalab.pk
+# Backend: localhost:8014 (Django/Gunicorn)
+# Server IP: 34.124.150.231
+
+phc.alshifalab.pk {
+    # Enable automatic HTTPS with Let's Encrypt
+    tls {
+        protocols tls1.2 tls1.3
+    }
+
+    # Logging
+    log {
+        output file /var/log/caddy/phc_access.log
+        format json
+    }
+
+    # Security headers
+    header {
+        # Enable HSTS
+        Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+        # Prevent clickjacking
+        X-Frame-Options "SAMEORIGIN"
+        # XSS protection
+        X-Content-Type-Options "nosniff"
+        # Referrer policy
+        Referrer-Policy "strict-origin-when-cross-origin"
+        # Remove server information
+        -Server
+    }
+
+    # Health check endpoint (bypass proxy for faster response)
+    handle /healthz {
+        reverse_proxy localhost:8014 {
+            header_up Host {host}
+            header_up X-Real-IP {remote}
+            header_up X-Forwarded-For {remote}
+            header_up X-Forwarded-Proto {scheme}
+        }
+    }
+
+    # Static files (served directly by Caddy for better performance)
+    handle /static/* {
+        root * /home/munaim/srv/pgsims/staticfiles
+        file_server
+        header Cache-Control "public, max-age=31536000, immutable"
+    }
+
+    # Media files
+    handle /media/* {
+        root * /home/munaim/srv/pgsims/media
+        file_server
+        header Cache-Control "public, max-age=604800"
+    }
+
+    # API endpoints
+    handle /api/* {
+        reverse_proxy localhost:8014 {
+            header_up Host {host}
+            header_up X-Real-IP {remote}
+            header_up X-Forwarded-For {remote}
+            header_up X-Forwarded-Proto {scheme}
+            header_up X-Forwarded-Host {host}
+        }
+    }
+
+    # All other requests (Django application)
+    handle {
+        reverse_proxy localhost:8014 {
+            header_up Host {host}
+            header_up X-Real-IP {remote}
+            header_up X-Forwarded-For {remote}
+            header_up X-Forwarded-Proto {scheme}
+            header_up X-Forwarded-Host {host}
+            
+            # Timeouts
+            transport http {
+                dial_timeout 10s
+                response_header_timeout 60s
+            }
+        }
+    }
+}
+
+# Fallback: Direct IP access (optional, for testing)
+34.124.150.231 {
+    redir https://phc.alshifalab.pk{uri} permanent
+}
