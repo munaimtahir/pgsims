@@ -14,6 +14,7 @@ from sims.bulk.serializers import (
     BulkAssignmentSerializer,
     BulkImportSerializer,
     BulkReviewSerializer,
+    TraineeImportSerializer,
 )
 from sims.bulk.services import BulkService
 
@@ -88,4 +89,32 @@ class BulkImportView(APIView):
         return Response(_operation_payload(operation), status=status_code)
 
 
-__all__ = ["BulkReviewView", "BulkAssignmentView", "BulkImportView"]
+class BulkTraineeImportView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request: Request) -> Response:
+        from django.core.exceptions import ValidationError as DjangoValidationError
+
+        serializer = TraineeImportSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        uploaded_file = serializer.validated_data["file"]
+        service = BulkService(request.user)
+
+        try:
+            operation = service.import_trainees(
+                uploaded_file,
+                dry_run=serializer.validated_data["dry_run"],
+                allow_partial=serializer.validated_data["allow_partial"],
+            )
+        except DjangoValidationError as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+        status_code = (
+            status.HTTP_200_OK
+            if operation.status == BulkOperation.STATUS_COMPLETED
+            else status.HTTP_400_BAD_REQUEST
+        )
+        return Response(_operation_payload(operation), status=status_code)
+
+
+__all__ = ["BulkReviewView", "BulkAssignmentView", "BulkImportView", "BulkTraineeImportView"]

@@ -21,6 +21,7 @@ SPECIALTY_CHOICES = (
     ("orthopedics", "Orthopedics"),
     ("cardiology", "Cardiology"),
     ("neurology", "Neurology"),
+    ("urology", "Urology"),
     ("psychiatry", "Psychiatry"),
     ("dermatology", "Dermatology"),
     ("radiology", "Radiology"),

@@ -27,8 +27,15 @@ class BulkImportSerializer(serializers.Serializer):
     allow_partial = serializers.BooleanField(default=False)
 
 
+class TraineeImportSerializer(serializers.Serializer):
+    file = serializers.FileField()
+    dry_run = serializers.BooleanField(default=True)
+    allow_partial = serializers.BooleanField(default=False)
+
+
 __all__ = [
     "BulkReviewSerializer",
     "BulkAssignmentSerializer",
     "BulkImportSerializer",
+    "TraineeImportSerializer",
 ]
