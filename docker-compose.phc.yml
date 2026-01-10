@@ -1,15 +1,15 @@
-# Docker Compose configuration for SIMS PHC deployment
-# Production-ready setup for phc.alshifalab.pk with Caddy reverse proxy
+# Docker Compose configuration for SIMS PGSIMS deployment
+# Production-ready setup for pgsims.alshifalab.pk with Caddy reverse proxy
 #
 # This configuration runs the backend on port 8014 (internal) which is proxied by Caddy
-# Caddy handles SSL/TLS termination and routes traffic from phc.alshifalab.pk to port 8014
+# Caddy handles SSL/TLS termination and routes traffic from pgsims.alshifalab.pk to port 8014
 #
 # SECURITY WARNING: Set environment variables in .env file:
 #   - SECRET_KEY: A secure Django secret key
 #   - DB_PASSWORD: A strong database password
-#   - ALLOWED_HOSTS: phc.alshifalab.pk,34.124.150.231,localhost,127.0.0.1
-#   - CORS_ALLOWED_ORIGINS: https://phc.alshifalab.pk
-#   - CSRF_TRUSTED_ORIGINS: https://phc.alshifalab.pk
+#   - ALLOWED_HOSTS: pgsims.alshifalab.pk,34.124.150.231,localhost,127.0.0.1
+#   - CORS_ALLOWED_ORIGINS: https://pgsims.alshifalab.pk
+#   - CSRF_TRUSTED_ORIGINS: https://pgsims.alshifalab.pk
 
 version: '3.9'
 
@@ -62,7 +62,7 @@ services:
     environment:
       - DEBUG=${DEBUG:-False}
       - SECRET_KEY=${SECRET_KEY}
-      - ALLOWED_HOSTS=${ALLOWED_HOSTS:-phc.alshifalab.pk,34.124.150.231,localhost,127.0.0.1}
+      - ALLOWED_HOSTS=${ALLOWED_HOSTS:-pgsims.alshifalab.pk,34.124.150.231,localhost,127.0.0.1}
       - DATABASE_URL=postgresql://${DB_USER:-sims_user}:${DB_PASSWORD}@db:5432/${DB_NAME:-sims_db}
       - REDIS_URL=redis://redis:6379/0
       - CELERY_BROKER_URL=redis://redis:6379/1
@@ -72,8 +72,8 @@ services:
       - SECURE_SSL_REDIRECT=${SECURE_SSL_REDIRECT:-True}
       - SESSION_COOKIE_SECURE=${SESSION_COOKIE_SECURE:-True}
       - CSRF_COOKIE_SECURE=${CSRF_COOKIE_SECURE:-True}
-      - CSRF_TRUSTED_ORIGINS=${CSRF_TRUSTED_ORIGINS:-https://phc.alshifalab.pk}
-      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:-https://phc.alshifalab.pk}
+      - CSRF_TRUSTED_ORIGINS=${CSRF_TRUSTED_ORIGINS:-https://pgsims.alshifalab.pk}
+      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:-https://pgsims.alshifalab.pk}
       - EMAIL_BACKEND=${EMAIL_BACKEND:-django.core.mail.backends.console.EmailBackend}
       - EMAIL_HOST=${EMAIL_HOST:-}
       - EMAIL_PORT=${EMAIL_PORT:-587}

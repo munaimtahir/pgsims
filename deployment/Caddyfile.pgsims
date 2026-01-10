@@ -1,20 +1,17 @@
-# Caddyfile configuration for PHC (PGSIMS) deployment
+# Caddyfile configuration for PGSIMS deployment
 # This file should be placed in /etc/caddy/Caddyfile or your Caddy configuration directory
 # Caddy will automatically handle SSL/TLS certificates via Let's Encrypt
 #
-# Domain: phc.alshifalab.pk
+# Domain: pgsims.alshifalab.pk
 # Backend: localhost:8014 (Django/Gunicorn)
-# Server IP: 34.124.150.231
-
-phc.alshifalab.pk {
-    # Enable automatic HTTPS with Let's Encrypt
+# Server IP: 34.124.150.231Let's Encrypt
     tls {
         protocols tls1.2 tls1.3
     }
 
     # Logging
     log {
-        output file /var/log/caddy/phc_access.log
+        output file /var/log/caddy/pgsims_access.log
         format json
     }
 
@@ -87,5 +84,5 @@ phc.alshifalab.pk {
 
 # Fallback: Direct IP access (optional, for testing)
 34.124.150.231 {
-    redir https://phc.alshifalab.pk{uri} permanent
+    redir https://pgsims.alshifalab.pk{uri} permanent
 }

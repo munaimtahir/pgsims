@@ -1,18 +1,18 @@
 #!/bin/bash
-# Deployment script for PHC (PGSIMS) on phc.alshifalab.pk
+# Deployment script for PGSIMS on pgsims.alshifalab.pk
 # Server IP: 34.124.150.231
-# Domain: phc.alshifalab.pk
+# Domain: pgsims.alshifalab.pk
 # Backend Port: 8014
 
 set -e
 
-PROJECT_DIR="${PROJECT_DIR:-/home/munaim/srv/pgsims}"
+PROJECT_DIR="${PROJECT_DIR:-/home/munaim/srv/apps/pgsims}"
 SERVER_IP="34.124.150.231"
-DOMAIN="phc.alshifalab.pk"
+DOMAIN="pgsims.alshifalab.pk"
 BACKEND_PORT="8014"
 
 echo "=========================================="
-echo "PHC (PGSIMS) Deployment Script"
+echo "PGSIMS Deployment Script"
 echo "=========================================="
 echo ""
 echo "Domain: $DOMAIN"
@@ -92,17 +92,17 @@ fi
 print_info "Step 2: Checking Caddy configuration..."
 
 if [ -f "/etc/caddy/Caddyfile" ]; then
-    if grep -q "phc.alshifalab.pk" /etc/caddy/Caddyfile; then
-        print_success "Caddyfile contains phc.alshifalab.pk configuration"
+    if grep -q "pgsims.alshifalab.pk" /etc/caddy/Caddyfile; then
+        print_success "Caddyfile contains pgsims.alshifalab.pk configuration"
     else
-        print_warning "Caddyfile exists but doesn't contain phc.alshifalab.pk configuration"
-        print_info "Please add the configuration from deployment/Caddyfile.phc to /etc/caddy/Caddyfile"
+        print_warning "Caddyfile exists but doesn't contain pgsims.alshifalab.pk configuration"
+        print_info "Please add the configuration from deployment/Caddyfile.pgsims to /etc/caddy/Caddyfile"
         print_info "Then run: sudo caddy validate --config /etc/caddy/Caddyfile"
         print_info "And: sudo systemctl reload caddy"
     fi
 else
     print_warning "Caddyfile not found at /etc/caddy/Caddyfile"
-    print_info "Please copy deployment/Caddyfile.phc to /etc/caddy/Caddyfile and configure Caddy"
+    print_info "Please copy deployment/Caddyfile.pgsims to /etc/caddy/Caddyfile and configure Caddy"
 fi
 
 # Step 3: Stop existing containers

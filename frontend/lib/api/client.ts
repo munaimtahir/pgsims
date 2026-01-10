@@ -23,9 +23,9 @@ function getApiUrl(): string {
     const hostname = window.location.hostname;
     const port = window.location.port;
 
-    // PHC domain deployment (phc.alshifalab.pk)
-    if (hostname === 'phc.alshifalab.pk') {
-      return `https://phc.alshifalab.pk`;
+    // PGSIMS domain deployment (pgsims.alshifalab.pk)
+    if (hostname === 'pgsims.alshifalab.pk') {
+      return `https://pgsims.alshifalab.pk`;
     }
 
     // VPS deployment (139.162.9.224, 172.237.95.120, 34.124.150.231 or port 81)
@@ -35,7 +35,7 @@ function getApiUrl(): string {
         return `http://172.237.95.120:81`;
       }
       if (hostname === '34.124.150.231') {
-        return `https://phc.alshifalab.pk`;
+        return `https://pgsims.alshifalab.pk`;
       }
       return `http://139.162.9.224:81`;
     }

@@ -39,12 +39,11 @@ def admin_logout_view(request):
 def home_view(request):
     """
     Home page view with integrated login functionality.
-    Redirects authenticated users to dashboard,
-    shows landing page with login form for anonymous users
+    Shows landing page for all users (authenticated and anonymous).
+    Authenticated users can access their dashboard via navigation.
     """
-    # Redirect authenticated users to dashboard
-    if request.user.is_authenticated:
-        return redirect("users:dashboard")
+    # Allow authenticated users to see homepage too
+    # They can access dashboard via navigation menu
 
     # Handle login POST request
     login_error = None
