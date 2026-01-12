@@ -16,12 +16,12 @@
 - Admin: http://172.237.95.120:81/admin/
 - Health: http://172.237.95.120:81/healthz/
 
-### PHC Production Server (Primary)
-**https://phc.alshifalab.pk/**
+### PGSIMS Production Server (Primary)
+**https://pgsims.alshifalab.pk/**
 
-- Login: https://phc.alshifalab.pk/users/login/
-- Admin: https://phc.alshifalab.pk/admin/
-- Health: https://phc.alshifalab.pk/healthz/
+- Login: https://pgsims.alshifalab.pk/users/login/
+- Admin: https://pgsims.alshifalab.pk/admin/
+- Health: https://pgsims.alshifalab.pk/healthz/
 - Server IP: 34.124.150.231
 - Backend Port: 8014 (internal, proxied by Caddy)
 
@@ -53,8 +53,8 @@ curl http://139.162.9.224:81/healthz/
 # Test Secondary Server
 curl http://172.237.95.120:81/healthz/
 
-# Test PHC Production Server
-curl https://phc.alshifalab.pk/healthz/
+# Test PGSIMS Production Server
+curl https://pgsims.alshifalab.pk/healthz/
 ```
 
 ### Test in Browser
@@ -107,5 +107,4 @@ docker compose restart
 
 **For detailed information, see:** 
 - `DEPLOYMENT_STATUS.md` - Complete deployment status
-- `PHC_DEPLOYMENT_SUMMARY.md` - PHC deployment configuration
-- `deployment/DEPLOY_PHC.md` - PHC deployment guide
+- `deployment/deploy_phc.sh` - PGSIMS deployment script

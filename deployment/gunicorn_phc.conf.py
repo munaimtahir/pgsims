@@ -1,5 +1,5 @@
-# Gunicorn configuration for PHC (PGSIMS) on port 8014
-# Located at: /home/munaim/srv/pgsims/deployment/gunicorn_phc.conf.py
+# Gunicorn configuration for PGSIMS on port 8014
+# Located at: /home/munaim/srv/apps/pgsims/deployment/gunicorn_phc.conf.py
 
 import multiprocessing
 
@@ -27,7 +27,7 @@ loglevel = "info"
 access_log_format = '%(h)s %(l)s %(u)s %(t)s "%(r)s" %(s)s %(b)s "%(f)s" "%(a)s"'
 
 # Process naming
-proc_name = "phc_pgsims_gunicorn"
+proc_name = "pgsims_gunicorn"
 
 # Server mechanics
 daemon = False

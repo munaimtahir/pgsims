@@ -181,7 +181,7 @@ class DashboardRedirectView(LoginRequiredMixin, View):
     def get(self, request, *args, **kwargs):
         user = request.user
         if user.is_admin():
-            return redirect("admin:index")
+            return redirect("users:admin_dashboard")  # Changed from admin:index to show dashboard with navigation
         elif user.is_supervisor():
             return redirect("users:supervisor_dashboard")
         elif user.is_pg():
@@ -191,10 +191,54 @@ class DashboardRedirectView(LoginRequiredMixin, View):
 
 
 class AdminDashboardView(AdminRequiredMixin, View):
-    """Admin dashboard class-based view - redirects to Django admin"""
+    """Admin dashboard class-based view with navigation and stats"""
 
     def get(self, request, *args, **kwargs):
-        return redirect("admin:index")
+        from django.db.models import Count
+        from django.utils import timezone
+        import json
+
+        # Get user statistics
+        total_users = User.objects.filter(is_archived=False).count()
+        total_pgs = User.objects.filter(role="pg", is_archived=False).count()
+        total_supervisors = User.objects.filter(role="supervisor", is_archived=False).count()
+
+        # Get new users this month
+        current_month_start = timezone.now().replace(
+            day=1, hour=0, minute=0, second=0, microsecond=0
+        )
+        new_users_this_month = User.objects.filter(
+            is_archived=False, date_joined__gte=current_month_start
+        ).count()
+
+        # Get recent users (last 5)
+        recent_users = User.objects.filter(is_archived=False).order_by("-date_joined")[:5]
+
+        # Get specialty distribution for chart
+        specialty_distribution = (
+            User.objects.filter(role__in=["pg", "supervisor"], is_archived=False, specialty__isnull=False)
+            .values("specialty")
+            .annotate(count=Count("id"))
+            .order_by("-count")
+        )
+
+        # Convert to JSON for JavaScript chart
+        specialty_stats_json = json.dumps(
+            [
+                {"specialty": item["specialty"] or "Unspecified", "count": item["count"]}
+                for item in specialty_distribution
+            ]
+        )
+
+        context = {
+            "total_users": total_users,
+            "total_pgs": total_pgs,
+            "total_supervisors": total_supervisors,
+            "new_users_this_month": new_users_this_month,
+            "recent_users": recent_users,
+            "specialty_stats_json": specialty_stats_json,
+        }
+        return render(request, "users/admin_dashboard.html", context)
 
 
 class SupervisorDashboardView(SupervisorRequiredMixin, View):

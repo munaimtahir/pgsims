@@ -4,7 +4,10 @@
 #
 # Domain: pgsims.alshifalab.pk
 # Backend: localhost:8014 (Django/Gunicorn)
-# Server IP: 34.124.150.231Let's Encrypt
+# Server IP: 34.124.150.231
+
+pgsims.alshifalab.pk {
+    # Enable automatic HTTPS with Let's Encrypt
     tls {
         protocols tls1.2 tls1.3
     }

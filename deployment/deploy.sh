@@ -10,6 +10,7 @@ PROJECT_DIR="${PROJECT_DIR:-/home/munaim/srv/apps/pgsims}"
 SERVER_IP="34.124.150.231"
 DOMAIN="pgsims.alshifalab.pk"
 BACKEND_PORT="8014"
+COMPOSE_FILE="docker-compose.phc.yml"
 
 echo "=========================================="
 echo "PGSIMS Deployment Script"
@@ -65,27 +66,23 @@ fi
 print_info "Step 1: Checking environment configuration..."
 
 if [ ! -f ".env" ]; then
-    print_warning ".env file not found. Creating from example..."
-    if [ -f "deployment/.env.phc.example" ]; then
-        cp deployment/.env.phc.example .env
-        print_warning "Please edit .env file and set SECRET_KEY, DB_PASSWORD, and other required values"
-        print_warning "Press Enter to continue after editing .env, or Ctrl+C to abort..."
-        read
-    else
-        print_error ".env file not found and no example available. Please create .env manually."
-        exit 1
-    fi
+    print_warning ".env file not found."
+    print_warning "Please create .env file with SECRET_KEY, DB_PASSWORD, and other required values"
+    print_warning "Press Enter to continue after creating .env, or Ctrl+C to abort..."
+    read
 else
     print_success ".env file exists"
 fi
 
 # Verify required environment variables
-if ! grep -q "SECRET_KEY=" .env || grep -q "SECRET_KEY=your-secret-key" .env; then
-    print_warning "SECRET_KEY not set or using default. Please set a strong SECRET_KEY in .env"
-fi
+if [ -f ".env" ]; then
+    if ! grep -q "SECRET_KEY=" .env || grep -q "SECRET_KEY=your-secret-key" .env; then
+        print_warning "SECRET_KEY not set or using default. Please set a strong SECRET_KEY in .env"
+    fi
 
-if ! grep -q "DB_PASSWORD=" .env || grep -q "DB_PASSWORD=your-strong" .env; then
-    print_warning "DB_PASSWORD not set or using default. Please set a strong DB_PASSWORD in .env"
+    if ! grep -q "DB_PASSWORD=" .env || grep -q "DB_PASSWORD=your-strong" .env; then
+        print_warning "DB_PASSWORD not set or using default. Please set a strong DB_PASSWORD in .env"
+    fi
 fi
 
 # Step 2: Verify Caddy configuration
@@ -97,30 +94,31 @@ if [ -f "/etc/caddy/Caddyfile" ]; then
     else
         print_warning "Caddyfile exists but doesn't contain pgsims.alshifalab.pk configuration"
         print_info "Please add the configuration from deployment/Caddyfile.pgsims to /etc/caddy/Caddyfile"
+        print_info "Or use the complete Caddyfile from CADDYFILE_COMPLETE.txt"
         print_info "Then run: sudo caddy validate --config /etc/caddy/Caddyfile"
         print_info "And: sudo systemctl reload caddy"
     fi
 else
     print_warning "Caddyfile not found at /etc/caddy/Caddyfile"
-    print_info "Please copy deployment/Caddyfile.pgsims to /etc/caddy/Caddyfile and configure Caddy"
+    print_info "Please configure Caddy using deployment/Caddyfile.pgsims or CADDYFILE_COMPLETE.txt"
 fi
 
 # Step 3: Stop existing containers
 print_info "Step 3: Stopping existing containers..."
-$DOCKER_COMPOSE -f docker-compose.phc.yml down 2>/dev/null || true
+$DOCKER_COMPOSE -f $COMPOSE_FILE down 2>/dev/null || true
 print_success "Existing containers stopped (if any)"
 
 # Step 4: Build Docker images
 print_info "Step 4: Building Docker images..."
 print_warning "This may take several minutes on first run..."
 
-$DOCKER_COMPOSE -f docker-compose.phc.yml build --no-cache
+$DOCKER_COMPOSE -f $COMPOSE_FILE build --no-cache
 print_success "Docker images built successfully"
 
 # Step 5: Start all services
 print_info "Step 5: Starting all services..."
 
-$DOCKER_COMPOSE -f docker-compose.phc.yml up -d
+$DOCKER_COMPOSE -f $COMPOSE_FILE up -d
 print_success "Services started"
 
 # Step 6: Wait for services to be healthy
@@ -142,7 +140,7 @@ done
 
 if [ "$ALL_RUNNING" = false ]; then
     print_error "Some containers failed to start. Checking logs..."
-    $DOCKER_COMPOSE -f docker-compose.phc.yml logs --tail=50
+    $DOCKER_COMPOSE -f $COMPOSE_FILE logs --tail=50
     exit 1
 fi
 
@@ -153,13 +151,13 @@ print_info "Step 8: Running database migrations..."
 echo "Waiting for database to be ready..."
 sleep 5
 
-$DOCKER_COMPOSE -f docker-compose.phc.yml exec -T web python manage.py migrate --noinput
+$DOCKER_COMPOSE -f $COMPOSE_FILE exec -T web python manage.py migrate --noinput
 print_success "Database migrations completed"
 
 # Step 9: Collect static files
 print_info "Step 9: Collecting static files..."
 
-$DOCKER_COMPOSE -f docker-compose.phc.yml exec -T web python manage.py collectstatic --noinput
+$DOCKER_COMPOSE -f $COMPOSE_FILE exec -T web python manage.py collectstatic --noinput
 print_success "Static files collected"
 
 # Step 10: Verify backend is accessible
@@ -172,7 +170,7 @@ if curl -f -s "http://localhost:$BACKEND_PORT/healthz/" > /dev/null 2>&1; then
     echo ""
 else
     print_warning "Backend health check failed. This might be normal if services are still starting."
-    print_info "Check logs with: $DOCKER_COMPOSE -f docker-compose.phc.yml logs web"
+    print_info "Check logs with: $DOCKER_COMPOSE -f $COMPOSE_FILE logs web"
 fi
 
 # Step 11: Summary
@@ -189,15 +187,15 @@ echo "   Health:   https://$DOMAIN/healthz/"
 echo ""
 echo "📋 Next Steps:"
 echo "   1. Create superuser:"
-echo "      $DOCKER_COMPOSE -f docker-compose.phc.yml exec web python manage.py createsuperuser"
+echo "      $DOCKER_COMPOSE -f $COMPOSE_FILE exec web python manage.py createsuperuser"
 echo ""
 echo "   2. (Optional) Seed demo data:"
-echo "      $DOCKER_COMPOSE -f docker-compose.phc.yml exec web python scripts/preload_demo_data.py"
+echo "      $DOCKER_COMPOSE -f $COMPOSE_FILE exec web python scripts/preload_demo_data.py"
 echo ""
 echo "   3. Verify Caddy is routing correctly:"
 echo "      curl https://$DOMAIN/healthz/"
 echo ""
 echo "   4. Check logs if needed:"
-echo "      $DOCKER_COMPOSE -f docker-compose.phc.yml logs -f"
+echo "      $DOCKER_COMPOSE -f $COMPOSE_FILE logs -f"
 echo ""
 echo "=========================================="

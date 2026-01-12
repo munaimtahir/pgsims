@@ -110,7 +110,10 @@
                 </div>
                 <div class="card-body">
                     <div class="d-grid gap-2">
-                        <a href="{% url 'users:user_create' %}" class="btn btn-primary">
+                        <a href="{% url 'admin:index' %}" class="btn btn-primary">
+                            <i class="fas fa-cog me-2"></i>Django Admin Panel
+                        </a>
+                        <a href="{% url 'users:user_create' %}" class="btn btn-outline-primary">
                             <i class="fas fa-user-plus me-2"></i>Add New User
                         </a>
                         <a href="{% url 'users:pg_bulk_upload' %}" class="btn btn-success">
@@ -118,7 +121,8 @@
                         </a>
                         <a href="{% url 'users:user_reports' %}" class="btn btn-info">
                             <i class="fas fa-chart-bar me-2"></i>View Reports
-                        </a>                        <a href="{% url 'users:activity_log' %}" class="btn btn-warning">
+                        </a>
+                        <a href="{% url 'users:activity_log' %}" class="btn btn-warning">
                             <i class="fas fa-history me-2"></i>Activity Log
                         </a>
                         <a href="{% url 'users:admin_analytics' %}" class="btn btn-secondary">

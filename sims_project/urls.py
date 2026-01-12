@@ -60,7 +60,7 @@ def home_view(request):
                     # Role-based redirection
                     if user.is_admin():
                         messages.success(request, f"Welcome back, Admin {user.get_display_name()}!")
-                        return redirect("admin:index")
+                        return redirect("users:admin_dashboard")  # Redirect to admin dashboard with navigation
                     elif user.is_supervisor():
                         messages.success(request, f"Welcome back, Dr. {user.get_display_name()}!")
                         return redirect("users:supervisor_dashboard")

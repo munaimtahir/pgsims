@@ -16,12 +16,12 @@
 - **API Endpoint:** http://172.237.95.120:81/api/
 - **Health Check:** http://172.237.95.120:81/healthz/
 
-### PHC Production Server (phc.alshifalab.pk)
-- **Homepage:** https://phc.alshifalab.pk/
-- **Login Page:** https://phc.alshifalab.pk/users/login/
-- **Admin Panel:** https://phc.alshifalab.pk/admin/
-- **API Endpoint:** https://phc.alshifalab.pk/api/
-- **Health Check:** https://phc.alshifalab.pk/healthz/
+### PGSIMS Production Server (pgsims.alshifalab.pk)
+- **Homepage:** https://pgsims.alshifalab.pk/
+- **Login Page:** https://pgsims.alshifalab.pk/users/login/
+- **Admin Panel:** https://pgsims.alshifalab.pk/admin/
+- **API Endpoint:** https://pgsims.alshifalab.pk/api/
+- **Health Check:** https://pgsims.alshifalab.pk/healthz/
 - **Server IP:** 34.124.150.231
 - **Backend Port:** 8014 (internal, proxied by Caddy)
 - **Reverse Proxy:** Caddy (automatic SSL/TLS)
