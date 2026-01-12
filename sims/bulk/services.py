@@ -12,7 +12,8 @@ from typing import Iterable, Iterator, List, Optional, Sequence, Tuple
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
 from django.utils import timezone
-from openpyxl import load_workbook
+from openpyxl import Workbook, load_workbook
+from openpyxl.styles import Font
 
 from sims.bulk.models import BulkOperation
 from sims.logbook.models import LogbookEntry
@@ -713,3 +714,165 @@ def _parse_trainee_rows(uploaded_file) -> Iterator[dict]:
         
         row_data["_row_number"] = row_idx
         yield row_data
+
+
+def generate_trainee_template() -> io.BytesIO:
+    """
+    Generate a template Excel file for trainee import.
+    Returns a BytesIO object containing the Excel file.
+    """
+    workbook = Workbook()
+    sheet = workbook.active
+    sheet.title = "Trainee Data"
+    
+    # Set headers
+    headers = ["Sr. No.", "Name of Trainee", "Date of Joining", "MS/FCPS", "Supervisor Name"]
+    header_font = Font(bold=True)
+    
+    for col_idx, header in enumerate(headers, start=1):
+        cell = sheet.cell(row=1, column=col_idx)
+        cell.value = header
+        cell.font = header_font
+    
+    # Add example rows
+    examples = [
+        [1, "John Doe", "2024-01-15", "MS", "Dr. Smith"],
+        [2, "Jane Smith", "2024-02-01", "FCPS", "Dr. Johnson"],
+        [3, "Ahmed Ali", "2024-03-10", "", "Dr. Khan"],
+    ]
+    
+    for row_idx, example in enumerate(examples, start=2):
+        for col_idx, value in enumerate(example, start=1):
+            sheet.cell(row=row_idx, column=col_idx, value=value)
+    
+    # Auto-adjust column widths
+    for col_idx in range(1, len(headers) + 1):
+        column_letter = sheet.cell(row=1, column=col_idx).column_letter
+        sheet.column_dimensions[column_letter].width = 20
+    
+    # Save to BytesIO
+    output = io.BytesIO()
+    workbook.save(output)
+    output.seek(0)
+    return output
+
+
+def convert_excel_to_trainee_format(uploaded_file) -> io.BytesIO:
+    """
+    Convert any Excel file to the required trainee import format.
+    Attempts to intelligently map columns from the uploaded file to the required format.
+    Returns a BytesIO object containing the converted Excel file.
+    """
+    name = getattr(uploaded_file, "name", "uploaded")
+    content = uploaded_file.read()
+    if isinstance(content, bytes):
+        stream = io.BytesIO(content)
+    else:
+        stream = io.StringIO(content)
+    stream.seek(0)
+    
+    if not name.endswith((".xlsx", ".xls")):
+        raise ValidationError("Only Excel files (.xlsx, .xls) are supported")
+    
+    # Load the uploaded workbook
+    source_workbook = load_workbook(stream)
+    source_sheet = source_workbook.active
+    
+    # Get headers from first row
+    source_headers = []
+    for cell in next(source_sheet.iter_rows(max_row=1)):
+        header = str(cell.value).strip() if cell.value else ""
+        source_headers.append(header)
+    
+    # Create new workbook with required format
+    output_workbook = Workbook()
+    output_sheet = output_workbook.active
+    output_sheet.title = "Trainee Data"
+    
+    # Required headers
+    required_headers = ["Sr. No.", "Name of Trainee", "Date of Joining", "MS/FCPS", "Supervisor Name"]
+    header_font = Font(bold=True)
+    
+    # Write headers
+    for col_idx, header in enumerate(required_headers, start=1):
+        cell = output_sheet.cell(row=1, column=col_idx)
+        cell.value = header
+        cell.font = header_font
+    
+    # Try to map source columns to required columns
+    column_mapping = {}
+    for req_col in required_headers:
+        req_lower = req_col.lower()
+        best_match_idx = None
+        best_match_score = 0
+        
+        for src_idx, src_header in enumerate(source_headers):
+            if not src_header:
+                continue
+            src_lower = src_header.lower()
+            
+            # Calculate match score
+            score = 0
+            if req_col == "Sr. No.":
+                if any(keyword in src_lower for keyword in ["sr", "serial", "no", "number", "sno"]):
+                    score = 1
+            elif req_col == "Name of Trainee":
+                if any(keyword in src_lower for keyword in ["name", "trainee", "student", "pg"]):
+                    score = 1
+                    if "trainee" in src_lower or "name" in src_lower:
+                        score = 2
+            elif req_col == "Date of Joining":
+                if any(keyword in src_lower for keyword in ["date", "joining", "join", "doj"]):
+                    score = 1
+                    if "joining" in src_lower or "doj" in src_lower:
+                        score = 2
+            elif req_col == "MS/FCPS":
+                if any(keyword in src_lower for keyword in ["ms", "fcps", "qualification", "degree"]):
+                    score = 1
+            elif req_col == "Supervisor Name":
+                if any(keyword in src_lower for keyword in ["supervisor", "mentor", "guide"]):
+                    score = 1
+                    if "supervisor" in src_lower:
+                        score = 2
+            
+            if score > best_match_score:
+                best_match_score = score
+                best_match_idx = src_idx
+        
+        if best_match_idx is not None:
+            column_mapping[req_col] = best_match_idx
+    
+    # Copy data rows
+    output_row = 2
+    for source_row_idx, source_row in enumerate(source_sheet.iter_rows(min_row=2, values_only=True), start=2):
+        if not any(source_row):  # Skip empty rows
+            continue
+        
+        # Map columns
+        for col_idx, req_header in enumerate(required_headers, start=1):
+            if req_header in column_mapping:
+                src_col_idx = column_mapping[req_header]
+                if src_col_idx < len(source_row):
+                    value = source_row[src_col_idx]
+                    # Format date if it's a date object
+                    if isinstance(value, datetime):
+                        value = value.strftime("%Y-%m-%d")
+                    elif isinstance(value, date):
+                        value = value.strftime("%Y-%m-%d")
+                    output_sheet.cell(row=output_row, column=col_idx, value=value)
+            elif req_header == "Sr. No.":
+                # Auto-generate serial number
+                output_sheet.cell(row=output_row, column=col_idx, value=output_row - 1)
+        
+        output_row += 1
+    
+    # Auto-adjust column widths
+    for col_idx in range(1, len(required_headers) + 1):
+        column_letter = output_sheet.cell(row=1, column=col_idx).column_letter
+        output_sheet.column_dimensions[column_letter].width = 20
+    
+    # Save to BytesIO
+    output = io.BytesIO()
+    output_workbook.save(output)
+    output.seek(0)
+    return output

@@ -37,10 +37,38 @@
                         <li><strong>MS/FCPS</strong> - Qualification (optional)</li>
                         <li><strong>Supervisor Name</strong> - Name of the supervisor (optional, will create supervisor if not found)</li>
                     </ul>
+                    <div class="d-flex gap-2 mb-3">
+                        <a href="{% url 'users:trainee_template_download' %}" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-download me-2"></i>Download Template File
+                        </a>
+                    </div>
                     <div class="alert alert-warning mb-0">
                         <i class="fas fa-exclamation-triangle me-2"></i>
                         <strong>Note:</strong> The system will create user accounts automatically. If a supervisor name is provided but doesn't exist, a supervisor account will be created automatically.
                     </div>
+                </div>
+            </div>
+
+            <!-- Excel Converter Card -->
+            <div class="card mb-4">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-exchange-alt me-2"></i>Convert Excel File to Required Format
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p class="mb-3">Have an Excel file with different column names? Convert it to the required format automatically.</p>
+                    <form id="excelConverterForm" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="convert_file" class="form-label">Select Excel File to Convert</label>
+                            <input type="file" class="form-control" id="convert_file" name="file" accept=".xlsx,.xls" required>
+                            <div class="form-text">The system will automatically map columns to the required format.</div>
+                        </div>
+                        <button type="submit" class="btn btn-secondary" id="convertBtn">
+                            <i class="fas fa-exchange-alt me-2"></i>Convert and Download
+                        </button>
+                    </form>
                 </div>
             </div>
 
@@ -150,7 +178,13 @@ $(document).ready(function() {
                     if (response.details && response.details.failures && response.details.failures.length > 0) {
                         html += '<div class="alert alert-warning mt-3"><h6>Errors Found:</h6><ul class="mb-0">';
                         response.details.failures.forEach(function(failure) {
-                            html += '<li>Row ' + failure.row + ': ' + failure.error + '</li>';
+                            let errorMsg = '';
+                            if (typeof failure.error === 'object') {
+                                errorMsg = JSON.stringify(failure.error);
+                            } else {
+                                errorMsg = failure.error || 'Unknown error';
+                            }
+                            html += '<li><strong>Row ' + (failure.row || 'unknown') + ':</strong> ' + errorMsg + '</li>';
                         });
                         html += '</ul></div>';
                     }
@@ -174,22 +208,71 @@ $(document).ready(function() {
                     
                     $('#resultsContent').html(html);
                 } else {
-                    $('#resultsContent').html('<div class="alert alert-danger"><h5><i class="fas fa-exclamation-triangle me-2"></i>Upload Failed</h5><p>' + (response.error || 'An error occurred during upload') + '</p></div>');
+                    let errorHtml = '<div class="alert alert-danger"><h5><i class="fas fa-exclamation-triangle me-2"></i>Upload Failed</h5><p>' + (response.error || 'An error occurred during upload') + '</p>';
+                    
+                    // Show detailed error information if available
+                    if (response.details && response.details.failures && response.details.failures.length > 0) {
+                        errorHtml += '<div class="mt-3"><h6>Error Details:</h6><ul class="mb-0">';
+                        response.details.failures.forEach(function(failure) {
+                            let errorMsg = '';
+                            if (typeof failure.error === 'object') {
+                                errorMsg = JSON.stringify(failure.error);
+                            } else {
+                                errorMsg = failure.error || 'Unknown error';
+                            }
+                            errorHtml += '<li><strong>Row ' + (failure.row || 'unknown') + ':</strong> ' + errorMsg;
+                            if (failure.data) {
+                                errorHtml += '<br><small class="text-muted">Data: ' + JSON.stringify(failure.data) + '</small>';
+                            }
+                            errorHtml += '</li>';
+                        });
+                        errorHtml += '</ul></div>';
+                    }
+                    
+                    errorHtml += '</div>';
+                    $('#resultsContent').html(errorHtml);
                 }
             },
-            error: function(xhr) {
+                error: function(xhr) {
                 let errorMsg = 'An error occurred during upload';
-                if (xhr.responseJSON && xhr.responseJSON.error) {
-                    errorMsg = xhr.responseJSON.error;
+                let errorDetails = null;
+                
+                if (xhr.responseJSON) {
+                    errorMsg = xhr.responseJSON.error || errorMsg;
+                    errorDetails = xhr.responseJSON.details;
                 } else if (xhr.responseText) {
                     try {
                         const response = JSON.parse(xhr.responseText);
                         errorMsg = response.error || errorMsg;
+                        errorDetails = response.details;
                     } catch(e) {
                         errorMsg = xhr.responseText.substring(0, 200);
                     }
                 }
-                $('#resultsContent').html('<div class="alert alert-danger"><h5><i class="fas fa-exclamation-triangle me-2"></i>Upload Failed</h5><p>' + errorMsg + '</p></div>');
+                
+                let errorHtml = '<div class="alert alert-danger"><h5><i class="fas fa-exclamation-triangle me-2"></i>Upload Failed</h5><p>' + errorMsg + '</p>';
+                
+                // Show detailed error information if available
+                if (errorDetails && errorDetails.failures && errorDetails.failures.length > 0) {
+                    errorHtml += '<div class="mt-3"><h6>Error Details:</h6><ul class="mb-0">';
+                    errorDetails.failures.forEach(function(failure) {
+                        let failureMsg = '';
+                        if (typeof failure.error === 'object') {
+                            failureMsg = JSON.stringify(failure.error);
+                        } else {
+                            failureMsg = failure.error || 'Unknown error';
+                        }
+                        errorHtml += '<li><strong>Row ' + (failure.row || 'unknown') + ':</strong> ' + failureMsg;
+                        if (failure.data) {
+                            errorHtml += '<br><small class="text-muted">Data: ' + JSON.stringify(failure.data) + '</small>';
+                        }
+                        errorHtml += '</li>';
+                    });
+                    errorHtml += '</ul></div>';
+                }
+                
+                errorHtml += '</div>';
+                $('#resultsContent').html(errorHtml);
             },
             complete: function() {
                 uploadBtn.prop('disabled', false);
@@ -200,6 +283,88 @@ $(document).ready(function() {
     
     // File size validation
     $('#id_file').on('change', function() {
+        const file = this.files[0];
+        if (file) {
+            const maxSize = 5 * 1024 * 1024; // 5MB
+            if (file.size > maxSize) {
+                alert('File size exceeds 5MB limit. Please choose a smaller file.');
+                $(this).val('');
+            }
+        }
+    });
+    
+    // Excel converter form handler
+    $('#excelConverterForm').on('submit', function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(this);
+        const convertBtn = $('#convertBtn');
+        const originalText = convertBtn.html();
+        
+        // Disable button and show loading
+        convertBtn.prop('disabled', true);
+        convertBtn.html('<i class="fas fa-spinner fa-spin me-2"></i>Converting...');
+        
+        $.ajax({
+            url: '{% url "users:excel_converter" %}',
+            type: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            xhr: function() {
+                const xhr = new window.XMLHttpRequest();
+                xhr.responseType = 'blob';
+                return xhr;
+            },
+            success: function(data, status, xhr) {
+                // Get filename from Content-Disposition header
+                const contentDisposition = xhr.getResponseHeader('Content-Disposition');
+                let filename = 'converted_trainee_template.xlsx';
+                if (contentDisposition) {
+                    const filenameMatch = contentDisposition.match(/filename="?(.+)"?/i);
+                    if (filenameMatch) {
+                        filename = filenameMatch[1];
+                    }
+                }
+                
+                // Create download link
+                const blob = new Blob([data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+                
+                // Show success message
+                alert('File converted successfully! The converted file has been downloaded.');
+            },
+            error: function(xhr) {
+                let errorMsg = 'An error occurred during conversion';
+                if (xhr.responseJSON && xhr.responseJSON.error) {
+                    errorMsg = xhr.responseJSON.error;
+                } else if (xhr.responseText) {
+                    try {
+                        const response = JSON.parse(xhr.responseText);
+                        errorMsg = response.error || errorMsg;
+                    } catch(e) {
+                        errorMsg = xhr.responseText.substring(0, 200);
+                    }
+                }
+                alert('Conversion failed: ' + errorMsg);
+            },
+            complete: function() {
+                convertBtn.prop('disabled', false);
+                convertBtn.html(originalText);
+                $('#convert_file').val('');
+            }
+        });
+    });
+    
+    // File size validation for converter
+    $('#convert_file').on('change', function() {
         const file = this.files[0];
         if (file) {
             const maxSize = 5 * 1024 * 1024; // 5MB

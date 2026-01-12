@@ -83,6 +83,8 @@ urlpatterns = [
     # PG Management
     path("pgs/", views.PGListView.as_view(), name="pg_list"),
     path("pgs/bulk-upload/", views.PGBulkUploadView.as_view(), name="pg_bulk_upload"),
+    path("pgs/template-download/", views.TraineeTemplateDownloadView.as_view(), name="trainee_template_download"),
+    path("pgs/convert-excel/", views.ExcelConverterView.as_view(), name="excel_converter"),
     path("pg/<int:pk>/progress/", views.PGProgressView.as_view(), name="pg_progress"),
     # Reports and Analytics
     path("reports/", views.UserReportsView.as_view(), name="user_reports"),

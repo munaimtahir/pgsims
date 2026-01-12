@@ -8,7 +8,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import PermissionDenied
 from django.core.paginator import Paginator
 from django.db.models import Count, Q
-from django.http import JsonResponse
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
 from django.utils import timezone
@@ -674,10 +674,56 @@ class PGBulkUploadView(AdminRequiredMixin, View):
                     )
                 return JsonResponse(response_data)
             else:
+                # Operation failed - include details in response
                 response_data["success"] = False
                 response_data["error"] = "Import failed. Check details for errors."
+                response_data["status"] = operation.status
+                # Ensure details are included even when failed
+                if not response_data.get("details"):
+                    response_data["details"] = operation.details or {}
                 return JsonResponse(response_data, status=400)
                 
+        except ValidationError as e:
+            return JsonResponse({"success": False, "error": str(e)}, status=400)
+        except Exception as e:
+            return JsonResponse({"success": False, "error": f"An error occurred: {str(e)}"}, status=500)
+
+
+class TraineeTemplateDownloadView(AdminRequiredMixin, View):
+    """Download template Excel file for trainee import"""
+    
+    def get(self, request):
+        from sims.bulk.services import generate_trainee_template
+        
+        template_file = generate_trainee_template()
+        response = HttpResponse(
+            template_file.read(),
+            content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+        response['Content-Disposition'] = 'attachment; filename="trainee_import_template.xlsx"'
+        return response
+
+
+class ExcelConverterView(AdminRequiredMixin, View):
+    """Convert Excel file to required trainee import format"""
+    
+    def post(self, request):
+        from sims.bulk.services import convert_excel_to_trainee_format
+        from django.core.exceptions import ValidationError
+        
+        if 'file' not in request.FILES:
+            return JsonResponse({"success": False, "error": "No file uploaded"}, status=400)
+        
+        uploaded_file = request.FILES['file']
+        
+        try:
+            converted_file = convert_excel_to_trainee_format(uploaded_file)
+            response = HttpResponse(
+                converted_file.read(),
+                content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+            )
+            response['Content-Disposition'] = 'attachment; filename="converted_trainee_template.xlsx"'
+            return response
         except ValidationError as e:
             return JsonResponse({"success": False, "error": str(e)}, status=400)
         except Exception as e:
