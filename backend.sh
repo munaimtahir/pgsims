@@ -56,6 +56,6 @@ docker compose -p "$COMPOSE_PROJECT_NAME" ps web
 
 echo "=========================================="
 echo "Backend is now running on:"
-echo "  http://127.0.0.1:8001"
+echo "  http://127.0.0.1:8014"
 echo "  https://pgsims.alshifalab.pk"
 echo "=========================================="

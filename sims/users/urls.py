@@ -102,4 +102,6 @@ urlpatterns = [
     path("api/user/<int:pk>/stats/", views.UserStatsAPIView.as_view(), name="user_stats_api"),
     path("api/stats/", views.UserListStatsAPIView.as_view(), name="user_list_stats_api"),
     path("api/admin/stats/", views.admin_stats_api, name="admin_stats_api"),
+    path("api/user-statistics/", views.UserStatisticsAPIView.as_view(), name="api_user_statistics"),
+    path("api/user-performance/", views.UserPerformanceAPIView.as_view(), name="api_user_performance"),
 ]

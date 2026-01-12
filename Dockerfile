@@ -54,8 +54,8 @@ COPY --chown=sims:sims . .
 # Switch to app user
 USER sims
 
-# Collect static files
-RUN python manage.py collectstatic --noinput || true
+# Note: collectstatic is run at container startup via docker-compose command
+# to ensure environment variables are available
 
 # Expose port
 EXPOSE 8000

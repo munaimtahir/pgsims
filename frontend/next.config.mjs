@@ -5,6 +5,9 @@ const nextConfig = {
     NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000',
   },
   
+  // Output configuration for Docker
+  output: 'standalone',
+  
   // Image domains if using next/image
   images: {
     domains: [],

@@ -2,7 +2,6 @@
 
 # Frontend deployment script for PGSIMS
 # Rebuilds and redeploys only the frontend service
-# NOTE: This script is ready for when a frontend service is added to docker-compose.yml
 
 set -e  # Exit on error
 
@@ -57,6 +56,6 @@ docker compose -p "$COMPOSE_PROJECT_NAME" ps frontend
 
 echo "=========================================="
 echo "Frontend is now running on:"
-echo "  http://127.0.0.1:8080"
+echo "  http://127.0.0.1:3000"
 echo "  https://pgsims.alshifalab.pk"
 echo "=========================================="

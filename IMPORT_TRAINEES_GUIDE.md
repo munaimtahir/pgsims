@@ -14,13 +14,32 @@ This guide explains how to import trainee data from the Excel file `Trainee_Data
 
 ## Import Methods
 
+### Method 0: Preview Data (Recommended First Step)
+
+Before importing, preview the data to see all trainees and supervisors that will be created:
+
+```bash
+# Preview all trainees and supervisors from the Excel file
+python manage.py preview_trainees /home/munaim/Downloads/Trainee_Data_Department_of_Urology.xlsx
+```
+
+This command will:
+- Parse the Excel file
+- Generate lists of all trainees with their usernames and emails
+- Generate lists of all unique supervisors
+- Display any errors or warnings
+- **Does NOT import any data** - it's a preview only
+
 ### Method 1: Using Django Management Command (Recommended)
 
 ```bash
-# Step 1: Validate the data (dry run)
+# Step 1: Preview the data (optional but recommended)
+python manage.py preview_trainees /home/munaim/Downloads/Trainee_Data_Department_of_Urology.xlsx
+
+# Step 2: Validate the data (dry run)
 python manage.py import_trainees /home/munaim/Downloads/Trainee_Data_Department_of_Urology.xlsx --dry-run --allow-partial
 
-# Step 2: If validation passes, run the actual import
+# Step 3: If validation passes, run the actual import
 python manage.py import_trainees /home/munaim/Downloads/Trainee_Data_Department_of_Urology.xlsx --allow-partial
 ```
 

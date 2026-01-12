@@ -45,8 +45,13 @@ if python3 scripts/preload_demo_data.py; then
     echo "  Admin:      username: admin,     password: admin123"
     echo "  Supervisor: username: dr_smith,  password: supervisor123"
     echo "  Supervisor: username: dr_jones,  password: supervisor123"
+    echo "  Supervisor: username: dr_ahmed,  password: supervisor123"
+    echo "  Supervisor: username: dr_ali,     password: supervisor123"
     echo "  PG Student: username: pg_ahmed,  password: student123"
     echo "  PG Student: username: pg_fatima, password: student123"
+    echo "  PG Student: username: pg_ali,    password: student123"
+    echo "  PG Student: username: pg_sara,    password: student123"
+    echo "  PG Student: username: pg_omar,    password: student123"
     echo ""
     exit 0
 else

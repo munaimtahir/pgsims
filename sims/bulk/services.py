@@ -279,12 +279,23 @@ class BulkService:
             if supervisor_name:
                 try:
                     supervisor = _get_or_create_supervisor(supervisor_name, self.actor)
-                    if supervisor and supervisor.id not in [s["id"] for s in created_supervisors]:
-                        created_supervisors.append({
-                            "id": supervisor.id,
-                            "username": supervisor.username,
-                            "name": supervisor.get_full_name()
-                        })
+                    if supervisor:
+                        if supervisor.id not in [s["id"] for s in created_supervisors]:
+                            created_supervisors.append({
+                                "id": supervisor.id,
+                                "username": supervisor.username,
+                                "name": supervisor.get_full_name()
+                            })
+                    else:
+                        # Supervisor creation returned None
+                        if not allow_partial:
+                            failures.append({
+                                "row": row_num,
+                                "error": f"Could not create/find supervisor '{supervisor_name}'",
+                                "data": row
+                            })
+                            errors_triggered = True
+                            return
                 except Exception as e:
                     failures.append({
                         "row": row_num,
@@ -346,10 +357,11 @@ class BulkService:
                         existing_user.save()
                         user = existing_user
                     else:
-                        # Create new user
-                        user = User.objects.create(**user_data)
+                        # Create new user - set password before saving to avoid validation errors
+                        user = User(**user_data)
                         # Set password (default password, should be changed on first login)
                         user.set_password("changeme123")
+                        # Now save (this will validate and create the record)
                         user.save()
                 
                 successes.append({
@@ -594,6 +606,9 @@ def _get_or_create_supervisor(supervisor_name: str, actor: User) -> Optional[Use
         is_active=True,
         created_by=actor,
     )
+    # Set password (default password, should be changed on first login)
+    supervisor.set_password("changeme123")
+    supervisor.save()
     
     return supervisor
 

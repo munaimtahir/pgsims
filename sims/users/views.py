@@ -638,9 +638,50 @@ class PGBulkUploadView(AdminRequiredMixin, View):
         return render(request, "users/pg_bulk_upload.html")
 
     def post(self, request):
-        # Implementation for bulk upload
-        messages.success(request, "PGs uploaded successfully.")
-        return redirect("users:pg_list")
+        from sims.bulk.services import BulkService
+        from django.core.exceptions import ValidationError
+        
+        if 'file' not in request.FILES:
+            return JsonResponse({"success": False, "error": "No file uploaded"}, status=400)
+        
+        uploaded_file = request.FILES['file']
+        dry_run = request.POST.get('dry_run', 'false').lower() == 'true'
+        allow_partial = request.POST.get('allow_partial', 'false').lower() == 'true'
+        
+        try:
+            service = BulkService(request.user)
+            operation = service.import_trainees(
+                uploaded_file,
+                dry_run=dry_run,
+                allow_partial=allow_partial,
+            )
+            
+            response_data = {
+                "success": True,
+                "total_items": operation.total_items,
+                "success_count": operation.success_count,
+                "failure_count": operation.failure_count,
+                "details": operation.details,
+                "dry_run": dry_run,
+            }
+            
+            if operation.status == operation.STATUS_COMPLETED:
+                if not dry_run:
+                    messages.success(
+                        request,
+                        f"Successfully imported {operation.success_count} PGs. "
+                        f"{operation.failure_count} rows failed."
+                    )
+                return JsonResponse(response_data)
+            else:
+                response_data["success"] = False
+                response_data["error"] = "Import failed. Check details for errors."
+                return JsonResponse(response_data, status=400)
+                
+        except ValidationError as e:
+            return JsonResponse({"success": False, "error": str(e)}, status=400)
+        except Exception as e:
+            return JsonResponse({"success": False, "error": f"An error occurred: {str(e)}"}, status=500)
 
 
 class PGProgressView(LoginRequiredMixin, DetailView):
@@ -664,7 +705,26 @@ class UserReportsView(AdminRequiredMixin, View):
     """User reports (admin only)"""
 
     def get(self, request):
-        return render(request, "users/user_reports.html")
+        # Get basic statistics for the template
+        total_users = User.objects.filter(is_archived=False).count()
+        total_pgs = User.objects.filter(role="pg", is_archived=False).count()
+        total_supervisors = User.objects.filter(role="supervisor", is_archived=False).count()
+        
+        # Get new users this month
+        current_month_start = timezone.now().replace(
+            day=1, hour=0, minute=0, second=0, microsecond=0
+        )
+        new_users_this_month = User.objects.filter(
+            is_archived=False, date_joined__gte=current_month_start
+        ).count()
+        
+        context = {
+            "total_users": total_users,
+            "total_pgs": total_pgs,
+            "total_supervisors": total_supervisors,
+            "new_users_this_month": new_users_this_month,
+        }
+        return render(request, "users/user_reports.html", context)
 
 
 class UserExportView(AdminRequiredMixin, View):
@@ -778,6 +838,166 @@ class UserListStatsAPIView(LoginRequiredMixin, View):
         }
 
         return JsonResponse(stats)
+
+
+class UserStatisticsAPIView(AdminRequiredMixin, View):
+    """API endpoint for user statistics used in reports"""
+
+    def get(self, request):
+        from datetime import timedelta
+        
+        # Get basic counts
+        total_users = User.objects.filter(is_archived=False).count()
+        total_pgs = User.objects.filter(role="pg", is_archived=False).count()
+        total_supervisors = User.objects.filter(role="supervisor", is_archived=False).count()
+        
+        # Get new users this month
+        current_month_start = timezone.now().replace(
+            day=1, hour=0, minute=0, second=0, microsecond=0
+        )
+        new_this_month = User.objects.filter(
+            is_archived=False, date_joined__gte=current_month_start
+        ).count()
+        
+        # Registration trends (last 6 months)
+        registration_trends = {"labels": [], "data": []}
+        for i in range(5, -1, -1):
+            month_start = (timezone.now() - timedelta(days=30 * i)).replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+            month_end = (month_start + timedelta(days=32)).replace(day=1) - timedelta(days=1)
+            count = User.objects.filter(
+                is_archived=False,
+                date_joined__gte=month_start,
+                date_joined__lte=month_end
+            ).count()
+            registration_trends["labels"].append(month_start.strftime("%b %Y"))
+            registration_trends["data"].append(count)
+        
+        # Role distribution
+        role_distribution = {
+            "pg": total_pgs,
+            "supervisor": total_supervisors,
+            "admin": User.objects.filter(role="admin", is_archived=False).count(),
+        }
+        
+        # Specialty distribution
+        specialty_distribution = {}
+        specialty_stats = (
+            User.objects.filter(role="pg", is_archived=False, specialty__isnull=False)
+            .values("specialty")
+            .annotate(count=Count("id"))
+            .order_by("-count")
+        )
+        for item in specialty_stats:
+            specialty_distribution[item["specialty"] or "Unspecified"] = item["count"]
+        
+        # Activity trends (last 30 days)
+        activity_trends = {"labels": [], "data": []}
+        for i in range(29, -1, -1):
+            day = timezone.now().date() - timedelta(days=i)
+            # Count users who logged in on this day
+            count = User.objects.filter(
+                last_login__date=day,
+                is_archived=False
+            ).count()
+            activity_trends["labels"].append(day.strftime("%m/%d"))
+            activity_trends["data"].append(count)
+        
+        # Health metrics
+        active_users = User.objects.filter(is_active=True, is_archived=False).count()
+        active_percentage = round((active_users / total_users * 100) if total_users > 0 else 0, 1)
+        
+        health_metrics = {
+            "active_users": active_percentage,
+            "engagement_rate": 68,  # Placeholder - would need actual engagement tracking
+            "completion_rate": 82,  # Placeholder - would need actual completion tracking
+            "satisfaction_rate": 91,  # Placeholder - would need actual satisfaction tracking
+        }
+        
+        # Ensure all required fields are present
+        if not registration_trends.get("labels"):
+            registration_trends = {"labels": [], "data": []}
+        if not activity_trends.get("labels"):
+            activity_trends = {"labels": [], "data": []}
+        
+        return JsonResponse({
+            "total_users": total_users,
+            "total_pgs": total_pgs,
+            "total_supervisors": total_supervisors,
+            "new_this_month": new_this_month,
+            "registration_trends": registration_trends,
+            "role_distribution": role_distribution,
+            "specialty_distribution": specialty_distribution,
+            "activity_trends": activity_trends,
+            "health_metrics": health_metrics,
+        })
+
+
+class UserPerformanceAPIView(AdminRequiredMixin, View):
+    """API endpoint for user performance data used in reports"""
+
+    def get(self, request):
+        from datetime import timedelta
+        
+        users_data = []
+        users = User.objects.filter(is_archived=False).select_related("supervisor")[:100]  # Limit to 100 for performance
+        
+        for user in users:
+            # Get submission counts from various apps
+            total_submissions = 0
+            
+            try:
+                from sims.certificates.models import Certificate
+                total_submissions += Certificate.objects.filter(pg=user).count()
+            except ImportError:
+                pass
+            
+            try:
+                from sims.logbook.models import LogbookEntry
+                total_submissions += LogbookEntry.objects.filter(pg=user).count()
+            except ImportError:
+                pass
+            
+            try:
+                from sims.cases.models import ClinicalCase
+                total_submissions += ClinicalCase.objects.filter(pg=user).count()
+            except ImportError:
+                pass
+            
+            try:
+                from sims.rotations.models import Rotation
+                total_submissions += Rotation.objects.filter(pg=user).count()
+            except ImportError:
+                pass
+            
+            # Calculate completion rate (placeholder - would need actual requirements)
+            completion_rate = min(round((total_submissions / 50) * 100, 1) if total_submissions > 0 else 0, 100)
+            
+            # Last activity
+            last_activity = "Never"
+            if user.last_login:
+                days_ago = (timezone.now().date() - user.last_login.date()).days
+                if days_ago == 0:
+                    last_activity = "Today"
+                elif days_ago == 1:
+                    last_activity = "1 day ago"
+                else:
+                    last_activity = f"{days_ago} days ago"
+            
+            users_data.append({
+                "id": user.id,
+                "first_name": user.first_name,
+                "last_name": user.last_name,
+                "full_name": user.get_full_name(),
+                "username": user.username,
+                "role": user.role,
+                "specialty": user.specialty or "N/A",
+                "total_submissions": total_submissions,
+                "completion_rate": completion_rate,
+                "last_activity": last_activity,
+                "is_active": user.is_active,
+            })
+        
+        return JsonResponse({"users": users_data})
 
 
 # Analytics Views

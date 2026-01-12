@@ -71,6 +71,6 @@ docker compose -p "$COMPOSE_PROJECT_NAME" ps web worker beat
 
 echo "=========================================="
 echo "Services are now running:"
-echo "  Web:    http://127.0.0.1:8001"
+echo "  Web:    http://127.0.0.1:8014"
 echo "  Production: https://pgsims.alshifalab.pk"
 echo "=========================================="

@@ -31,10 +31,14 @@ if __name__ == "__main__":
 
 from django.contrib.auth import get_user_model
 from django.db import transaction
-from sims.rotations.models import Hospital, Department, Rotation
+from django.utils import timezone
+from sims.rotations.models import Hospital, Department as RotationDepartment, Rotation, RotationEvaluation
 from sims.certificates.models import CertificateType, Certificate
 from sims.logbook.models import LogbookEntry, Procedure, Diagnosis
 from sims.cases.models import CaseCategory, ClinicalCase
+from sims.academics.models import Department as AcademicDepartment, Batch, StudentProfile
+from sims.results.models import Exam, Score
+from sims.attendance.models import Session, AttendanceRecord, EligibilitySummary
 
 User = get_user_model()
 
@@ -73,6 +77,24 @@ def create_demo_users():
                 'last_name': 'Jones',
                 'specialty': 'medicine',
             },
+            {
+                'username': 'dr_ahmed',
+                'email': 'ahmed.supervisor@sims.demo',
+                'password': 'supervisor123',
+                'role': 'supervisor',
+                'first_name': 'Ahmed',
+                'last_name': 'Raza',
+                'specialty': 'cardiology',
+            },
+            {
+                'username': 'dr_ali',
+                'email': 'ali.supervisor@sims.demo',
+                'password': 'supervisor123',
+                'role': 'supervisor',
+                'first_name': 'Ali',
+                'last_name': 'Khan',
+                'specialty': 'orthopedics',
+            },
         ],
         'students': [
             {
@@ -96,6 +118,39 @@ def create_demo_users():
                 'specialty': 'medicine',
                 'year': '2',
                 'registration_number': 'PG2024002',
+            },
+            {
+                'username': 'pg_ali',
+                'email': 'ali@sims.demo',
+                'password': 'student123',
+                'role': 'pg',
+                'first_name': 'Ali',
+                'last_name': 'Hassan',
+                'specialty': 'surgery',
+                'year': '2',
+                'registration_number': 'PG2024003',
+            },
+            {
+                'username': 'pg_sara',
+                'email': 'sara@sims.demo',
+                'password': 'student123',
+                'role': 'pg',
+                'first_name': 'Sara',
+                'last_name': 'Ahmed',
+                'specialty': 'medicine',
+                'year': '1',
+                'registration_number': 'PG2024004',
+            },
+            {
+                'username': 'pg_omar',
+                'email': 'omar@sims.demo',
+                'password': 'student123',
+                'role': 'pg',
+                'first_name': 'Omar',
+                'last_name': 'Malik',
+                'specialty': 'cardiology',
+                'year': '3',
+                'registration_number': 'PG2024005',
             },
         ],
     }
@@ -132,7 +187,11 @@ def create_demo_users():
     students = []
     for idx, pg_data in enumerate(users_data['students']):
         # Assign supervisor based on specialty match
-        supervisor = supervisors[idx % len(supervisors)]
+        matching_supervisors = [s for s in supervisors if s.specialty == pg_data.get('specialty')]
+        if matching_supervisors:
+            supervisor = matching_supervisors[0]
+        else:
+            supervisor = supervisors[idx % len(supervisors)]
         pg_data['supervisor'] = supervisor
         
         student, created = User.objects.get_or_create(
@@ -195,7 +254,7 @@ def create_hospitals_and_departments():
     for dept_data in departments_data:
         for hospital in hospitals:
             dept_data_with_hospital = {**dept_data, 'hospital': hospital}
-            department, created = Department.objects.get_or_create(
+            department, created = RotationDepartment.objects.get_or_create(
                 name=dept_data['name'],
                 hospital=hospital,
                 defaults=dept_data_with_hospital
@@ -637,6 +696,313 @@ def create_clinical_cases(students, supervisors, rotations):
     return cases
 
 
+def create_academic_data(admin, supervisors, students):
+    """Create academic departments, batches, and student profiles"""
+    print("\nCreating academic data...")
+    
+    # Create academic departments
+    academic_depts_data = [
+        {'name': 'Department of Surgery', 'code': 'SURG', 'description': 'General Surgery Department'},
+        {'name': 'Department of Medicine', 'code': 'MED', 'description': 'Internal Medicine Department'},
+        {'name': 'Department of Cardiology', 'code': 'CARD', 'description': 'Cardiology Department'},
+        {'name': 'Department of Orthopedics', 'code': 'ORTHO', 'description': 'Orthopedics Department'},
+    ]
+    
+    academic_depts = []
+    for dept_data in academic_depts_data:
+        # Assign a supervisor as department head
+        head = supervisors[0] if academic_depts_data.index(dept_data) < len(supervisors) else admin
+        dept_data['head'] = head
+        
+        dept, created = AcademicDepartment.objects.get_or_create(
+            code=dept_data['code'],
+            defaults=dept_data
+        )
+        if created:
+            print(f"✓ Created academic department: {dept.name}")
+        academic_depts.append(dept)
+    
+    # Create batches
+    batches = []
+    for idx, dept in enumerate(academic_depts):
+        batch_data = {
+            'name': f'2024 Batch',
+            'program': 'ms' if idx < 2 else 'md',
+            'department': dept,
+            'start_date': date(2024, 1, 1),
+            'end_date': date(2027, 12, 31),
+            'coordinator': dept.head,
+            'capacity': 30,
+        }
+        
+        batch, created = Batch.objects.get_or_create(
+            name=batch_data['name'],
+            department=dept,
+            start_date=batch_data['start_date'],
+            defaults=batch_data
+        )
+        if created:
+            print(f"✓ Created batch: {batch.name} - {dept.code}")
+        batches.append(batch)
+    
+    # Create student profiles
+    student_profiles = []
+    for idx, student in enumerate(students):
+        if idx < len(batches):
+            batch = batches[idx % len(batches)]
+        else:
+            batch = batches[0]
+        
+        profile_data = {
+            'user': student,
+            'batch': batch,
+            'roll_number': student.registration_number or f'ROLL{student.id:04d}',
+            'admission_date': date(2024, 1, 1),
+            'expected_graduation_date': date(2027, 12, 31),
+            'status': 'active',
+            'cgpa': 3.5 + (idx * 0.2),
+        }
+        
+        profile, created = StudentProfile.objects.get_or_create(
+            user=student,
+            defaults=profile_data
+        )
+        if created:
+            print(f"✓ Created student profile: {profile.roll_number} - {student.username}")
+        student_profiles.append(profile)
+    
+    return academic_depts, batches, student_profiles
+
+
+def create_exams_and_scores(admin, students, rotations):
+    """Create exams and scores for students"""
+    print("\nCreating exams and scores...")
+    
+    exams = []
+    scores = []
+    
+    # Create exams for different rotations
+    exam_templates = [
+        {
+            'title': 'Mid-Rotation Assessment - General Surgery',
+            'exam_type': 'midterm',
+            'max_marks': 100.0,
+            'passing_marks': 50.0,
+        },
+        {
+            'title': 'Final Rotation Exam - Internal Medicine',
+            'exam_type': 'final',
+            'max_marks': 100.0,
+            'passing_marks': 50.0,
+        },
+        {
+            'title': 'Theory Exam - Cardiology',
+            'exam_type': 'theory',
+            'max_marks': 100.0,
+            'passing_marks': 40.0,
+        },
+        {
+            'title': 'Practical Assessment - Orthopedics',
+            'exam_type': 'practical',
+            'max_marks': 50.0,
+            'passing_marks': 25.0,
+        },
+    ]
+    
+    for idx, student in enumerate(students):
+        # Get student's rotations
+        student_rotations = [r for r in rotations if r.pg == student]
+        
+        for exam_idx, exam_template in enumerate(exam_templates[:min(2, len(exam_templates))]):
+            rotation = student_rotations[exam_idx % len(student_rotations)] if student_rotations else None
+            
+            exam_date = date.today() - timedelta(days=30 * (exam_idx + 1))
+            
+            exam_data = {
+                'title': exam_template['title'],
+                'exam_type': exam_template['exam_type'],
+                'rotation': rotation,
+                'module_name': rotation.department.name if rotation else exam_template['title'].split(' - ')[-1],
+                'date': exam_date,
+                'start_time': timezone.now().time().replace(hour=9, minute=0),
+                'duration_minutes': 120,
+                'max_marks': exam_template['max_marks'],
+                'passing_marks': exam_template['passing_marks'],
+                'status': 'completed',
+                'conducted_by': admin,
+            }
+            
+            exam, created = Exam.objects.get_or_create(
+                title=exam_data['title'],
+                date=exam_date,
+                defaults=exam_data
+            )
+            
+            if created:
+                print(f"✓ Created exam: {exam.title}")
+            exams.append(exam)
+            
+            # Create score for this student
+            marks = 65.0 + (idx * 5.0) + (exam_idx * 3.0)  # Vary marks
+            if marks > exam.max_marks:
+                marks = exam.max_marks - 5.0
+            
+            score_data = {
+                'exam': exam,
+                'student': student,
+                'marks_obtained': marks,
+                'is_eligible': True,
+                'entered_by': admin,
+            }
+            
+            score, created = Score.objects.get_or_create(
+                exam=exam,
+                student=student,
+                defaults=score_data
+            )
+            
+            if created:
+                print(f"✓ Created score: {student.username} - {marks}/{exam.max_marks}")
+            scores.append(score)
+    
+    return exams, scores
+
+
+def create_attendance_data(admin, supervisors, students, rotations):
+    """Create attendance sessions and records"""
+    print("\nCreating attendance data...")
+    
+    sessions = []
+    attendance_records = []
+    
+    # Create sessions for the past 2 months
+    session_types = ['lecture', 'clinical', 'tutorial', 'seminar']
+    
+    for day_offset in range(60, 0, -3):  # Every 3 days for 2 months
+        session_date = date.today() - timedelta(days=day_offset)
+        
+        for session_idx, session_type in enumerate(session_types):
+            if session_idx % 2 == 0:  # Create every other session type
+                rotation = rotations[session_idx % len(rotations)] if rotations else None
+                
+                session_data = {
+                    'title': f'{session_type.title()} Session - {session_date.strftime("%B %d")}',
+                    'session_type': session_type,
+                    'date': session_date,
+                    'start_time': timezone.now().time().replace(hour=9 + session_idx, minute=0),
+                    'end_time': timezone.now().time().replace(hour=10 + session_idx, minute=30),
+                    'rotation': rotation,
+                    'module_name': rotation.department.name if rotation else 'General Medicine',
+                    'location': 'Main Lecture Hall' if session_type == 'lecture' else 'Clinical Ward',
+                    'instructor': supervisors[session_idx % len(supervisors)] if supervisors else admin,
+                    'status': 'completed',
+                }
+                
+                session, created = Session.objects.get_or_create(
+                    title=session_data['title'],
+                    date=session_date,
+                    defaults=session_data
+                )
+                
+                if created:
+                    sessions.append(session)
+                    
+                    # Create attendance records for students (80-95% attendance)
+                    for student in students:
+                        attendance_rand = (day_offset + hash(student.username)) % 10
+                        if attendance_rand < 8:  # ~80% present
+                            status = 'present'
+                        elif attendance_rand == 8:
+                            status = 'late'
+                        else:
+                            status = 'absent'
+                        
+                        record_data = {
+                            'session': session,
+                            'user': student,
+                            'status': status,
+                            'recorded_by': admin,
+                        }
+                        
+                        record, created = AttendanceRecord.objects.get_or_create(
+                            session=session,
+                            user=student,
+                            defaults=record_data
+                        )
+                        
+                        if created:
+                            attendance_records.append(record)
+    
+    # Create eligibility summaries
+    eligibility_summaries = []
+    for student in students:
+        # Calculate attendance percentage (80-95%)
+        total_sessions = len([s for s in sessions if s.date <= date.today()])
+        attended_count = len([r for r in attendance_records if r.user == student and r.status in ['present', 'late']])
+        percentage = (attended_count / total_sessions * 100) if total_sessions > 0 else 85.0
+        
+        summary_data = {
+            'user': student,
+            'period': 'monthly',
+            'start_date': date.today() - timedelta(days=60),
+            'end_date': date.today(),
+            'total_sessions': total_sessions,
+            'attended_sessions': attended_count,
+            'percentage_present': percentage,
+            'is_eligible': percentage >= 75.0,
+            'threshold_percentage': 75.0,
+        }
+        
+        summary, created = EligibilitySummary.objects.get_or_create(
+            user=student,
+            period='monthly',
+            start_date=summary_data['start_date'],
+            end_date=summary_data['end_date'],
+            defaults=summary_data
+        )
+        
+        if created:
+            print(f"✓ Created eligibility summary: {student.username} - {percentage:.1f}%")
+        eligibility_summaries.append(summary)
+    
+    print(f"✓ Created {len(sessions)} sessions, {len(attendance_records)} attendance records")
+    return sessions, attendance_records, eligibility_summaries
+
+
+def create_rotation_evaluations(students, supervisors, rotations):
+    """Create rotation evaluations"""
+    print("\nCreating rotation evaluations...")
+    
+    evaluations = []
+    
+    for rotation in rotations:
+        if rotation.status in ['ongoing', 'completed']:
+            # Create supervisor evaluation
+            if rotation.supervisor:
+                eval_data = {
+                    'rotation': rotation,
+                    'evaluator': rotation.supervisor,
+                    'evaluation_type': 'supervisor',
+                    'score': 75 + (hash(str(rotation.id)) % 20),  # Score between 75-95
+                    'comments': f'Good performance in {rotation.department.name}. Shows dedication and learning attitude.',
+                    'recommendations': 'Continue to focus on clinical skills development and case presentations.',
+                    'status': 'approved' if rotation.status == 'completed' else 'submitted',
+                }
+                
+                eval_obj, created = RotationEvaluation.objects.get_or_create(
+                    rotation=rotation,
+                    evaluator=rotation.supervisor,
+                    evaluation_type='supervisor',
+                    defaults=eval_data
+                )
+                
+                if created:
+                    print(f"✓ Created evaluation: {rotation.pg.username} - {rotation.department.name}")
+                evaluations.append(eval_obj)
+    
+    return evaluations
+
+
 @transaction.atomic
 def main():
     """Main function to run all demo data creation"""
@@ -663,6 +1029,18 @@ def main():
         # Create clinical cases
         cases = create_clinical_cases(students, supervisors, rotations)
         
+        # Create academic data
+        academic_depts, batches, student_profiles = create_academic_data(admin, supervisors, students)
+        
+        # Create exams and scores
+        exams, scores = create_exams_and_scores(admin, students, rotations)
+        
+        # Create attendance data
+        sessions, attendance_records, eligibility_summaries = create_attendance_data(admin, supervisors, students, rotations)
+        
+        # Create rotation evaluations
+        evaluations = create_rotation_evaluations(students, supervisors, rotations)
+        
         print("\n" + "=" * 70)
         print("✓ Demo data created successfully!")
         print("=" * 70)
@@ -670,16 +1048,30 @@ def main():
         print(f"  • Users: 1 admin, {len(supervisors)} supervisors, {len(students)} PG students")
         print(f"  • Hospitals: {len(hospitals)}")
         print(f"  • Departments: {len(departments)}")
+        print(f"  • Academic Departments: {len(academic_depts)}")
+        print(f"  • Batches: {len(batches)}")
+        print(f"  • Student Profiles: {len(student_profiles)}")
         print(f"  • Rotations: {len(rotations)}")
+        print(f"  • Rotation Evaluations: {len(evaluations)}")
         print(f"  • Certificates: {len(certificates)}")
         print(f"  • Logbook Entries: {len(entries)}")
         print(f"  • Clinical Cases: {len(cases)}")
+        print(f"  • Exams: {len(exams)}")
+        print(f"  • Scores: {len(scores)}")
+        print(f"  • Attendance Sessions: {len(sessions)}")
+        print(f"  • Attendance Records: {len(attendance_records)}")
+        print(f"  • Eligibility Summaries: {len(eligibility_summaries)}")
         print("\nLogin Credentials:")
         print("  Admin:      username: admin,     password: admin123")
         print("  Supervisor: username: dr_smith,  password: supervisor123")
         print("  Supervisor: username: dr_jones,  password: supervisor123")
+        print("  Supervisor: username: dr_ahmed,  password: supervisor123")
+        print("  Supervisor: username: dr_ali,     password: supervisor123")
         print("  PG Student: username: pg_ahmed,  password: student123")
         print("  PG Student: username: pg_fatima, password: student123")
+        print("  PG Student: username: pg_ali,    password: student123")
+        print("  PG Student: username: pg_sara,    password: student123")
+        print("  PG Student: username: pg_omar,    password: student123")
         print("=" * 70)
         
     except Exception as e:

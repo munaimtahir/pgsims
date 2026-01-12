@@ -167,6 +167,32 @@ services:
     networks:
       - sims_network
 
+  # Next.js Frontend Application
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+      args:
+        - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://web:8000}
+    container_name: sims_frontend
+    environment:
+      - NODE_ENV=production
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://web:8000}
+      - PORT=3000
+      - HOSTNAME=0.0.0.0
+    depends_on:
+      - web
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+    networks:
+      - sims_network
+    # NOTE: No port bindings - Traefik/Coolify handles external access
+
 volumes:
   postgres_data:
   redis_data:
