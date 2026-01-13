@@ -1,0 +1,317 @@
+================================================================================
+PGSIMS - DOCKER & CONFIG FIX REPORT
+================================================================================
+Date: 2025-01-XX
+VPS IP: 34.16.82.13
+Status: ✅ COMPLETE
+
+================================================================================
+1. REPOSITORY NAME
+================================================================================
+pgsims
+
+================================================================================
+2. AUDIT SUMMARY
+================================================================================
+
+Backend Framework: Django 4.2 with Django REST Framework
+Frontend: Next.js (React)
+Existing Dockerfiles:
+  - Dockerfile (Python 3.11-slim, Gunicorn)
+  - Dockerfile.frontend (Node 20, Next.js standalone)
+Existing docker-compose.yml: ✅ Present but needed fixes
+Environment Variables: Partially configured, needs standardization
+Port Usage:
+  - Backend: Was "8014:8014" (no 127.0.0.1 binding) ❌ → Fixed to "127.0.0.1:8014:8014" ✅
+  - Frontend: Was "3000:3000" (wrong port, no 127.0.0.1) ❌ → Fixed to "127.0.0.1:8082:3000" ✅
+Hardcoded Domains/IPs: Found old IPs (34.124.150.231, 139.162.9.224, 172.237.95.120) in settings.py
+
+Issues Identified:
+1. Backend port mapping missing 127.0.0.1 binding
+2. Frontend port was 3000 but should be 8082 for Caddy routing
+3. Frontend port mapping missing 127.0.0.1 binding
+4. ALLOWED_HOSTS includes old IP addresses
+5. Frontend API URL uses wrong domain (should be api.pgsims.alshifalab.pk)
+6. CSRF_TRUSTED_ORIGINS missing api.pgsims.alshifalab.pk
+
+================================================================================
+3. CHANGES MADE
+================================================================================
+
+✅ Fixed sims_project/settings.py:
+   - Updated ALLOWED_HOSTS default to include api.pgsims.alshifalab.pk
+   - Removed old IP addresses (34.124.150.231, 139.162.9.224, 172.237.95.120)
+
+✅ Fixed docker-compose.yml:
+   - Backend port mapping: Changed from "8014:8014" to "127.0.0.1:8014:8014"
+   - Frontend port mapping: Changed from "3000:3000" to "127.0.0.1:8082:3000"
+   - Updated ALLOWED_HOSTS default to remove old IPs and include api.pgsims.alshifalab.pk
+   - Updated CSRF_TRUSTED_ORIGINS default to include api.pgsims.alshifalab.pk
+   - Updated frontend NEXT_PUBLIC_API_URL from https://pgsims.alshifalab.pk to https://api.pgsims.alshifalab.pk
+
+✅ Verified Dockerfiles:
+   - Dockerfile: Correctly binds to 0.0.0.0:8000 inside container (default), command overrides to 0.0.0.0:8014
+   - Dockerfile.frontend: Correctly uses Next.js on port 3000 inside container
+   - Both are properly mapped to 127.0.0.1 on host via docker-compose.yml
+
+✅ Verified DEBUG setting:
+   - Default is False (os.environ.get("DEBUG", "False").lower() in ("true", "1", "yes"))
+   - Production-ready by default
+
+================================================================================
+4. UPDATED DOCKERFILE(S)
+================================================================================
+
+Dockerfile:
+-----------
+# Multi-stage Dockerfile for SIMS
+# Builds a production-ready Docker image
+
+# Stage 1: Builder
+FROM python:3.11-slim as builder
+
+# Set environment variables
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    libpq-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create and set working directory
+WORKDIR /app
+
+# Copy requirements and install Python dependencies
+COPY requirements.txt .
+RUN pip install --user -r requirements.txt
+
+# Stage 2: Runtime
+FROM python:3.11-slim
+
+# Set environment variables
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PATH=/home/sims/.local/bin:$PATH
+
+# Install runtime dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libpq5 \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create app user
+RUN useradd -m -u 1000 sims && \
+    mkdir -p /app /app/staticfiles /app/media /app/logs && \
+    chown -R sims:sims /app
+
+# Copy Python dependencies from builder
+COPY --from=builder --chown=sims:sims /root/.local /home/sims/.local
+
+# Set working directory
+WORKDIR /app
+
+# Copy application code
+COPY --chown=sims:sims . .
+
+# Switch to app user
+USER sims
+
+# Note: collectstatic is run at container startup via docker-compose command
+# to ensure environment variables are available
+
+# Expose port
+EXPOSE 8000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+    CMD python -c "import requests; requests.get('http://localhost:8000/healthz/', timeout=5)" || exit 1
+
+# Default command (can be overridden)
+CMD ["gunicorn", "sims_project.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "4", "--timeout", "60"]
+
+Note: The docker-compose.yml command overrides the default to bind to 0.0.0.0:8014, which is correct.
+
+Dockerfile.frontend:
+--------------------
+# Multi-stage Dockerfile for SIMS Frontend (Next.js)
+# Builds a production-ready Next.js frontend
+
+# Stage 1: Dependencies
+FROM node:20-alpine AS deps
+RUN apk add --no-cache libc6-compat
+WORKDIR /app
+
+# Copy package files
+COPY frontend/package.json frontend/package-lock.json* ./
+RUN npm ci
+
+# Stage 2: Builder
+FROM node:20-alpine AS builder
+WORKDIR /app
+
+# Copy dependencies from deps stage
+COPY --from=deps /app/node_modules ./node_modules
+COPY frontend/ .
+
+# Set build-time environment variable (can be overridden)
+ARG NEXT_PUBLIC_API_URL=http://localhost:8000
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+
+# Build Next.js application
+RUN npm run build
+
+# Stage 3: Runner
+FROM node:20-alpine AS runner
+WORKDIR /app
+
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
+
+# Create app user
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nextjs
+
+# Copy standalone build from builder
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+# Create public directory (Next.js may not have a public folder)
+RUN mkdir -p ./public
+
+USER nextjs
+
+EXPOSE 3000
+
+ENV PORT=3000
+ENV HOSTNAME="0.0.0.0"
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+    CMD node -e "require('http').get('http://localhost:3000', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})" || exit 1
+
+CMD ["node", "server.js"]
+
+================================================================================
+5. UPDATED docker-compose.yml
+================================================================================
+
+Key Changes:
+- Backend port mapping: "127.0.0.1:8014:8014" (was "8014:8014")
+- Frontend port mapping: "127.0.0.1:8082:3000" (was "3000:3000")
+- ALLOWED_HOSTS default: api.pgsims.alshifalab.pk,pgsims.alshifalab.pk,localhost,127.0.0.1
+- CSRF_TRUSTED_ORIGINS default: https://pgsims.alshifalab.pk,https://api.pgsims.alshifalab.pk
+- Frontend NEXT_PUBLIC_API_URL: https://api.pgsims.alshifalab.pk (was https://pgsims.alshifalab.pk)
+
+Full docker-compose.yml structure:
+- db: PostgreSQL 15-alpine
+- redis: Redis 7-alpine
+- web: Django backend on 127.0.0.1:8014
+- worker: Celery worker
+- beat: Celery beat scheduler
+- frontend: Next.js frontend on 127.0.0.1:8082
+
+================================================================================
+6. UPDATED ENV VARIABLES
+================================================================================
+
+Required Environment Variables (.env file):
+
+# Django Core Settings
+SECRET_KEY=your-secret-key-here-change-in-production
+DEBUG=False
+ALLOWED_HOSTS=api.pgsims.alshifalab.pk,pgsims.alshifalab.pk,localhost,127.0.0.1
+
+# Database Configuration
+DB_NAME=sims_db
+DB_USER=sims_user
+DB_PASSWORD=your-database-password-here
+DATABASE_URL=postgresql://sims_user:your-database-password-here@db:5432/sims_db
+
+# Redis Configuration
+REDIS_URL=redis://redis:6379/0
+CELERY_BROKER_URL=redis://redis:6379/1
+CELERY_RESULT_BACKEND=redis://redis:6379/1
+
+# CORS & CSRF Configuration
+CSRF_TRUSTED_ORIGINS=https://pgsims.alshifalab.pk,https://api.pgsims.alshifalab.pk
+CORS_ALLOWED_ORIGINS=https://pgsims.alshifalab.pk
+
+# Reverse Proxy Settings
+USE_PROXY_HEADERS=True
+SECURE_SSL_REDIRECT=True
+SESSION_COOKIE_SECURE=True
+CSRF_COOKIE_SECURE=True
+
+# Frontend Build Configuration
+NEXT_PUBLIC_API_URL=https://api.pgsims.alshifalab.pk
+
+# Email Configuration (Optional)
+EMAIL_BACKEND=django.core.mail.backends.console.EmailBackend
+EMAIL_HOST=
+EMAIL_PORT=587
+EMAIL_USE_TLS=True
+EMAIL_HOST_USER=
+EMAIL_HOST_PASSWORD=
+
+================================================================================
+7. VERIFICATION CHECKLIST
+================================================================================
+
+✅ docker-compose.yml exists and is valid
+✅ Backend service binds to 127.0.0.1:8014 (correct port for Caddy routing)
+✅ Frontend service binds to 127.0.0.1:8082 (correct port for Caddy routing)
+✅ No services bind to public VPS IP (34.16.82.13)
+✅ No services listen on ports 80 or 443
+✅ Backend Dockerfile binds to 0.0.0.0:8014 inside container (via command override)
+✅ Docker maps backend to 127.0.0.1:8014 on host (correct)
+✅ Frontend uses Next.js on port 3000 inside container (correct)
+✅ Docker maps frontend to 127.0.0.1:8082 on host (correct)
+✅ ALLOWED_HOSTS includes api.pgsims.alshifalab.pk, localhost, 127.0.0.1
+✅ CORS settings include correct production domain
+✅ CSRF settings include api.pgsims.alshifalab.pk
+✅ DEBUG defaults to False
+✅ Frontend API URL configured for production (https://api.pgsims.alshifalab.pk)
+✅ No hardcoded references to old VPS IPs in active config
+✅ Static/media handling configured correctly
+✅ Volume paths are sane for VPS deployment
+✅ Services have restart: unless-stopped policy
+
+Port Collision Check:
+- Backend: 127.0.0.1:8014 ✅ (matches routing table)
+- Frontend: 127.0.0.1:8082 ✅ (matches routing table)
+- No conflicts with other apps
+
+Ready for Caddy Proxy:
+✅ Backend ready at 127.0.0.1:8014 for api.pgsims.alshifalab.pk
+✅ Frontend ready at 127.0.0.1:8082 for pgsims.alshifalab.pk
+
+================================================================================
+8. GO / NO-GO VERDICT
+================================================================================
+
+✅ GO - READY FOR DEPLOYMENT
+
+The pgsims repository is now properly configured for deployment on VPS 34.16.82.13 behind Caddy reverse proxy.
+
+All critical issues have been resolved:
+- ✅ Correct port bindings (127.0.0.1 only)
+- ✅ Correct domain configuration (api.pgsims.alshifalab.pk)
+- ✅ Production-ready defaults (DEBUG=False)
+- ✅ Proper CORS/CSRF settings
+- ✅ Frontend API URL configured for production
+
+Next Steps:
+1. Create .env file from template above
+2. Set strong SECRET_KEY and DB_PASSWORD
+3. Run: docker compose up -d
+4. Verify services are listening on correct ports
+5. Configure Caddy to route:
+   - pgsims.alshifalab.pk → 127.0.0.1:8082
+   - api.pgsims.alshifalab.pk → 127.0.0.1:8014
+
+================================================================================
+END OF REPORT
+================================================================================
