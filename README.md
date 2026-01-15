@@ -181,57 +181,32 @@ SIMS supports deployment on both **localhost** (for development and local demons
 
 ### Localhost Deployment
 
-For local development and demonstrations on your Windows machine:
+For local development and demonstrations:
 
 **Quick Start:**
-```powershell
-# Automated setup
+```bash
+# Automated setup (Windows)
 .\scripts\setup_localhost_windows.ps1
 
-# Deploy with Docker
-.\deployment\deploy_localhost.ps1
-
 # Or manual deployment
-Copy-Item .env.localhost .env
 python manage.py migrate
 python manage.py runserver
 ```
 
 **Access:** http://localhost:8000/
 
-See [LOCALHOST_DEPLOYMENT_GUIDE.md](LOCALHOST_DEPLOYMENT_GUIDE.md) for detailed instructions.
-
 ### VPS Deployment
 
-For production deployment on VPS (139.162.9.224:81):
+For production deployment on a VPS:
 
 **Quick Start:**
 ```bash
-# Switch to VPS configuration
-./deployment/switch_to_vps.sh
-
-# Deploy
+# Deploy with Docker
 docker compose up -d --build
 docker compose exec web python manage.py migrate
 ```
 
-**Access:** http://139.162.9.224:81/
-
-See [VPS_DEPLOYMENT_GUIDE_139.162.9.224.md](VPS_DEPLOYMENT_GUIDE_139.162.9.224.md) for detailed instructions.
-
-### Switching Between Environments
-
-To switch between localhost and VPS:
-
-```powershell
-# Switch to localhost
-.\deployment\switch_to_localhost.ps1  # or .sh on Linux/Mac
-
-# Switch to VPS
-.\deployment\switch_to_vps.sh
-```
-
-See [DEPLOYMENT_ENVIRONMENTS.md](DEPLOYMENT_ENVIRONMENTS.md) for a complete comparison and detailed switching guide.
+See [docs/DEPLOY_COOLIFY_TRAEFIK.md](docs/DEPLOY_COOLIFY_TRAEFIK.md) for the recommended production deployment method.
 
 ### Environment Configuration Files
 
@@ -500,50 +475,45 @@ docker compose ps
 For local development and demonstrations:
 
 1. **Quick Setup:**
-   ```powershell
+   ```bash
+   # For Windows
    .\scripts\setup_localhost_windows.ps1
+   
+   # For Linux/Mac
+   python manage.py migrate
+   python manage.py runserver
    ```
 
-2. **Deploy:**
-   ```powershell
-   .\deployment\deploy_localhost.ps1
-   ```
+2. **Access:** http://localhost:8000/
 
-3. **Access:** http://localhost:8000/
-
-See [LOCALHOST_DEPLOYMENT_GUIDE.md](LOCALHOST_DEPLOYMENT_GUIDE.md) for complete instructions.
+See [docs/LOCAL_DEV.md](docs/LOCAL_DEV.md) for complete development instructions.
 
 ### VPS Deployment (Production)
 
 For production deployment on VPS:
 
-1. **Switch configuration:**
-   ```bash
-   ./deployment/switch_to_vps.sh
-   ```
-
-2. **Deploy:**
+1. **Deploy:**
    ```bash
    docker compose up -d --build
    ```
 
-3. **Access:** http://139.162.9.224:81/
+2. **Access your domain or IP**
 
-See [VPS_DEPLOYMENT_GUIDE_139.162.9.224.md](VPS_DEPLOYMENT_GUIDE_139.162.9.224.md) for complete instructions.
+See [docs/DEPLOY_COOLIFY_TRAEFIK.md](docs/DEPLOY_COOLIFY_TRAEFIK.md) for complete production deployment instructions.
 
 ### Frontend Environment Setup
 
 **For localhost:**
-```powershell
-Copy-Item frontend\.env.localhost frontend\.env.local
+```bash
+cp frontend/.env.local.example frontend/.env.local
+# Edit frontend/.env.local with your settings
 ```
 
-**For VPS:**
-```powershell
-Copy-Item frontend\.env.vps frontend\.env.local
+**For production:**
+```bash
+cp frontend/.env.local.example frontend/.env.local
+# Update NEXT_PUBLIC_API_URL with your production API URL
 ```
-
-See [DEPLOYMENT_ENVIRONMENTS.md](DEPLOYMENT_ENVIRONMENTS.md) for environment comparison.
 
 ### Production Deployment Options
 
@@ -576,7 +546,7 @@ See **[docs/DEPLOY_COOLIFY_TRAEFIK.md](docs/DEPLOY_COOLIFY_TRAEFIK.md)** for com
 docker-compose up -d
 ```
 
-See [VPS_DEPLOYMENT_GUIDE_139.162.9.224.md](VPS_DEPLOYMENT_GUIDE_139.162.9.224.md) for instructions.
+See [docs/DEPLOY_COOLIFY_TRAEFIK.md](docs/DEPLOY_COOLIFY_TRAEFIK.md) for complete deployment instructions.
 
 #### 3. Local Development
 
@@ -657,7 +627,7 @@ For production deployment, consider:
    - Celery beat running for scheduled tasks
    - Redis configured as broker and result backend
 
-See [docs/SERVER_DEPLOYMENT_GUIDE_172.236.152.35.md](docs/SERVER_DEPLOYMENT_GUIDE_172.236.152.35.md) for detailed deployment instructions.
+See [docs/DEPLOY_COOLIFY_TRAEFIK.md](docs/DEPLOY_COOLIFY_TRAEFIK.md) for detailed deployment instructions.
 
 ## 📖 Documentation
 
