@@ -1,141 +1,190 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { useAuthStore } from '@/store/authStore';
+import { logbookApi } from '@/lib/api';
+import { notificationsApi } from '@/lib/api';
+import ErrorBanner from '@/components/ui/ErrorBanner';
+import LoadingSkeleton, { TableSkeleton } from '@/components/ui/LoadingSkeleton';
+import SectionCard from '@/components/ui/SectionCard';
+import DataTable, { Column } from '@/components/ui/DataTable';
+import SuccessBanner from '@/components/ui/SuccessBanner';
 import Link from 'next/link';
+import { format } from 'date-fns';
 
 export default function SupervisorDashboardPage() {
   const { user } = useAuthStore();
+  const [pendingEntries, setPendingEntries] = useState<any[]>([]);
+  const [unreadCount, setUnreadCount] = useState<number>(0);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+  const [verifyingId, setVerifyingId] = useState<number | null>(null);
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  async function loadData() {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const [pendingData, unreadData] = await Promise.all([
+        logbookApi.getPending().catch(() => ({ count: 0, results: [] })),
+        notificationsApi.getUnreadCount().catch(() => ({ count: 0 })),
+      ]);
+
+      if (pendingData) {
+        setPendingEntries(pendingData.results || []);
+      }
+      if (unreadData) {
+        setUnreadCount(unreadData.count || 0);
+      }
+    } catch (err: any) {
+      setError(err?.message || 'Failed to load dashboard data');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const handleVerify = async (id: number) => {
+    if (!confirm('Are you sure you want to verify this logbook entry?')) {
+      return;
+    }
+
+    try {
+      setVerifyingId(id);
+      setError(null);
+      await logbookApi.verify(id);
+      setSuccess('Logbook entry verified successfully');
+      loadData(); // Reload data
+    } catch (err: any) {
+      setError(err?.message || 'Failed to verify entry');
+    } finally {
+      setVerifyingId(null);
+    }
+  };
+
+  const columns: Column<any>[] = [
+    {
+      key: 'id',
+      label: 'ID',
+    },
+    {
+      key: 'user',
+      label: 'PG Name',
+      render: (item) => {
+        if (typeof item.user === 'object' && item.user?.full_name) {
+          return item.user.full_name;
+        }
+        return item.user?.username || '-';
+      },
+    },
+    {
+      key: 'case_title',
+      label: 'Procedure/Case',
+    },
+    {
+      key: 'date',
+      label: 'Date',
+      render: (item) => {
+        try {
+          return format(new Date(item.date), 'MMM dd, yyyy');
+        } catch {
+          return item.date || '-';
+        }
+      },
+    },
+    {
+      key: 'status',
+      label: 'Status',
+      render: (item) => (
+        <span className={`px-2 py-1 text-xs rounded-full ${
+          item.status === 'pending' ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-800'
+        }`}>
+          {item.status || 'pending'}
+        </span>
+      ),
+    },
+    {
+      key: 'actions',
+      label: 'Actions',
+      render: (item) => (
+        <div className="flex space-x-2">
+          <button
+            onClick={() => handleVerify(item.id)}
+            disabled={verifyingId === item.id}
+            className="text-sm text-indigo-600 hover:text-indigo-900 disabled:opacity-50"
+          >
+            {verifyingId === item.id ? 'Verifying...' : 'Verify'}
+          </button>
+        </div>
+      ),
+    },
+  ];
 
   return (
     <ProtectedRoute allowedRoles={['supervisor']}>
       <DashboardLayout>
         <div className="space-y-6">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">
-              Supervisor Dashboard
-            </h1>
-            <p className="mt-2 text-gray-600">
-              Welcome, {user?.first_name}. Manage your assigned PGs and review logbooks.
-            </p>
+            <h1 className="text-3xl font-bold text-gray-900">Supervisor Dashboard</h1>
+            <p className="mt-2 text-gray-600">Welcome, {user?.first_name}. Review pending logbook entries.</p>
           </div>
 
-          {/* Quick Stats */}
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            <div className="bg-white overflow-hidden shadow rounded-lg">
-              <div className="p-5">
-                <div className="flex items-center">
-                  <div className="flex-shrink-0">
-                    <svg className="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                    </svg>
-                  </div>
-                  <div className="ml-5 w-0 flex-1">
-                    <dl>
-                      <dt className="text-sm font-medium text-gray-500 truncate">
-                        Assigned PGs
-                      </dt>
-                      <dd className="text-lg font-semibold text-gray-900">
-                        -
-                      </dd>
-                    </dl>
-                  </div>
-                </div>
-              </div>
-            </div>
+          {error && <ErrorBanner message={error} onDismiss={() => setError(null)} />}
+          {success && <SuccessBanner message={success} onDismiss={() => setSuccess(null)} />}
 
-            <div className="bg-white overflow-hidden shadow rounded-lg">
-              <div className="p-5">
-                <div className="flex items-center">
-                  <div className="flex-shrink-0">
-                    <svg className="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    </svg>
-                  </div>
-                  <div className="ml-5 w-0 flex-1">
-                    <dl>
-                      <dt className="text-sm font-medium text-gray-500 truncate">
-                        Pending Reviews
-                      </dt>
-                      <dd className="text-lg font-semibold text-gray-900">
-                        -
-                      </dd>
-                    </dl>
-                  </div>
-                </div>
+          {/* Notifications Widget */}
+          <SectionCard
+            title="Notifications"
+            actions={
+              <Link
+                href="/dashboard/pg/notifications"
+                className="text-sm text-indigo-600 hover:text-indigo-900"
+              >
+                View All
+              </Link>
+            }
+          >
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <svg className="h-8 w-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                </svg>
+              </div>
+              <div className="ml-4">
+                <p className="text-2xl font-semibold text-gray-900">{unreadCount}</p>
+                <p className="text-sm text-gray-500">Unread notifications</p>
               </div>
             </div>
+          </SectionCard>
 
-            <div className="bg-white overflow-hidden shadow rounded-lg">
-              <div className="p-5">
-                <div className="flex items-center">
-                  <div className="flex-shrink-0">
-                    <svg className="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                  </div>
-                  <div className="ml-5 w-0 flex-1">
-                    <dl>
-                      <dt className="text-sm font-medium text-gray-500 truncate">
-                        Reviewed Today
-                      </dt>
-                      <dd className="text-lg font-semibold text-gray-900">
-                        -
-                      </dd>
-                    </dl>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white overflow-hidden shadow rounded-lg">
-              <div className="p-5">
-                <div className="flex items-center">
-                  <div className="flex-shrink-0">
-                    <svg className="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                    </svg>
-                  </div>
-                  <div className="ml-5 w-0 flex-1">
-                    <dl>
-                      <dt className="text-sm font-medium text-gray-500 truncate">
-                        Specialty
-                      </dt>
-                      <dd className="text-lg font-semibold text-gray-900">
-                        {user?.specialty || '-'}
-                      </dd>
-                    </dl>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Quick Links */}
-          <div className="bg-white shadow rounded-lg">
-            <div className="px-4 py-5 sm:p-6">
-              <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">
-                Quick Actions
-              </h3>
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <Link
-                  href="/dashboard/supervisor/logbooks"
-                  className="p-4 border border-gray-200 rounded-lg hover:border-indigo-500 hover:bg-indigo-50 transition"
-                >
-                  <h4 className="font-medium text-gray-900">Review Logbooks</h4>
-                  <p className="mt-1 text-sm text-gray-500">Review and approve logbook entries</p>
-                </Link>
-                <Link
-                  href="/dashboard/supervisor/pgs"
-                  className="p-4 border border-gray-200 rounded-lg hover:border-indigo-500 hover:bg-indigo-50 transition"
-                >
-                  <h4 className="font-medium text-gray-900">My PGs</h4>
-                  <p className="mt-1 text-sm text-gray-500">View assigned postgraduate students</p>
-                </Link>
-              </div>
-            </div>
-          </div>
+          {/* Pending Logbook Verifications */}
+          <SectionCard
+            title="Pending Logbook Verifications"
+            actions={
+              <Link
+                href="/dashboard/supervisor/logbooks"
+                className="text-sm text-indigo-600 hover:text-indigo-900"
+              >
+                View All
+              </Link>
+            }
+          >
+            {loading ? (
+              <TableSkeleton rows={5} cols={6} />
+            ) : (
+              <DataTable
+                columns={columns}
+                data={pendingEntries}
+                emptyMessage="No pending logbook verifications"
+              />
+            )}
+          </SectionCard>
         </div>
       </DashboardLayout>
     </ProtectedRoute>
