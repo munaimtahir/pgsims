@@ -30,7 +30,25 @@ class NotificationListView(generics.ListAPIView):
 
     def get_queryset(self):
         user = self.request.user
-        return Notification.objects.filter(recipient=user).select_related("actor")
+        queryset = Notification.objects.filter(recipient=user).select_related("actor")
+        
+        # Support filtering by is_read via query parameter
+        # is_read=True means read_at is not null, is_read=False means read_at is null
+        is_read_param = self.request.query_params.get("is_read")
+        if is_read_param is not None:
+            try:
+                is_read_bool = is_read_param.lower() in ("true", "1", "yes")
+                if is_read_bool:
+                    # Filter for read notifications (read_at is not null)
+                    queryset = queryset.exclude(read_at__isnull=True)
+                else:
+                    # Filter for unread notifications (read_at is null)
+                    queryset = queryset.filter(read_at__isnull=True)
+            except (ValueError, AttributeError):
+                # Invalid parameter, ignore filter
+                pass
+        
+        return queryset
 
 
 class NotificationMarkReadView(APIView):

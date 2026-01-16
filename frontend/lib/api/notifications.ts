@@ -33,26 +33,33 @@ export const notificationsApi = {
 
   /**
    * Get unread notifications
+   * Uses list endpoint with is_read=false filter
    */
   getUnread: async () => {
-    const response = await apiClient.get<{ results: Notification[]; count: number }>('/api/notifications/unread/');
+    const response = await apiClient.get<{ results: Notification[]; count: number }>('/api/notifications/', {
+      params: { is_read: false },
+    });
     return response.data;
   },
 
   /**
    * Get unread count
+   * Backend returns {"unread": count}, frontend expects {"count": count}
    */
   getUnreadCount: async () => {
-    const response = await apiClient.get<{ count: number }>('/api/notifications/unread-count/');
-    return response.data;
+    const response = await apiClient.get<{ unread: number }>('/api/notifications/unread-count/');
+    return { count: response.data.unread };
   },
 
   /**
    * Mark notification as read
+   * Backend expects { notification_ids: [id] }, not { id }
    */
   markRead: async (id: number) => {
-    const response = await apiClient.post<{ message: string }>(`/api/notifications/mark-read/`, { id });
-    return response.data;
+    const response = await apiClient.post<{ marked: number }>(`/api/notifications/mark-read/`, {
+      notification_ids: [id],
+    });
+    return { message: `${response.data.marked} notification(s) marked as read` };
   },
 
   /**
