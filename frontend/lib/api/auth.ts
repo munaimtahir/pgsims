@@ -106,6 +106,51 @@ export const authApi = {
     });
     return response.data;
   },
+
+  /**
+   * Update user profile
+   * Uses allowed endpoint: PUT/PATCH /api/auth/profile/update/
+   */
+  async updateProfile(data: Partial<User>): Promise<User> {
+    const response = await apiClient.patch<User>('/api/auth/profile/update/', data);
+    return response.data;
+  },
+
+  /**
+   * Request password reset
+   * Uses allowed endpoint: POST /api/auth/password-reset/
+   */
+  async passwordReset(email: string): Promise<{ message: string }> {
+    const response = await apiClient.post<{ message: string }>('/api/auth/password-reset/', { email });
+    return response.data;
+  },
+
+  /**
+   * Confirm password reset
+   * Uses allowed endpoint: POST /api/auth/password-reset/confirm/
+   */
+  async passwordResetConfirm(data: {
+    uid: string;
+    token: string;
+    new_password: string;
+    new_password2: string;
+  }): Promise<{ message: string }> {
+    const response = await apiClient.post<{ message: string }>('/api/auth/password-reset/confirm/', data);
+    return response.data;
+  },
+
+  /**
+   * Change password
+   * Uses allowed endpoint: POST /api/auth/change-password/
+   */
+  async changePassword(data: {
+    old_password: string;
+    new_password: string;
+    new_password2: string;
+  }): Promise<{ message: string }> {
+    const response = await apiClient.post<{ message: string }>('/api/auth/change-password/', data);
+    return response.data;
+  },
 };
 
 export default authApi;
