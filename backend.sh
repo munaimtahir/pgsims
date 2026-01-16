@@ -56,6 +56,7 @@ docker compose -p "$COMPOSE_PROJECT_NAME" ps web
 
 echo "=========================================="
 echo "Backend is now running on:"
-echo "  http://127.0.0.1:8014"
-echo "  https://pgsims.alshifalab.pk"
+echo "  Internal: http://127.0.0.1:8014"
+echo "  Public:   https://pgsims.alshifalab.pk/api/"
+echo "  Admin:    https://pgsims.alshifalab.pk/admin/"
 echo "=========================================="

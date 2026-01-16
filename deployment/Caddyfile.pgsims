@@ -3,8 +3,9 @@
 # Caddy will automatically handle SSL/TLS certificates via Let's Encrypt
 #
 # Domain: pgsims.alshifalab.pk
+# Frontend: localhost:8082 (Next.js)
 # Backend: localhost:8014 (Django/Gunicorn)
-# Server IP: 34.124.150.231
+# Server IP: 34.16.82.13
 
 pgsims.alshifalab.pk {
     # Enable automatic HTTPS with Let's Encrypt
@@ -67,9 +68,20 @@ pgsims.alshifalab.pk {
         }
     }
 
-    # All other requests (Django application)
-    handle {
+    # Admin routes
+    handle /admin/* {
         reverse_proxy localhost:8014 {
+            header_up Host {host}
+            header_up X-Real-IP {remote}
+            header_up X-Forwarded-For {remote}
+            header_up X-Forwarded-Proto {scheme}
+            header_up X-Forwarded-Host {host}
+        }
+    }
+
+    # All other requests (Frontend Next.js application)
+    handle {
+        reverse_proxy localhost:8082 {
             header_up Host {host}
             header_up X-Real-IP {remote}
             header_up X-Forwarded-For {remote}
@@ -85,7 +97,7 @@ pgsims.alshifalab.pk {
     }
 }
 
-# Fallback: Direct IP access (optional, for testing)
-34.124.150.231 {
+# Fallback: Direct IP access (redirect to domain)
+34.16.82.13 {
     redir https://pgsims.alshifalab.pk{uri} permanent
 }

@@ -1,58 +1,26 @@
 /**
  * Base API client configuration using axios
- * Auto-detects localhost vs VPS deployment
+ * Uses NEXT_PUBLIC_API_URL environment variable only
  */
 
 import axios from 'axios';
 
 /**
- * Get API URL based on environment
- * Priority:
- * 1. NEXT_PUBLIC_API_URL environment variable
- * 2. Auto-detect from window.location (localhost vs VPS)
- * 3. Default to localhost:8000
+ * Get API URL from environment variable
+ * MUST use NEXT_PUBLIC_API_URL only - no auto-detection
  */
 function getApiUrl(): string {
-  // Use explicit environment variable if set
-  if (process.env.NEXT_PUBLIC_API_URL) {
-    return process.env.NEXT_PUBLIC_API_URL;
-  }
-
-  // Auto-detect from browser location (client-side only)
-  if (typeof window !== 'undefined') {
-    const hostname = window.location.hostname;
-    const port = window.location.port;
-
-    // PGSIMS domain deployment (pgsims.alshifalab.pk)
-    if (hostname === 'pgsims.alshifalab.pk') {
-      return `https://pgsims.alshifalab.pk`;
-    }
-
-    // VPS deployment (139.162.9.224, 172.237.95.120, 34.124.150.231 or port 81)
-    if (hostname === '139.162.9.224' || hostname === '172.237.95.120' || hostname === '34.124.150.231' || port === '81') {
-      // Return API URL based on detected hostname
-      if (hostname === '172.237.95.120') {
-        return `http://172.237.95.120:81`;
-      }
-      if (hostname === '34.124.150.231') {
-        return `https://pgsims.alshifalab.pk`;
-      }
-      return `http://139.162.9.224:81`;
-    }
-
-    // Localhost deployment
-    if (hostname === 'localhost' || hostname === '127.0.0.1') {
-      // If frontend is on 3000, backend is on 8000
-      if (port === '3000' || !port) {
-        return 'http://localhost:8000';
-      }
-      // If frontend is on same port or different, use 8000
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+  if (!apiUrl) {
+    // In development, provide a default but warn
+    if (process.env.NODE_ENV === 'development') {
+      console.warn('NEXT_PUBLIC_API_URL not set, using default http://localhost:8000');
       return 'http://localhost:8000';
     }
+    // In production, throw error
+    throw new Error('NEXT_PUBLIC_API_URL environment variable is required');
   }
-
-  // Default fallback (server-side or unknown)
-  return 'http://localhost:8000';
+  return apiUrl;
 }
 
 const API_URL = getApiUrl();
@@ -93,7 +61,8 @@ apiClient.interceptors.response.use(
         try {
           const refreshToken = localStorage.getItem('refresh_token');
           if (refreshToken) {
-            const response = await axios.post(`${API_URL}/api/token/refresh/`, {
+            // Use allowed endpoint: POST /api/auth/refresh/
+            const response = await axios.post(`${API_URL}/api/auth/refresh/`, {
               refresh: refreshToken,
             });
 

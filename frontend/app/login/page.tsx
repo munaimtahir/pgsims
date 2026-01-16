@@ -34,13 +34,16 @@ export default function LoginPage() {
       const response = await authApi.login(formData);
       setAuth(response.user, response.access, response.refresh);
       
-      // Redirect based on role
-      if (response.user.role === 'admin') {
+      // Redirect to role-specific dashboard
+      const role = response.user.role;
+      if (role === 'admin') {
         router.push('/dashboard/admin');
-      } else if (response.user.role === 'supervisor') {
+      } else if (role === 'supervisor') {
         router.push('/dashboard/supervisor');
+      } else if (role === 'pg') {
+        router.push('/dashboard/pg');
       } else {
-        router.push('/dashboard/student');
+        router.push('/dashboard');
       }
     } catch (err: unknown) {
       const error = err as { response?: { data?: { detail?: string; error?: string } } };

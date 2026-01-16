@@ -5,6 +5,8 @@ from __future__ import annotations
 import csv
 import io
 import re
+import secrets
+import string
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
 from typing import Iterable, Iterator, List, Optional, Sequence, Tuple
@@ -17,7 +19,13 @@ from openpyxl.styles import Font
 
 from sims.bulk.models import BulkOperation
 from sims.logbook.models import LogbookEntry
-from sims.users.models import User
+from sims.users.models import SPECIALTY_CHOICES, YEAR_CHOICES, User
+
+try:
+    from sims.rotations.models import Department, Hospital
+except ImportError:
+    Department = None
+    Hospital = None
 
 
 @dataclass
@@ -172,6 +180,672 @@ class BulkService:
             len(successes),
             len(failures),
             {"successes": successes, "failures": failures},
+        )
+        return operation
+
+    def import_supervisors(
+        self,
+        uploaded_file,
+        *,
+        dry_run: bool = True,
+        allow_partial: bool = False,
+        generate_passwords: bool = True,
+    ) -> BulkOperation:
+        """
+        Import supervisor/faculty data from CSV or Excel file.
+        
+        Expected columns (case-insensitive):
+        - Name (or First Name, Last Name)
+        - Email (optional, will be generated)
+        - Specialty (required)
+        - Department (optional)
+        - Phone (optional)
+        - Registration Number (optional)
+        - Username (optional, will be generated)
+        
+        Creates accounts with role 'supervisor' and generates secure passwords.
+        """
+        operation = BulkOperation.objects.create(
+            user=self.actor, operation=BulkOperation.OP_IMPORT
+        )
+        
+        # Required columns (flexible matching)
+        required_cols = {"name", "specialty"}  # Flexible - can be "first name" + "last name"
+        
+        try:
+            rows = list(_parse_csv_rows(uploaded_file, required_columns=None))
+        except ValidationError as e:
+            operation.mark_failed({"error": str(e)})
+            return operation
+        
+        successes: List[dict] = []
+        failures: List[dict] = []
+        errors_triggered = False
+        
+        def process_row(row: dict) -> None:
+            nonlocal errors_triggered
+            
+            row_num = row.get("_row_number", "unknown")
+            
+            # Extract data with flexible column matching
+            name = (
+                row.get("name") or 
+                f"{row.get('first_name', '').strip()} {row.get('last_name', '').strip()}".strip()
+            )
+            email = row.get("email", "").strip()
+            specialty = row.get("specialty", "").strip()
+            department_name = row.get("department", "").strip()
+            phone = row.get("phone", "").strip() or row.get("phone_number", "").strip()
+            registration_number = row.get("registration_number", "").strip() or row.get("reg_no", "").strip()
+            username = row.get("username", "").strip()
+            
+            # Validate required fields
+            if not name:
+                failures.append({
+                    "row": row_num,
+                    "error": "Missing 'Name' (or 'First Name' + 'Last Name')",
+                    "data": row
+                })
+                errors_triggered = True
+                return
+            
+            if not specialty:
+                failures.append({
+                    "row": row_num,
+                    "error": "Missing 'Specialty'",
+                    "data": row
+                })
+                errors_triggered = True
+                return
+            
+            # Validate specialty
+            valid_specialties = [choice[0] for choice in SPECIALTY_CHOICES]
+            specialty_lower = specialty.lower().replace(" ", "_")
+            # Try to match specialty
+            matched_specialty = None
+            for spec_code, spec_name in SPECIALTY_CHOICES:
+                if (specialty_lower == spec_code.lower() or 
+                    specialty.lower() == spec_name.lower() or
+                    specialty_lower in spec_name.lower() or
+                    spec_name.lower() in specialty_lower):
+                    matched_specialty = spec_code
+                    break
+            
+            if not matched_specialty:
+                failures.append({
+                    "row": row_num,
+                    "error": f"Invalid specialty '{specialty}'. Valid options: {', '.join([s[1] for s in SPECIALTY_CHOICES[:5]])}...",
+                    "data": row
+                })
+                errors_triggered = True
+                return
+            
+            # Parse name
+            try:
+                first_name, last_name = _parse_name(name)
+                if not first_name and not last_name:
+                    failures.append({
+                        "row": row_num,
+                        "error": "Invalid name format",
+                        "data": row
+                    })
+                    errors_triggered = True
+                    return
+            except Exception as e:
+                failures.append({
+                    "row": row_num,
+                    "error": f"Error parsing name: {str(e)}",
+                    "data": row
+                })
+                errors_triggered = True
+                return
+            
+            # Generate username if not provided
+            if not username:
+                try:
+                    username = _generate_username(first_name, last_name)
+                except Exception as e:
+                    failures.append({
+                        "row": row_num,
+                        "error": f"Error generating username: {str(e)}",
+                        "data": row
+                    })
+                    errors_triggered = True
+                    return
+            
+            # Generate email if not provided
+            if not email:
+                email = f"{username}.supervisor@pmc.edu.pk"
+            
+            # Get or create department if provided
+            department = None
+            if department_name and Department:
+                try:
+                    # Try to find department by name (case-insensitive)
+                    department = Department.objects.filter(
+                        name__iexact=department_name,
+                        is_active=True
+                    ).first()
+                    
+                    if not department:
+                        # Optionally create department if hospital exists
+                        # For now, we'll just warn
+                        if allow_partial:
+                            pass  # Continue without department
+                        else:
+                            failures.append({
+                                "row": row_num,
+                                "warning": f"Department '{department_name}' not found. Continuing without department.",
+                                "data": row
+                            })
+                except Exception as e:
+                    if not allow_partial:
+                        failures.append({
+                            "row": row_num,
+                            "error": f"Error with department '{department_name}': {str(e)}",
+                            "data": row
+                        })
+                        errors_triggered = True
+                        return
+            
+            # Prepare user data
+            user_data = {
+                "username": username,
+                "email": email,
+                "first_name": first_name,
+                "last_name": last_name,
+                "role": "supervisor",
+                "specialty": matched_specialty,
+                "phone_number": phone if phone else None,
+                "registration_number": registration_number if registration_number else None,
+                "is_active": True,
+                "created_by": self.actor,
+            }
+            
+            # Generate password
+            password = None
+            if generate_passwords:
+                password = _generate_password_from_username(username)
+            else:
+                password = _generate_secure_password()
+            
+            # Create or validate user
+            try:
+                if dry_run:
+                    # Validate without creating
+                    user = User(**user_data)
+                    user.full_clean()
+                else:
+                    # Check if user already exists
+                    existing_user = User.objects.filter(username=username).first()
+                    if existing_user:
+                        # Update existing user
+                        for key, value in user_data.items():
+                            if key not in ("username", "created_by"):
+                                setattr(existing_user, key, value)
+                        existing_user.modified_by = self.actor
+                        existing_user.full_clean()
+                        existing_user.save()
+                        
+                        # Update password if specified
+                        if password:
+                            existing_user.set_password(password)
+                            existing_user.save()
+                        
+                        user = existing_user
+                    else:
+                        # Create new user
+                        user = User(**user_data)
+                        user.set_password(password)
+                        user.save()
+                
+                successes.append({
+                    "row": row_num,
+                    "username": username,
+                    "name": f"{first_name} {last_name}".strip(),
+                    "email": email,
+                    "specialty": matched_specialty,
+                    "password": password if not dry_run else "***",  # Don't expose passwords in dry run
+                    "department": department_name if department_name else None,
+                })
+            except ValidationError as exc:
+                failures.append({
+                    "row": row_num,
+                    "error": exc.message_dict if hasattr(exc, "message_dict") else str(exc),
+                    "data": row
+                })
+                errors_triggered = True
+            except Exception as exc:
+                failures.append({
+                    "row": row_num,
+                    "error": f"Unexpected error: {str(exc)}",
+                    "data": row
+                })
+                errors_triggered = True
+        
+        # Process rows
+        if dry_run or allow_partial:
+            for row in rows:
+                process_row(row)
+        else:
+            try:
+                with transaction.atomic():
+                    for row in rows:
+                        process_row(row)
+                    if errors_triggered:
+                        raise BulkProcessingError("Import failed; rolling back")
+            except BulkProcessingError:
+                operation.mark_failed({"failures": failures})
+                return operation
+        
+        # Prepare operation details
+        details = {
+            "successes": successes,
+            "failures": failures,
+        }
+        
+        operation.mark_completed(
+            len(successes),
+            len(failures),
+            details,
+        )
+        return operation
+
+    def import_residents(
+        self,
+        uploaded_file,
+        *,
+        dry_run: bool = True,
+        allow_partial: bool = False,
+        generate_passwords: bool = True,
+    ) -> BulkOperation:
+        """
+        Import resident/postgraduate data from CSV or Excel file.
+        
+        Expected columns (case-insensitive):
+        - Name (or First Name, Last Name)
+        - Year (required) - Training year (1, 2, 3, 4)
+        - Specialty (required)
+        - Supervisor Name (required) or Supervisor Username
+        - Email (optional, will be generated)
+        - Department (optional)
+        - Phone (optional)
+        - Registration Number (optional)
+        - Username (optional, will be generated)
+        - Date of Joining (optional)
+        
+        Creates accounts with role 'pg' and links to supervisors.
+        Handles cases where supervisors don't exist (creates warning/error based on allow_partial).
+        """
+        operation = BulkOperation.objects.create(
+            user=self.actor, operation=BulkOperation.OP_IMPORT
+        )
+        
+        try:
+            rows = list(_parse_csv_rows(uploaded_file, required_columns=None))
+        except ValidationError as e:
+            operation.mark_failed({"error": str(e)})
+            return operation
+        
+        successes: List[dict] = []
+        failures: List[dict] = []
+        errors_triggered = False
+        unlinked_residents: List[dict] = []
+        
+        def process_row(row: dict) -> None:
+            nonlocal errors_triggered
+            
+            row_num = row.get("_row_number", "unknown")
+            
+            # Extract data with flexible column matching
+            name = (
+                row.get("name") or 
+                f"{row.get('first_name', '').strip()} {row.get('last_name', '').strip()}".strip()
+            )
+            year = row.get("year", "").strip() or row.get("training_year", "").strip()
+            specialty = row.get("specialty", "").strip()
+            supervisor_name = row.get("supervisor_name", "").strip() or row.get("supervisor", "").strip()
+            supervisor_username = row.get("supervisor_username", "").strip()
+            email = row.get("email", "").strip()
+            department_name = row.get("department", "").strip()
+            phone = row.get("phone", "").strip() or row.get("phone_number", "").strip()
+            registration_number = row.get("registration_number", "").strip() or row.get("reg_no", "").strip()
+            username = row.get("username", "").strip()
+            date_joining_str = row.get("date_joining", "").strip() or row.get("date_of_joining", "").strip()
+            
+            # Validate required fields
+            if not name:
+                failures.append({
+                    "row": row_num,
+                    "error": "Missing 'Name' (or 'First Name' + 'Last Name')",
+                    "data": row
+                })
+                errors_triggered = True
+                return
+            
+            if not year:
+                failures.append({
+                    "row": row_num,
+                    "error": "Missing 'Year' (training year: 1, 2, 3, or 4)",
+                    "data": row
+                })
+                errors_triggered = True
+                return
+            
+            # Validate year
+            valid_years = [choice[0] for choice in YEAR_CHOICES]
+            if year not in valid_years:
+                failures.append({
+                    "row": row_num,
+                    "error": f"Invalid year '{year}'. Must be one of: {', '.join(valid_years)}",
+                    "data": row
+                })
+                errors_triggered = True
+                return
+            
+            if not specialty:
+                failures.append({
+                    "row": row_num,
+                    "error": "Missing 'Specialty'",
+                    "data": row
+                })
+                errors_triggered = True
+                return
+            
+            # Validate specialty
+            valid_specialties = [choice[0] for choice in SPECIALTY_CHOICES]
+            specialty_lower = specialty.lower().replace(" ", "_")
+            matched_specialty = None
+            for spec_code, spec_name in SPECIALTY_CHOICES:
+                if (specialty_lower == spec_code.lower() or 
+                    specialty.lower() == spec_name.lower() or
+                    specialty_lower in spec_name.lower() or
+                    spec_name.lower() in specialty_lower):
+                    matched_specialty = spec_code
+                    break
+            
+            if not matched_specialty:
+                failures.append({
+                    "row": row_num,
+                    "error": f"Invalid specialty '{specialty}'",
+                    "data": row
+                })
+                errors_triggered = True
+                return
+            
+            # Parse name
+            try:
+                first_name, last_name = _parse_name(name)
+                if not first_name and not last_name:
+                    failures.append({
+                        "row": row_num,
+                        "error": "Invalid name format",
+                        "data": row
+                    })
+                    errors_triggered = True
+                    return
+            except Exception as e:
+                failures.append({
+                    "row": row_num,
+                    "error": f"Error parsing name: {str(e)}",
+                    "data": row
+                })
+                errors_triggered = True
+                return
+            
+            # Parse date of joining
+            date_joined = None
+            if date_joining_str:
+                try:
+                    date_joined = _parse_date(date_joining_str)
+                except Exception as e:
+                    if not allow_partial:
+                        failures.append({
+                            "row": row_num,
+                            "error": f"Invalid date format: {str(e)}",
+                            "data": row
+                        })
+                        errors_triggered = True
+                        return
+                    date_joined = date.today()
+            else:
+                date_joined = date.today()
+            
+            # Get supervisor
+            supervisor = None
+            if supervisor_username:
+                try:
+                    supervisor = User.objects.filter(
+                        username=supervisor_username,
+                        role="supervisor"
+                    ).first()
+                    if not supervisor:
+                        failures.append({
+                            "row": row_num,
+                            "error": f"Supervisor with username '{supervisor_username}' not found",
+                            "data": row
+                        })
+                        if not allow_partial:
+                            errors_triggered = True
+                            return
+                except Exception as e:
+                    failures.append({
+                        "row": row_num,
+                        "error": f"Error finding supervisor by username: {str(e)}",
+                        "data": row
+                    })
+                    if not allow_partial:
+                        errors_triggered = True
+                        return
+            elif supervisor_name:
+                try:
+                    supervisor = _get_or_create_supervisor(
+                        supervisor_name, 
+                        self.actor,
+                        specialty=matched_specialty,
+                        generate_password=generate_passwords
+                    )
+                    if not supervisor:
+                        failures.append({
+                            "row": row_num,
+                            "error": f"Could not create/find supervisor '{supervisor_name}'",
+                            "data": row
+                        })
+                        if not allow_partial:
+                            errors_triggered = True
+                            return
+                except Exception as e:
+                    failures.append({
+                        "row": row_num,
+                        "error": f"Error with supervisor '{supervisor_name}': {str(e)}",
+                        "data": row
+                    })
+                    if not allow_partial:
+                        errors_triggered = True
+                        return
+            else:
+                # No supervisor provided
+                failures.append({
+                    "row": row_num,
+                    "error": "Missing 'Supervisor Name' or 'Supervisor Username'",
+                    "data": row
+                })
+                if not allow_partial:
+                    errors_triggered = True
+                    return
+            
+            # Generate username if not provided
+            if not username:
+                try:
+                    username = _generate_username(first_name, last_name)
+                except Exception as e:
+                    failures.append({
+                        "row": row_num,
+                        "error": f"Error generating username: {str(e)}",
+                        "data": row
+                    })
+                    errors_triggered = True
+                    return
+            
+            # Generate email if not provided
+            if not email:
+                email = f"{username}.pgr@pmc.edu.pk"
+            
+            # Get or create department if provided (optional)
+            department = None
+            if department_name and Department:
+                try:
+                    department = Department.objects.filter(
+                        name__iexact=department_name,
+                        is_active=True
+                    ).first()
+                    if not department and allow_partial:
+                        pass  # Continue without department
+                except Exception:
+                    pass  # Ignore department errors if allow_partial
+            
+            # Prepare user data
+            user_data = {
+                "username": username,
+                "email": email,
+                "first_name": first_name,
+                "last_name": last_name,
+                "role": "pg",
+                "specialty": matched_specialty,
+                "year": year,
+                "phone_number": phone if phone else None,
+                "registration_number": registration_number if registration_number else None,
+                "date_joined": date_joined,
+                "is_active": True,
+                "created_by": self.actor,
+            }
+            
+            if supervisor:
+                user_data["supervisor"] = supervisor
+            
+            # Generate password
+            password = None
+            if generate_passwords:
+                password = _generate_password_from_username(username, year)
+            else:
+                password = _generate_secure_password()
+            
+            # Create or validate user
+            try:
+                if dry_run:
+                    # Validate without creating
+                    # For dry run validation, we need a supervisor for PG role validation
+                    # Use a dummy supervisor if none exists (only for validation)
+                    validation_data = user_data.copy()
+                    if not supervisor:
+                        # Find any existing supervisor for validation purposes
+                        dummy_supervisor = User.objects.filter(role="supervisor").first()
+                        if dummy_supervisor:
+                            validation_data["supervisor"] = dummy_supervisor
+                        elif not allow_partial:
+                            # If no supervisor exists at all and allow_partial=False, skip validation
+                            # (This case should have been caught earlier, but handle gracefully)
+                            failures.append({
+                                "row": row_num,
+                                "error": "No supervisor found and no supervisors exist in system for validation",
+                                "data": row
+                            })
+                            errors_triggered = True
+                            return
+                    
+                    user = User(**validation_data)
+                    user.full_clean()
+                else:
+                    # Check if user already exists
+                    existing_user = User.objects.filter(username=username).first()
+                    if existing_user:
+                        # Update existing user
+                        for key, value in user_data.items():
+                            if key not in ("username", "created_by"):
+                                setattr(existing_user, key, value)
+                        existing_user.modified_by = self.actor
+                        existing_user.full_clean()
+                        existing_user.save()
+                        
+                        # Update password if specified
+                        if password:
+                            existing_user.set_password(password)
+                            existing_user.save()
+                        
+                        user = existing_user
+                    else:
+                        # Create new user
+                        if not supervisor:
+                            # Cannot create PG without supervisor (validation will fail)
+                            failures.append({
+                                "row": row_num,
+                                "error": "Cannot create PG user without supervisor",
+                                "data": row
+                            })
+                            errors_triggered = True
+                            return
+                        
+                        user = User(**user_data)
+                        user.set_password(password)
+                        user.save()
+                
+                success_entry = {
+                    "row": row_num,
+                    "username": username,
+                    "name": f"{first_name} {last_name}".strip(),
+                    "email": email,
+                    "specialty": matched_specialty,
+                    "year": year,
+                    "password": password if not dry_run else "***",
+                    "supervisor": supervisor.username if supervisor else None,
+                }
+                
+                if not supervisor:
+                    success_entry["warning"] = "Created without supervisor - will need manual linking"
+                    unlinked_residents.append(success_entry)
+                
+                successes.append(success_entry)
+            except ValidationError as exc:
+                failures.append({
+                    "row": row_num,
+                    "error": exc.message_dict if hasattr(exc, "message_dict") else str(exc),
+                    "data": row
+                })
+                errors_triggered = True
+            except Exception as exc:
+                failures.append({
+                    "row": row_num,
+                    "error": f"Unexpected error: {str(exc)}",
+                    "data": row
+                })
+                errors_triggered = True
+        
+        # Process rows
+        if dry_run or allow_partial:
+            for row in rows:
+                process_row(row)
+        else:
+            try:
+                with transaction.atomic():
+                    for row in rows:
+                        process_row(row)
+                    if errors_triggered:
+                        raise BulkProcessingError("Import failed; rolling back")
+            except BulkProcessingError:
+                operation.mark_failed({"failures": failures})
+                return operation
+        
+        # Prepare operation details
+        details = {
+            "successes": successes,
+            "failures": failures,
+            "unlinked_residents": unlinked_residents,
+        }
+        
+        operation.mark_completed(
+            len(successes),
+            len(failures),
+            details,
         )
         return operation
 
@@ -556,18 +1230,41 @@ def _infer_training_year(date_joined: date) -> str:
         return "4"
 
 
-def _get_or_create_supervisor(supervisor_name: str, actor: User) -> Optional[User]:
+def _get_or_create_supervisor(
+    supervisor_name: str, 
+    actor: User, 
+    specialty: Optional[str] = None,
+    generate_password: bool = True
+) -> Optional[User]:
     """
     Find supervisor by name or create if not found.
     - Search by full name (case-insensitive)
     - If not found, create new supervisor user
-    - Set specialty to urology
-    - Generate username and email
+    - Uses provided specialty or defaults to urology
+    - Generates username, email, and password
+    
+    Args:
+        supervisor_name: Full name of supervisor
+        actor: User creating the supervisor
+        specialty: Specialty code (optional, defaults to 'urology')
+        generate_password: Whether to generate a secure password
+    
+    Returns:
+        User object (supervisor) or None if creation fails
     """
     if not supervisor_name or not supervisor_name.strip():
         return None
     
     supervisor_name = supervisor_name.strip()
+    
+    # Default specialty if not provided
+    if not specialty:
+        specialty = "urology"
+    
+    # Validate specialty
+    valid_specialties = [choice[0] for choice in SPECIALTY_CHOICES]
+    if specialty not in valid_specialties:
+        specialty = "urology"  # Default fallback
     
     # Try to find existing supervisor by name
     # Search by first_name + last_name or full name match
@@ -584,7 +1281,7 @@ def _get_or_create_supervisor(supervisor_name: str, actor: User) -> Optional[Use
         if supervisor:
             return supervisor
         
-        # Try full name match
+        # Try full name match (where first_name contains the full name)
         supervisor = User.objects.filter(
             first_name__iexact=supervisor_name,
             role="supervisor"
@@ -593,25 +1290,60 @@ def _get_or_create_supervisor(supervisor_name: str, actor: User) -> Optional[Use
         if supervisor:
             return supervisor
     
+    # Try to find by username if supervisor_name looks like a username
+    if "." in supervisor_name or len(supervisor_name.split()) == 1:
+        supervisor = User.objects.filter(
+            username__iexact=supervisor_name,
+            role="supervisor"
+        ).first()
+        if supervisor:
+            return supervisor
+    
     # Create new supervisor
-    username = _generate_username(first_name, last_name)
-    email = f"{username}.supervisor@pmc.edu.pk"
-    
-    supervisor = User.objects.create(
-        username=username,
-        email=email,
-        first_name=first_name or supervisor_name,
-        last_name=last_name,
-        role="supervisor",
-        specialty="urology",
-        is_active=True,
-        created_by=actor,
-    )
-    # Set password (default password, should be changed on first login)
-    supervisor.set_password("changeme123")
-    supervisor.save()
-    
-    return supervisor
+    try:
+        username = _generate_username(first_name, last_name)
+        email = f"{username}.supervisor@pmc.edu.pk"
+        
+        # Check if username already exists
+        if User.objects.filter(username=username).exists():
+            # Try to find existing user with this username (might be different role)
+            existing = User.objects.filter(username=username).first()
+            if existing.role == "supervisor":
+                return existing
+            # If different role, append suffix
+            counter = 1
+            base_username = username
+            while User.objects.filter(username=username).exists():
+                username = f"{base_username}{counter}"
+                counter += 1
+            email = f"{username}.supervisor@pmc.edu.pk"
+        
+        supervisor = User.objects.create(
+            username=username,
+            email=email,
+            first_name=first_name or supervisor_name,
+            last_name=last_name,
+            role="supervisor",
+            specialty=specialty,
+            is_active=True,
+            created_by=actor,
+        )
+        
+        # Set password
+        if generate_password:
+            password = _generate_password_from_username(username)
+        else:
+            password = _generate_secure_password()
+        supervisor.set_password(password)
+        supervisor.save()
+        
+        return supervisor
+    except Exception as e:
+        # Log error but return None to allow graceful handling
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"Error creating supervisor '{supervisor_name}': {str(e)}")
+        return None
 
 
 def _parse_date(date_str: str) -> date:
@@ -653,6 +1385,141 @@ def _parse_date(date_str: str) -> date:
         pass
     
     raise ValueError(f"Unable to parse date: {date_str}")
+
+
+def _generate_secure_password(length: int = 12) -> str:
+    """
+    Generate a secure random password.
+    - Contains uppercase, lowercase, digits, and special characters
+    - Minimum length 12 characters
+    """
+    if length < 12:
+        length = 12
+    
+    # Character sets
+    lowercase = string.ascii_lowercase
+    uppercase = string.ascii_uppercase
+    digits = string.digits
+    special = "!@#$%^&*"
+    
+    # Ensure at least one character from each set
+    password = [
+        secrets.choice(lowercase),
+        secrets.choice(uppercase),
+        secrets.choice(digits),
+        secrets.choice(special),
+    ]
+    
+    # Fill the rest randomly
+    all_chars = lowercase + uppercase + digits + special
+    password.extend(secrets.choice(all_chars) for _ in range(length - 4))
+    
+    # Shuffle to avoid predictable patterns
+    secrets.SystemRandom().shuffle(password)
+    
+    return "".join(password)
+
+
+def _generate_password_from_username(username: str, year: Optional[str] = None) -> str:
+    """
+    Generate a deterministic password from username.
+    Format: Username@Year! (if year provided) or Username@123!
+    This makes passwords predictable for first-time login but still secure.
+    """
+    if year:
+        return f"{username}@{year}!"
+    return f"{username}@123!"
+
+
+def _parse_csv_rows(uploaded_file, required_columns: Optional[set] = None) -> Iterator[dict]:
+    """
+    Parse CSV file and yield row dictionaries.
+    Supports both CSV and Excel files.
+    
+    Args:
+        uploaded_file: File object
+        required_columns: Set of required column names (case-insensitive)
+    
+    Yields:
+        dict: Row data with lowercase keys
+    """
+    name = getattr(uploaded_file, "name", "uploaded")
+    content = uploaded_file.read()
+    
+    # Reset file pointer
+    if isinstance(content, bytes):
+        stream = io.BytesIO(content)
+    else:
+        stream = io.StringIO(content)
+    stream.seek(0)
+    
+    # Handle CSV files
+    if name.endswith(".csv"):
+        text_stream = (
+            io.TextIOWrapper(stream, encoding="utf-8") 
+            if isinstance(stream, io.BytesIO) else stream
+        )
+        reader = csv.DictReader(text_stream)
+        
+        if reader.fieldnames:
+            # Normalize headers (strip, lowercase)
+            headers = [h.strip().lower() if h else f"col_{i}" 
+                      for i, h in enumerate(reader.fieldnames)]
+            reader.fieldnames = headers
+            
+            # Validate required columns
+            if required_columns:
+                missing = required_columns - {h.lower() for h in headers}
+                if missing:
+                    raise ValidationError(
+                        f"Missing required columns: {', '.join(sorted(missing))}"
+                    )
+        
+        for row_idx, row in enumerate(reader, start=2):
+            # Normalize row values
+            normalized_row = {
+                k.lower().strip(): (v.strip() if v else "") 
+                for k, v in row.items() if k
+            }
+            normalized_row["_row_number"] = row_idx
+            yield normalized_row
+    
+    # Handle Excel files
+    elif name.endswith((".xlsx", ".xls")):
+        workbook = load_workbook(stream)
+        sheet = workbook.active
+        
+        # Get headers from first row
+        headers = [
+            str(cell.value).strip().lower() if cell.value else f"col_{idx}"
+            for idx, cell in enumerate(next(sheet.iter_rows(max_row=1)))
+        ]
+        
+        # Validate required columns
+        if required_columns:
+            missing = required_columns - {h.lower() for h in headers}
+            if missing:
+                raise ValidationError(
+                    f"Missing required columns: {', '.join(sorted(missing))}"
+                )
+        
+        # Parse data rows
+        for row_idx, row in enumerate(sheet.iter_rows(min_row=2, values_only=True), start=2):
+            if not any(row):  # Skip empty rows
+                continue
+            
+            payload = {
+                headers[idx] if idx < len(headers) else f"col_{idx}": (
+                    str(value).strip() if value is not None else ""
+                )
+                for idx, value in enumerate(row)
+                if idx < len(headers)
+            }
+            payload["_row_number"] = row_idx
+            yield payload
+    
+    else:
+        raise ValidationError("Unsupported file format. Please upload CSV or Excel file.")
 
 
 def _parse_trainee_rows(uploaded_file) -> Iterator[dict]:

@@ -33,9 +33,25 @@ class TraineeImportSerializer(serializers.Serializer):
     allow_partial = serializers.BooleanField(default=False)
 
 
+class SupervisorImportSerializer(serializers.Serializer):
+    file = serializers.FileField()
+    dry_run = serializers.BooleanField(default=True)
+    allow_partial = serializers.BooleanField(default=False)
+    generate_passwords = serializers.BooleanField(default=True)
+
+
+class ResidentImportSerializer(serializers.Serializer):
+    file = serializers.FileField()
+    dry_run = serializers.BooleanField(default=True)
+    allow_partial = serializers.BooleanField(default=False)
+    generate_passwords = serializers.BooleanField(default=True)
+
+
 __all__ = [
     "BulkReviewSerializer",
     "BulkAssignmentSerializer",
     "BulkImportSerializer",
     "TraineeImportSerializer",
+    "SupervisorImportSerializer",
+    "ResidentImportSerializer",
 ]

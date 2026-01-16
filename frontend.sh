@@ -56,6 +56,6 @@ docker compose -p "$COMPOSE_PROJECT_NAME" ps frontend
 
 echo "=========================================="
 echo "Frontend is now running on:"
-echo "  http://127.0.0.1:3000"
-echo "  https://pgsims.alshifalab.pk"
+echo "  Internal: http://127.0.0.1:8082"
+echo "  Public:   https://pgsims.alshifalab.pk"
 echo "=========================================="

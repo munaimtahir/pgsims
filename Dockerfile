@@ -57,12 +57,12 @@ USER sims
 # Note: collectstatic is run at container startup via docker-compose command
 # to ensure environment variables are available
 
-# Expose port
-EXPOSE 8000
+# Expose port (matches docker-compose.yml configuration)
+EXPOSE 8014
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD python -c "import requests; requests.get('http://localhost:8000/healthz/', timeout=5)" || exit 1
+    CMD curl -f http://localhost:8014/healthz/ || exit 1
 
-# Default command (can be overridden)
-CMD ["gunicorn", "sims_project.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "4", "--timeout", "60"]
+# Default command (can be overridden by docker-compose.yml)
+CMD ["gunicorn", "sims_project.wsgi:application", "--bind", "0.0.0.0:8014", "--workers", "4", "--timeout", "60"]

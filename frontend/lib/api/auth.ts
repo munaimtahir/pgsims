@@ -32,6 +32,7 @@ export interface RegisterData {
   role: 'pg' | 'supervisor' | 'admin';
   specialty?: string;
   year?: string;
+  supervisor?: number;
   phone_number?: string;
 }
 
@@ -88,32 +89,22 @@ export const authApi = {
 
   /**
    * Get current user profile
+   * Uses allowed endpoint: GET /api/auth/profile/
    */
   async getCurrentUser(): Promise<User> {
-    const response = await apiClient.get<User>('/api/auth/me/');
+    const response = await apiClient.get<User>('/api/auth/profile/');
     return response.data;
   },
 
   /**
    * Refresh access token
+   * Uses allowed endpoint: POST /api/auth/refresh/
    */
   async refreshToken(refreshToken: string): Promise<{ access: string }> {
-    const response = await apiClient.post<{ access: string }>('/api/token/refresh/', {
+    const response = await apiClient.post<{ access: string }>('/api/auth/refresh/', {
       refresh: refreshToken,
     });
     return response.data;
-  },
-
-  /**
-   * Verify token is valid
-   */
-  async verifyToken(token: string): Promise<boolean> {
-    try {
-      await apiClient.post('/api/token/verify/', { token });
-      return true;
-    } catch {
-      return false;
-    }
   },
 };
 
