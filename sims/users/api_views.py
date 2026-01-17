@@ -9,11 +9,13 @@ Provides:
 - Password reset flow
 """
 
-from rest_framework import status
+from rest_framework import permissions, status
 from rest_framework.decorators import api_view, permission_classes
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.throttling import AnonRateThrottle
+from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
@@ -23,7 +25,7 @@ from django.conf import settings
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from .models import User
-from .serializers import UserSerializer, UserRegistrationSerializer
+from .serializers import AssignedPGSerializer, UserSerializer, UserRegistrationSerializer
 
 
 class LoginRateThrottle(AnonRateThrottle):
@@ -311,3 +313,18 @@ def change_password_view(request):
     user.save()
 
     return Response({"message": "Password changed successfully"}, status=status.HTTP_200_OK)
+
+
+class SupervisorAssignedPGsView(APIView):
+    """Return PGs assigned to the authenticated supervisor."""
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        if getattr(user, "role", None) != "supervisor":
+            raise PermissionDenied("Only supervisors can access assigned PGs")
+
+        assigned_pgs = user.get_assigned_pgs().order_by("last_name", "first_name")
+        serializer = AssignedPGSerializer(assigned_pgs, many=True)
+        return Response(serializer.data)
