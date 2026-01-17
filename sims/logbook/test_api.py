@@ -322,3 +322,73 @@ class PGLogbookEntryAPITests(TestCase):
         self.assertEqual(pending_response.status_code, 200)
         pending_ids = [item["id"] for item in pending_response.data["results"]]
         self.assertIn(entry.id, pending_ids)
+
+    def test_non_pg_user_cannot_access_pg_endpoints(self):
+        """Non-PG users (supervisor/admin) cannot access PG-only endpoints."""
+        # Test supervisor access
+        self.client.force_authenticate(self.supervisor)
+        list_url = reverse("logbook_api:my_entries")
+        response = self.client.get(list_url)
+        self.assertEqual(response.status_code, 403)
+
+        # Test admin access
+        self.client.force_authenticate(self.admin)
+        response = self.client.get(list_url)
+        self.assertEqual(response.status_code, 403)
+
+    def test_cannot_submit_already_pending_entry(self):
+        """Submitting an entry that's already pending should fail."""
+        entry = LogbookEntry.objects.create(
+            pg=self.pg,
+            case_title="Pending Case",
+            date=date.today(),
+            location_of_activity="Clinic",
+            patient_history_summary="History",
+            management_action="Action",
+            topic_subtopic="Topic",
+            status="pending",
+            supervisor=self.supervisor,
+        )
+
+        self.client.force_authenticate(self.pg)
+        submit_url = reverse("logbook_api:my_entry_submit", kwargs={"pk": entry.id})
+        response = self.client.post(submit_url, format="json")
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("pending", response.data["error"])
+
+    def test_cannot_submit_approved_entry(self):
+        """Submitting an entry that's already approved should fail."""
+        entry = LogbookEntry.objects.create(
+            pg=self.pg,
+            case_title="Approved Case",
+            date=date.today(),
+            location_of_activity="Clinic",
+            patient_history_summary="History",
+            management_action="Action",
+            topic_subtopic="Topic",
+            status="approved",
+            supervisor=self.supervisor,
+        )
+
+        self.client.force_authenticate(self.pg)
+        submit_url = reverse("logbook_api:my_entry_submit", kwargs={"pk": entry.id})
+        response = self.client.post(submit_url, format="json")
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("approved", response.data["error"])
+
+    def test_create_entry_with_missing_required_fields(self):
+        """Creating an entry with missing required fields should fail."""
+        self.client.force_authenticate(self.pg)
+        create_url = reverse("logbook_api:my_entries")
+        
+        # Missing case_title
+        incomplete_data = {
+            "date": str(date.today()),
+            "location_of_activity": "Clinic",
+            "patient_history_summary": "History",
+            "management_action": "Action",
+            "topic_subtopic": "Topic",
+        }
+        response = self.client.post(create_url, incomplete_data, format="json")
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("case_title", response.data)
