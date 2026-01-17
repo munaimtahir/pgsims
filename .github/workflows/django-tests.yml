@@ -1,7 +1,6 @@
 name: Django Test Suite with Coverage
 
 on:
-  pull_request:
   workflow_dispatch:
 
 permissions:
