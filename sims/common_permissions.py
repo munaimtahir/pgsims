@@ -9,4 +9,8 @@ class IsPGUser(permissions.BasePermission):
     message = "Only PG users can access this resource."
 
     def has_permission(self, request, view):
-        return getattr(request.user, "role", None) == "pg"
+        return (
+            request.user and 
+            request.user.is_authenticated and 
+            getattr(request.user, "role", None) == "pg"
+        )

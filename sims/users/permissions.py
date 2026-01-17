@@ -9,4 +9,8 @@ class IsSupervisor(permissions.BasePermission):
     message = "Only supervisors can access this resource."
 
     def has_permission(self, request, view):
-        return getattr(request.user, "role", None) == "supervisor"
+        return (
+            request.user and 
+            request.user.is_authenticated and 
+            getattr(request.user, "role", None) == "supervisor"
+        )

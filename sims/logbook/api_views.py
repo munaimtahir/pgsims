@@ -211,7 +211,7 @@ class PGLogbookEntryListCreateView(APIView):
             serializer = PGLogbookEntrySerializer(page, many=True)
             return paginator.get_paginated_response(serializer.data)
         serializer = PGLogbookEntrySerializer(queryset, many=True)
-        return Response({"count": queryset.count(), "results": serializer.data})
+        return Response({"count": len(serializer.data), "results": serializer.data})
 
     def post(self, request: Request) -> Response:
         serializer = PGLogbookEntryWriteSerializer(data=request.data)
