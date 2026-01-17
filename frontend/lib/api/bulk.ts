@@ -10,7 +10,8 @@ export interface BulkImportResult {
   success_count: number;
   error_count: number;
   errors: string[];
-  imported_items: any[];
+  imported_items: unknown[];
+  import_id?: number;
 }
 
 export interface BulkAssignmentResult {

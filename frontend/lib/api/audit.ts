@@ -7,9 +7,9 @@ import apiClient from './client';
 
 export interface ActivityLog {
   id: number;
-  user: number;
+  user: number | { username?: string; full_name?: string };
   action: string;
-  details: Record<string, any>;
+  details: Record<string, unknown>;
   ip_address?: string;
   user_agent?: string;
   created_at: string;
@@ -18,7 +18,7 @@ export interface ActivityLog {
 export interface AuditReport {
   id: number;
   report_type: string;
-  parameters: Record<string, any>;
+  parameters: Record<string, unknown>;
   generated_at: string;
   file_url?: string;
 }
@@ -43,7 +43,7 @@ export const auditApi = {
   /**
    * Create audit report
    */
-  createReport: async (data: { report_type: string; parameters: Record<string, any> }) => {
+  createReport: async (data: { report_type: string; parameters: Record<string, unknown> }) => {
     const response = await apiClient.post<AuditReport>('/api/audit/reports/', data);
     return response.data;
   },

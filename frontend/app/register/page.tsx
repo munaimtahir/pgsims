@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { authApi } from '@/lib/api/auth';
+import { authApi, type RegisterData } from '@/lib/api/auth';
 import { useAuthStore } from '@/store/authStore';
 import apiClient from '@/lib/api/client';
 
@@ -92,7 +92,7 @@ export default function RegisterPage() {
     setLoading(true);
 
     // Build registration payload (remove password2, ensure required fields)
-    const payload: any = {
+    const payload: Record<string, unknown> = {
       username: formData.username,
       email: formData.email,
       password: formData.password,
@@ -109,14 +109,14 @@ export default function RegisterPage() {
       payload.year = formData.year;
     }
     if (formData.supervisor) {
-      payload.supervisor = formData.supervisor;
+      payload.supervisor = String(formData.supervisor);
     }
     if (formData.phone_number) {
       payload.phone_number = formData.phone_number;
     }
 
     try {
-      const response = await authApi.register(payload);
+      const response = await authApi.register(payload as unknown as RegisterData);
       setAuth(response.user, response.tokens.access, response.tokens.refresh);
       
       // Redirect to role-specific dashboard

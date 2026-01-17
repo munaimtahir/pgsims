@@ -7,6 +7,7 @@ import { bulkApi } from '@/lib/api';
 import ErrorBanner from '@/components/ui/ErrorBanner';
 import SuccessBanner from '@/components/ui/SuccessBanner';
 import SectionCard from '@/components/ui/SectionCard';
+import { BulkImportResult } from '@/lib/api/bulk';
 
 type ImportType = 'trainees' | 'supervisors' | 'residents' | 'generic';
 
@@ -16,8 +17,8 @@ export default function AdminBulkImportPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-  const [importResult, setImportResult] = useState<any>(null);
-  const [reviewData, setReviewData] = useState<any>(null);
+  const [importResult, setImportResult] = useState<BulkImportResult | null>(null);
+  const [reviewData, setReviewData] = useState<unknown>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -66,8 +67,9 @@ export default function AdminBulkImportPage() {
           // Review endpoint may not be available
         }
       }
-    } catch (err: any) {
-      setError(err?.message || 'Failed to import file');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Failed to import file';
+      setError(message);
     } finally {
       setLoading(false);
     }
@@ -78,7 +80,7 @@ export default function AdminBulkImportPage() {
     try {
       const review = await bulkApi.review(importResult.import_id);
       setReviewData(review);
-    } catch (err: any) {
+    } catch {
       setError('Failed to load review data');
     }
   };
@@ -170,7 +172,7 @@ export default function AdminBulkImportPage() {
             </SectionCard>
           )}
 
-          {reviewData && (
+          {reviewData !== null && (
             <SectionCard title="Review Data">
               <pre className="text-xs bg-gray-100 p-4 rounded overflow-auto">
                 {JSON.stringify(reviewData, null, 2)}

@@ -11,7 +11,7 @@ export interface DashboardOverview {
   total_supervisors: number;
   active_rotations: number;
   pending_reviews: number;
-  recent_activity: any[];
+  recent_activity: unknown[];
 }
 
 export interface TrendData {
@@ -31,7 +31,7 @@ export interface PerformanceMetrics {
   average_scores: number;
   pass_rate: number;
   completion_rate: number;
-  top_performers: any[];
+  top_performers: unknown[];
 }
 
 export const analyticsApi = {

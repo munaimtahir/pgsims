@@ -10,7 +10,7 @@ export interface ReportTemplate {
   name: string;
   description: string;
   report_type: string;
-  parameters: Record<string, any>;
+  parameters: Record<string, unknown>;
 }
 
 export interface ScheduledReport {
@@ -18,7 +18,7 @@ export interface ScheduledReport {
   template: number;
   schedule_type: string;
   recipients: string[];
-  parameters: Record<string, any>;
+  parameters: Record<string, unknown>;
   last_run?: string;
   next_run?: string;
   active: boolean;
@@ -29,7 +29,7 @@ export interface GeneratedReport {
   template: number;
   generated_at: string;
   file_url?: string;
-  parameters: Record<string, any>;
+  parameters: Record<string, unknown>;
 }
 
 export const reportsApi = {
@@ -44,7 +44,7 @@ export const reportsApi = {
   /**
    * Generate a report
    */
-  generate: async (templateId: number, parameters: Record<string, any>) => {
+  generate: async (templateId: number, parameters: Record<string, unknown>) => {
     const response = await apiClient.post<GeneratedReport>('/api/reports/generate/', {
       template: templateId,
       parameters,

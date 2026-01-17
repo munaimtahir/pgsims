@@ -8,12 +8,13 @@ import Link from 'next/link';
 import { analyticsApi } from '@/lib/api';
 import { notificationsApi } from '@/lib/api';
 import ErrorBanner from '@/components/ui/ErrorBanner';
-import LoadingSkeleton, { CardSkeleton } from '@/components/ui/LoadingSkeleton';
+import { CardSkeleton } from '@/components/ui/LoadingSkeleton';
 import SectionCard from '@/components/ui/SectionCard';
+import { DashboardOverview } from '@/lib/api/analytics';
 
 export default function AdminDashboardPage() {
   const { user } = useAuthStore();
-  const [overview, setOverview] = useState<any>(null);
+  const [overview, setOverview] = useState<DashboardOverview | null>(null);
   const [unreadCount, setUnreadCount] = useState<number>(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -35,8 +36,9 @@ export default function AdminDashboardPage() {
         if (unreadData) {
           setUnreadCount(unreadData.count || 0);
         }
-      } catch (err: any) {
-        setError(err?.message || 'Failed to load dashboard data');
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : 'Failed to load dashboard data';
+        setError(message);
       } finally {
         setLoading(false);
       }

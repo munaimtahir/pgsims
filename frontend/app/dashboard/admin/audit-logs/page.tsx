@@ -5,13 +5,21 @@ import ProtectedRoute from '@/components/auth/ProtectedRoute';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { auditApi } from '@/lib/api';
 import ErrorBanner from '@/components/ui/ErrorBanner';
-import LoadingSkeleton, { TableSkeleton } from '@/components/ui/LoadingSkeleton';
+import { TableSkeleton } from '@/components/ui/LoadingSkeleton';
 import SectionCard from '@/components/ui/SectionCard';
 import DataTable, { Column } from '@/components/ui/DataTable';
 import { format } from 'date-fns';
+import { ActivityLog } from '@/lib/api/audit';
+
+interface AuditLogFilters {
+  action?: string;
+  start_date?: string;
+  end_date?: string;
+  ordering?: string;
+}
 
 export default function AdminAuditLogsPage() {
-  const [logs, setLogs] = useState<any[]>([]);
+  const [logs, setLogs] = useState<ActivityLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [filters, setFilters] = useState({
@@ -20,15 +28,11 @@ export default function AdminAuditLogsPage() {
     end_date: '',
   });
 
-  useEffect(() => {
-    loadLogs();
-  }, []);
-
-  async function loadLogs() {
+  const loadLogs = async () => {
     try {
       setLoading(true);
       setError(null);
-      const params: any = {};
+      const params: AuditLogFilters = {};
       if (filters.action) params.action = filters.action;
       if (filters.start_date) params.start_date = filters.start_date;
       if (filters.end_date) params.end_date = filters.end_date;
@@ -36,12 +40,18 @@ export default function AdminAuditLogsPage() {
 
       const response = await auditApi.getActivityLogs(params);
       setLogs(response.results || []);
-    } catch (err: any) {
-      setError(err?.message || 'Failed to load audit logs');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Failed to load audit logs';
+      setError(message);
     } finally {
       setLoading(false);
     }
-  }
+  };
+
+  useEffect(() => {
+    loadLogs();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleFilterChange = (key: string, value: string) => {
     setFilters((prev) => ({ ...prev, [key]: value }));
@@ -51,7 +61,7 @@ export default function AdminAuditLogsPage() {
     loadLogs();
   };
 
-  const columns: Column<any>[] = [
+  const columns: Column<ActivityLog>[] = [
     {
       key: 'created_at',
       label: 'Timestamp',
@@ -70,7 +80,10 @@ export default function AdminAuditLogsPage() {
         if (typeof item.user === 'object' && item.user?.username) {
           return item.user.username;
         }
-        return item.user || '-';
+        if (typeof item.user === 'number') {
+          return String(item.user);
+        }
+        return '-';
       },
     },
     { key: 'action', label: 'Action' },

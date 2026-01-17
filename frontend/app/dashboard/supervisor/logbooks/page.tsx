@@ -5,14 +5,22 @@ import ProtectedRoute from '@/components/auth/ProtectedRoute';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { logbookApi } from '@/lib/api';
 import ErrorBanner from '@/components/ui/ErrorBanner';
-import LoadingSkeleton, { TableSkeleton } from '@/components/ui/LoadingSkeleton';
+import { TableSkeleton } from '@/components/ui/LoadingSkeleton';
 import SectionCard from '@/components/ui/SectionCard';
 import DataTable, { Column } from '@/components/ui/DataTable';
 import SuccessBanner from '@/components/ui/SuccessBanner';
 import { format } from 'date-fns';
 
+interface LogbookEntry {
+  id: number;
+  user: { full_name?: string; username?: string } | number;
+  case_title?: string;
+  date: string;
+  status?: string;
+}
+
 export default function SupervisorLogbooksPage() {
-  const [entries, setEntries] = useState<any[]>([]);
+  const [entries, setEntries] = useState<LogbookEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -30,8 +38,9 @@ export default function SupervisorLogbooksPage() {
       setError(null);
       const data = await logbookApi.getPending();
       setEntries(data.results || []);
-    } catch (err: any) {
-      setError(err?.message || 'Failed to load logbook entries');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Failed to load logbook entries';
+      setError(message);
     } finally {
       setLoading(false);
     }
@@ -48,22 +57,23 @@ export default function SupervisorLogbooksPage() {
       await logbookApi.verify(id);
       setSuccess('Logbook entry verified successfully');
       loadEntries(); // Reload data
-    } catch (err: any) {
-      setError(err?.message || 'Failed to verify entry');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Failed to verify entry';
+      setError(message);
     } finally {
       setVerifyingId(null);
     }
   };
 
   const filteredEntries = entries.filter((entry) => {
-    const matchesSearch = !searchTerm || 
+    const matchesSearch = !searchTerm ||
       entry.case_title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      entry.user?.full_name?.toLowerCase().includes(searchTerm.toLowerCase());
+      (typeof entry.user === 'object' && entry.user?.full_name?.toLowerCase().includes(searchTerm.toLowerCase()));
     const matchesStatus = statusFilter === 'all' || entry.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
 
-  const columns: Column<any>[] = [
+  const columns: Column<LogbookEntry>[] = [
     {
       key: 'id',
       label: 'ID',
@@ -75,7 +85,13 @@ export default function SupervisorLogbooksPage() {
         if (typeof item.user === 'object' && item.user?.full_name) {
           return item.user.full_name;
         }
-        return item.user?.username || '-';
+        if (typeof item.user === 'object' && item.user?.username) {
+          return item.user.username;
+        }
+        if (typeof item.user === 'number') {
+          return String(item.user);
+        }
+        return '-';
       },
     },
     {

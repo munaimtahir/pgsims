@@ -5,13 +5,23 @@ import ProtectedRoute from '@/components/auth/ProtectedRoute';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { resultsApi } from '@/lib/api';
 import ErrorBanner from '@/components/ui/ErrorBanner';
-import LoadingSkeleton, { TableSkeleton } from '@/components/ui/LoadingSkeleton';
+import { TableSkeleton } from '@/components/ui/LoadingSkeleton';
 import SectionCard from '@/components/ui/SectionCard';
 import DataTable, { Column } from '@/components/ui/DataTable';
 import { format } from 'date-fns';
 
+interface ExamScore {
+  id: number;
+  exam: number | { title?: string; date?: string; max_marks?: number };
+  marks_obtained: number;
+  percentage?: number;
+  grade?: string;
+  is_passing: boolean;
+  created_at?: string;
+}
+
 export default function PGResultsPage() {
-  const [scores, setScores] = useState<any[]>([]);
+  const [scores, setScores] = useState<ExamScore[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -25,14 +35,15 @@ export default function PGResultsPage() {
       setError(null);
       const data = await resultsApi.scores.getMyScores();
       setScores(Array.isArray(data) ? data : []);
-    } catch (err: any) {
-      setError(err?.message || 'Failed to load exam results');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Failed to load exam results';
+      setError(message);
     } finally {
       setLoading(false);
     }
   }
 
-  const columns: Column<any>[] = [
+  const columns: Column<ExamScore>[] = [
     {
       key: 'exam',
       label: 'Exam',
@@ -40,7 +51,10 @@ export default function PGResultsPage() {
         if (typeof item.exam === 'object' && item.exam?.title) {
           return item.exam.title;
         }
-        return item.exam || '-';
+        if (typeof item.exam === 'number') {
+          return String(item.exam);
+        }
+        return '-';
       },
     },
     {
@@ -48,7 +62,7 @@ export default function PGResultsPage() {
       label: 'Date',
       render: (item) => {
         try {
-          if (item.exam?.date) {
+          if (typeof item.exam === 'object' && item.exam?.date) {
             return format(new Date(item.exam.date), 'MMM dd, yyyy');
           }
           if (item.created_at) {
@@ -65,7 +79,7 @@ export default function PGResultsPage() {
       label: 'Score',
       render: (item) => {
         const marks = item.marks_obtained;
-        const maxMarks = item.exam?.max_marks;
+        const maxMarks = typeof item.exam === 'object' ? item.exam?.max_marks : undefined;
         if (marks !== undefined && maxMarks !== undefined) {
           return `${marks} / ${maxMarks}`;
         }

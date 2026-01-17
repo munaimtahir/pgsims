@@ -9,12 +9,13 @@ import LoadingSkeleton from '@/components/ui/LoadingSkeleton';
 import SectionCard from '@/components/ui/SectionCard';
 import DataTable, { Column } from '@/components/ui/DataTable';
 import Link from 'next/link';
+import { SearchResult, SearchHistory, SearchSuggestion } from '@/lib/api/search';
 
 export default function SearchPage() {
   const [query, setQuery] = useState('');
-  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [suggestions, setSuggestions] = useState<string[]>([]);
-  const [history, setHistory] = useState<any[]>([]);
+  const [history, setHistory] = useState<SearchHistory[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -23,6 +24,7 @@ export default function SearchPage() {
     loadHistory();
   }, []);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const debouncedSearch = useCallback(
     (() => {
       let timeout: NodeJS.Timeout;
@@ -38,9 +40,10 @@ export default function SearchPage() {
                 searchApi.getSuggestions(searchQuery).catch(() => ({ results: [] })),
               ]);
               setSearchResults(results.results || []);
-              setSuggestions((suggs.results || []).map((s: any) => s.text || s));
-            } catch (err: any) {
-              setError(err?.message || 'Search failed');
+              setSuggestions((suggs.results || []).map((s: SearchSuggestion) => s.text || ''));
+            } catch (err: unknown) {
+              const message = err instanceof Error ? err.message : 'Search failed';
+              setError(message);
             } finally {
               setLoading(false);
             }
@@ -72,7 +75,7 @@ export default function SearchPage() {
     setShowSuggestions(false);
   };
 
-  const columns: Column<any>[] = [
+  const columns: Column<SearchResult>[] = [
     {
       key: 'type',
       label: 'Type',
@@ -118,7 +121,7 @@ export default function SearchPage() {
     }
     acc[type].push(result);
     return acc;
-  }, {} as Record<string, any[]>);
+  }, {} as Record<string, SearchResult[]>);
 
   return (
     <ProtectedRoute>

@@ -5,25 +5,22 @@ import ProtectedRoute from '@/components/auth/ProtectedRoute';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { analyticsApi } from '@/lib/api';
 import ErrorBanner from '@/components/ui/ErrorBanner';
-import LoadingSkeleton, { TableSkeleton } from '@/components/ui/LoadingSkeleton';
+import { TableSkeleton } from '@/components/ui/LoadingSkeleton';
 import SectionCard from '@/components/ui/SectionCard';
 import DataTable, { Column } from '@/components/ui/DataTable';
+import { TrendData, PerformanceMetrics, ComplianceMetrics } from '@/lib/api/analytics';
 
 type TabType = 'trends' | 'performance' | 'compliance';
 
 export default function AdminAnalyticsPage() {
   const [activeTab, setActiveTab] = useState<TabType>('trends');
-  const [trendsData, setTrendsData] = useState<any[]>([]);
-  const [performanceData, setPerformanceData] = useState<any>(null);
-  const [complianceData, setComplianceData] = useState<any>(null);
+  const [trendsData, setTrendsData] = useState<TrendData[]>([]);
+  const [performanceData, setPerformanceData] = useState<PerformanceMetrics | null>(null);
+  const [complianceData, setComplianceData] = useState<ComplianceMetrics | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    loadTabData();
-  }, [activeTab]);
-
-  async function loadTabData() {
+  const loadTabData = async () => {
     try {
       setLoading(true);
       setError(null);
@@ -42,14 +39,20 @@ export default function AdminAnalyticsPage() {
           setComplianceData(compliance);
           break;
       }
-    } catch (err: any) {
-      setError(err?.message || 'Failed to load analytics data');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Failed to load analytics data';
+      setError(message);
     } finally {
       setLoading(false);
     }
-  }
+  };
 
-  const trendsColumns: Column<any>[] = [
+  useEffect(() => {
+    loadTabData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab]);
+
+  const trendsColumns: Column<TrendData>[] = [
     { key: 'period', label: 'Period' },
     { key: 'label', label: 'Label' },
     { key: 'value', label: 'Value', render: (item) => item.value?.toLocaleString() || '-' },

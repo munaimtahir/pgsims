@@ -16,7 +16,7 @@ interface DataTableProps<T> {
   onRowClick?: (item: T) => void;
 }
 
-export default function DataTable<T extends Record<string, any>>({
+export default function DataTable<T = Record<string, unknown>>({
   columns,
   data,
   emptyMessage = 'No data available',
@@ -53,15 +53,27 @@ export default function DataTable<T extends Record<string, any>>({
               onClick={() => onRowClick?.(item)}
               className={onRowClick ? 'cursor-pointer hover:bg-gray-50' : ''}
             >
-              {columns.map((column) => (
-                <td key={column.key} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {column.render
-                    ? column.render(item)
-                    : typeof item[column.key] === 'string' && item[column.key].match(/^\d{4}-\d{2}-\d{2}/)
-                    ? format(new Date(item[column.key]), 'MMM dd, yyyy')
-                    : item[column.key] ?? '-'}
-                </td>
-              ))}
+              {columns.map((column) => {
+                const itemRecord = item as Record<string, unknown>;
+                const value = itemRecord[column.key];
+                let displayValue: React.ReactNode = '-';
+                
+                if (column.render) {
+                  displayValue = column.render(item);
+                } else if (typeof value === 'string' && value.match(/^\d{4}-\d{2}-\d{2}/)) {
+                  displayValue = format(new Date(value), 'MMM dd, yyyy');
+                } else if (typeof value === 'object' && value !== null) {
+                  displayValue = JSON.stringify(value);
+                } else if (value !== null && value !== undefined) {
+                  displayValue = String(value);
+                }
+                
+                return (
+                  <td key={column.key} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    {displayValue}
+                  </td>
+                );
+              })}
             </tr>
           ))}
         </tbody>

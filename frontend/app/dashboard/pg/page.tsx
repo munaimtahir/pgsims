@@ -8,15 +8,37 @@ import { authApi } from '@/lib/api';
 import { notificationsApi } from '@/lib/api';
 import { attendanceApi } from '@/lib/api';
 import ErrorBanner from '@/components/ui/ErrorBanner';
-import LoadingSkeleton, { CardSkeleton } from '@/components/ui/LoadingSkeleton';
+import { CardSkeleton } from '@/components/ui/LoadingSkeleton';
 import SectionCard from '@/components/ui/SectionCard';
 import Link from 'next/link';
 
+interface UserProfile {
+  id: number;
+  username: string;
+  email: string;
+  first_name: string;
+  last_name: string;
+  role: string;
+  full_name?: string;
+  specialty?: string;
+  year?: number | string;
+}
+
+interface AttendanceSummary {
+  total_days?: number;
+  present_days?: number;
+  absent_days?: number;
+  attendance_percentage?: number;
+  attended?: number;
+  total_sessions?: number;
+  [key: string]: unknown;
+}
+
 export default function PGDashboardPage() {
   const { user } = useAuthStore();
-  const [profile, setProfile] = useState<any>(null);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
   const [unreadCount, setUnreadCount] = useState<number>(0);
-  const [attendanceSummary, setAttendanceSummary] = useState<any>(null);
+  const [attendanceSummary, setAttendanceSummary] = useState<AttendanceSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -51,10 +73,11 @@ export default function PGDashboardPage() {
         setUnreadCount(unreadData.count || 0);
       }
       if (attendanceData) {
-        setAttendanceSummary(attendanceData);
+        setAttendanceSummary(attendanceData as unknown as AttendanceSummary);
       }
-    } catch (err: any) {
-      setError(err?.message || 'Failed to load dashboard data');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Failed to load dashboard data';
+      setError(message);
     } finally {
       setLoading(false);
     }

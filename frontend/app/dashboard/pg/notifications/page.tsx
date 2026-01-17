@@ -5,28 +5,25 @@ import ProtectedRoute from '@/components/auth/ProtectedRoute';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { notificationsApi } from '@/lib/api';
 import ErrorBanner from '@/components/ui/ErrorBanner';
-import LoadingSkeleton, { TableSkeleton } from '@/components/ui/LoadingSkeleton';
+import { TableSkeleton } from '@/components/ui/LoadingSkeleton';
 import SectionCard from '@/components/ui/SectionCard';
 import DataTable, { Column } from '@/components/ui/DataTable';
 import SuccessBanner from '@/components/ui/SuccessBanner';
 import { format } from 'date-fns';
+import { Notification } from '@/lib/api/notifications';
 
 type TabType = 'all' | 'unread';
 
 export default function PGNotificationsPage() {
   const [activeTab, setActiveTab] = useState<TabType>('all');
-  const [notifications, setNotifications] = useState<any[]>([]);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState<number>(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [markingRead, setMarkingRead] = useState<number | null>(null);
 
-  useEffect(() => {
-    loadNotifications();
-  }, [activeTab]);
-
-  async function loadNotifications() {
+  const loadNotifications = async () => {
     try {
       setLoading(true);
       setError(null);
@@ -50,12 +47,18 @@ export default function PGNotificationsPage() {
       if (countData) {
         setUnreadCount(countData.count || 0);
       }
-    } catch (err: any) {
-      setError(err?.message || 'Failed to load notifications');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Failed to load notifications';
+      setError(message);
     } finally {
       setLoading(false);
     }
-  }
+  };
+
+  useEffect(() => {
+    loadNotifications();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab]);
 
   const handleMarkRead = async (id: number) => {
     try {
@@ -64,8 +67,9 @@ export default function PGNotificationsPage() {
       await notificationsApi.markRead(id);
       setSuccess('Notification marked as read');
       loadNotifications();
-    } catch (err: any) {
-      setError(err?.message || 'Failed to mark notification as read');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Failed to mark notification as read';
+      setError(message);
     } finally {
       setMarkingRead(null);
     }
@@ -80,12 +84,13 @@ export default function PGNotificationsPage() {
       }
       setSuccess('All notifications marked as read');
       loadNotifications();
-    } catch (err: any) {
-      setError(err?.message || 'Failed to mark all notifications as read');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Failed to mark all notifications as read';
+      setError(message);
     }
   };
 
-  const columns: Column<any>[] = [
+  const columns: Column<Notification>[] = [
     {
       key: 'title',
       label: 'Title',

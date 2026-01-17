@@ -11,7 +11,7 @@ export interface SearchResult {
   title: string;
   description?: string;
   url: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface SearchHistory {

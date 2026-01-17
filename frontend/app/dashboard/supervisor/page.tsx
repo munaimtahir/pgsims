@@ -7,16 +7,24 @@ import { useAuthStore } from '@/store/authStore';
 import { logbookApi } from '@/lib/api';
 import { notificationsApi } from '@/lib/api';
 import ErrorBanner from '@/components/ui/ErrorBanner';
-import LoadingSkeleton, { TableSkeleton } from '@/components/ui/LoadingSkeleton';
+import { TableSkeleton } from '@/components/ui/LoadingSkeleton';
 import SectionCard from '@/components/ui/SectionCard';
 import DataTable, { Column } from '@/components/ui/DataTable';
 import SuccessBanner from '@/components/ui/SuccessBanner';
 import Link from 'next/link';
 import { format } from 'date-fns';
 
+interface PendingLogbookEntry {
+  id: number;
+  user: { full_name?: string; username?: string } | number;
+  case_title?: string;
+  date: string;
+  status?: string;
+}
+
 export default function SupervisorDashboardPage() {
   const { user } = useAuthStore();
-  const [pendingEntries, setPendingEntries] = useState<any[]>([]);
+  const [pendingEntries, setPendingEntries] = useState<PendingLogbookEntry[]>([]);
   const [unreadCount, setUnreadCount] = useState<number>(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -43,8 +51,9 @@ export default function SupervisorDashboardPage() {
       if (unreadData) {
         setUnreadCount(unreadData.count || 0);
       }
-    } catch (err: any) {
-      setError(err?.message || 'Failed to load dashboard data');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Failed to load dashboard data';
+      setError(message);
     } finally {
       setLoading(false);
     }
@@ -61,14 +70,15 @@ export default function SupervisorDashboardPage() {
       await logbookApi.verify(id);
       setSuccess('Logbook entry verified successfully');
       loadData(); // Reload data
-    } catch (err: any) {
-      setError(err?.message || 'Failed to verify entry');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Failed to verify entry';
+      setError(message);
     } finally {
       setVerifyingId(null);
     }
   };
 
-  const columns: Column<any>[] = [
+  const columns: Column<PendingLogbookEntry>[] = [
     {
       key: 'id',
       label: 'ID',
@@ -80,7 +90,13 @@ export default function SupervisorDashboardPage() {
         if (typeof item.user === 'object' && item.user?.full_name) {
           return item.user.full_name;
         }
-        return item.user?.username || '-';
+        if (typeof item.user === 'object' && item.user?.username) {
+          return item.user.username;
+        }
+        if (typeof item.user === 'number') {
+          return String(item.user);
+        }
+        return '-';
       },
     },
     {

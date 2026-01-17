@@ -4,7 +4,6 @@ import ProtectedRoute from '@/components/auth/ProtectedRoute';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import SectionCard from '@/components/ui/SectionCard';
 import EmptyState from '@/components/ui/EmptyState';
-import Link from 'next/link';
 
 export default function PGLogbookPage() {
   return (
