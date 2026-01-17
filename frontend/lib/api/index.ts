@@ -7,6 +7,7 @@ export * from './auth';
 export * from './academics';
 export * from './results';
 export * from './logbook';
+export * from './rotations';
 export * from './attendance';
 export * from './analytics';
 export * from './notifications';

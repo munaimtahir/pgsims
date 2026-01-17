@@ -595,6 +595,82 @@ class RotationAPITests(TestCase):
         self.assertEqual(data[0]["id"], rotation.id)
 
 
+class RotationMyAPITests(TestCase):
+    """Test cases for PG rotation API endpoints."""
+
+    def setUp(self):
+        self.client = Client()
+
+        self.hospital = Hospital.objects.create(name="Test Hospital")
+        self.department = Department.objects.create(
+            name="Internal Medicine", hospital=self.hospital
+        )
+
+        self.supervisor = SupervisorFactory(username="supervisor_rotations", specialty="medicine")
+        self.pg_user = User.objects.create_user(
+            username="pg_rotations",
+            email="pg_rotations@test.com",
+            password="testpass123",
+            role="pg",
+            specialty="medicine",
+            year="1",
+            supervisor=self.supervisor,
+        )
+        self.other_pg = User.objects.create_user(
+            username="pg_other",
+            email="pg_other@test.com",
+            password="testpass123",
+            role="pg",
+            specialty="medicine",
+            year="2",
+            supervisor=self.supervisor,
+        )
+
+        self.rotation = Rotation.objects.create(
+            pg=self.pg_user,
+            department=self.department,
+            hospital=self.hospital,
+            supervisor=self.supervisor,
+            start_date=date.today() + timedelta(days=1),
+            end_date=date.today() + timedelta(days=30),
+            status="planned",
+        )
+        self.other_rotation = Rotation.objects.create(
+            pg=self.other_pg,
+            department=self.department,
+            hospital=self.hospital,
+            supervisor=self.supervisor,
+            start_date=date.today() + timedelta(days=10),
+            end_date=date.today() + timedelta(days=40),
+            status="planned",
+        )
+
+    def test_pg_can_list_own_rotations(self):
+        """PG can list only their rotations."""
+        self.client.login(username="pg_rotations", password="testpass123")
+        response = self.client.get(reverse("rotations_api:my_rotations"))
+        self.assertEqual(response.status_code, 200)
+
+        data = response.json()
+        rotation_ids = [item["id"] for item in data["results"]]
+        self.assertIn(self.rotation.id, rotation_ids)
+        self.assertNotIn(self.other_rotation.id, rotation_ids)
+
+    def test_pg_can_view_rotation_detail(self):
+        """PG can view details for their rotation."""
+        self.client.login(username="pg_rotations", password="testpass123")
+        response = self.client.get(
+            reverse("rotations_api:my_rotation_detail", kwargs={"pk": self.rotation.id})
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["id"], self.rotation.id)
+
+    def test_non_pg_is_forbidden(self):
+        """Non-PG users cannot access PG rotations endpoints."""
+        self.client.login(username="supervisor_rotations", password="testpass123")
+        response = self.client.get(reverse("rotations_api:my_rotations"))
+        self.assertEqual(response.status_code, 403)
+
 class RotationExportTests(TestCase):
     """Test cases for rotation export functionality"""
 

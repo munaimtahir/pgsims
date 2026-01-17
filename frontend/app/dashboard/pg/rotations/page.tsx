@@ -1,11 +1,112 @@
 'use client';
 
+import { useCallback, useEffect, useState } from 'react';
+import { format } from 'date-fns';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
 import DashboardLayout from '@/components/layout/DashboardLayout';
-import SectionCard from '@/components/ui/SectionCard';
+import DataTable, { Column } from '@/components/ui/DataTable';
 import EmptyState from '@/components/ui/EmptyState';
+import ErrorBanner from '@/components/ui/ErrorBanner';
+import { TableSkeleton } from '@/components/ui/LoadingSkeleton';
+import SectionCard from '@/components/ui/SectionCard';
+import { rotationsApi, RotationSummary } from '@/lib/api';
+
+const normalizeRotations = (data: { results?: RotationSummary[] } | RotationSummary[]) => {
+  if (Array.isArray(data)) {
+    return data;
+  }
+  return data.results ?? [];
+};
 
 export default function PGRotationsPage() {
+  const [rotations, setRotations] = useState<RotationSummary[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadRotations = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await rotationsApi.getMyRotations();
+      setRotations(normalizeRotations(data));
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Failed to load rotations';
+      setError(message);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadRotations();
+  }, [loadRotations]);
+
+  const columns: Column<RotationSummary>[] = [
+    {
+      key: 'name',
+      label: 'Rotation',
+      render: (item) => item.name || item.department || '-'
+    },
+    {
+      key: 'department',
+      label: 'Department',
+      render: (item) => item.department || '-'
+    },
+    {
+      key: 'hospital',
+      label: 'Hospital',
+      render: (item) => item.hospital || '-'
+    },
+    {
+      key: 'start_date',
+      label: 'Start Date',
+      render: (item) => {
+        try {
+          return format(new Date(item.start_date), 'MMM dd, yyyy');
+        } catch {
+          return item.start_date || '-';
+        }
+      }
+    },
+    {
+      key: 'end_date',
+      label: 'End Date',
+      render: (item) => {
+        try {
+          return format(new Date(item.end_date), 'MMM dd, yyyy');
+        } catch {
+          return item.end_date || '-';
+        }
+      }
+    },
+    {
+      key: 'status',
+      label: 'Status',
+      render: (item) => (
+        <span
+          className={`px-2 py-1 text-xs rounded-full ${
+            item.status === 'ongoing'
+              ? 'bg-green-100 text-green-800'
+              : item.status === 'planned'
+              ? 'bg-blue-100 text-blue-800'
+              : item.status === 'completed'
+              ? 'bg-gray-100 text-gray-800'
+              : item.status === 'cancelled'
+              ? 'bg-red-100 text-red-800'
+              : 'bg-yellow-100 text-yellow-800'
+          }`}
+        >
+          {item.status}
+        </span>
+      )
+    },
+    {
+      key: 'supervisor_name',
+      label: 'Supervisor',
+      render: (item) => item.supervisor_name || '-'
+    }
+  ];
+
   return (
     <ProtectedRoute allowedRoles={['pg']}>
       <DashboardLayout>
@@ -15,22 +116,19 @@ export default function PGRotationsPage() {
             <p className="mt-2 text-gray-600">View your rotation schedule and assignments</p>
           </div>
 
+          {error && <ErrorBanner message={error} onDismiss={() => setError(null)} />}
+
           <SectionCard title="Rotations">
-            <EmptyState
-              title="Rotations API Not Available"
-              description="The rotations REST API endpoint is not yet available. This feature will be implemented when the backend API is ready."
-            />
-            <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-              <p className="text-sm text-gray-600">
-                When available, this page will display:
-              </p>
-              <ul className="list-disc list-inside mt-2 text-sm text-gray-600 space-y-1">
-                <li>Current and upcoming rotations</li>
-                <li>Rotation calendar view</li>
-                <li>Department assignments</li>
-                <li>Rotation evaluations</li>
-              </ul>
-            </div>
+            {loading ? (
+              <TableSkeleton rows={5} cols={6} />
+            ) : rotations.length === 0 ? (
+              <EmptyState
+                title="No rotations yet"
+                description="You don't have any rotations assigned yet. Check back later for updates."
+              />
+            ) : (
+              <DataTable columns={columns} data={rotations} emptyMessage="No rotations found" />
+            )}
           </SectionCard>
         </div>
       </DashboardLayout>
