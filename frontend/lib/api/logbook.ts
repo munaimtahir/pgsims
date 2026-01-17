@@ -9,6 +9,10 @@ export interface LogbookEntry {
   id: number;
   case_title: string;
   date: string;
+  location_of_activity?: string;
+  patient_history_summary?: string;
+  management_action?: string;
+  topic_subtopic?: string;
   user?: {
     id: number;
     username: string;
@@ -19,10 +23,13 @@ export interface LogbookEntry {
     department: string;
   };
   submitted_at?: string;
-  status: 'pending' | 'approved' | 'rejected';
+  status: 'draft' | 'pending' | 'approved' | 'rejected' | 'returned' | 'archived';
   verified_by?: number;
   verified_at?: string;
   supervisor_comments?: string;
+  updated_at?: string;
+  created_at?: string;
+  submitted_to_supervisor_at?: string;
 }
 
 export interface PendingLogbookEntry {
@@ -42,6 +49,15 @@ export interface PendingLogbookEntry {
   status: string;
 }
 
+export interface PGLogbookEntryPayload {
+  case_title: string;
+  date: string;
+  location_of_activity: string;
+  patient_history_summary: string;
+  management_action: string;
+  topic_subtopic: string;
+}
+
 export const logbookApi = {
   /**
    * Get pending logbook entries (for supervisors/admins)
@@ -56,6 +72,40 @@ export const logbookApi = {
    */
   verify: async (id: number, feedback?: string) => {
     const response = await apiClient.patch<LogbookEntry>(`/api/logbook/${id}/verify/`, { feedback });
+    return response.data;
+  },
+
+  /**
+   * Get PG logbook entries (for PGs)
+   */
+  getMyEntries: async () => {
+    const response = await apiClient.get<{ count?: number; results?: LogbookEntry[] } | LogbookEntry[]>(
+      '/api/logbook/my/'
+    );
+    return response.data;
+  },
+
+  /**
+   * Create PG logbook entry (draft)
+   */
+  createMyEntry: async (payload: PGLogbookEntryPayload) => {
+    const response = await apiClient.post<LogbookEntry>('/api/logbook/my/', payload);
+    return response.data;
+  },
+
+  /**
+   * Update PG logbook entry (draft-only)
+   */
+  updateMyEntry: async (id: number, payload: Partial<PGLogbookEntryPayload>) => {
+    const response = await apiClient.patch<LogbookEntry>(`/api/logbook/my/${id}/`, payload);
+    return response.data;
+  },
+
+  /**
+   * Submit PG logbook entry (draft -> pending)
+   */
+  submitMyEntry: async (id: number) => {
+    const response = await apiClient.post<LogbookEntry>(`/api/logbook/my/${id}/submit/`);
     return response.data;
   },
 };
