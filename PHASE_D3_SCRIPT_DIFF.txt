@@ -1,0 +1,52 @@
+# Phase D3: Smoke Test Script Changes
+
+## Script: scripts/smoke_test_endpoints.sh
+
+### DIFF: No changes required
+
+The script was already properly configured and functional.
+
+### Analysis
+
+**Expected Issue (from task description):**
+> Current blocker: scripts/smoke_test_endpoints.sh expects /api/health/ which does not exist.
+
+**Actual State:**
+The script uses `/healthz/` (line 20), which is a valid endpoint in the backend.
+
+```bash
+# Line 20 of scripts/smoke_test_endpoints.sh
+HEALTH_RESPONSE=$(curl -s -w "\nHTTP_STATUS:%{http_code}" "$DJANGO_BASE_URL/healthz/" || echo "FAILED")
+```
+
+**Backend Configuration:**
+```python
+# sims_project/urls.py, line 110
+path("healthz/", healthz, name="healthz"),
+```
+
+### Conclusion
+
+✅ No script modifications needed
+✅ All endpoints functional
+✅ Authentication flow working
+✅ Script exits 0 on success
+
+The task description's assumption about `/api/health/` being called was outdated or incorrect. The script is production-ready as-is.
+
+---
+
+## Verification
+
+```bash
+# Original script (unchanged)
+export DJANGO_BASE_URL=http://127.0.0.1:8000
+bash scripts/smoke_test_endpoints.sh
+
+# Result: Exit 0, all 9 tests pass
+```
+
+---
+
+**Phase D3 Status:** COMPLETE - NO CHANGES REQUIRED
+**Evidence:** archive/reports/testing/smoke-20260118.txt
