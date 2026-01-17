@@ -1,6 +1,7 @@
 """API views for logbook supervisor verification workflow."""
 
 from django.contrib.auth import get_user_model
+from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from rest_framework import permissions, status
 from rest_framework.exceptions import PermissionDenied
@@ -9,6 +10,10 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from sims.logbook.models import LogbookEntry
+from sims.logbook.api_serializers import (
+    PGLogbookEntrySerializer,
+    PGLogbookEntryWriteSerializer,
+)
 
 User = get_user_model()
 
@@ -173,4 +178,105 @@ class VerifyLogbookEntryView(APIView):
         )
 
 
-__all__ = ["PendingLogbookEntriesView", "VerifyLogbookEntryView"]
+class PGLogbookEntryListCreateView(APIView):
+    """
+    GET /api/logbook/my/
+    POST /api/logbook/my/
+    """
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    def _ensure_pg(self, user: User) -> None:
+        if getattr(user, "role", None) != "pg":
+            raise PermissionDenied("Only PG users can access their logbook entries")
+
+    def get(self, request: Request) -> Response:
+        self._ensure_pg(request.user)
+        queryset = LogbookEntry.objects.filter(pg=request.user).order_by("-date", "-updated_at")
+        serializer = PGLogbookEntrySerializer(queryset, many=True)
+        return Response({"count": len(serializer.data), "results": serializer.data})
+
+    def post(self, request: Request) -> Response:
+        self._ensure_pg(request.user)
+        serializer = PGLogbookEntryWriteSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        entry = serializer.save(pg=request.user, status="draft")
+        response_serializer = PGLogbookEntrySerializer(entry)
+        return Response(response_serializer.data, status=status.HTTP_201_CREATED)
+
+
+class PGLogbookEntryDetailView(APIView):
+    """
+    PATCH /api/logbook/my/<id>/
+    """
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    def _ensure_pg(self, user: User) -> None:
+        if getattr(user, "role", None) != "pg":
+            raise PermissionDenied("Only PG users can access their logbook entries")
+
+    def _get_entry(self, request: Request, pk: int) -> LogbookEntry:
+        self._ensure_pg(request.user)
+        return get_object_or_404(LogbookEntry, pk=pk, pg=request.user)
+
+    def patch(self, request: Request, pk: int) -> Response:
+        entry = self._get_entry(request, pk)
+        if entry.status != "draft":
+            return Response(
+                {"error": "Only draft entries can be edited"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        serializer = PGLogbookEntryWriteSerializer(entry, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        response_serializer = PGLogbookEntrySerializer(entry)
+        return Response(response_serializer.data)
+
+
+class PGLogbookEntrySubmitView(APIView):
+    """
+    POST /api/logbook/my/<id>/submit/
+    """
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    def _ensure_pg(self, user: User) -> None:
+        if getattr(user, "role", None) != "pg":
+            raise PermissionDenied("Only PG users can submit their logbook entries")
+
+    def post(self, request: Request, pk: int) -> Response:
+        self._ensure_pg(request.user)
+        try:
+            entry = LogbookEntry.objects.get(pk=pk, pg=request.user)
+        except LogbookEntry.DoesNotExist:
+            return Response({"error": "Logbook entry not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        if entry.status != "draft":
+            return Response(
+                {"error": "Only draft entries can be submitted"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if not entry.supervisor and getattr(request.user, "supervisor", None):
+            entry.supervisor = request.user.supervisor
+
+        if not entry.supervisor:
+            return Response(
+                {"error": "No supervisor assigned to submit this entry"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        entry.status = "pending"
+        entry.save()
+        response_serializer = PGLogbookEntrySerializer(entry)
+        return Response(response_serializer.data)
+
+
+__all__ = [
+    "PendingLogbookEntriesView",
+    "VerifyLogbookEntryView",
+    "PGLogbookEntryListCreateView",
+    "PGLogbookEntryDetailView",
+    "PGLogbookEntrySubmitView",
+]
