@@ -578,13 +578,70 @@ class SupervisorAssignedPGsAPITestCase(TestCase):
         self.assertEqual(response.status_code, 401)
 
     def test_assigned_pgs_supervisor_success(self):
-        """Supervisor should see only their assigned PGs."""
+        """Supervisor should see only their assigned PGs with correct fields."""
         self.client.force_authenticate(self.supervisor_user)
         response = self.client.get(reverse("users_api:assigned_pgs"))
         self.assertEqual(response.status_code, 200)
         pg_ids = {pg["id"] for pg in response.data}
         self.assertIn(self.pg_user.id, pg_ids)
         self.assertNotIn(self.pg_other.id, pg_ids)
+        
+        # Verify serializer fields are present
+        pg_data = next(pg for pg in response.data if pg["id"] == self.pg_user.id)
+        self.assertIn("username", pg_data)
+        self.assertIn("full_name", pg_data)
+        self.assertIn("email", pg_data)
+        self.assertIn("specialty", pg_data)
+        self.assertIn("year", pg_data)
+        self.assertIn("is_active", pg_data)
+        self.assertEqual(pg_data["full_name"], self.pg_user.get_full_name())
+
+    def test_assigned_pgs_supervisor_no_pgs(self):
+        """Supervisor with no assigned PGs should receive empty list."""
+        supervisor_no_pgs = User.objects.create_user(
+            username="supervisor_no_pgs",
+            password="testpass123",
+            role="supervisor",
+            specialty="medicine",
+        )
+        self.client.force_authenticate(supervisor_no_pgs)
+        response = self.client.get(reverse("users_api:assigned_pgs"))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data, [])
+
+    def test_assigned_pgs_excludes_inactive_archived_pgs(self):
+        """Inactive or archived PGs should be excluded from results."""
+        # Create inactive PG
+        inactive_pg = User.objects.create_user(
+            username="pg_inactive",
+            password="testpass123",
+            role="pg",
+            specialty="medicine",
+            year="1",
+            supervisor=self.supervisor_user,
+            is_active=False,
+        )
+        # Create archived PG
+        archived_pg = User.objects.create_user(
+            username="pg_archived",
+            password="testpass123",
+            role="pg",
+            specialty="medicine",
+            year="1",
+            supervisor=self.supervisor_user,
+            is_archived=True,
+        )
+        
+        self.client.force_authenticate(self.supervisor_user)
+        response = self.client.get(reverse("users_api:assigned_pgs"))
+        self.assertEqual(response.status_code, 200)
+        pg_ids = {pg["id"] for pg in response.data}
+        
+        # Active PG should be present
+        self.assertIn(self.pg_user.id, pg_ids)
+        # Inactive and archived PGs should be excluded
+        self.assertNotIn(inactive_pg.id, pg_ids)
+        self.assertNotIn(archived_pg.id, pg_ids)
 
     def test_assigned_pgs_pg_forbidden(self):
         """PG should not access assigned PGs endpoint."""

@@ -10,49 +10,44 @@ from rest_framework.views import APIView
 
 from sims.rotations.api_serializers import RotationSummarySerializer
 from sims.rotations.models import Rotation
+from sims.rotations.permissions import IsPGUser
 
 User = get_user_model()
 
 
 class PGMyRotationsListView(APIView):
     """
+    List rotations for authenticated PG user.
+    
     GET /api/rotations/my/
-
-    Returns rotations for the authenticated PG user.
+    Returns all rotations for the authenticated PG user.
+    Authentication: Required (PG role only)
     """
 
-    permission_classes = [permissions.IsAuthenticated]
-
-    def _ensure_pg(self, user: User) -> None:
-        if getattr(user, "role", None) != "pg":
-            raise PermissionDenied("Only PG users can access their rotations")
+    permission_classes = [permissions.IsAuthenticated, IsPGUser]
 
     def get(self, request: Request) -> Response:
-        self._ensure_pg(request.user)
         queryset = (
             Rotation.objects.filter(pg=request.user)
             .select_related("department", "hospital", "supervisor")
             .order_by("-start_date")
         )
         serializer = RotationSummarySerializer(queryset, many=True)
-        return Response({"count": len(serializer.data), "results": serializer.data})
+        return Response({"count": queryset.count(), "results": serializer.data})
 
 
 class PGMyRotationDetailView(APIView):
     """
+    Get details of a specific rotation for authenticated PG user.
+    
     GET /api/rotations/my/<id>/
-
     Returns a single rotation for the authenticated PG user.
+    Authentication: Required (PG role only)
     """
 
-    permission_classes = [permissions.IsAuthenticated]
-
-    def _ensure_pg(self, user: User) -> None:
-        if getattr(user, "role", None) != "pg":
-            raise PermissionDenied("Only PG users can access their rotations")
+    permission_classes = [permissions.IsAuthenticated, IsPGUser]
 
     def get(self, request: Request, pk: int) -> Response:
-        self._ensure_pg(request.user)
         rotation = get_object_or_404(
             Rotation.objects.select_related("department", "hospital", "supervisor"),
             pk=pk,

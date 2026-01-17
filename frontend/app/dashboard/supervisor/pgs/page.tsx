@@ -10,39 +10,38 @@ import DataTable, { Column } from '@/components/ui/DataTable';
 import { TableSkeleton } from '@/components/ui/LoadingSkeleton';
 import { AssignedPG, usersApi } from '@/lib/api';
 
-const formatValue = (
-  value?: string | number | { name?: string; label?: string; value?: string | number },
-) => {
-  if (typeof value === 'string' || typeof value === 'number') {
-    return String(value);
-  }
-  if (value && typeof value === 'object') {
-    return value.label || value.name || value.value?.toString() || '-';
-  }
-  return '-';
-};
-
 export default function SupervisorPGsPage() {
   const [pgs, setPgs] = useState<AssignedPG[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    let isMounted = true;
+
     const fetchPGs = async () => {
       try {
-        setLoading(true);
         setError(null);
         const data = await usersApi.getAssignedPGs();
-        setPgs(data || []);
+        if (isMounted) {
+          setPgs(data || []);
+        }
       } catch (err: unknown) {
-        const message = err instanceof Error ? err.message : 'Failed to load assigned PGs';
-        setError(message);
+        if (isMounted) {
+          const message = err instanceof Error ? err.message : 'Failed to load assigned PGs';
+          setError(message);
+        }
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
 
     fetchPGs();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const columns: Column<AssignedPG>[] = [
@@ -54,12 +53,12 @@ export default function SupervisorPGsPage() {
     {
       key: 'specialty',
       label: 'Specialty',
-      render: (pg) => formatValue(pg.specialty),
+      render: (pg) => pg.specialty || '-',
     },
     {
       key: 'year',
       label: 'Year',
-      render: (pg) => formatValue(pg.year),
+      render: (pg) => pg.year || '-',
     },
     {
       key: 'email',

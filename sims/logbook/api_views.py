@@ -5,6 +5,7 @@ from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from rest_framework import permissions, status
 from rest_framework.exceptions import PermissionDenied
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -14,8 +15,16 @@ from sims.logbook.api_serializers import (
     PGLogbookEntrySerializer,
     PGLogbookEntryWriteSerializer,
 )
+from sims.logbook.permissions import IsPGUser
 
 User = get_user_model()
+
+
+class LogbookEntryPagination(PageNumberPagination):
+    """Pagination class for logbook entries."""
+    page_size = 30
+    page_size_query_param = 'page_size'
+    max_page_size = 100
 
 
 class PendingLogbookEntriesView(APIView):
@@ -180,24 +189,31 @@ class VerifyLogbookEntryView(APIView):
 
 class PGLogbookEntryListCreateView(APIView):
     """
+    List and create PG logbook entries.
+    
     GET /api/logbook/my/
+    Returns paginated list of logbook entries for the authenticated PG user.
+    Authentication: Required (PG role only)
+    
     POST /api/logbook/my/
+    Creates a new draft logbook entry for the authenticated PG user.
+    Authentication: Required (PG role only)
     """
 
-    permission_classes = [permissions.IsAuthenticated]
-
-    def _ensure_pg(self, user: User) -> None:
-        if getattr(user, "role", None) != "pg":
-            raise PermissionDenied("Only PG users can access their logbook entries")
+    permission_classes = [permissions.IsAuthenticated, IsPGUser]
+    pagination_class = LogbookEntryPagination
 
     def get(self, request: Request) -> Response:
-        self._ensure_pg(request.user)
         queryset = LogbookEntry.objects.filter(pg=request.user).order_by("-date", "-updated_at")
+        paginator = self.pagination_class()
+        page = paginator.paginate_queryset(queryset, request)
+        if page is not None:
+            serializer = PGLogbookEntrySerializer(page, many=True)
+            return paginator.get_paginated_response(serializer.data)
         serializer = PGLogbookEntrySerializer(queryset, many=True)
-        return Response({"count": len(serializer.data), "results": serializer.data})
+        return Response({"count": queryset.count(), "results": serializer.data})
 
     def post(self, request: Request) -> Response:
-        self._ensure_pg(request.user)
         serializer = PGLogbookEntryWriteSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         entry = serializer.save(pg=request.user, status="draft")
@@ -207,24 +223,21 @@ class PGLogbookEntryListCreateView(APIView):
 
 class PGLogbookEntryDetailView(APIView):
     """
+    Update a PG logbook entry.
+    
     PATCH /api/logbook/my/<id>/
+    Updates an existing draft logbook entry for the authenticated PG user.
+    Only draft entries can be edited.
+    Authentication: Required (PG role only)
     """
 
-    permission_classes = [permissions.IsAuthenticated]
-
-    def _ensure_pg(self, user: User) -> None:
-        if getattr(user, "role", None) != "pg":
-            raise PermissionDenied("Only PG users can access their logbook entries")
-
-    def _get_entry(self, request: Request, pk: int) -> LogbookEntry:
-        self._ensure_pg(request.user)
-        return get_object_or_404(LogbookEntry, pk=pk, pg=request.user)
+    permission_classes = [permissions.IsAuthenticated, IsPGUser]
 
     def patch(self, request: Request, pk: int) -> Response:
-        entry = self._get_entry(request, pk)
+        entry = get_object_or_404(LogbookEntry, pk=pk, pg=request.user)
         if entry.status != "draft":
             return Response(
-                {"error": "Only draft entries can be edited"},
+                {"error": f'Cannot edit entry with status "{entry.status}". Only draft entries can be edited.'},
                 status=status.HTTP_400_BAD_REQUEST,
             )
         serializer = PGLogbookEntryWriteSerializer(entry, data=request.data, partial=True)
@@ -236,32 +249,28 @@ class PGLogbookEntryDetailView(APIView):
 
 class PGLogbookEntrySubmitView(APIView):
     """
+    Submit a PG logbook entry for review.
+    
     POST /api/logbook/my/<id>/submit/
+    Submits a draft logbook entry for supervisor review.
+    Changes status from 'draft' to 'pending'.
+    Authentication: Required (PG role only)
     """
 
-    permission_classes = [permissions.IsAuthenticated]
-
-    def _ensure_pg(self, user: User) -> None:
-        if getattr(user, "role", None) != "pg":
-            raise PermissionDenied("Only PG users can submit their logbook entries")
+    permission_classes = [permissions.IsAuthenticated, IsPGUser]
 
     def post(self, request: Request, pk: int) -> Response:
-        self._ensure_pg(request.user)
-        try:
-            entry = LogbookEntry.objects.get(pk=pk, pg=request.user)
-        except LogbookEntry.DoesNotExist:
-            return Response({"error": "Logbook entry not found"}, status=status.HTTP_404_NOT_FOUND)
+        entry = get_object_or_404(LogbookEntry, pk=pk, pg=request.user)
 
         if entry.status != "draft":
             return Response(
-                {"error": "Only draft entries can be submitted"},
+                {"error": f'Cannot submit entry with status "{entry.status}". Only draft entries can be submitted.'},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        if not entry.supervisor and getattr(request.user, "supervisor", None):
-            entry.supervisor = request.user.supervisor
-
-        if not entry.supervisor:
+        # Ensure that either the entry already has a supervisor or the PG user has one assigned.
+        # The actual supervisor assignment is handled by the LogbookEntry model's save() method.
+        if not (entry.supervisor or getattr(request.user, "supervisor", None)):
             return Response(
                 {"error": "No supervisor assigned to submit this entry"},
                 status=status.HTTP_400_BAD_REQUEST,

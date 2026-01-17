@@ -28,6 +28,15 @@ const normalizeEntries = (data: { results?: LogbookEntry[] } | LogbookEntry[]) =
   return data.results ?? [];
 };
 
+const statusClasses: Record<LogbookEntry['status'], string> = {
+  draft: 'bg-gray-100 text-gray-800',
+  pending: 'bg-yellow-100 text-yellow-800',
+  approved: 'bg-green-100 text-green-800',
+  returned: 'bg-orange-100 text-orange-800',
+  rejected: 'bg-red-100 text-red-800',
+  archived: 'bg-gray-100 text-gray-800',
+};
+
 export default function PGLogbookPage() {
   const [entries, setEntries] = useState<LogbookEntry[]>([]);
   const [loading, setLoading] = useState(true);
@@ -145,25 +154,14 @@ export default function PGLogbookPage() {
     {
       key: 'status',
       label: 'Status',
-      render: (item) => (
-        <span
-          className={`px-2 py-1 text-xs rounded-full ${
-            item.status === 'draft'
-              ? 'bg-gray-100 text-gray-800'
-              : item.status === 'pending'
-              ? 'bg-yellow-100 text-yellow-800'
-              : item.status === 'approved'
-              ? 'bg-green-100 text-green-800'
-              : item.status === 'returned'
-              ? 'bg-orange-100 text-orange-800'
-              : item.status === 'rejected'
-              ? 'bg-red-100 text-red-800'
-              : 'bg-gray-100 text-gray-800'
-          }`}
-        >
-          {item.status}
-        </span>
-      ),
+      render: (item) => {
+        const className = statusClasses[item.status] || 'bg-gray-100 text-gray-800';
+        return (
+          <span className={`px-2 py-1 text-xs rounded-full ${className}`}>
+            {item.status}
+          </span>
+        );
+      },
     },
     {
       key: 'updated_at',
@@ -224,72 +222,96 @@ export default function PGLogbookPage() {
             <form className="space-y-4" onSubmit={handleSubmit}>
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Case title</label>
+                  <label htmlFor="case_title" className="block text-sm font-medium text-gray-700">
+                    Case title
+                  </label>
                   <input
                     type="text"
+                    id="case_title"
                     name="case_title"
                     value={formData.case_title}
                     onChange={handleChange}
                     required
+                    aria-required="true"
                     className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Date</label>
+                  <label htmlFor="date" className="block text-sm font-medium text-gray-700">
+                    Date
+                  </label>
                   <input
                     type="date"
+                    id="date"
                     name="date"
                     value={formData.date}
                     onChange={handleChange}
                     required
+                    aria-required="true"
                     className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                   />
                 </div>
                 <div className="sm:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700">Location</label>
+                  <label htmlFor="location_of_activity" className="block text-sm font-medium text-gray-700">
+                    Location
+                  </label>
                   <input
                     type="text"
+                    id="location_of_activity"
                     name="location_of_activity"
                     value={formData.location_of_activity}
                     onChange={handleChange}
                     required
+                    aria-required="true"
                     className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700">Patient history summary</label>
+                <label htmlFor="patient_history_summary" className="block text-sm font-medium text-gray-700">
+                  Patient history summary
+                </label>
                 <textarea
+                  id="patient_history_summary"
                   name="patient_history_summary"
                   value={formData.patient_history_summary}
                   onChange={handleChange}
                   required
+                  aria-required="true"
                   rows={3}
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700">Management action</label>
+                <label htmlFor="management_action" className="block text-sm font-medium text-gray-700">
+                  Management action
+                </label>
                 <textarea
+                  id="management_action"
                   name="management_action"
                   value={formData.management_action}
                   onChange={handleChange}
                   required
+                  aria-required="true"
                   rows={3}
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700">Topic / subtopic</label>
+                <label htmlFor="topic_subtopic" className="block text-sm font-medium text-gray-700">
+                  Topic / subtopic
+                </label>
                 <input
                   type="text"
+                  id="topic_subtopic"
                   name="topic_subtopic"
                   value={formData.topic_subtopic}
                   onChange={handleChange}
                   required
+                  aria-required="true"
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                 />
               </div>
