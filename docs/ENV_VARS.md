@@ -2,14 +2,58 @@
 
 Complete reference for all environment variables used in SIMS.
 
+## Environment Loading Mechanism
+
+SIMS uses `python-dotenv` to automatically load environment variables from a `.env` file in the project root.
+
+### How It Works
+
+1. **Development/Testing**: If a `.env` file exists in the project root, it will be automatically loaded when Django starts
+2. **Production**: Environment variables must be set explicitly in the system environment (container, systemd, etc.)
+3. **Security**: The SECRET_KEY is **always required** - there is no default fallback
+
+### Setup for Different Environments
+
+**Local Development:**
+```bash
+# Copy the example file and customize it
+cp .env.example .env
+# Edit .env and set your SECRET_KEY and other variables
+```
+
+**Testing (pytest):**
+```bash
+# Ensure .env file exists with SECRET_KEY set
+# Or set environment variables explicitly:
+export SECRET_KEY=$(python -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())")
+```
+
+**Production Deployment:**
+```bash
+# Set environment variables in your deployment configuration
+# Docker: Use docker-compose.yml env section
+# Systemd: Use EnvironmentFile=/path/to/.env
+# Kubernetes: Use ConfigMap and Secrets
+# DO NOT rely on .env file in production - use explicit environment variables
+```
+
 ## Core Django Settings
 
 ### SECRET_KEY
-- **Required**: Yes (production)
-- **Default**: Insecure key for development
+- **Required**: Yes (all environments)
+- **Default**: None - **must be explicitly set**
 - **Description**: Django secret key for cryptographic signing
-- **Example**: `SECRET_KEY=your-secret-key-min-50-chars-random-string`
-- **Generation**: `python -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())"`
+- **Security**: 
+  - Used for session signing, password reset tokens, and other cryptographic operations
+  - **NEVER** commit to version control
+  - **NEVER** share across environments
+  - Minimum 50 characters recommended
+  - If missing, Django will fail with: `RuntimeError: SECRET_KEY environment variable is required`
+- **Generation**: 
+  ```bash
+  python -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())"
+  ```
+- **Example**: `SECRET_KEY=5c6412af704856c50a7320cb993609f00fdab98facc5d5485e294ef96d847820`
 
 ### DEBUG
 - **Required**: No
