@@ -1,4 +1,4 @@
-"""Custom permission classes for rotation-related API views."""
+"""Common permission classes shared across apps."""
 
 from rest_framework import permissions
 

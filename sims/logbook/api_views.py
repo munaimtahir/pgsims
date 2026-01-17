@@ -15,7 +15,7 @@ from sims.logbook.api_serializers import (
     PGLogbookEntrySerializer,
     PGLogbookEntryWriteSerializer,
 )
-from sims.logbook.permissions import IsPGUser
+from sims.common_permissions import IsPGUser
 
 User = get_user_model()
 

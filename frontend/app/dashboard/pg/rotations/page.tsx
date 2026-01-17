@@ -86,6 +86,7 @@ export default function PGRotationsPage() {
 
   const loadRotations = useCallback(async () => {
     try {
+      setLoading(true);
       setError(null);
       const data = await rotationsApi.getMyRotations();
       setRotations(normalizeRotations(data));

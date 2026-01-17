@@ -10,7 +10,7 @@ from rest_framework.views import APIView
 
 from sims.rotations.api_serializers import RotationSummarySerializer
 from sims.rotations.models import Rotation
-from sims.rotations.permissions import IsPGUser
+from sims.common_permissions import IsPGUser
 
 User = get_user_model()
 
@@ -33,7 +33,7 @@ class PGMyRotationsListView(APIView):
             .order_by("-start_date")
         )
         serializer = RotationSummarySerializer(queryset, many=True)
-        return Response({"count": queryset.count(), "results": serializer.data})
+        return Response({"count": len(serializer.data), "results": serializer.data})
 
 
 class PGMyRotationDetailView(APIView):
