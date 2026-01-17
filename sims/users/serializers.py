@@ -126,3 +126,21 @@ class UserDetailSerializer(UserSerializer):
         if obj.role == "supervisor":
             return obj.assigned_pgs.filter(is_active=True, is_archived=False).count()
         return 0
+
+
+class AssignedPGSerializer(serializers.ModelSerializer):
+    """Minimal serializer for supervisor-assigned PGs."""
+
+    full_name = serializers.CharField(source="get_full_name", read_only=True)
+
+    class Meta:
+        model = User
+        fields = [
+            "id",
+            "username",
+            "full_name",
+            "email",
+            "specialty",
+            "year",
+            "is_active",
+        ]

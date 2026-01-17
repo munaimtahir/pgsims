@@ -4,6 +4,7 @@ from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.test import Client, TestCase
 from django.urls import reverse
+from rest_framework.test import APIClient
 
 User = get_user_model()
 
@@ -530,6 +531,72 @@ class UserAPITestCase(TestCase):
             supervisor["id"] == self.supervisor_user.id for supervisor in data["supervisors"]
         )
         self.assertTrue(supervisor_found)
+
+
+class SupervisorAssignedPGsAPITestCase(TestCase):
+    """Test cases for assigned PGs API endpoint."""
+
+    def setUp(self):
+        self.client = APIClient()
+        self.admin_user = User.objects.create_user(
+            username="admin_test",
+            password="testpass123",
+            role="admin",
+        )
+        self.supervisor_user = User.objects.create_user(
+            username="supervisor_test",
+            password="testpass123",
+            role="supervisor",
+            specialty="medicine",
+        )
+        self.supervisor_other = User.objects.create_user(
+            username="supervisor_other",
+            password="testpass123",
+            role="supervisor",
+            specialty="surgery",
+        )
+        self.pg_user = User.objects.create_user(
+            username="pg_test",
+            password="testpass123",
+            role="pg",
+            specialty="medicine",
+            year="1",
+            supervisor=self.supervisor_user,
+        )
+        self.pg_other = User.objects.create_user(
+            username="pg_other",
+            password="testpass123",
+            role="pg",
+            specialty="surgery",
+            year="2",
+            supervisor=self.supervisor_other,
+        )
+
+    def test_assigned_pgs_requires_authentication(self):
+        """Unauthenticated users should be rejected."""
+        response = self.client.get(reverse("users_api:assigned_pgs"))
+        self.assertEqual(response.status_code, 401)
+
+    def test_assigned_pgs_supervisor_success(self):
+        """Supervisor should see only their assigned PGs."""
+        self.client.force_authenticate(self.supervisor_user)
+        response = self.client.get(reverse("users_api:assigned_pgs"))
+        self.assertEqual(response.status_code, 200)
+        pg_ids = {pg["id"] for pg in response.data}
+        self.assertIn(self.pg_user.id, pg_ids)
+        self.assertNotIn(self.pg_other.id, pg_ids)
+
+    def test_assigned_pgs_pg_forbidden(self):
+        """PG should not access assigned PGs endpoint."""
+        self.client.force_authenticate(self.pg_user)
+        response = self.client.get(reverse("users_api:assigned_pgs"))
+        self.assertEqual(response.status_code, 403)
+
+    def test_assigned_pgs_admin_forbidden(self):
+        """Admin should not access assigned PGs endpoint."""
+        self.client.force_authenticate(self.admin_user)
+        response = self.client.get(reverse("users_api:assigned_pgs"))
+        self.assertEqual(response.status_code, 403)
 
 
 class UserStatisticsTestCase(TestCase):
