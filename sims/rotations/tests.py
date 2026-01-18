@@ -671,6 +671,61 @@ class RotationMyAPITests(TestCase):
         response = self.client.get(reverse("rotations_api:my_rotations"))
         self.assertEqual(response.status_code, 403)
 
+    def test_pg_cannot_access_other_pg_rotation_detail(self):
+        """PG user attempting to access another PG's rotation should get 404."""
+        self.client.login(username="pg_rotations", password="testpass123")
+        response = self.client.get(
+            reverse("rotations_api:my_rotation_detail", kwargs={"pk": self.other_rotation.id})
+        )
+        self.assertEqual(response.status_code, 404)
+
+    def test_unauthenticated_access_denied(self):
+        """Unauthenticated users should receive 401/403 for rotations endpoints."""
+        # Test list endpoint
+        response = self.client.get(reverse("rotations_api:my_rotations"))
+        self.assertIn(response.status_code, [401, 403])
+        
+        # Test detail endpoint
+        response = self.client.get(
+            reverse("rotations_api:my_rotation_detail", kwargs={"pk": self.rotation.id})
+        )
+        self.assertIn(response.status_code, [401, 403])
+
+    def test_empty_rotation_list(self):
+        """PG with no rotations should receive empty results list."""
+        # Create PG with no rotations
+        pg_no_rotations = User.objects.create_user(
+            username="pg_no_rotations",
+            password="testpass123",
+            role="pg",
+            specialty="medicine",
+            year="1",
+            supervisor=self.supervisor,
+        )
+        self.client.login(username="pg_no_rotations", password="testpass123")
+        response = self.client.get(reverse("rotations_api:my_rotations"))
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data["count"], 0)
+        self.assertEqual(len(data["results"]), 0)
+
+    def test_rotation_list_response_structure(self):
+        """Verify rotation list response contains expected fields."""
+        self.client.login(username="pg_rotations", password="testpass123")
+        response = self.client.get(reverse("rotations_api:my_rotations"))
+        self.assertEqual(response.status_code, 200)
+        
+        data = response.json()
+        self.assertIn("count", data)
+        self.assertIn("results", data)
+        
+        if data["results"]:
+            rotation = data["results"][0]
+            expected_fields = ["id", "name", "department", "hospital", "start_date", "end_date", "status", "supervisor_name"]
+            for field in expected_fields:
+                self.assertIn(field, rotation, f"Missing field: {field}")
+
+ 
 class RotationExportTests(TestCase):
     """Test cases for rotation export functionality"""
 

@@ -5,8 +5,8 @@ export interface AssignedPG {
   username?: string;
   full_name?: string;
   email?: string;
-  specialty?: string | { name?: string; label?: string };
-  year?: string | number | { label?: string; value?: string | number };
+  specialty?: string;
+  year?: string;
   is_active?: boolean;
 }
 

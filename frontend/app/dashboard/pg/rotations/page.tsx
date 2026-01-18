@@ -11,12 +11,73 @@ import { TableSkeleton } from '@/components/ui/LoadingSkeleton';
 import SectionCard from '@/components/ui/SectionCard';
 import { rotationsApi, RotationSummary } from '@/lib/api';
 
-const normalizeRotations = (data: { results?: RotationSummary[] } | RotationSummary[]) => {
-  if (Array.isArray(data)) {
-    return data;
-  }
+const normalizeRotations = (data: { results?: RotationSummary[] }) => {
   return data.results ?? [];
 };
+
+const statusClassMap: Record<string, string> = {
+  ongoing: 'bg-green-100 text-green-800',
+  planned: 'bg-blue-100 text-blue-800',
+  completed: 'bg-gray-100 text-gray-800',
+  cancelled: 'bg-red-100 text-red-800',
+};
+
+const columns: Column<RotationSummary>[] = [
+  {
+    key: 'name',
+    label: 'Rotation',
+    render: (item) => item.name || item.department || '-'
+  },
+  {
+    key: 'department',
+    label: 'Department',
+    render: (item) => item.department || '-'
+  },
+  {
+    key: 'hospital',
+    label: 'Hospital',
+    render: (item) => item.hospital || '-'
+  },
+  {
+    key: 'start_date',
+    label: 'Start Date',
+    render: (item) => {
+      try {
+        return format(new Date(item.start_date), 'MMM dd, yyyy');
+      } catch {
+        return item.start_date || '-';
+      }
+    }
+  },
+  {
+    key: 'end_date',
+    label: 'End Date',
+    render: (item) => {
+      try {
+        return format(new Date(item.end_date), 'MMM dd, yyyy');
+      } catch {
+        return item.end_date || '-';
+      }
+    }
+  },
+  {
+    key: 'status',
+    label: 'Status',
+    render: (item) => {
+      const className = statusClassMap[item.status] || 'bg-yellow-100 text-yellow-800';
+      return (
+        <span className={`px-2 py-1 text-xs rounded-full ${className}`}>
+          {item.status}
+        </span>
+      );
+    }
+  },
+  {
+    key: 'supervisor_name',
+    label: 'Supervisor',
+    render: (item) => item.supervisor_name || '-'
+  }
+];
 
 export default function PGRotationsPage() {
   const [rotations, setRotations] = useState<RotationSummary[]>([]);
@@ -40,72 +101,6 @@ export default function PGRotationsPage() {
   useEffect(() => {
     loadRotations();
   }, [loadRotations]);
-
-  const columns: Column<RotationSummary>[] = [
-    {
-      key: 'name',
-      label: 'Rotation',
-      render: (item) => item.name || item.department || '-'
-    },
-    {
-      key: 'department',
-      label: 'Department',
-      render: (item) => item.department || '-'
-    },
-    {
-      key: 'hospital',
-      label: 'Hospital',
-      render: (item) => item.hospital || '-'
-    },
-    {
-      key: 'start_date',
-      label: 'Start Date',
-      render: (item) => {
-        try {
-          return format(new Date(item.start_date), 'MMM dd, yyyy');
-        } catch {
-          return item.start_date || '-';
-        }
-      }
-    },
-    {
-      key: 'end_date',
-      label: 'End Date',
-      render: (item) => {
-        try {
-          return format(new Date(item.end_date), 'MMM dd, yyyy');
-        } catch {
-          return item.end_date || '-';
-        }
-      }
-    },
-    {
-      key: 'status',
-      label: 'Status',
-      render: (item) => (
-        <span
-          className={`px-2 py-1 text-xs rounded-full ${
-            item.status === 'ongoing'
-              ? 'bg-green-100 text-green-800'
-              : item.status === 'planned'
-              ? 'bg-blue-100 text-blue-800'
-              : item.status === 'completed'
-              ? 'bg-gray-100 text-gray-800'
-              : item.status === 'cancelled'
-              ? 'bg-red-100 text-red-800'
-              : 'bg-yellow-100 text-yellow-800'
-          }`}
-        >
-          {item.status}
-        </span>
-      )
-    },
-    {
-      key: 'supervisor_name',
-      label: 'Supervisor',
-      render: (item) => item.supervisor_name || '-'
-    }
-  ];
 
   return (
     <ProtectedRoute allowedRoles={['pg']}>

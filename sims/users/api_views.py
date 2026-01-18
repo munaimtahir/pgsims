@@ -26,6 +26,7 @@ from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from .models import User
 from .serializers import AssignedPGSerializer, UserSerializer, UserRegistrationSerializer
+from .permissions import IsSupervisor
 
 
 class LoginRateThrottle(AnonRateThrottle):
@@ -316,15 +317,29 @@ def change_password_view(request):
 
 
 class SupervisorAssignedPGsView(APIView):
-    """Return PGs assigned to the authenticated supervisor."""
+    """
+    Get list of PGs assigned to the authenticated supervisor.
 
-    permission_classes = [permissions.IsAuthenticated]
+    GET /api/users/assigned-pgs/
+    Authentication: Required (Supervisor role only)
+
+    Response: 200 OK
+    [
+        {
+            "id": 1,
+            "username": "pg1",
+            "full_name": "John Doe",
+            "email": "pg1@example.com",
+            "specialty": "medicine",
+            "year": "1",
+            "is_active": true
+        }
+    ]
+    """
+
+    permission_classes = [permissions.IsAuthenticated, IsSupervisor]
 
     def get(self, request):
-        user = request.user
-        if getattr(user, "role", None) != "supervisor":
-            raise PermissionDenied("Only supervisors can access assigned PGs")
-
-        assigned_pgs = user.get_assigned_pgs().order_by("last_name", "first_name")
+        assigned_pgs = request.user.get_assigned_pgs().order_by("last_name", "first_name")
         serializer = AssignedPGSerializer(assigned_pgs, many=True)
         return Response(serializer.data)
