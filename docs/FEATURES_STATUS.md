@@ -1,5 +1,7 @@
 # SIMS Features Development Status
 
+> **Canonical status:** See `RELEASE_STATUS.md`. This document is historical and may be out of date.
+
 **Last Updated**: January 2025  
 **Project**: SIMS (Surgical Information Management System)  
 **Status Review Date**: January 2025

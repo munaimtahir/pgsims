@@ -1,5 +1,9 @@
 # SIMS Project Completion Summary
 
+> **Canonical status:** See `RELEASE_STATUS.md`. This document is a historical summary.
+
+> **Canonical status:** See `RELEASE_STATUS.md`. This document is a historical summary.
+
 ## 🎉 PROJECT STATUS: COMPLETED ✅
 
 The SIMS (Specialized Information Management System) Django application has been successfully resolved and is now fully functional.

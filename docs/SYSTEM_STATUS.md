@@ -1,6 +1,10 @@
 # SIMS Postgraduate Medical Training Management System
 ## System Status Report
 
+> **Canonical status:** See `RELEASE_STATUS.md`. This document is a historical snapshot.
+
+> **Canonical status:** See `RELEASE_STATUS.md`. This document is a historical snapshot.
+
 **Generated**: May 30, 2025  
 **System**: SIMS Django Application  
 **Version**: Production Ready  

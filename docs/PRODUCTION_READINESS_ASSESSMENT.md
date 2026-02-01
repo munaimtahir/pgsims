@@ -1,5 +1,9 @@
 # Production Readiness Assessment - SIMS v1.0.0
 
+> **Canonical status:** See `RELEASE_STATUS.md`. This document is a historical snapshot.
+
+> **Canonical status:** See `RELEASE_STATUS.md`. This document is a historical snapshot.
+
 **Date:** 2025-10-23  
 **Version:** 1.0.0  
 **Assessment Type:** Pre-Release Sprint Completion

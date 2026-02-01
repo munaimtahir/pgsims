@@ -1,5 +1,9 @@
 # Stage 2 Feature Readiness Review
 
+> **Canonical status:** See `RELEASE_STATUS.md`. This document is a historical review.
+
+> **Canonical status:** See `RELEASE_STATUS.md`. This document is a historical review.
+
 _Date: 2025-05-31_
 
 This review validates the "Stage-2" feature set that the README and supporting docs label as

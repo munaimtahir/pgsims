@@ -1,5 +1,7 @@
 # SIMS Documentation Index
 
+**Start here for current status:** `RELEASE_STATUS.md`
+
 This directory consolidates every project guide, operational report, and deployment reference that previously lived across the repository root. No information has been removed during the reorganization—each original document now resides here with its content intact.
 
 ## How to Navigate

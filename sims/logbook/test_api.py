@@ -195,6 +195,12 @@ class PGLogbookEntryAPITests(TestCase):
     """Tests for PG logbook CRUD API endpoints."""
 
     def setUp(self):
+        self.admin = User.objects.create_user(
+            username="admin_pg",
+            password="testpass",
+            role="admin",
+            email="admin_pg@example.com",
+        )
         self.supervisor = User.objects.create_user(
             username="supervisor_pg",
             password="testpass",

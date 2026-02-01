@@ -129,6 +129,7 @@ urlpatterns = [
     path("api/reports/", include("sims.reports.urls")),
     path("api/logbook/", include("sims.logbook.api_urls")),
     path("api/rotations/", include("sims.rotations.api_urls")),
+    path("api/certificates/", include("sims.certificates.api_urls")),
     path("api/attendance/", include("sims.attendance.urls")),
     path("api/users/", include("sims.users.api_user_urls")),
     # New apps

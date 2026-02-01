@@ -1000,3 +1000,152 @@ class CertificateIntegrationTests(TestCase):
         certificate.refresh_from_db()
         self.assertEqual(certificate.status, "pending")
         self.assertEqual(certificate.title, "Updated Rejection Test Certificate")
+
+
+from sims.tests.factories.certificate_factories import CertificateFactory
+from rest_framework.test import APIClient
+
+class PGCertificateAPITests(TestCase):
+    """Test cases for the new PG-facing certificate REST API endpoints."""
+
+    def setUp(self):
+        """Set up test data using factories."""
+        self.client = APIClient()
+
+        # Create two different PGs
+        self.pg_user1 = PGFactory(username="pg_test_user_1")
+        self.pg_user2 = PGFactory(username="pg_test_user_2")
+        
+        # Create a supervisor for testing permissions
+        self.supervisor_user = SupervisorFactory(username="supervisor_test_user")
+
+        # Create a certificate with a file for user 1
+        self.cert_with_file = CertificateFactory(
+            pg=self.pg_user1,
+            title="Cert with File"
+        )
+
+        # Create a certificate without a file for user 1
+        self.cert_without_file = CertificateFactory(
+            pg=self.pg_user1,
+            title="Cert without File",
+            certificate_file=None
+        )
+        
+        # Create a certificate for user 2
+        self.cert_other_user = CertificateFactory(
+            pg=self.pg_user2,
+            title="Other User Cert"
+        )
+
+    def test_unauthenticated_access_denied(self):
+        """Unauthenticated users should receive 401 for all endpoints."""
+        list_url = reverse("certificates_api:my_certificates")
+        download_url = reverse("certificates_api:my_certificate_download", kwargs={"pk": self.cert_with_file.pk})
+        
+        response = self.client.get(list_url)
+        self.assertEqual(response.status_code, 401)
+        
+        response = self.client.get(download_url)
+        self.assertEqual(response.status_code, 401)
+
+    def test_non_pg_access_forbidden(self):
+        """Non-PG users (e.g., supervisors) should receive 403."""
+        self.client.force_authenticate(user=self.supervisor_user)
+        
+        list_url = reverse("certificates_api:my_certificates")
+        download_url = reverse("certificates_api:my_certificate_download", kwargs={"pk": self.cert_with_file.pk})
+        
+        response = self.client.get(list_url)
+        self.assertEqual(response.status_code, 403)
+        
+        response = self.client.get(download_url)
+        self.assertEqual(response.status_code, 403)
+
+    def test_pg_can_list_own_certificates(self):
+        """A PG should be able to list their own certificates and not others'."""
+        self.client.force_authenticate(user=self.pg_user1)
+        
+        url = reverse("certificates_api:my_certificates")
+        response = self.client.get(url)
+        
+        self.assertEqual(response.status_code, 200)
+        
+        data = response.json()
+        self.assertEqual(data["count"], 2)
+        
+        certificate_titles = [cert["title"] for cert in data["results"]]
+        self.assertIn("Cert with File", certificate_titles)
+        self.assertIn("Cert without File", certificate_titles)
+        self.assertNotIn("Other User Cert", certificate_titles)
+
+    def test_list_response_structure_and_fields(self):
+        """The list endpoint response should have the correct structure and fields."""
+        self.client.force_authenticate(user=self.pg_user1)
+        
+        url = reverse("certificates_api:my_certificates")
+        response = self.client.get(url)
+        
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        
+        self.assertIn("count", data)
+        self.assertIn("results", data)
+        
+        if data["results"]:
+            cert_data = data["results"][0]
+            expected_fields = ["id", "title", "certificate_type_name", "issue_date", "status", "has_file", "file_name"]
+            for field in expected_fields:
+                self.assertIn(field, cert_data, f"Field '{field}' is missing from the response.")
+
+    def test_pg_can_download_own_certificate(self):
+        """A PG should be able to download their own certificate file."""
+        self.client.force_authenticate(user=self.pg_user1)
+        
+        url = reverse("certificates_api:my_certificate_download", kwargs={"pk": self.cert_with_file.pk})
+        response = self.client.get(url)
+        
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response['Content-Type'], 'application/pdf')
+        self.assertIn("attachment", response['Content-Disposition'])
+        self.assertIn(self.cert_with_file.certificate_file.name.split("/")[-1], response['Content-Disposition'])
+
+    def test_pg_cannot_download_other_users_certificate(self):
+        """A PG should get a 403 Forbidden trying to download another user's certificate."""
+        self.client.force_authenticate(user=self.pg_user1)
+        
+        # Attempt to download the certificate belonging to pg_user2
+        url = reverse("certificates_api:my_certificate_download", kwargs={"pk": self.cert_other_user.pk})
+        response = self.client.get(url)
+        
+        self.assertEqual(response.status_code, 403)
+
+    def test_download_for_certificate_without_file_is_404(self):
+        """Requesting a download for a certificate with no file should result in a 404."""
+        self.client.force_authenticate(user=self.pg_user1)
+        
+        url = reverse("certificates_api:my_certificate_download", kwargs={"pk": self.cert_without_file.pk})
+        response = self.client.get(url)
+        
+        self.assertEqual(response.status_code, 404)
+
+    def test_download_for_nonexistent_certificate_is_404(self):
+        """Requesting a download for a non-existent certificate ID should result in a 404."""
+        self.client.force_authenticate(user=self.pg_user1)
+        
+        # Use a high number for a likely non-existent PK
+        non_existent_pk = 99999 
+        url = reverse("certificates_api:my_certificate_download", kwargs={"pk": non_existent_pk})
+        response = self.client.get(url)
+        
+        self.assertEqual(response.status_code, 404)
+
+        # I also need to check for the common permissions file
+        
+        
+    def test_common_permissions_file_exists(self):
+        """Check if the common permissions file exists."""
+        import os
+        self.assertTrue(os.path.exists("sims/common_permissions.py"))
+        
+        
