@@ -21,7 +21,7 @@ services:
   # PostgreSQL Database
   db:
     image: postgres:15-alpine
-    container_name: sims_db
+    container_name: pgsims_db
     environment:
       # WARNING: Set DB_PASSWORD in .env file - never use default in production
       POSTGRES_DB: ${DB_NAME:-sims_db}
@@ -41,7 +41,7 @@ services:
   # Redis Cache & Message Broker
   redis:
     image: redis:7-alpine
-    container_name: sims_redis
+    container_name: pgsims_redis
     command: redis-server --appendonly yes
     volumes:
       - redis_data:/data
@@ -59,7 +59,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: sims_web
+    container_name: pgsims_backend
     command: >
       sh -c "python manage.py migrate --noinput &&
              python manage.py collectstatic --noinput &&
@@ -111,7 +111,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: sims_worker
+    container_name: pgsims_worker
     command: celery -A sims_project worker -l info --concurrency=2
     environment:
       - DEBUG=${DEBUG:-False}
@@ -137,7 +137,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: sims_beat
+    container_name: pgsims_beat
     command: celery -A sims_project beat -l info --scheduler django_celery_beat.schedulers:DatabaseScheduler
     environment:
       - DEBUG=${DEBUG:-False}
@@ -164,7 +164,7 @@ services:
       dockerfile: Dockerfile.frontend
       args:
         - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-https://pgsims.alshifalab.pk}
-    container_name: sims_frontend
+    container_name: pgsims_frontend
     environment:
       - NODE_ENV=production
       - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-https://pgsims.alshifalab.pk}
