@@ -1,19 +1,20 @@
 'use client';
 
-import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useEffect, useState } from 'react';
 import { Download } from 'lucide-react';
 
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import SectionCard from '@/components/ui/SectionCard';
 import EmptyState from '@/components/ui/EmptyState';
-import { DataTable, ColumnDef } from '@/components/ui/DataTable';
+import DataTable, { Column } from '@/components/ui/DataTable';
 import LoadingSkeleton from '@/components/ui/LoadingSkeleton';
 import ErrorBanner from '@/components/ui/ErrorBanner';
 import SuccessBanner from '@/components/ui/SuccessBanner';
 import { certificatesApi, CertificateSummary } from '@/lib/api/certificates';
 import { format } from 'date-fns';
+
+export const dynamic = 'force-dynamic';
 
 const getStatusClasses = (status: string) => {
   switch (status.toLowerCase()) {
@@ -34,11 +35,38 @@ export default function PGCertificatesPage() {
   const [downloading, setDownloading] = useState<number | null>(null);
   const [downloadSuccess, setDownloadSuccess] = useState<string | null>(null);
   const [downloadError, setDownloadError] = useState<string | null>(null);
+  const [certificates, setCertificates] = useState<CertificateSummary[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isError, setIsError] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('Failed to load certificates.');
 
-  const { data: certificates, isLoading, isError, error } = useQuery({
-    queryKey: ['my-certificates'],
-    queryFn: certificatesApi.getMyCertificates,
-  });
+  useEffect(() => {
+    let isMounted = true;
+    const loadCertificates = async () => {
+      try {
+        setIsLoading(true);
+        setIsError(false);
+        const data = await certificatesApi.getMyCertificates();
+        if (isMounted) {
+          setCertificates(data || []);
+        }
+      } catch (err) {
+        if (isMounted) {
+          setIsError(true);
+          setErrorMessage(err instanceof Error ? err.message : 'Failed to load certificates.');
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    loadCertificates();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const handleDownload = async (cert: CertificateSummary) => {
     if (!cert.has_file) return;
@@ -54,7 +82,7 @@ export default function PGCertificatesPage() {
       } else {
         throw new Error('Download failed unexpectedly.');
       }
-    } catch (e: any) {
+    } catch (e) {
       setDownloadError(`Failed to download ${cert.file_name}. Please try again.`);
       console.error(e);
     } finally {
@@ -62,39 +90,38 @@ export default function PGCertificatesPage() {
     }
   };
 
-  const columns: ColumnDef<CertificateSummary>[] = [
+  const columns: Column<CertificateSummary>[] = [
     {
-      accessorKey: 'title',
-      header: 'Certificate Title',
-      cell: ({ row }) => <span className="font-medium">{row.original.title}</span>,
+      key: 'title',
+      label: 'Certificate Title',
+      render: (cert) => <span className="font-medium">{cert.title}</span>,
     },
     {
-      accessorKey: 'certificate_type_name',
-      header: 'Type',
+      key: 'certificate_type_name',
+      label: 'Type',
     },
     {
-      accessorKey: 'issue_date',
-      header: 'Issue Date',
-      cell: ({ row }) => format(new Date(row.original.issue_date), 'dd MMM yyyy'),
+      key: 'issue_date',
+      label: 'Issue Date',
+      render: (cert) => format(new Date(cert.issue_date), 'dd MMM yyyy'),
     },
     {
-      accessorKey: 'status',
-      header: 'Status',
-      cell: ({ row }) => (
+      key: 'status',
+      label: 'Status',
+      render: (cert) => (
         <span
           className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusClasses(
-            row.original.status
+            cert.status
           )}`}
         >
-          {row.original.status}
+          {cert.status}
         </span>
       ),
     },
     {
-      id: 'actions',
-      header: 'Actions',
-      cell: ({ row }) => {
-        const cert = row.original;
+      key: 'actions',
+      label: 'Actions',
+      render: (cert) => {
         const isDownloading = downloading === cert.id;
         return (
           <button
@@ -116,7 +143,7 @@ export default function PGCertificatesPage() {
     }
 
     if (isError) {
-      return <ErrorBanner title="Failed to load certificates" message={error.message} />;
+      return <ErrorBanner title="Failed to load certificates" message={errorMessage} />;
     }
 
     if (!certificates || certificates.length === 0) {

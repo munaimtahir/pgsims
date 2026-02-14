@@ -561,6 +561,7 @@ else:
 
 # Logging Configuration
 LOG_LEVEL = os.environ.get("LOG_LEVEL", "INFO")
+LOG_FILE_PATH = os.environ.get("LOG_FILE_PATH", str(BASE_DIR / "logs" / "sims_error.log"))
 
 LOGGING = {
     "version": 1,
@@ -592,7 +593,7 @@ LOGGING = {
         "file": {
             "level": "ERROR",
             "class": "logging.handlers.RotatingFileHandler",
-            "filename": BASE_DIR / "logs" / "sims_error.log",
+            "filename": LOG_FILE_PATH,
             "maxBytes": 10485760,  # 10MB
             "backupCount": 5,
             "formatter": "verbose",
