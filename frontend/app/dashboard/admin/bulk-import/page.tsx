@@ -100,7 +100,16 @@ export default function AdminBulkImportPage() {
           <SectionCard title="Import Data">
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700">Import Type</label>
+                <div className="flex justify-between items-center">
+                  <label className="block text-sm font-medium text-gray-700">Import Type</label>
+                  <a
+                    href={`/templates/${importType}_template.csv`}
+                    download
+                    className="text-sm font-medium text-indigo-600 hover:text-indigo-500"
+                  >
+                    Download {importType.charAt(0).toUpperCase() + importType.slice(1)} Template CSV
+                  </a>
+                </div>
                 <select
                   value={importType}
                   onChange={(e) => setImportType(e.target.value as ImportType)}

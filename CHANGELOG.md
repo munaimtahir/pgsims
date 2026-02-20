@@ -1,4 +1,4 @@
-# Changelog
+cd # Changelog
 
 All notable changes to the SIMS project will be documented in this file.
 
