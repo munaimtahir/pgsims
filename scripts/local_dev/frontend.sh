@@ -18,26 +18,26 @@ COMPOSE_PROJECT_NAME="pgsims"
 
 # Stop the frontend service
 echo "Stopping frontend service (pgsims project only)..."
-docker compose -p "$COMPOSE_PROJECT_NAME" stop frontend || true
+docker compose -f ../../docker/docker-compose.yml -p "$COMPOSE_PROJECT_NAME" stop frontend || true
 
 # Remove the frontend container if it exists
 echo "Removing frontend container..."
-docker compose -p "$COMPOSE_PROJECT_NAME" rm -f frontend || true
+docker compose -f ../../docker/docker-compose.yml -p "$COMPOSE_PROJECT_NAME" rm -f frontend || true
 
 # Remove the frontend image to force rebuild (scoped to pgsims project)
 echo "Removing existing frontend image..."
-docker compose -p "$COMPOSE_PROJECT_NAME" rmi -f frontend || true
+docker compose -f ../../docker/docker-compose.yml -p "$COMPOSE_PROJECT_NAME" rmi -f frontend || true
 # Also remove by container name pattern specific to pgsims
 docker rmi $(docker images -q --filter "reference=pgsims*frontend*" 2>/dev/null) 2>/dev/null || true
 docker rmi $(docker images -q --filter "reference=*sims_frontend*" 2>/dev/null) 2>/dev/null || true
 
 # Rebuild the frontend image without cache
 echo "Rebuilding frontend image (no cache)..."
-docker compose -p "$COMPOSE_PROJECT_NAME" build --no-cache frontend
+docker compose -f ../../docker/docker-compose.yml -p "$COMPOSE_PROJECT_NAME" build --no-cache frontend
 
 # Start the frontend service
 echo "Starting frontend service..."
-docker compose -p "$COMPOSE_PROJECT_NAME" up -d frontend
+docker compose -f ../../docker/docker-compose.yml -p "$COMPOSE_PROJECT_NAME" up -d frontend
 
 # Wait a moment for the service to start
 sleep 3
@@ -46,13 +46,13 @@ sleep 3
 echo "=========================================="
 echo "Frontend service logs (last 20 lines):"
 echo "=========================================="
-docker compose -p "$COMPOSE_PROJECT_NAME" logs --tail=20 frontend
+docker compose -f ../../docker/docker-compose.yml -p "$COMPOSE_PROJECT_NAME" logs --tail=20 frontend
 
 # Check service status
 echo "=========================================="
 echo "Frontend deployment complete!"
 echo "Checking service status..."
-docker compose -p "$COMPOSE_PROJECT_NAME" ps frontend
+docker compose -f ../../docker/docker-compose.yml -p "$COMPOSE_PROJECT_NAME" ps frontend
 
 echo "=========================================="
 echo "Frontend is now running on:"

@@ -15,8 +15,6 @@
 #
 # NEVER commit .env to version control.
 
-version: '3.9'
-
 services:
   # PostgreSQL Database
   db:
@@ -30,7 +28,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-sims_user}"]
+      test: [ "CMD-SHELL", "pg_isready -U ${DB_USER:-sims_user}" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -46,7 +44,7 @@ services:
     volumes:
       - redis_data:/data
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: [ "CMD", "redis-cli", "ping" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -87,7 +85,7 @@ services:
       - EMAIL_HOST_USER=${EMAIL_HOST_USER:-}
       - EMAIL_HOST_PASSWORD=${EMAIL_HOST_PASSWORD:-}
     ports:
-      - "127.0.0.1:8014:8014"  # Exposed for Caddy reverse proxy
+      - "127.0.0.1:8014:8014" # Exposed for Caddy reverse proxy
     volumes:
       - static_volume:/app/staticfiles
       - media_volume:/app/media
@@ -98,7 +96,7 @@ services:
       redis:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8014/healthz/"]
+      test: [ "CMD", "curl", "-f", "http://localhost:8014/healthz/" ]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -161,8 +159,8 @@ services:
   # Next.js Frontend Application
   frontend:
     build:
-      context: ../frontend
-      dockerfile: Dockerfile
+      context: ..
+      dockerfile: frontend/Dockerfile
       args:
         - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-https://pgsims.alshifalab.pk}
     container_name: pgsims_frontend
@@ -172,11 +170,11 @@ services:
       - PORT=3000
       - HOSTNAME=0.0.0.0
     ports:
-      - "127.0.0.1:8082:3000"  # Exposed for Caddy reverse proxy
+      - "127.0.0.1:8082:3000" # Exposed for Caddy reverse proxy
     depends_on:
       - web
     healthcheck:
-      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"]
+      test: [ "CMD", "node", "-e", "require('http').get('http://localhost:3000', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})" ]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -190,6 +188,7 @@ volumes:
   redis_data:
   static_volume:
   media_volume:
+
 
 networks:
   sims_network:

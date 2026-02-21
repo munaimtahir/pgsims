@@ -18,37 +18,37 @@ help:
 	@echo "make restart      - Restart Docker services"
 
 dev:
-	python manage.py runserver 0.0.0.0:8000
+	cd backend && python manage.py runserver 0.0.0.0:8000
 
 test:
-	pytest --cov=sims --cov-report=html --cov-report=term-missing --maxfail=5 -v
+	pytest backend/sims --cov=backend/sims --cov-report=html --cov-report=term-missing --maxfail=5 -v
 
 up:
-	docker-compose up -d
+	docker compose -f docker/docker-compose.yml up -d
 	@echo "Waiting for services to be healthy..."
 	@sleep 5
-	docker-compose logs web | tail -20
+	docker compose -f docker/docker-compose.yml logs web | tail -20
 
 down:
-	docker-compose down
+	docker compose -f docker/docker-compose.yml down
 
 logs:
-	docker-compose logs -f
+	docker compose -f docker/docker-compose.yml logs -f
 
 shell:
-	python manage.py shell
+	cd backend && python manage.py shell
 
 migrate:
-	docker-compose exec web python manage.py migrate
+	docker compose -f docker/docker-compose.yml exec web python manage.py migrate
 
 makemigrations:
-	docker-compose exec web python manage.py makemigrations
+	docker compose -f docker/docker-compose.yml exec web python manage.py makemigrations
 
 seed:
-	docker-compose exec web python manage.py sims_seed_demo
+	docker compose -f docker/docker-compose.yml exec web python manage.py sims_seed_demo
 
 collectstatic:
-	docker-compose exec web python manage.py collectstatic --noinput
+	docker compose -f docker/docker-compose.yml exec web python manage.py collectstatic --noinput
 
 clean:
 	find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
@@ -58,20 +58,20 @@ clean:
 	rm -rf htmlcov .pytest_cache .coverage
 
 build:
-	docker-compose build --no-cache
+	docker compose -f docker/docker-compose.yml build --no-cache
 
 restart:
-	docker-compose restart
+	docker compose -f docker/docker-compose.yml restart
 
 # Production deployment helpers
 deploy-check:
-	python manage.py check --deploy
+	cd backend && python manage.py check --deploy
 
 deploy-migrate:
-	docker-compose exec web python manage.py migrate --noinput
+	docker compose -f docker/docker-compose.yml exec web python manage.py migrate --noinput
 
 deploy-collectstatic:
-	docker-compose exec web python manage.py collectstatic --noinput --clear
+	docker compose -f docker/docker-compose.yml exec web python manage.py collectstatic --noinput --clear
 
 deploy-restart:
-	docker-compose restart web worker beat
+	docker compose -f docker/docker-compose.yml restart web worker beat

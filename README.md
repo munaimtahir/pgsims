@@ -220,50 +220,34 @@ See [docs/DEPLOY_COOLIFY_TRAEFIK.md](docs/DEPLOY_COOLIFY_TRAEFIK.md) for the rec
 
 ## 📁 Project Structure
 
+SIMS is organized as a clean monorepo with separate concern domains:
+
 ```
 sims/
-├── manage.py                   # Django management script
-├── README.md                   # Project overview and documentation
-├── requirements.txt            # Python dependencies
-├── requirements-dev.txt        # Development dependencies
-├── pytest.ini                  # Pytest configuration
-├── pyproject.toml              # Black/pytest configuration
-├── conftest.py                 # Pytest fixtures and configuration
-├── .github/workflows/          # CI/CD workflows
-├── deployment/                 # Deployment configuration and scripts
-├── docs/                       # Project documentation and reports
-│   ├── archive/                # Historical development documents
-│   └── reports/                # Feature and testing reports
-├── logs/                       # Runtime and diagnostic logs
-├── scripts/                    # Utility scripts and helper tools
-├── sims_project/               # Django project configuration
-│   ├── settings.py             # Django settings module
-│   ├── urls.py                 # Root URL patterns
-│   ├── wsgi.py                 # WSGI configuration
-│   └── health.py               # Health check endpoints
-├── sims/                       # Core Django applications
-│   ├── analytics/              # Analytics and metrics
-│   ├── attendance/             # Attendance tracking
-│   ├── audit/                  # Audit trail functionality
-│   ├── bulk/                   # Bulk operations
-│   ├── cases/                  # Clinical case management
-│   ├── certificates/           # Certification tracking
-│   ├── logbook/                # Digital logbook functionality
-│   ├── notifications/          # Notification system
-│   ├── reports/                # Report generation
-│   ├── rotations/              # Training rotation management
-│   ├── search/                 # Global search functionality
-│   └── users/                  # User management and authentication
-├── static/                     # Project static assets
-│   ├── css/                    # Compiled CSS
-│   ├── images/                 # Shared imagery and icons
-│   └── js/                     # JavaScript bundles
-├── staticfiles/                # Collected static files for deployment
-├── templates/                  # Django template files
-└── tests/                      # Test files and test utilities
-    ├── factories/              # Test data factories
-    ├── feature_verification/   # Feature verification tests
-    └── manual/                 # Manual test utilities
+├── backend/                # 🐍 Django Backend Application
+│   ├── sims/               # CORE application modules (Users, Rotations, etc.)
+│   ├── sims_project/       # Project configuration (settings, urls, wsgi)
+│   ├── templates/          # Global Django templates
+│   ├── static/             # Backend static assets
+│   ├── tests/              # Backend test suites
+│   ├── manage.py           # Django management script
+│   └── requirements.txt    # Python dependencies
+├── frontend/               # ⚛️ Next.js Frontend Application
+│   ├── app/                # Next.js App router
+│   ├── components/         # React components
+│   └── public/             # Static assets
+├── docker/                 # 🐳 Docker Configuration
+│   ├── docker-compose.yml  # Main production compose file
+│   └── docker-compose.*.yml # Environment-specific compose files
+├── deploy/                 # 🚀 Deployment Scripts & Configs
+│   ├── Caddyfile.pgsims    # Caddy reverse proxy config
+│   └── deploy*.sh          # VPS deployment utilities
+├── scripts/                # 🛠️ Maintenance & Local Dev Utilities
+│   ├── local_dev/          # Desktop dev helper scripts
+│   └── sandbox/            # Demo data seeders & test scripts
+├── docs/                   # 📖 Consolidated Documentation
+├── Makefile                # Unified entry point for development commands
+└── .env                    # Environment secrets (Root & Backend)
 ```
 
 ## 👥 User Roles
