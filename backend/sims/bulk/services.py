@@ -1526,7 +1526,7 @@ def _get_or_create_supervisor(
                 counter += 1
             email = f"{username}.supervisor@pmc.edu.pk"
         
-        supervisor = User.objects.create(
+        supervisor = User(
             username=username,
             email=email,
             first_name=first_name or supervisor_name,
@@ -1536,8 +1536,7 @@ def _get_or_create_supervisor(
             is_active=True,
             created_by=actor,
         )
-        
-        # Set password
+
         if generate_password:
             password = _generate_password_from_username(username)
         else:
@@ -1661,6 +1660,10 @@ def _parse_csv_rows(uploaded_file, required_columns: Optional[set] = None) -> It
         stream = io.StringIO(content)
     stream.seek(0)
     
+    def _normalize_header(header: str) -> str:
+        normalized = re.sub(r"[^a-z0-9]+", "_", (header or "").strip().lower())
+        return normalized.strip("_")
+
     # Handle CSV files
     if name.endswith(".csv"):
         text_stream = (
@@ -1671,7 +1674,7 @@ def _parse_csv_rows(uploaded_file, required_columns: Optional[set] = None) -> It
         
         if reader.fieldnames:
             # Normalize headers (strip, lowercase)
-            headers = [h.strip().lower() if h else f"col_{i}" 
+            headers = [_normalize_header(h) if h else f"col_{i}" 
                       for i, h in enumerate(reader.fieldnames)]
             reader.fieldnames = headers
             
@@ -1686,7 +1689,7 @@ def _parse_csv_rows(uploaded_file, required_columns: Optional[set] = None) -> It
         for row_idx, row in enumerate(reader, start=2):
             # Normalize row values
             normalized_row = {
-                k.lower().strip(): (v.strip() if v else "") 
+                _normalize_header(k): (v.strip() if v else "") 
                 for k, v in row.items() if k
             }
             normalized_row["_row_number"] = row_idx
@@ -1699,7 +1702,7 @@ def _parse_csv_rows(uploaded_file, required_columns: Optional[set] = None) -> It
         
         # Get headers from first row
         headers = [
-            str(cell.value).strip().lower() if cell.value else f"col_{idx}"
+            _normalize_header(str(cell.value)) if cell.value else f"col_{idx}"
             for idx, cell in enumerate(next(sheet.iter_rows(max_row=1)))
         ]
         
@@ -1743,51 +1746,58 @@ def _parse_trainee_rows(uploaded_file) -> Iterator[dict]:
         stream = io.StringIO(content)
     stream.seek(0)
     
+    def _header_alias(header: str) -> str:
+        norm = re.sub(r"[^a-z0-9]+", "_", (header or "").strip().lower()).strip("_")
+        if norm in {"name", "name_of_trainee"}:
+            return "name"
+        if norm in {"date", "date_of_joining", "date_joining"}:
+            return "date"
+        if norm in {"ms_fcps", "qualification"}:
+            return "qualification"
+        if norm in {"supervisor_name", "supervisor"}:
+            return "supervisor"
+        if norm in {"sr_no", "serial_no", "serial_number"}:
+            return "sr_no"
+        return norm
+
+    if name.endswith(".csv"):
+        text_stream = io.TextIOWrapper(stream, encoding="utf-8")
+        reader = csv.DictReader(text_stream)
+        aliases = {h: _header_alias(h or "") for h in (reader.fieldnames or [])}
+        if "name" not in aliases.values() or "date" not in aliases.values():
+            raise ValidationError("Missing required columns: 'Name of Trainee' and 'Date of Joining'")
+        for row_idx, row in enumerate(reader, start=2):
+            if not any(row.values()):
+                continue
+            normalized = {_header_alias(k or ""): (v.strip() if isinstance(v, str) else v) for k, v in row.items()}
+            yield {
+                "name": (normalized.get("name") or "").strip(),
+                "date_joining": normalized.get("date"),
+                "qualification": (normalized.get("qualification") or "").strip(),
+                "supervisor_name": (normalized.get("supervisor") or "").strip(),
+                "_row_number": row_idx,
+            }
+        return
+
     if not name.endswith((".xlsx", ".xls")):
-        raise ValidationError("Trainee import only supports Excel files (.xlsx, .xls)")
-    
+        raise ValidationError("Trainee import supports CSV or Excel files (.csv, .xlsx, .xls)")
+
     workbook = load_workbook(stream)
     sheet = workbook.active
-    
-    # Get headers from first row
     headers = [str(cell.value).strip() if cell.value else "" for cell in next(sheet.iter_rows(max_row=1))]
-    
-    # Map column indices
-    # Expected: Sr. No., Name of Trainee, Date of Joining, MS/FCPS, Supervisor Name
-    col_map = {}
-    for idx, header in enumerate(headers):
-        header_lower = header.lower()
-        if "sr" in header_lower and "no" in header_lower:
-            col_map["sr_no"] = idx
-        elif "name" in header_lower and "trainee" in header_lower:
-            col_map["name"] = idx
-        elif "date" in header_lower and "joining" in header_lower:
-            col_map["date"] = idx
-        elif "ms" in header_lower or "fcps" in header_lower:
-            col_map["qualification"] = idx
-        elif "supervisor" in header_lower and "name" in header_lower:
-            col_map["supervisor"] = idx
-    
-    # Validate required columns
+    col_map = {_header_alias(header): idx for idx, header in enumerate(headers)}
     if "name" not in col_map or "date" not in col_map:
         raise ValidationError("Missing required columns: 'Name of Trainee' and 'Date of Joining'")
-    
-    # Parse data rows
     for row_idx, row in enumerate(sheet.iter_rows(min_row=2, values_only=True), start=2):
-        if not any(row):  # Skip empty rows
+        if not any(row):
             continue
-        
-        row_data = {}
-        if "name" in col_map and col_map["name"] < len(row):
-            row_data["name"] = str(row[col_map["name"]]).strip() if row[col_map["name"]] else ""
-        if "date" in col_map and col_map["date"] < len(row):
-            row_data["date_joining"] = row[col_map["date"]]
-        if "qualification" in col_map and col_map["qualification"] < len(row):
-            row_data["qualification"] = str(row[col_map["qualification"]]).strip() if row[col_map["qualification"]] else ""
-        if "supervisor" in col_map and col_map["supervisor"] < len(row):
-            row_data["supervisor_name"] = str(row[col_map["supervisor"]]).strip() if row[col_map["supervisor"]] else ""
-        
-        row_data["_row_number"] = row_idx
+        row_data = {
+            "name": str(row[col_map["name"]]).strip() if col_map["name"] < len(row) and row[col_map["name"]] else "",
+            "date_joining": row[col_map["date"]] if col_map["date"] < len(row) else "",
+            "qualification": str(row[col_map["qualification"]]).strip() if "qualification" in col_map and col_map["qualification"] < len(row) and row[col_map["qualification"]] else "",
+            "supervisor_name": str(row[col_map["supervisor"]]).strip() if "supervisor" in col_map and col_map["supervisor"] < len(row) and row[col_map["supervisor"]] else "",
+            "_row_number": row_idx,
+        }
         yield row_data
 
 

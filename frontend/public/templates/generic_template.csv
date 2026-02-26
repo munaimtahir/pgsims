@@ -1,3 +1,1 @@
-username,email,first_name,last_name,role
-user1,user1@example.com,User,One,pg
-user2,user2@example.com,User,Two,supervisor
+pg_username,case_title,date,status,location,patient_history,management_action,topic_subtopic

@@ -409,7 +409,7 @@ class Command(BaseCommand):
             resident, created = self._upsert_user(
                 username=f"resident.{email_local}",
                 email=f"{email_local}{DEMO_EMAIL_DOMAIN}",
-                first_name=first_name,
+                first_name=f"Dr. {first_name}",
                 last_name=last_name,
                 role="pg",
                 specialty="urology",

@@ -174,3 +174,73 @@ class BulkOperationTests(APITestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response["Content-Type"], "text/csv")
         self.assertIn("code,name,active,hospitals", response.content.decode("utf-8"))
+
+    def test_bulk_trainee_import_accepts_csv_template(self) -> None:
+        csv_buffer = io.StringIO()
+        writer = csv.DictWriter(
+            csv_buffer,
+            fieldnames=["Sr. No.", "Name of Trainee", "Date of Joining", "MS/FCPS", "Supervisor Name"],
+        )
+        writer.writeheader()
+        writer.writerow(
+            {
+                "Sr. No.": "1",
+                "Name of Trainee": "Ali Raza",
+                "Date of Joining": "2024-01-10",
+                "MS/FCPS": "FCPS",
+                "Supervisor Name": "Dr. Test Supervisor",
+            }
+        )
+        uploaded = SimpleUploadedFile(
+            "trainees.csv", csv_buffer.getvalue().encode("utf-8"), content_type="text/csv"
+        )
+        url = reverse("bulk_api:import_trainees")
+        response = self.client.post(
+            url,
+            {"file": uploaded, "dry_run": False, "allow_partial": True},
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertGreaterEqual(response.data.get("success_count", 0), 1)
+
+    def test_bulk_resident_import_supports_spaced_headers(self) -> None:
+        csv_buffer = io.StringIO()
+        writer = csv.DictWriter(
+            csv_buffer,
+            fieldnames=[
+                "Name",
+                "Year",
+                "Specialty",
+                "Supervisor Name",
+                "Email",
+                "Department",
+                "Phone",
+                "Registration Number",
+                "Date of Joining",
+                "Username",
+            ],
+        )
+        writer.writeheader()
+        writer.writerow(
+            {
+                "Name": "Sara Noor",
+                "Year": "1",
+                "Specialty": "urology",
+                "Supervisor Name": "Dr. Header Match",
+                "Email": "sara.noor@example.com",
+                "Department": "Urology",
+                "Phone": "+923009998887",
+                "Registration Number": "PG-HDR-001",
+                "Date of Joining": "2024-02-01",
+                "Username": "sara.noor",
+            }
+        )
+        uploaded = SimpleUploadedFile(
+            "residents.csv", csv_buffer.getvalue().encode("utf-8"), content_type="text/csv"
+        )
+        url = reverse("bulk_api:import_residents")
+        response = self.client.post(
+            url,
+            {"file": uploaded, "dry_run": False, "allow_partial": True},
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertGreaterEqual(response.data.get("success_count", 0), 1)

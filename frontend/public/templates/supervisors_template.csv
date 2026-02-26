@@ -1,3 +1,3 @@
-Name,Specialty,Email,Department,Phone,Registration Number
-Dr. John Smith,urology,john.smith@example.com,Department of Urology,+1234567890,REG123456
-Dr. Jane Doe,surgery,jane.doe@example.com,Department of Surgery,+1234567891,REG123457
+name,specialty,email,department,phone,registration_number,username
+Dr. John Smith,urology,john.smith@example.com,Urology,+923001112233,PMC-REG-001,john.smith
+Dr. Jane Doe,surgery,jane.doe@example.com,Surgery,+923004445566,PMC-REG-002,jane.doe
