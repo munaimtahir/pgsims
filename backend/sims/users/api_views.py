@@ -11,7 +11,6 @@ Provides:
 
 from rest_framework import permissions, status
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.throttling import AnonRateThrottle
@@ -91,7 +90,22 @@ def register_view(request):
         "role": "pg|supervisor|admin"
     }
     """
-    serializer = UserRegistrationSerializer(data=request.data)
+    if not getattr(settings, "ENABLE_PUBLIC_REGISTRATION", False):
+        return Response(
+            {"error": "Public registration is disabled."},
+            status=status.HTTP_403_FORBIDDEN,
+        )
+
+    requested_role = request.data.get("role", "pg")
+    if requested_role != "pg":
+        return Response(
+            {"role": ["Public registration can only create PG accounts."]},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    data = request.data.copy()
+    data["role"] = "pg"
+    serializer = UserRegistrationSerializer(data=data)
 
     if serializer.is_valid():
         user = serializer.save()

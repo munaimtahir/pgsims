@@ -400,6 +400,124 @@ def dashboard_compliance(user: User) -> Dict:
     return {"compliance": compliance_data}
 
 
+def get_specialty_stats(user: User, role: str = "all", period: str = "all") -> Dict:
+    """
+    Get specialty distribution statistics for admin dashboard.
+    """
+    from django.db.models import Count
+    from django.utils import timezone
+    from sims.users.models import User as UserModel, SPECIALTY_CHOICES
+
+    # Base queryset for active users
+    base_qs = UserModel.objects.filter(is_archived=False)
+
+    # Apply role filter
+    if role == "pg":
+        filtered_qs = base_qs.filter(role="pg")
+    elif role == "supervisor":
+        filtered_qs = base_qs.filter(role="supervisor")
+    elif role == "all":
+        filtered_qs = base_qs.filter(role__in=["pg", "supervisor"])
+    else:
+        filtered_qs = base_qs
+
+    # Apply period filter
+    if period == "year":
+        filtered_qs = filtered_qs.filter(date_joined__year=timezone.now().year)
+    elif period == "month":
+        filtered_qs = filtered_qs.filter(
+            date_joined__month=timezone.now().month, date_joined__year=timezone.now().year
+        )
+
+    # Enhanced specialty distribution with more details
+    specialty_stats_qs = (
+        filtered_qs.values("specialty").annotate(count=Count("id")).order_by("-count")
+    )
+
+    specialty_stats = []
+    total_count = filtered_qs.count()
+
+    # Create a mapping for specialty keys to names
+    specialty_display_map = dict(SPECIALTY_CHOICES)
+
+    for item in specialty_stats_qs:
+        specialty_key = item["specialty"]
+        specialty_name = specialty_display_map.get(specialty_key, specialty_key or "Unspecified")
+        count = item["count"]
+        percentage = round((count / total_count * 100), 1) if total_count > 0 else 0
+
+        specialty_stats.append(
+            {
+                "specialty": specialty_name,
+                "count": count,
+                "percentage": percentage,
+                "key": specialty_key
+            }
+        )
+
+    # Calculate summary statistics
+    total_specialties = len(specialty_stats)
+    most_popular = specialty_stats[0]["specialty"] if specialty_stats else "None"
+    average_per_specialty = (
+        round(total_count / total_specialties, 1) if total_specialties > 0 else 0
+    )
+    unspecified_count = sum(1 for item in specialty_stats if not item["key"] or item["key"] == "other")
+
+    # Map colors
+    specialty_colors = {
+        "Internal Medicine": "#3b82f6",
+        "Surgery": "#ef4444",
+        "Pediatrics": "#10b981",
+        "Gynecology & Obstetrics": "#ec4899",
+        "Psychiatry": "#8b5cf6",
+        "Radiology": "#06b6d4",
+        "Orthopedics": "#64748b",
+        "Cardiology": "#be123c",
+        "Neurology": "#7c3aed",
+        "Dermatology": "#a855f7",
+        "Pathology": "#374151",
+        "Anesthesia": "#f59e0b",
+        "Urology": "#06b6d4",
+        "Ophthalmology": "#0ea5e9",
+        "ENT": "#84cc16",
+        "Unspecified": "#9ca3af",
+    }
+
+    # Vibrant colors fallback
+    vibrant_colors = [
+        "#3b82f6", "#ef4444", "#10b981", "#ec4899", "#8b5cf6",
+        "#06b6d4", "#f59e0b", "#dc2626", "#059669", "#be123c",
+        "#7c3aed", "#a855f7", "#0ea5e9", "#84cc16", "#6366f1",
+        "#f97316", "#14b8a6", "#8b5a3c", "#db2777", "#7c2d12",
+    ]
+
+    for index, item in enumerate(specialty_stats):
+        name = item["specialty"]
+        if name in specialty_colors:
+            color = specialty_colors[name]
+            # Replace grey ones with vibrant
+            if color in ["#64748b", "#374151", "#6b7280", "#9ca3af"]:
+                color = vibrant_colors[index % len(vibrant_colors)]
+            item["color"] = color
+        else:
+            item["color"] = vibrant_colors[index % len(vibrant_colors)]
+
+    return {
+        "specialty_stats": specialty_stats,
+        "summary": {
+            "total_specialties": total_specialties,
+            "most_popular": most_popular,
+            "average_per_specialty": average_per_specialty,
+            "unspecified_count": unspecified_count,
+        },
+        "filter_applied": {
+            "role": role,
+            "period": period,
+            "total_filtered": total_count,
+        }
+    }
+
+
 __all__ = [
     "TrendRequest",
     "trend_for_user",
@@ -410,4 +528,5 @@ __all__ = [
     "dashboard_overview",
     "dashboard_trends",
     "dashboard_compliance",
+    "get_specialty_stats",
 ]

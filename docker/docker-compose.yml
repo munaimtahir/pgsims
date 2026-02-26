@@ -159,8 +159,8 @@ services:
   # Next.js Frontend Application
   frontend:
     build:
-      context: ..
-      dockerfile: frontend/Dockerfile
+      context: ../frontend
+      dockerfile: Dockerfile
       args:
         - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-https://pgsims.alshifalab.pk}
     container_name: pgsims_frontend

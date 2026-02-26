@@ -13,6 +13,17 @@ export interface ReportTemplate {
   parameters: Record<string, unknown>;
 }
 
+export interface ReportCatalogItem {
+  key: string;
+  title: string;
+}
+
+export interface ReportRunResponse {
+  key: string;
+  rows: Array<Record<string, unknown>>;
+  summary: Record<string, unknown>;
+}
+
 export interface ScheduledReport {
   id: number;
   template: number;
@@ -33,6 +44,32 @@ export interface GeneratedReport {
 }
 
 export const reportsApi = {
+  getCatalog: async () => {
+    const response = await apiClient.get<{ results: ReportCatalogItem[] }>('/api/reports/catalog/');
+    return response.data.results;
+  },
+
+  run: async (key: string, filters: Record<string, string | number | undefined> = {}) => {
+    const params = new URLSearchParams();
+    Object.entries(filters).forEach(([filterKey, value]) => {
+      if (value !== undefined && value !== '') params.append(filterKey, String(value));
+    });
+    const query = params.toString();
+    const response = await apiClient.get<ReportRunResponse>(`/api/reports/run/${key}/${query ? `?${query}` : ''}`);
+    return response.data;
+  },
+
+  export: async (key: string, format: 'xlsx' | 'csv', filters: Record<string, string | number | undefined> = {}) => {
+    const params = new URLSearchParams({ file_format: format });
+    Object.entries(filters).forEach(([filterKey, value]) => {
+      if (value !== undefined && value !== '') params.append(filterKey, String(value));
+    });
+    const response = await apiClient.get(`/api/reports/export/${key}/?${params.toString()}`, {
+      responseType: 'blob',
+    });
+    return response.data as Blob;
+  },
+
   /**
    * Get available report templates
    */

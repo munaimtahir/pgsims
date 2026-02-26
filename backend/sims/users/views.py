@@ -1050,39 +1050,67 @@ class UserPerformanceAPIView(AdminRequiredMixin, View):
 @admin_required
 def admin_analytics_view(request):
     """Admin analytics with system-wide statistics"""
+    from sims.analytics.services import (
+        dashboard_overview,
+        dashboard_trends,
+        dashboard_compliance,
+        get_specialty_stats
+    )
 
-    # System overview stats
+    # Core user counts
     total_users = User.objects.filter(is_archived=False).count()
     active_users = User.objects.filter(is_active=True, is_archived=False).count()
     total_pgs = User.objects.filter(role="pg", is_archived=False).count()
     total_supervisors = User.objects.filter(role="supervisor", is_archived=False).count()
-    # Monthly user registration stats
-    from django.db.models import Count
 
-    # Specialty distribution
-    specialty_distribution = (
-        User.objects.filter(role__in=["pg", "supervisor"], is_archived=False)
-        .values("specialty")
-        .annotate(count=Count("id"))
-        .order_by("-count")
+    # Enhanced specialty distribution (using service with colors)
+    specialty_data = get_specialty_stats(request.user, role="all", period="all")
+    specialty_stats = specialty_data["specialty_stats"]
+    specialty_summary = specialty_data["summary"]
+    
+    # Enrichment from analytics module
+    overview = dashboard_overview(request.user)
+    trends = dashboard_trends(request.user)
+    compliance = dashboard_compliance(request.user)
+    from sims.analytics.services import performance_metrics
+    performance = performance_metrics(request.user)
+
+    # Prepare JSON for frontend charts
+    specialty_stats_json = json.dumps(specialty_stats)
+    trends_json = json.dumps(trends.get("trends", []))
+    compliance_json = json.dumps(compliance.get("compliance", []))
+
+    # Recent system-wide activity (Details logs)
+    from sims.logbook.models import LogbookEntry
+    recent_logs = (
+        LogbookEntry.objects.select_related("pg", "rotation", "supervisor")
+        .order_by("-date", "-created_at")[:10]
     )
 
-    # Convert to JSON for JavaScript consumption
-    specialty_stats_json = json.dumps(
-        [
-            {"specialty": item["specialty"] or "Unspecified", "count": item["count"]}
-            for item in specialty_distribution
-        ]
-    )
-
-    # Progress tracking statistics
     context = {
+        # Core user counts
         "total_users": total_users,
         "active_users": active_users,
         "total_pgs": total_pgs,
         "total_supervisors": total_supervisors,
-        "specialty_distribution": list(specialty_distribution),
+        
+        # Specialty stats
+        "specialty_distribution": specialty_stats,
         "specialty_stats_json": specialty_stats_json,
+        "specialty_summary": specialty_summary,
+
+        # Training overview from analytics module
+        "overview": overview,
+        "performance": performance,
+        
+        # Trends & Compliance (JSON for charts)
+        "trends_json": trends_json,
+        "compliance_json": compliance_json,
+        "compliance_list": compliance.get("compliance", []),
+        
+        # Detailed Logs
+        "recent_logs": recent_logs,
+        
         "analytics_type": "admin",
     }
     return render(request, "users/admin_analytics.html", context)
@@ -1247,6 +1275,11 @@ def pg_analytics_view(request):
 def admin_stats_api(request):
     """Enhanced API endpoint for admin dashboard statistics with filters"""
     from django.http import JsonResponse
+    from sims.analytics.services import (
+        get_specialty_stats,
+        dashboard_overview,
+        performance_metrics
+    )
 
     # Get filter parameters
     role_filter = request.GET.get("role", "all")
@@ -1255,151 +1288,43 @@ def admin_stats_api(request):
     # Base queryset for active users
     base_qs = User.objects.filter(is_archived=False)
 
-    # Apply role filter
-    if role_filter == "pg":
-        filtered_qs = base_qs.filter(role="pg")
-    elif role_filter == "supervisor":
-        filtered_qs = base_qs.filter(role="supervisor")
-    elif role_filter == "all":
-        filtered_qs = base_qs.filter(role__in=["pg", "supervisor"])
-    else:
-        filtered_qs = base_qs
+    # Get enhanced specialty stats using the service
+    stats_data = get_specialty_stats(request.user, role=role_filter, period=period_filter)
+    
+    # Get training overview and performance
+    overview = dashboard_overview(request.user)
+    performance = performance_metrics(request.user)
 
-    # Apply period filter
-    if period_filter == "year":
-        filtered_qs = filtered_qs.filter(date_joined__year=timezone.now().year)
-    elif period_filter == "month":
-        filtered_qs = filtered_qs.filter(
-            date_joined__month=timezone.now().month, date_joined__year=timezone.now().year
-        )
-
-    # Get basic statistics
+    # Basic counts
     total_users = base_qs.count()
     total_pgs = base_qs.filter(role="pg").count()
     total_supervisors = base_qs.filter(role="supervisor").count()
-    new_users_this_month = base_qs.filter(
-        date_joined__month=timezone.now().month, date_joined__year=timezone.now().year
-    ).count()
-
+    
     # Recent users (last 5)
     recent_users_qs = base_qs.order_by("-date_joined")[:5]
-    recent_users = []
-    for user in recent_users_qs:
-        recent_users.append(
-            {
-                "username": user.username,
-                "full_name": user.get_full_name(),
-                "role_display": user.get_role_display(),
-                "specialty": user.specialty or "Unspecified",
-                "date_joined_display": f"{(timezone.now() - user.date_joined).days} days ago",
-            }
-        )
-
-    # Enhanced specialty distribution with more details
-    specialty_stats_qs = (
-        filtered_qs.values("specialty").annotate(count=Count("id")).order_by("-count")
-    )
-
-    specialty_stats = []
-    total_count = filtered_qs.count()
-
-    for item in specialty_stats_qs:
-        specialty_name = item["specialty"] or "Unspecified"
-        count = item["count"]
-        percentage = round((count / total_count * 100), 1) if total_count > 0 else 0
-
-        specialty_stats.append(
-            {"specialty": specialty_name, "count": count, "percentage": percentage}
-        )
-
-    # Calculate summary statistics
-    total_specialties = len(specialty_stats)
-    most_popular = specialty_stats[0]["specialty"] if specialty_stats else "None"
-    average_per_specialty = (
-        round(total_count / total_specialties, 1) if total_specialties > 0 else 0
-    )
-    unspecified_count = sum(1 for item in specialty_stats if item["specialty"] == "Unspecified")
-
-    # Enhanced medical specialty color mapping for better visualization
-    specialty_colors = {
-        "Internal Medicine": "#3b82f6",  # Blue
-        "Surgery": "#ef4444",  # Red
-        "Pediatrics": "#10b981",  # Green
-        "Obstetrics & Gynecology": "#ec4899",  # Pink
-        "Psychiatry": "#8b5cf6",  # Purple
-        "Radiology": "#06b6d4",  # Cyan
-        "Anesthesiology": "#f59e0b",  # Orange
-        "Emergency Medicine": "#dc2626",  # Dark Red
-        "Family Medicine": "#059669",  # Emerald
-        "Cardiology": "#be123c",  # Rose
-        "Neurology": "#7c3aed",  # Violet
-        "Orthopedics": "#64748b",  # Slate
-        "Dermatology": "#a855f7",  # Purple Light
-        "Pathology": "#374151",  # Gray
-        "Ophthalmology": "#0ea5e9",  # Sky
-        "ENT": "#84cc16",  # Lime
-        "Urology": "#06b6d4",  # Teal
-        "Oncology": "#6366f1",  # Indigo
-        "Unspecified": "#9ca3af",  # Gray Light
-    }
-
-    # Vibrant color palette for any specialty not in the predefined list
-    vibrant_colors = [
-        "#3b82f6",
-        "#ef4444",
-        "#10b981",
-        "#ec4899",
-        "#8b5cf6",
-        "#06b6d4",
-        "#f59e0b",
-        "#dc2626",
-        "#059669",
-        "#be123c",
-        "#7c3aed",
-        "#a855f7",
-        "#0ea5e9",
-        "#84cc16",
-        "#6366f1",
-        "#f97316",
-        "#14b8a6",
-        "#8b5a3c",
-        "#db2777",
-        "#7c2d12",
+    recent_users = [
+        {
+            "username": user.username,
+            "full_name": user.get_full_name(),
+            "role_display": user.get_role_display(),
+            "specialty": user.specialty or "Unspecified",
+            "date_joined_display": f"{(timezone.now() - user.date_joined).days} days ago",
+        }
+        for user in recent_users_qs
     ]
 
-    # Add colors to specialty stats - ensure NO grey colors are used
-    for index, item in enumerate(specialty_stats):
-        specialty_name = item["specialty"]
-        if specialty_name in specialty_colors:
-            # Use predefined color, but avoid grey ones
-            color = specialty_colors[specialty_name]
-            if color in ["#64748b", "#374151", "#6b7280", "#9ca3af"]:
-                # Replace grey colors with vibrant alternatives
-                color = vibrant_colors[index % len(vibrant_colors)]
-            item["color"] = color
-        else:
-            # Use vibrant color from palette for unknown specialties
-            item["color"] = vibrant_colors[index % len(vibrant_colors)]
-
-    return JsonResponse(
-        {
+    response_data = {
+        "user_stats": {
             "total_users": total_users,
             "total_pgs": total_pgs,
             "total_supervisors": total_supervisors,
-            "new_users_this_month": new_users_this_month,
             "recent_users": recent_users,
-            "specialty_stats": specialty_stats,
-            "filter_applied": {
-                "role": role_filter,
-                "period": period_filter,
-                "total_filtered": total_count,
-            },
-            "summary": {
-                "total_specialties": total_specialties,
-                "most_popular": most_popular,
-                "average_per_specialty": average_per_specialty,
-                "unspecified_count": unspecified_count,
-            },
-            "status": "success",
-        }
-    )
+        },
+        "training_stats": overview,
+        "performance_stats": performance,
+        "specialty_distribution": stats_data["specialty_stats"],
+        "summary": stats_data["summary"],
+        "filter_applied": stats_data["filter_applied"]
+    }
+
+    return JsonResponse(response_data)

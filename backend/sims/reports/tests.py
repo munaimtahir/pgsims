@@ -204,3 +204,21 @@ class ReportingTests(APITestCase):
         # Should record the failure
         self.assertIsNotNone(schedule.last_run_at)
         self.assertIn("error", schedule.last_result)
+
+    def test_report_catalog_and_run_endpoints(self) -> None:
+        catalog_url = reverse("reports_api:catalog")
+        catalog_response = self.client.get(catalog_url)
+        self.assertEqual(catalog_response.status_code, 200)
+        self.assertGreaterEqual(len(catalog_response.data["results"]), 1)
+
+        run_url = reverse("reports_api:run", kwargs={"key": "pending-logbook-queue"})
+        run_response = self.client.get(run_url)
+        self.assertEqual(run_response.status_code, 200)
+        self.assertIn("rows", run_response.data)
+        self.assertIn("summary", run_response.data)
+
+    def test_report_export_endpoint_csv(self) -> None:
+        export_url = reverse("reports_api:export", kwargs={"key": "residents-roster"})
+        response = self.client.get(f"{export_url}?file_format=csv")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response["Content-Type"], "text/csv")

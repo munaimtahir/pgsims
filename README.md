@@ -27,7 +27,7 @@ SIMS (Surgical Information Management System) is a comprehensive web-based manag
 
 **Current Status**: ✅ **Production-Ready for Pilot Deployment**
 
-**Deployment**: Now supports **Coolify/Traefik** for easy single-VPS deployment with automatic HTTPS! See [docs/DEPLOY_COOLIFY_TRAEFIK.md](docs/DEPLOY_COOLIFY_TRAEFIK.md) for the recommended production deployment method.
+**Deployment**: Production deployment is standardized on Docker Compose (`docker/docker-compose.prod.yml`) + Caddy reverse proxy. See [docs/deploy/CADDY_ROUTINE.md](docs/deploy/CADDY_ROUTINE.md).
 
 ## ✨ Features
 
@@ -175,48 +175,31 @@ python manage.py runserver
 - **Admin Interface**: http://127.0.0.1:8000/admin
 - **Login**: Use admin credentials
 
-## 🖥️ Deployment Options
+## 🖥️ Deployment
 
-SIMS supports deployment on both **localhost** (for development and local demonstrations) and **VPS** (for production).
+### Production (Canonical Path)
 
-### Localhost Deployment
+PGSIMS supports one production deployment path only:
 
-For local development and demonstrations:
+1. Start stack with Docker Compose:
 
-**Quick Start:**
 ```bash
-# Automated setup (Windows)
-.\scripts\setup_localhost_windows.ps1
-
-# Or manual deployment
-python manage.py migrate
-python manage.py runserver
+cd /srv/apps/pgsims
+docker compose -f docker/docker-compose.prod.yml up -d --build
 ```
 
-**Access:** http://localhost:8000/
+2. Sync and reload Caddy:
 
-### VPS Deployment
-
-For production deployment on a VPS:
-
-**Quick Start:**
 ```bash
-# Deploy with Docker
-docker compose up -d --build
-docker compose exec web python manage.py migrate
+cd /srv/apps/pgsims
+./ops/caddy_sync_reload.sh
 ```
 
-See [docs/DEPLOY_COOLIFY_TRAEFIK.md](docs/DEPLOY_COOLIFY_TRAEFIK.md) for the recommended production deployment method.
+3. Follow full verification routine in [docs/deploy/CADDY_ROUTINE.md](docs/deploy/CADDY_ROUTINE.md).
 
-### Environment Configuration Files
+### Local Development
 
-- **Localhost:** `.env.localhost` → copy to `.env`
-- **VPS:** `.env.vps` → copy to `.env`
-- **Template:** `.env.example` (reference only)
-
-**Frontend Configuration:**
-- **Localhost:** `frontend/.env.localhost` → copy to `frontend/.env.local`
-- **VPS:** `frontend/.env.vps` → copy to `frontend/.env.local`
+Use local scripts and compose variants under `scripts/local_dev/` and `docker/docker-compose.local.yml` for developer workflows.
 
 ## 📁 Project Structure
 
@@ -239,9 +222,8 @@ sims/
 ├── docker/                 # 🐳 Docker Configuration
 │   ├── docker-compose.yml  # Main production compose file
 │   └── docker-compose.*.yml # Environment-specific compose files
-├── deploy/                 # 🚀 Deployment Scripts & Configs
-│   ├── Caddyfile.pgsims    # Caddy reverse proxy config
-│   └── deploy*.sh          # VPS deployment utilities
+├── deploy/                 # 🚀 Deployment Config
+│   └── Caddyfile.pgsims    # Canonical Caddy reverse proxy config
 ├── scripts/                # 🛠️ Maintenance & Local Dev Utilities
 │   ├── local_dev/          # Desktop dev helper scripts
 │   └── sandbox/            # Demo data seeders & test scripts
@@ -418,7 +400,7 @@ The Docker Compose setup includes:
 - **web**: Django application (Gunicorn)
 - **worker**: Celery worker for background tasks
 - **beat**: Celery beat scheduler
-- **nginx**: Reverse proxy and static file server
+- **caddy**: External reverse proxy (host service)
 
 ### Environment Variables
 
@@ -448,170 +430,25 @@ docker compose ps
 
 ### Ports
 
-- `81`: Nginx (HTTP)
-- `443`: Nginx (HTTPS)
-- `8000`: Django (internal, proxied through nginx)
+- `127.0.0.1:8014`: Django backend target for Caddy
+- `127.0.0.1:8082`: Next.js frontend target for Caddy
 
-## 🚀 Deployment
+## 🚀 Deployment Routine
 
-### Localhost Deployment (Development)
+Use the canonical routine only:
 
-For local development and demonstrations:
+- Compose file: `docker/docker-compose.prod.yml`
+- Caddy source: `deploy/Caddyfile.pgsims`
+- Active Caddy path: `/etc/caddy/Caddyfile`
+- Step-by-step runbook: [docs/deploy/CADDY_ROUTINE.md](docs/deploy/CADDY_ROUTINE.md)
 
-1. **Quick Setup:**
-   ```bash
-   # For Windows
-   .\scripts\setup_localhost_windows.ps1
-   
-   # For Linux/Mac
-   python manage.py migrate
-   python manage.py runserver
-   ```
-
-2. **Access:** http://localhost:8000/
-
-See [docs/LOCAL_DEV.md](docs/LOCAL_DEV.md) for complete development instructions.
-
-### VPS Deployment (Production)
-
-For production deployment on VPS:
-
-1. **Deploy:**
-   ```bash
-   docker compose up -d --build
-   ```
-
-2. **Access your domain or IP**
-
-See [docs/DEPLOY_COOLIFY_TRAEFIK.md](docs/DEPLOY_COOLIFY_TRAEFIK.md) for complete production deployment instructions.
-
-### Frontend Environment Setup
-
-**For localhost:**
-```bash
-cp frontend/.env.local.example frontend/.env.local
-# Edit frontend/.env.local with your settings
-```
-
-**For production:**
-```bash
-cp frontend/.env.local.example frontend/.env.local
-# Update NEXT_PUBLIC_API_URL with your production API URL
-```
-
-### Production Deployment Options
-
-SIMS offers multiple deployment methods:
-
-#### 1. Coolify/Traefik Deployment (Recommended)
-
-**Best for:** Single VPS, automatic SSL, easy management
+Quick commands:
 
 ```bash
-# Use the Coolify-ready compose file
-docker-compose -f docker-compose.coolify.yml up -d
+cd /srv/apps/pgsims
+docker compose -f docker/docker-compose.prod.yml up -d --build
+./ops/caddy_sync_reload.sh
 ```
-
-**Features:**
-- ✅ Automatic HTTPS with Let's Encrypt (via Coolify/Traefik)
-- ✅ No nginx configuration needed
-- ✅ WhiteNoise serves static files efficiently
-- ✅ Zero port 80/443 conflicts
-- ✅ Built-in health checks
-
-See **[docs/DEPLOY_COOLIFY_TRAEFIK.md](docs/DEPLOY_COOLIFY_TRAEFIK.md)** for complete guide.
-
-#### 2. Docker Compose (Direct)
-
-**Best for:** Custom VPS setup with your own reverse proxy
-
-```bash
-# Standard deployment
-docker-compose up -d
-```
-
-See [docs/DEPLOY_COOLIFY_TRAEFIK.md](docs/DEPLOY_COOLIFY_TRAEFIK.md) for complete deployment instructions.
-
-#### 3. Local Development
-
-**Best for:** Development and testing
-
-```bash
-# Local development with hot reload
-docker-compose -f docker-compose.local.yml up -d
-```
-
-See **[docs/LOCAL_DEV.md](docs/LOCAL_DEV.md)** for complete development guide.
-
-### Quick Start
-
-#### Local Development (5 minutes)
-```bash
-# 1. Clone repository
-git clone https://github.com/munaimtahir/sims.git
-cd sims
-
-# 2. Create environment file
-cp .env.example .env
-# Edit .env with your settings
-
-# 3. Start services
-docker-compose -f docker-compose.local.yml up -d
-
-# 4. Create admin user
-docker-compose -f docker-compose.local.yml exec web python manage.py createsuperuser
-
-# 5. Access application
-open http://localhost:8000
-```
-
-#### Coolify Deployment (10 minutes)
-See **[docs/DEPLOY_COOLIFY_TRAEFIK.md](docs/DEPLOY_COOLIFY_TRAEFIK.md)** for step-by-step Coolify deployment.
-
-### Production Deployment Checklist
-
-For production deployment, consider:
-
-1. **Environment Configuration**
-   - Set `DEBUG = False` in environment variables
-   - Use environment variables for all sensitive data
-   - Configure `ALLOWED_HOSTS` with your domain(s)
-   - Set `SECRET_KEY` to a secure random value
-
-2. **Database**
-   - Use PostgreSQL for production
-   - Configure proper database backup strategy
-   - Set strong database passwords
-
-3. **Static Files**
-   - Collect static files: `python manage.py collectstatic`
-   - Serve via nginx or CDN
-   - Configure media file storage
-
-4. **Web Server**
-   - Use Gunicorn or uWSGI (included in Docker setup)
-   - Configure nginx as reverse proxy (included in Docker setup)
-   - Set up SSL/TLS certificates for HTTPS
-
-5. **Security Checklist**
-   - ✅ `SECRET_KEY` set from environment (REQUIRED)
-   - ✅ `DEBUG = False` in production
-   - ✅ `ALLOWED_HOSTS` configured with your domain
-   - ✅ Strong database passwords
-   - ✅ HTTPS/SSL configured
-   - ✅ Security headers enabled (`SECURE_SSL_REDIRECT`, `SESSION_COOKIE_SECURE`, etc.)
-   - ✅ CORS origins restricted to your frontend domain
-   - ✅ No default credentials in production
-   - ✅ Regular security updates
-   - ✅ Database backups configured
-   - ✅ Logging configured
-
-6. **Celery**
-   - Celery worker running for background tasks
-   - Celery beat running for scheduled tasks
-   - Redis configured as broker and result backend
-
-See [docs/DEPLOY_COOLIFY_TRAEFIK.md](docs/DEPLOY_COOLIFY_TRAEFIK.md) for detailed deployment instructions.
 
 ## 📖 Documentation
 

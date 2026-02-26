@@ -12,6 +12,7 @@ export * from './attendance';
 export * from './analytics';
 export * from './notifications';
 export * from './reports';
+export * from './cases';
 export * from './search';
 export * from './bulk';
 export * from './audit';

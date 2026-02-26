@@ -75,6 +75,7 @@ class ClinicalCase(models.Model):
         ("submitted", "Submitted for Review"),
         ("approved", "Approved"),
         ("needs_revision", "Needs Revision"),
+        ("rejected", "Rejected"),
         ("archived", "Archived"),
     ]
 

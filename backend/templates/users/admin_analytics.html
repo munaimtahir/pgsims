@@ -13,157 +13,369 @@
 {% endblock %}
 
 {% block page_header %}
-<div class="d-flex justify-content-between align-items-start mb-4">
-    <div>
-        <h2>
-            <i class="fas fa-chart-bar me-2"></i>System Analytics
-        </h2>
-        <p class="text-muted">Comprehensive system statistics and insights</p>
+<div class="analytics-header d-flex justify-content-between align-items-center mb-5 p-4 rounded-4 text-white shadow-lg">
+    <div class="d-flex align-items-center">
+        <div class="header-icon-wrapper me-4">
+            <i class="fas fa-chart-line fa-3x"></i>
+        </div>
+        <div>
+            <h2 class="mb-1 fw-bold">System-Wide Analytics</h2>
+            <p class="mb-0 opacity-75">Real-time training metrics and performance insights across all departments</p>
+        </div>
     </div>
-    <div>
-        <a href="{% url 'users:admin_dashboard' %}" class="btn btn-outline-secondary">
-            <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+    <div class="header-actions">
+        <button onclick="window.print()" class="btn btn-light btn-sm me-2 shadow-sm">
+            <i class="fas fa-print me-2 text-primary"></i>Export PDF
+        </button>
+        <a href="{% url 'users:admin_dashboard' %}" class="btn btn-outline-light btn-sm shadow-sm">
+            <i class="fas fa-home me-2"></i>Back to Dashboard
         </a>
     </div>
 </div>
 {% endblock %}
 
 {% block content %}
-<!-- System Overview Cards -->
-<div class="row mb-4">
+<!-- System Overview Section -->
+<div class="row mb-5">
+    <div class="col-12">
+        <h4 class="section-title mb-4">
+            <span class="title-accent"></span>System Resource Overview
+        </h4>
+    </div>
+
+    <!-- User Stats -->
     <div class="col-xl-3 col-md-6 mb-4">
-        <div class="card border-left-primary shadow h-100 py-2">
-            <div class="card-body">
-                <div class="row no-gutters align-items-center">
-                    <div class="col mr-2">
-                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
-                            Total Users
-                        </div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_users }}</div>
-                    </div>
-                    <div class="col-auto">
-                        <i class="fas fa-users fa-2x text-gray-300"></i>
-                    </div>
+        <div class="stat-card stat-card-primary">
+            <div class="stat-details">
+                <span class="stat-label">Total Postgraduates</span>
+                <h3 class="stat-value">{{ total_pgs }}</h3>
+                <div class="stat-trend trend-up">
+                    <i class="fas fa-circle-notch fa-spin me-1"></i>
+                    <span>Currently Enrolled</span>
                 </div>
+            </div>
+            <div class="stat-icon-wrapper">
+                <i class="fas fa-user-graduate"></i>
             </div>
         </div>
     </div>
-    
+
     <div class="col-xl-3 col-md-6 mb-4">
-        <div class="card border-left-success shadow h-100 py-2">
-            <div class="card-body">
-                <div class="row no-gutters align-items-center">
-                    <div class="col mr-2">
-                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
-                            Active Users
-                        </div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ active_users }}</div>
-                    </div>
-                    <div class="col-auto">
-                        <i class="fas fa-user-check fa-2x text-gray-300"></i>
-                    </div>
+        <div class="stat-card stat-card-info">
+            <div class="stat-details">
+                <span class="stat-label">Active Rotations</span>
+                <h3 class="stat-value">{{ overview.active_rotations|default:"0" }}</h3>
+                <div class="stat-trend trend-neutral">
+                    <i class="fas fa-sync-alt me-1"></i>
+                    <span>In Progress</span>
                 </div>
+            </div>
+            <div class="stat-icon-wrapper">
+                <i class="fas fa-hospital-alt"></i>
             </div>
         </div>
     </div>
-    
+
     <div class="col-xl-3 col-md-6 mb-4">
-        <div class="card border-left-info shadow h-100 py-2">
-            <div class="card-body">
-                <div class="row no-gutters align-items-center">
-                    <div class="col mr-2">
-                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
-                            Total PGs
-                        </div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_pgs }}</div>
-                    </div>
-                    <div class="col-auto">
-                        <i class="fas fa-user-graduate fa-2x text-gray-300"></i>
-                    </div>
+        <div class="stat-card stat-card-success">
+            <div class="stat-details">
+                <span class="stat-label">Verified Logbooks</span>
+                <h3 class="stat-value">{{ overview.last_30d_logs|default:"0" }}</h3>
+                <div class="stat-trend trend-up">
+                    <i class="fas fa-check-double me-1"></i>
+                    <span>In Last 30 Days</span>
                 </div>
+            </div>
+            <div class="stat-icon-wrapper">
+                <i class="fas fa-book-medical"></i>
             </div>
         </div>
     </div>
-    
+
     <div class="col-xl-3 col-md-6 mb-4">
-        <div class="card border-left-warning shadow h-100 py-2">
-            <div class="card-body">
-                <div class="row no-gutters align-items-center">
-                    <div class="col mr-2">
-                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
-                            Total Supervisors
-                        </div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_supervisors }}</div>
-                    </div>
-                    <div class="col-auto">
-                        <i class="fas fa-chalkboard-teacher fa-2x text-gray-300"></i>
-                    </div>
+        <div class="stat-card stat-card-warning">
+            <div class="stat-details">
+                <span class="stat-label">Clinical Cases</span>
+                <h3 class="stat-value">{{ overview.last_30d_cases|default:"0" }}</h3>
+                <div class="stat-trend trend-neutral">
+                    <i class="fas fa-microscope me-1"></i>
+                    <span>Case Reports</span>
                 </div>
+            </div>
+            <div class="stat-icon-wrapper">
+                <i class="fas fa-procedures"></i>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Charts Row -->
-<div class="row">
-    <!-- Specialty Distribution Chart -->
-    <div class="col-xl-6 col-lg-6 mb-4">
-        <div class="card shadow h-100">
-            <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                <h6 class="m-0 font-weight-bold text-primary">Specialty Distribution</h6>
+<div class="row mb-5">
+    <!-- Performance KPIs Section -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <h4 class="section-title mb-4">
+                <span class="title-accent"></span>Operational Performance
+            </h4>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-4">
+            <div class="performance-mini-card shadow-sm">
+                <div class="d-flex align-items-center mb-2">
+                    <div class="p-2 rounded-circle bg-soft-success text-success me-3">
+                        <i class="fas fa-percentage fa-fw"></i>
+                    </div>
+                    <span class="text-muted small fw-bold uppercase">Approval Rate</span>
+                </div>
+                <div class="d-flex align-items-end">
+                    <h4 class="mb-0 fw-bold">{{ performance.approval_rate|floatformat:1 }}%</h4>
+                    <span class="ms-2 text-success small mb-1"><i class="fas fa-caret-up me-1"></i>Benchmark</span>
+                </div>
             </div>
-            <div class="card-body">
-                <div class="chart-area">
+        </div>
+        <div class="col-lg-3 col-md-6 mb-4">
+            <div class="performance-mini-card shadow-sm">
+                <div class="d-flex align-items-center mb-2">
+                    <div class="p-2 rounded-circle bg-soft-info text-info me-3">
+                        <i class="fas fa-hourglass-half fa-fw"></i>
+                    </div>
+                    <span class="text-muted small fw-bold uppercase">Avg Review Time</span>
+                </div>
+                <div class="d-flex align-items-end">
+                    <h4 class="mb-0 fw-bold">{{ performance.average_review_hours|floatformat:1 }}h</h4>
+                    <span class="ms-2 text-muted small mb-1">per entry</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-4">
+            <div class="performance-mini-card shadow-sm">
+                <div class="d-flex align-items-center mb-2">
+                    <div class="p-2 rounded-circle bg-soft-warning text-warning me-3">
+                        <i class="fas fa-tasks fa-fw"></i>
+                    </div>
+                    <span class="text-muted small fw-bold uppercase">Pending Logs</span>
+                </div>
+                <div class="d-flex align-items-end">
+                    <h4 class="mb-0 fw-bold">{{ performance.pending|floatformat:0 }}</h4>
+                    <span class="ms-2 text-warning small mb-1">Awaiting Review</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-4">
+            <div class="performance-mini-card shadow-sm">
+                <div class="d-flex align-items-center mb-2">
+                    <div class="p-2 rounded-circle bg-soft-danger text-danger me-3">
+                        <i class="fas fa-user-clock fa-fw"></i>
+                    </div>
+                    <span class="text-muted small fw-bold uppercase">System Usage</span>
+                </div>
+                <div class="d-flex align-items-end">
+                    <h4 class="mb-0 fw-bold">{{ total_users }}</h4>
+                    <span class="ms-2 text-muted small mb-1">Registered</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-8 col-lg-7 mb-4">
+        <div class="modern-chart-card shadow-sm">
+            <div class="card-header-flex p-4 border-0 bg-transparent">
+                <h5 class="m-0 fw-bold">Training Activity Trends</h5>
+                <div class="chart-controls">
+                    <select class="form-select form-select-sm shadow-none" id="trendTimeframe">
+                        <option value="12">Last 12 Months</option>
+                    </select>
+                </div>
+            </div>
+            <div class="card-body px-4 pb-4">
+                <div class="chart-container" style="height: 350px;">
+                    <canvas id="trendsChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Specialty Distribution Pie -->
+    <div class="col-xl-4 col-lg-5 mb-4">
+        <div class="modern-chart-card shadow-sm">
+            <div class="card-header-flex p-4 border-0 bg-transparent">
+                <h5 class="m-0 fw-bold">Specialty Split</h5>
+            </div>
+            <div class="card-body px-4 pb-4">
+                <div class="chart-container" style="height: 280px;">
                     <canvas id="specialtyChart"></canvas>
                 </div>
-            </div>
-        </div>
-    </div>
-    
-    <!-- User Activity Chart -->
-    <div class="col-xl-6 col-lg-6 mb-4">
-        <div class="card shadow h-100">
-            <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                <h6 class="m-0 font-weight-bold text-primary">User Activity Overview</h6>
-            </div>
-            <div class="card-body">
-                <div class="chart-bar">
-                    <canvas id="activityChart"></canvas>
+                <div class="specialty-summary mt-4">
+                    <div class="row text-center g-2">
+                        <div class="col-6">
+                            <div class="p-2 border rounded-3 bg-light">
+                                <small class="text-muted d-block">Leading Dept</small>
+                                <span class="fw-bold text-primary">{{ specialty_summary.most_popular|default:"N/A"
+                                    }}</span>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="p-2 border rounded-3 bg-light">
+                                <small class="text-muted d-block">Total Specialists</small>
+                                <span class="fw-bold">{{ total_supervisors }}</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Data Tables -->
+<!-- Detailed Data Section -->
 <div class="row">
-    <div class="col-lg-12 mb-4">
-        <div class="card shadow">
-            <div class="card-header py-3">
-                <h6 class="m-0 font-weight-bold text-primary">Specialty Breakdown</h6>
+    <!-- Rotation Compliance -->
+    <div class="col-xl-12 mb-4">
+        <div class="modern-table-card shadow-sm rounded-4 overflow-hidden border-0">
+            <div class="card-header-flex p-4 bg-white border-bottom border-light">
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-user-shield text-info fa-lg me-2"></i>
+                    <h5 class="m-0 fw-bold">Departmental Compliance & Verification Status</h5>
+                </div>
             </div>
-            <div class="card-body">
+            <div class="card-body p-0">
                 <div class="table-responsive">
-                    <table class="table table-bordered" width="100%" cellspacing="0">
-                        <thead>
+                    <table class="table table-hover align-middle mb-0 custom-analytics-table">
+                        <thead class="bg-light">
                             <tr>
-                                <th>Specialty</th>
-                                <th>Number of Users</th>
-                                <th>Percentage</th>
+                                <th class="ps-4">Department / Rotation</th>
+                                <th class="text-center">Total Logs</th>
+                                <th class="text-center">Verified</th>
+                                <th class="text-center">Compliance</th>
+                                <th class="pe-4">Progress Visual</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {% for specialty in specialty_distribution %}
+                            {% for item in compliance_list %}
                             <tr>
-                                <td>{{ specialty.specialty|default:"Not Specified" }}</td>
-                                <td>{{ specialty.count }}</td>
-                                <td>
-                                    {% widthratio specialty.count total_users 100 %}%
+                                <td class="ps-4">
+                                    <div class="fw-bold">{{ item.rotation_name }}</div>
+                                    <small class="text-muted">Ongoing Assessment</small>
+                                </td>
+                                <td class="text-center fw-bold">{{ item.total_logs }}</td>
+                                <td class="text-center">
+                                    <span class="badge bg-soft-success text-success px-3">{{ item.verified_logs
+                                        }}</span>
+                                </td>
+                                <td class="text-center">
+                                    <h6 class="mb-0 fw-bold text-primary">{{ item.verification_percentage }}%</h6>
+                                </td>
+                                <td class="pe-4" style="width: 200px;">
+                                    <div class="progress rounded-pill" style="height: 10px;">
+                                        {% if item.verification_percentage > 80 %}
+                                        <div class="progress-bar bg-success"
+                                            style="width: {{ item.verification_percentage }}%"></div>
+                                        {% elif item.verification_percentage > 50 %}
+                                        <div class="progress-bar bg-info"
+                                            style="width: {{ item.verification_percentage }}%"></div>
+                                        {% else %}
+                                        <div class="progress-bar bg-warning"
+                                            style="width: {{ item.verification_percentage }}%"></div>
+                                        {% endif %}
+                                    </div>
                                 </td>
                             </tr>
                             {% empty %}
                             <tr>
-                                <td colspan="3" class="text-center text-muted">No data available</td>
+                                <td colspan="5" class="py-5 text-center text-muted">
+                                    <i class="fas fa-database fa-3x mb-3 opacity-25"></i>
+                                    <p>No departmental compliance data recorded yet.</p>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Detailed Activity Logs -->
+<div class="row">
+    <div class="col-xl-12 mb-4">
+        <div class="modern-table-card shadow-sm rounded-4 overflow-hidden border-0 bg-white">
+            <div class="card-header-flex p-4 border-bottom border-light">
+                <div class="d-flex align-items-center justify-content-between w-100">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-history text-primary fa-lg me-2"></i>
+                        <h5 class="m-0 fw-bold">Recent System-Wide Activity Logs</h5>
+                    </div>
+                    <a href="{% url 'logbook:list' %}" class="btn btn-primary btn-sm rounded-pill px-4">
+                        View Full Logbook <i class="fas fa-external-link-alt ms-1 small"></i>
+                    </a>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0 custom-analytics-table">
+                        <thead class="bg-light">
+                            <tr>
+                                <th class="ps-4">Date</th>
+                                <th>Postgraduate</th>
+                                <th>Rotation / Department</th>
+                                <th class="text-center">Complexity</th>
+                                <th class="text-center">Status</th>
+                                <th class="pe-4 text-end">Score</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for log in recent_logs %}
+                            <tr>
+                                <td class="ps-4">
+                                    <div class="fw-bold">{{ log.date|date:"d M Y" }}</div>
+                                    <small class="text-muted">{{ log.created_at|timesince }} ago</small>
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="avatar-sm me-2 bg-soft-primary text-primary rounded-circle d-flex align-items-center justify-content-center fw-bold"
+                                            style="width: 32px; height: 32px; font-size: 0.8rem;">
+                                            {{ log.pg.first_name|first }}{{ log.pg.last_name|first }}
+                                        </div>
+                                        <div>
+                                            <div class="fw-bold">{{ log.pg.get_full_name }}</div>
+                                            <small class="text-muted">{{ log.pg.specialty|title }}</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="fw-bold">{{ log.rotation.department.name }}</div>
+                                    <small class="text-muted">{{ log.rotation.hospital.name }}</small>
+                                </td>
+                                <td class="text-center">
+                                    {% if log.complexity == 'complex' %}
+                                    <span class="badge bg-danger rounded-pill">Complex</span>
+                                    {% elif log.complexity == 'intermediate' %}
+                                    <span class="badge bg-warning text-dark rounded-pill">Intermediate</span>
+                                    {% else %}
+                                    <span class="badge bg-info rounded-pill">Simple</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-center">
+                                    {% if log.status == 'approved' %}
+                                    <span class="text-success"><i class="fas fa-check-circle me-1"></i>Approved</span>
+                                    {% elif log.status == 'rejected' %}
+                                    <span class="text-danger"><i class="fas fa-times-circle me-1"></i>Rejected</span>
+                                    {% else %}
+                                    <span class="text-warning"><i class="fas fa-clock me-1"></i>Pending</span>
+                                    {% endif %}
+                                </td>
+                                <td class="pe-4 text-end">
+                                    {% if log.supervisor_assessment_score %}
+                                    <div class="fw-bold text-dark">{{ log.supervisor_assessment_score }}/10</div>
+                                    {% else %}
+                                    <span class="text-muted small">Not Scored</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6" class="py-5 text-center text-muted">
+                                    <i class="fas fa-clipboard-list fa-3x mb-3 opacity-25"></i>
+                                    <p>No recent logbook activity found.</p>
+                                </td>
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -176,131 +388,373 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
 <script>
-// Specialty Distribution Pie Chart
-const specialtyCtx = document.getElementById('specialtyChart').getContext('2d');
-const specialtyData = {
-    labels: [
-        {% for specialty in specialty_distribution %}
-        '{{ specialty.specialty|default:"Not Specified" }}'{% if not forloop.last %},{% endif %}
-        {% endfor %}
-    ],
-    datasets: [{
-        data: [
-            {% for specialty in specialty_distribution %}
-            {{ specialty.count }}{% if not forloop.last %},{% endif %}
-            {% endfor %}
-        ],
-        backgroundColor: [
-            '#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b',
-            '#858796', '#fd7e14', '#20c997', '#6f42c1', '#e83e8c'
-        ]
-    }]
-};
+    document.addEventListener('DOMContentLoaded', function () {
+        // 1. Specialty Distribution Doughnut Chart
+        const specialtyStats = {{ specialty_stats_json| safe
+    }};
+    const specialtyCtx = document.getElementById('specialtyChart').getContext('2d');
 
-new Chart(specialtyCtx, {
-    type: 'doughnut',
-    data: specialtyData,
-    options: {
-        responsive: true,
-        plugins: {
-            legend: {
-                position: 'bottom'
-            }
-        }
-    }
-});
-
-// User Activity Bar Chart
-const activityCtx = document.getElementById('activityChart').getContext('2d');
-const activityData = {
-    labels: ['Total Users', 'Active Users', 'PGs', 'Supervisors'],
-    datasets: [{
-        label: 'Count',
-        data: [{{ total_users }}, {{ active_users }}, {{ total_pgs }}, {{ total_supervisors }}],
-        backgroundColor: ['#4e73df', '#1cc88a', '#36b9cc', '#f6c23e']
-    }]
-};
-
-new Chart(activityCtx, {
-    type: 'bar',
-    data: activityData,
-    options: {
-        responsive: true,
-        plugins: {
-            legend: {
-                display: false
-            }
+    new Chart(specialtyCtx, {
+        type: 'doughnut',
+        data: {
+            labels: specialtyStats.map(s => s.specialty),
+            datasets: [{
+                data: specialtyStats.map(s => s.count),
+                backgroundColor: specialtyStats.map(s => s.color || '#4e73df'),
+                borderWidth: 5,
+                borderColor: '#ffffff',
+                hoverOffset: 15
+            }]
         },
-        scales: {
-            y: {
-                beginAtZero: true
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    padding: 12,
+                    backgroundColor: 'rgba(0,0,0,0.8)',
+                    titleFont: { size: 14, weight: 'bold' }
+                }
+            },
+            cutout: '70%'
+        }
+    });
+
+    // 2. Training Activity Trends Line/Area Chart
+    const trendsData = {{ trends_json| safe }};
+    const trendsCtx = document.getElementById('trendsChart').getContext('2d');
+
+    // Process trends for multi-line chart
+    const months = [...new Set(trendsData.map(t => t.month))].sort();
+
+    new Chart(trendsCtx, {
+        type: 'line',
+        data: {
+            labels: months,
+            datasets: [
+                {
+                    label: 'Logbook Entries',
+                    data: months.map(m => {
+                        const entry = trendsData.filter(t => t.month === m);
+                        return entry.reduce((sum, current) => sum + (current.log_count || 0), 0);
+                    }),
+                    borderColor: '#4e73df',
+                    backgroundColor: 'rgba(78, 115, 223, 0.05)',
+                    fill: true,
+                    tension: 0.4,
+                    pointBackgroundColor: '#4e73df',
+                    pointBorderColor: '#ffffff',
+                    pointBorderWidth: 2,
+                    pointRadius: 4
+                },
+                {
+                    label: 'Clinical Cases',
+                    data: months.map(m => {
+                        const entry = trendsData.filter(t => t.month === m);
+                        return entry.reduce((sum, current) => sum + (current.case_count || 0), 0);
+                    }),
+                    borderColor: '#1cc88a',
+                    backgroundColor: 'rgba(28, 200, 138, 0.05)',
+                    fill: true,
+                    tension: 0.4,
+                    pointBackgroundColor: '#1cc88a',
+                    pointBorderColor: '#ffffff',
+                    pointBorderWidth: 2,
+                    pointRadius: 4
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: {
+                intersect: false,
+                mode: 'index'
+            },
+            plugins: {
+                legend: {
+                    position: 'top',
+                    labels: {
+                        usePointStyle: true,
+                        padding: 20,
+                        font: { size: 12, weight: '600' }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        display: true,
+                        drawBorder: false,
+                        color: 'rgba(0,0,0,0.05)'
+                    },
+                    ticks: {
+                        maxTicksLimit: 8,
+                        font: { weight: '500' }
+                    }
+                },
+                x: {
+                    grid: { display: false }
+                }
             }
         }
-    }
+    });
 });
 </script>
 {% endblock %}
 
 {% block extra_css %}
 <style>
-/* FMU Branding and Modern UI for Analytics */
-body {
-    background: linear-gradient(135deg, #2c5282 0%, #3182ce 50%, #4299e1 100%);
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-}
-.card {
-    border-radius: 18px;
-    box-shadow: 0 8px 32px rgba(44, 82, 130, 0.08);
-    border: none;
-}
-.card-title {
-    font-weight: 700;
-    font-size: 1.5rem;
-}
-.card-text {
-    font-size: 1rem;
-}
-.page-footer {
-    background: rgba(44, 82, 130, 0.95);
-    color: white;
-    padding: 20px 0;
-    text-align: center;
-    font-size: 0.9rem;
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
-    margin-top: 40px;
-    width: 100%;
-}
-@media (max-width: 768px) {
-    .card-title { font-size: 1.1rem; }
-    .card-text { font-size: 0.9rem; }
-}
-.border-left-primary {
-    border-left: 0.25rem solid #4e73df !important;
-}
-.border-left-success {
-    border-left: 0.25rem solid #1cc88a !important;
-}
-.border-left-info {
-    border-left: 0.25rem solid #36b9cc !important;
-}
-.border-left-warning {
-    border-left: 0.25rem solid #f6c23e !important;
-}
-.text-gray-800 {
-    color: #5a5c69 !important;
-}
-.text-gray-300 {
-    color: #dddfeb !important;
-}
+    /* Modern Analytics CSS */
+    :root {
+        --primary: #4e73df;
+        --success: #1cc88a;
+        --info: #36b9cc;
+        --warning: #f6c23e;
+        --danger: #e74a3b;
+    }
+
+    body {
+        background-color: #f8f9fc;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+
+    .analytics-header {
+        background: linear-gradient(135deg, #4e73df 0%, #224abe 100%);
+        border: none;
+    }
+
+    .header-icon-wrapper {
+        background: rgba(255, 255, 255, 0.2);
+        width: 80px;
+        height: 80px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 20px;
+        backdrop-filter: blur(10px);
+    }
+
+    .section-title {
+        position: relative;
+        padding-left: 20px;
+        color: #4a5568;
+        font-weight: 700;
+    }
+
+    .title-accent {
+        position: absolute;
+        left: 0;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 6px;
+        height: 24px;
+        background: var(--primary);
+        border-radius: 3px;
+    }
+
+    /* Stat Cards */
+    .stat-card {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 1.25rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        transition: transform 0.3s ease;
+        border: 1px solid rgba(0, 0, 0, 0.05);
+    }
+
+    .stat-card:hover {
+        transform: translateY(-5px);
+    }
+
+    .stat-label {
+        display: block;
+        color: #718096;
+        font-size: 0.875rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.025em;
+        margin-bottom: 0.5rem;
+    }
+
+    .stat-value {
+        font-weight: 800;
+        font-size: 1.875rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .stat-icon-wrapper {
+        width: 56px;
+        height: 56px;
+        border-radius: 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+    }
+
+    .stat-card-primary .stat-icon-wrapper {
+        background: rgba(78, 115, 223, 0.1);
+        color: #4e73df;
+    }
+
+    .stat-card-primary .stat-value {
+        color: #4e73df;
+    }
+
+    .stat-card-info .stat-icon-wrapper {
+        background: rgba(54, 185, 204, 0.1);
+        color: #36b9cc;
+    }
+
+    .stat-card-info .stat-value {
+        color: #36b9cc;
+    }
+
+    .stat-card-success .stat-icon-wrapper {
+        background: rgba(28, 200, 138, 0.1);
+        color: #1cc88a;
+    }
+
+    .stat-card-success .stat-value {
+        color: #1cc88a;
+    }
+
+    .stat-card-warning .stat-icon-wrapper {
+        background: rgba(246, 194, 62, 0.1);
+        color: #f6c23e;
+    }
+
+    .stat-card-warning .stat-value {
+        color: #f6c23e;
+    }
+
+    .stat-trend {
+        font-size: 0.75rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+    }
+
+    .trend-up {
+        color: #1cc88a;
+    }
+
+    .trend-neutral {
+        color: #718096;
+    }
+
+    /* Modern Charts */
+    .modern-chart-card {
+        background: white;
+        border-radius: 1.25rem;
+        border: 1px solid rgba(0, 0, 0, 0.05);
+    }
+
+    .card-header-flex {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    /* Tables */
+    .modern-table-card {
+        border: none;
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.05);
+    }
+
+    .custom-analytics-table thead th {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        font-weight: 700;
+        color: #a0aec0;
+        letter-spacing: 0.05em;
+        border-bottom: 1px solid #edf2f7;
+        padding: 1rem 0.75rem;
+    }
+
+    .custom-analytics-table tbody td {
+        padding: 1.25rem 0.75rem;
+        color: #2d3748;
+        border-bottom: 1px solid #f7fafc;
+    }
+
+    .bg-soft-success {
+        background-color: rgba(28, 200, 138, 0.1);
+    }
+
+    .bg-soft-info {
+        background-color: rgba(54, 185, 204, 0.1);
+    }
+
+    .bg-soft-warning {
+        background-color: rgba(246, 194, 62, 0.1);
+    }
+
+    .bg-soft-danger {
+        background-color: rgba(231, 74, 59, 0.1);
+    }
+
+    .performance-mini-card {
+        background: white;
+        padding: 1.25rem;
+        border-radius: 1rem;
+        border: 1px solid rgba(0, 0, 0, 0.05);
+        transition: all 0.2s ease;
+    }
+
+    .performance-mini-card:hover {
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1) !important;
+    }
+
+    .uppercase {
+        text-transform: uppercase;
+    }
+
+    .page-footer {
+        background: #1a202c;
+        color: #a0aec0;
+        padding: 3rem 0;
+        margin-top: 5rem;
+    }
+
+    .page-footer a {
+        color: #edf2f7;
+        text-decoration: none;
+    }
+
+    @media print {
+
+        .analytics-header,
+        .header-actions,
+        .breadcrumb,
+        .page-footer {
+            display: none !important;
+        }
+
+        .stat-card,
+        .modern-chart-card,
+        .modern-table-card {
+            box-shadow: none !important;
+            border: 1px solid #eee !important;
+        }
+    }
 </style>
 {% endblock %}
 
 <footer class="page-footer">
     <div class="container">
         <p class="mb-0">
-            © 2025 SIMS - Postgraduate Medical Training System. All rights reserved. |
+            © 2025 SIMS - Postgraduate Students Information Management System. All rights reserved. |
             <a href="/admin/">Admin</a> |
             SIMS v2.1.0 |
             Faisalabad Medical University

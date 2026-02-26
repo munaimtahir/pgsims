@@ -10,7 +10,9 @@ from rest_framework.test import APITestCase
 
 from sims.bulk.models import BulkOperation
 from sims.bulk.services import BulkService
+from sims.academics.models import Department
 from sims.logbook.models import LogbookEntry
+from sims.rotations.models import Hospital, HospitalDepartment
 from sims.users.models import User
 
 
@@ -142,3 +144,33 @@ class BulkOperationTests(APITestCase):
         self.assertEqual(BulkOperation.objects.count(), initial_count + 1)
         self.assertIsNotNone(operation.completed_at)
         self.assertEqual(operation.status, BulkOperation.STATUS_COMPLETED)
+
+    def test_bulk_department_import_maps_to_active_hospital(self) -> None:
+        Hospital.objects.all().delete()
+        hospital = Hospital.objects.create(name="UTRMC", code="UTRMC", is_active=True)
+        csv_buffer = io.StringIO()
+        writer = csv.DictWriter(csv_buffer, fieldnames=["code", "name", "description"])
+        writer.writeheader()
+        writer.writerow({"code": "ANES", "name": "Anesthesia", "description": "Anaesthesia dept"})
+        uploaded = SimpleUploadedFile(
+            "departments.csv", csv_buffer.getvalue().encode("utf-8"), content_type="text/csv"
+        )
+        url = reverse("bulk_api:import_departments")
+        response = self.client.post(
+            url,
+            {"file": uploaded, "dry_run": False, "allow_partial": False},
+        )
+        self.assertEqual(response.status_code, 200)
+        department = Department.objects.get(code="ANES")
+        self.assertEqual(department.name, "Anesthesia")
+        self.assertTrue(
+            HospitalDepartment.objects.filter(hospital=hospital, department=department, is_active=True).exists()
+        )
+
+    def test_bulk_export_departments_csv(self) -> None:
+        Department.objects.update_or_create(code="SURG", defaults={"name": "Surgery", "active": True})
+        url = reverse("bulk_api:exports", kwargs={"resource": "departments"})
+        response = self.client.get(f"{url}?file_format=csv")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response["Content-Type"], "text/csv")
+        self.assertIn("code,name,active,hospitals", response.content.decode("utf-8"))

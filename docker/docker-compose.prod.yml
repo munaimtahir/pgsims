@@ -89,8 +89,8 @@ services:
     ports:
       - "127.0.0.1:8014:8014" # Exposed for Caddy reverse proxy
     volumes:
-      - static_volume:/app/staticfiles
-      - media_volume:/app/media
+      - ../backend/staticfiles:/app/staticfiles
+      - ../backend/media:/app/media
       - ../backend/logs:/app/logs
     depends_on:
       db:
@@ -123,7 +123,7 @@ services:
       - CELERY_RESULT_BACKEND=redis://redis:6379/1
       - LOG_FILE_PATH=/tmp/sims_error.log
     volumes:
-      - media_volume:/app/media
+      - ../backend/media:/app/media
       - ../backend/logs:/app/logs
     depends_on:
       - db
@@ -192,8 +192,6 @@ volumes:
     name: PROD_pgsims_pgdata
   PROD_pgsims_redis_data:
     name: PROD_pgsims_redis_data
-  static_volume:
-  media_volume:
 
 
 networks:

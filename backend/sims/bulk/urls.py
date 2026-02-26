@@ -5,8 +5,10 @@ from django.urls import path
 from sims.bulk.views import (
     BulkAssignmentView,
     BulkImportView,
+    BulkDepartmentImportView,
     BulkResidentImportView,
     BulkReviewView,
+    BulkExportView,
     BulkSupervisorImportView,
     BulkTraineeImportView,
 )
@@ -20,4 +22,6 @@ urlpatterns = [
     path("import-trainees/", BulkTraineeImportView.as_view(), name="import_trainees"),
     path("import-supervisors/", BulkSupervisorImportView.as_view(), name="import_supervisors"),
     path("import-residents/", BulkResidentImportView.as_view(), name="import_residents"),
+    path("import-departments/", BulkDepartmentImportView.as_view(), name="import_departments"),
+    path("exports/<str:resource>/", BulkExportView.as_view(), name="exports"),
 ]

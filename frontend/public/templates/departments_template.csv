@@ -1,0 +1,4 @@
+code,name,description,active
+SURG,Surgery,General surgery department,true
+MED,Medicine,Internal medicine department,true
+PEDS,Pediatrics,Pediatric medicine and neonatology,true

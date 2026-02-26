@@ -52,6 +52,22 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     Dashboard
                   </Link>
                 )}
+                {(user?.role === 'utrmc_user' || user?.role === 'utrmc_admin') && (
+                  <Link
+                    href="/dashboard/utrmc/cases"
+                    className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
+                  >
+                    Cases
+                  </Link>
+                )}
+                {(user?.role === 'utrmc_user' || user?.role === 'utrmc_admin') && (
+                  <Link
+                    href="/dashboard/utrmc/reports"
+                    className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
+                  >
+                    Reports
+                  </Link>
+                )}
                 {user?.role === 'pg' && (
                   <>
                     <Link
@@ -65,6 +81,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                       className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
                     >
                       Logbook
+                    </Link>
+                    <Link
+                      href="/dashboard/pg/cases"
+                      className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
+                    >
+                      Cases
                     </Link>
                     <Link
                       href="/dashboard/pg/rotations"
@@ -101,6 +123,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                       Logbooks
                     </Link>
                     <Link
+                      href="/dashboard/supervisor/cases"
+                      className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
+                    >
+                      Cases
+                    </Link>
+                    <Link
                       href="/dashboard/supervisor/pgs"
                       className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
                     >
@@ -127,6 +155,18 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                       className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
                     >
                       Bulk Import
+                    </Link>
+                    <Link
+                      href="/dashboard/admin/exports"
+                      className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
+                    >
+                      Exports
+                    </Link>
+                    <Link
+                      href="/dashboard/admin/reports"
+                      className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
+                    >
+                      Reports
                     </Link>
                   </>
                 )}

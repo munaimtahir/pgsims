@@ -676,6 +676,11 @@ CORS_ALLOW_HEADERS = [
 LOGIN_RATE_LIMIT = os.environ.get("LOGIN_RATE_LIMIT", "5/min")
 LOGIN_RATE_LIMIT_BLOCK_DURATION = int(os.environ.get("LOGIN_RATE_LIMIT_BLOCK_DURATION", "300"))  # 5 minutes
 
+# Public self-registration gate (disabled by default).
+ENABLE_PUBLIC_REGISTRATION = (
+    os.environ.get("ENABLE_PUBLIC_REGISTRATION", "False").lower() in ("true", "1", "yes")
+)
+
 # Load local settings if available
 try:
     from .local_settings import *

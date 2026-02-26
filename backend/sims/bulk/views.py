@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from django.contrib.auth import get_user_model
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from rest_framework import permissions, status
 from rest_framework.request import Request
@@ -14,6 +15,7 @@ from sims.bulk.serializers import (
     BulkAssignmentSerializer,
     BulkImportSerializer,
     BulkReviewSerializer,
+    DepartmentImportSerializer,
     ResidentImportSerializer,
     SupervisorImportSerializer,
     TraineeImportSerializer,
@@ -122,7 +124,7 @@ class BulkTraineeImportView(APIView):
 class BulkSupervisorImportView(APIView):
     """
     Bulk import view for supervisors/faculty.
-    
+
     Accepts CSV or Excel files with supervisor data.
     Creates accounts with role 'supervisor' and generates passwords.
     """
@@ -157,7 +159,7 @@ class BulkSupervisorImportView(APIView):
 class BulkResidentImportView(APIView):
     """
     Bulk import view for residents/postgraduates.
-    
+
     Accepts CSV or Excel files with resident data.
     Creates accounts with role 'pg' and links to supervisors.
     Handles cases where supervisors don't exist (based on allow_partial setting).
@@ -190,6 +192,48 @@ class BulkResidentImportView(APIView):
         return Response(_operation_payload(operation), status=status_code)
 
 
+class BulkDepartmentImportView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request: Request) -> Response:
+        if getattr(request.user, "role", None) != "admin":
+            return Response({"detail": "Only admins can import departments."}, status=403)
+
+        serializer = DepartmentImportSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        service = BulkService(request.user)
+        operation = service.import_departments(
+            serializer.validated_data["file"],
+            dry_run=serializer.validated_data["dry_run"],
+            allow_partial=serializer.validated_data["allow_partial"],
+        )
+        status_code = (
+            status.HTTP_200_OK
+            if operation.status == BulkOperation.STATUS_COMPLETED
+            else status.HTTP_400_BAD_REQUEST
+        )
+        return Response(_operation_payload(operation), status=status_code)
+
+
+class BulkExportView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request: Request, resource: str) -> HttpResponse:
+        from django.core.exceptions import ValidationError as DjangoValidationError
+
+        if getattr(request.user, "role", None) != "admin":
+            return Response({"detail": "Only admins can export bulk datasets."}, status=403)
+        export_format = request.query_params.get("file_format", "xlsx").lower()
+        service = BulkService(request.user)
+        try:
+            export_file = service.export_dataset(resource=resource, export_format=export_format)
+        except DjangoValidationError as exc:
+            return Response({"detail": str(exc)}, status=400)
+        response = HttpResponse(export_file.content, content_type=export_file.content_type)
+        response["Content-Disposition"] = f'attachment; filename="{export_file.filename}"'
+        return response
+
+
 __all__ = [
     "BulkReviewView",
     "BulkAssignmentView",
@@ -197,4 +241,6 @@ __all__ = [
     "BulkTraineeImportView",
     "BulkSupervisorImportView",
     "BulkResidentImportView",
+    "BulkDepartmentImportView",
+    "BulkExportView",
 ]

@@ -1,103 +1,49 @@
-# Caddyfile configuration for PGSIMS deployment
-# This file should be placed in /etc/caddy/Caddyfile or your Caddy configuration directory
-# Caddy will automatically handle SSL/TLS certificates via Let's Encrypt
-#
-# Domain: pgsims.alshifalab.pk
-# Frontend: localhost:8082 (Next.js)
-# Backend: localhost:8014 (Django/Gunicorn)
-# Server IP: 34.16.82.13
+# Canonical Caddy config for PGSIMS
+# Source of truth: deploy/Caddyfile.pgsims
 
 pgsims.alshifalab.pk {
-    # Enable automatic HTTPS with Let's Encrypt
-    tls {
-        protocols tls1.2 tls1.3
-    }
+    encode zstd gzip
 
-    # Logging
     log {
         output file /var/log/caddy/pgsims_access.log
         format json
     }
 
-    # Security headers
     header {
-        # Enable HSTS
         Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
-        # Prevent clickjacking
         X-Frame-Options "SAMEORIGIN"
-        # XSS protection
         X-Content-Type-Options "nosniff"
-        # Referrer policy
         Referrer-Policy "strict-origin-when-cross-origin"
-        # Remove server information
+        Permissions-Policy "camera=(), microphone=(), geolocation=()"
         -Server
     }
 
-    # Health check endpoint (bypass proxy for faster response)
-    handle /healthz {
-        reverse_proxy localhost:8014 {
-            header_up Host {host}
-            header_up X-Real-IP {remote}
-            header_up X-Forwarded-For {remote}
-            header_up X-Forwarded-Proto {scheme}
-        }
-    }
-
-    # Static files (served directly by Caddy for better performance)
+    # Django static and media from host paths written by docker compose bind mounts.
     handle /static/* {
-        root * /home/munaim/srv/apps/pgsims/staticfiles
+        root * /srv/apps/pgsims/backend/staticfiles
         file_server
         header Cache-Control "public, max-age=31536000, immutable"
     }
 
-    # Media files
     handle /media/* {
-        root * /home/munaim/srv/apps/pgsims/media
+        root * /srv/apps/pgsims/backend/media
         file_server
         header Cache-Control "public, max-age=604800"
     }
 
-    # API endpoints
     handle /api/* {
-        reverse_proxy localhost:8014 {
-            header_up Host {host}
-            header_up X-Real-IP {remote}
-            header_up X-Forwarded-For {remote}
-            header_up X-Forwarded-Proto {scheme}
-            header_up X-Forwarded-Host {host}
-        }
+        reverse_proxy 127.0.0.1:8014
     }
 
-    # Admin routes
     handle /admin/* {
-        reverse_proxy localhost:8014 {
-            header_up Host {host}
-            header_up X-Real-IP {remote}
-            header_up X-Forwarded-For {remote}
-            header_up X-Forwarded-Proto {scheme}
-            header_up X-Forwarded-Host {host}
-        }
+        reverse_proxy 127.0.0.1:8014
     }
 
-    # All other requests (Frontend Next.js application)
+    handle /healthz {
+        reverse_proxy 127.0.0.1:8014
+    }
+
     handle {
-        reverse_proxy localhost:8082 {
-            header_up Host {host}
-            header_up X-Real-IP {remote}
-            header_up X-Forwarded-For {remote}
-            header_up X-Forwarded-Proto {scheme}
-            header_up X-Forwarded-Host {host}
-            
-            # Timeouts
-            transport http {
-                dial_timeout 10s
-                response_header_timeout 60s
-            }
-        }
+        reverse_proxy 127.0.0.1:8082
     }
-}
-
-# Fallback: Direct IP access (redirect to domain)
-34.16.82.13 {
-    redir https://pgsims.alshifalab.pk{uri} permanent
 }

@@ -23,16 +23,24 @@ from sims.users.models import SPECIALTY_CHOICES, YEAR_CHOICES, User
 
 try:
     from sims.academics.models import Department
-    from sims.rotations.models import Hospital
+    from sims.rotations.models import Hospital, HospitalDepartment
 except ImportError:
     Department = None
     Hospital = None
+    HospitalDepartment = None
 
 
 @dataclass
 class BulkResult:
     successes: List[dict]
     failures: List[dict]
+
+
+@dataclass
+class BulkExportFile:
+    filename: str
+    content: bytes
+    content_type: str
 
 
 class BulkProcessingError(Exception):
@@ -1091,6 +1099,205 @@ class BulkService:
             details,
         )
         return operation
+
+    def import_departments(
+        self,
+        uploaded_file,
+        *,
+        dry_run: bool = True,
+        allow_partial: bool = False,
+    ) -> BulkOperation:
+        operation = BulkOperation.objects.create(user=self.actor, operation=BulkOperation.OP_IMPORT)
+        if Department is None or Hospital is None or HospitalDepartment is None:
+            operation.mark_failed({"error": "Department/Hospital models unavailable."})
+            return operation
+
+        default_hospital = Hospital.objects.filter(is_active=True).order_by("id").first()
+        if default_hospital is None:
+            operation.mark_failed({"error": "No active hospital found for single-hospital mapping."})
+            return operation
+
+        try:
+            rows = list(_parse_csv_rows(uploaded_file, required_columns=None))
+        except ValidationError as exc:
+            operation.mark_failed({"error": str(exc)})
+            return operation
+
+        successes: List[dict] = []
+        failures: List[dict] = []
+        errors_triggered = False
+
+        def _normalized_code(name: str) -> str:
+            cleaned = re.sub(r"[^A-Za-z0-9]+", "", name or "").upper()
+            return (cleaned[:20] or "DEPT")
+
+        def process_row(row: dict) -> None:
+            nonlocal errors_triggered
+            row_num = row.get("_row_number", "unknown")
+            name = (row.get("name") or row.get("department") or "").strip()
+            code = (row.get("code") or "").strip().upper()
+            description = (row.get("description") or "").strip()
+            active_raw = (row.get("active") or "true").strip().lower()
+            active = active_raw not in {"false", "0", "no"}
+
+            if not name and not code:
+                failures.append({"row": row_num, "error": "Missing department name/code", "data": row})
+                errors_triggered = True
+                return
+            if not code:
+                code = _normalized_code(name)
+            if not name:
+                name = code
+
+            try:
+                existing = Department.objects.filter(code=code).first() or Department.objects.filter(
+                    name__iexact=name
+                ).first()
+                if dry_run:
+                    candidate = existing or Department(code=code, name=name)
+                    candidate.code = code
+                    candidate.name = name
+                    candidate.description = description
+                    candidate.active = active
+                    candidate.full_clean()
+                else:
+                    department, _ = Department.objects.update_or_create(
+                        code=code,
+                        defaults={
+                            "name": name,
+                            "description": description,
+                            "active": active,
+                        },
+                    )
+                    HospitalDepartment.objects.update_or_create(
+                        hospital=default_hospital,
+                        department=department,
+                        defaults={"is_active": True},
+                    )
+                successes.append({"row": row_num, "code": code, "name": name})
+            except ValidationError as exc:
+                failures.append(
+                    {
+                        "row": row_num,
+                        "error": exc.message_dict if hasattr(exc, "message_dict") else str(exc),
+                        "data": row,
+                    }
+                )
+                errors_triggered = True
+
+        if dry_run or allow_partial:
+            for row in rows:
+                process_row(row)
+        else:
+            try:
+                with transaction.atomic():
+                    for row in rows:
+                        process_row(row)
+                    if errors_triggered:
+                        raise BulkProcessingError("Department import failed; rolling back")
+            except BulkProcessingError:
+                operation.mark_failed({"failures": failures})
+                return operation
+
+        operation.mark_completed(
+            len(successes),
+            len(failures),
+            {"successes": successes, "failures": failures, "hospital": default_hospital.code},
+        )
+        return operation
+
+    def export_dataset(self, resource: str, export_format: str = "xlsx") -> BulkExportFile:
+        if export_format not in {"xlsx", "csv"}:
+            raise ValidationError("Unsupported export format. Use xlsx or csv.")
+
+        if resource == "residents":
+            queryset = User.objects.filter(role="pg").select_related("supervisor", "home_department")
+            rows = [
+                {
+                    "username": user.username,
+                    "first_name": user.first_name,
+                    "last_name": user.last_name,
+                    "email": user.email,
+                    "specialty": user.specialty or "",
+                    "year": user.year or "",
+                    "supervisor": user.supervisor.username if user.supervisor else "",
+                    "department": user.home_department.name if user.home_department else "",
+                }
+                for user in queryset
+            ]
+        elif resource == "supervisors":
+            queryset = User.objects.filter(role="supervisor")
+            rows = [
+                {
+                    "username": user.username,
+                    "first_name": user.first_name,
+                    "last_name": user.last_name,
+                    "email": user.email,
+                    "specialty": user.specialty or "",
+                    "phone_number": user.phone_number or "",
+                    "registration_number": user.registration_number or "",
+                }
+                for user in queryset
+            ]
+        elif resource == "departments":
+            if Department is None:
+                raise ValidationError("Department model unavailable.")
+            rows = []
+            for dept in Department.objects.all().order_by("code"):
+                hospitals = []
+                if HospitalDepartment is not None:
+                    hospitals = list(
+                        HospitalDepartment.objects.filter(department=dept, is_active=True)
+                        .select_related("hospital")
+                        .values_list("hospital__code", flat=True)
+                    )
+                rows.append(
+                    {
+                        "code": dept.code,
+                        "name": dept.name,
+                        "active": dept.active,
+                        "hospitals": ",".join(hospitals),
+                    }
+                )
+        else:
+            raise ValidationError("Unsupported export resource.")
+
+        return _render_export_rows(rows, resource, export_format)
+
+
+def _render_export_rows(rows: List[dict], resource: str, export_format: str) -> BulkExportFile:
+    if export_format == "csv":
+        output = io.StringIO()
+        fieldnames = list(rows[0].keys()) if rows else []
+        writer = csv.DictWriter(output, fieldnames=fieldnames)
+        if fieldnames:
+            writer.writeheader()
+            for row in rows:
+                writer.writerow(row)
+        content = output.getvalue().encode("utf-8")
+        return BulkExportFile(
+            filename=f"{resource}_export.csv",
+            content=content,
+            content_type="text/csv",
+        )
+
+    workbook = Workbook()
+    sheet = workbook.active
+    sheet.title = "Export"
+    headers = list(rows[0].keys()) if rows else []
+    for col_idx, header in enumerate(headers, start=1):
+        cell = sheet.cell(row=1, column=col_idx, value=header)
+        cell.font = Font(bold=True)
+    for row_idx, row in enumerate(rows, start=2):
+        for col_idx, header in enumerate(headers, start=1):
+            sheet.cell(row=row_idx, column=col_idx, value=row.get(header, ""))
+    stream = io.BytesIO()
+    workbook.save(stream)
+    return BulkExportFile(
+        filename=f"{resource}_export.xlsx",
+        content=stream.getvalue(),
+        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    )
 
 
 def _chunked(items: Sequence[int], chunk_size: int) -> Iterator[List[int]]:

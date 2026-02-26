@@ -9,7 +9,7 @@ import SuccessBanner from '@/components/ui/SuccessBanner';
 import SectionCard from '@/components/ui/SectionCard';
 import { BulkImportResult } from '@/lib/api/bulk';
 
-type ImportType = 'trainees' | 'supervisors' | 'residents' | 'generic';
+type ImportType = 'trainees' | 'supervisors' | 'residents' | 'departments' | 'generic';
 
 export default function AdminBulkImportPage() {
   const [importType, setImportType] = useState<ImportType>('trainees');
@@ -40,23 +40,27 @@ export default function AdminBulkImportPage() {
       setImportResult(null);
 
       let result;
-      switch (importType) {
+        switch (importType) {
         case 'trainees':
           result = await bulkApi.importTrainees(file);
           break;
         case 'supervisors':
           result = await bulkApi.importSupervisors(file);
           break;
-        case 'residents':
-          result = await bulkApi.importResidents(file);
-          break;
-        case 'generic':
-          result = await bulkApi.import(file, 'generic');
-          break;
-      }
+          case 'residents':
+            result = await bulkApi.importResidents(file);
+            break;
+          case 'departments':
+            result = await bulkApi.importDepartments(file);
+            break;
+          case 'generic':
+            result = await bulkApi.import(file, 'generic');
+            break;
+        }
 
       setImportResult(result);
-      setSuccess(`Import completed: ${result.success_count} successful, ${result.error_count || 0} errors`);
+      const errorCount = result.failure_count ?? result.error_count ?? 0;
+      setSuccess(`Import completed: ${result.success_count} successful, ${errorCount} errors`);
 
       // Bulk review API mutates entries and requires explicit entry_ids + status payload.
       // This page only has import operation output, so we do not auto-call review here.
@@ -107,6 +111,7 @@ export default function AdminBulkImportPage() {
                   <option value="trainees">Trainees</option>
                   <option value="supervisors">Supervisors</option>
                   <option value="residents">Residents</option>
+                  <option value="departments">Departments</option>
                   <option value="generic">Generic</option>
                 </select>
               </div>

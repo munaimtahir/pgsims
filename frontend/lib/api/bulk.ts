@@ -8,6 +8,7 @@ import apiClient from './client';
 export interface BulkImportResult {
   success: boolean;
   success_count: number;
+  failure_count?: number;
   error_count: number;
   errors: string[];
   imported_items: unknown[];
@@ -34,6 +35,8 @@ export const bulkApi = {
     const formData = new FormData();
     formData.append('file', file);
     formData.append('import_type', importType);
+    formData.append('dry_run', 'false');
+    formData.append('allow_partial', 'true');
     
     const response = await apiClient.post<BulkImportResult>('/api/bulk/import/', formData, {
       headers: {
@@ -49,6 +52,8 @@ export const bulkApi = {
   importTrainees: async (file: File) => {
     const formData = new FormData();
     formData.append('file', file);
+    formData.append('dry_run', 'false');
+    formData.append('allow_partial', 'true');
     
     const response = await apiClient.post<BulkImportResult>('/api/bulk/import-trainees/', formData, {
       headers: {
@@ -64,6 +69,8 @@ export const bulkApi = {
   importSupervisors: async (file: File) => {
     const formData = new FormData();
     formData.append('file', file);
+    formData.append('dry_run', 'false');
+    formData.append('allow_partial', 'true');
     
     const response = await apiClient.post<BulkImportResult>('/api/bulk/import-supervisors/', formData, {
       headers: {
@@ -79,8 +86,24 @@ export const bulkApi = {
   importResidents: async (file: File) => {
     const formData = new FormData();
     formData.append('file', file);
+    formData.append('dry_run', 'false');
+    formData.append('allow_partial', 'true');
     
     const response = await apiClient.post<BulkImportResult>('/api/bulk/import-residents/', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
+  },
+
+  importDepartments: async (file: File) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('dry_run', 'false');
+    formData.append('allow_partial', 'true');
+
+    const response = await apiClient.post<BulkImportResult>('/api/bulk/import-departments/', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
@@ -102,6 +125,13 @@ export const bulkApi = {
   review: async (payload: BulkReviewPayload) => {
     const response = await apiClient.post<BulkImportResult>('/api/bulk/review/', payload);
     return response.data;
+  },
+
+  exportDataset: async (resource: 'residents' | 'supervisors' | 'departments', format: 'xlsx' | 'csv' = 'xlsx') => {
+    const response = await apiClient.get(`/api/bulk/exports/${resource}/?file_format=${format}`, {
+      responseType: 'blob',
+    });
+    return response.data as Blob;
   },
 };
 
