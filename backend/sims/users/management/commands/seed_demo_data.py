@@ -193,7 +193,10 @@ class Command(BaseCommand):
         parser.add_argument(
             "--reset",
             action="store_true",
-            help="Delete existing @demo.local users and demo-coded departments/hospitals before seeding.",
+            help=(
+                "Delete existing @demo.local users and demo-coded departments/hospitals "
+                "before seeding."
+            ),
         )
 
     @transaction.atomic
@@ -211,8 +214,8 @@ class Command(BaseCommand):
         LogbookEntry.objects.filter(pg__email__iendswith=DEMO_EMAIL_DOMAIN).delete()
         Rotation.objects.filter(pg__email__iendswith=DEMO_EMAIL_DOMAIN).delete()
 
-        hospital = self._upsert_hospital()
-        departments = self._upsert_departments()
+        hospital, _ = self._upsert_hospital()
+        departments, departments_created = self._upsert_departments()
         self._upsert_hospital_departments(hospital=hospital, departments=departments)
 
         supervisors, supervisors_created = self._upsert_supervisors(
@@ -231,12 +234,21 @@ class Command(BaseCommand):
             home_department=root_department,
         )
 
-        rotations_created = self._seed_rotations(residents=residents, departments=departments, hospital=hospital)
-        status_counts = self._seed_logbook_entries(residents=residents, rotations_by_pg=self._rotations_by_pg())
-        research_created, research_note = self._seed_research_progress_if_supported(residents=residents)
+        rotations_created = self._seed_rotations(
+            residents=residents,
+            departments=departments,
+            hospital=hospital,
+        )
+        status_counts = self._seed_logbook_entries(
+            residents=residents,
+            rotations_by_pg=self._rotations_by_pg(),
+        )
+        research_created, research_note = self._seed_research_progress_if_supported(
+            residents=residents
+        )
 
         self.stdout.write(self.style.SUCCESS("seed_demo_data completed successfully."))
-        self.stdout.write(f"Department Created: {len(departments)}")
+        self.stdout.write(f"Department Created: {departments_created}")
         self.stdout.write(f"Supervisors Created: {supervisors_created}")
         self.stdout.write(f"Residents Created: {residents_created}")
         self.stdout.write("Cases per status:")
@@ -293,7 +305,11 @@ class Command(BaseCommand):
         diagnostics = []
         for label, fields in required_fields.items():
             app_label, model_name = label.split(".")
-            model = apps.get_model(app_label, model_name)
+            try:
+                model = apps.get_model(app_label, model_name)
+            except LookupError:
+                diagnostics.append(f"Missing model: {label}")
+                continue
             if model is None:
                 diagnostics.append(f"Missing model: {label}")
                 continue
@@ -302,14 +318,19 @@ class Command(BaseCommand):
             if missing:
                 diagnostics.append(f"{label} missing fields: {', '.join(missing)}")
 
-        logbook_model = apps.get_model("logbook", "LogbookEntry")
+        try:
+            logbook_model = apps.get_model("logbook", "LogbookEntry")
+        except LookupError:
+            diagnostics.append("Missing model: logbook.LogbookEntry")
+            return diagnostics
         if logbook_model is not None:
             status_field = logbook_model._meta.get_field("status")
             available_statuses = {choice[0] for choice in status_field.choices}
             required_statuses = {"draft", "pending", "returned", "approved"}
             if not required_statuses.issubset(available_statuses):
                 diagnostics.append(
-                    "logbook.LogbookEntry status choices must include: draft, pending, returned, approved"
+                    "logbook.LogbookEntry status choices must include: "
+                    "draft, pending, returned, approved"
                 )
         return diagnostics
 
@@ -319,7 +340,7 @@ class Command(BaseCommand):
         Department.objects.filter(code__startswith="DEMO-").delete()
 
     def _upsert_hospital(self):
-        hospital, _ = Hospital.objects.update_or_create(
+        hospital, created = Hospital.objects.update_or_create(
             code=DEMO_HOSPITAL_CODE,
             defaults={
                 "name": "UTRMC Teaching Hospital",
@@ -327,12 +348,13 @@ class Command(BaseCommand):
                 "is_active": True,
             },
         )
-        return hospital
+        return hospital, created
 
     def _upsert_departments(self):
         departments = {}
+        created_count = 0
         for code, name in DEPARTMENT_SPECS:
-            department, _ = Department.objects.update_or_create(
+            department, created = Department.objects.update_or_create(
                 code=code,
                 defaults={
                     "name": name,
@@ -341,7 +363,8 @@ class Command(BaseCommand):
                 },
             )
             departments[code] = department
-        return departments
+            created_count += int(created)
+        return departments, created_count
 
     def _upsert_hospital_departments(self, hospital, departments):
         for department in departments.values():
@@ -384,7 +407,7 @@ class Command(BaseCommand):
             first_name, last_name = self._split_name(core_name)
             email_local = self._email_local_from_name(core_name)
             resident, created = self._upsert_user(
-                username=email_local,
+                username=f"resident.{email_local}",
                 email=f"{email_local}{DEMO_EMAIL_DOMAIN}",
                 first_name=first_name,
                 last_name=last_name,
@@ -460,7 +483,9 @@ class Command(BaseCommand):
                     end_date=end_date,
                     status=status,
                     objectives=f"Competency development in {departments[unit_code].name}.",
-                    learning_outcomes="Demonstrate independent procedural planning and documentation.",
+                    learning_outcomes=(
+                        "Demonstrate independent procedural planning and documentation."
+                    ),
                     notes="Presentation demo rotation data seeded by management command.",
                 )
                 rotation.save()
@@ -469,9 +494,9 @@ class Command(BaseCommand):
 
     def _rotations_by_pg(self):
         mapping = {}
-        for rotation in Rotation.objects.filter(pg__email__iendswith=DEMO_EMAIL_DOMAIN).select_related(
-            "pg", "department"
-        ):
+        for rotation in Rotation.objects.filter(
+            pg__email__iendswith=DEMO_EMAIL_DOMAIN
+        ).select_related("pg", "department"):
             mapping.setdefault(rotation.pg_id, []).append(rotation)
         return mapping
 
@@ -501,11 +526,12 @@ class Command(BaseCommand):
                     management_action=template["management"],
                     topic_subtopic=template["topic"],
                     clinical_reasoning=(
-                        "Clinical findings were correlated with imaging before selecting definitive "
-                        "procedural management."
+                        "Clinical findings were correlated with imaging before selecting "
+                        "definitive procedural management."
                     ),
                     learning_points=(
-                        "Improved operative planning, peri-operative counseling, and documentation quality."
+                        "Improved operative planning, peri-operative counseling, and "
+                        "documentation quality."
                     ),
                     status="draft",
                 )
@@ -524,17 +550,23 @@ class Command(BaseCommand):
                     counters["submitted"] += 1
                     continue
 
-                entry.status = "returned"
-                entry.supervisor_feedback = (
-                    "Please expand peri-operative risk documentation and postoperative follow-up details."
-                )
-                entry.save()
-
                 if 6 <= entry_index <= 7:
+                    entry.status = "returned"
+                    entry.supervisor_feedback = (
+                        "Please expand peri-operative risk documentation and postoperative "
+                        "follow-up details."
+                    )
+                    entry.save()
                     counters["sent_back"] += 1
                     continue
 
                 if 8 <= entry_index <= 9:
+                    entry.status = "returned"
+                    entry.supervisor_feedback = (
+                        "Please expand peri-operative risk documentation and postoperative "
+                        "follow-up details."
+                    )
+                    entry.save()
                     entry.management_action = (
                         f"{template['management']} Revised after supervisor feedback with clearer "
                         "documentation."
@@ -547,7 +579,8 @@ class Command(BaseCommand):
 
                 entry.status = "approved"
                 entry.supervisor_feedback = (
-                    "Comprehensive entry. Clinical reasoning and operative details are satisfactory."
+                    "Comprehensive entry. Clinical reasoning and operative details are "
+                    "satisfactory."
                 )
                 entry.save()
                 counters["verified"] += 1
@@ -588,7 +621,12 @@ class Command(BaseCommand):
         research_models = [m for m in apps.get_models() if "research" in m.__name__.lower()]
         if not research_models:
             return 0, "No dedicated research progress model detected; skipped."
-        return 0, "Research model detected but seeding is intentionally skipped pending explicit schema."
+        model_list = ", ".join(sorted(f"{m._meta.app_label}.{m.__name__}" for m in research_models))
+        raise CommandError(
+            "DIAGNOSTIC REPORT\n"
+            "Research model(s) detected but schema-specific seeding is undefined: "
+            f"{model_list}. Seeding stopped to avoid guessing field mappings."
+        )
 
     def _split_name(self, full_name):
         parts = full_name.split()
