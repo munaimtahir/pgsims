@@ -11,8 +11,9 @@ from rest_framework.test import APITestCase
 
 from sims.cases.models import CaseCategory, ClinicalCase
 from sims.certificates.models import Certificate, CertificateType
+from sims.academics.models import Department
 from sims.logbook.models import Diagnosis, LogbookEntry
-from sims.rotations.models import Department, Hospital, Rotation
+from sims.rotations.models import Hospital, HospitalDepartment, Rotation
 
 from .models import SavedSearchSuggestion, SearchQueryLog
 from .services import SearchService
@@ -67,8 +68,9 @@ class SearchServiceTests(TestCase):
         )
         self.department = Department.objects.create(
             name="Surgery",
-            hospital=self.hospital,
+            code="SURG",
         )
+        HospitalDepartment.objects.create(hospital=self.hospital, department=self.department)
 
         # Create rotation for pg1
         self.rotation = Rotation.objects.create(

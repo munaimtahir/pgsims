@@ -1,9 +1,11 @@
-"""Factories for Rotation models"""
+from datetime import date, timedelta
 
 import factory
 from factory.django import DjangoModelFactory
-from datetime import date, timedelta
-from sims.rotations.models import Hospital, Department, Rotation
+
+from sims.academics.models import Department
+from sims.rotations.models import Hospital, Rotation
+
 from .user_factories import PGFactory
 
 
@@ -31,11 +33,25 @@ class DepartmentFactory(DjangoModelFactory):
         model = Department
 
     name = factory.Sequence(lambda n: f"Department {n}")
-    hospital = factory.SubFactory(HospitalFactory)
-    head_of_department = factory.Faker("name")
-    contact_email = factory.Faker("email")
-    contact_phone = factory.Faker("phone_number")
+    code = factory.Sequence(lambda n: f"DEPT{n:03d}")
     description = factory.Faker("paragraph")
+    active = True
+
+
+class CanonicalDepartmentFactory(DepartmentFactory):
+    pass
+
+
+class RotationHospitalFactory(HospitalFactory):
+    pass
+
+
+class HospitalDepartmentMatrixFactory(DjangoModelFactory):
+    class Meta:
+        model = "rotations.HospitalDepartment"
+
+    hospital = factory.SubFactory(HospitalFactory)
+    department = factory.SubFactory(DepartmentFactory)
     is_active = True
 
 
@@ -48,8 +64,8 @@ class RotationFactory(DjangoModelFactory):
     pg = factory.SubFactory(PGFactory)
     supervisor = factory.LazyAttribute(lambda obj: obj.pg.supervisor)
     department = factory.SubFactory(DepartmentFactory)
-    hospital = factory.LazyAttribute(lambda obj: obj.department.hospital)
+    hospital = factory.SubFactory(HospitalFactory)
     start_date = factory.LazyFunction(lambda: date.today() - timedelta(days=30))
     end_date = factory.LazyFunction(lambda: date.today() + timedelta(days=60))
     objectives = factory.Faker("paragraph")
-    status = "active"
+    status = "ongoing"

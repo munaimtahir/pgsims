@@ -882,7 +882,7 @@ class BulkLogbookActionForm(forms.Form):
         if self.user:
             if self.user.role == "supervisor":
                 self.fields["entries"].queryset = LogbookEntry.objects.filter(
-                    pg__supervisor=self.user, status__in=["submitted", "approved"]
+                    pg__supervisor=self.user, status__in=["pending", "approved"]
                 ).select_related("pg", "primary_diagnosis")
 
                 # Remove assign_supervisor action for supervisors
@@ -892,7 +892,7 @@ class BulkLogbookActionForm(forms.Form):
 
             elif self.user.role == "admin":
                 self.fields["entries"].queryset = LogbookEntry.objects.filter(
-                    status__in=["submitted", "approved"]
+                    status__in=["pending", "approved"]
                 ).select_related("pg", "primary_diagnosis")
 
     def clean(self):

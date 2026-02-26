@@ -22,7 +22,8 @@ from sims.logbook.models import LogbookEntry
 from sims.users.models import SPECIALTY_CHOICES, YEAR_CHOICES, User
 
 try:
-    from sims.rotations.models import Department, Hospital
+    from sims.academics.models import Department
+    from sims.rotations.models import Hospital
 except ImportError:
     Department = None
     Hospital = None
@@ -324,7 +325,7 @@ class BulkService:
                     # Try to find department by name (case-insensitive)
                     department = Department.objects.filter(
                         name__iexact=department_name,
-                        is_active=True
+                        active=True
                     ).first()
                     
                     if not department:
@@ -697,7 +698,7 @@ class BulkService:
                 try:
                     department = Department.objects.filter(
                         name__iexact=department_name,
-                        is_active=True
+                        active=True
                     ).first()
                     if not department and allow_partial:
                         pass  # Continue without department

@@ -448,7 +448,7 @@ def case_export_data(request):
                 "title": case.case_title,
                 "pg": case.pg.get_full_name() if case.pg else "",
                 "category": case.category.name if case.category else "",
-                "date": case.date.isoformat() if case.date else "",
+                "date": case.date_encountered.isoformat() if case.date_encountered else "",
                 "status": case.status,
                 "score": case.completion_score,
                 "primary_diagnosis": case.primary_diagnosis.name if case.primary_diagnosis else "",

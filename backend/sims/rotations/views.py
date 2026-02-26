@@ -20,6 +20,7 @@ from django.views.generic import (
 )
 from django.views.generic.edit import FormView
 
+from sims.academics.models import Department
 from .forms import (
     BulkRotationAssignmentForm,
     RotationCreateForm,
@@ -27,7 +28,7 @@ from .forms import (
     RotationSearchForm,
     RotationUpdateForm,
 )
-from .models import Department, Hospital, Rotation, RotationEvaluation
+from .models import Hospital, HospitalDepartment, Rotation, RotationEvaluation
 
 User = get_user_model()
 
@@ -135,7 +136,7 @@ class RotationListView(LoginRequiredMixin, RotationAccessMixin, ListView):
         context["search_form"] = RotationSearchForm(self.request.GET)
 
         # Add filter options
-        context["departments"] = Department.objects.filter(is_active=True)
+        context["departments"] = Department.objects.filter(active=True)
         context["hospitals"] = Hospital.objects.filter(is_active=True)
 
         if self.request.user.role == "admin":
@@ -625,9 +626,11 @@ def rotation_calendar_api(request):
 def department_by_hospital_api(request, hospital_id):
     """API endpoint to get departments by hospital"""
     try:
-        departments = Department.objects.filter(hospital_id=hospital_id, is_active=True).values(
-            "id", "name"
-        )
+        departments = Department.objects.filter(
+            active=True,
+            hospital_departments__hospital_id=hospital_id,
+            hospital_departments__is_active=True,
+        ).values("id", "name").distinct()
 
         return JsonResponse(list(departments), safe=False)
     except Exception as e:

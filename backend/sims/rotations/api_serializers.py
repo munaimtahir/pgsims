@@ -4,14 +4,85 @@ from typing import Optional
 
 from rest_framework import serializers
 
-from sims.rotations.models import Rotation
+from sims.rotations.models import Hospital, HospitalDepartment, Rotation
+
+
+class DepartmentRefSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    name = serializers.CharField()
+    code = serializers.CharField(allow_null=True, required=False)
+
+
+class HospitalRefSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    name = serializers.CharField()
+    code = serializers.CharField(allow_null=True, required=False)
+
+
+class HospitalSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Hospital
+        fields = [
+            "id",
+            "name",
+            "code",
+            "address",
+            "phone",
+            "email",
+            "website",
+            "description",
+            "facilities",
+            "is_active",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = ["created_at", "updated_at"]
+
+
+class HospitalDepartmentSerializer(serializers.ModelSerializer):
+    department = DepartmentRefSerializer(read_only=True)
+    hospital = HospitalRefSerializer(read_only=True)
+    department_id = serializers.IntegerField(write_only=True, required=True)
+    hospital_id = serializers.IntegerField(write_only=True, required=True)
+
+    class Meta:
+        model = HospitalDepartment
+        fields = [
+            "id",
+            "hospital",
+            "department",
+            "hospital_id",
+            "department_id",
+            "is_active",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = ["created_at", "updated_at"]
+
+    def create(self, validated_data):
+        return HospitalDepartment.objects.create(
+            hospital_id=validated_data.pop("hospital_id"),
+            department_id=validated_data.pop("department_id"),
+            **validated_data,
+        )
+
+    def update(self, instance, validated_data):
+        if "hospital_id" in validated_data:
+            instance.hospital_id = validated_data.pop("hospital_id")
+        if "department_id" in validated_data:
+            instance.department_id = validated_data.pop("department_id")
+        return super().update(instance, validated_data)
 
 
 class RotationSummarySerializer(serializers.ModelSerializer):
     name = serializers.SerializerMethodField()
-    department = serializers.CharField(source="department.name", read_only=True)
-    hospital = serializers.CharField(source="hospital.name", read_only=True)
+    department = serializers.SerializerMethodField()
+    hospital = serializers.SerializerMethodField()
+    source_department = serializers.SerializerMethodField()
+    source_hospital = serializers.SerializerMethodField()
     supervisor_name = serializers.SerializerMethodField()
+    requires_utrmc_approval = serializers.SerializerMethodField()
+    approved_by = serializers.SerializerMethodField()
 
     class Meta:
         model = Rotation
@@ -24,14 +95,61 @@ class RotationSummarySerializer(serializers.ModelSerializer):
             "end_date",
             "status",
             "supervisor_name",
+            "source_department",
+            "source_hospital",
+            "requires_utrmc_approval",
+            "override_reason",
+            "approved_by",
+            "approved_at",
+            "utrmc_approved_by",
+            "utrmc_approved_at",
         ]
 
+    def _serialize_department(self, obj: Rotation):
+        if not obj.department_id:
+            return None
+        return {
+            "id": obj.department_id,
+            "name": obj.department.name,
+            "code": getattr(obj.department, "code", None),
+        }
+
+    def _serialize_hospital(self, hospital):
+        if not hospital:
+            return None
+        return {"id": hospital.id, "name": hospital.name, "code": hospital.code}
+
     def get_name(self, obj: Rotation) -> str:
-        if obj.department_id:
-            return obj.department.name
-        return "Rotation"
+        return obj.get_department_name() if hasattr(obj, "get_department_name") else "Rotation"
+
+    def get_department(self, obj: Rotation):
+        return self._serialize_department(obj)
+
+    def get_hospital(self, obj: Rotation):
+        return self._serialize_hospital(obj.hospital)
+
+    def get_source_department(self, obj: Rotation):
+        if not obj.source_department_id:
+            return None
+        return {
+            "id": obj.source_department_id,
+            "name": obj.source_department.name,
+            "code": obj.source_department.code,
+        }
+
+    def get_source_hospital(self, obj: Rotation):
+        return self._serialize_hospital(obj.source_hospital)
 
     def get_supervisor_name(self, obj: Rotation) -> Optional[str]:
         if not obj.supervisor_id:
             return None
         return obj.supervisor.get_full_name() or obj.supervisor.username
+
+    def get_requires_utrmc_approval(self, obj: Rotation) -> bool:
+        return bool(getattr(obj, "requires_utrmc_approval", False))
+
+    def get_approved_by(self, obj: Rotation):
+        user = obj.approved_by
+        if not user:
+            return None
+        return {"id": user.id, "username": user.username, "full_name": user.get_full_name()}

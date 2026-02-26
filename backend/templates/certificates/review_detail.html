@@ -1,0 +1,16 @@
+{% extends "base/base.html" %}
+
+{% block content %}
+<div class="container py-4">
+    <h1 class="h4 mb-3">Certificate Review</h1>
+    <p><strong>Certificate:</strong> <a href="{% url 'certificates:detail' pk=review.certificate.pk %}">{{ review.certificate.title }}</a></p>
+    <p><strong>Reviewer:</strong> {{ review.reviewer.get_full_name|default:review.reviewer.username }}</p>
+    <p><strong>Status:</strong> {{ review.get_status_display }}</p>
+    {% if review.comments %}
+    <p><strong>Comments:</strong> {{ review.comments }}</p>
+    {% endif %}
+    {% if review.recommendations %}
+    <p><strong>Recommendations:</strong> {{ review.recommendations }}</p>
+    {% endif %}
+</div>
+{% endblock %}

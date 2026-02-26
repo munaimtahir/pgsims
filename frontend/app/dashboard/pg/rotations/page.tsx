@@ -9,11 +9,9 @@ import EmptyState from '@/components/ui/EmptyState';
 import ErrorBanner from '@/components/ui/ErrorBanner';
 import { TableSkeleton } from '@/components/ui/LoadingSkeleton';
 import SectionCard from '@/components/ui/SectionCard';
-import { rotationsApi, RotationSummary } from '@/lib/api';
-
-const normalizeRotations = (data: { results?: RotationSummary[] }) => {
-  return data.results ?? [];
-};
+import { rotationsApi } from '@/lib/api';
+import { adaptRotationList, UIRotationSummary } from '@/lib/adapters/rotationAdapter';
+import { getStatusBadgeClass, getStatusLabel } from '@/lib/ui/status';
 
 const statusClassMap: Record<string, string> = {
   ongoing: 'bg-green-100 text-green-800',
@@ -22,21 +20,27 @@ const statusClassMap: Record<string, string> = {
   cancelled: 'bg-red-100 text-red-800',
 };
 
-const columns: Column<RotationSummary>[] = [
+const columns: Column<UIRotationSummary>[] = [
   {
     key: 'name',
-    label: 'Rotation',
-    render: (item) => item.name || item.department || '-'
-  },
-  {
-    key: 'department',
     label: 'Department',
-    render: (item) => item.department || '-'
+    render: (item) =>
+      `${item.department.name}${item.department.code ? ` (${item.department.code})` : ''}`
   },
   {
     key: 'hospital',
     label: 'Hospital',
-    render: (item) => item.hospital || '-'
+    render: (item) =>
+      `${item.hospital.name}${item.hospital.code ? ` (${item.hospital.code})` : ''}`
+  },
+  {
+    key: 'site',
+    label: 'Posting',
+    render: (item) => {
+      const hospital = `${item.hospital.name}${item.hospital.code ? ` (${item.hospital.code})` : ''}`;
+      const department = `${item.department.name}${item.department.code ? ` (${item.department.code})` : ''}`;
+      return `${hospital} / ${department}`;
+    }
   },
   {
     key: 'start_date',
@@ -64,10 +68,10 @@ const columns: Column<RotationSummary>[] = [
     key: 'status',
     label: 'Status',
     render: (item) => {
-      const className = statusClassMap[item.status] || 'bg-yellow-100 text-yellow-800';
+      const className = statusClassMap[item.status] || getStatusBadgeClass(item.status);
       return (
-        <span className={`px-2 py-1 text-xs rounded-full ${className}`}>
-          {item.status}
+        <span data-testid={`rotation-status-${item.id}`} className={`px-2 py-1 text-xs rounded-full ${className}`}>
+          {getStatusLabel(item.status)}
         </span>
       );
     }
@@ -80,7 +84,7 @@ const columns: Column<RotationSummary>[] = [
 ];
 
 export default function PGRotationsPage() {
-  const [rotations, setRotations] = useState<RotationSummary[]>([]);
+  const [rotations, setRotations] = useState<UIRotationSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -89,7 +93,7 @@ export default function PGRotationsPage() {
       setLoading(true);
       setError(null);
       const data = await rotationsApi.getMyRotations();
-      setRotations(normalizeRotations(data));
+      setRotations(adaptRotationList(data));
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Failed to load rotations';
       setError(message);
@@ -115,7 +119,7 @@ export default function PGRotationsPage() {
 
           <SectionCard title="Rotations">
             {loading ? (
-              <TableSkeleton rows={5} cols={6} />
+              <TableSkeleton rows={5} cols={7} />
             ) : rotations.length === 0 ? (
               <EmptyState
                 title="No rotations yet"

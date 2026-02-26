@@ -58,15 +58,8 @@ export default function AdminBulkImportPage() {
       setImportResult(result);
       setSuccess(`Import completed: ${result.success_count} successful, ${result.error_count || 0} errors`);
 
-      // Try to load review data if import ID is available
-      if (result.import_id) {
-        try {
-          const review = await bulkApi.review(result.import_id);
-          setReviewData(review);
-        } catch {
-          // Review endpoint may not be available
-        }
-      }
+      // Bulk review API mutates entries and requires explicit entry_ids + status payload.
+      // This page only has import operation output, so we do not auto-call review here.
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Failed to import file';
       setError(message);
@@ -76,13 +69,9 @@ export default function AdminBulkImportPage() {
   };
 
   const handleReviewLatest = async () => {
-    if (!importResult?.import_id) return;
-    try {
-      const review = await bulkApi.review(importResult.import_id);
-      setReviewData(review);
-    } catch {
-      setError('Failed to load review data');
-    }
+    if (!importResult) return;
+    setReviewData(importResult);
+    setError('Bulk review endpoint requires entry_ids + status and is not driven by import_id alone.');
   };
 
   return (

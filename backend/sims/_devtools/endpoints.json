@@ -1,0 +1,3758 @@
+[
+  {
+    "path": "admin/auth/group/",
+    "method": "ANY",
+    "view": "changelist_view",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "admin/auth/group/add/",
+    "method": "ANY",
+    "view": "add_view",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "admin/auth/group/<path:object_id>/history/",
+    "method": "ANY",
+    "view": "history_view",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "admin/auth/group/<path:object_id>/delete/",
+    "method": "ANY",
+    "view": "delete_view",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "admin/auth/group/<path:object_id>/change/",
+    "method": "ANY",
+    "view": "change_view",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "admin/auth/group/<path:object_id>/",
+    "method": "GET",
+    "view": "RedirectView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "admin/auth/group/<path:object_id>/",
+    "method": "POST",
+    "view": "RedirectView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "admin/auth/group/<path:object_id>/",
+    "method": "PUT",
+    "view": "RedirectView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "admin/auth/group/<path:object_id>/",
+    "method": "PATCH",
+    "view": "RedirectView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "admin/auth/group/<path:object_id>/",
+    "method": "DELETE",
+    "view": "RedirectView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "admin/auth/group/<path:object_id>/",
+    "method": "TRACE",
+    "view": "RedirectView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "users/api/users/search/",
+    "method": "GET",
+    "view": "UserSearchAPIView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "users/api/users/search/",
+    "method": "POST",
+    "view": "UserSearchAPIView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "users/api/users/search/",
+    "method": "PUT",
+    "view": "UserSearchAPIView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "users/api/users/search/",
+    "method": "PATCH",
+    "view": "UserSearchAPIView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "users/api/users/search/",
+    "method": "DELETE",
+    "view": "UserSearchAPIView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "users/api/users/search/",
+    "method": "TRACE",
+    "view": "UserSearchAPIView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "users/api/supervisors/specialty/<str:specialty>/",
+    "method": "GET",
+    "view": "SupervisorsBySpecialtyAPIView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "users/api/supervisors/specialty/<str:specialty>/",
+    "method": "POST",
+    "view": "SupervisorsBySpecialtyAPIView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "users/api/supervisors/specialty/<str:specialty>/",
+    "method": "PUT",
+    "view": "SupervisorsBySpecialtyAPIView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "users/api/supervisors/specialty/<str:specialty>/",
+    "method": "PATCH",
+    "view": "SupervisorsBySpecialtyAPIView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "users/api/supervisors/specialty/<str:specialty>/",
+    "method": "DELETE",
+    "view": "SupervisorsBySpecialtyAPIView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "users/api/supervisors/specialty/<str:specialty>/",
+    "method": "TRACE",
+    "view": "SupervisorsBySpecialtyAPIView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "users/api/user/<int:pk>/stats/",
+    "method": "GET",
+    "view": "UserStatsAPIView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "users/api/user/<int:pk>/stats/",
+    "method": "POST",
+    "view": "UserStatsAPIView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "users/api/user/<int:pk>/stats/",
+    "method": "PUT",
+    "view": "UserStatsAPIView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "users/api/user/<int:pk>/stats/",
+    "method": "PATCH",
+    "view": "UserStatsAPIView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "users/api/user/<int:pk>/stats/",
+    "method": "DELETE",
+    "view": "UserStatsAPIView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "users/api/user/<int:pk>/stats/",
+    "method": "TRACE",
+    "view": "UserStatsAPIView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "users/api/stats/",
+    "method": "GET",
+    "view": "UserListStatsAPIView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "users/api/stats/",
+    "method": "POST",
+    "view": "UserListStatsAPIView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "users/api/stats/",
+    "method": "PUT",
+    "view": "UserListStatsAPIView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "users/api/stats/",
+    "method": "PATCH",
+    "view": "UserListStatsAPIView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "users/api/stats/",
+    "method": "DELETE",
+    "view": "UserListStatsAPIView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "users/api/stats/",
+    "method": "TRACE",
+    "view": "UserListStatsAPIView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "users/api/admin/stats/",
+    "method": "ANY",
+    "view": "admin_stats_api",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "users/api/user-statistics/",
+    "method": "GET",
+    "view": "UserStatisticsAPIView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "users/api/user-statistics/",
+    "method": "POST",
+    "view": "UserStatisticsAPIView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "users/api/user-statistics/",
+    "method": "PUT",
+    "view": "UserStatisticsAPIView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "users/api/user-statistics/",
+    "method": "PATCH",
+    "view": "UserStatisticsAPIView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "users/api/user-statistics/",
+    "method": "DELETE",
+    "view": "UserStatisticsAPIView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "users/api/user-statistics/",
+    "method": "TRACE",
+    "view": "UserStatisticsAPIView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "users/api/user-performance/",
+    "method": "GET",
+    "view": "UserPerformanceAPIView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "users/api/user-performance/",
+    "method": "POST",
+    "view": "UserPerformanceAPIView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "users/api/user-performance/",
+    "method": "PUT",
+    "view": "UserPerformanceAPIView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "users/api/user-performance/",
+    "method": "PATCH",
+    "view": "UserPerformanceAPIView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "users/api/user-performance/",
+    "method": "DELETE",
+    "view": "UserPerformanceAPIView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "users/api/user-performance/",
+    "method": "TRACE",
+    "view": "UserPerformanceAPIView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "rotations/api/calendar/",
+    "method": "ANY",
+    "view": "rotation_calendar_api",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "rotations/api/stats/",
+    "method": "ANY",
+    "view": "rotation_stats_api",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "rotations/api/quick-stats/",
+    "method": "ANY",
+    "view": "rotation_quick_stats",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "rotations/api/departments/<int:hospital_id>/",
+    "method": "ANY",
+    "view": "department_by_hospital_api",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "certificates/api/stats/",
+    "method": "ANY",
+    "view": "certificate_stats_api",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "certificates/api/quick-stats/",
+    "method": "ANY",
+    "view": "certificate_quick_stats",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "certificates/api/<int:pk>/verify/",
+    "method": "ANY",
+    "view": "certificate_verification_api",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "certificates/api/update-statistics/",
+    "method": "ANY",
+    "view": "update_certificate_statistics",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "logbook/api/stats/",
+    "method": "ANY",
+    "view": "logbook_stats_api",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "logbook/api/template/<int:template_id>/preview/",
+    "method": "ANY",
+    "view": "template_preview_api",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "logbook/api/entry/<int:entry_id>/complexity/",
+    "method": "ANY",
+    "view": "entry_complexity_api",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "logbook/api/update-statistics/",
+    "method": "ANY",
+    "view": "update_logbook_statistics",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "cases/api/diagnoses/",
+    "method": "ANY",
+    "view": "get_diagnoses_json",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "cases/api/procedures/",
+    "method": "ANY",
+    "view": "get_procedures_json",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/audit/^activity/$",
+    "method": "ANY",
+    "view": "ActivityLogViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/audit/^activity\\.(?P<format>[a-z0-9]+)/?$",
+    "method": "ANY",
+    "view": "ActivityLogViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/audit/^activity/export/$",
+    "method": "ANY",
+    "view": "ActivityLogViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/audit/^activity/export\\.(?P<format>[a-z0-9]+)/?$",
+    "method": "ANY",
+    "view": "ActivityLogViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/audit/^activity/(?P<pk>[^/.]+)/$",
+    "method": "ANY",
+    "view": "ActivityLogViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/audit/^activity/(?P<pk>[^/.]+)\\.(?P<format>[a-z0-9]+)/?$",
+    "method": "ANY",
+    "view": "ActivityLogViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/audit/^reports/$",
+    "method": "ANY",
+    "view": "AuditReportViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/audit/^reports\\.(?P<format>[a-z0-9]+)/?$",
+    "method": "ANY",
+    "view": "AuditReportViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/audit/^reports/latest/$",
+    "method": "ANY",
+    "view": "AuditReportViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/audit/^reports/latest\\.(?P<format>[a-z0-9]+)/?$",
+    "method": "ANY",
+    "view": "AuditReportViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/audit/",
+    "method": "GET",
+    "view": "APIRootView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/audit/",
+    "method": "POST",
+    "view": "APIRootView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/audit/",
+    "method": "PUT",
+    "view": "APIRootView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/audit/",
+    "method": "PATCH",
+    "view": "APIRootView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/audit/",
+    "method": "DELETE",
+    "view": "APIRootView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/audit/",
+    "method": "TRACE",
+    "view": "APIRootView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/audit/<drf_format_suffix:format>",
+    "method": "GET",
+    "view": "APIRootView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/audit/<drf_format_suffix:format>",
+    "method": "POST",
+    "view": "APIRootView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/audit/<drf_format_suffix:format>",
+    "method": "PUT",
+    "view": "APIRootView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/audit/<drf_format_suffix:format>",
+    "method": "PATCH",
+    "view": "APIRootView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/audit/<drf_format_suffix:format>",
+    "method": "DELETE",
+    "view": "APIRootView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/audit/<drf_format_suffix:format>",
+    "method": "TRACE",
+    "view": "APIRootView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/search/",
+    "method": "GET",
+    "view": "GlobalSearchView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/search/",
+    "method": "POST",
+    "view": "GlobalSearchView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/search/",
+    "method": "PUT",
+    "view": "GlobalSearchView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/search/",
+    "method": "PATCH",
+    "view": "GlobalSearchView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/search/",
+    "method": "DELETE",
+    "view": "GlobalSearchView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/search/",
+    "method": "TRACE",
+    "view": "GlobalSearchView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/search/history/",
+    "method": "GET",
+    "view": "SearchHistoryView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/search/history/",
+    "method": "POST",
+    "view": "SearchHistoryView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/search/history/",
+    "method": "PUT",
+    "view": "SearchHistoryView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/search/history/",
+    "method": "PATCH",
+    "view": "SearchHistoryView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/search/history/",
+    "method": "DELETE",
+    "view": "SearchHistoryView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/search/history/",
+    "method": "TRACE",
+    "view": "SearchHistoryView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/search/suggestions/",
+    "method": "GET",
+    "view": "SearchSuggestionsView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/search/suggestions/",
+    "method": "POST",
+    "view": "SearchSuggestionsView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/search/suggestions/",
+    "method": "PUT",
+    "view": "SearchSuggestionsView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/search/suggestions/",
+    "method": "PATCH",
+    "view": "SearchSuggestionsView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/search/suggestions/",
+    "method": "DELETE",
+    "view": "SearchSuggestionsView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/search/suggestions/",
+    "method": "TRACE",
+    "view": "SearchSuggestionsView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/analytics/trends/",
+    "method": "GET",
+    "view": "TrendAnalyticsView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/analytics/trends/",
+    "method": "POST",
+    "view": "TrendAnalyticsView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/analytics/trends/",
+    "method": "PUT",
+    "view": "TrendAnalyticsView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/analytics/trends/",
+    "method": "PATCH",
+    "view": "TrendAnalyticsView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/analytics/trends/",
+    "method": "DELETE",
+    "view": "TrendAnalyticsView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/analytics/trends/",
+    "method": "TRACE",
+    "view": "TrendAnalyticsView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/analytics/comparative/",
+    "method": "GET",
+    "view": "ComparativeAnalyticsView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/analytics/comparative/",
+    "method": "POST",
+    "view": "ComparativeAnalyticsView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/analytics/comparative/",
+    "method": "PUT",
+    "view": "ComparativeAnalyticsView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/analytics/comparative/",
+    "method": "PATCH",
+    "view": "ComparativeAnalyticsView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/analytics/comparative/",
+    "method": "DELETE",
+    "view": "ComparativeAnalyticsView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/analytics/comparative/",
+    "method": "TRACE",
+    "view": "ComparativeAnalyticsView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/analytics/performance/",
+    "method": "GET",
+    "view": "PerformanceMetricsView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/analytics/performance/",
+    "method": "POST",
+    "view": "PerformanceMetricsView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/analytics/performance/",
+    "method": "PUT",
+    "view": "PerformanceMetricsView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/analytics/performance/",
+    "method": "PATCH",
+    "view": "PerformanceMetricsView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/analytics/performance/",
+    "method": "DELETE",
+    "view": "PerformanceMetricsView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/analytics/performance/",
+    "method": "TRACE",
+    "view": "PerformanceMetricsView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/analytics/dashboard/overview/",
+    "method": "GET",
+    "view": "DashboardOverviewView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/analytics/dashboard/overview/",
+    "method": "POST",
+    "view": "DashboardOverviewView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/analytics/dashboard/overview/",
+    "method": "PUT",
+    "view": "DashboardOverviewView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/analytics/dashboard/overview/",
+    "method": "PATCH",
+    "view": "DashboardOverviewView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/analytics/dashboard/overview/",
+    "method": "DELETE",
+    "view": "DashboardOverviewView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/analytics/dashboard/overview/",
+    "method": "TRACE",
+    "view": "DashboardOverviewView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/analytics/dashboard/trends/",
+    "method": "GET",
+    "view": "DashboardTrendsView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/analytics/dashboard/trends/",
+    "method": "POST",
+    "view": "DashboardTrendsView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/analytics/dashboard/trends/",
+    "method": "PUT",
+    "view": "DashboardTrendsView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/analytics/dashboard/trends/",
+    "method": "PATCH",
+    "view": "DashboardTrendsView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/analytics/dashboard/trends/",
+    "method": "DELETE",
+    "view": "DashboardTrendsView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/analytics/dashboard/trends/",
+    "method": "TRACE",
+    "view": "DashboardTrendsView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/analytics/dashboard/compliance/",
+    "method": "GET",
+    "view": "DashboardComplianceView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/analytics/dashboard/compliance/",
+    "method": "POST",
+    "view": "DashboardComplianceView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/analytics/dashboard/compliance/",
+    "method": "PUT",
+    "view": "DashboardComplianceView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/analytics/dashboard/compliance/",
+    "method": "PATCH",
+    "view": "DashboardComplianceView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/analytics/dashboard/compliance/",
+    "method": "DELETE",
+    "view": "DashboardComplianceView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/analytics/dashboard/compliance/",
+    "method": "TRACE",
+    "view": "DashboardComplianceView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/bulk/review/",
+    "method": "GET",
+    "view": "BulkReviewView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/bulk/review/",
+    "method": "POST",
+    "view": "BulkReviewView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/bulk/review/",
+    "method": "PUT",
+    "view": "BulkReviewView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/bulk/review/",
+    "method": "PATCH",
+    "view": "BulkReviewView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/bulk/review/",
+    "method": "DELETE",
+    "view": "BulkReviewView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/bulk/review/",
+    "method": "TRACE",
+    "view": "BulkReviewView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/bulk/assignment/",
+    "method": "GET",
+    "view": "BulkAssignmentView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/bulk/assignment/",
+    "method": "POST",
+    "view": "BulkAssignmentView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/bulk/assignment/",
+    "method": "PUT",
+    "view": "BulkAssignmentView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/bulk/assignment/",
+    "method": "PATCH",
+    "view": "BulkAssignmentView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/bulk/assignment/",
+    "method": "DELETE",
+    "view": "BulkAssignmentView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/bulk/assignment/",
+    "method": "TRACE",
+    "view": "BulkAssignmentView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/bulk/import/",
+    "method": "GET",
+    "view": "BulkImportView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/bulk/import/",
+    "method": "POST",
+    "view": "BulkImportView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/bulk/import/",
+    "method": "PUT",
+    "view": "BulkImportView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/bulk/import/",
+    "method": "PATCH",
+    "view": "BulkImportView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/bulk/import/",
+    "method": "DELETE",
+    "view": "BulkImportView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/bulk/import/",
+    "method": "TRACE",
+    "view": "BulkImportView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/bulk/import-trainees/",
+    "method": "GET",
+    "view": "BulkTraineeImportView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/bulk/import-trainees/",
+    "method": "POST",
+    "view": "BulkTraineeImportView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/bulk/import-trainees/",
+    "method": "PUT",
+    "view": "BulkTraineeImportView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/bulk/import-trainees/",
+    "method": "PATCH",
+    "view": "BulkTraineeImportView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/bulk/import-trainees/",
+    "method": "DELETE",
+    "view": "BulkTraineeImportView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/bulk/import-trainees/",
+    "method": "TRACE",
+    "view": "BulkTraineeImportView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/bulk/import-supervisors/",
+    "method": "GET",
+    "view": "BulkSupervisorImportView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/bulk/import-supervisors/",
+    "method": "POST",
+    "view": "BulkSupervisorImportView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/bulk/import-supervisors/",
+    "method": "PUT",
+    "view": "BulkSupervisorImportView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/bulk/import-supervisors/",
+    "method": "PATCH",
+    "view": "BulkSupervisorImportView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/bulk/import-supervisors/",
+    "method": "DELETE",
+    "view": "BulkSupervisorImportView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/bulk/import-supervisors/",
+    "method": "TRACE",
+    "view": "BulkSupervisorImportView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/bulk/import-residents/",
+    "method": "GET",
+    "view": "BulkResidentImportView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/bulk/import-residents/",
+    "method": "POST",
+    "view": "BulkResidentImportView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/bulk/import-residents/",
+    "method": "PUT",
+    "view": "BulkResidentImportView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/bulk/import-residents/",
+    "method": "PATCH",
+    "view": "BulkResidentImportView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/bulk/import-residents/",
+    "method": "DELETE",
+    "view": "BulkResidentImportView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/bulk/import-residents/",
+    "method": "TRACE",
+    "view": "BulkResidentImportView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/notifications/",
+    "method": "GET",
+    "view": "NotificationListView",
+    "action": "custom/standard",
+    "serializer": "NotificationSerializer",
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/notifications/",
+    "method": "POST",
+    "view": "NotificationListView",
+    "action": "custom/standard",
+    "serializer": "NotificationSerializer",
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/notifications/",
+    "method": "PUT",
+    "view": "NotificationListView",
+    "action": "custom/standard",
+    "serializer": "NotificationSerializer",
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/notifications/",
+    "method": "PATCH",
+    "view": "NotificationListView",
+    "action": "custom/standard",
+    "serializer": "NotificationSerializer",
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/notifications/",
+    "method": "DELETE",
+    "view": "NotificationListView",
+    "action": "custom/standard",
+    "serializer": "NotificationSerializer",
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/notifications/",
+    "method": "TRACE",
+    "view": "NotificationListView",
+    "action": "custom/standard",
+    "serializer": "NotificationSerializer",
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/notifications/mark-read/",
+    "method": "GET",
+    "view": "NotificationMarkReadView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/notifications/mark-read/",
+    "method": "POST",
+    "view": "NotificationMarkReadView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/notifications/mark-read/",
+    "method": "PUT",
+    "view": "NotificationMarkReadView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/notifications/mark-read/",
+    "method": "PATCH",
+    "view": "NotificationMarkReadView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/notifications/mark-read/",
+    "method": "DELETE",
+    "view": "NotificationMarkReadView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/notifications/mark-read/",
+    "method": "TRACE",
+    "view": "NotificationMarkReadView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/notifications/preferences/",
+    "method": "GET",
+    "view": "NotificationPreferenceView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/notifications/preferences/",
+    "method": "POST",
+    "view": "NotificationPreferenceView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/notifications/preferences/",
+    "method": "PUT",
+    "view": "NotificationPreferenceView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/notifications/preferences/",
+    "method": "PATCH",
+    "view": "NotificationPreferenceView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/notifications/preferences/",
+    "method": "DELETE",
+    "view": "NotificationPreferenceView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/notifications/preferences/",
+    "method": "TRACE",
+    "view": "NotificationPreferenceView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/notifications/unread-count/",
+    "method": "GET",
+    "view": "NotificationUnreadCountView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/notifications/unread-count/",
+    "method": "POST",
+    "view": "NotificationUnreadCountView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/notifications/unread-count/",
+    "method": "PUT",
+    "view": "NotificationUnreadCountView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/notifications/unread-count/",
+    "method": "PATCH",
+    "view": "NotificationUnreadCountView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/notifications/unread-count/",
+    "method": "DELETE",
+    "view": "NotificationUnreadCountView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/notifications/unread-count/",
+    "method": "TRACE",
+    "view": "NotificationUnreadCountView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/reports/templates/",
+    "method": "GET",
+    "view": "ReportTemplateListView",
+    "action": "custom/standard",
+    "serializer": "ReportTemplateSerializer",
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/reports/templates/",
+    "method": "POST",
+    "view": "ReportTemplateListView",
+    "action": "custom/standard",
+    "serializer": "ReportTemplateSerializer",
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/reports/templates/",
+    "method": "PUT",
+    "view": "ReportTemplateListView",
+    "action": "custom/standard",
+    "serializer": "ReportTemplateSerializer",
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/reports/templates/",
+    "method": "PATCH",
+    "view": "ReportTemplateListView",
+    "action": "custom/standard",
+    "serializer": "ReportTemplateSerializer",
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/reports/templates/",
+    "method": "DELETE",
+    "view": "ReportTemplateListView",
+    "action": "custom/standard",
+    "serializer": "ReportTemplateSerializer",
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/reports/templates/",
+    "method": "TRACE",
+    "view": "ReportTemplateListView",
+    "action": "custom/standard",
+    "serializer": "ReportTemplateSerializer",
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/reports/generate/",
+    "method": "GET",
+    "view": "ReportGenerateView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/reports/generate/",
+    "method": "POST",
+    "view": "ReportGenerateView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/reports/generate/",
+    "method": "PUT",
+    "view": "ReportGenerateView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/reports/generate/",
+    "method": "PATCH",
+    "view": "ReportGenerateView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/reports/generate/",
+    "method": "DELETE",
+    "view": "ReportGenerateView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/reports/generate/",
+    "method": "TRACE",
+    "view": "ReportGenerateView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/reports/scheduled/",
+    "method": "GET",
+    "view": "ScheduledReportListCreateView",
+    "action": "custom/standard",
+    "serializer": "ScheduledReportSerializer",
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/reports/scheduled/",
+    "method": "POST",
+    "view": "ScheduledReportListCreateView",
+    "action": "custom/standard",
+    "serializer": "ScheduledReportSerializer",
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/reports/scheduled/",
+    "method": "PUT",
+    "view": "ScheduledReportListCreateView",
+    "action": "custom/standard",
+    "serializer": "ScheduledReportSerializer",
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/reports/scheduled/",
+    "method": "PATCH",
+    "view": "ScheduledReportListCreateView",
+    "action": "custom/standard",
+    "serializer": "ScheduledReportSerializer",
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/reports/scheduled/",
+    "method": "DELETE",
+    "view": "ScheduledReportListCreateView",
+    "action": "custom/standard",
+    "serializer": "ScheduledReportSerializer",
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/reports/scheduled/",
+    "method": "TRACE",
+    "view": "ScheduledReportListCreateView",
+    "action": "custom/standard",
+    "serializer": "ScheduledReportSerializer",
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/reports/scheduled/<int:pk>/",
+    "method": "GET",
+    "view": "ScheduledReportDetailView",
+    "action": "custom/standard",
+    "serializer": "ScheduledReportSerializer",
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/reports/scheduled/<int:pk>/",
+    "method": "POST",
+    "view": "ScheduledReportDetailView",
+    "action": "custom/standard",
+    "serializer": "ScheduledReportSerializer",
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/reports/scheduled/<int:pk>/",
+    "method": "PUT",
+    "view": "ScheduledReportDetailView",
+    "action": "custom/standard",
+    "serializer": "ScheduledReportSerializer",
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/reports/scheduled/<int:pk>/",
+    "method": "PATCH",
+    "view": "ScheduledReportDetailView",
+    "action": "custom/standard",
+    "serializer": "ScheduledReportSerializer",
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/reports/scheduled/<int:pk>/",
+    "method": "DELETE",
+    "view": "ScheduledReportDetailView",
+    "action": "custom/standard",
+    "serializer": "ScheduledReportSerializer",
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/reports/scheduled/<int:pk>/",
+    "method": "TRACE",
+    "view": "ScheduledReportDetailView",
+    "action": "custom/standard",
+    "serializer": "ScheduledReportSerializer",
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/logbook/pending/",
+    "method": "GET",
+    "view": "PendingLogbookEntriesView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "CanViewPendingLogbookQueue"
+    ]
+  },
+  {
+    "path": "api/logbook/pending/",
+    "method": "POST",
+    "view": "PendingLogbookEntriesView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "CanViewPendingLogbookQueue"
+    ]
+  },
+  {
+    "path": "api/logbook/pending/",
+    "method": "PUT",
+    "view": "PendingLogbookEntriesView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "CanViewPendingLogbookQueue"
+    ]
+  },
+  {
+    "path": "api/logbook/pending/",
+    "method": "PATCH",
+    "view": "PendingLogbookEntriesView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "CanViewPendingLogbookQueue"
+    ]
+  },
+  {
+    "path": "api/logbook/pending/",
+    "method": "DELETE",
+    "view": "PendingLogbookEntriesView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "CanViewPendingLogbookQueue"
+    ]
+  },
+  {
+    "path": "api/logbook/pending/",
+    "method": "TRACE",
+    "view": "PendingLogbookEntriesView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "CanViewPendingLogbookQueue"
+    ]
+  },
+  {
+    "path": "api/logbook/<int:pk>/verify/",
+    "method": "GET",
+    "view": "VerifyLogbookEntryView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "CanVerifyLogbookEntry"
+    ]
+  },
+  {
+    "path": "api/logbook/<int:pk>/verify/",
+    "method": "POST",
+    "view": "VerifyLogbookEntryView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "CanVerifyLogbookEntry"
+    ]
+  },
+  {
+    "path": "api/logbook/<int:pk>/verify/",
+    "method": "PUT",
+    "view": "VerifyLogbookEntryView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "CanVerifyLogbookEntry"
+    ]
+  },
+  {
+    "path": "api/logbook/<int:pk>/verify/",
+    "method": "PATCH",
+    "view": "VerifyLogbookEntryView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "CanVerifyLogbookEntry"
+    ]
+  },
+  {
+    "path": "api/logbook/<int:pk>/verify/",
+    "method": "DELETE",
+    "view": "VerifyLogbookEntryView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "CanVerifyLogbookEntry"
+    ]
+  },
+  {
+    "path": "api/logbook/<int:pk>/verify/",
+    "method": "TRACE",
+    "view": "VerifyLogbookEntryView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "CanVerifyLogbookEntry"
+    ]
+  },
+  {
+    "path": "api/logbook/my/",
+    "method": "GET",
+    "view": "PGLogbookEntryListCreateView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated",
+      "IsPGUser"
+    ]
+  },
+  {
+    "path": "api/logbook/my/",
+    "method": "POST",
+    "view": "PGLogbookEntryListCreateView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated",
+      "IsPGUser"
+    ]
+  },
+  {
+    "path": "api/logbook/my/",
+    "method": "PUT",
+    "view": "PGLogbookEntryListCreateView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated",
+      "IsPGUser"
+    ]
+  },
+  {
+    "path": "api/logbook/my/",
+    "method": "PATCH",
+    "view": "PGLogbookEntryListCreateView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated",
+      "IsPGUser"
+    ]
+  },
+  {
+    "path": "api/logbook/my/",
+    "method": "DELETE",
+    "view": "PGLogbookEntryListCreateView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated",
+      "IsPGUser"
+    ]
+  },
+  {
+    "path": "api/logbook/my/",
+    "method": "TRACE",
+    "view": "PGLogbookEntryListCreateView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated",
+      "IsPGUser"
+    ]
+  },
+  {
+    "path": "api/logbook/my/<int:pk>/",
+    "method": "GET",
+    "view": "PGLogbookEntryDetailView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated",
+      "IsPGUser"
+    ]
+  },
+  {
+    "path": "api/logbook/my/<int:pk>/",
+    "method": "POST",
+    "view": "PGLogbookEntryDetailView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated",
+      "IsPGUser"
+    ]
+  },
+  {
+    "path": "api/logbook/my/<int:pk>/",
+    "method": "PUT",
+    "view": "PGLogbookEntryDetailView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated",
+      "IsPGUser"
+    ]
+  },
+  {
+    "path": "api/logbook/my/<int:pk>/",
+    "method": "PATCH",
+    "view": "PGLogbookEntryDetailView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated",
+      "IsPGUser"
+    ]
+  },
+  {
+    "path": "api/logbook/my/<int:pk>/",
+    "method": "DELETE",
+    "view": "PGLogbookEntryDetailView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated",
+      "IsPGUser"
+    ]
+  },
+  {
+    "path": "api/logbook/my/<int:pk>/",
+    "method": "TRACE",
+    "view": "PGLogbookEntryDetailView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated",
+      "IsPGUser"
+    ]
+  },
+  {
+    "path": "api/logbook/my/<int:pk>/submit/",
+    "method": "GET",
+    "view": "PGLogbookEntrySubmitView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated",
+      "IsPGUser"
+    ]
+  },
+  {
+    "path": "api/logbook/my/<int:pk>/submit/",
+    "method": "POST",
+    "view": "PGLogbookEntrySubmitView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated",
+      "IsPGUser"
+    ]
+  },
+  {
+    "path": "api/logbook/my/<int:pk>/submit/",
+    "method": "PUT",
+    "view": "PGLogbookEntrySubmitView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated",
+      "IsPGUser"
+    ]
+  },
+  {
+    "path": "api/logbook/my/<int:pk>/submit/",
+    "method": "PATCH",
+    "view": "PGLogbookEntrySubmitView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated",
+      "IsPGUser"
+    ]
+  },
+  {
+    "path": "api/logbook/my/<int:pk>/submit/",
+    "method": "DELETE",
+    "view": "PGLogbookEntrySubmitView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated",
+      "IsPGUser"
+    ]
+  },
+  {
+    "path": "api/logbook/my/<int:pk>/submit/",
+    "method": "TRACE",
+    "view": "PGLogbookEntrySubmitView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated",
+      "IsPGUser"
+    ]
+  },
+  {
+    "path": "api/rotations/^hospitals/$",
+    "method": "ANY",
+    "view": "HospitalViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/rotations/^hospitals\\.(?P<format>[a-z0-9]+)/?$",
+    "method": "ANY",
+    "view": "HospitalViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/rotations/^hospitals/(?P<pk>[^/.]+)/$",
+    "method": "ANY",
+    "view": "HospitalViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/rotations/^hospitals/(?P<pk>[^/.]+)\\.(?P<format>[a-z0-9]+)/?$",
+    "method": "ANY",
+    "view": "HospitalViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/rotations/^hospital-departments/$",
+    "method": "ANY",
+    "view": "HospitalDepartmentViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/rotations/^hospital-departments\\.(?P<format>[a-z0-9]+)/?$",
+    "method": "ANY",
+    "view": "HospitalDepartmentViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/rotations/^hospital-departments/(?P<pk>[^/.]+)/$",
+    "method": "ANY",
+    "view": "HospitalDepartmentViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/rotations/^hospital-departments/(?P<pk>[^/.]+)\\.(?P<format>[a-z0-9]+)/?$",
+    "method": "ANY",
+    "view": "HospitalDepartmentViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/rotations/",
+    "method": "GET",
+    "view": "APIRootView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/rotations/",
+    "method": "POST",
+    "view": "APIRootView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/rotations/",
+    "method": "PUT",
+    "view": "APIRootView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/rotations/",
+    "method": "PATCH",
+    "view": "APIRootView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/rotations/",
+    "method": "DELETE",
+    "view": "APIRootView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/rotations/",
+    "method": "TRACE",
+    "view": "APIRootView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/rotations/<drf_format_suffix:format>",
+    "method": "GET",
+    "view": "APIRootView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/rotations/<drf_format_suffix:format>",
+    "method": "POST",
+    "view": "APIRootView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/rotations/<drf_format_suffix:format>",
+    "method": "PUT",
+    "view": "APIRootView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/rotations/<drf_format_suffix:format>",
+    "method": "PATCH",
+    "view": "APIRootView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/rotations/<drf_format_suffix:format>",
+    "method": "DELETE",
+    "view": "APIRootView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/rotations/<drf_format_suffix:format>",
+    "method": "TRACE",
+    "view": "APIRootView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/rotations/my/",
+    "method": "GET",
+    "view": "PGMyRotationsListView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated",
+      "IsPGUser"
+    ]
+  },
+  {
+    "path": "api/rotations/my/",
+    "method": "POST",
+    "view": "PGMyRotationsListView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated",
+      "IsPGUser"
+    ]
+  },
+  {
+    "path": "api/rotations/my/",
+    "method": "PUT",
+    "view": "PGMyRotationsListView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated",
+      "IsPGUser"
+    ]
+  },
+  {
+    "path": "api/rotations/my/",
+    "method": "PATCH",
+    "view": "PGMyRotationsListView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated",
+      "IsPGUser"
+    ]
+  },
+  {
+    "path": "api/rotations/my/",
+    "method": "DELETE",
+    "view": "PGMyRotationsListView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated",
+      "IsPGUser"
+    ]
+  },
+  {
+    "path": "api/rotations/my/",
+    "method": "TRACE",
+    "view": "PGMyRotationsListView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated",
+      "IsPGUser"
+    ]
+  },
+  {
+    "path": "api/rotations/my/<int:pk>/",
+    "method": "GET",
+    "view": "PGMyRotationDetailView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated",
+      "IsPGUser"
+    ]
+  },
+  {
+    "path": "api/rotations/my/<int:pk>/",
+    "method": "POST",
+    "view": "PGMyRotationDetailView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated",
+      "IsPGUser"
+    ]
+  },
+  {
+    "path": "api/rotations/my/<int:pk>/",
+    "method": "PUT",
+    "view": "PGMyRotationDetailView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated",
+      "IsPGUser"
+    ]
+  },
+  {
+    "path": "api/rotations/my/<int:pk>/",
+    "method": "PATCH",
+    "view": "PGMyRotationDetailView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated",
+      "IsPGUser"
+    ]
+  },
+  {
+    "path": "api/rotations/my/<int:pk>/",
+    "method": "DELETE",
+    "view": "PGMyRotationDetailView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated",
+      "IsPGUser"
+    ]
+  },
+  {
+    "path": "api/rotations/my/<int:pk>/",
+    "method": "TRACE",
+    "view": "PGMyRotationDetailView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated",
+      "IsPGUser"
+    ]
+  },
+  {
+    "path": "api/rotations/<int:pk>/utrmc-approve/",
+    "method": "GET",
+    "view": "UTRMCRotationOverrideApproveView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated",
+      "IsUTRMCAdminUser",
+      "CanApproveRotationOverride"
+    ]
+  },
+  {
+    "path": "api/rotations/<int:pk>/utrmc-approve/",
+    "method": "POST",
+    "view": "UTRMCRotationOverrideApproveView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated",
+      "IsUTRMCAdminUser",
+      "CanApproveRotationOverride"
+    ]
+  },
+  {
+    "path": "api/rotations/<int:pk>/utrmc-approve/",
+    "method": "PUT",
+    "view": "UTRMCRotationOverrideApproveView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated",
+      "IsUTRMCAdminUser",
+      "CanApproveRotationOverride"
+    ]
+  },
+  {
+    "path": "api/rotations/<int:pk>/utrmc-approve/",
+    "method": "PATCH",
+    "view": "UTRMCRotationOverrideApproveView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated",
+      "IsUTRMCAdminUser",
+      "CanApproveRotationOverride"
+    ]
+  },
+  {
+    "path": "api/rotations/<int:pk>/utrmc-approve/",
+    "method": "DELETE",
+    "view": "UTRMCRotationOverrideApproveView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated",
+      "IsUTRMCAdminUser",
+      "CanApproveRotationOverride"
+    ]
+  },
+  {
+    "path": "api/rotations/<int:pk>/utrmc-approve/",
+    "method": "TRACE",
+    "view": "UTRMCRotationOverrideApproveView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated",
+      "IsUTRMCAdminUser",
+      "CanApproveRotationOverride"
+    ]
+  },
+  {
+    "path": "api/certificates/my/",
+    "method": "GET",
+    "view": "PGCertificatesListView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated",
+      "IsPGUser"
+    ]
+  },
+  {
+    "path": "api/certificates/my/",
+    "method": "POST",
+    "view": "PGCertificatesListView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated",
+      "IsPGUser"
+    ]
+  },
+  {
+    "path": "api/certificates/my/",
+    "method": "PUT",
+    "view": "PGCertificatesListView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated",
+      "IsPGUser"
+    ]
+  },
+  {
+    "path": "api/certificates/my/",
+    "method": "PATCH",
+    "view": "PGCertificatesListView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated",
+      "IsPGUser"
+    ]
+  },
+  {
+    "path": "api/certificates/my/",
+    "method": "DELETE",
+    "view": "PGCertificatesListView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated",
+      "IsPGUser"
+    ]
+  },
+  {
+    "path": "api/certificates/my/",
+    "method": "TRACE",
+    "view": "PGCertificatesListView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated",
+      "IsPGUser"
+    ]
+  },
+  {
+    "path": "api/certificates/my/<int:pk>/download/",
+    "method": "GET",
+    "view": "PGCertificateDownloadView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated",
+      "IsPGUser"
+    ]
+  },
+  {
+    "path": "api/certificates/my/<int:pk>/download/",
+    "method": "POST",
+    "view": "PGCertificateDownloadView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated",
+      "IsPGUser"
+    ]
+  },
+  {
+    "path": "api/certificates/my/<int:pk>/download/",
+    "method": "PUT",
+    "view": "PGCertificateDownloadView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated",
+      "IsPGUser"
+    ]
+  },
+  {
+    "path": "api/certificates/my/<int:pk>/download/",
+    "method": "PATCH",
+    "view": "PGCertificateDownloadView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated",
+      "IsPGUser"
+    ]
+  },
+  {
+    "path": "api/certificates/my/<int:pk>/download/",
+    "method": "DELETE",
+    "view": "PGCertificateDownloadView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated",
+      "IsPGUser"
+    ]
+  },
+  {
+    "path": "api/certificates/my/<int:pk>/download/",
+    "method": "TRACE",
+    "view": "PGCertificateDownloadView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated",
+      "IsPGUser"
+    ]
+  },
+  {
+    "path": "api/attendance/upload/",
+    "method": "GET",
+    "view": "BulkAttendanceUploadView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/attendance/upload/",
+    "method": "POST",
+    "view": "BulkAttendanceUploadView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/attendance/upload/",
+    "method": "PUT",
+    "view": "BulkAttendanceUploadView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/attendance/upload/",
+    "method": "PATCH",
+    "view": "BulkAttendanceUploadView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/attendance/upload/",
+    "method": "DELETE",
+    "view": "BulkAttendanceUploadView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/attendance/upload/",
+    "method": "TRACE",
+    "view": "BulkAttendanceUploadView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/attendance/summary/",
+    "method": "GET",
+    "view": "AttendanceSummaryView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/attendance/summary/",
+    "method": "POST",
+    "view": "AttendanceSummaryView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/attendance/summary/",
+    "method": "PUT",
+    "view": "AttendanceSummaryView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/attendance/summary/",
+    "method": "PATCH",
+    "view": "AttendanceSummaryView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/attendance/summary/",
+    "method": "DELETE",
+    "view": "AttendanceSummaryView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/attendance/summary/",
+    "method": "TRACE",
+    "view": "AttendanceSummaryView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/users/assigned-pgs/",
+    "method": "GET",
+    "view": "SupervisorAssignedPGsView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated",
+      "IsSupervisor"
+    ]
+  },
+  {
+    "path": "api/users/assigned-pgs/",
+    "method": "POST",
+    "view": "SupervisorAssignedPGsView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated",
+      "IsSupervisor"
+    ]
+  },
+  {
+    "path": "api/users/assigned-pgs/",
+    "method": "PUT",
+    "view": "SupervisorAssignedPGsView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated",
+      "IsSupervisor"
+    ]
+  },
+  {
+    "path": "api/users/assigned-pgs/",
+    "method": "PATCH",
+    "view": "SupervisorAssignedPGsView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated",
+      "IsSupervisor"
+    ]
+  },
+  {
+    "path": "api/users/assigned-pgs/",
+    "method": "DELETE",
+    "view": "SupervisorAssignedPGsView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated",
+      "IsSupervisor"
+    ]
+  },
+  {
+    "path": "api/users/assigned-pgs/",
+    "method": "TRACE",
+    "view": "SupervisorAssignedPGsView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated",
+      "IsSupervisor"
+    ]
+  },
+  {
+    "path": "academics/api/^departments/$",
+    "method": "ANY",
+    "view": "DepartmentViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "academics/api/^departments\\.(?P<format>[a-z0-9]+)/?$",
+    "method": "ANY",
+    "view": "DepartmentViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "academics/api/^departments/(?P<pk>[^/.]+)/$",
+    "method": "ANY",
+    "view": "DepartmentViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "academics/api/^departments/(?P<pk>[^/.]+)\\.(?P<format>[a-z0-9]+)/?$",
+    "method": "ANY",
+    "view": "DepartmentViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "academics/api/^batches/$",
+    "method": "ANY",
+    "view": "BatchViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "academics/api/^batches\\.(?P<format>[a-z0-9]+)/?$",
+    "method": "ANY",
+    "view": "BatchViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "academics/api/^batches/(?P<pk>[^/.]+)/$",
+    "method": "ANY",
+    "view": "BatchViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "academics/api/^batches/(?P<pk>[^/.]+)\\.(?P<format>[a-z0-9]+)/?$",
+    "method": "ANY",
+    "view": "BatchViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "academics/api/^batches/(?P<pk>[^/.]+)/students/$",
+    "method": "ANY",
+    "view": "BatchViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "academics/api/^batches/(?P<pk>[^/.]+)/students\\.(?P<format>[a-z0-9]+)/?$",
+    "method": "ANY",
+    "view": "BatchViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "academics/api/^students/$",
+    "method": "ANY",
+    "view": "StudentProfileViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "academics/api/^students\\.(?P<format>[a-z0-9]+)/?$",
+    "method": "ANY",
+    "view": "StudentProfileViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "academics/api/^students/(?P<pk>[^/.]+)/$",
+    "method": "ANY",
+    "view": "StudentProfileViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "academics/api/^students/(?P<pk>[^/.]+)\\.(?P<format>[a-z0-9]+)/?$",
+    "method": "ANY",
+    "view": "StudentProfileViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "academics/api/^students/(?P<pk>[^/.]+)/update_status/$",
+    "method": "ANY",
+    "view": "StudentProfileViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "academics/api/^students/(?P<pk>[^/.]+)/update_status\\.(?P<format>[a-z0-9]+)/?$",
+    "method": "ANY",
+    "view": "StudentProfileViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "academics/api/",
+    "method": "GET",
+    "view": "APIRootView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "academics/api/",
+    "method": "POST",
+    "view": "APIRootView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "academics/api/",
+    "method": "PUT",
+    "view": "APIRootView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "academics/api/",
+    "method": "PATCH",
+    "view": "APIRootView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "academics/api/",
+    "method": "DELETE",
+    "view": "APIRootView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "academics/api/",
+    "method": "TRACE",
+    "view": "APIRootView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "academics/api/<drf_format_suffix:format>",
+    "method": "GET",
+    "view": "APIRootView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "academics/api/<drf_format_suffix:format>",
+    "method": "POST",
+    "view": "APIRootView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "academics/api/<drf_format_suffix:format>",
+    "method": "PUT",
+    "view": "APIRootView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "academics/api/<drf_format_suffix:format>",
+    "method": "PATCH",
+    "view": "APIRootView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "academics/api/<drf_format_suffix:format>",
+    "method": "DELETE",
+    "view": "APIRootView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "academics/api/<drf_format_suffix:format>",
+    "method": "TRACE",
+    "view": "APIRootView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "results/api/^exams/$",
+    "method": "ANY",
+    "view": "ExamViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "results/api/^exams\\.(?P<format>[a-z0-9]+)/?$",
+    "method": "ANY",
+    "view": "ExamViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "results/api/^exams/(?P<pk>[^/.]+)/$",
+    "method": "ANY",
+    "view": "ExamViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "results/api/^exams/(?P<pk>[^/.]+)\\.(?P<format>[a-z0-9]+)/?$",
+    "method": "ANY",
+    "view": "ExamViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "results/api/^exams/(?P<pk>[^/.]+)/scores/$",
+    "method": "ANY",
+    "view": "ExamViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "results/api/^exams/(?P<pk>[^/.]+)/scores\\.(?P<format>[a-z0-9]+)/?$",
+    "method": "ANY",
+    "view": "ExamViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "results/api/^exams/(?P<pk>[^/.]+)/statistics/$",
+    "method": "ANY",
+    "view": "ExamViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "results/api/^exams/(?P<pk>[^/.]+)/statistics\\.(?P<format>[a-z0-9]+)/?$",
+    "method": "ANY",
+    "view": "ExamViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "results/api/^scores/$",
+    "method": "ANY",
+    "view": "ScoreViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "results/api/^scores\\.(?P<format>[a-z0-9]+)/?$",
+    "method": "ANY",
+    "view": "ScoreViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "results/api/^scores/my_scores/$",
+    "method": "ANY",
+    "view": "ScoreViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "results/api/^scores/my_scores\\.(?P<format>[a-z0-9]+)/?$",
+    "method": "ANY",
+    "view": "ScoreViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "results/api/^scores/(?P<pk>[^/.]+)/$",
+    "method": "ANY",
+    "view": "ScoreViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "results/api/^scores/(?P<pk>[^/.]+)\\.(?P<format>[a-z0-9]+)/?$",
+    "method": "ANY",
+    "view": "ScoreViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "results/api/",
+    "method": "GET",
+    "view": "APIRootView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "results/api/",
+    "method": "POST",
+    "view": "APIRootView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "results/api/",
+    "method": "PUT",
+    "view": "APIRootView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "results/api/",
+    "method": "PATCH",
+    "view": "APIRootView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "results/api/",
+    "method": "DELETE",
+    "view": "APIRootView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "results/api/",
+    "method": "TRACE",
+    "view": "APIRootView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "results/api/<drf_format_suffix:format>",
+    "method": "GET",
+    "view": "APIRootView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "results/api/<drf_format_suffix:format>",
+    "method": "POST",
+    "view": "APIRootView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "results/api/<drf_format_suffix:format>",
+    "method": "PUT",
+    "view": "APIRootView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "results/api/<drf_format_suffix:format>",
+    "method": "PATCH",
+    "view": "APIRootView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "results/api/<drf_format_suffix:format>",
+    "method": "DELETE",
+    "view": "APIRootView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "results/api/<drf_format_suffix:format>",
+    "method": "TRACE",
+    "view": "APIRootView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/auth/login/",
+    "method": "GET",
+    "view": "CustomTokenObtainPairView",
+    "action": "custom/standard",
+    "serializer": "CustomTokenObtainPairSerializer",
+    "permissions": []
+  },
+  {
+    "path": "api/auth/login/",
+    "method": "POST",
+    "view": "CustomTokenObtainPairView",
+    "action": "custom/standard",
+    "serializer": "CustomTokenObtainPairSerializer",
+    "permissions": []
+  },
+  {
+    "path": "api/auth/login/",
+    "method": "PUT",
+    "view": "CustomTokenObtainPairView",
+    "action": "custom/standard",
+    "serializer": "CustomTokenObtainPairSerializer",
+    "permissions": []
+  },
+  {
+    "path": "api/auth/login/",
+    "method": "PATCH",
+    "view": "CustomTokenObtainPairView",
+    "action": "custom/standard",
+    "serializer": "CustomTokenObtainPairSerializer",
+    "permissions": []
+  },
+  {
+    "path": "api/auth/login/",
+    "method": "DELETE",
+    "view": "CustomTokenObtainPairView",
+    "action": "custom/standard",
+    "serializer": "CustomTokenObtainPairSerializer",
+    "permissions": []
+  },
+  {
+    "path": "api/auth/login/",
+    "method": "TRACE",
+    "view": "CustomTokenObtainPairView",
+    "action": "custom/standard",
+    "serializer": "CustomTokenObtainPairSerializer",
+    "permissions": []
+  },
+  {
+    "path": "api/auth/refresh/",
+    "method": "GET",
+    "view": "TokenRefreshView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/auth/refresh/",
+    "method": "POST",
+    "view": "TokenRefreshView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/auth/refresh/",
+    "method": "PUT",
+    "view": "TokenRefreshView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/auth/refresh/",
+    "method": "PATCH",
+    "view": "TokenRefreshView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/auth/refresh/",
+    "method": "DELETE",
+    "view": "TokenRefreshView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/auth/refresh/",
+    "method": "TRACE",
+    "view": "TokenRefreshView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/auth/logout/",
+    "method": "POST",
+    "view": "logout_view",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/auth/register/",
+    "method": "POST",
+    "view": "register_view",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "AllowAny"
+    ]
+  },
+  {
+    "path": "api/auth/profile/",
+    "method": "GET",
+    "view": "user_profile_view",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/auth/profile/update/",
+    "method": "PATCH",
+    "view": "update_profile_view",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/auth/profile/update/",
+    "method": "PUT",
+    "view": "update_profile_view",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/auth/password-reset/",
+    "method": "POST",
+    "view": "password_reset_request_view",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "AllowAny"
+    ]
+  },
+  {
+    "path": "api/auth/password-reset/confirm/",
+    "method": "POST",
+    "view": "password_reset_confirm_view",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "AllowAny"
+    ]
+  },
+  {
+    "path": "api/auth/change-password/",
+    "method": "POST",
+    "view": "change_password_view",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  }
+]

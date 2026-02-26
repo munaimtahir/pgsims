@@ -327,21 +327,29 @@ class CertificateAdmin(ImportExportModelAdmin):
                     message = f"Your certificate '{certificate.title}' requires revision."
 
                 Notification.objects.create(
-                    user=certificate.pg,
+                    recipient=certificate.pg,
+                    verb="certificate",
                     title=title,
-                    message=message,
-                    type="certificate",
-                    related_object_id=certificate.id,
+                    body=message,
+                    metadata={
+                        "object_type": "certificate",
+                        "object_id": certificate.id,
+                        "action": action,
+                    },
                 )
 
             # Notify supervisor for uploaded certificates
             if action == "uploaded" and certificate.pg and certificate.pg.supervisor:
                 Notification.objects.create(
-                    user=certificate.pg.supervisor,
+                    recipient=certificate.pg.supervisor,
+                    verb="certificate",
                     title="New Certificate for Review",
-                    message=f"{certificate.pg.get_full_name()} has uploaded a new certificate: {certificate.title}",
-                    type="certificate",
-                    related_object_id=certificate.id,
+                    body=f"{certificate.pg.get_full_name()} has uploaded a new certificate: {certificate.title}",
+                    metadata={
+                        "object_type": "certificate",
+                        "object_id": certificate.id,
+                        "action": action,
+                    },
                 )
 
     # Custom Actions

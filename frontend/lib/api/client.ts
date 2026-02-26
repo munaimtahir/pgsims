@@ -4,6 +4,7 @@
  */
 
 import axios from 'axios';
+import { clearAuthCookies, syncAuthCookies } from '@/lib/auth/cookies';
 
 /**
  * Get API URL from environment variable
@@ -68,6 +69,17 @@ apiClient.interceptors.response.use(
 
             const { access } = response.data;
             localStorage.setItem('access_token', access);
+            syncAuthCookies({
+              accessToken: access,
+              role: (() => {
+                try {
+                  const user = JSON.parse(localStorage.getItem('user') || 'null');
+                  return user?.role ?? null;
+                } catch {
+                  return null;
+                }
+              })(),
+            });
 
             originalRequest.headers.Authorization = `Bearer ${access}`;
             return apiClient(originalRequest);
@@ -77,6 +89,7 @@ apiClient.interceptors.response.use(
           localStorage.removeItem('access_token');
           localStorage.removeItem('refresh_token');
           localStorage.removeItem('user');
+          clearAuthCookies();
           window.location.href = '/login';
           return Promise.reject(refreshError);
         }

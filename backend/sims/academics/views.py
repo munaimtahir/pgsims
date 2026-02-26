@@ -3,6 +3,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from .models import Department, Batch, StudentProfile
 from .serializers import DepartmentSerializer, BatchSerializer, StudentProfileSerializer
+from sims.common_permissions import ReadAnyWriteAdminOnly
 
 
 class DepartmentViewSet(viewsets.ModelViewSet):
@@ -10,10 +11,17 @@ class DepartmentViewSet(viewsets.ModelViewSet):
 
     queryset = Department.objects.all()
     serializer_class = DepartmentSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [ReadAnyWriteAdminOnly]
     filterset_fields = ["active", "code"]
     search_fields = ["name", "code", "description"]
     ordering_fields = ["name", "code", "created_at"]
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        user = self.request.user
+        if getattr(user, "is_superuser", False) or getattr(user, "role", None) in {"admin", "utrmc_admin"}:
+            return queryset
+        return queryset.filter(active=True)
 
 
 class BatchViewSet(viewsets.ModelViewSet):

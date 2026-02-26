@@ -10,7 +10,9 @@ import SectionCard from '@/components/ui/SectionCard';
 import SuccessBanner from '@/components/ui/SuccessBanner';
 import { TableSkeleton } from '@/components/ui/LoadingSkeleton';
 import DataTable, { Column } from '@/components/ui/DataTable';
-import { logbookApi, LogbookEntry, PGLogbookEntryPayload } from '@/lib/api';
+import { logbookApi, PGLogbookEntryPayload } from '@/lib/api';
+import { adaptLogbookEntryList, UILogbookEntry } from '@/lib/adapters/logbookAdapter';
+import { getStatusBadgeClass, getStatusLabel } from '@/lib/ui/status';
 
 const emptyForm: PGLogbookEntryPayload = {
   case_title: '',
@@ -21,24 +23,8 @@ const emptyForm: PGLogbookEntryPayload = {
   topic_subtopic: '',
 };
 
-const normalizeEntries = (data: { results?: LogbookEntry[] } | LogbookEntry[]) => {
-  if (Array.isArray(data)) {
-    return data;
-  }
-  return data.results ?? [];
-};
-
-const statusClasses: Record<LogbookEntry['status'], string> = {
-  draft: 'bg-gray-100 text-gray-800',
-  pending: 'bg-yellow-100 text-yellow-800',
-  approved: 'bg-green-100 text-green-800',
-  returned: 'bg-orange-100 text-orange-800',
-  rejected: 'bg-red-100 text-red-800',
-  archived: 'bg-gray-100 text-gray-800',
-};
-
 export default function PGLogbookPage() {
-  const [entries, setEntries] = useState<LogbookEntry[]>([]);
+  const [entries, setEntries] = useState<UILogbookEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -52,7 +38,7 @@ export default function PGLogbookPage() {
       setLoading(true);
       setError(null);
       const data = await logbookApi.getMyEntries();
-      setEntries(normalizeEntries(data));
+      setEntries(adaptLogbookEntryList(data));
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Failed to load logbook entries';
       setError(message);
@@ -75,7 +61,7 @@ export default function PGLogbookPage() {
     }));
   };
 
-  const handleEdit = (entry: LogbookEntry) => {
+  const handleEdit = (entry: UILogbookEntry) => {
     setEditingId(entry.id);
     setFormData({
       case_title: entry.case_title || '',
@@ -134,7 +120,7 @@ export default function PGLogbookPage() {
     }
   };
 
-  const columns: Column<LogbookEntry>[] = [
+  const columns: Column<UILogbookEntry>[] = [
     {
       key: 'date',
       label: 'Date',
@@ -155,10 +141,10 @@ export default function PGLogbookPage() {
       key: 'status',
       label: 'Status',
       render: (item) => {
-        const className = statusClasses[item.status] || 'bg-gray-100 text-gray-800';
+        const className = getStatusBadgeClass(item.status);
         return (
-          <span className={`px-2 py-1 text-xs rounded-full ${className}`}>
-            {item.status}
+          <span data-testid={`logbook-status-${item.id}`} className={`px-2 py-1 text-xs rounded-full ${className}`}>
+            {getStatusLabel(item.status)}
           </span>
         );
       },
@@ -178,23 +164,30 @@ export default function PGLogbookPage() {
       },
     },
     {
+      key: 'feedback',
+      label: 'Feedback',
+      render: (item) => <span data-testid={`logbook-feedback-${item.id}`}>{item.feedback_text || '-'}</span>,
+    },
+    {
       key: 'actions',
       label: 'Actions',
       render: (item) => (
         <div className="flex flex-wrap gap-2">
-          {item.status === 'draft' && (
+          {(item.status === 'draft' || item.status === 'returned') && (
             <button
               type="button"
               onClick={() => handleEdit(item)}
+              data-testid={`logbook-edit-${item.id}`}
               className="text-sm text-indigo-600 hover:text-indigo-900"
             >
               Edit
             </button>
           )}
-          {item.status === 'draft' && (
+          {(item.status === 'draft' || item.status === 'returned') && (
             <button
               type="button"
               onClick={() => handleSubmitEntry(item.id)}
+              data-testid={`logbook-submit-${item.id}`}
               disabled={submittingId === item.id}
               className="text-sm text-green-600 hover:text-green-900 disabled:opacity-50"
             >
@@ -226,6 +219,7 @@ export default function PGLogbookPage() {
                     Case title
                   </label>
                   <input
+                    data-testid="logbook-form-case-title"
                     type="text"
                     id="case_title"
                     name="case_title"
@@ -241,6 +235,7 @@ export default function PGLogbookPage() {
                     Date
                   </label>
                   <input
+                    data-testid="logbook-form-date"
                     type="date"
                     id="date"
                     name="date"
@@ -256,6 +251,7 @@ export default function PGLogbookPage() {
                     Location
                   </label>
                   <input
+                    data-testid="logbook-form-location"
                     type="text"
                     id="location_of_activity"
                     name="location_of_activity"
@@ -273,6 +269,7 @@ export default function PGLogbookPage() {
                   Patient history summary
                 </label>
                 <textarea
+                  data-testid="logbook-form-history"
                   id="patient_history_summary"
                   name="patient_history_summary"
                   value={formData.patient_history_summary}
@@ -289,6 +286,7 @@ export default function PGLogbookPage() {
                   Management action
                 </label>
                 <textarea
+                  data-testid="logbook-form-management"
                   id="management_action"
                   name="management_action"
                   value={formData.management_action}
@@ -305,6 +303,7 @@ export default function PGLogbookPage() {
                   Topic / subtopic
                 </label>
                 <input
+                  data-testid="logbook-form-topic"
                   type="text"
                   id="topic_subtopic"
                   name="topic_subtopic"
@@ -319,6 +318,7 @@ export default function PGLogbookPage() {
               <div className="flex flex-wrap gap-3">
                 <button
                   type="submit"
+                  data-testid="logbook-save-button"
                   disabled={saving}
                   className="inline-flex items-center rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 disabled:opacity-60"
                 >

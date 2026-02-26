@@ -723,11 +723,15 @@ class LogbookEntry(models.Model):
 
             if self.supervisor and Notification:
                 Notification.objects.create(
-                    user=self.supervisor,
+                    recipient=self.supervisor,
+                    verb="logbook_submission",
                     title=f"Logbook Entry Submitted: '{self.case_title}'",
-                    message=f"{self.pg.get_full_name()} has submitted a logbook entry for your review.",
-                    type="logbook_submission",
-                    related_object_id=self.id,
+                    body=f"{self.pg.get_full_name()} has submitted a logbook entry for your review.",
+                    metadata={
+                        "object_type": "logbook_entry",
+                        "object_id": self.id,
+                        "status": self.status,
+                    },
                 )
         except ImportError:
             pass

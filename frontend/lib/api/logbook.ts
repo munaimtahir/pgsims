@@ -26,6 +26,8 @@ export interface LogbookEntry {
   status: 'draft' | 'pending' | 'approved' | 'rejected' | 'returned' | 'archived';
   verified_by?: number;
   verified_at?: string;
+  feedback?: string;
+  supervisor_feedback?: string;
   supervisor_comments?: string;
   updated_at?: string;
   created_at?: string;
@@ -70,8 +72,14 @@ export const logbookApi = {
   /**
    * Verify a logbook entry (for supervisors/admins)
    */
-  verify: async (id: number, feedback?: string) => {
-    const response = await apiClient.patch<LogbookEntry>(`/api/logbook/${id}/verify/`, { feedback });
+  verify: async (
+    id: number,
+    payload?: { action?: 'approved' | 'returned' | 'rejected'; feedback?: string }
+  ) => {
+    const response = await apiClient.patch<LogbookEntry>(
+      `/api/logbook/${id}/verify/`,
+      payload ?? {}
+    );
     return response.data;
   },
 

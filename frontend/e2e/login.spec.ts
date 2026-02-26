@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { seedAuth } from './helpers/auth';
 
 test.describe('Login Flow', () => {
   test('should navigate to login page', async ({ page }) => {
@@ -67,6 +68,36 @@ test.describe('Protected Routes', () => {
     // Should redirect to login
     await page.waitForURL(/\/login/);
     await expect(page.getByRole('heading', { name: /sign in to sims/i })).toBeVisible();
+  });
+
+  test('should treat invalid auth cookies as logged-out and redirect to login', async ({ page, context }) => {
+    await context.addCookies([
+      {
+        name: 'pgsims_access_token',
+        value: 'invalid.token.value',
+        url: 'http://localhost:3000',
+      },
+      {
+        name: 'pgsims_user_role',
+        value: 'pg',
+        url: 'http://localhost:3000',
+      },
+      {
+        name: 'pgsims_access_exp',
+        value: String(Math.floor(Date.now() / 1000) + 3600),
+        url: 'http://localhost:3000',
+      },
+    ]);
+
+    await page.goto('/dashboard/pg');
+    await page.waitForURL(/\/login/);
+    await expect(page.getByRole('heading', { name: /sign in to sims/i })).toBeVisible();
+  });
+
+  test('admin can access a PG dashboard route (middleware/admin fallback)', async ({ page, context }) => {
+    await seedAuth(context, page, 'admin');
+    await page.goto('/dashboard/pg');
+    await expect(page).toHaveURL(/\/dashboard\/pg/);
   });
 });
 

@@ -213,6 +213,7 @@ class CertificateDetailView(LoginRequiredMixin, CertificateAccessMixin, DetailVi
         context["is_expired"] = certificate.is_expired()
         context["is_expiring_soon"] = certificate.is_expiring_soon()
         context["days_until_expiry"] = certificate.get_days_until_expiry()
+        context["days_until_expiry_abs"] = abs(context["days_until_expiry"] or 0)
         context["validity_status"] = certificate.get_validity_status()
 
         # Add permission flags

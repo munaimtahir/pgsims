@@ -8,10 +8,11 @@ from django.urls import reverse
 from django.utils import timezone
 from rest_framework.test import APITestCase
 
+from sims.academics.models import Department
 from sims.logbook.models import LogbookEntry
 from sims.notifications.models import Notification, NotificationPreference
 from sims.notifications.services import NotificationService
-from sims.rotations.models import Department, Hospital, Rotation
+from sims.rotations.models import Hospital, HospitalDepartment, Rotation
 from sims.users.models import User
 
 
@@ -86,7 +87,8 @@ class NotificationTests(APITestCase):
 
     def test_rotation_deadline_trigger(self) -> None:
         hospital = Hospital.objects.create(name="General Hospital")
-        department = Department.objects.create(name="Surgery", hospital=hospital)
+        department = Department.objects.create(name="Surgery", code="SURG")
+        HospitalDepartment.objects.create(hospital=hospital, department=department)
         rotation = Rotation.objects.create(
             pg=self.pg,
             department=department,

@@ -345,7 +345,13 @@ class CertificateStatisticsModelTests(TestCase):
         )
 
         self.pg_user = User.objects.create_user(
-            username="pg_test", email="pg@test.com", password="testpass123", role="pg"
+            username="pg_test",
+            email="pg@test.com",
+            password="testpass123",
+            role="pg",
+            specialty="medicine",
+            year="1",
+            supervisor=self.supervisor,
         )
 
         self.test_file = SimpleUploadedFile("test.pdf", b"content", content_type="application/pdf")
@@ -573,6 +579,7 @@ class CertificateFormTests(TestCase):
             "issue_date": date.today(),
             "description": "Test description",
             "cme_points_earned": 10,
+            "cpd_credits_earned": 0,
         }
 
         form = CertificateCreateForm(
@@ -801,7 +808,13 @@ class CertificateExportTests(TestCase):
         )
 
         self.pg_user = User.objects.create_user(
-            username="pg_test", email="pg@test.com", password="testpass123", role="pg"
+            username="pg_test",
+            email="pg@test.com",
+            password="testpass123",
+            role="pg",
+            specialty="medicine",
+            year="1",
+            supervisor=self.supervisor,
         )
 
         self.test_file = SimpleUploadedFile("test.pdf", b"content", content_type="application/pdf")
@@ -887,6 +900,7 @@ class CertificateIntegrationTests(TestCase):
             "issue_date": date.today(),
             "description": "Test certificate for integration workflow",
             "cme_points_earned": 15,
+            "cpd_credits_earned": 0,
             "certificate_file": test_file,
         }
 
@@ -988,6 +1002,7 @@ class CertificateIntegrationTests(TestCase):
             "issue_date": date.today(),
             "description": "Updated description with more details",
             "cme_points_earned": 15,
+            "cpd_credits_earned": 0,
         }
 
         response = self.client.post(

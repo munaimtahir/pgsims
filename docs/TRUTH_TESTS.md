@@ -1,0 +1,1 @@
+contracts/TRUTH_TESTS.md

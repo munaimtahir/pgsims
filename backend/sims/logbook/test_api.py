@@ -7,8 +7,10 @@ from django.urls import reverse
 from django.utils import timezone
 from rest_framework.test import APIClient
 
+from sims.academics.models import Department
 from sims.logbook.models import LogbookEntry
-from sims.rotations.models import Department, Hospital, Rotation
+from sims.notifications.models import Notification
+from sims.rotations.models import Hospital, HospitalDepartment, Rotation
 from sims.users.models import User
 
 
@@ -23,6 +25,18 @@ class LogbookVerificationAPITests(TestCase):
             password="testpass",
             role="admin",
             email="admin@example.com",
+        )
+        self.utrmc_user = User.objects.create_user(
+            username="utrmc_reader",
+            password="testpass",
+            role="utrmc_user",
+            email="utrmc_reader@example.com",
+        )
+        self.utrmc_admin = User.objects.create_user(
+            username="utrmc_admin",
+            password="testpass",
+            role="utrmc_admin",
+            email="utrmc_admin@example.com",
         )
         self.supervisor = User.objects.create_user(
             username="supervisor",
@@ -52,7 +66,8 @@ class LogbookVerificationAPITests(TestCase):
 
         # Create hospital and department
         self.hospital = Hospital.objects.create(name="Test Hospital")
-        self.department = Department.objects.create(name="Surgery", hospital=self.hospital)
+        self.department = Department.objects.create(name="Surgery", code="SURG")
+        HospitalDepartment.objects.create(hospital=self.hospital, department=self.department)
 
         # Create rotation
         self.rotation = Rotation.objects.create(
@@ -117,6 +132,27 @@ class LogbookVerificationAPITests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data["count"], 1)
 
+    def test_pending_entries_utrmc_user_read_only_access(self):
+        """UTRMC read-only user can see all pending entries."""
+        self.client.force_authenticate(self.utrmc_user)
+        response = self.client.get(reverse("logbook_api:pending"))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["count"], 1)
+
+    def test_verify_entry_utrmc_user_denied(self):
+        """UTRMC read-only user cannot verify entries."""
+        self.client.force_authenticate(self.utrmc_user)
+        url = reverse("logbook_api:verify", kwargs={"pk": self.pending_entry.id})
+        response = self.client.patch(url, {"feedback": "Nope"})
+        self.assertEqual(response.status_code, 403)
+
+    def test_verify_entry_utrmc_admin_denied(self):
+        """UTRMC admin is oversight-only for logbook verification and cannot verify entries."""
+        self.client.force_authenticate(self.utrmc_admin)
+        url = reverse("logbook_api:verify", kwargs={"pk": self.pending_entry.id})
+        response = self.client.patch(url, {"feedback": "Nope"})
+        self.assertEqual(response.status_code, 403)
+
     def test_pending_entries_pg_denied(self):
         """PG users cannot access pending entries list."""
         self.client.force_authenticate(self.pg)
@@ -140,6 +176,7 @@ class LogbookVerificationAPITests(TestCase):
         self.assertEqual(self.pending_entry.status, "approved")
         self.assertEqual(self.pending_entry.verified_by, self.supervisor)
         self.assertIsNotNone(self.pending_entry.verified_at)
+        self.assertEqual(self.pending_entry.supervisor_feedback, "Good work!")
 
     def test_verify_entry_admin(self):
         """Admin can verify any entry."""
@@ -398,3 +435,76 @@ class PGLogbookEntryAPITests(TestCase):
         response = self.client.post(create_url, incomplete_data, format="json")
         self.assertEqual(response.status_code, 400)
         self.assertIn("case_title", response.data)
+
+    def test_submit_return_feedback_visible_and_resubmit_approve_flow(self):
+        """Smoke test for PG submit -> supervisor return -> PG sees feedback -> resubmit -> approve."""
+        self.client.force_authenticate(self.pg)
+        create_url = reverse("logbook_api:my_entries")
+        create_response = self.client.post(create_url, self.entry_payload, format="json")
+        self.assertEqual(create_response.status_code, 201)
+        entry_id = create_response.data["id"]
+
+        submit_url = reverse("logbook_api:my_entry_submit", kwargs={"pk": entry_id})
+        submit_response = self.client.post(submit_url, format="json")
+        self.assertEqual(submit_response.status_code, 200)
+        self.assertEqual(submit_response.data["status"], "pending")
+
+        notification = Notification.objects.filter(
+            recipient=self.supervisor,
+            verb="logbook_submission",
+            metadata__object_type="logbook_entry",
+            metadata__object_id=entry_id,
+        ).first()
+        self.assertIsNotNone(notification)
+
+        self.client.force_authenticate(self.supervisor)
+        verify_url = reverse("logbook_api:verify", kwargs={"pk": entry_id})
+        return_response = self.client.patch(
+            verify_url,
+            {"action": "returned", "feedback": "Please add more detail."},
+            format="json",
+        )
+        self.assertEqual(return_response.status_code, 200)
+        self.assertEqual(return_response.data["status"], "returned")
+        self.assertEqual(return_response.data["feedback"], "Please add more detail.")
+        self.assertEqual(return_response.data["supervisor_feedback"], "Please add more detail.")
+        self.assertIsNone(return_response.data["verified_at"])
+
+        self.client.force_authenticate(self.pg)
+        list_response = self.client.get(create_url)
+        self.assertEqual(list_response.status_code, 200)
+        entry_row = next(item for item in list_response.data["results"] if item["id"] == entry_id)
+        self.assertEqual(entry_row["status"], "returned")
+        self.assertEqual(entry_row["feedback"], "Please add more detail.")
+        self.assertEqual(entry_row["supervisor_feedback"], "Please add more detail.")
+        self.assertIn("submitted_at", entry_row)
+
+        update_url = reverse("logbook_api:my_entry_detail", kwargs={"pk": entry_id})
+        update_response = self.client.patch(
+            update_url,
+            {"management_action": "Updated management action"},
+            format="json",
+        )
+        self.assertEqual(update_response.status_code, 200)
+
+        resubmit_response = self.client.post(submit_url, format="json")
+        self.assertEqual(resubmit_response.status_code, 200)
+        self.assertEqual(resubmit_response.data["status"], "pending")
+
+        self.client.force_authenticate(self.supervisor)
+        approve_response = self.client.patch(
+            verify_url,
+            {"action": "approved", "supervisor_feedback": "Looks good now."},
+            format="json",
+        )
+        self.assertEqual(approve_response.status_code, 200)
+        self.assertEqual(approve_response.data["status"], "approved")
+        self.assertEqual(approve_response.data["feedback"], "Looks good now.")
+
+        self.client.force_authenticate(self.pg)
+        blocked_update_response = self.client.patch(
+            update_url,
+            {"case_title": "Should fail"},
+            format="json",
+        )
+        self.assertEqual(blocked_update_response.status_code, 400)

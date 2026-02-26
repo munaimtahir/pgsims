@@ -10,6 +10,8 @@ USER_ROLES = (
     ("admin", "Admin"),
     ("supervisor", "Supervisor"),
     ("pg", "Postgraduate"),
+    ("utrmc_user", "UTRMC User"),
+    ("utrmc_admin", "UTRMC Admin"),
 )
 
 # Medical specialty choices (expand as needed)
@@ -88,6 +90,24 @@ class User(AbstractUser):
         related_name="assigned_pgs",
         limit_choices_to={"role": "supervisor"},
         help_text="Assigned supervisor (required for PGs)",
+    )
+
+    home_hospital = models.ForeignKey(
+        "rotations.Hospital",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="home_pgs",
+        help_text="Primary home hospital for PG users until graduation",
+    )
+
+    home_department = models.ForeignKey(
+        "academics.Department",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="home_pgs",
+        help_text="Primary home department for PG users until graduation",
     )
 
     # Profile fields
@@ -175,6 +195,9 @@ class User(AbstractUser):
             if self.supervisor:
                 raise ValidationError({"supervisor": "Admins cannot have supervisors"})
 
+        if self.role in {"utrmc_user", "utrmc_admin"} and self.supervisor:
+            raise ValidationError({"supervisor": "UTRMC users cannot have supervisors"})
+
         # Prevent self-supervision
         if self.supervisor == self:
             raise ValidationError({"supervisor": "Users cannot supervise themselves"})
@@ -211,6 +234,14 @@ class User(AbstractUser):
         """Check if user is a postgraduate"""
         return self.role == "pg"
 
+    def is_utrmc_user(self):
+        """Check if user is UTRMC read-only oversight user."""
+        return self.role == "utrmc_user"
+
+    def is_utrmc_admin(self):
+        """Check if user is UTRMC admin user."""
+        return self.role == "utrmc_admin"
+
     # Relationship methods
     def get_assigned_pgs(self):
         """Get all PGs assigned to this supervisor"""
@@ -233,6 +264,8 @@ class User(AbstractUser):
             return reverse("users:supervisor_dashboard")
         elif self.is_pg():
             return reverse("users:pg_dashboard")
+        elif self.is_utrmc_user() or self.is_utrmc_admin():
+            return "/dashboard/utrmc"
         return reverse("users:profile")
 
     def get_absolute_url(self):
@@ -251,6 +284,8 @@ class User(AbstractUser):
             "admin": "badge-danger",
             "supervisor": "badge-warning",
             "pg": "badge-info",
+            "utrmc_user": "badge-secondary",
+            "utrmc_admin": "badge-dark",
         }
         return role_classes.get(self.role, "badge-secondary")
 

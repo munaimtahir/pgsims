@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { authApi, type RegisterData } from '@/lib/api/auth';
 import { useAuthStore } from '@/store/authStore';
 import apiClient from '@/lib/api/client';
+import { getDashboardPathForRole } from '@/lib/rbac';
 
 interface Supervisor {
   id: number;
@@ -23,7 +24,7 @@ export default function RegisterPage() {
     password2: '',
     first_name: '',
     last_name: '',
-    role: 'pg' as 'pg' | 'supervisor' | 'admin',
+    role: 'pg' as 'pg' | 'supervisor' | 'admin' | 'utrmc_user' | 'utrmc_admin',
     specialty: '',
     year: '',
     supervisor: undefined as number | undefined,
@@ -120,16 +121,7 @@ export default function RegisterPage() {
       setAuth(response.user, response.tokens.access, response.tokens.refresh);
       
       // Redirect to role-specific dashboard
-      const role = response.user.role;
-      if (role === 'admin') {
-        router.push('/dashboard/admin');
-      } else if (role === 'supervisor') {
-        router.push('/dashboard/supervisor');
-      } else if (role === 'pg') {
-        router.push('/dashboard/pg');
-      } else {
-        router.push('/dashboard');
-      }
+      router.push(getDashboardPathForRole(response.user.role));
     } catch (err: unknown) {
       const error = err as { response?: { data?: Record<string, unknown> } };
       const errors = error.response?.data;

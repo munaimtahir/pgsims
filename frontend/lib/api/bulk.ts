@@ -21,6 +21,11 @@ export interface BulkAssignmentResult {
   errors: string[];
 }
 
+export interface BulkReviewPayload {
+  entry_ids: number[];
+  status: 'approved' | 'returned' | 'rejected';
+}
+
 export const bulkApi = {
   /**
    * Bulk import (generic)
@@ -94,8 +99,8 @@ export const bulkApi = {
   /**
    * Review bulk import
    */
-  review: async (importId: number) => {
-    const response = await apiClient.get<BulkImportResult>(`/api/bulk/review/?import_id=${importId}`);
+  review: async (payload: BulkReviewPayload) => {
+    const response = await apiClient.post<BulkImportResult>('/api/bulk/review/', payload);
     return response.data;
   },
 };

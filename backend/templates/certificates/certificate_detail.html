@@ -87,7 +87,7 @@
                             <dt class="col-sm-5">Days Until Expiry:</dt>
                             <dd class="col-sm-7">
                                 {% if certificate.is_expired %}
-                                <span class="text-danger">Expired {{ certificate.days_until_expiry|abs }} days ago</span>
+                                <span class="text-danger">Expired {{ days_until_expiry_abs }} days ago</span>
                                 {% else %}
                                 <span class="{% if certificate.is_expiring_soon %}text-warning{% else %}text-success{% endif %}">
                                     {{ certificate.days_until_expiry }} days
@@ -193,7 +193,7 @@
                     {% endif %}
                     
                     {% if user.role == 'supervisor' or user.role == 'admin' %}
-                    <a href="{% url 'certificates:review' certificate.pk %}" class="btn btn-outline-info">
+                    <a href="{% url 'certificates:review' certificate_pk=certificate.pk %}" class="btn btn-outline-info">
                         <i class="fas fa-clipboard-check me-2"></i>Add Review
                     </a>
                     {% endif %}
@@ -217,7 +217,7 @@
                         <i class="fas fa-exclamation-triangle fa-2x"></i>
                     </div>
                     <h6 class="text-danger">Certificate Expired</h6>
-                    <p class="text-muted small">This certificate expired {{ certificate.days_until_expiry|abs }} days ago. Please renew to maintain compliance.</p>
+                    <p class="text-muted small">This certificate expired {{ days_until_expiry_abs }} days ago. Please renew to maintain compliance.</p>
                     {% elif certificate.is_expiring_soon %}
                     <div class="text-warning mb-2">
                         <i class="fas fa-clock fa-2x"></i>

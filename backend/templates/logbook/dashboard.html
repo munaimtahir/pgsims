@@ -680,11 +680,17 @@ function initializeSystemCharts() {
 function loadDashboardData() {
     // Load dashboard data via AJAX
     {% if user.role == 'pg' %}
-    const apiUrl = '{% url "logbook:api_dashboard_data" %}';
+    {% url "logbook:api_dashboard_data" as pgDashboardApiUrl %}
+    const apiUrl = '{{ pgDashboardApiUrl|default_if_none:"" }}';
     {% else %}
-    const apiUrl = '{% url "logbook:api_system_dashboard_data" %}';
+    {% url "logbook:api_system_dashboard_data" as systemDashboardApiUrl %}
+    const apiUrl = '{{ systemDashboardApiUrl|default_if_none:"" }}';
     {% endif %}
-    
+
+    if (!apiUrl) {
+        return;
+    }
+
     $.get(apiUrl)
         .done(function(data) {
             updateDashboardData(data);

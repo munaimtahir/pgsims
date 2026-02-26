@@ -248,7 +248,9 @@ class UserViewsTestCase(TestCase):
         # Test admin dashboard redirect
         self.client.login(username="admin_test", password="testpass123")
         response = self.client.get(reverse("users:dashboard"))
-        self.assertRedirects(response, reverse("admin:index"), fetch_redirect_response=False)
+        self.assertRedirects(
+            response, reverse("users:admin_dashboard"), fetch_redirect_response=False
+        )
 
         # Test supervisor dashboard redirect
         self.client.login(username="supervisor_test", password="testpass123")
@@ -265,7 +267,7 @@ class UserViewsTestCase(TestCase):
         # Admin should have access (admin_dashboard redirects to admin:index)
         self.client.login(username="admin_test", password="testpass123")
         response = self.client.get(reverse("users:admin_dashboard"))
-        self.assertEqual(response.status_code, 302)  # Redirects to admin:index
+        self.assertEqual(response.status_code, 200)  # Renders internal admin dashboard
 
         # Non-admin should not have access
         self.client.login(username="pg_test", password="testpass123")

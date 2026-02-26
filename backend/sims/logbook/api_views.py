@@ -15,9 +15,14 @@ from sims.logbook.api_serializers import (
     PGLogbookEntrySerializer,
     PGLogbookEntryWriteSerializer,
 )
-from sims.common_permissions import IsPGUser
+from sims.common_permissions import (
+    CanVerifyLogbookEntry,
+    CanViewPendingLogbookQueue,
+    IsPGUser,
+)
 
 User = get_user_model()
+READ_ONLY_OVERSIGHT_ROLES = {"utrmc_user", "utrmc_admin"}
 
 
 class LogbookEntryPagination(PageNumberPagination):
@@ -37,17 +42,13 @@ class PendingLogbookEntriesView(APIView):
     - PGs cannot access this endpoint
     """
 
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [CanViewPendingLogbookQueue]
 
     def get(self, request: Request) -> Response:
         user = request.user
 
-        # Only supervisors and admins can view pending entries
-        if getattr(user, "role", None) not in ["supervisor", "admin"]:
-            raise PermissionDenied("Only supervisors and admins can view pending entries")
-
         # Build queryset based on role
-        if user.is_superuser or getattr(user, "role", None) == "admin":
+        if user.is_superuser or getattr(user, "role", None) in {"admin", *READ_ONLY_OVERSIGHT_ROLES}:
             queryset = LogbookEntry.objects.filter(status="pending")
         else:  # supervisor
             supervised_users = User.objects.filter(supervisor=user)
@@ -73,7 +74,11 @@ class PendingLogbookEntriesView(APIView):
                     },
                     "rotation": {
                         "id": entry.rotation.id if entry.rotation else None,
-                        "department": (entry.rotation.department.name if entry.rotation else None),
+                        "department": (
+                            entry.rotation.get_department_name()
+                            if entry.rotation
+                            else None
+                        ),
                     },
                     "submitted_at": (
                         entry.submitted_to_supervisor_at.isoformat()
@@ -98,18 +103,15 @@ class VerifyLogbookEntryView(APIView):
 
     Request body (optional):
     {
+        "action": "approved|returned|rejected",
         "feedback": "Additional supervisor feedback"
     }
     """
 
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [CanVerifyLogbookEntry]
 
     def patch(self, request: Request, pk: int) -> Response:
         user = request.user
-
-        # Only supervisors and admins can verify entries
-        if getattr(user, "role", None) not in ["supervisor", "admin"]:
-            raise PermissionDenied("Only supervisors and admins can verify entries")
 
         # Get the logbook entry
         try:
@@ -117,10 +119,7 @@ class VerifyLogbookEntryView(APIView):
         except LogbookEntry.DoesNotExist:
             return Response({"error": "Logbook entry not found"}, status=status.HTTP_404_NOT_FOUND)
 
-        # Check permission - supervisors can only verify their assigned PGs
-        if getattr(user, "role", None) == "supervisor":
-            if entry.pg.supervisor_id != user.id:
-                raise PermissionDenied("You can only verify entries from your assigned PGs")
+        self.check_object_permissions(request, entry)
 
         # Cannot verify already verified entries
         if entry.verified_by is not None:
@@ -128,17 +127,45 @@ class VerifyLogbookEntryView(APIView):
                 {"error": "Entry is already verified"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
+        if entry.status != "pending":
+            return Response(
+                {"error": f'Only pending entries can be verified. Current status is "{entry.status}".'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        action = str(request.data.get("action") or "approved").strip().lower()
+        action_map = {
+            "approve": "approved",
+            "approved": "approved",
+            "return": "returned",
+            "returned": "returned",
+            "reject": "rejected",
+            "rejected": "rejected",
+        }
+        next_status = action_map.get(action)
+        if next_status is None:
+            return Response(
+                {"error": f'Unsupported action "{action}".'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         # Update entry
-        entry.verified_by = user
-        entry.verified_at = timezone.now()
-        entry.status = "approved"
+        entry.status = next_status
+        if next_status == "approved":
+            entry.verified_by = user
+            entry.verified_at = timezone.now()
+        else:
+            entry.verified_by = None
+            entry.verified_at = None
         entry.supervisor_action_at = timezone.now()
 
         # Add optional feedback
-        feedback = request.data.get("feedback")
-        if feedback:
-            entry.supervisor_comments = feedback
+        feedback = (
+            request.data.get("feedback")
+            or request.data.get("supervisor_feedback")
+            or ""
+        )
+        entry.supervisor_feedback = feedback
 
         entry.save()
 
@@ -176,13 +203,19 @@ class VerifyLogbookEntryView(APIView):
                 "id": entry.id,
                 "case_title": entry.case_title,
                 "status": entry.status,
-                "verified_by": {
-                    "id": user.id,
-                    "username": user.username,
-                    "full_name": user.get_full_name(),
-                },
-                "verified_at": entry.verified_at.isoformat(),
-                "message": "Entry verified successfully",
+                "supervisor_feedback": entry.supervisor_feedback,
+                "feedback": entry.supervisor_feedback,
+                "verified_by": (
+                    {
+                        "id": user.id,
+                        "username": user.username,
+                        "full_name": user.get_full_name(),
+                    }
+                    if entry.status == "approved"
+                    else None
+                ),
+                "verified_at": entry.verified_at.isoformat() if entry.verified_at else None,
+                "message": f'Entry {entry.status} successfully',
             }
         )
 
@@ -235,9 +268,14 @@ class PGLogbookEntryDetailView(APIView):
 
     def patch(self, request: Request, pk: int) -> Response:
         entry = get_object_or_404(LogbookEntry, pk=pk, pg=request.user)
-        if entry.status != "draft":
+        if not entry.can_be_edited():
             return Response(
-                {"error": f'Cannot edit entry with status "{entry.status}". Only draft entries can be edited.'},
+                {
+                    "error": (
+                        f'Cannot edit entry with status "{entry.status}". '
+                        'Only draft or returned entries can be edited.'
+                    )
+                },
                 status=status.HTTP_400_BAD_REQUEST,
             )
         serializer = PGLogbookEntryWriteSerializer(entry, data=request.data, partial=True)
@@ -262,9 +300,14 @@ class PGLogbookEntrySubmitView(APIView):
     def post(self, request: Request, pk: int) -> Response:
         entry = get_object_or_404(LogbookEntry, pk=pk, pg=request.user)
 
-        if entry.status != "draft":
+        if entry.status not in {"draft", "returned"}:
             return Response(
-                {"error": f'Cannot submit entry with status "{entry.status}". Only draft entries can be submitted.'},
+                {
+                    "error": (
+                        f'Cannot submit entry with status "{entry.status}". '
+                        'Only draft or returned entries can be submitted.'
+                    )
+                },
                 status=status.HTTP_400_BAD_REQUEST,
             )
 

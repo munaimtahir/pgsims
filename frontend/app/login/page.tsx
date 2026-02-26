@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { authApi } from '@/lib/api/auth';
 import { useAuthStore } from '@/store/authStore';
+import { getDashboardPathForRole } from '@/lib/rbac';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -35,16 +36,7 @@ export default function LoginPage() {
       setAuth(response.user, response.access, response.refresh);
       
       // Redirect to role-specific dashboard
-      const role = response.user.role;
-      if (role === 'admin') {
-        router.push('/dashboard/admin');
-      } else if (role === 'supervisor') {
-        router.push('/dashboard/supervisor');
-      } else if (role === 'pg') {
-        router.push('/dashboard/pg');
-      } else {
-        router.push('/dashboard');
-      }
+      router.push(getDashboardPathForRole(response.user.role));
     } catch (err: unknown) {
       const error = err as { response?: { data?: { detail?: string; error?: string } } };
       setError(

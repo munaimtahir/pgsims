@@ -6,6 +6,7 @@ from django.urls import reverse
 from django.utils import timezone
 from simple_history.models import HistoricalRecords
 
+from sims.academics.models import Department
 from sims.domain.validators import (
     sanitize_free_text,
     validate_chronology,
@@ -76,82 +77,44 @@ class Hospital(models.Model):
         ).count()
 
     def get_departments_count(self):
-        """Get count of departments in this hospital"""
-        return self.departments.filter(is_active=True).count()
+        """Get count of active canonical departments hosted by this hospital."""
+        return self.hospital_departments.filter(is_active=True).count()
 
 
-class Department(models.Model):
-    """
-    Model representing departments within hospitals.
-
-    Created: 2025-05-29 16:28:44 UTC
-    Author: SMIB2012
-    """
-
-    name = models.CharField(max_length=200, help_text="Name of the department")
+class HospitalDepartment(models.Model):
+    """Matrix of canonical departments hosted in a hospital."""
 
     hospital = models.ForeignKey(
         Hospital,
         on_delete=models.CASCADE,
-        related_name="departments",
-        help_text="Hospital this department belongs to",
+        related_name="hospital_departments",
     )
-
-    head_of_department = models.CharField(
-        max_length=200, blank=True, help_text="Name of the department head"
+    department = models.ForeignKey(
+        Department,
+        on_delete=models.CASCADE,
+        related_name="hospital_departments",
     )
-
-    contact_email = models.EmailField(blank=True, help_text="Department contact email")
-
-    contact_phone = models.CharField(
-        max_length=20, blank=True, help_text="Department contact phone"
-    )
-
-    description = models.TextField(
-        blank=True, help_text="Description of the department and its services"
-    )
-
-    training_objectives = models.TextField(
-        blank=True, help_text="Learning objectives for rotations in this department"
-    )
-
-    required_skills = models.TextField(
-        blank=True, help_text="Skills that should be acquired during rotation"
-    )
-
-    is_active = models.BooleanField(
-        default=True,
-        help_text="Whether this department is currently accepting rotations",
-    )
-
+    is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    history = HistoricalRecords()
 
     class Meta:
-        verbose_name = "Department"
-        verbose_name_plural = "Departments"
-        ordering = ["hospital__name", "name"]
-        unique_together = ["hospital", "name"]
+        verbose_name = "Hospital Department"
+        verbose_name_plural = "Hospital Departments"
+        ordering = ["hospital__name", "department__name"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["hospital", "department"],
+                name="uniq_hospital_department",
+            )
+        ]
         indexes = [
-            models.Index(fields=["hospital", "name"]),
+            models.Index(fields=["hospital", "department"]),
             models.Index(fields=["is_active"]),
         ]
 
     def __str__(self):
-        return f"{self.name} - {self.hospital.name}"
-
-    def get_current_rotations_count(self):
-        """Get count of current rotations in this department"""
-        return self.rotations.filter(
-            status="ongoing",
-            start_date__lte=timezone.now().date(),
-            end_date__gte=timezone.now().date(),
-        ).count()
-
-    def get_total_rotations_count(self):
-        """Get total count of rotations in this department"""
-        return self.rotations.count()
+        return f"{self.hospital} / {self.department}"
 
 
 class Rotation(models.Model):
@@ -186,7 +149,7 @@ class Rotation(models.Model):
         Department,
         on_delete=models.CASCADE,
         related_name="rotations",
-        help_text="Department where rotation takes place",
+        help_text="Canonical academic department where rotation takes place",
     )
 
     hospital = models.ForeignKey(
@@ -271,6 +234,33 @@ class Rotation(models.Model):
         null=True, blank=True, help_text="Date and time when rotation was approved"
     )
 
+    source_hospital = models.ForeignKey(
+        Hospital,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="rotations_source_hospital",
+        help_text="Optional snapshot of source/home hospital at assignment time",
+    )
+    source_department = models.ForeignKey(
+        Department,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="rotations_source_department",
+        help_text="Optional snapshot of source/home department at assignment time",
+    )
+    override_reason = models.TextField(null=True, blank=True)
+    utrmc_approved_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="rotations_utrmc_approved",
+        help_text="UTRMC admin who approved inter-hospital override",
+    )
+    utrmc_approved_at = models.DateTimeField(null=True, blank=True)
+
     class Meta:
         verbose_name = "Rotation"
         verbose_name_plural = "Rotations"
@@ -280,7 +270,6 @@ class Rotation(models.Model):
             models.Index(fields=["supervisor", "status"]),
             models.Index(fields=["start_date", "end_date"]),
             models.Index(fields=["status"]),
-            models.Index(fields=["department"]),
             models.Index(fields=["hospital"]),
         ]
         constraints = [
@@ -292,8 +281,11 @@ class Rotation(models.Model):
 
     def __str__(self):
         pg_name = self.pg.get_full_name() if self.pg else "No PG"
-        dept_name = self.department.name if self.department else "No Department"
+        dept_name = self.get_department_name()
         return f"{pg_name} - {dept_name} ({self.start_date} to {self.end_date})"
+
+    def get_department_name(self):
+        return self.department.name if self.department_id else "No Department"
 
     def clean(self):
         """Validate rotation data"""
@@ -321,7 +313,10 @@ class Rotation(models.Model):
 
         # Validate department belongs to hospital
         if self.department and self.hospital:
-            if self.department.hospital != self.hospital:
+            hosted = HospitalDepartment.objects.filter(
+                hospital=self.hospital, department=self.department, is_active=True
+            ).exists()
+            if not hosted:
                 errors["department"] = "Department must belong to the selected hospital"
 
         # Validate supervisor specialty matches rotation department (if applicable)
@@ -345,6 +340,19 @@ class Rotation(models.Model):
             except ValidationError as exc:
                 errors.update({"notes": exc.messages})
 
+        try:
+            from sims.rotations.services import validate_rotation_override_requirements
+
+            validate_rotation_override_requirements(
+                self.pg,
+                self.hospital,
+                self.department,
+                self.override_reason,
+                getattr(self.utrmc_approved_by, "role", None),
+            )
+        except ValueError as exc:
+            errors["override_reason"] = str(exc)
+
         if errors:
             raise ValidationError(errors)
 
@@ -358,11 +366,14 @@ class Rotation(models.Model):
         elif self.status == "ongoing" and today > self.end_date:
             self.status = "completed"
 
-        # Set hospital from department if not set
-        if self.department and not self.hospital:
-            self.hospital = self.department.hospital
-
         super().save(*args, **kwargs)
+
+    @property
+    def requires_utrmc_approval(self):
+        from sims.rotations.services import evaluate_rotation_override_policy
+
+        result = evaluate_rotation_override_policy(self.pg, self.hospital, self.department)
+        return result.requires_utrmc_approval
 
     def get_duration_days(self):
         """Calculate rotation duration in days"""

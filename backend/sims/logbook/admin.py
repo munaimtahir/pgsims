@@ -564,11 +564,11 @@ class LogbookEntryAdmin(ImportExportModelAdmin):
         # Notify supervisor for new submissions
         if action == "submitted" and entry.pg and getattr(entry.pg, "supervisor", None):
             Notification.objects.create(
-                user=entry.pg.supervisor,
+                recipient=entry.pg.supervisor,
+                verb="logbook",
                 title="New Logbook Entry for Review",
-                message=f"{entry.pg.get_full_name()} has submitted a new logbook entry: {entry.case_title or 'Untitled'}",
-                type="logbook",
-                related_object_id=entry.id,
+                body=f"{entry.pg.get_full_name()} has submitted a new logbook entry: {entry.case_title or 'Untitled'}",
+                metadata={"object_type": "logbook_entry", "object_id": entry.id, "action": action},
             )
 
         # Notify PG for status changes
@@ -585,11 +585,11 @@ class LogbookEntryAdmin(ImportExportModelAdmin):
                 )
 
             Notification.objects.create(
-                user=entry.pg,
+                recipient=entry.pg,
+                verb="logbook",
                 title=title,
-                message=message,
-                type="logbook",
-                related_object_id=entry.id,
+                body=message,
+                metadata={"object_type": "logbook_entry", "object_id": entry.id, "action": action},
             )
 
     # Custom Actions

@@ -7,12 +7,14 @@ import apiClient from './client';
 export interface RotationSummary {
   id: number;
   name: string;
-  department: string;
-  hospital: string;
+  department: { id: number; name: string; code?: string | null } | null;
+  hospital: { id: number; name: string; code?: string | null } | null;
   start_date: string;
   end_date: string;
   status: string;
   supervisor_name?: string | null;
+  requires_utrmc_approval?: boolean;
+  override_reason?: string | null;
 }
 
 export const rotationsApi = {

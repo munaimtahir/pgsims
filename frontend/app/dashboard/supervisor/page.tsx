@@ -13,6 +13,7 @@ import DataTable, { Column } from '@/components/ui/DataTable';
 import SuccessBanner from '@/components/ui/SuccessBanner';
 import Link from 'next/link';
 import { format } from 'date-fns';
+import { getStatusBadgeClass, getStatusLabel } from '@/lib/ui/status';
 
 interface PendingLogbookEntry {
   id: number;
@@ -60,7 +61,7 @@ export default function SupervisorDashboardPage() {
   }
 
   const handleVerify = async (id: number) => {
-    if (!confirm('Are you sure you want to verify this logbook entry?')) {
+    if (!confirm('Are you sure you want to approve this Submitted logbook entry?')) {
       return;
     }
 
@@ -68,10 +69,10 @@ export default function SupervisorDashboardPage() {
       setVerifyingId(id);
       setError(null);
       await logbookApi.verify(id);
-      setSuccess('Logbook entry verified successfully');
+      setSuccess('Logbook entry approved successfully');
       loadData(); // Reload data
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Failed to verify entry';
+      const message = err instanceof Error ? err.message : 'Failed to approve entry';
       setError(message);
     } finally {
       setVerifyingId(null);
@@ -118,10 +119,8 @@ export default function SupervisorDashboardPage() {
       key: 'status',
       label: 'Status',
       render: (item) => (
-        <span className={`px-2 py-1 text-xs rounded-full ${
-          item.status === 'pending' ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-800'
-        }`}>
-          {item.status || 'pending'}
+        <span className={`px-2 py-1 text-xs rounded-full ${getStatusBadgeClass(item.status)}`}>
+          {getStatusLabel(item.status)}
         </span>
       ),
     },
@@ -135,7 +134,7 @@ export default function SupervisorDashboardPage() {
             disabled={verifyingId === item.id}
             className="text-sm text-indigo-600 hover:text-indigo-900 disabled:opacity-50"
           >
-            {verifyingId === item.id ? 'Verifying...' : 'Verify'}
+            {verifyingId === item.id ? 'Approving...' : 'Approve'}
           </button>
         </div>
       ),
@@ -148,7 +147,7 @@ export default function SupervisorDashboardPage() {
         <div className="space-y-6">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">Supervisor Dashboard</h1>
-            <p className="mt-2 text-gray-600">Welcome, {user?.first_name}. Review pending logbook entries.</p>
+            <p className="mt-2 text-gray-600">Welcome, {user?.first_name}. Review Submitted logbook entries.</p>
           </div>
 
           {error && <ErrorBanner message={error} onDismiss={() => setError(null)} />}

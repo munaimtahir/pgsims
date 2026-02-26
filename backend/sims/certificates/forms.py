@@ -153,6 +153,8 @@ class CertificateCreateForm(forms.ModelForm):
         # PG field is required for admins and supervisors
         if self.user and self.user.role in ["admin", "supervisor"]:
             self.fields["pg"].required = True
+        elif self.user and self.user.role == "pg":
+            self.fields["pg"].required = False
 
     def _set_default_dates(self):
         """Set sensible default dates"""

@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
 import { useAuthStore } from '@/store/authStore';
+import { getDashboardPathForRole } from '@/lib/rbac';
 
 /**
  * Dashboard redirect hub - redirects to role-specific dashboard
@@ -14,16 +15,7 @@ export default function DashboardPage() {
 
   useEffect(() => {
     if (user) {
-      const role = user.role;
-      if (role === 'admin') {
-        router.replace('/dashboard/admin');
-      } else if (role === 'supervisor') {
-        router.replace('/dashboard/supervisor');
-      } else if (role === 'pg') {
-        router.replace('/dashboard/pg');
-      } else {
-        router.replace('/unauthorized');
-      }
+      router.replace(getDashboardPathForRole(user.role));
     }
   }, [user, router]);
 

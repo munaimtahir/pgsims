@@ -8,6 +8,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.core.exceptions import PermissionDenied
 from django.db.models import Avg, Count, Q
+from django.db.models.functions import ExtractWeekDay, TruncMonth
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse, reverse_lazy
@@ -747,7 +748,7 @@ class LogbookDashboardView(LoginRequiredMixin, LogbookAccessMixin, TemplateView)
 
         monthly_counts = (
             entries.filter(date__gte=six_months_ago)
-            .extra({"month": "DATE_TRUNC('month', date)"})
+            .annotate(month=TruncMonth("date"))
             .values("month")
             .annotate(count=Count("id"))
             .order_by("month")
@@ -1021,7 +1022,7 @@ def logbook_stats_api(request):
             for status in LogbookEntry.STATUS_CHOICES
         },
         "by_month": list(
-            entries.extra({"month": "DATE_TRUNC('month', date)"})
+            entries.annotate(month=TruncMonth("date"))
             .values("month")
             .annotate(count=Count("id"))
             .order_by("month")
@@ -1216,7 +1217,7 @@ class LogbookAnalyticsView(LoginRequiredMixin, LogbookAccessMixin, TemplateView)
 
         return (
             entries.filter(date__gte=twelve_months_ago)
-            .extra({"month": "DATE_TRUNC('month', date)"})
+            .annotate(month=TruncMonth("date"))
             .values("month")
             .annotate(
                 total=Count("id"),
@@ -1230,7 +1231,7 @@ class LogbookAnalyticsView(LoginRequiredMixin, LogbookAccessMixin, TemplateView)
     def get_weekly_activity(self, entries):
         """Get weekly activity patterns"""
         return (
-            entries.extra({"weekday": "EXTRACT(dow FROM date)"})
+            entries.annotate(weekday=ExtractWeekDay("date"))
             .values("weekday")
             .annotate(count=Count("id"))
             .order_by("weekday")

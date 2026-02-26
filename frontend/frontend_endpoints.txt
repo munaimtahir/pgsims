@@ -1,0 +1,84 @@
+lib/api/users.ts:15:    const response = await apiClient.get<AssignedPG[]>('/api/users/assigned-pgs/');
+lib/api/certificates.ts:22:    const response = await apiClient.get<{ count: number; results: CertificateSummary[] }>('/api/certificates/my/');
+lib/api/certificates.ts:32:    const baseUrl = apiClient.defaults.baseURL || window.location.origin;
+lib/api/certificates.ts:45:        const response = await apiClient.get(url, {
+lib/api/auth.ts:59:    const response = await apiClient.post<LoginResponse>('/api/auth/login/', credentials);
+lib/api/auth.ts:67:    const response = await apiClient.post<RegisterResponse>('/api/auth/register/', data);
+lib/api/auth.ts:78:        await apiClient.post('/api/auth/logout/', { refresh: refreshToken });
+lib/api/auth.ts:97:    const response = await apiClient.get<User>('/api/auth/profile/');
+lib/api/auth.ts:106:    const response = await apiClient.post<{ access: string }>('/api/auth/refresh/', {
+lib/api/auth.ts:117:    const response = await apiClient.patch<User>('/api/auth/profile/update/', data);
+lib/api/auth.ts:126:    const response = await apiClient.post<{ message: string }>('/api/auth/password-reset/', { email });
+lib/api/auth.ts:140:    const response = await apiClient.post<{ message: string }>('/api/auth/password-reset/confirm/', data);
+lib/api/auth.ts:153:    const response = await apiClient.post<{ message: string }>('/api/auth/change-password/', data);
+lib/api/logbook.ts:68:    const response = await apiClient.get<{ count: number; results: PendingLogbookEntry[] }>('/api/logbook/pending/');
+lib/api/logbook.ts:79:    const response = await apiClient.patch<LogbookEntry>(
+lib/api/logbook.ts:90:    const response = await apiClient.get<{ count?: number; results?: LogbookEntry[] } | LogbookEntry[]>(
+lib/api/logbook.ts:100:    const response = await apiClient.post<LogbookEntry>('/api/logbook/my/', payload);
+lib/api/logbook.ts:108:    const response = await apiClient.patch<LogbookEntry>(`/api/logbook/my/${id}/`, payload);
+lib/api/logbook.ts:116:    const response = await apiClient.post<LogbookEntry>(`/api/logbook/my/${id}/submit/`);
+lib/api/client.ts:37:apiClient.interceptors.request.use(
+lib/api/client.ts:53:apiClient.interceptors.response.use(
+lib/api/attendance.ts:38:    const response = await apiClient.get<AttendanceSummary>('/api/attendance/summary/', { params });
+lib/api/attendance.ts:49:    const response = await apiClient.post<BulkUploadResult>('/api/attendance/upload/', formData, {
+lib/api/search.ts:34:    const response = await apiClient.get<{ results: SearchResult[]; count: number }>('/api/search/', {
+lib/api/search.ts:44:    const response = await apiClient.get<{ results: SearchHistory[]; count: number }>('/api/search/history/');
+lib/api/search.ts:52:    const response = await apiClient.get<{ results: SearchSuggestion[] }>('/api/search/suggestions/', {
+lib/api/rotations.ts:25:    const response = await apiClient.get<{ count: number; results: RotationSummary[] }>('/api/rotations/my/');
+lib/api/rotations.ts:33:    const response = await apiClient.get<RotationSummary>(`/api/rotations/my/${id}/`);
+lib/api/analytics.ts:42:    const response = await apiClient.get<DashboardOverview>('/api/analytics/dashboard/overview/');
+lib/api/analytics.ts:50:    const response = await apiClient.get<TrendData[]>('/api/analytics/dashboard/trends/', { params });
+lib/api/analytics.ts:58:    const response = await apiClient.get<ComplianceMetrics>('/api/analytics/dashboard/compliance/');
+lib/api/analytics.ts:66:    const response = await apiClient.get<PerformanceMetrics>('/api/analytics/performance/', { params });
+lib/api/bulk.ts:33:    const response = await apiClient.post<BulkImportResult>('/api/bulk/import/', formData, {
+lib/api/bulk.ts:48:    const response = await apiClient.post<BulkImportResult>('/api/bulk/import-trainees/', formData, {
+lib/api/bulk.ts:63:    const response = await apiClient.post<BulkImportResult>('/api/bulk/import-supervisors/', formData, {
+lib/api/bulk.ts:78:    const response = await apiClient.post<BulkImportResult>('/api/bulk/import-residents/', formData, {
+lib/api/bulk.ts:90:    const response = await apiClient.post<BulkAssignmentResult>('/api/bulk/assignment/', data);
+lib/api/bulk.ts:98:    const response = await apiClient.get<BulkImportResult>(`/api/bulk/review/?import_id=${importId}`);
+lib/api/notifications.ts:30:    const response = await apiClient.get<{ results: Notification[]; count: number }>('/api/notifications/', { params });
+lib/api/notifications.ts:39:    const response = await apiClient.get<{ results: Notification[]; count: number }>('/api/notifications/', {
+lib/api/notifications.ts:50:    const response = await apiClient.get<{ unread: number }>('/api/notifications/unread-count/');
+lib/api/notifications.ts:59:    const response = await apiClient.post<{ marked: number }>(`/api/notifications/mark-read/`, {
+lib/api/notifications.ts:69:    const response = await apiClient.get<NotificationPreferences>('/api/notifications/preferences/');
+lib/api/notifications.ts:77:    const response = await apiClient.put<NotificationPreferences>('/api/notifications/preferences/', preferences);
+lib/api/academics.ts:48:      const response = await apiClient.get<{ results: Department[]; count: number }>('/academics/api/departments/', { params });
+lib/api/academics.ts:52:      const response = await apiClient.get<Department>(`/academics/api/departments/${id}/`);
+lib/api/academics.ts:56:      const response = await apiClient.post<Department>('/academics/api/departments/', data);
+lib/api/academics.ts:60:      const response = await apiClient.put<Department>(`/academics/api/departments/${id}/`, data);
+lib/api/academics.ts:64:      await apiClient.delete(`/academics/api/departments/${id}/`);
+lib/api/academics.ts:73:      const response = await apiClient.get<{ results: Batch[]; count: number }>('/academics/api/batches/', { params });
+lib/api/academics.ts:77:      const response = await apiClient.get<Batch>(`/academics/api/batches/${id}/`);
+lib/api/academics.ts:81:      const response = await apiClient.post<Batch>('/academics/api/batches/', data);
+lib/api/academics.ts:85:      const response = await apiClient.put<Batch>(`/academics/api/batches/${id}/`, data);
+lib/api/academics.ts:89:      await apiClient.delete(`/academics/api/batches/${id}/`);
+lib/api/academics.ts:92:      const response = await apiClient.get<StudentProfile[]>(`/academics/api/batches/${id}/students/`);
+lib/api/academics.ts:102:      const response = await apiClient.get<{ results: StudentProfile[]; count: number }>('/academics/api/students/', { params });
+lib/api/academics.ts:106:      const response = await apiClient.get<StudentProfile>(`/academics/api/students/${id}/`);
+lib/api/academics.ts:110:      const response = await apiClient.post<StudentProfile>('/academics/api/students/', data);
+lib/api/academics.ts:114:      const response = await apiClient.put<StudentProfile>(`/academics/api/students/${id}/`, data);
+lib/api/academics.ts:118:      await apiClient.delete(`/academics/api/students/${id}/`);
+lib/api/academics.ts:121:      const response = await apiClient.post<StudentProfile>(`/academics/api/students/${id}/update_status/`, { status });
+lib/api/audit.ts:31:    const response = await apiClient.get<{ results: ActivityLog[]; count: number }>('/api/audit/activity/', { params });
+lib/api/audit.ts:39:    const response = await apiClient.get<{ results: AuditReport[]; count: number }>('/api/audit/reports/', { params });
+lib/api/audit.ts:47:    const response = await apiClient.post<AuditReport>('/api/audit/reports/', data);
+lib/api/results.ts:54:      const response = await apiClient.get<{ results: Exam[]; count: number }>('/results/api/exams/', { params });
+lib/api/results.ts:58:      const response = await apiClient.get<Exam>(`/results/api/exams/${id}/`);
+lib/api/results.ts:62:      const response = await apiClient.post<Exam>('/results/api/exams/', data);
+lib/api/results.ts:66:      const response = await apiClient.put<Exam>(`/results/api/exams/${id}/`, data);
+lib/api/results.ts:70:      await apiClient.delete(`/results/api/exams/${id}/`);
+lib/api/results.ts:73:      const response = await apiClient.get<Score[]>(`/results/api/exams/${id}/scores/`);
+lib/api/results.ts:77:      const response = await apiClient.get<ExamStatistics>(`/results/api/exams/${id}/statistics/`);
+lib/api/results.ts:87:      const response = await apiClient.get<{ results: Score[]; count: number }>('/results/api/scores/', { params });
+lib/api/results.ts:91:      const response = await apiClient.get<Score>(`/results/api/scores/${id}/`);
+lib/api/results.ts:95:      const response = await apiClient.post<Score>('/results/api/scores/', data);
+lib/api/results.ts:99:      const response = await apiClient.put<Score>(`/results/api/scores/${id}/`, data);
+lib/api/results.ts:103:      await apiClient.delete(`/results/api/scores/${id}/`);
+lib/api/results.ts:106:      const response = await apiClient.get<Score[]>('/results/api/scores/my_scores/');
+lib/api/reports.ts:40:    const response = await apiClient.get<{ results: ReportTemplate[]; count: number }>('/api/reports/templates/');
+lib/api/reports.ts:48:    const response = await apiClient.post<GeneratedReport>('/api/reports/generate/', {
+lib/api/reports.ts:59:    const response = await apiClient.get<{ results: ScheduledReport[]; count: number }>('/api/reports/scheduled/');
+lib/api/reports.ts:67:    const response = await apiClient.post<ScheduledReport>('/api/reports/scheduled/', data);
+lib/api/reports.ts:75:    const response = await apiClient.get<ScheduledReport>(`/api/reports/scheduled/${id}/`);
+app/register/page.tsx:49:            response = await apiClient.get<{ supervisors: Supervisor[] }>(
+app/register/page.tsx:54:            response = await apiClient.get<{ supervisors: Supervisor[] }>(
