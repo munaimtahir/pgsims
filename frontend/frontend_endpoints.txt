@@ -1,6 +1,5 @@
 lib/api/users.ts:15:    const response = await apiClient.get<AssignedPG[]>('/api/users/assigned-pgs/');
 lib/api/certificates.ts:22:    const response = await apiClient.get<{ count: number; results: CertificateSummary[] }>('/api/certificates/my/');
-lib/api/certificates.ts:32:    const baseUrl = apiClient.defaults.baseURL || window.location.origin;
 lib/api/certificates.ts:45:        const response = await apiClient.get(url, {
 lib/api/auth.ts:59:    const response = await apiClient.post<LoginResponse>('/api/auth/login/', credentials);
 lib/api/auth.ts:67:    const response = await apiClient.post<RegisterResponse>('/api/auth/register/', data);
@@ -17,8 +16,6 @@ lib/api/logbook.ts:90:    const response = await apiClient.get<{ count?: number;
 lib/api/logbook.ts:100:    const response = await apiClient.post<LogbookEntry>('/api/logbook/my/', payload);
 lib/api/logbook.ts:108:    const response = await apiClient.patch<LogbookEntry>(`/api/logbook/my/${id}/`, payload);
 lib/api/logbook.ts:116:    const response = await apiClient.post<LogbookEntry>(`/api/logbook/my/${id}/submit/`);
-lib/api/client.ts:37:apiClient.interceptors.request.use(
-lib/api/client.ts:53:apiClient.interceptors.response.use(
 lib/api/attendance.ts:38:    const response = await apiClient.get<AttendanceSummary>('/api/attendance/summary/', { params });
 lib/api/attendance.ts:49:    const response = await apiClient.post<BulkUploadResult>('/api/attendance/upload/', formData, {
 lib/api/search.ts:34:    const response = await apiClient.get<{ results: SearchResult[]; count: number }>('/api/search/', {
@@ -30,18 +27,18 @@ lib/api/analytics.ts:42:    const response = await apiClient.get<DashboardOvervi
 lib/api/analytics.ts:50:    const response = await apiClient.get<TrendData[]>('/api/analytics/dashboard/trends/', { params });
 lib/api/analytics.ts:58:    const response = await apiClient.get<ComplianceMetrics>('/api/analytics/dashboard/compliance/');
 lib/api/analytics.ts:66:    const response = await apiClient.get<PerformanceMetrics>('/api/analytics/performance/', { params });
-lib/api/bulk.ts:33:    const response = await apiClient.post<BulkImportResult>('/api/bulk/import/', formData, {
-lib/api/bulk.ts:48:    const response = await apiClient.post<BulkImportResult>('/api/bulk/import-trainees/', formData, {
-lib/api/bulk.ts:63:    const response = await apiClient.post<BulkImportResult>('/api/bulk/import-supervisors/', formData, {
-lib/api/bulk.ts:78:    const response = await apiClient.post<BulkImportResult>('/api/bulk/import-residents/', formData, {
-lib/api/bulk.ts:90:    const response = await apiClient.post<BulkAssignmentResult>('/api/bulk/assignment/', data);
-lib/api/bulk.ts:98:    const response = await apiClient.get<BulkImportResult>(`/api/bulk/review/?import_id=${importId}`);
+lib/api/bulk.ts:38:    const response = await apiClient.post<BulkImportResult>('/api/bulk/import/', formData, {
+lib/api/bulk.ts:53:    const response = await apiClient.post<BulkImportResult>('/api/bulk/import-trainees/', formData, {
+lib/api/bulk.ts:68:    const response = await apiClient.post<BulkImportResult>('/api/bulk/import-supervisors/', formData, {
+lib/api/bulk.ts:83:    const response = await apiClient.post<BulkImportResult>('/api/bulk/import-residents/', formData, {
+lib/api/bulk.ts:95:    const response = await apiClient.post<BulkAssignmentResult>('/api/bulk/assignment/', data);
+lib/api/bulk.ts:103:    const response = await apiClient.post<BulkImportResult>('/api/bulk/review/', payload);
 lib/api/notifications.ts:30:    const response = await apiClient.get<{ results: Notification[]; count: number }>('/api/notifications/', { params });
 lib/api/notifications.ts:39:    const response = await apiClient.get<{ results: Notification[]; count: number }>('/api/notifications/', {
 lib/api/notifications.ts:50:    const response = await apiClient.get<{ unread: number }>('/api/notifications/unread-count/');
 lib/api/notifications.ts:59:    const response = await apiClient.post<{ marked: number }>(`/api/notifications/mark-read/`, {
 lib/api/notifications.ts:69:    const response = await apiClient.get<NotificationPreferences>('/api/notifications/preferences/');
-lib/api/notifications.ts:77:    const response = await apiClient.put<NotificationPreferences>('/api/notifications/preferences/', preferences);
+lib/api/notifications.ts:77:    const response = await apiClient.patch<NotificationPreferences>('/api/notifications/preferences/', preferences);
 lib/api/academics.ts:48:      const response = await apiClient.get<{ results: Department[]; count: number }>('/academics/api/departments/', { params });
 lib/api/academics.ts:52:      const response = await apiClient.get<Department>(`/academics/api/departments/${id}/`);
 lib/api/academics.ts:56:      const response = await apiClient.post<Department>('/academics/api/departments/', data);
@@ -80,5 +77,3 @@ lib/api/reports.ts:48:    const response = await apiClient.post<GeneratedReport>
 lib/api/reports.ts:59:    const response = await apiClient.get<{ results: ScheduledReport[]; count: number }>('/api/reports/scheduled/');
 lib/api/reports.ts:67:    const response = await apiClient.post<ScheduledReport>('/api/reports/scheduled/', data);
 lib/api/reports.ts:75:    const response = await apiClient.get<ScheduledReport>(`/api/reports/scheduled/${id}/`);
-app/register/page.tsx:49:            response = await apiClient.get<{ supervisors: Supervisor[] }>(
-app/register/page.tsx:54:            response = await apiClient.get<{ supervisors: Supervisor[] }>(
