@@ -101,3 +101,7 @@ logs/sims.log
 docs/_audit/**
 !docs/_audit/
 !docs/_audit/README.md
+
+# Large backups and patches
+docs/_archive/_snapshots/*.tar.gz
+docs/_archive/_patches/*.patch
