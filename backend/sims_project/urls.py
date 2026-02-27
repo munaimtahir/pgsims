@@ -111,8 +111,6 @@ urlpatterns = [
     path("readiness/", readiness, name="readiness"),
     path("liveness/", liveness, name="liveness"),
     path("robots.txt", robots_txt, name="robots_txt"),
-    # Custom admin logout URL (must come before admin/ URL)
-    path("admin/logout/", admin_logout_view, name="admin_logout"),
     # Django Admin
     path("admin/", admin.site.urls),
     # SIMS App URLs
@@ -145,9 +143,4 @@ if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 
-# Admin customization
-admin.site.site_header = "SIMS Administration"
-admin.site.site_title = "SIMS Admin"
-admin.site.index_title = "Welcome to SIMS"
-admin.site.site_url = "/"
-admin.site.enable_nav_sidebar = True
+# Admin customization disabled to restore vanilla Django admin defaults.

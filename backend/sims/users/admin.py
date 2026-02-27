@@ -192,7 +192,4 @@ class UserAdmin(BaseUserAdmin, ImportExportModelAdmin):
         super().save_model(request, obj, form, change)
 
 
-# Customize admin site headers
-admin.site.site_header = "SIMS - Postgraduate Medical Training System"
-admin.site.site_title = "SIMS Admin"
-admin.site.index_title = "Welcome to SIMS Administration"
+# Admin branding overrides disabled to restore vanilla Django admin defaults.
