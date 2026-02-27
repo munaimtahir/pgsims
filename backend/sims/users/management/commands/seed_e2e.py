@@ -35,9 +35,10 @@ class Command(BaseCommand):
 
         departments = []
         for code, name in departments_seed:
+            # Department.name is unique; key on name to avoid collisions if legacy codes differ.
             department, _ = Department.objects.update_or_create(
-                code=code,
-                defaults={"name": name, "active": True},
+                name=name,
+                defaults={"code": code, "active": True},
             )
             departments.append(department)
             HospitalDepartment.objects.update_or_create(

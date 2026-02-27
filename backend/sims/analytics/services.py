@@ -11,13 +11,7 @@ from django.core.cache import cache
 from django.db import models
 from django.db.models import Avg, Count, DurationField, ExpressionWrapper, F, Max, QuerySet
 
-from sims.analytics.event_tracking import (
-    ANALYTICS_EVENT_ALLOWLIST,
-    normalize_ui_event_type,
-    safe_track_event,
-    should_sample,
-    track_event,
-)
+from sims.analytics.event_tracking import normalize_ui_event_type, safe_track_event, should_sample, track_event
 from sims.logbook.models import LogbookEntry
 
 User = get_user_model()
@@ -540,5 +534,4 @@ __all__ = [
     "safe_track_event",
     "should_sample",
     "normalize_ui_event_type",
-    "ANALYTICS_EVENT_ALLOWLIST",
 ]

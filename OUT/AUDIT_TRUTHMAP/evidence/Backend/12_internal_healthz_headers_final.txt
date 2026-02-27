@@ -1,0 +1,16 @@
+HTTP/1.1 200 OK
+Server: gunicorn
+Date: Fri, 27 Feb 2026 00:36:32 GMT
+Connection: close
+Content-Type: application/json
+Expires: Fri, 27 Feb 2026 00:36:32 GMT
+Cache-Control: max-age=0, no-cache, no-store, must-revalidate, private
+X-Response-Time: 1014ms
+X-Frame-Options: DENY
+X-Request-ID: e511e3a4a28442b2852fad446b8389e5
+Content-Length: 82
+Vary: Cookie, origin
+X-Content-Type-Options: nosniff
+Referrer-Policy: same-origin
+Cross-Origin-Opener-Policy: same-origin
+

@@ -1,0 +1,14 @@
+HTTP/2 404 
+alt-svc: h3=":443"; ma=2592000
+cache-control: private, no-cache, no-store, max-age=0, must-revalidate
+content-type: text/html; charset=utf-8
+date: Fri, 27 Feb 2026 00:21:20 GMT
+link: </_next/static/media/4473ecc91f70f139-s.p.woff>; rel=preload; as="font"; crossorigin=""; type="font/woff", </_next/static/media/463dafcda517f24f-s.p.woff>; rel=preload; as="font"; crossorigin=""; type="font/woff"
+referrer-policy: strict-origin-when-cross-origin
+strict-transport-security: max-age=31536000; includeSubDomains; preload
+vary: RSC, Next-Router-State-Tree, Next-Router-Prefetch, Accept-Encoding
+via: 1.1 Caddy
+x-content-type-options: nosniff
+x-frame-options: SAMEORIGIN
+x-powered-by: Next.js
+

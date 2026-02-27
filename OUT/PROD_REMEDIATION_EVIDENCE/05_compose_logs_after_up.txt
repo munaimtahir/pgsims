@@ -1,0 +1,469 @@
+pgsims_frontend_prod  |   ▲ Next.js 14.2.33
+pgsims_frontend_prod  |   - Local:        http://localhost:3000
+pgsims_frontend_prod  |   - Network:      http://0.0.0.0:3000
+pgsims_frontend_prod  | 
+pgsims_frontend_prod  |  ✓ Starting...
+pgsims_frontend_prod  |  ✓ Ready in 135ms
+pgsims_redis_prod     | 1:C 27 Feb 2026 00:13:54.368 # WARNING Memory overcommit must be enabled! Without it, a background save or replication may fail under low memory condition. Being disabled, it can also cause failures without low memory condition, see https://github.com/jemalloc/jemalloc/issues/1328. To fix this issue add 'vm.overcommit_memory = 1' to /etc/sysctl.conf and then reboot or run the command 'sysctl vm.overcommit_memory=1' for this to take effect.
+pgsims_redis_prod     | 1:C 27 Feb 2026 00:13:54.368 * oO0OoO0OoO0Oo Redis is starting oO0OoO0OoO0Oo
+pgsims_redis_prod     | 1:C 27 Feb 2026 00:13:54.368 * Redis version=7.4.7, bits=64, commit=00000000, modified=0, pid=1, just started
+pgsims_redis_prod     | 1:C 27 Feb 2026 00:13:54.368 * Configuration loaded
+pgsims_redis_prod     | 1:M 27 Feb 2026 00:13:54.369 * Increased maximum number of open files to 10032 (it was originally set to 1024).
+pgsims_redis_prod     | 1:M 27 Feb 2026 00:13:54.369 * monotonic clock: POSIX clock_gettime
+pgsims_redis_prod     | 1:M 27 Feb 2026 00:13:54.370 * Running mode=standalone, port=6379.
+pgsims_redis_prod     | 1:M 27 Feb 2026 00:13:54.371 * Server initialized
+pgsims_redis_prod     | 1:M 27 Feb 2026 00:13:54.371 * Reading RDB base file on AOF loading...
+pgsims_redis_prod     | 1:M 27 Feb 2026 00:13:54.371 * Loading RDB produced by version 7.4.7
+pgsims_redis_prod     | 1:M 27 Feb 2026 00:13:54.371 * RDB age 7385 seconds
+pgsims_redis_prod     | 1:M 27 Feb 2026 00:13:54.371 * RDB memory usage when created 0.90 Mb
+pgsims_redis_prod     | 1:M 27 Feb 2026 00:13:54.371 * RDB is base AOF
+pgsims_redis_prod     | 1:M 27 Feb 2026 00:13:54.371 * Done loading RDB, keys loaded: 0, keys expired: 0.
+pgsims_redis_prod     | 1:M 27 Feb 2026 00:13:54.371 * DB loaded from base file appendonly.aof.1.base.rdb: 0.000 seconds
+pgsims_redis_prod     | 1:M 27 Feb 2026 00:13:54.380 * DB loaded from incr file appendonly.aof.1.incr.aof: 0.009 seconds
+pgsims_redis_prod     | 1:M 27 Feb 2026 00:13:54.380 * DB loaded from append only file: 0.009 seconds
+pgsims_redis_prod     | 1:M 27 Feb 2026 00:13:54.380 * Opening AOF incr file appendonly.aof.1.incr.aof on server start
+pgsims_redis_prod     | 1:M 27 Feb 2026 00:13:54.380 * Ready to accept connections tcp
+pgsims_redis_prod     | 1:M 27 Feb 2026 00:18:55.006 * 100 changes in 300 seconds. Saving...
+pgsims_redis_prod     | 1:M 27 Feb 2026 00:18:55.006 * Background saving started by pid 199
+pgsims_redis_prod     | 199:C 27 Feb 2026 00:18:55.011 * DB saved on disk
+pgsims_redis_prod     | 199:C 27 Feb 2026 00:18:55.011 * Fork CoW for RDB: current 0 MB, peak 0 MB, average 0 MB
+pgsims_redis_prod     | 1:M 27 Feb 2026 00:18:55.107 * Background saving terminated with success
+pgsims_beat           | celery beat v5.6.2 (recovery) is starting.
+pgsims_beat           | [INFO] 2026-02-27 00:16:13,952 sims.certificates Certificate periodic tasks setup completed
+pgsims_beat           | [INFO] 2026-02-27 00:16:13,967 sims.logbook Logbook periodic tasks setup completed
+pgsims_beat           | __    -    ... __   -        _
+pgsims_beat           | LocalTime -> 2026-02-27 00:16:14
+pgsims_beat           | Configuration ->
+pgsims_beat           |     . broker -> redis://redis:6379/1
+pgsims_beat           |     . loader -> celery.loaders.app.AppLoader
+pgsims_beat           |     . scheduler -> django_celery_beat.schedulers.DatabaseScheduler
+pgsims_beat           | 
+pgsims_beat           |     . logfile -> [stderr]@%INFO
+pgsims_beat           |     . maxinterval -> 5.00 seconds (5s)
+pgsims_beat           | [2026-02-27 00:16:14,495: INFO/MainProcess] beat: Starting...
+pgsims_beat           | [2026-02-27 00:16:14,625: INFO/MainProcess] DatabaseScheduler: Schedule changed.
+pgsims_backend_prod   | [2026-02-27 00:16:17 +0000] [25] [INFO] Booting worker with pid: 25
+pgsims_backend_prod   | [2026-02-27 00:16:17 +0000] [26] [INFO] Booting worker with pid: 26
+pgsims_backend_prod   | [2026-02-27 00:16:17 +0000] [27] [INFO] Booting worker with pid: 27
+pgsims_backend_prod   | [2026-02-27 00:16:17 +0000] [28] [INFO] Booting worker with pid: 28
+pgsims_backend_prod   | [INFO] 2026-02-27 00:16:19,102 sims.certificates Certificate periodic tasks setup completed
+pgsims_backend_prod   | [INFO] 2026-02-27 00:16:19,127 sims.logbook Logbook periodic tasks setup completed
+pgsims_backend_prod   | [INFO] 2026-02-27 00:16:19,154 sims.certificates Certificate periodic tasks setup completed
+pgsims_backend_prod   | [INFO] 2026-02-27 00:16:19,168 sims.logbook Logbook periodic tasks setup completed
+pgsims_backend_prod   | [INFO] 2026-02-27 00:16:19,241 sims.wsgi SIMS WSGI application initialized successfully
+pgsims_backend_prod   | [INFO] 2026-02-27 00:16:19,246 sims.certificates Certificate periodic tasks setup completed
+pgsims_backend_prod   | [INFO] 2026-02-27 00:16:19,248 sims.certificates Certificate periodic tasks setup completed
+pgsims_backend_prod   | [INFO] 2026-02-27 00:16:19,252 sims.wsgi SIMS WSGI application initialized successfully
+pgsims_backend_prod   | [INFO] 2026-02-27 00:16:19,256 sims.logbook Logbook periodic tasks setup completed
+pgsims_backend_prod   | [INFO] 2026-02-27 00:16:19,259 sims.logbook Logbook periodic tasks setup completed
+pgsims_backend_prod   | [INFO] 2026-02-27 00:16:19,311 sims.wsgi SIMS WSGI application initialized successfully
+pgsims_backend_prod   | [INFO] 2026-02-27 00:16:19,313 sims.wsgi SIMS WSGI application initialized successfully
+pgsims_backend_prod   | [WARNING] 2026-02-27 00:16:23,939 sims.performance Slow request: GET /healthz/ took 1432ms
+pgsims_backend_prod   | [ERROR] 2026-02-27 00:16:29,997 django.request Internal Server Error: /api/analytics/dashboard/overview/
+pgsims_backend_prod   | Traceback (most recent call last):
+pgsims_backend_prod   |   File "/home/sims/.local/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+pgsims_backend_prod   |     response = get_response(request)
+pgsims_backend_prod   |                ^^^^^^^^^^^^^^^^^^^^^
+pgsims_backend_prod   |   File "/home/sims/.local/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+pgsims_backend_prod   |     response = wrapped_callback(request, *callback_args, **callback_kwargs)
+pgsims_backend_prod   |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+pgsims_backend_prod   |   File "/home/sims/.local/lib/python3.11/site-packages/django/views/decorators/csrf.py", line 56, in wrapper_view
+pgsims_backend_prod   |     return view_func(*args, **kwargs)
+pgsims_backend_prod   |            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+pgsims_backend_prod   |   File "/home/sims/.local/lib/python3.11/site-packages/django/views/generic/base.py", line 105, in view
+pgsims_backend_prod   |     return self.dispatch(request, *args, **kwargs)
+pgsims_backend_prod   |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+pgsims_backend_prod   |   File "/home/sims/.local/lib/python3.11/site-packages/rest_framework/views.py", line 515, in dispatch
+pgsims_backend_prod   |     response = self.handle_exception(exc)
+pgsims_backend_prod   |                ^^^^^^^^^^^^^^^^^^^^^^^^^^
+pgsims_backend_prod   |   File "/home/sims/.local/lib/python3.11/site-packages/rest_framework/views.py", line 475, in handle_exception
+pgsims_backend_prod   |     self.raise_uncaught_exception(exc)
+pgsims_backend_prod   |   File "/home/sims/.local/lib/python3.11/site-packages/rest_framework/views.py", line 486, in raise_uncaught_exception
+pgsims_backend_prod   |     raise exc
+pgsims_backend_prod   |   File "/home/sims/.local/lib/python3.11/site-packages/rest_framework/views.py", line 512, in dispatch
+pgsims_backend_prod   |     response = handler(request, *args, **kwargs)
+pgsims_backend_prod   |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+pgsims_backend_prod   |   File "/app/sims/analytics/views.py", line 158, in get
+pgsims_backend_prod   |     overview = dashboard_overview(request.user)
+pgsims_backend_prod   |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+pgsims_backend_prod   |   File "/app/sims/analytics/services.py", line 279, in dashboard_overview
+pgsims_backend_prod   |     certificates_qs = Certificate.objects.filter(resident=user)
+pgsims_backend_prod   |                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+pgsims_backend_prod   |   File "/home/sims/.local/lib/python3.11/site-packages/django/db/models/manager.py", line 87, in manager_method
+pgsims_backend_prod   |     return getattr(self.get_queryset(), name)(*args, **kwargs)
+pgsims_backend_prod   |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+pgsims_backend_prod   |   File "/home/sims/.local/lib/python3.11/site-packages/django/db/models/query.py", line 1438, in filter
+pgsims_backend_prod   |     return self._filter_or_exclude(False, args, kwargs)
+pgsims_backend_prod   |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+pgsims_backend_prod   |   File "/home/sims/.local/lib/python3.11/site-packages/django/db/models/query.py", line 1456, in _filter_or_exclude
+pgsims_backend_prod   |     clone._filter_or_exclude_inplace(negate, args, kwargs)
+pgsims_backend_prod   |   File "/home/sims/.local/lib/python3.11/site-packages/django/db/models/query.py", line 1466, in _filter_or_exclude_inplace
+pgsims_backend_prod   |     self._query.add_q(Q(*args, **kwargs))
+pgsims_backend_prod   |   File "/home/sims/.local/lib/python3.11/site-packages/django/db/models/sql/query.py", line 1548, in add_q
+pgsims_backend_prod   |     clause, _ = self._add_q(q_object, self.used_aliases)
+pgsims_backend_prod   |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+pgsims_backend_prod   |   File "/home/sims/.local/lib/python3.11/site-packages/django/db/models/sql/query.py", line 1579, in _add_q
+pgsims_backend_prod   |     child_clause, needed_inner = self.build_filter(
+pgsims_backend_prod   |                                  ^^^^^^^^^^^^^^^^^^
+pgsims_backend_prod   |   File "/home/sims/.local/lib/python3.11/site-packages/django/db/models/sql/query.py", line 1429, in build_filter
+pgsims_backend_prod   |     lookups, parts, reffed_expression = self.solve_lookup_type(arg, summarize)
+pgsims_backend_prod   |                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+pgsims_backend_prod   |   File "/home/sims/.local/lib/python3.11/site-packages/django/db/models/sql/query.py", line 1239, in solve_lookup_type
+pgsims_backend_prod   |     _, field, _, lookup_parts = self.names_to_path(lookup_splitted, self.get_meta())
+pgsims_backend_prod   |                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+pgsims_backend_prod   |   File "/home/sims/.local/lib/python3.11/site-packages/django/db/models/sql/query.py", line 1733, in names_to_path
+pgsims_backend_prod   |     raise FieldError(
+pgsims_backend_prod   | django.core.exceptions.FieldError: Cannot resolve keyword 'resident' into field. Choices are: additional_documents, certificate_file, certificate_number, certificate_type, certificate_type_id, cme_points_earned, cpd_credits_earned, created_at, created_by, created_by_id, description, expiry_date, id, is_verified, issue_date, issuing_organization, pg, pg_id, reviews, skills_acquired, status, title, updated_at, verification_code, verification_url, verified_at, verified_by, verified_by_id
+pgsims_backend_prod   | [ERROR] 2026-02-27 00:16:30,618 django.request Internal Server Error: /api/analytics/dashboard/overview/
+pgsims_db_prod        | 2026-02-27 00:14:08.965 UTC [74] FATAL:  password authentication failed for user "sims_user"
+pgsims_db_prod        | 2026-02-27 00:14:08.965 UTC [74] DETAIL:  Connection matched pg_hba.conf line 100: "host all all all scram-sha-256"
+pgsims_db_prod        | 2026-02-27 00:14:08.973 UTC [75] FATAL:  password authentication failed for user "sims_user"
+pgsims_db_prod        | 2026-02-27 00:14:08.973 UTC [75] DETAIL:  Connection matched pg_hba.conf line 100: "host all all all scram-sha-256"
+pgsims_db_prod        | 2026-02-27 00:14:08.981 UTC [76] FATAL:  password authentication failed for user "sims_user"
+pgsims_db_prod        | 2026-02-27 00:14:08.981 UTC [76] DETAIL:  Connection matched pg_hba.conf line 100: "host all all all scram-sha-256"
+pgsims_db_prod        | 2026-02-27 00:14:08.994 UTC [77] FATAL:  password authentication failed for user "sims_user"
+pgsims_db_prod        | 2026-02-27 00:14:08.994 UTC [77] DETAIL:  Connection matched pg_hba.conf line 100: "host all all all scram-sha-256"
+pgsims_db_prod        | 2026-02-27 00:14:09.530 UTC [78] FATAL:  password authentication failed for user "sims_user"
+pgsims_db_prod        | 2026-02-27 00:14:09.530 UTC [78] DETAIL:  Connection matched pg_hba.conf line 100: "host all all all scram-sha-256"
+pgsims_db_prod        | 2026-02-27 00:14:11.607 UTC [79] FATAL:  password authentication failed for user "sims_user"
+pgsims_db_prod        | 2026-02-27 00:14:11.607 UTC [79] DETAIL:  Connection matched pg_hba.conf line 100: "host all all all scram-sha-256"
+pgsims_db_prod        | 2026-02-27 00:14:11.618 UTC [80] FATAL:  password authentication failed for user "sims_user"
+pgsims_db_prod        | 2026-02-27 00:14:11.618 UTC [80] DETAIL:  Connection matched pg_hba.conf line 100: "host all all all scram-sha-256"
+pgsims_db_prod        | 2026-02-27 00:14:11.627 UTC [81] FATAL:  password authentication failed for user "sims_user"
+pgsims_db_prod        | 2026-02-27 00:14:11.627 UTC [81] DETAIL:  Connection matched pg_hba.conf line 100: "host all all all scram-sha-256"
+pgsims_db_prod        | 2026-02-27 00:14:11.640 UTC [82] FATAL:  password authentication failed for user "sims_user"
+pgsims_db_prod        | 2026-02-27 00:14:11.640 UTC [82] DETAIL:  Connection matched pg_hba.conf line 100: "host all all all scram-sha-256"
+pgsims_db_prod        | 2026-02-27 00:14:11.740 UTC [83] FATAL:  password authentication failed for user "sims_user"
+pgsims_db_prod        | 2026-02-27 00:14:11.740 UTC [83] DETAIL:  Connection matched pg_hba.conf line 100: "host all all all scram-sha-256"
+pgsims_db_prod        | 2026-02-27 00:14:11.753 UTC [84] FATAL:  password authentication failed for user "sims_user"
+pgsims_db_prod        | 2026-02-27 00:14:11.753 UTC [84] DETAIL:  Connection matched pg_hba.conf line 100: "host all all all scram-sha-256"
+pgsims_db_prod        | 2026-02-27 00:14:11.765 UTC [85] FATAL:  password authentication failed for user "sims_user"
+pgsims_db_prod        | 2026-02-27 00:14:11.765 UTC [85] DETAIL:  Connection matched pg_hba.conf line 100: "host all all all scram-sha-256"
+pgsims_db_prod        | 2026-02-27 00:14:11.783 UTC [86] FATAL:  password authentication failed for user "sims_user"
+pgsims_db_prod        | 2026-02-27 00:14:11.783 UTC [86] DETAIL:  Connection matched pg_hba.conf line 100: "host all all all scram-sha-256"
+pgsims_db_prod        | 2026-02-27 00:14:12.172 UTC [87] FATAL:  password authentication failed for user "sims_user"
+pgsims_db_prod        | 2026-02-27 00:14:12.172 UTC [87] DETAIL:  Connection matched pg_hba.conf line 100: "host all all all scram-sha-256"
+pgsims_db_prod        | 2026-02-27 00:14:12.461 UTC [88] FATAL:  password authentication failed for user "sims_user"
+pgsims_db_prod        | 2026-02-27 00:14:12.461 UTC [88] DETAIL:  Connection matched pg_hba.conf line 100: "host all all all scram-sha-256"
+pgsims_db_prod        | 2026-02-27 00:14:14.461 UTC [96] FATAL:  database "sims_user" does not exist
+pgsims_db_prod        | 2026-02-27 00:14:14.485 UTC [97] FATAL:  password authentication failed for user "sims_user"
+pgsims_db_prod        | 2026-02-27 00:14:14.485 UTC [97] DETAIL:  Connection matched pg_hba.conf line 100: "host all all all scram-sha-256"
+pgsims_db_prod        | 2026-02-27 00:14:14.495 UTC [98] FATAL:  password authentication failed for user "sims_user"
+pgsims_db_prod        | 2026-02-27 00:14:14.495 UTC [98] DETAIL:  Connection matched pg_hba.conf line 100: "host all all all scram-sha-256"
+pgsims_db_prod        | 2026-02-27 00:14:14.504 UTC [99] FATAL:  password authentication failed for user "sims_user"
+pgsims_db_prod        | 2026-02-27 00:14:14.504 UTC [99] DETAIL:  Connection matched pg_hba.conf line 100: "host all all all scram-sha-256"
+pgsims_backend_prod   | Traceback (most recent call last):
+pgsims_backend_prod   |   File "/home/sims/.local/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+pgsims_backend_prod   |     response = get_response(request)
+pgsims_backend_prod   |                ^^^^^^^^^^^^^^^^^^^^^
+pgsims_backend_prod   |   File "/home/sims/.local/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+pgsims_backend_prod   |     response = wrapped_callback(request, *callback_args, **callback_kwargs)
+pgsims_backend_prod   |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+pgsims_backend_prod   |   File "/home/sims/.local/lib/python3.11/site-packages/django/views/decorators/csrf.py", line 56, in wrapper_view
+pgsims_backend_prod   |     return view_func(*args, **kwargs)
+pgsims_backend_prod   |            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+pgsims_backend_prod   |   File "/home/sims/.local/lib/python3.11/site-packages/django/views/generic/base.py", line 105, in view
+pgsims_backend_prod   |     return self.dispatch(request, *args, **kwargs)
+pgsims_backend_prod   |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+pgsims_backend_prod   |   File "/home/sims/.local/lib/python3.11/site-packages/rest_framework/views.py", line 515, in dispatch
+pgsims_backend_prod   |     response = self.handle_exception(exc)
+pgsims_backend_prod   |                ^^^^^^^^^^^^^^^^^^^^^^^^^^
+pgsims_backend_prod   |   File "/home/sims/.local/lib/python3.11/site-packages/rest_framework/views.py", line 475, in handle_exception
+pgsims_backend_prod   |     self.raise_uncaught_exception(exc)
+pgsims_backend_prod   |   File "/home/sims/.local/lib/python3.11/site-packages/rest_framework/views.py", line 486, in raise_uncaught_exception
+pgsims_backend_prod   |     raise exc
+pgsims_db_prod        | 2026-02-27 00:14:14.517 UTC [100] FATAL:  password authentication failed for user "sims_user"
+pgsims_db_prod        | 2026-02-27 00:14:14.517 UTC [100] DETAIL:  Connection matched pg_hba.conf line 100: "host all all all scram-sha-256"
+pgsims_db_prod        | 2026-02-27 00:14:15.080 UTC [101] FATAL:  password authentication failed for user "sims_user"
+pgsims_db_prod        | 2026-02-27 00:14:15.080 UTC [101] DETAIL:  Connection matched pg_hba.conf line 100: "host all all all scram-sha-256"
+pgsims_db_prod        | 2026-02-27 00:14:17.775 UTC [102] FATAL:  password authentication failed for user "sims_user"
+pgsims_db_prod        | 2026-02-27 00:14:17.775 UTC [102] DETAIL:  Connection matched pg_hba.conf line 100: "host all all all scram-sha-256"
+pgsims_db_prod        | 2026-02-27 00:14:17.789 UTC [103] FATAL:  password authentication failed for user "sims_user"
+pgsims_backend_prod   |   File "/home/sims/.local/lib/python3.11/site-packages/rest_framework/views.py", line 512, in dispatch
+pgsims_backend_prod   |     response = handler(request, *args, **kwargs)
+pgsims_backend_prod   |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+pgsims_backend_prod   |   File "/app/sims/analytics/views.py", line 158, in get
+pgsims_backend_prod   |     overview = dashboard_overview(request.user)
+pgsims_backend_prod   |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+pgsims_backend_prod   |   File "/app/sims/analytics/services.py", line 279, in dashboard_overview
+pgsims_backend_prod   |     certificates_qs = Certificate.objects.filter(resident=user)
+pgsims_backend_prod   |                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+pgsims_db_prod        | 2026-02-27 00:14:17.789 UTC [103] DETAIL:  Connection matched pg_hba.conf line 100: "host all all all scram-sha-256"
+pgsims_db_prod        | 2026-02-27 00:14:17.805 UTC [104] FATAL:  password authentication failed for user "sims_user"
+pgsims_db_prod        | 2026-02-27 00:14:17.805 UTC [104] DETAIL:  Connection matched pg_hba.conf line 100: "host all all all scram-sha-256"
+pgsims_db_prod        | 2026-02-27 00:14:17.825 UTC [105] FATAL:  password authentication failed for user "sims_user"
+pgsims_db_prod        | 2026-02-27 00:14:17.825 UTC [105] DETAIL:  Connection matched pg_hba.conf line 100: "host all all all scram-sha-256"
+pgsims_db_prod        | 2026-02-27 00:14:17.977 UTC [106] FATAL:  password authentication failed for user "sims_user"
+pgsims_db_prod        | 2026-02-27 00:14:17.977 UTC [106] DETAIL:  Connection matched pg_hba.conf line 100: "host all all all scram-sha-256"
+pgsims_db_prod        | 2026-02-27 00:14:17.978 UTC [107] FATAL:  password authentication failed for user "sims_user"
+pgsims_db_prod        | 2026-02-27 00:14:17.978 UTC [107] DETAIL:  Connection matched pg_hba.conf line 100: "host all all all scram-sha-256"
+pgsims_backend_prod   |   File "/home/sims/.local/lib/python3.11/site-packages/django/db/models/manager.py", line 87, in manager_method
+pgsims_backend_prod   |     return getattr(self.get_queryset(), name)(*args, **kwargs)
+pgsims_backend_prod   |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+pgsims_backend_prod   |   File "/home/sims/.local/lib/python3.11/site-packages/django/db/models/query.py", line 1438, in filter
+pgsims_backend_prod   |     return self._filter_or_exclude(False, args, kwargs)
+pgsims_backend_prod   |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+pgsims_backend_prod   |   File "/home/sims/.local/lib/python3.11/site-packages/django/db/models/query.py", line 1456, in _filter_or_exclude
+pgsims_backend_prod   |     clone._filter_or_exclude_inplace(negate, args, kwargs)
+pgsims_db_prod        | 2026-02-27 00:14:17.988 UTC [108] FATAL:  password authentication failed for user "sims_user"
+pgsims_db_prod        | 2026-02-27 00:14:17.988 UTC [108] DETAIL:  Connection matched pg_hba.conf line 100: "host all all all scram-sha-256"
+pgsims_db_prod        | 2026-02-27 00:14:17.993 UTC [109] FATAL:  password authentication failed for user "sims_user"
+pgsims_db_prod        | 2026-02-27 00:14:17.993 UTC [109] DETAIL:  Connection matched pg_hba.conf line 100: "host all all all scram-sha-256"
+pgsims_db_prod        | 2026-02-27 00:14:17.999 UTC [110] FATAL:  password authentication failed for user "sims_user"
+pgsims_db_prod        | 2026-02-27 00:14:17.999 UTC [110] DETAIL:  Connection matched pg_hba.conf line 100: "host all all all scram-sha-256"
+pgsims_db_prod        | 2026-02-27 00:14:18.008 UTC [111] FATAL:  password authentication failed for user "sims_user"
+pgsims_db_prod        | 2026-02-27 00:14:18.008 UTC [111] DETAIL:  Connection matched pg_hba.conf line 100: "host all all all scram-sha-256"
+pgsims_db_prod        | 2026-02-27 00:14:18.016 UTC [112] FATAL:  password authentication failed for user "sims_user"
+pgsims_db_prod        | 2026-02-27 00:14:18.016 UTC [112] DETAIL:  Connection matched pg_hba.conf line 100: "host all all all scram-sha-256"
+pgsims_db_prod        | 2026-02-27 00:14:18.029 UTC [113] FATAL:  password authentication failed for user "sims_user"
+pgsims_db_prod        | 2026-02-27 00:14:18.029 UTC [113] DETAIL:  Connection matched pg_hba.conf line 100: "host all all all scram-sha-256"
+pgsims_db_prod        | 2026-02-27 00:14:18.376 UTC [114] FATAL:  password authentication failed for user "sims_user"
+pgsims_db_prod        | 2026-02-27 00:14:18.376 UTC [114] DETAIL:  Connection matched pg_hba.conf line 100: "host all all all scram-sha-256"
+pgsims_db_prod        | 2026-02-27 00:14:18.900 UTC [115] FATAL:  password authentication failed for user "sims_user"
+pgsims_db_prod        | 2026-02-27 00:14:18.900 UTC [115] DETAIL:  Connection matched pg_hba.conf line 100: "host all all all scram-sha-256"
+pgsims_db_prod        | 2026-02-27 00:14:18.906 UTC [116] FATAL:  password authentication failed for user "sims_user"
+pgsims_db_prod        | 2026-02-27 00:14:18.906 UTC [116] DETAIL:  Connection matched pg_hba.conf line 100: "host all all all scram-sha-256"
+pgsims_db_prod        | 2026-02-27 00:14:22.146 UTC [117] FATAL:  password authentication failed for user "sims_user"
+pgsims_db_prod        | 2026-02-27 00:14:22.146 UTC [117] DETAIL:  Connection matched pg_hba.conf line 100: "host all all all scram-sha-256"
+pgsims_db_prod        | 2026-02-27 00:14:22.155 UTC [118] FATAL:  password authentication failed for user "sims_user"
+pgsims_db_prod        | 2026-02-27 00:14:22.155 UTC [118] DETAIL:  Connection matched pg_hba.conf line 100: "host all all all scram-sha-256"
+pgsims_db_prod        | 2026-02-27 00:14:22.163 UTC [119] FATAL:  password authentication failed for user "sims_user"
+pgsims_db_prod        | 2026-02-27 00:14:22.163 UTC [119] DETAIL:  Connection matched pg_hba.conf line 100: "host all all all scram-sha-256"
+pgsims_db_prod        | 2026-02-27 00:14:22.180 UTC [120] FATAL:  password authentication failed for user "sims_user"
+pgsims_db_prod        | 2026-02-27 00:14:22.180 UTC [120] DETAIL:  Connection matched pg_hba.conf line 100: "host all all all scram-sha-256"
+pgsims_db_prod        | 2026-02-27 00:14:22.712 UTC [121] FATAL:  password authentication failed for user "sims_user"
+pgsims_db_prod        | 2026-02-27 00:14:22.712 UTC [121] DETAIL:  Connection matched pg_hba.conf line 100: "host all all all scram-sha-256"
+pgsims_db_prod        | 2026-02-27 00:14:24.509 UTC [128] FATAL:  database "sims_user" does not exist
+pgsims_db_prod        | 2026-02-27 00:14:26.810 UTC [129] FATAL:  password authentication failed for user "sims_user"
+pgsims_db_prod        | 2026-02-27 00:14:26.810 UTC [129] DETAIL:  Connection matched pg_hba.conf line 100: "host all all all scram-sha-256"
+pgsims_backend_prod   |   File "/home/sims/.local/lib/python3.11/site-packages/django/db/models/query.py", line 1466, in _filter_or_exclude_inplace
+pgsims_backend_prod   |     self._query.add_q(Q(*args, **kwargs))
+pgsims_backend_prod   |   File "/home/sims/.local/lib/python3.11/site-packages/django/db/models/sql/query.py", line 1548, in add_q
+pgsims_backend_prod   |     clause, _ = self._add_q(q_object, self.used_aliases)
+pgsims_backend_prod   |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+pgsims_backend_prod   |   File "/home/sims/.local/lib/python3.11/site-packages/django/db/models/sql/query.py", line 1579, in _add_q
+pgsims_backend_prod   |     child_clause, needed_inner = self.build_filter(
+pgsims_backend_prod   |                                  ^^^^^^^^^^^^^^^^^^
+pgsims_backend_prod   |   File "/home/sims/.local/lib/python3.11/site-packages/django/db/models/sql/query.py", line 1429, in build_filter
+pgsims_backend_prod   |     lookups, parts, reffed_expression = self.solve_lookup_type(arg, summarize)
+pgsims_backend_prod   |                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+pgsims_backend_prod   |   File "/home/sims/.local/lib/python3.11/site-packages/django/db/models/sql/query.py", line 1239, in solve_lookup_type
+pgsims_backend_prod   |     _, field, _, lookup_parts = self.names_to_path(lookup_splitted, self.get_meta())
+pgsims_backend_prod   |                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+pgsims_backend_prod   |   File "/home/sims/.local/lib/python3.11/site-packages/django/db/models/sql/query.py", line 1733, in names_to_path
+pgsims_backend_prod   |     raise FieldError(
+pgsims_backend_prod   | django.core.exceptions.FieldError: Cannot resolve keyword 'resident' into field. Choices are: additional_documents, certificate_file, certificate_number, certificate_type, certificate_type_id, cme_points_earned, cpd_credits_earned, created_at, created_by, created_by_id, description, expiry_date, id, is_verified, issue_date, issuing_organization, pg, pg_id, reviews, skills_acquired, status, title, updated_at, verification_code, verification_url, verified_at, verified_by, verified_by_id
+pgsims_backend_prod   | [ERROR] 2026-02-27 00:16:31,052 django.request Internal Server Error: /api/analytics/dashboard/overview/
+pgsims_backend_prod   | Traceback (most recent call last):
+pgsims_backend_prod   |   File "/home/sims/.local/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+pgsims_db_prod        | 2026-02-27 00:14:26.819 UTC [130] FATAL:  password authentication failed for user "sims_user"
+pgsims_db_prod        | 2026-02-27 00:14:26.819 UTC [130] DETAIL:  Connection matched pg_hba.conf line 100: "host all all all scram-sha-256"
+pgsims_db_prod        | 2026-02-27 00:14:26.830 UTC [131] FATAL:  password authentication failed for user "sims_user"
+pgsims_db_prod        | 2026-02-27 00:14:26.830 UTC [131] DETAIL:  Connection matched pg_hba.conf line 100: "host all all all scram-sha-256"
+pgsims_db_prod        | 2026-02-27 00:14:26.844 UTC [132] FATAL:  password authentication failed for user "sims_user"
+pgsims_db_prod        | 2026-02-27 00:14:26.844 UTC [132] DETAIL:  Connection matched pg_hba.conf line 100: "host all all all scram-sha-256"
+pgsims_db_prod        | 2026-02-27 00:14:27.360 UTC [133] FATAL:  password authentication failed for user "sims_user"
+pgsims_backend_prod   |     response = get_response(request)
+pgsims_backend_prod   |                ^^^^^^^^^^^^^^^^^^^^^
+pgsims_backend_prod   |   File "/home/sims/.local/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+pgsims_backend_prod   |     response = wrapped_callback(request, *callback_args, **callback_kwargs)
+pgsims_backend_prod   |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+pgsims_backend_prod   |   File "/home/sims/.local/lib/python3.11/site-packages/django/views/decorators/csrf.py", line 56, in wrapper_view
+pgsims_backend_prod   |     return view_func(*args, **kwargs)
+pgsims_backend_prod   |            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+pgsims_backend_prod   |   File "/home/sims/.local/lib/python3.11/site-packages/django/views/generic/base.py", line 105, in view
+pgsims_backend_prod   |     return self.dispatch(request, *args, **kwargs)
+pgsims_backend_prod   |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+pgsims_backend_prod   |   File "/home/sims/.local/lib/python3.11/site-packages/rest_framework/views.py", line 515, in dispatch
+pgsims_backend_prod   |     response = self.handle_exception(exc)
+pgsims_backend_prod   |                ^^^^^^^^^^^^^^^^^^^^^^^^^^
+pgsims_backend_prod   |   File "/home/sims/.local/lib/python3.11/site-packages/rest_framework/views.py", line 475, in handle_exception
+pgsims_db_prod        | 2026-02-27 00:14:27.360 UTC [133] DETAIL:  Connection matched pg_hba.conf line 100: "host all all all scram-sha-256"
+pgsims_db_prod        | 2026-02-27 00:14:27.622 UTC [134] FATAL:  password authentication failed for user "sims_user"
+pgsims_db_prod        | 2026-02-27 00:14:27.622 UTC [134] DETAIL:  Connection matched pg_hba.conf line 100: "host all all all scram-sha-256"
+pgsims_db_prod        | 2026-02-27 00:14:27.633 UTC [135] FATAL:  password authentication failed for user "sims_user"
+pgsims_db_prod        | 2026-02-27 00:14:27.633 UTC [135] DETAIL:  Connection matched pg_hba.conf line 100: "host all all all scram-sha-256"
+pgsims_db_prod        | 2026-02-27 00:14:27.643 UTC [136] FATAL:  password authentication failed for user "sims_user"
+pgsims_db_prod        | 2026-02-27 00:14:27.643 UTC [136] DETAIL:  Connection matched pg_hba.conf line 100: "host all all all scram-sha-256"
+pgsims_db_prod        | 2026-02-27 00:14:27.659 UTC [137] FATAL:  password authentication failed for user "sims_user"
+pgsims_db_prod        | 2026-02-27 00:14:27.659 UTC [137] DETAIL:  Connection matched pg_hba.conf line 100: "host all all all scram-sha-256"
+pgsims_db_prod        | 2026-02-27 00:14:28.236 UTC [138] FATAL:  password authentication failed for user "sims_user"
+pgsims_db_prod        | 2026-02-27 00:14:28.236 UTC [138] DETAIL:  Connection matched pg_hba.conf line 100: "host all all all scram-sha-256"
+pgsims_db_prod        | 2026-02-27 00:14:34.554 UTC [146] FATAL:  database "sims_user" does not exist
+pgsims_db_prod        | 2026-02-27 00:14:36.153 UTC [154] FATAL:  role "postgres" does not exist
+pgsims_db_prod        | 2026-02-27 00:14:36.284 UTC [155] FATAL:  password authentication failed for user "sims_user"
+pgsims_db_prod        | 2026-02-27 00:14:36.284 UTC [155] DETAIL:  Connection matched pg_hba.conf line 100: "host all all all scram-sha-256"
+pgsims_db_prod        | 2026-02-27 00:14:36.295 UTC [156] FATAL:  password authentication failed for user "sims_user"
+pgsims_db_prod        | 2026-02-27 00:14:36.295 UTC [156] DETAIL:  Connection matched pg_hba.conf line 100: "host all all all scram-sha-256"
+pgsims_db_prod        | 2026-02-27 00:14:36.305 UTC [157] FATAL:  password authentication failed for user "sims_user"
+pgsims_db_prod        | 2026-02-27 00:14:36.305 UTC [157] DETAIL:  Connection matched pg_hba.conf line 100: "host all all all scram-sha-256"
+pgsims_db_prod        | 2026-02-27 00:14:36.321 UTC [158] FATAL:  password authentication failed for user "sims_user"
+pgsims_db_prod        | 2026-02-27 00:14:36.321 UTC [158] DETAIL:  Connection matched pg_hba.conf line 100: "host all all all scram-sha-256"
+pgsims_db_prod        | 2026-02-27 00:14:36.849 UTC [159] FATAL:  password authentication failed for user "sims_user"
+pgsims_db_prod        | 2026-02-27 00:14:36.849 UTC [159] DETAIL:  Connection matched pg_hba.conf line 100: "host all all all scram-sha-256"
+pgsims_db_prod        | 2026-02-27 00:14:39.434 UTC [173] FATAL:  role "postgres" does not exist
+pgsims_db_prod        | 2026-02-27 00:14:42.056 UTC [174] FATAL:  password authentication failed for user "sims_user"
+pgsims_db_prod        | 2026-02-27 00:14:42.056 UTC [174] DETAIL:  Connection matched pg_hba.conf line 100: "host all all all scram-sha-256"
+pgsims_db_prod        | 2026-02-27 00:14:42.064 UTC [175] FATAL:  password authentication failed for user "sims_user"
+pgsims_db_prod        | 2026-02-27 00:14:42.064 UTC [175] DETAIL:  Connection matched pg_hba.conf line 100: "host all all all scram-sha-256"
+pgsims_db_prod        | 2026-02-27 00:14:42.073 UTC [176] FATAL:  password authentication failed for user "sims_user"
+pgsims_db_prod        | 2026-02-27 00:14:42.073 UTC [176] DETAIL:  Connection matched pg_hba.conf line 100: "host all all all scram-sha-256"
+pgsims_db_prod        | 2026-02-27 00:14:42.087 UTC [177] FATAL:  password authentication failed for user "sims_user"
+pgsims_db_prod        | 2026-02-27 00:14:42.087 UTC [177] DETAIL:  Connection matched pg_hba.conf line 100: "host all all all scram-sha-256"
+pgsims_db_prod        | 2026-02-27 00:14:42.523 UTC [178] FATAL:  password authentication failed for user "sims_user"
+pgsims_db_prod        | 2026-02-27 00:14:42.523 UTC [178] DETAIL:  Connection matched pg_hba.conf line 100: "host all all all scram-sha-256"
+pgsims_db_prod        | 2026-02-27 00:14:44.601 UTC [185] FATAL:  database "sims_user" does not exist
+pgsims_db_prod        | 2026-02-27 00:14:51.249 UTC [199] FATAL:  password authentication failed for user "sims_user"
+pgsims_db_prod        | 2026-02-27 00:14:51.249 UTC [199] DETAIL:  Connection matched pg_hba.conf line 100: "host all all all scram-sha-256"
+pgsims_db_prod        | 2026-02-27 00:14:51.258 UTC [200] FATAL:  password authentication failed for user "sims_user"
+pgsims_db_prod        | 2026-02-27 00:14:51.258 UTC [200] DETAIL:  Connection matched pg_hba.conf line 100: "host all all all scram-sha-256"
+pgsims_db_prod        | 2026-02-27 00:14:51.267 UTC [201] FATAL:  password authentication failed for user "sims_user"
+pgsims_db_prod        | 2026-02-27 00:14:51.267 UTC [201] DETAIL:  Connection matched pg_hba.conf line 100: "host all all all scram-sha-256"
+pgsims_backend_prod   |     self.raise_uncaught_exception(exc)
+pgsims_db_prod        | 2026-02-27 00:14:51.282 UTC [202] FATAL:  password authentication failed for user "sims_user"
+pgsims_db_prod        | 2026-02-27 00:14:51.282 UTC [202] DETAIL:  Connection matched pg_hba.conf line 100: "host all all all scram-sha-256"
+pgsims_db_prod        | 2026-02-27 00:14:51.895 UTC [203] FATAL:  password authentication failed for user "sims_user"
+pgsims_db_prod        | 2026-02-27 00:14:51.895 UTC [203] DETAIL:  Connection matched pg_hba.conf line 100: "host all all all scram-sha-256"
+pgsims_db_prod        | 2026-02-27 00:14:54.660 UTC [218] FATAL:  database "sims_user" does not exist
+pgsims_db_prod        | 2026-02-27 00:15:04.708 UTC [233] FATAL:  database "sims_user" does not exist
+pgsims_db_prod        | 2026-02-27 00:15:10.144 UTC [235] ERROR:  duplicate key value violates unique constraint "academics_department_name_key"
+pgsims_db_prod        | 2026-02-27 00:15:10.144 UTC [235] DETAIL:  Key (name)=(Pediatrics) already exists.
+pgsims_db_prod        | 2026-02-27 00:15:10.144 UTC [235] STATEMENT:  INSERT INTO "academics_department" ("name", "code", "description", "head_id", "active", "created_at", "updated_at") VALUES ('Pediatrics', 'PED', '', NULL, true, '2026-02-27T00:15:10.143573+00:00'::timestamptz, '2026-02-27T00:15:10.143583+00:00'::timestamptz) RETURNING "academics_department"."id"
+pgsims_db_prod        | 2026-02-27 00:15:14.757 UTC [244] FATAL:  database "sims_user" does not exist
+pgsims_db_prod        | 2026-02-27 00:15:20.498 UTC [245] ERROR:  duplicate key value violates unique constraint "academics_department_name_key"
+pgsims_db_prod        | 2026-02-27 00:15:20.498 UTC [245] DETAIL:  Key (name)=(Pediatrics) already exists.
+pgsims_db_prod        | 2026-02-27 00:15:20.498 UTC [245] STATEMENT:  INSERT INTO "academics_department" ("name", "code", "description", "head_id", "active", "created_at", "updated_at") VALUES ('Pediatrics', 'PED', '', NULL, true, '2026-02-27T00:15:20.498103+00:00'::timestamptz, '2026-02-27T00:15:20.498112+00:00'::timestamptz) RETURNING "academics_department"."id"
+pgsims_db_prod        | 2026-02-27 00:15:24.810 UTC [253] FATAL:  database "sims_user" does not exist
+pgsims_db_prod        | 2026-02-27 00:15:34.860 UTC [263] FATAL:  database "sims_user" does not exist
+pgsims_db_prod        | 2026-02-27 00:15:44.923 UTC [270] FATAL:  database "sims_user" does not exist
+pgsims_db_prod        | 2026-02-27 00:15:55.000 UTC [278] FATAL:  database "sims_user" does not exist
+pgsims_db_prod        | 2026-02-27 00:16:05.044 UTC [285] FATAL:  database "sims_user" does not exist
+pgsims_db_prod        | 2026-02-27 00:16:15.103 UTC [296] FATAL:  database "sims_user" does not exist
+pgsims_db_prod        | 2026-02-27 00:16:25.160 UTC [309] FATAL:  database "sims_user" does not exist
+pgsims_db_prod        | 2026-02-27 00:16:35.216 UTC [323] FATAL:  database "sims_user" does not exist
+pgsims_db_prod        | 2026-02-27 00:16:45.265 UTC [331] FATAL:  database "sims_user" does not exist
+pgsims_db_prod        | 2026-02-27 00:16:45.757 UTC [27] LOG:  checkpoint starting: immediate force wait
+pgsims_worker         | [INFO] 2026-02-27 00:16:13,999 sims.certificates Certificate periodic tasks setup completed
+pgsims_db_prod        | 2026-02-27 00:16:45.792 UTC [27] LOG:  checkpoint complete: wrote 389 buffers (2.4%); 0 WAL file(s) added, 0 removed, 1 recycled; write=0.011 s, sync=0.019 s, total=0.036 s; sync files=242, longest=0.002 s, average=0.001 s; distance=9492 kB, estimate=9492 kB
+pgsims_worker         | [INFO] 2026-02-27 00:16:14,014 sims.logbook Logbook periodic tasks setup completed
+pgsims_db_prod        | 2026-02-27 00:16:55.316 UTC [340] FATAL:  database "sims_user" does not exist
+pgsims_worker         |  
+pgsims_db_prod        | 2026-02-27 00:17:05.366 UTC [347] FATAL:  database "sims_user" does not exist
+pgsims_db_prod        | 2026-02-27 00:17:15.412 UTC [355] FATAL:  database "sims_user" does not exist
+pgsims_db_prod        | 2026-02-27 00:17:25.464 UTC [362] FATAL:  database "sims_user" does not exist
+pgsims_backend_prod   |   File "/home/sims/.local/lib/python3.11/site-packages/rest_framework/views.py", line 486, in raise_uncaught_exception
+pgsims_worker         |  -------------- celery@eacd06d06b27 v5.6.2 (recovery)
+pgsims_worker         | --- ***** ----- 
+pgsims_backend_prod   |     raise exc
+pgsims_worker         | -- ******* ---- Linux-6.17.0-1008-gcp-x86_64-with-glibc2.41 2026-02-27 00:16:14
+pgsims_backend_prod   |   File "/home/sims/.local/lib/python3.11/site-packages/rest_framework/views.py", line 512, in dispatch
+pgsims_worker         | - *** --- * --- 
+pgsims_backend_prod   |     response = handler(request, *args, **kwargs)
+pgsims_worker         | - ** ---------- [config]
+pgsims_backend_prod   |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+pgsims_worker         | - ** ---------- .> app:         sims:0x716379cac990
+pgsims_backend_prod   |   File "/app/sims/analytics/views.py", line 158, in get
+pgsims_backend_prod   |     overview = dashboard_overview(request.user)
+pgsims_backend_prod   |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+pgsims_backend_prod   |   File "/app/sims/analytics/services.py", line 279, in dashboard_overview
+pgsims_backend_prod   |     certificates_qs = Certificate.objects.filter(resident=user)
+pgsims_backend_prod   |                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+pgsims_backend_prod   |   File "/home/sims/.local/lib/python3.11/site-packages/django/db/models/manager.py", line 87, in manager_method
+pgsims_backend_prod   |     return getattr(self.get_queryset(), name)(*args, **kwargs)
+pgsims_backend_prod   |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+pgsims_db_prod        | 2026-02-27 00:17:35.522 UTC [370] FATAL:  database "sims_user" does not exist
+pgsims_db_prod        | 2026-02-27 00:17:45.568 UTC [377] FATAL:  database "sims_user" does not exist
+pgsims_db_prod        | 2026-02-27 00:17:55.611 UTC [386] FATAL:  database "sims_user" does not exist
+pgsims_db_prod        | 2026-02-27 00:18:05.657 UTC [393] FATAL:  database "sims_user" does not exist
+pgsims_db_prod        | 2026-02-27 00:18:15.701 UTC [401] FATAL:  database "sims_user" does not exist
+pgsims_backend_prod   |   File "/home/sims/.local/lib/python3.11/site-packages/django/db/models/query.py", line 1438, in filter
+pgsims_worker         | - ** ---------- .> transport:   redis://redis:6379/1
+pgsims_backend_prod   |     return self._filter_or_exclude(False, args, kwargs)
+pgsims_worker         | - ** ---------- .> results:     redis://redis:6379/1
+pgsims_backend_prod   |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+pgsims_worker         | - *** --- * --- .> concurrency: 2 (prefork)
+pgsims_db_prod        | 2026-02-27 00:18:25.744 UTC [408] FATAL:  database "sims_user" does not exist
+pgsims_worker         | -- ******* ---- .> task events: OFF (enable -E to monitor tasks in this worker)
+pgsims_worker         | --- ***** ----- 
+pgsims_backend_prod   |   File "/home/sims/.local/lib/python3.11/site-packages/django/db/models/query.py", line 1456, in _filter_or_exclude
+pgsims_worker         |  -------------- [queues]
+pgsims_backend_prod   |     clone._filter_or_exclude_inplace(negate, args, kwargs)
+pgsims_backend_prod   |   File "/home/sims/.local/lib/python3.11/site-packages/django/db/models/query.py", line 1466, in _filter_or_exclude_inplace
+pgsims_backend_prod   |     self._query.add_q(Q(*args, **kwargs))
+pgsims_backend_prod   |   File "/home/sims/.local/lib/python3.11/site-packages/django/db/models/sql/query.py", line 1548, in add_q
+pgsims_backend_prod   |     clause, _ = self._add_q(q_object, self.used_aliases)
+pgsims_db_prod        | 2026-02-27 00:18:35.788 UTC [416] FATAL:  database "sims_user" does not exist
+pgsims_db_prod        | 2026-02-27 00:18:45.832 UTC [423] FATAL:  database "sims_user" does not exist
+pgsims_db_prod        | 2026-02-27 00:18:55.879 UTC [431] FATAL:  database "sims_user" does not exist
+pgsims_db_prod        | 2026-02-27 00:19:05.920 UTC [438] FATAL:  database "sims_user" does not exist
+pgsims_worker         |                 .> celery           exchange=celery(direct) key=celery
+pgsims_db_prod        | 2026-02-27 00:19:15.966 UTC [446] FATAL:  database "sims_user" does not exist
+pgsims_worker         |                 
+pgsims_db_prod        | 2026-02-27 00:19:26.010 UTC [453] FATAL:  database "sims_user" does not exist
+pgsims_worker         | 
+pgsims_db_prod        | 2026-02-27 00:19:36.058 UTC [461] FATAL:  database "sims_user" does not exist
+pgsims_worker         | [tasks]
+pgsims_db_prod        | 2026-02-27 00:19:46.097 UTC [468] FATAL:  database "sims_user" does not exist
+pgsims_worker         |   . sims_project.celery.debug_task
+pgsims_db_prod        | 2026-02-27 00:19:56.139 UTC [476] FATAL:  database "sims_user" does not exist
+pgsims_worker         | 
+pgsims_db_prod        | 2026-02-27 00:20:06.189 UTC [483] FATAL:  database "sims_user" does not exist
+pgsims_worker         | [2026-02-27 00:16:14,971: INFO/MainProcess] Connected to redis://redis:6379/1
+pgsims_db_prod        | 2026-02-27 00:20:16.231 UTC [491] FATAL:  database "sims_user" does not exist
+pgsims_db_prod        | 2026-02-27 00:20:26.281 UTC [501] FATAL:  database "sims_user" does not exist
+pgsims_db_prod        | 2026-02-27 00:20:36.326 UTC [512] FATAL:  database "sims_user" does not exist
+pgsims_db_prod        | 2026-02-27 00:20:45.692 UTC [27] LOG:  checkpoint starting: immediate force wait
+pgsims_backend_prod   |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+pgsims_db_prod        | 2026-02-27 00:20:45.711 UTC [27] LOG:  checkpoint complete: wrote 235 buffers (1.4%); 0 WAL file(s) added, 0 removed, 1 recycled; write=0.006 s, sync=0.006 s, total=0.020 s; sync files=102, longest=0.002 s, average=0.001 s; distance=10706 kB, estimate=10706 kB
+pgsims_db_prod        | 2026-02-27 00:20:46.371 UTC [537] FATAL:  database "sims_user" does not exist
+pgsims_db_prod        | 2026-02-27 00:20:56.436 UTC [545] FATAL:  database "sims_user" does not exist
+pgsims_db_prod        | 2026-02-27 00:21:06.481 UTC [553] FATAL:  database "sims_user" does not exist
+pgsims_db_prod        | 2026-02-27 00:21:16.528 UTC [560] FATAL:  database "sims_user" does not exist
+pgsims_db_prod        | 2026-02-27 00:21:26.569 UTC [568] FATAL:  database "sims_user" does not exist
+pgsims_db_prod        | 2026-02-27 00:21:36.617 UTC [575] FATAL:  database "sims_user" does not exist
+pgsims_db_prod        | 2026-02-27 00:21:46.665 UTC [582] FATAL:  database "sims_user" does not exist
+pgsims_db_prod        | 2026-02-27 00:21:56.710 UTC [590] FATAL:  database "sims_user" does not exist
+pgsims_db_prod        | 2026-02-27 00:22:06.756 UTC [598] FATAL:  database "sims_user" does not exist
+pgsims_db_prod        | 2026-02-27 00:22:16.798 UTC [606] FATAL:  database "sims_user" does not exist
+pgsims_db_prod        | 2026-02-27 00:22:26.847 UTC [613] FATAL:  database "sims_user" does not exist
+pgsims_db_prod        | 2026-02-27 00:22:36.894 UTC [621] FATAL:  database "sims_user" does not exist
+pgsims_db_prod        | 2026-02-27 00:22:46.943 UTC [628] FATAL:  database "sims_user" does not exist
+pgsims_db_prod        | 2026-02-27 00:22:56.996 UTC [636] FATAL:  database "sims_user" does not exist
+pgsims_db_prod        | 2026-02-27 00:23:07.039 UTC [643] FATAL:  database "sims_user" does not exist
+pgsims_db_prod        | 2026-02-27 00:23:17.096 UTC [651] FATAL:  database "sims_user" does not exist
+pgsims_db_prod        | 2026-02-27 00:23:27.145 UTC [658] FATAL:  database "sims_user" does not exist
+pgsims_db_prod        | 2026-02-27 00:23:37.196 UTC [666] FATAL:  database "sims_user" does not exist
+pgsims_db_prod        | 2026-02-27 00:23:47.257 UTC [673] FATAL:  database "sims_user" does not exist
+pgsims_worker         | [2026-02-27 00:16:14,975: INFO/MainProcess] mingle: searching for neighbors
+pgsims_worker         | [2026-02-27 00:16:15,986: INFO/MainProcess] mingle: all alone
+pgsims_worker         | [2026-02-27 00:16:16,003: INFO/MainProcess] celery@eacd06d06b27 ready.
+pgsims_backend_prod   |   File "/home/sims/.local/lib/python3.11/site-packages/django/db/models/sql/query.py", line 1579, in _add_q
+pgsims_backend_prod   |     child_clause, needed_inner = self.build_filter(
+pgsims_backend_prod   |                                  ^^^^^^^^^^^^^^^^^^
+pgsims_backend_prod   |   File "/home/sims/.local/lib/python3.11/site-packages/django/db/models/sql/query.py", line 1429, in build_filter
+pgsims_backend_prod   |     lookups, parts, reffed_expression = self.solve_lookup_type(arg, summarize)
+pgsims_backend_prod   |                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+pgsims_backend_prod   |   File "/home/sims/.local/lib/python3.11/site-packages/django/db/models/sql/query.py", line 1239, in solve_lookup_type
+pgsims_backend_prod   |     _, field, _, lookup_parts = self.names_to_path(lookup_splitted, self.get_meta())
+pgsims_backend_prod   |                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+pgsims_backend_prod   |   File "/home/sims/.local/lib/python3.11/site-packages/django/db/models/sql/query.py", line 1733, in names_to_path
+pgsims_backend_prod   |     raise FieldError(
+pgsims_backend_prod   | django.core.exceptions.FieldError: Cannot resolve keyword 'resident' into field. Choices are: additional_documents, certificate_file, certificate_number, certificate_type, certificate_type_id, cme_points_earned, cpd_credits_earned, created_at, created_by, created_by_id, description, expiry_date, id, is_verified, issue_date, issuing_organization, pg, pg_id, reviews, skills_acquired, status, title, updated_at, verification_code, verification_url, verified_at, verified_by, verified_by_id
+pgsims_backend_prod   | [WARNING] 2026-02-27 00:16:55,030 sims.performance Slow request: GET /healthz/ took 1033ms
+pgsims_backend_prod   | [WARNING] 2026-02-27 00:17:26,085 sims.performance Slow request: GET /healthz/ took 1007ms
+pgsims_backend_prod   | [WARNING] 2026-02-27 00:17:57,139 sims.performance Slow request: GET /healthz/ took 1008ms
+pgsims_backend_prod   | [WARNING] 2026-02-27 00:18:28,216 sims.performance Slow request: GET /healthz/ took 1031ms
+pgsims_backend_prod   | [WARNING] 2026-02-27 00:18:59,276 sims.performance Slow request: GET /healthz/ took 1008ms
+pgsims_backend_prod   | [WARNING] 2026-02-27 00:19:30,333 sims.performance Slow request: GET /healthz/ took 1008ms
+pgsims_backend_prod   | [WARNING] 2026-02-27 00:20:01,389 sims.performance Slow request: GET /healthz/ took 1007ms
+pgsims_backend_prod   | [WARNING] 2026-02-27 00:20:32,451 sims.performance Slow request: GET /healthz/ took 1008ms
+pgsims_backend_prod   | [WARNING] 2026-02-27 00:21:03,513 sims.performance Slow request: GET /healthz/ took 1009ms
+pgsims_backend_prod   | [WARNING] 2026-02-27 00:21:20,324 sims.performance Slow request: GET /healthz/ took 1008ms
+pgsims_backend_prod   | [WARNING] 2026-02-27 00:21:34,590 sims.performance Slow request: GET /healthz/ took 1027ms
+pgsims_backend_prod   | [WARNING] 2026-02-27 00:22:05,655 sims.performance Slow request: GET /healthz/ took 1009ms
+pgsims_backend_prod   | [WARNING] 2026-02-27 00:22:36,711 sims.performance Slow request: GET /healthz/ took 1007ms
+pgsims_backend_prod   | [WARNING] 2026-02-27 00:23:04,477 sims.performance Slow request: GET /healthz/ took 1007ms
+pgsims_backend_prod   | [WARNING] 2026-02-27 00:23:07,765 sims.performance Slow request: GET /healthz/ took 1007ms
+pgsims_backend_prod   | /home/sims/.local/lib/python3.11/site-packages/django/db/models/fields/__init__.py:1595: RuntimeWarning: DateTimeField ClinicalCase.created_at received a naive datetime (2026-01-28 00:23:37.901505) while time zone support is active.
+pgsims_backend_prod   |   warnings.warn(
+pgsims_backend_prod   | [WARNING] 2026-02-27 00:23:38,824 sims.performance Slow request: GET /healthz/ took 1007ms

@@ -1,0 +1,11 @@
+time="2026-02-27T05:15:22+05:00" level=warning msg="The \"SECRET_KEY\" variable is not set. Defaulting to a blank string."
+time="2026-02-27T05:15:22+05:00" level=warning msg="The \"DB_PASSWORD\" variable is not set. Defaulting to a blank string."
+time="2026-02-27T05:15:22+05:00" level=warning msg="The \"SECRET_KEY\" variable is not set. Defaulting to a blank string."
+time="2026-02-27T05:15:22+05:00" level=warning msg="The \"DB_PASSWORD\" variable is not set. Defaulting to a blank string."
+time="2026-02-27T05:15:22+05:00" level=warning msg="The \"SECRET_KEY\" variable is not set. Defaulting to a blank string."
+time="2026-02-27T05:15:22+05:00" level=warning msg="The \"DB_PASSWORD\" variable is not set. Defaulting to a blank string."
+time="2026-02-27T05:15:22+05:00" level=warning msg="The \"DB_PASSWORD\" variable is not set. Defaulting to a blank string."
+time="2026-02-27T05:15:22+05:00" level=warning msg="/srv/apps/pgsims/docker/docker-compose.prod.yml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+[INFO] 2026-02-27 00:15:23,437 sims.certificates Certificate periodic tasks setup completed
+[INFO] 2026-02-27 00:15:23,448 sims.logbook Logbook periodic tasks setup completed
+System check identified no issues (0 silenced).

@@ -66,6 +66,7 @@ class SearchService:
             qs = qs.filter(role=role)
 
         if self.use_full_text:
+            base_qs = qs
             vector = (
                 SearchVector("first_name", weight="A")
                 + SearchVector("last_name", weight="A")
@@ -80,6 +81,17 @@ class SearchService:
                 .order_by("-rank")
             )
             scored = [(obj, obj.rank) for obj in qs[: self.limit]]
+            if not scored:
+                # Fallback for short/partial terms that may not rank in postgres full-text search.
+                condition = (
+                    Q(first_name__icontains=query)
+                    | Q(last_name__icontains=query)
+                    | Q(username__icontains=query)
+                    | Q(email__icontains=query)
+                    | Q(specialty__icontains=query)
+                )
+                qs = base_qs.filter(condition)
+                scored = [(obj, 0.5) for obj in qs[: self.limit]]
         else:
             condition = (
                 Q(first_name__icontains=query)

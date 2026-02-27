@@ -1,0 +1,183 @@
+
+> frontend@0.1.0 test:e2e
+> playwright test --workers=1
+
+
+Running 7 tests using 1 worker
+
+[1A[2K[1/7] [chromium] › e2e/admin_analytics.spec.ts:3:5 › admin analytics page loads, filters refresh, and live polling updates feed
+[1A[2K  1) [chromium] › e2e/admin_analytics.spec.ts:3:5 › admin analytics page loads, filters refresh, and live polling updates feed 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3000/dashboard/admin/analytics
+    Call log:
+    [2m  - navigating to "http://localhost:3000/dashboard/admin/analytics", waiting until "load"[22m
+
+
+      111 |   });
+      112 |
+    > 113 |   await page.goto('/dashboard/admin/analytics');
+          |              ^
+      114 |   await expect(page.getByRole('heading', { name: 'Analytics' })).toBeVisible();
+      115 |
+      116 |   const filterRequest = page.waitForRequest(
+        at /home/munaim/srv/apps/pgsims/frontend/e2e/admin_analytics.spec.ts:113:14
+
+
+[1A[2K[2/7] [chromium] › e2e/cases_create_submit_review.spec.ts:4:5 › PG creates/submits case and supervisor reviews
+[1A[2K  2) [chromium] › e2e/cases_create_submit_review.spec.ts:4:5 › PG creates/submits case and supervisor reviews 
+
+    Error: apiRequestContext.post: connect ECONNREFUSED 127.0.0.1:8000
+    Call log:
+    [2m  - → POST http://localhost:8000/api/auth/login/[22m
+    [2m    - user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.7390.37 Safari/537.36[22m
+    [2m    - accept: */*[22m
+    [2m    - accept-encoding: gzip,deflate,br[22m
+    [2m    - content-type: application/json[22m
+    [2m    - content-length: 44[22m
+
+
+       at helpers/auth.ts:29
+
+      27 |   const apiBaseURL = process.env.E2E_API_URL ?? 'http://localhost:8000';
+      28 |   const credentials = CREDENTIALS[role];
+    > 29 |   const response = await page.request.post(`${apiBaseURL}/api/auth/login/`, {
+         |                                       ^
+      30 |     data: credentials,
+      31 |   });
+      32 |   if (!response.ok()) {
+        at loginAs (/home/munaim/srv/apps/pgsims/frontend/e2e/helpers/auth.ts:29:39)
+        at /home/munaim/srv/apps/pgsims/frontend/e2e/cases_create_submit_review.spec.ts:7:16
+
+
+[1A[2K[3/7] [chromium] › e2e/import_reports_dashboard.spec.ts:4:5 › Admin import + reports export + UTRMC KPI dashboard
+[1A[2K  3) [chromium] › e2e/import_reports_dashboard.spec.ts:4:5 › Admin import + reports export + UTRMC KPI dashboard 
+
+    Error: apiRequestContext.post: connect ECONNREFUSED 127.0.0.1:8000
+    Call log:
+    [2m  - → POST http://localhost:8000/api/auth/login/[22m
+    [2m    - user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.7390.37 Safari/537.36[22m
+    [2m    - accept: */*[22m
+    [2m    - accept-encoding: gzip,deflate,br[22m
+    [2m    - content-type: application/json[22m
+    [2m    - content-length: 47[22m
+
+
+       at helpers/auth.ts:29
+
+      27 |   const apiBaseURL = process.env.E2E_API_URL ?? 'http://localhost:8000';
+      28 |   const credentials = CREDENTIALS[role];
+    > 29 |   const response = await page.request.post(`${apiBaseURL}/api/auth/login/`, {
+         |                                       ^
+      30 |     data: credentials,
+      31 |   });
+      32 |   if (!response.ok()) {
+        at loginAs (/home/munaim/srv/apps/pgsims/frontend/e2e/helpers/auth.ts:29:39)
+        at /home/munaim/srv/apps/pgsims/frontend/e2e/import_reports_dashboard.spec.ts:10:16
+
+
+[1A[2K[4/7] [chromium] › e2e/logbook_submit_return_resubmit_approve.spec.ts:4:5 › PG -> Supervisor return -> PG resubmit -> approve workflow
+[1A[2K  4) [chromium] › e2e/logbook_submit_return_resubmit_approve.spec.ts:4:5 › PG -> Supervisor return -> PG resubmit -> approve workflow 
+
+    Error: apiRequestContext.post: connect ECONNREFUSED 127.0.0.1:8000
+    Call log:
+    [2m  - → POST http://localhost:8000/api/auth/login/[22m
+    [2m    - user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.7390.37 Safari/537.36[22m
+    [2m    - accept: */*[22m
+    [2m    - accept-encoding: gzip,deflate,br[22m
+    [2m    - content-type: application/json[22m
+    [2m    - content-length: 44[22m
+
+
+       at helpers/auth.ts:29
+
+      27 |   const apiBaseURL = process.env.E2E_API_URL ?? 'http://localhost:8000';
+      28 |   const credentials = CREDENTIALS[role];
+    > 29 |   const response = await page.request.post(`${apiBaseURL}/api/auth/login/`, {
+         |                                       ^
+      30 |     data: credentials,
+      31 |   });
+      32 |   if (!response.ok()) {
+        at loginAs (/home/munaim/srv/apps/pgsims/frontend/e2e/helpers/auth.ts:29:39)
+        at /home/munaim/srv/apps/pgsims/frontend/e2e/logbook_submit_return_resubmit_approve.spec.ts:20:16
+
+
+[1A[2K[5/7] [chromium] › e2e/login.spec.ts:3:5 › login page renders and registration is disabled
+[1A[2K  5) [chromium] › e2e/login.spec.ts:3:5 › login page renders and registration is disabled ──────────
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3000/login
+    Call log:
+    [2m  - navigating to "http://localhost:3000/login", waiting until "load"[22m
+
+
+      2 |
+      3 | test('login page renders and registration is disabled', async ({ page }) => {
+    > 4 |   await page.goto('/login');
+        |              ^
+      5 |   await expect(page.getByRole('heading', { name: /sign in to sims/i })).toBeVisible();
+      6 |   await expect(page.getByText(/registration is disabled/i)).toBeVisible();
+      7 |   await page.goto('/register');
+        at /home/munaim/srv/apps/pgsims/frontend/e2e/login.spec.ts:4:14
+
+
+[1A[2K[6/7] [chromium] › e2e/utrmc_readonly_dashboard.spec.ts:5:7 › UTRMC Read-only Dashboard › utrmc_user can load dashboard and sees no mutation UI
+[1A[2K  6) [chromium] › e2e/utrmc_readonly_dashboard.spec.ts:5:7 › UTRMC Read-only Dashboard › utrmc_user can load dashboard and sees no mutation UI 
+
+    Error: apiRequestContext.post: connect ECONNREFUSED 127.0.0.1:8000
+    Call log:
+    [2m  - → POST http://localhost:8000/api/auth/login/[22m
+    [2m    - user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.7390.37 Safari/537.36[22m
+    [2m    - accept: */*[22m
+    [2m    - accept-encoding: gzip,deflate,br[22m
+    [2m    - content-type: application/json[22m
+    [2m    - content-length: 52[22m
+
+
+       at helpers/auth.ts:29
+
+      27 |   const apiBaseURL = process.env.E2E_API_URL ?? 'http://localhost:8000';
+      28 |   const credentials = CREDENTIALS[role];
+    > 29 |   const response = await page.request.post(`${apiBaseURL}/api/auth/login/`, {
+         |                                       ^
+      30 |     data: credentials,
+      31 |   });
+      32 |   if (!response.ok()) {
+        at loginAs (/home/munaim/srv/apps/pgsims/frontend/e2e/helpers/auth.ts:29:39)
+        at /home/munaim/srv/apps/pgsims/frontend/e2e/utrmc_readonly_dashboard.spec.ts:6:18
+
+
+[1A[2K[7/7] [chromium] › e2e/utrmc_readonly_dashboard.spec.ts:18:7 › UTRMC Read-only Dashboard › utrmc_user is redirected away from supervisor route
+[1A[2K  7) [chromium] › e2e/utrmc_readonly_dashboard.spec.ts:18:7 › UTRMC Read-only Dashboard › utrmc_user is redirected away from supervisor route 
+
+    Error: apiRequestContext.post: connect ECONNREFUSED 127.0.0.1:8000
+    Call log:
+    [2m  - → POST http://localhost:8000/api/auth/login/[22m
+    [2m    - user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.7390.37 Safari/537.36[22m
+    [2m    - accept: */*[22m
+    [2m    - accept-encoding: gzip,deflate,br[22m
+    [2m    - content-type: application/json[22m
+    [2m    - content-length: 52[22m
+
+
+       at helpers/auth.ts:29
+
+      27 |   const apiBaseURL = process.env.E2E_API_URL ?? 'http://localhost:8000';
+      28 |   const credentials = CREDENTIALS[role];
+    > 29 |   const response = await page.request.post(`${apiBaseURL}/api/auth/login/`, {
+         |                                       ^
+      30 |     data: credentials,
+      31 |   });
+      32 |   if (!response.ok()) {
+        at loginAs (/home/munaim/srv/apps/pgsims/frontend/e2e/helpers/auth.ts:29:39)
+        at /home/munaim/srv/apps/pgsims/frontend/e2e/utrmc_readonly_dashboard.spec.ts:19:18
+
+
+[1A[2K  7 failed
+    [chromium] › e2e/admin_analytics.spec.ts:3:5 › admin analytics page loads, filters refresh, and live polling updates feed 
+    [chromium] › e2e/cases_create_submit_review.spec.ts:4:5 › PG creates/submits case and supervisor reviews 
+    [chromium] › e2e/import_reports_dashboard.spec.ts:4:5 › Admin import + reports export + UTRMC KPI dashboard 
+    [chromium] › e2e/logbook_submit_return_resubmit_approve.spec.ts:4:5 › PG -> Supervisor return -> PG resubmit -> approve workflow 
+    [chromium] › e2e/login.spec.ts:3:5 › login page renders and registration is disabled ───────────
+    [chromium] › e2e/utrmc_readonly_dashboard.spec.ts:5:7 › UTRMC Read-only Dashboard › utrmc_user can load dashboard and sees no mutation UI 
+    [chromium] › e2e/utrmc_readonly_dashboard.spec.ts:18:7 › UTRMC Read-only Dashboard › utrmc_user is redirected away from supervisor route 
+
+[36m  Serving HTML report at http://localhost:9323. Press Ctrl+C to quit.[39m

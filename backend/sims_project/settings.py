@@ -43,6 +43,9 @@ if not SECRET_KEY:
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get("DEBUG", "False").lower() in ("true", "1", "yes")
 
+# Production diagnostics fingerprint for routing/runtime verification.
+ADMIN_RESET_FINGERPRINT = "RESET_2026-02-28_A"
+
 # ALLOWED_HOSTS - Support both localhost and VPS deployments
 # For localhost: localhost,127.0.0.1
 # For VPS: api.pgsims.alshifalab.pk,pgsims.alshifalab.pk,localhost,127.0.0.1
@@ -415,6 +418,10 @@ ANALYTICS_UI_INGEST_ENABLED = os.environ.get(
 ).lower() in ("true", "1", "yes")
 ANALYTICS_ALLOW_SUPERVISOR_ACCESS = os.environ.get(
     "ANALYTICS_ALLOW_SUPERVISOR_ACCESS", "false"
+).lower() in ("true", "1", "yes")
+ANALYTICS_SUPERVISOR_ACCESS_ENABLED = os.environ.get(
+    "ANALYTICS_SUPERVISOR_ACCESS_ENABLED",
+    str(ANALYTICS_ALLOW_SUPERVISOR_ACCESS).lower(),
 ).lower() in ("true", "1", "yes")
 ANALYTICS_REQUEST_SAMPLING = max(
     0.0, min(float(os.environ.get("ANALYTICS_REQUEST_SAMPLING", "1.0")), 1.0)

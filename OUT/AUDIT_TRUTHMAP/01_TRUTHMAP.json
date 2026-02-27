@@ -1,0 +1,559 @@
+{
+  "meta": {
+    "timestamp": "2026-02-27T00:39:45.473672+00:00",
+    "git_head": "05e67ec290df24234f04d36aa47c3013376f3314",
+    "domain": "https://pgsims.alshifalab.pk",
+    "compose_file": "/srv/apps/pgsims/docker/docker-compose.prod.yml",
+    "auditor": "GitHub Copilot CLI audit agent"
+  },
+  "summary": {
+    "pass": false,
+    "blockers": 4,
+    "major": 10,
+    "minor": 5
+  },
+  "sections": [
+    {
+      "section": "Proxy/Caddy",
+      "checks": [
+        {
+          "id": "CADDY-01",
+          "check": "Active Caddyfile validates",
+          "status": "FAIL",
+          "severity": "major",
+          "evidence": [
+            "evidence/Proxy/01_caddy_validate.txt"
+          ],
+          "notes": "caddy validate failed due permission denied opening /var/log/caddy/mediq.log.",
+          "fix_hint": "Fix Caddy log writer path/permissions and re-run caddy validate."
+        },
+        {
+          "id": "CADDY-02",
+          "check": "Caddy service is running",
+          "status": "PASS",
+          "severity": "info",
+          "evidence": [
+            "evidence/Proxy/02_caddy_systemctl_status.txt"
+          ],
+          "notes": "systemd reports caddy active (running).",
+          "fix_hint": "None"
+        },
+        {
+          "id": "CADDY-03",
+          "check": "PGSIMS vhost block matches template upstreams",
+          "status": "PASS",
+          "severity": "info",
+          "evidence": [
+            "evidence/Proxy/07_active_pgsims_block.txt",
+            "evidence/Proxy/08_template_pgsims_block.txt"
+          ],
+          "notes": "Active and template pgsims.alshifalab.pk blocks both target 127.0.0.1:8014 and 127.0.0.1:8082.",
+          "fix_hint": "None"
+        },
+        {
+          "id": "CADDY-04",
+          "check": "Local upstream reachability (frontend/backend)",
+          "status": "WARN",
+          "severity": "major",
+          "evidence": [
+            "evidence/Proxy/04_frontend_upstream_head.txt",
+            "evidence/Proxy/12_backend_healthz_get_final.txt",
+            "evidence/Proxy/13_backend_api_healthz_get_final.txt"
+          ],
+          "notes": "Frontend upstream responds 200; backend /healthz/ responds 200 but /api/healthz/ returns 404.",
+          "fix_hint": "Expose or map /api/healthz/ endpoint expected by contracts/monitors."
+        }
+      ]
+    },
+    {
+      "section": "Docker/Runtime",
+      "checks": [
+        {
+          "id": "DOCKER-01",
+          "check": "Production compose file exists and renders config",
+          "status": "PASS",
+          "severity": "info",
+          "evidence": [
+            "evidence/Docker/01_compose_ls.txt",
+            "evidence/Docker/02_compose_config.txt"
+          ],
+          "notes": "Compose file present and config resolved with warnings.",
+          "fix_hint": "None"
+        },
+        {
+          "id": "DOCKER-02",
+          "check": "Runtime services stay healthy",
+          "status": "FAIL",
+          "severity": "blocker",
+          "evidence": [
+            "evidence/Docker/11_compose_ps_final.txt",
+            "evidence/Docker/14_compose_ps_unstable.txt",
+            "evidence/Docker/13_compose_logs_unstable.txt"
+          ],
+          "notes": "web container repeatedly restarts; final state shows Restarting (1).",
+          "fix_hint": "Provide required env vars (SECRET_KEY/DB_PASSWORD) to compose runtime and restart stack."
+        },
+        {
+          "id": "DOCKER-03",
+          "check": "Host port exposure and listeners",
+          "status": "WARN",
+          "severity": "minor",
+          "evidence": [
+            "evidence/Docker/09_ss_tulpn.txt"
+          ],
+          "notes": "Expected listener 8082 present; 8014 intermittently missing when web restarts.",
+          "fix_hint": "Stabilize backend container so 8014 remains bound."
+        },
+        {
+          "id": "DOCKER-04",
+          "check": "Firewall rules captured",
+          "status": "SKIP",
+          "severity": "info",
+          "evidence": [
+            "evidence/Docker/10_firewall.txt"
+          ],
+          "notes": "iptables inspection failed without root privileges.",
+          "fix_hint": "Run firewall capture with root or provide ufw/iptables export."
+        }
+      ]
+    },
+    {
+      "section": "Backend/API",
+      "checks": [
+        {
+          "id": "API-01",
+          "check": "Django manage check succeeds in container",
+          "status": "PASS",
+          "severity": "info",
+          "evidence": [
+            "evidence/Backend/03_manage_check.txt"
+          ],
+          "notes": "System check identified no issues during healthy window.",
+          "fix_hint": "None"
+        },
+        {
+          "id": "API-02",
+          "check": "Migrations are applied",
+          "status": "PASS",
+          "severity": "info",
+          "evidence": [
+            "evidence/Backend/04_showmigrations_plan.txt"
+          ],
+          "notes": "showmigrations --plan reports applied migrations.",
+          "fix_hint": "None"
+        },
+        {
+          "id": "API-03",
+          "check": "Internal health endpoint responds",
+          "status": "PASS",
+          "severity": "info",
+          "evidence": [
+            "evidence/Backend/06_internal_healthz_headers.txt",
+            "evidence/Backend/12_internal_healthz_headers_final.txt"
+          ],
+          "notes": "/healthz/ returns HTTP 200.",
+          "fix_hint": "None"
+        },
+        {
+          "id": "API-04",
+          "check": "External API health endpoint (/api/healthz/) responds",
+          "status": "FAIL",
+          "severity": "major",
+          "evidence": [
+            "evidence/Backend/08_external_api_healthz_headers.txt",
+            "evidence/Backend/13_external_api_healthz_headers_final.txt"
+          ],
+          "notes": "Domain /api/healthz/ returns 404.",
+          "fix_hint": "Add /api/healthz/ route or align monitoring path to /healthz/."
+        },
+        {
+          "id": "API-05",
+          "check": "OpenAPI/docs endpoints available",
+          "status": "FAIL",
+          "severity": "minor",
+          "evidence": [
+            "evidence/Backend/09_schema_headers.txt",
+            "evidence/Backend/10_docs_headers.txt",
+            "evidence/Backend/11_openapi_headers.txt"
+          ],
+          "notes": "/api/schema/, /api/docs/, /api/openapi.json all return 404.",
+          "fix_hint": "Enable schema/docs routes or document that API docs are intentionally disabled."
+        },
+        {
+          "id": "API-06",
+          "check": "Auth API availability is stable",
+          "status": "FAIL",
+          "severity": "blocker",
+          "evidence": [
+            "evidence/Auth/AUTH-login-admin.json",
+            "evidence/Docker/13_compose_logs_unstable.txt"
+          ],
+          "notes": "Login endpoint intermittently returns 502 when backend restarts.",
+          "fix_hint": "Stabilize web container and upstream before relying on auth endpoints."
+        }
+      ]
+    },
+    {
+      "section": "Auth/RBAC",
+      "checks": [
+        {
+          "id": "AUTH-01",
+          "check": "Seeded credential source identified",
+          "status": "PASS",
+          "severity": "info",
+          "evidence": [
+            "evidence/Auth/00_seed_source_lines.txt"
+          ],
+          "notes": "seed_e2e command located with role usernames; passwords kept redacted in evidence.",
+          "fix_hint": "None"
+        },
+        {
+          "id": "AUTH-02",
+          "check": "Role logins succeed (when backend healthy)",
+          "status": "PASS",
+          "severity": "info",
+          "evidence": [
+            "evidence/Auth/AUTH-cookie-observation-success.json"
+          ],
+          "notes": "All five roles received HTTP 200 in successful login sample.",
+          "fix_hint": "None"
+        },
+        {
+          "id": "AUTH-03",
+          "check": "RBAC endpoint behavior can be verified consistently",
+          "status": "FAIL",
+          "severity": "blocker",
+          "evidence": [
+            "evidence/Auth/AUTH-rbac-admin.json",
+            "evidence/Auth/AUTH-rbac-pg.json",
+            "evidence/Docker/14_compose_ps_unstable.txt"
+          ],
+          "notes": "RBAC probes returned 502 during backend instability, preventing reliable authorization verification.",
+          "fix_hint": "Fix backend uptime first, then re-run role matrix probes."
+        },
+        {
+          "id": "AUTH-04",
+          "check": "Login does not set JS-readable auth cookies",
+          "status": "PASS",
+          "severity": "info",
+          "evidence": [
+            "evidence/Auth/AUTH-cookie-observation-success.json"
+          ],
+          "notes": "Set-Cookie header absent in sampled JWT login responses.",
+          "fix_hint": "None"
+        }
+      ]
+    },
+    {
+      "section": "Frontend/UI",
+      "checks": [
+        {
+          "id": "FE-01",
+          "check": "Public pages over HTTPS return 200",
+          "status": "PASS",
+          "severity": "info",
+          "evidence": [
+            "evidence/Frontend/FE-01_pages.txt"
+          ],
+          "notes": "/ and /login return 200.",
+          "fix_hint": "None"
+        },
+        {
+          "id": "FE-02",
+          "check": "Role dashboard routes are reachable",
+          "status": "WARN",
+          "severity": "minor",
+          "evidence": [
+            "evidence/Frontend/FE-01_pages.txt"
+          ],
+          "notes": "/dashboard/* routes return 307 redirect to /login when unauthenticated; authenticated UI route render not proven.",
+          "fix_hint": "Run browser-authenticated dashboard checks."
+        },
+        {
+          "id": "FE-03",
+          "check": "Built frontend does not hardcode localhost backend",
+          "status": "PASS",
+          "severity": "info",
+          "evidence": [
+            "evidence/Frontend/FE-02_localhost_grep.txt"
+          ],
+          "notes": "No localhost:8000 or 127.0.0.1:8014 hit in .next grep output.",
+          "fix_hint": "None"
+        },
+        {
+          "id": "FE-04",
+          "check": "Same-origin /api/healthz works",
+          "status": "FAIL",
+          "severity": "major",
+          "evidence": [
+            "evidence/Frontend/FE-03_same_origin_api_healthz.txt"
+          ],
+          "notes": "Same-origin API health returns 404.",
+          "fix_hint": "Expose /api/healthz/ or update frontend health probe path."
+        }
+      ]
+    },
+    {
+      "section": "Logbook Workflow",
+      "checks": [
+        {
+          "id": "WF-01",
+          "check": "Logbook status transitions are defined",
+          "status": "PASS",
+          "severity": "info",
+          "evidence": [
+            "evidence/Workflow/01_status_inventory.txt",
+            "evidence/Backend/05_show_urls.txt"
+          ],
+          "notes": "draft/pending/returned/approved flow and verify/submit routes are present.",
+          "fix_hint": "None"
+        },
+        {
+          "id": "WF-02",
+          "check": "PG submit -> supervisor return -> PG resubmit -> approve",
+          "status": "PASS",
+          "severity": "info",
+          "evidence": [
+            "evidence/Workflow/04_workflow_full_attempt.json"
+          ],
+          "notes": "Workflow completed successfully with entry_id 281 and expected statuses.",
+          "fix_hint": "None"
+        },
+        {
+          "id": "WF-03",
+          "check": "Audit activity records retrievable for transitions",
+          "status": "FAIL",
+          "severity": "major",
+          "evidence": [
+            "evidence/Workflow/04_workflow_full_attempt.json",
+            "evidence/Workflow/05_audit_activity_probe.json"
+          ],
+          "notes": "/api/audit/activity/ returned 403 for tested roles; transition audit entries could not be directly verified via API.",
+          "fix_hint": "Grant read access to authorized audit viewers or provide a supported audit-query endpoint for verification."
+        }
+      ]
+    },
+    {
+      "section": "Import/Export",
+      "checks": [
+        {
+          "id": "IMEX-01",
+          "check": "Import/export surfaces inventoried",
+          "status": "PASS",
+          "severity": "info",
+          "evidence": [
+            "evidence/ImportExport/01_inventory.txt"
+          ],
+          "notes": "Bulk, reports, and module export/import surfaces discovered.",
+          "fix_hint": "None"
+        },
+        {
+          "id": "IMEX-02",
+          "check": "Report export endpoint works",
+          "status": "FAIL",
+          "severity": "major",
+          "evidence": [
+            "evidence/ImportExport/02_export_headers.txt"
+          ],
+          "notes": "/api/reports/export/logbook/?format=csv returned 404.",
+          "fix_hint": "Use valid report key endpoint or restore expected export route."
+        },
+        {
+          "id": "IMEX-03",
+          "check": "Bulk export/import probe with auth",
+          "status": "FAIL",
+          "severity": "major",
+          "evidence": [
+            "evidence/ImportExport/05_role_probes.json"
+          ],
+          "notes": "Role probes failed with 401 due failed/expired auth during probe window.",
+          "fix_hint": "Re-run probes after stabilizing auth/backend and using valid role tokens."
+        },
+        {
+          "id": "IMEX-04",
+          "check": "Idempotent import dry-run verified",
+          "status": "SKIP",
+          "severity": "info",
+          "evidence": [
+            "evidence/ImportExport/05_role_probes.json"
+          ],
+          "notes": "Could not execute authenticated dry-run import end-to-end in unstable backend window.",
+          "fix_hint": "Run dry-run import with stable admin token and compare duplicate counts."
+        }
+      ]
+    },
+    {
+      "section": "Analytics",
+      "checks": [
+        {
+          "id": "AN-01",
+          "check": "Analytics models/endpoints exist",
+          "status": "PASS",
+          "severity": "info",
+          "evidence": [
+            "evidence/Analytics/01_inventory.txt"
+          ],
+          "notes": "Analytics models, views, and routes are present in codebase.",
+          "fix_hint": "None"
+        },
+        {
+          "id": "AN-02",
+          "check": "Analytics dashboard endpoints return data",
+          "status": "FAIL",
+          "severity": "major",
+          "evidence": [
+            "evidence/Analytics/02_endpoints_admin.json",
+            "evidence/Analytics/02_endpoints_pg.json"
+          ],
+          "notes": "Probed analytics endpoints returned 401 in captured runs; prior RBAC probes also showed 500 on dashboard overview.",
+          "fix_hint": "Fix auth/session stability and investigate analytics dashboard 500 responses."
+        },
+        {
+          "id": "AN-03",
+          "check": "Analytics writes observed after user actions",
+          "status": "WARN",
+          "severity": "minor",
+          "evidence": [
+            "evidence/Workflow/04_workflow_full_attempt.json",
+            "evidence/ImportExport/06_backend_logs_after_probe.txt"
+          ],
+          "notes": "Workflow actions succeeded, but direct analytics event count verification was not available through exposed endpoints.",
+          "fix_hint": "Expose/read analytics event counts for audit validation."
+        }
+      ]
+    },
+    {
+      "section": "Static/Media",
+      "checks": [
+        {
+          "id": "SM-01",
+          "check": "Static asset served over HTTPS",
+          "status": "PASS",
+          "severity": "info",
+          "evidence": [
+            "evidence/StaticMedia/01_static_head.txt"
+          ],
+          "notes": "Sample static asset returned HTTP 200.",
+          "fix_hint": "None"
+        },
+        {
+          "id": "SM-02",
+          "check": "Media route responds",
+          "status": "WARN",
+          "severity": "minor",
+          "evidence": [
+            "evidence/StaticMedia/02_media_head.txt"
+          ],
+          "notes": "/media/ returned 404 (no index/object at root path).",
+          "fix_hint": "Verify media file URLs with concrete file paths."
+        },
+        {
+          "id": "SM-03",
+          "check": "Backend staticfiles mount exists",
+          "status": "PASS",
+          "severity": "info",
+          "evidence": [
+            "evidence/StaticMedia/04_backend_staticfiles_ls.txt",
+            "evidence/StaticMedia/03_compose_mounts.txt"
+          ],
+          "notes": "staticfiles directory exists and compose includes static/media mounts.",
+          "fix_hint": "None"
+        }
+      ]
+    },
+    {
+      "section": "Tests/E2E",
+      "checks": [
+        {
+          "id": "TEST-01",
+          "check": "Truth test for logbook return/resubmit flow",
+          "status": "PASS",
+          "severity": "info",
+          "evidence": [
+            "evidence/Tests/01_backend_targeted_test.txt"
+          ],
+          "notes": "Targeted backend truth test passed.",
+          "fix_hint": "None"
+        },
+        {
+          "id": "TEST-02",
+          "check": "Playwright serial suite",
+          "status": "FAIL",
+          "severity": "major",
+          "evidence": [
+            "evidence/Tests/02_playwright_serial.txt"
+          ],
+          "notes": "7/7 tests failed, mostly ECONNREFUSED to localhost:3000 and localhost:8000.",
+          "fix_hint": "Set Playwright baseURL/E2E_API_URL to deployed domain or run expected local servers."
+        }
+      ]
+    },
+    {
+      "section": "Security Basics",
+      "checks": [
+        {
+          "id": "SEC-01",
+          "check": "HTTPS + security headers present on root",
+          "status": "PASS",
+          "severity": "info",
+          "evidence": [
+            "evidence/Baseline/07_domain_head.txt"
+          ],
+          "notes": "HSTS, X-Frame-Options, and X-Content-Type-Options present.",
+          "fix_hint": "None"
+        },
+        {
+          "id": "SEC-02",
+          "check": "Production secrets are set for runtime",
+          "status": "FAIL",
+          "severity": "blocker",
+          "evidence": [
+            "evidence/Docker/04_compose_ps.txt",
+            "evidence/Docker/13_compose_logs_unstable.txt"
+          ],
+          "notes": "Compose warns SECRET_KEY/DB_PASSWORD unset; backend crashes with RuntimeError: SECRET_KEY environment variable is required.",
+          "fix_hint": "Provide non-empty SECRET_KEY and DB_PASSWORD via prod env before launch."
+        },
+        {
+          "id": "SEC-03",
+          "check": "Auth tokens kept out of cookies",
+          "status": "PASS",
+          "severity": "info",
+          "evidence": [
+            "evidence/Auth/AUTH-cookie-observation-success.json"
+          ],
+          "notes": "No Set-Cookie token observed across sampled logins.",
+          "fix_hint": "None"
+        }
+      ]
+    },
+    {
+      "section": "Performance Smoke",
+      "checks": [
+        {
+          "id": "PERF-01",
+          "check": "Root/login latency smoke",
+          "status": "PASS",
+          "severity": "info",
+          "evidence": [
+            "evidence/Perf/01_root_timing.txt",
+            "evidence/Perf/02_login_timing.txt"
+          ],
+          "notes": "Root ~0.125s, login ~0.011s in sampled curls.",
+          "fix_hint": "None"
+        },
+        {
+          "id": "PERF-02",
+          "check": "API health latency smoke",
+          "status": "FAIL",
+          "severity": "major",
+          "evidence": [
+            "evidence/Perf/03_api_healthz_timing.txt"
+          ],
+          "notes": "/api/healthz returned 404 (timing captured but endpoint unhealthy).",
+          "fix_hint": "Restore /api/healthz endpoint or point perf smoke to valid health route."
+        }
+      ]
+    }
+  ]
+}

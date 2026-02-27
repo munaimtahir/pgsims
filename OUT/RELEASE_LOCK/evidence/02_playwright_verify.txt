@@ -1,0 +1,1 @@
+SKIPPED: Playwright verification not executed because Phase 2 backend test verification failed and fail-fast gate triggered.

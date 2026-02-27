@@ -1,0 +1,128 @@
+time="2026-02-27T05:16:32+05:00" level=warning msg="The \"DB_PASSWORD\" variable is not set. Defaulting to a blank string."
+time="2026-02-27T05:16:32+05:00" level=warning msg="The \"SECRET_KEY\" variable is not set. Defaulting to a blank string."
+time="2026-02-27T05:16:32+05:00" level=warning msg="The \"DB_PASSWORD\" variable is not set. Defaulting to a blank string."
+time="2026-02-27T05:16:32+05:00" level=warning msg="The \"SECRET_KEY\" variable is not set. Defaulting to a blank string."
+time="2026-02-27T05:16:32+05:00" level=warning msg="The \"DB_PASSWORD\" variable is not set. Defaulting to a blank string."
+time="2026-02-27T05:16:32+05:00" level=warning msg="The \"SECRET_KEY\" variable is not set. Defaulting to a blank string."
+time="2026-02-27T05:16:32+05:00" level=warning msg="The \"DB_PASSWORD\" variable is not set. Defaulting to a blank string."
+time="2026-02-27T05:16:32+05:00" level=warning msg="/srv/apps/pgsims/docker/docker-compose.prod.yml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+pgsims_backend_prod  |                                  ^^^^^^^^^^^^^^^^^^
+pgsims_backend_prod  |   File "/home/sims/.local/lib/python3.11/site-packages/django/db/models/sql/query.py", line 1429, in build_filter
+pgsims_backend_prod  |     lookups, parts, reffed_expression = self.solve_lookup_type(arg, summarize)
+pgsims_backend_prod  |                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+pgsims_backend_prod  |   File "/home/sims/.local/lib/python3.11/site-packages/django/db/models/sql/query.py", line 1239, in solve_lookup_type
+pgsims_backend_prod  |     _, field, _, lookup_parts = self.names_to_path(lookup_splitted, self.get_meta())
+pgsims_backend_prod  |                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+pgsims_backend_prod  |   File "/home/sims/.local/lib/python3.11/site-packages/django/db/models/sql/query.py", line 1733, in names_to_path
+pgsims_backend_prod  |     raise FieldError(
+pgsims_backend_prod  | django.core.exceptions.FieldError: Cannot resolve keyword 'resident' into field. Choices are: additional_documents, certificate_file, certificate_number, certificate_type, certificate_type_id, cme_points_earned, cpd_credits_earned, created_at, created_by, created_by_id, description, expiry_date, id, is_verified, issue_date, issuing_organization, pg, pg_id, reviews, skills_acquired, status, title, updated_at, verification_code, verification_url, verified_at, verified_by, verified_by_id
+pgsims_backend_prod  | [ERROR] 2026-02-27 00:16:30,618 django.request Internal Server Error: /api/analytics/dashboard/overview/
+pgsims_backend_prod  | Traceback (most recent call last):
+pgsims_backend_prod  |   File "/home/sims/.local/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+pgsims_backend_prod  |     response = get_response(request)
+pgsims_backend_prod  |                ^^^^^^^^^^^^^^^^^^^^^
+pgsims_backend_prod  |   File "/home/sims/.local/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+pgsims_backend_prod  |     response = wrapped_callback(request, *callback_args, **callback_kwargs)
+pgsims_backend_prod  |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+pgsims_backend_prod  |   File "/home/sims/.local/lib/python3.11/site-packages/django/views/decorators/csrf.py", line 56, in wrapper_view
+pgsims_backend_prod  |     return view_func(*args, **kwargs)
+pgsims_backend_prod  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+pgsims_backend_prod  |   File "/home/sims/.local/lib/python3.11/site-packages/django/views/generic/base.py", line 105, in view
+pgsims_backend_prod  |     return self.dispatch(request, *args, **kwargs)
+pgsims_backend_prod  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+pgsims_backend_prod  |   File "/home/sims/.local/lib/python3.11/site-packages/rest_framework/views.py", line 515, in dispatch
+pgsims_backend_prod  |     response = self.handle_exception(exc)
+pgsims_backend_prod  |                ^^^^^^^^^^^^^^^^^^^^^^^^^^
+pgsims_backend_prod  |   File "/home/sims/.local/lib/python3.11/site-packages/rest_framework/views.py", line 475, in handle_exception
+pgsims_backend_prod  |     self.raise_uncaught_exception(exc)
+pgsims_backend_prod  |   File "/home/sims/.local/lib/python3.11/site-packages/rest_framework/views.py", line 486, in raise_uncaught_exception
+pgsims_backend_prod  |     raise exc
+pgsims_backend_prod  |   File "/home/sims/.local/lib/python3.11/site-packages/rest_framework/views.py", line 512, in dispatch
+pgsims_backend_prod  |     response = handler(request, *args, **kwargs)
+pgsims_backend_prod  |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+pgsims_backend_prod  |   File "/app/sims/analytics/views.py", line 158, in get
+pgsims_backend_prod  |     overview = dashboard_overview(request.user)
+pgsims_backend_prod  |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+pgsims_backend_prod  |   File "/app/sims/analytics/services.py", line 279, in dashboard_overview
+pgsims_backend_prod  |     certificates_qs = Certificate.objects.filter(resident=user)
+pgsims_backend_prod  |                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+pgsims_backend_prod  |   File "/home/sims/.local/lib/python3.11/site-packages/django/db/models/manager.py", line 87, in manager_method
+pgsims_backend_prod  |     return getattr(self.get_queryset(), name)(*args, **kwargs)
+pgsims_backend_prod  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+pgsims_backend_prod  |   File "/home/sims/.local/lib/python3.11/site-packages/django/db/models/query.py", line 1438, in filter
+pgsims_backend_prod  |     return self._filter_or_exclude(False, args, kwargs)
+pgsims_backend_prod  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+pgsims_backend_prod  |   File "/home/sims/.local/lib/python3.11/site-packages/django/db/models/query.py", line 1456, in _filter_or_exclude
+pgsims_backend_prod  |     clone._filter_or_exclude_inplace(negate, args, kwargs)
+pgsims_backend_prod  |   File "/home/sims/.local/lib/python3.11/site-packages/django/db/models/query.py", line 1466, in _filter_or_exclude_inplace
+pgsims_backend_prod  |     self._query.add_q(Q(*args, **kwargs))
+pgsims_backend_prod  |   File "/home/sims/.local/lib/python3.11/site-packages/django/db/models/sql/query.py", line 1548, in add_q
+pgsims_backend_prod  |     clause, _ = self._add_q(q_object, self.used_aliases)
+pgsims_backend_prod  |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+pgsims_backend_prod  |   File "/home/sims/.local/lib/python3.11/site-packages/django/db/models/sql/query.py", line 1579, in _add_q
+pgsims_backend_prod  |     child_clause, needed_inner = self.build_filter(
+pgsims_backend_prod  |                                  ^^^^^^^^^^^^^^^^^^
+pgsims_backend_prod  |   File "/home/sims/.local/lib/python3.11/site-packages/django/db/models/sql/query.py", line 1429, in build_filter
+pgsims_backend_prod  |     lookups, parts, reffed_expression = self.solve_lookup_type(arg, summarize)
+pgsims_backend_prod  |                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+pgsims_backend_prod  |   File "/home/sims/.local/lib/python3.11/site-packages/django/db/models/sql/query.py", line 1239, in solve_lookup_type
+pgsims_backend_prod  |     _, field, _, lookup_parts = self.names_to_path(lookup_splitted, self.get_meta())
+pgsims_backend_prod  |                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+pgsims_backend_prod  |   File "/home/sims/.local/lib/python3.11/site-packages/django/db/models/sql/query.py", line 1733, in names_to_path
+pgsims_backend_prod  |     raise FieldError(
+pgsims_backend_prod  | django.core.exceptions.FieldError: Cannot resolve keyword 'resident' into field. Choices are: additional_documents, certificate_file, certificate_number, certificate_type, certificate_type_id, cme_points_earned, cpd_credits_earned, created_at, created_by, created_by_id, description, expiry_date, id, is_verified, issue_date, issuing_organization, pg, pg_id, reviews, skills_acquired, status, title, updated_at, verification_code, verification_url, verified_at, verified_by, verified_by_id
+pgsims_backend_prod  | [ERROR] 2026-02-27 00:16:31,052 django.request Internal Server Error: /api/analytics/dashboard/overview/
+pgsims_backend_prod  | Traceback (most recent call last):
+pgsims_backend_prod  |   File "/home/sims/.local/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+pgsims_backend_prod  |     response = get_response(request)
+pgsims_backend_prod  |                ^^^^^^^^^^^^^^^^^^^^^
+pgsims_backend_prod  |   File "/home/sims/.local/lib/python3.11/site-packages/django/core/handlers/base.py", line 197, in _get_response
+pgsims_backend_prod  |     response = wrapped_callback(request, *callback_args, **callback_kwargs)
+pgsims_backend_prod  |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+pgsims_backend_prod  |   File "/home/sims/.local/lib/python3.11/site-packages/django/views/decorators/csrf.py", line 56, in wrapper_view
+pgsims_backend_prod  |     return view_func(*args, **kwargs)
+pgsims_backend_prod  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+pgsims_backend_prod  |   File "/home/sims/.local/lib/python3.11/site-packages/django/views/generic/base.py", line 105, in view
+pgsims_backend_prod  |     return self.dispatch(request, *args, **kwargs)
+pgsims_backend_prod  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+pgsims_backend_prod  |   File "/home/sims/.local/lib/python3.11/site-packages/rest_framework/views.py", line 515, in dispatch
+pgsims_backend_prod  |     response = self.handle_exception(exc)
+pgsims_backend_prod  |                ^^^^^^^^^^^^^^^^^^^^^^^^^^
+pgsims_backend_prod  |   File "/home/sims/.local/lib/python3.11/site-packages/rest_framework/views.py", line 475, in handle_exception
+pgsims_backend_prod  |     self.raise_uncaught_exception(exc)
+pgsims_backend_prod  |   File "/home/sims/.local/lib/python3.11/site-packages/rest_framework/views.py", line 486, in raise_uncaught_exception
+pgsims_backend_prod  |     raise exc
+pgsims_backend_prod  |   File "/home/sims/.local/lib/python3.11/site-packages/rest_framework/views.py", line 512, in dispatch
+pgsims_backend_prod  |     response = handler(request, *args, **kwargs)
+pgsims_backend_prod  |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+pgsims_backend_prod  |   File "/app/sims/analytics/views.py", line 158, in get
+pgsims_backend_prod  |     overview = dashboard_overview(request.user)
+pgsims_backend_prod  |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+pgsims_backend_prod  |   File "/app/sims/analytics/services.py", line 279, in dashboard_overview
+pgsims_backend_prod  |     certificates_qs = Certificate.objects.filter(resident=user)
+pgsims_backend_prod  |                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+pgsims_backend_prod  |   File "/home/sims/.local/lib/python3.11/site-packages/django/db/models/manager.py", line 87, in manager_method
+pgsims_backend_prod  |     return getattr(self.get_queryset(), name)(*args, **kwargs)
+pgsims_backend_prod  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+pgsims_backend_prod  |   File "/home/sims/.local/lib/python3.11/site-packages/django/db/models/query.py", line 1438, in filter
+pgsims_backend_prod  |     return self._filter_or_exclude(False, args, kwargs)
+pgsims_backend_prod  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+pgsims_backend_prod  |   File "/home/sims/.local/lib/python3.11/site-packages/django/db/models/query.py", line 1456, in _filter_or_exclude
+pgsims_backend_prod  |     clone._filter_or_exclude_inplace(negate, args, kwargs)
+pgsims_backend_prod  |   File "/home/sims/.local/lib/python3.11/site-packages/django/db/models/query.py", line 1466, in _filter_or_exclude_inplace
+pgsims_backend_prod  |     self._query.add_q(Q(*args, **kwargs))
+pgsims_backend_prod  |   File "/home/sims/.local/lib/python3.11/site-packages/django/db/models/sql/query.py", line 1548, in add_q
+pgsims_backend_prod  |     clause, _ = self._add_q(q_object, self.used_aliases)
+pgsims_backend_prod  |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+pgsims_backend_prod  |   File "/home/sims/.local/lib/python3.11/site-packages/django/db/models/sql/query.py", line 1579, in _add_q
+pgsims_backend_prod  |     child_clause, needed_inner = self.build_filter(
+pgsims_backend_prod  |                                  ^^^^^^^^^^^^^^^^^^
+pgsims_backend_prod  |   File "/home/sims/.local/lib/python3.11/site-packages/django/db/models/sql/query.py", line 1429, in build_filter
+pgsims_backend_prod  |     lookups, parts, reffed_expression = self.solve_lookup_type(arg, summarize)
+pgsims_backend_prod  |                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+pgsims_backend_prod  |   File "/home/sims/.local/lib/python3.11/site-packages/django/db/models/sql/query.py", line 1239, in solve_lookup_type
+pgsims_backend_prod  |     _, field, _, lookup_parts = self.names_to_path(lookup_splitted, self.get_meta())
+pgsims_backend_prod  |                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+pgsims_backend_prod  |   File "/home/sims/.local/lib/python3.11/site-packages/django/db/models/sql/query.py", line 1733, in names_to_path
+pgsims_backend_prod  |     raise FieldError(
+pgsims_backend_prod  | django.core.exceptions.FieldError: Cannot resolve keyword 'resident' into field. Choices are: additional_documents, certificate_file, certificate_number, certificate_type, certificate_type_id, cme_points_earned, cpd_credits_earned, created_at, created_by, created_by_id, description, expiry_date, id, is_verified, issue_date, issuing_organization, pg, pg_id, reviews, skills_acquired, status, title, updated_at, verification_code, verification_url, verified_at, verified_by, verified_by_id

@@ -54,6 +54,10 @@ export default function AdminAnalyticsPage() {
     roles: [],
   });
   const [tabData, setTabData] = useState<AnalyticsTabPayload | null>(null);
+  const [liveCursor, setLiveCursor] = useState<string | undefined>(undefined);
+  const [liveRows, setLiveRows] = useState<Array<Record<string, unknown>>>([]);
+  const [eventTypePrefix, setEventTypePrefix] = useState('');
+  const [entityType, setEntityType] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -75,6 +79,37 @@ export default function AdminAnalyticsPage() {
       setError(null);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Failed to load analytics data.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const pollLive = async (isInitial = false) => {
+    setLoading(isInitial);
+    try {
+      const payload = await analyticsApi.getLiveEvents({
+        ...queryParams,
+        limit: 200,
+        cursor: isInitial ? undefined : liveCursor,
+        event_type_prefix: eventTypePrefix || undefined,
+        entity_type: entityType || undefined,
+      });
+      setLiveCursor(payload.cursor || liveCursor);
+      setLiveRows((previousRows) => {
+        const incoming = (payload.events || []) as Array<Record<string, unknown>>;
+        const combined = isInitial ? incoming : [...incoming, ...previousRows];
+        const seen = new Set<string>();
+        const deduped = combined.filter((row) => {
+          const id = String(row.id ?? '');
+          if (!id || seen.has(id)) return false;
+          seen.add(id);
+          return true;
+        });
+        return deduped.slice(0, 200);
+      });
+      setError(null);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to load live feed.');
     } finally {
       setLoading(false);
     }
@@ -106,14 +141,33 @@ export default function AdminAnalyticsPage() {
   }, [activeTab]);
 
   useEffect(() => {
-    loadTab(activeTab);
-    if (activeTab !== 'live') return;
+    if (activeTab !== 'live') {
+      void loadTab(activeTab);
+      return;
+    }
+    setLiveCursor(undefined);
+    setLiveRows([]);
+    void pollLive(true);
     const timer = setInterval(() => {
-      loadTab('live');
+      void pollLive(false);
     }, 7000);
     return () => clearInterval(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTab, queryParams]);
+  }, [activeTab, queryParams, eventTypePrefix, entityType]);
+
+  useEffect(() => {
+    if (activeTab !== 'live') return;
+    setTabData({
+      title: 'Live',
+      date_range: { start_date: startDate, end_date: endDate },
+      cards: [{ key: 'live_events', title: 'Events (Latest Window)', value: liveRows.length }],
+      table: {
+        columns: ['occurred_at', 'event_type', 'actor_role', 'department_id', 'hospital_id', 'entity_id'],
+        rows: liveRows,
+      },
+      series: [],
+    });
+  }, [activeTab, liveRows, startDate, endDate]);
 
   const handleExport = async () => {
     try {
@@ -136,6 +190,13 @@ export default function AdminAnalyticsPage() {
       label: column.replace(/_/g, ' '),
       render: (row) => {
         const value = row[column];
+        if (column === 'entity_id' && typeof row.drilldown_url === 'string' && row.drilldown_url) {
+          return (
+            <a className="text-indigo-600 hover:text-indigo-800 underline" href={String(row.drilldown_url)}>
+              {value === null || value === undefined || value === '' ? 'Open' : String(value)}
+            </a>
+          );
+        }
         if (typeof value === 'number') return value.toLocaleString();
         return value === null || value === undefined || value === '' ? '-' : String(value);
       },
@@ -218,6 +279,32 @@ export default function AdminAnalyticsPage() {
                 </button>
               </div>
             </div>
+            {activeTab === 'live' ? (
+              <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-3">
+                <label className="text-sm text-gray-700">
+                  Event type prefix
+                  <input
+                    data-testid="analytics-live-filter-event-prefix"
+                    type="text"
+                    className="mt-1 w-full rounded border px-3 py-2 text-sm"
+                    placeholder="logbook.case"
+                    value={eventTypePrefix}
+                    onChange={(e) => setEventTypePrefix(e.target.value)}
+                  />
+                </label>
+                <label className="text-sm text-gray-700">
+                  Entity type
+                  <input
+                    data-testid="analytics-live-filter-entity-type"
+                    type="text"
+                    className="mt-1 w-full rounded border px-3 py-2 text-sm"
+                    placeholder="logbook_entry"
+                    value={entityType}
+                    onChange={(e) => setEntityType(e.target.value)}
+                  />
+                </label>
+              </div>
+            ) : null}
           </SectionCard>
 
           <div className="overflow-x-auto border-b border-gray-200">

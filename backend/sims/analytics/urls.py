@@ -6,6 +6,7 @@ from sims.analytics.views import (
     AnalyticsEventIngestView,
     AnalyticsFiltersView,
     AnalyticsLiveView,
+    AnalyticsQualityView,
     AnalyticsTabExportView,
     AnalyticsTabView,
     ComparativeAnalyticsView,
@@ -26,8 +27,10 @@ urlpatterns = [
     path("dashboard/trends/", DashboardTrendsView.as_view(), name="dashboard-trends"),
     path("dashboard/compliance/", DashboardComplianceView.as_view(), name="dashboard-compliance"),
     path("events/", AnalyticsEventIngestView.as_view(), name="events-ingest"),
+    path("events/live", AnalyticsLiveView.as_view(), name="events-live"),
     path("v1/filters/", AnalyticsFiltersView.as_view(), name="v1-filters"),
     path("v1/tabs/<str:tab>/", AnalyticsTabView.as_view(), name="v1-tab"),
     path("v1/tabs/<str:tab>/export/", AnalyticsTabExportView.as_view(), name="v1-tab-export"),
     path("v1/live/", AnalyticsLiveView.as_view(), name="v1-live"),
+    path("v1/quality/", AnalyticsQualityView.as_view(), name="v1-quality"),
 ]

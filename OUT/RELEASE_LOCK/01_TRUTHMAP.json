@@ -1,0 +1,147 @@
+{
+  "generated_at": "2026-02-27",
+  "repo": "/srv/apps/pgsims",
+  "domain": "https://pgsims.alshifalab.pk",
+  "overall_status": "FAIL",
+  "blockers": [
+    {
+      "id": "B1",
+      "area": "Backend/API",
+      "issue": "Health endpoint does not return 200 (received 405).",
+      "evidence": "/srv/apps/pgsims/OUT/RELEASE_LOCK/evidence/01_curl_https_healthz.txt",
+      "grep_pattern": "HTTP/2 405"
+    },
+    {
+      "id": "B2",
+      "area": "Tests (backend)",
+      "issue": "One-shot backend test verification failed during test DB setup in non-interactive mode.",
+      "evidence": "/srv/apps/pgsims/OUT/RELEASE_LOCK/evidence/02_backend_tests_verify.txt",
+      "grep_pattern": "ProgrammingError|EOFError"
+    }
+  ],
+  "sections": {
+    "Proxy/Caddy": {
+      "status": "WARN",
+      "checks": [
+        {
+          "name": "Caddy config validates",
+          "status": "PASS",
+          "evidence": "/srv/apps/pgsims/OUT/RELEASE_LOCK/evidence/01_caddy_validate.txt",
+          "expected": "Valid configuration",
+          "actual": "Valid configuration"
+        },
+        {
+          "name": "Caddy service active",
+          "status": "PASS",
+          "evidence": "/srv/apps/pgsims/OUT/RELEASE_LOCK/evidence/01_caddy_status.txt",
+          "expected": "active (running)",
+          "actual": "active (running)"
+        },
+        {
+          "name": "Caddy recent error noise",
+          "status": "WARN",
+          "evidence": "/srv/apps/pgsims/OUT/RELEASE_LOCK/evidence/01_caddy_journal_tail.txt",
+          "expected": "No repeated upstream refusal",
+          "actual": "Contains historical 502/dial tcp 127.0.0.1:8014 refused entries"
+        }
+      ]
+    },
+    "Docker/Runtime": {
+      "status": "PASS",
+      "checks": [
+        {
+          "name": "Compose services up/healthy",
+          "status": "PASS",
+          "evidence": "/srv/apps/pgsims/OUT/RELEASE_LOCK/evidence/01_compose_ps.txt"
+        },
+        {
+          "name": "Expected loopback listeners",
+          "status": "PASS",
+          "evidence": "/srv/apps/pgsims/OUT/RELEASE_LOCK/evidence/01_ss_listening.txt"
+        }
+      ]
+    },
+    "Backend/API": {
+      "status": "FAIL",
+      "checks": [
+        {
+          "name": "Local backend /healthz/",
+          "status": "FAIL",
+          "evidence": "/srv/apps/pgsims/OUT/RELEASE_LOCK/evidence/01_curl_backend_healthz_local.txt",
+          "expected": "200",
+          "actual": "405"
+        },
+        {
+          "name": "External /healthz/",
+          "status": "FAIL",
+          "evidence": "/srv/apps/pgsims/OUT/RELEASE_LOCK/evidence/01_curl_https_healthz.txt",
+          "expected": "200",
+          "actual": "405"
+        }
+      ]
+    },
+    "Auth/RBAC (smoke only)": {
+      "status": "WARN",
+      "checks": [
+        {
+          "name": "Passive auth behavior from journal",
+          "status": "WARN",
+          "evidence": "/srv/apps/pgsims/OUT/RELEASE_LOCK/evidence/01_caddy_journal_tail.txt",
+          "note": "Observed 401/429 patterns but no explicit authenticated smoke run in this lock audit"
+        }
+      ]
+    },
+    "Frontend/UI": {
+      "status": "PASS",
+      "checks": [
+        {
+          "name": "Frontend local root",
+          "status": "PASS",
+          "evidence": "/srv/apps/pgsims/OUT/RELEASE_LOCK/evidence/01_curl_frontend_local.txt",
+          "expected": "200",
+          "actual": "200"
+        },
+        {
+          "name": "External root",
+          "status": "PASS",
+          "evidence": "/srv/apps/pgsims/OUT/RELEASE_LOCK/evidence/01_curl_https_root.txt",
+          "expected": "200/304",
+          "actual": "200"
+        }
+      ]
+    },
+    "Tests (backend)": {
+      "status": "FAIL",
+      "checks": [
+        {
+          "name": "One-shot Django test run",
+          "status": "FAIL",
+          "evidence": "/srv/apps/pgsims/OUT/RELEASE_LOCK/evidence/02_backend_tests_verify.txt",
+          "issue": "test_sims_db already exists + EOFError on interactive prompt"
+        }
+      ]
+    },
+    "E2E (playwright)": {
+      "status": "WARN",
+      "checks": [
+        {
+          "name": "One-shot Playwright verification",
+          "status": "WARN",
+          "evidence": "/srv/apps/pgsims/OUT/RELEASE_LOCK/evidence/02_playwright_verify.txt",
+          "note": "Skipped due fail-fast after backend test verification failure"
+        }
+      ]
+    },
+    "Ops Guardrails": {
+      "status": "WARN",
+      "checks": [
+        {
+          "name": "Phase 3 guardrails",
+          "status": "WARN",
+          "evidence": "/srv/apps/pgsims/OUT/RELEASE_LOCK/evidence/03_guardrails_skipped.txt",
+          "note": "Not applied due fail-fast rule"
+        }
+      ]
+    }
+  }
+}

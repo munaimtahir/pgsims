@@ -1,0 +1,122 @@
+Error: Playwright Test did not expect test() to be called here.
+Most common reasons include:
+- You are calling test() in a configuration file.
+- You are calling test() in a file that is imported by the configuration file.
+- You have two different versions of @playwright/test. This usually happens
+  when one of the dependencies in your package.json depends on @playwright/test.
+
+   at frontend/e2e/admin_analytics.spec.ts:3
+
+  1 | import { expect, test } from '@playwright/test';
+  2 |
+> 3 | test('admin analytics page loads, filters refresh, and live polling updates feed', async ({
+    |     ^
+  4 |   page,
+  5 |   context,
+  6 | }) => {
+    at TestTypeImpl._currentSuite (/home/munaim/srv/apps/pgsims/frontend/node_modules/playwright/lib/common/testType.js:74:13)
+    at TestTypeImpl._createTest (/home/munaim/srv/apps/pgsims/frontend/node_modules/playwright/lib/common/testType.js:87:24)
+    at /home/munaim/srv/apps/pgsims/frontend/node_modules/playwright/lib/transform/transform.js:275:12
+    at Object.<anonymous> (/home/munaim/srv/apps/pgsims/frontend/e2e/admin_analytics.spec.ts:3:5)
+Error: Playwright Test did not expect test() to be called here.
+Most common reasons include:
+- You are calling test() in a configuration file.
+- You are calling test() in a file that is imported by the configuration file.
+- You have two different versions of @playwright/test. This usually happens
+  when one of the dependencies in your package.json depends on @playwright/test.
+
+   at frontend/e2e/cases_create_submit_review.spec.ts:4
+
+  2 | import { loginAs } from './helpers/auth';
+  3 |
+> 4 | test('PG creates/submits case and supervisor reviews', async ({ page, context }) => {
+    |     ^
+  5 |   const title = `E2E case ${Date.now()}`;
+  6 |
+  7 |   await loginAs(context, page, 'pg');
+    at TestTypeImpl._currentSuite (/home/munaim/srv/apps/pgsims/frontend/node_modules/playwright/lib/common/testType.js:74:13)
+    at TestTypeImpl._createTest (/home/munaim/srv/apps/pgsims/frontend/node_modules/playwright/lib/common/testType.js:87:24)
+    at /home/munaim/srv/apps/pgsims/frontend/node_modules/playwright/lib/transform/transform.js:275:12
+    at Object.<anonymous> (/home/munaim/srv/apps/pgsims/frontend/e2e/cases_create_submit_review.spec.ts:4:5)
+Error: Playwright Test did not expect test() to be called here.
+Most common reasons include:
+- You are calling test() in a configuration file.
+- You are calling test() in a file that is imported by the configuration file.
+- You have two different versions of @playwright/test. This usually happens
+  when one of the dependencies in your package.json depends on @playwright/test.
+
+   at frontend/e2e/import_reports_dashboard.spec.ts:4
+
+  2 | import { loginAs } from './helpers/auth';
+  3 |
+> 4 | test('Admin import + reports export + UTRMC KPI dashboard', async ({ page, context }) => {
+    |     ^
+  5 |   const suffix = `${Date.now()}`.slice(-6);
+  6 |   const supervisorUsername = `e2e_sup_${suffix}`;
+  7 |   const residentUsername = `e2e_pg_${suffix}`;
+    at TestTypeImpl._currentSuite (/home/munaim/srv/apps/pgsims/frontend/node_modules/playwright/lib/common/testType.js:74:13)
+    at TestTypeImpl._createTest (/home/munaim/srv/apps/pgsims/frontend/node_modules/playwright/lib/common/testType.js:87:24)
+    at /home/munaim/srv/apps/pgsims/frontend/node_modules/playwright/lib/transform/transform.js:275:12
+    at Object.<anonymous> (/home/munaim/srv/apps/pgsims/frontend/e2e/import_reports_dashboard.spec.ts:4:5)
+Error: Playwright Test did not expect test() to be called here.
+Most common reasons include:
+- You are calling test() in a configuration file.
+- You are calling test() in a file that is imported by the configuration file.
+- You have two different versions of @playwright/test. This usually happens
+  when one of the dependencies in your package.json depends on @playwright/test.
+
+   at frontend/e2e/logbook_submit_return_resubmit_approve.spec.ts:4
+
+  2 | import { loginAs } from './helpers/auth';
+  3 |
+> 4 | test('PG -> Supervisor return -> PG resubmit -> approve workflow', async ({ page, context }) => {
+    |     ^
+  5 |   const caseTitle = `E2E logbook ${Date.now()}`;
+  6 |   const promptReplies = ['Please add more details.', 'Approved.'];
+  7 |
+    at TestTypeImpl._currentSuite (/home/munaim/srv/apps/pgsims/frontend/node_modules/playwright/lib/common/testType.js:74:13)
+    at TestTypeImpl._createTest (/home/munaim/srv/apps/pgsims/frontend/node_modules/playwright/lib/common/testType.js:87:24)
+    at /home/munaim/srv/apps/pgsims/frontend/node_modules/playwright/lib/transform/transform.js:275:12
+    at Object.<anonymous> (/home/munaim/srv/apps/pgsims/frontend/e2e/logbook_submit_return_resubmit_approve.spec.ts:4:5)
+Error: Playwright Test did not expect test() to be called here.
+Most common reasons include:
+- You are calling test() in a configuration file.
+- You are calling test() in a file that is imported by the configuration file.
+- You have two different versions of @playwright/test. This usually happens
+  when one of the dependencies in your package.json depends on @playwright/test.
+
+   at frontend/e2e/login.spec.ts:3
+
+  1 | import { expect, test } from '@playwright/test';
+  2 |
+> 3 | test('login page renders and registration is disabled', async ({ page }) => {
+    |     ^
+  4 |   await page.goto('/login');
+  5 |   await expect(page.getByRole('heading', { name: /sign in to sims/i })).toBeVisible();
+  6 |   await expect(page.getByText(/registration is disabled/i)).toBeVisible();
+    at TestTypeImpl._currentSuite (/home/munaim/srv/apps/pgsims/frontend/node_modules/playwright/lib/common/testType.js:74:13)
+    at TestTypeImpl._createTest (/home/munaim/srv/apps/pgsims/frontend/node_modules/playwright/lib/common/testType.js:87:24)
+    at /home/munaim/srv/apps/pgsims/frontend/node_modules/playwright/lib/transform/transform.js:275:12
+    at Object.<anonymous> (/home/munaim/srv/apps/pgsims/frontend/e2e/login.spec.ts:3:5)
+Error: Playwright Test did not expect test.describe() to be called here.
+Most common reasons include:
+- You are calling test.describe() in a configuration file.
+- You are calling test.describe() in a file that is imported by the configuration file.
+- You have two different versions of @playwright/test. This usually happens
+  when one of the dependencies in your package.json depends on @playwright/test.
+
+   at frontend/e2e/utrmc_readonly_dashboard.spec.ts:4
+
+  2 | import { loginAs } from './helpers/auth';
+  3 |
+> 4 | test.describe('UTRMC Read-only Dashboard', () => {
+    |      ^
+  5 |   test('utrmc_user can load dashboard and sees no mutation UI', async ({ page, context }) => {
+  6 |     await loginAs(context, page, 'utrmc_user');
+  7 |     await page.goto('/dashboard/utrmc');
+    at TestTypeImpl._currentSuite (/home/munaim/srv/apps/pgsims/frontend/node_modules/playwright/lib/common/testType.js:74:13)
+    at TestTypeImpl._describe (/home/munaim/srv/apps/pgsims/frontend/node_modules/playwright/lib/common/testType.js:114:24)
+    at Function.describe (/home/munaim/srv/apps/pgsims/frontend/node_modules/playwright/lib/transform/transform.js:275:12)
+    at Object.<anonymous> (/home/munaim/srv/apps/pgsims/frontend/e2e/utrmc_readonly_dashboard.spec.ts:4:6)
+Error: No tests found
+

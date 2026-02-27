@@ -14,7 +14,7 @@ from django.conf.urls.static import static
 from django.contrib import admin, messages
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.views import LogoutView
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import redirect
 from django.template.response import TemplateResponse
 from django.urls import include, path
@@ -103,6 +103,11 @@ Allow: /
     return HttpResponse(content, content_type="text/plain")
 
 
+def fingerprint_view(request):
+    """Runtime fingerprint endpoint for production verification."""
+    return JsonResponse({"fingerprint": settings.ADMIN_RESET_FINGERPRINT})
+
+
 urlpatterns = [
     # Home and utility URLs
     path("", home_view, name="home"),
@@ -111,6 +116,7 @@ urlpatterns = [
     path("readiness/", readiness, name="readiness"),
     path("liveness/", liveness, name="liveness"),
     path("robots.txt", robots_txt, name="robots_txt"),
+    path("__fingerprint/", fingerprint_view, name="fingerprint"),
     # Django Admin
     path("admin/", admin.site.urls),
     # SIMS App URLs

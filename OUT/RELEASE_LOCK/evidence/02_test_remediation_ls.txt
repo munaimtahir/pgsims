@@ -1,0 +1,9 @@
+total 92
+drwxrwxr-x+ 2 munaim munaim  4096 Feb 27 05:39 .
+drwxrwxr-x+ 7 munaim munaim  4096 Feb 27 05:38 ..
+-rw-rw-r--+ 1 munaim munaim  2193 Feb 27 05:34 00_pip_freeze.txt
+-rw-rw-r--+ 1 munaim munaim  1084 Feb 27 05:38 00_ps.txt
+-rw-rw-r--+ 1 munaim munaim  1085 Feb 27 05:34 00_python.txt
+-rw-rw-r--+ 1 munaim munaim 36940 Feb 27 05:35 01_test_failures_raw.txt
+-rw-rw-r--+ 1 munaim munaim 25177 Feb 27 05:38 02_targeted_after_fix1.txt
+-rw-rw-r--+ 1 munaim munaim   790 Feb 27 05:39 03_FINAL_RUN.txt

@@ -1,0 +1,16 @@
+50:        def upsert_user(*, username, password, **fields):
+60:        upsert_user(
+61:            username="e2e_admin",
+64:            role="admin",
+69:        upsert_user(
+70:            username="e2e_utrmc_user",
+73:            role="utrmc_user",
+78:        upsert_user(
+79:            username="e2e_utrmc_admin",
+82:            role="utrmc_admin",
+87:        supervisor = upsert_user(
+88:            username="e2e_supervisor",
+91:            role="supervisor",
+97:        pg = upsert_user(
+98:            username="e2e_pg",
+101:            role="pg",

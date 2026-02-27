@@ -1,0 +1,17 @@
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0  0   179    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0
+HTTP/1.1 404 Not Found
+Server: gunicorn
+Date: Fri, 27 Feb 2026 00:36:31 GMT
+Connection: close
+Content-Type: text/html; charset=utf-8
+X-Response-Time: 0ms
+X-Frame-Options: DENY
+X-Request-ID: f605d1c3f4e84752b1c3a2b922b6d854
+Content-Length: 179
+Vary: Cookie, origin
+X-Content-Type-Options: nosniff
+Referrer-Policy: same-origin
+Cross-Origin-Opener-Policy: same-origin
+

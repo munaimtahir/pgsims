@@ -1,0 +1,453 @@
+/srv/apps/pgsims/backend/sims/logbook/api_urls.py:16:    path("pending/", PendingLogbookEntriesView.as_view(), name="pending"),
+/srv/apps/pgsims/backend/sims/logbook/api_urls.py:17:    path("<int:pk>/verify/", VerifyLogbookEntryView.as_view(), name="verify"),
+/srv/apps/pgsims/backend/sims/logbook/api_urls.py:20:    path("my/<int:pk>/submit/", PGLogbookEntrySubmitView.as_view(), name="my_entry_submit"),
+/srv/apps/pgsims/backend/sims/logbook/test_api.py:84:        self.pending_entry = LogbookEntry.objects.create(
+/srv/apps/pgsims/backend/sims/logbook/test_api.py:92:            status="pending",
+/srv/apps/pgsims/backend/sims/logbook/test_api.py:95:            submitted_to_supervisor_at=timezone.now(),
+/srv/apps/pgsims/backend/sims/logbook/test_api.py:98:        self.approved_entry = LogbookEntry.objects.create(
+/srv/apps/pgsims/backend/sims/logbook/test_api.py:106:            status="approved",
+/srv/apps/pgsims/backend/sims/logbook/test_api.py:109:            submitted_to_supervisor_at=timezone.now(),
+/srv/apps/pgsims/backend/sims/logbook/test_api.py:116:    def test_pending_entries_supervisor(self):
+/srv/apps/pgsims/backend/sims/logbook/test_api.py:117:        """Supervisor can see pending entries from assigned PGs."""
+/srv/apps/pgsims/backend/sims/logbook/test_api.py:119:        url = reverse("logbook_api:pending")
+/srv/apps/pgsims/backend/sims/logbook/test_api.py:124:        self.assertEqual(response.data["results"][0]["id"], self.pending_entry.id)
+/srv/apps/pgsims/backend/sims/logbook/test_api.py:126:    def test_pending_entries_admin(self):
+/srv/apps/pgsims/backend/sims/logbook/test_api.py:127:        """Admin can see all pending entries."""
+/srv/apps/pgsims/backend/sims/logbook/test_api.py:129:        url = reverse("logbook_api:pending")
+/srv/apps/pgsims/backend/sims/logbook/test_api.py:135:    def test_pending_entries_utrmc_user_read_only_access(self):
+/srv/apps/pgsims/backend/sims/logbook/test_api.py:136:        """UTRMC read-only user can see all pending entries."""
+/srv/apps/pgsims/backend/sims/logbook/test_api.py:138:        response = self.client.get(reverse("logbook_api:pending"))
+/srv/apps/pgsims/backend/sims/logbook/test_api.py:142:    def test_verify_entry_utrmc_user_denied(self):
+/srv/apps/pgsims/backend/sims/logbook/test_api.py:143:        """UTRMC read-only user cannot verify entries."""
+/srv/apps/pgsims/backend/sims/logbook/test_api.py:145:        url = reverse("logbook_api:verify", kwargs={"pk": self.pending_entry.id})
+/srv/apps/pgsims/backend/sims/logbook/test_api.py:149:    def test_verify_entry_utrmc_admin_denied(self):
+/srv/apps/pgsims/backend/sims/logbook/test_api.py:150:        """UTRMC admin is oversight-only for logbook verification and cannot verify entries."""
+/srv/apps/pgsims/backend/sims/logbook/test_api.py:152:        url = reverse("logbook_api:verify", kwargs={"pk": self.pending_entry.id})
+/srv/apps/pgsims/backend/sims/logbook/test_api.py:156:    def test_pending_entries_pg_denied(self):
+/srv/apps/pgsims/backend/sims/logbook/test_api.py:157:        """PG users cannot access pending entries list."""
+/srv/apps/pgsims/backend/sims/logbook/test_api.py:159:        url = reverse("logbook_api:pending")
+/srv/apps/pgsims/backend/sims/logbook/test_api.py:164:    def test_verify_entry_supervisor(self):
+/srv/apps/pgsims/backend/sims/logbook/test_api.py:165:        """Supervisor can verify entry from assigned PG."""
+/srv/apps/pgsims/backend/sims/logbook/test_api.py:167:        url = reverse("logbook_api:verify", kwargs={"pk": self.pending_entry.id})
+/srv/apps/pgsims/backend/sims/logbook/test_api.py:171:        self.assertEqual(response.data["status"], "approved")
+/srv/apps/pgsims/backend/sims/logbook/test_api.py:175:        self.pending_entry.refresh_from_db()
+/srv/apps/pgsims/backend/sims/logbook/test_api.py:176:        self.assertEqual(self.pending_entry.status, "approved")
+/srv/apps/pgsims/backend/sims/logbook/test_api.py:177:        self.assertEqual(self.pending_entry.verified_by, self.supervisor)
+/srv/apps/pgsims/backend/sims/logbook/test_api.py:178:        self.assertIsNotNone(self.pending_entry.verified_at)
+/srv/apps/pgsims/backend/sims/logbook/test_api.py:179:        self.assertEqual(self.pending_entry.supervisor_feedback, "Good work!")
+/srv/apps/pgsims/backend/sims/logbook/test_api.py:181:    def test_verify_entry_admin(self):
+/srv/apps/pgsims/backend/sims/logbook/test_api.py:182:        """Admin can verify any entry."""
+/srv/apps/pgsims/backend/sims/logbook/test_api.py:184:        url = reverse("logbook_api:verify", kwargs={"pk": self.pending_entry.id})
+/srv/apps/pgsims/backend/sims/logbook/test_api.py:188:        self.assertEqual(response.data["status"], "approved")
+/srv/apps/pgsims/backend/sims/logbook/test_api.py:190:    def test_verify_entry_pg_denied(self):
+/srv/apps/pgsims/backend/sims/logbook/test_api.py:191:        """PG users cannot verify entries."""
+/srv/apps/pgsims/backend/sims/logbook/test_api.py:193:        url = reverse("logbook_api:verify", kwargs={"pk": self.pending_entry.id})
+/srv/apps/pgsims/backend/sims/logbook/test_api.py:198:    def test_verify_entry_wrong_supervisor(self):
+/srv/apps/pgsims/backend/sims/logbook/test_api.py:199:        """Supervisor cannot verify entries from non-assigned PGs."""
+/srv/apps/pgsims/backend/sims/logbook/test_api.py:208:        url = reverse("logbook_api:verify", kwargs={"pk": self.pending_entry.id})
+/srv/apps/pgsims/backend/sims/logbook/test_api.py:213:    def test_verify_already_verified(self):
+/srv/apps/pgsims/backend/sims/logbook/test_api.py:214:        """Cannot verify an already verified entry."""
+/srv/apps/pgsims/backend/sims/logbook/test_api.py:216:        url = reverse("logbook_api:verify", kwargs={"pk": self.approved_entry.id})
+/srv/apps/pgsims/backend/sims/logbook/test_api.py:222:    def test_verify_nonexistent_entry(self):
+/srv/apps/pgsims/backend/sims/logbook/test_api.py:225:        url = reverse("logbook_api:verify", kwargs={"pk": 99999})
+/srv/apps/pgsims/backend/sims/logbook/test_api.py:284:        self.assertEqual(response.data["status"], "draft")
+/srv/apps/pgsims/backend/sims/logbook/test_api.py:308:            status="draft",
+/srv/apps/pgsims/backend/sims/logbook/test_api.py:320:    def test_pg_cannot_edit_after_submit(self):
+/srv/apps/pgsims/backend/sims/logbook/test_api.py:330:            status="pending",
+/srv/apps/pgsims/backend/sims/logbook/test_api.py:332:            submitted_to_supervisor_at=timezone.now(),
+/srv/apps/pgsims/backend/sims/logbook/test_api.py:340:    def test_pg_submit_entry_shows_in_pending_queue(self):
+/srv/apps/pgsims/backend/sims/logbook/test_api.py:341:        """Submitting a draft entry moves it to pending and appears in supervisor queue."""
+/srv/apps/pgsims/backend/sims/logbook/test_api.py:350:            status="draft",
+/srv/apps/pgsims/backend/sims/logbook/test_api.py:354:        submit_url = reverse("logbook_api:my_entry_submit", kwargs={"pk": entry.id})
+/srv/apps/pgsims/backend/sims/logbook/test_api.py:355:        response = self.client.post(submit_url, format="json")
+/srv/apps/pgsims/backend/sims/logbook/test_api.py:357:        self.assertEqual(response.data["status"], "pending")
+/srv/apps/pgsims/backend/sims/logbook/test_api.py:360:        self.assertEqual(entry.status, "pending")
+/srv/apps/pgsims/backend/sims/logbook/test_api.py:361:        self.assertIsNotNone(entry.submitted_to_supervisor_at)
+/srv/apps/pgsims/backend/sims/logbook/test_api.py:364:        pending_response = self.client.get(reverse("logbook_api:pending"))
+/srv/apps/pgsims/backend/sims/logbook/test_api.py:365:        self.assertEqual(pending_response.status_code, 200)
+/srv/apps/pgsims/backend/sims/logbook/test_api.py:366:        pending_ids = [item["id"] for item in pending_response.data["results"]]
+/srv/apps/pgsims/backend/sims/logbook/test_api.py:367:        self.assertIn(entry.id, pending_ids)
+/srv/apps/pgsims/backend/sims/logbook/test_api.py:382:    def test_cannot_submit_already_pending_entry(self):
+/srv/apps/pgsims/backend/sims/logbook/test_api.py:383:        """Submitting an entry that's already pending should fail."""
+/srv/apps/pgsims/backend/sims/logbook/test_api.py:392:            status="pending",
+/srv/apps/pgsims/backend/sims/logbook/test_api.py:397:        submit_url = reverse("logbook_api:my_entry_submit", kwargs={"pk": entry.id})
+/srv/apps/pgsims/backend/sims/logbook/test_api.py:398:        response = self.client.post(submit_url, format="json")
+/srv/apps/pgsims/backend/sims/logbook/test_api.py:400:        self.assertIn("pending", response.data["error"])
+/srv/apps/pgsims/backend/sims/logbook/test_api.py:402:    def test_cannot_submit_approved_entry(self):
+/srv/apps/pgsims/backend/sims/logbook/test_api.py:403:        """Submitting an entry that's already approved should fail."""
+/srv/apps/pgsims/backend/sims/logbook/test_api.py:412:            status="approved",
+/srv/apps/pgsims/backend/sims/logbook/test_api.py:417:        submit_url = reverse("logbook_api:my_entry_submit", kwargs={"pk": entry.id})
+/srv/apps/pgsims/backend/sims/logbook/test_api.py:418:        response = self.client.post(submit_url, format="json")
+/srv/apps/pgsims/backend/sims/logbook/test_api.py:420:        self.assertIn("approved", response.data["error"])
+/srv/apps/pgsims/backend/sims/logbook/test_api.py:439:    def test_submit_return_feedback_visible_and_resubmit_approve_flow(self):
+/srv/apps/pgsims/backend/sims/logbook/test_api.py:440:        """Smoke test for PG submit -> supervisor return -> PG sees feedback -> resubmit -> approve."""
+/srv/apps/pgsims/backend/sims/logbook/test_api.py:447:        submit_url = reverse("logbook_api:my_entry_submit", kwargs={"pk": entry_id})
+/srv/apps/pgsims/backend/sims/logbook/test_api.py:448:        submit_response = self.client.post(submit_url, format="json")
+/srv/apps/pgsims/backend/sims/logbook/test_api.py:449:        self.assertEqual(submit_response.status_code, 200)
+/srv/apps/pgsims/backend/sims/logbook/test_api.py:450:        self.assertEqual(submit_response.data["status"], "pending")
+/srv/apps/pgsims/backend/sims/logbook/test_api.py:461:        verify_url = reverse("logbook_api:verify", kwargs={"pk": entry_id})
+/srv/apps/pgsims/backend/sims/logbook/test_api.py:463:            verify_url,
+/srv/apps/pgsims/backend/sims/logbook/test_api.py:464:            {"action": "returned", "feedback": "Please add more detail."},
+/srv/apps/pgsims/backend/sims/logbook/test_api.py:468:        self.assertEqual(return_response.data["status"], "returned")
+/srv/apps/pgsims/backend/sims/logbook/test_api.py:477:        self.assertEqual(entry_row["status"], "returned")
+/srv/apps/pgsims/backend/sims/logbook/test_api.py:480:        self.assertIn("submitted_at", entry_row)
+/srv/apps/pgsims/backend/sims/logbook/test_api.py:490:        resubmit_response = self.client.post(submit_url, format="json")
+/srv/apps/pgsims/backend/sims/logbook/test_api.py:491:        self.assertEqual(resubmit_response.status_code, 200)
+/srv/apps/pgsims/backend/sims/logbook/test_api.py:492:        self.assertEqual(resubmit_response.data["status"], "pending")
+/srv/apps/pgsims/backend/sims/logbook/test_api.py:496:            verify_url,
+/srv/apps/pgsims/backend/sims/logbook/test_api.py:497:            {"action": "approved", "supervisor_feedback": "Looks good now."},
+/srv/apps/pgsims/backend/sims/logbook/test_api.py:501:        self.assertEqual(approve_response.data["status"], "approved")
+/srv/apps/pgsims/backend/sims/logbook/forms.py:419:        if entry.status == "approved":
+/srv/apps/pgsims/backend/sims/logbook/forms.py:424:                    self.fields[field_name].help_text += " (Cannot be changed for approved entry)"
+/srv/apps/pgsims/backend/sims/logbook/forms.py:427:        elif entry.status == "submitted":
+/srv/apps/pgsims/backend/sims/logbook/forms.py:429:                # Disable most fields for PGs when entry is submitted
+/srv/apps/pgsims/backend/sims/logbook/forms.py:553:            if self.entry.status in ["pending", "submitted"]:
+/srv/apps/pgsims/backend/sims/logbook/forms.py:555:                    ("pending", "Keep Pending"),
+/srv/apps/pgsims/backend/sims/logbook/forms.py:556:                    ("approved", "Approve"),
+/srv/apps/pgsims/backend/sims/logbook/forms.py:606:        # Require areas for improvement when not approved
+/srv/apps/pgsims/backend/sims/logbook/forms.py:629:        # Check if all scores are provided when status is approved
+/srv/apps/pgsims/backend/sims/logbook/forms.py:630:        if status == "approved":
+/srv/apps/pgsims/backend/sims/logbook/forms.py:885:                    pg__supervisor=self.user, status__in=["pending", "approved"]
+/srv/apps/pgsims/backend/sims/logbook/forms.py:895:                    status__in=["pending", "approved"]
+/srv/apps/pgsims/backend/sims/logbook/tests.py:255:        self.assertEqual(entry.status, "draft")
+/srv/apps/pgsims/backend/sims/logbook/tests.py:320:            status="draft",
+/srv/apps/pgsims/backend/sims/logbook/tests.py:327:        approved_entry = LogbookEntry.objects.create(
+/srv/apps/pgsims/backend/sims/logbook/tests.py:336:            status="approved",
+/srv/apps/pgsims/backend/sims/logbook/tests.py:339:        self.assertFalse(approved_entry.can_be_edited())
+/srv/apps/pgsims/backend/sims/logbook/tests.py:340:        self.assertFalse(approved_entry.can_be_deleted())
+/srv/apps/pgsims/backend/sims/logbook/tests.py:400:            status="draft",
+/srv/apps/pgsims/backend/sims/logbook/tests.py:415:            status="draft",
+/srv/apps/pgsims/backend/sims/logbook/tests.py:450:            status="pending",
+/srv/apps/pgsims/backend/sims/logbook/tests.py:458:            status="approved",
+/srv/apps/pgsims/backend/sims/logbook/tests.py:468:        self.assertEqual(review.status, "approved")
+/srv/apps/pgsims/backend/sims/logbook/tests.py:475:            status="approved",
+/srv/apps/pgsims/backend/sims/logbook/tests.py:485:        self.assertEqual(self.entry.status, "pending")
+/srv/apps/pgsims/backend/sims/logbook/tests.py:493:            status="approved",
+/srv/apps/pgsims/backend/sims/logbook/tests.py:505:            status="approved",
+/srv/apps/pgsims/backend/sims/logbook/tests.py:522:            status="approved",
+/srv/apps/pgsims/backend/sims/logbook/tests.py:533:            status="pending",
+/srv/apps/pgsims/backend/sims/logbook/tests.py:570:        self.assertEqual(stats.approved_entries, 0)
+/srv/apps/pgsims/backend/sims/logbook/tests.py:573:        approved_entry = LogbookEntry.objects.create(
+/srv/apps/pgsims/backend/sims/logbook/tests.py:582:            status="approved",
+/srv/apps/pgsims/backend/sims/logbook/tests.py:585:        approved_entry.procedures.add(self.procedure)
+/srv/apps/pgsims/backend/sims/logbook/tests.py:596:            status="draft",
+/srv/apps/pgsims/backend/sims/logbook/tests.py:603:        self.assertEqual(stats.approved_entries, 1)
+/srv/apps/pgsims/backend/sims/logbook/tests.py:675:            status="draft",
+/srv/apps/pgsims/backend/sims/logbook/tests.py:720:        self.entry.status = "pending"
+/srv/apps/pgsims/backend/sims/logbook/tests.py:871:            status="pending",
+/srv/apps/pgsims/backend/sims/logbook/tests.py:875:            "status": "approved",
+/srv/apps/pgsims/backend/sims/logbook/tests.py:898:            status="pending",
+/srv/apps/pgsims/backend/sims/logbook/tests.py:902:            "status": "approved",
+/srv/apps/pgsims/backend/sims/logbook/tests.py:926:            status="pending",
+/srv/apps/pgsims/backend/sims/logbook/tests.py:938:            status="pending",
+/srv/apps/pgsims/backend/sims/logbook/tests.py:1013:            status="draft",
+/srv/apps/pgsims/backend/sims/logbook/tests.py:1097:            status="approved",
+/srv/apps/pgsims/backend/sims/logbook/tests.py:1180:        self.assertEqual(entry.status, "pending")
+/srv/apps/pgsims/backend/sims/logbook/tests.py:1182:        # 2. PG submits entry for review
+/srv/apps/pgsims/backend/sims/logbook/tests.py:1183:        entry.status = "pending"
+/srv/apps/pgsims/backend/sims/logbook/tests.py:1194:            "status": "approved",
+/srv/apps/pgsims/backend/sims/logbook/tests.py:1212:        self.assertEqual(entry.status, "pending")
+/srv/apps/pgsims/backend/sims/logbook/tests.py:1216:        self.assertEqual(review.status, "approved")
+/srv/apps/pgsims/backend/sims/logbook/tests.py:1225:        self.assertEqual(stats.approved_entries, 0)
+/srv/apps/pgsims/backend/sims/logbook/tests.py:1231:        # Create submitted entry
+/srv/apps/pgsims/backend/sims/logbook/tests.py:1242:            status="pending",
+/srv/apps/pgsims/backend/sims/logbook/tests.py:1267:        self.assertEqual(entry.status, "pending")
+/srv/apps/pgsims/backend/sims/logbook/tests.py:1269:        # 2. PG cannot edit because the legacy review endpoint did not transition to returned.
+/srv/apps/pgsims/backend/sims/logbook/tests.py:1355:        self.assertEqual(entry.status, "pending")
+/srv/apps/pgsims/backend/sims/logbook/tests.py:1357:        self.assertIsNotNone(entry.submitted_to_supervisor_at)
+/srv/apps/pgsims/backend/sims/logbook/tests.py:1367:        # User fixtures require a supervisor for PGs, so the create flow auto-submits.
+/srv/apps/pgsims/backend/sims/logbook/tests.py:1368:        self.assertEqual(entry.status, "pending")
+/srv/apps/pgsims/backend/sims/logbook/tests.py:1370:        self.assertIsNotNone(entry.submitted_to_supervisor_at)
+/srv/apps/pgsims/backend/sims/logbook/tests.py:1401:        # So, the entry should become 'pending'.
+/srv/apps/pgsims/backend/sims/logbook/tests.py:1402:        self.assertEqual(entry.status, "pending")
+/srv/apps/pgsims/backend/sims/logbook/tests.py:1404:        self.assertIsNotNone(entry.submitted_to_supervisor_at)
+/srv/apps/pgsims/backend/sims/logbook/tests.py:1414:    def test_pg_edits_returned_entry(self):
+/srv/apps/pgsims/backend/sims/logbook/tests.py:1421:        entry.status = "returned"
+/srv/apps/pgsims/backend/sims/logbook/tests.py:1426:        # PG1 edits the returned entry
+/srv/apps/pgsims/backend/sims/logbook/tests.py:1436:        self.assertEqual(entry.status, "pending")
+/srv/apps/pgsims/backend/sims/logbook/tests.py:1438:        self.assertIsNotNone(entry.submitted_to_supervisor_at)
+/srv/apps/pgsims/backend/sims/logbook/tests.py:1439:        # The model's save method should update submitted_to_supervisor_at and clear supervisor_action_at
+/srv/apps/pgsims/backend/sims/logbook/tests.py:1440:        # For simplicity, we check submitted_to_supervisor_at is not None.
+/srv/apps/pgsims/backend/sims/logbook/tests.py:1441:        # A more precise test would check if supervisor_action_at is None or earlier than submitted_to_supervisor_at.
+/srv/apps/pgsims/backend/sims/logbook/tests.py:1443:    def test_pg_edits_draft_and_submits(self):
+/srv/apps/pgsims/backend/sims/logbook/tests.py:1452:        # If we used PGLogbookEntryCreateView, it would become 'pending'.
+/srv/apps/pgsims/backend/sims/logbook/tests.py:1455:            pg=self.pg3_unassigned, supervisor=None, status="draft", **entry_data_for_draft
+/srv/apps/pgsims/backend/sims/logbook/tests.py:1457:        # self.assertEqual(entry.status, 'draft') # This assertion was problematic, removed.
+/srv/apps/pgsims/backend/sims/logbook/tests.py:1460:        # PG3 (who has self.supervisor1 assigned in DB via setUpTestData) edits this draft and submits.
+/srv/apps/pgsims/backend/sims/logbook/tests.py:1467:        # And if 'submit_for_review' is in POST, the view sets status to 'pending'.
+/srv/apps/pgsims/backend/sims/logbook/tests.py:1473:                "submit_for_review": "true",
+/srv/apps/pgsims/backend/sims/logbook/tests.py:1479:        self.assertEqual(entry.status, "pending")  # Should be pending after submit_for_review
+/srv/apps/pgsims/backend/sims/logbook/tests.py:1483:        self.assertIsNotNone(entry.submitted_to_supervisor_at)
+/srv/apps/pgsims/backend/sims/logbook/tests.py:1506:        )  # Or 404 depending on how PermissionDenied is handled by generic view
+/srv/apps/pgsims/backend/sims/logbook/tests.py:1508:    def test_supervisor_sees_only_assigned_pending_entries(self):
+/srv/apps/pgsims/backend/sims/logbook/tests.py:1509:        # PG1 (Sup1) submits
+/srv/apps/pgsims/backend/sims/logbook/tests.py:1513:            pg=self.pg1, status="pending", supervisor=self.supervisor1, **data_pg1
+/srv/apps/pgsims/backend/sims/logbook/tests.py:1516:        # PG2 (Sup2) submits
+/srv/apps/pgsims/backend/sims/logbook/tests.py:1520:            pg=self.pg2, status="pending", supervisor=self.supervisor2, **data_pg2
+/srv/apps/pgsims/backend/sims/logbook/tests.py:1529:            status="draft",
+/srv/apps/pgsims/backend/sims/logbook/tests.py:1542:    def _create_pending_entry_for_supervisor(self, supervisor, pg, title_suffix=""):
+/srv/apps/pgsims/backend/sims/logbook/tests.py:1548:            status="pending",
+/srv/apps/pgsims/backend/sims/logbook/tests.py:1549:            submitted_to_supervisor_at=timezone.now(),
+/srv/apps/pgsims/backend/sims/logbook/tests.py:1554:        entry = self._create_pending_entry_for_supervisor(self.supervisor1, self.pg1, "ToApprove")
+/srv/apps/pgsims/backend/sims/logbook/tests.py:1565:        self.assertEqual(entry.status, "approved")
+/srv/apps/pgsims/backend/sims/logbook/tests.py:1570:        entry = self._create_pending_entry_for_supervisor(self.supervisor1, self.pg1, "ToReject")
+/srv/apps/pgsims/backend/sims/logbook/tests.py:1586:        entry = self._create_pending_entry_for_supervisor(self.supervisor1, self.pg1, "ToReturn")
+/srv/apps/pgsims/backend/sims/logbook/tests.py:1597:        self.assertEqual(entry.status, "returned")
+/srv/apps/pgsims/backend/sims/logbook/tests.py:1631:        entry_pg2 = self._create_pending_entry_for_supervisor(self.supervisor2, self.pg2, "PG2")
+/srv/apps/pgsims/backend/sims/logbook/api_serializers.py:10:    submitted_at = serializers.DateTimeField(source="submitted_to_supervisor_at", read_only=True)
+/srv/apps/pgsims/backend/sims/logbook/api_serializers.py:27:            "submitted_to_supervisor_at",
+/srv/apps/pgsims/backend/sims/logbook/api_serializers.py:28:            "submitted_at",
+/srv/apps/pgsims/backend/sims/logbook/api_serializers.py:38:            "submitted_to_supervisor_at",
+/srv/apps/pgsims/backend/sims/logbook/api_serializers.py:39:            "submitted_at",
+/srv/apps/pgsims/backend/sims/logbook/models.py:411:        ("pending", "Pending Supervisor Review"),
+/srv/apps/pgsims/backend/sims/logbook/models.py:412:        ("approved", "Approved"),
+/srv/apps/pgsims/backend/sims/logbook/models.py:414:        ("returned", "Returned for Edits"),
+/srv/apps/pgsims/backend/sims/logbook/models.py:558:    submitted_to_supervisor_at = models.DateTimeField(
+/srv/apps/pgsims/backend/sims/logbook/models.py:561:        help_text="Timestamp when entry was formally submitted to supervisor",
+/srv/apps/pgsims/backend/sims/logbook/models.py:582:        help_text="Supervisor who approved this entry",
+/srv/apps/pgsims/backend/sims/logbook/models.py:587:        help_text="Date and time when entry was approved by supervisor",
+/srv/apps/pgsims/backend/sims/logbook/models.py:602:            models.Index(fields=["submitted_to_supervisor_at"]),
+/srv/apps/pgsims/backend/sims/logbook/models.py:677:        if new_status_intended == "pending":
+/srv/apps/pgsims/backend/sims/logbook/models.py:679:                if old_status == "draft" or old_status is None or old_status == "returned":
+/srv/apps/pgsims/backend/sims/logbook/models.py:680:                    self.submitted_to_supervisor_at = now
+/srv/apps/pgsims/backend/sims/logbook/models.py:683:                    final_status_to_set = "pending"
+/srv/apps/pgsims/backend/sims/logbook/models.py:685:                final_status_to_set = "draft"
+/srv/apps/pgsims/backend/sims/logbook/models.py:686:                if old_status == "pending":
+/srv/apps/pgsims/backend/sims/logbook/models.py:687:                    self.submitted_to_supervisor_at = None
+/srv/apps/pgsims/backend/sims/logbook/models.py:689:        elif old_status == "pending":
+/srv/apps/pgsims/backend/sims/logbook/models.py:690:            if new_status_intended == "approved":
+/srv/apps/pgsims/backend/sims/logbook/models.py:695:                final_status_to_set = "approved"
+/srv/apps/pgsims/backend/sims/logbook/models.py:701:            elif new_status_intended == "returned":
+/srv/apps/pgsims/backend/sims/logbook/models.py:705:                final_status_to_set = "returned"
+/srv/apps/pgsims/backend/sims/logbook/models.py:707:        elif new_status_intended == "draft":
+/srv/apps/pgsims/backend/sims/logbook/models.py:708:            if old_status != "draft":
+/srv/apps/pgsims/backend/sims/logbook/models.py:709:                self.submitted_to_supervisor_at = None
+/srv/apps/pgsims/backend/sims/logbook/models.py:713:            final_status_to_set = "draft"
+/srv/apps/pgsims/backend/sims/logbook/models.py:729:                    body=f"{self.pg.get_full_name()} has submitted a logbook entry for your review.",
+/srv/apps/pgsims/backend/sims/logbook/models.py:745:        if self.supervisor_action_at and self.submitted_to_supervisor_at:
+/srv/apps/pgsims/backend/sims/logbook/models.py:746:            return self.supervisor_action_at - self.submitted_to_supervisor_at
+/srv/apps/pgsims/backend/sims/logbook/models.py:750:        if self.status == "draft":
+/srv/apps/pgsims/backend/sims/logbook/models.py:755:        return self.status in ["draft", "returned"]
+/srv/apps/pgsims/backend/sims/logbook/models.py:758:        return self.status in ["draft"]
+/srv/apps/pgsims/backend/sims/logbook/models.py:763:            "pending": "#ffc107",
+/srv/apps/pgsims/backend/sims/logbook/models.py:764:            "approved": "#28a745",
+/srv/apps/pgsims/backend/sims/logbook/models.py:766:            "returned": "#fd7e14",
+/srv/apps/pgsims/backend/sims/logbook/models.py:800:        if self.status in ["draft", "returned"]:
+/srv/apps/pgsims/backend/sims/logbook/models.py:823:        ("pending", "Pending Review"),
+/srv/apps/pgsims/backend/sims/logbook/models.py:824:        ("approved", "Approved"),
+/srv/apps/pgsims/backend/sims/logbook/models.py:828:        ),  # This is internal to review, maps to 'returned' for entry
+/srv/apps/pgsims/backend/sims/logbook/models.py:850:        default="pending",
+/srv/apps/pgsims/backend/sims/logbook/models.py:977:            "pending": "#ffc107",
+/srv/apps/pgsims/backend/sims/logbook/models.py:978:            "approved": "#28a745",
+/srv/apps/pgsims/backend/sims/logbook/models.py:985:        return self.feedback and self.status != "pending" and self.overall_score is not None
+/srv/apps/pgsims/backend/sims/logbook/models.py:1000:    submitted_entries = models.PositiveIntegerField(default=0)  # Original name
+/srv/apps/pgsims/backend/sims/logbook/models.py:1001:    approved_entries = models.PositiveIntegerField(default=0)
+/srv/apps/pgsims/backend/sims/logbook/models.py:1004:    )  # Original name, will map 'returned' status here
+/srv/apps/pgsims/backend/sims/logbook/models.py:1046:        self.draft_entries = entries.filter(status="draft").count()
+/srv/apps/pgsims/backend/sims/logbook/models.py:1047:        self.submitted_entries = entries.filter(
+/srv/apps/pgsims/backend/sims/logbook/models.py:1048:            status="pending"
+/srv/apps/pgsims/backend/sims/logbook/models.py:1049:        ).count()  # Map 'pending' to 'submitted_entries'
+/srv/apps/pgsims/backend/sims/logbook/models.py:1050:        self.approved_entries = entries.filter(status="approved").count()
+/srv/apps/pgsims/backend/sims/logbook/models.py:1052:            status="returned"
+/srv/apps/pgsims/backend/sims/logbook/models.py:1053:        ).count()  # Map 'returned' to 'revision_entries'
+/srv/apps/pgsims/backend/sims/logbook/models.py:1064:        approved_entries_qs = entries.filter(status="approved")
+/srv/apps/pgsims/backend/sims/logbook/models.py:1065:        self.total_cme_points = sum(e.get_cme_points() for e in approved_entries_qs)
+/srv/apps/pgsims/backend/sims/logbook/models.py:1068:            status__in=["draft", "archived"]
+/srv/apps/pgsims/backend/sims/logbook/models.py:1072:                self.approved_entries / non_archived_non_draft_entries_count
+/srv/apps/pgsims/backend/sims/logbook/models.py:1080:            submitted_to_supervisor_at__isnull=False,
+/srv/apps/pgsims/backend/sims/logbook/models.py:1082:            status__in=["approved", "rejected", "returned"],
+/srv/apps/pgsims/backend/sims/logbook/models.py:1085:            (e.supervisor_action_at - e.submitted_to_supervisor_at).total_seconds()
+/srv/apps/pgsims/backend/sims/logbook/models.py:1087:            if e.supervisor_action_at and e.submitted_to_supervisor_at
+/srv/apps/pgsims/backend/sims/logbook/models.py:1097:            status__in=["approved", "rejected", "returned"]
+/srv/apps/pgsims/backend/sims/logbook/migrations/0002_initial.py:87:            field=models.ForeignKey(blank=True, help_text='Supervisor who approved this entry', limit_choices_to={'role__in': ['supervisor', 'admin']}, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='verified_logbook_entries', to=settings.AUTH_USER_MODEL),
+/srv/apps/pgsims/backend/sims/logbook/migrations/0002_initial.py:193:            index=models.Index(fields=['submitted_to_supervisor_at'], name='logbook_log_submitt_0823dd_idx'),
+/srv/apps/pgsims/backend/sims/logbook/migrations/0001_initial.py:40:                ('status', models.CharField(choices=[('pending', 'Pending Review'), ('approved', 'Approved'), ('needs_revision', 'Needs Revision'), ('rejected', 'Rejected')], default='pending', help_text='Review status', max_length=20)),
+/srv/apps/pgsims/backend/sims/logbook/migrations/0001_initial.py:142:                ('status', models.CharField(choices=[('draft', 'Draft'), ('pending', 'Pending Supervisor Review'), ('approved', 'Approved'), ('rejected', 'Rejected'), ('returned', 'Returned for Edits'), ('archived', 'Archived')], default='draft', help_text='Current status of the entry', max_length=20)),
+/srv/apps/pgsims/backend/sims/logbook/migrations/0001_initial.py:144:                ('submitted_to_supervisor_at', models.DateTimeField(blank=True, help_text='Timestamp when entry was formally submitted to supervisor', null=True)),
+/srv/apps/pgsims/backend/sims/logbook/migrations/0001_initial.py:147:                ('verified_at', models.DateTimeField(blank=True, help_text='Date and time when entry was approved by supervisor', null=True)),
+/srv/apps/pgsims/backend/sims/logbook/migrations/0001_initial.py:159:                ('status', models.CharField(choices=[('pending', 'Pending Review'), ('approved', 'Approved'), ('needs_revision', 'Needs Revision'), ('rejected', 'Rejected')], default='pending', help_text='Review status', max_length=20)),
+/srv/apps/pgsims/backend/sims/logbook/migrations/0001_initial.py:185:                ('submitted_entries', models.PositiveIntegerField(default=0)),
+/srv/apps/pgsims/backend/sims/logbook/migrations/0001_initial.py:186:                ('approved_entries', models.PositiveIntegerField(default=0)),
+/srv/apps/pgsims/backend/sims/logbook/admin.py:457:            "submitted": "#ffc107",  # Yellow
+/srv/apps/pgsims/backend/sims/logbook/admin.py:458:            "approved": "#28a745",  # Green
+/srv/apps/pgsims/backend/sims/logbook/admin.py:543:        if obj.status == "submitted" and (
+/srv/apps/pgsims/backend/sims/logbook/admin.py:546:            obj.status = "approved"
+/srv/apps/pgsims/backend/sims/logbook/admin.py:554:            self.send_entry_notification(obj, "submitted")
+/srv/apps/pgsims/backend/sims/logbook/admin.py:565:        if action == "submitted" and entry.pg and getattr(entry.pg, "supervisor", None):
+/srv/apps/pgsims/backend/sims/logbook/admin.py:570:                body=f"{entry.pg.get_full_name()} has submitted a new logbook entry: {entry.case_title or 'Untitled'}",
+/srv/apps/pgsims/backend/sims/logbook/admin.py:575:        elif action in ["approved", "needs_revision"] and entry.pg:
+/srv/apps/pgsims/backend/sims/logbook/admin.py:576:            if action == "approved":
+/srv/apps/pgsims/backend/sims/logbook/admin.py:579:                    f"Your logbook entry '{entry.case_title or 'Untitled'}' has been approved."
+/srv/apps/pgsims/backend/sims/logbook/admin.py:603:        for entry in queryset.filter(status="submitted"):
+/srv/apps/pgsims/backend/sims/logbook/admin.py:608:            entry.status = "approved"
+/srv/apps/pgsims/backend/sims/logbook/admin.py:612:            self.send_entry_notification(entry, "approved")
+/srv/apps/pgsims/backend/sims/logbook/admin.py:615:        messages.success(request, f"Successfully approved {count} entries.")
+/srv/apps/pgsims/backend/sims/logbook/admin.py:626:        for entry in queryset.filter(status="submitted"):
+/srv/apps/pgsims/backend/sims/logbook/admin.py:643:            messages.error(request, "You don't have permission to verify entries.")
+/srv/apps/pgsims/backend/sims/logbook/admin.py:679:            if obj and obj.status != "draft":
+/srv/apps/pgsims/backend/sims/logbook/admin.py:795:        if obj.status == "approved" and obj.logbook_entry.status == "submitted":
+/srv/apps/pgsims/backend/sims/logbook/admin.py:796:            obj.logbook_entry.status = "approved"
+/srv/apps/pgsims/backend/sims/logbook/admin.py:813:        "approved_entries",
+/srv/apps/pgsims/backend/sims/logbook/admin.py:838:    overdue_count = LogbookEntry.objects.filter(date__lt=overdue_threshold, status="draft").count()
+/srv/apps/pgsims/backend/sims/logbook/admin.py:909:                    "approved_entries": entries.filter(status="approved").count(),
+/srv/apps/pgsims/backend/sims/logbook/admin.py:910:                    "pending_entries": entries.filter(status="submitted").count(),
+/srv/apps/pgsims/backend/sims/logbook/admin.py:911:                    "draft_entries": entries.filter(status="draft").count(),
+/srv/apps/pgsims/backend/sims/logbook/api_views.py:37:    GET /api/logbook/pending/
+/srv/apps/pgsims/backend/sims/logbook/api_views.py:39:    Returns logbook entries pending verification, scoped by supervisor role.
+/srv/apps/pgsims/backend/sims/logbook/api_views.py:41:    - Admins see all pending entries
+/srv/apps/pgsims/backend/sims/logbook/api_views.py:52:            queryset = LogbookEntry.objects.filter(status="pending")
+/srv/apps/pgsims/backend/sims/logbook/api_views.py:55:            queryset = LogbookEntry.objects.filter(status="pending", pg__in=supervised_users)
+/srv/apps/pgsims/backend/sims/logbook/api_views.py:60:        ).order_by("-submitted_to_supervisor_at", "-date")
+/srv/apps/pgsims/backend/sims/logbook/api_views.py:83:                    "submitted_at": (
+/srv/apps/pgsims/backend/sims/logbook/api_views.py:84:                        entry.submitted_to_supervisor_at.isoformat()
+/srv/apps/pgsims/backend/sims/logbook/api_views.py:85:                        if entry.submitted_to_supervisor_at
+/srv/apps/pgsims/backend/sims/logbook/api_views.py:97:    PATCH /api/logbook/<id>/verify/
+/srv/apps/pgsims/backend/sims/logbook/api_views.py:101:    - Changes status to 'approved'
+/srv/apps/pgsims/backend/sims/logbook/api_views.py:106:        "action": "approved|returned|rejected",
+/srv/apps/pgsims/backend/sims/logbook/api_views.py:124:        # Cannot verify already verified entries
+/srv/apps/pgsims/backend/sims/logbook/api_views.py:130:        if entry.status != "pending":
+/srv/apps/pgsims/backend/sims/logbook/api_views.py:132:                {"error": f'Only pending entries can be verified. Current status is "{entry.status}".'},
+/srv/apps/pgsims/backend/sims/logbook/api_views.py:136:        action = str(request.data.get("action") or "approved").strip().lower()
+/srv/apps/pgsims/backend/sims/logbook/api_views.py:138:            "approve": "approved",
+/srv/apps/pgsims/backend/sims/logbook/api_views.py:139:            "approved": "approved",
+/srv/apps/pgsims/backend/sims/logbook/api_views.py:140:            "return": "returned",
+/srv/apps/pgsims/backend/sims/logbook/api_views.py:141:            "returned": "returned",
+/srv/apps/pgsims/backend/sims/logbook/api_views.py:155:        if next_status == "approved":
+/srv/apps/pgsims/backend/sims/logbook/api_views.py:174:            "approved": "logbook.case.verified",
+/srv/apps/pgsims/backend/sims/logbook/api_views.py:175:            "returned": "logbook.case.sent_back",
+/srv/apps/pgsims/backend/sims/logbook/api_views.py:187:            metadata={"source": "verify_api", "action": action},
+/srv/apps/pgsims/backend/sims/logbook/api_views.py:198:            metadata={"source": "verify_api", "action": action},
+/srv/apps/pgsims/backend/sims/logbook/api_views.py:243:                    if entry.status == "approved"
+/srv/apps/pgsims/backend/sims/logbook/api_views.py:281:        entry = serializer.save(pg=request.user, status="draft")
+/srv/apps/pgsims/backend/sims/logbook/api_views.py:327:                        'Only draft or returned entries can be edited.'
+/srv/apps/pgsims/backend/sims/logbook/api_views.py:343:    POST /api/logbook/my/<id>/submit/
+/srv/apps/pgsims/backend/sims/logbook/api_views.py:345:    Changes status from 'draft' to 'pending'.
+/srv/apps/pgsims/backend/sims/logbook/api_views.py:355:        if entry.status not in {"draft", "returned"}:
+/srv/apps/pgsims/backend/sims/logbook/api_views.py:359:                        f'Cannot submit entry with status "{entry.status}". '
+/srv/apps/pgsims/backend/sims/logbook/api_views.py:360:                        'Only draft or returned entries can be submitted.'
+/srv/apps/pgsims/backend/sims/logbook/api_views.py:370:                {"error": "No supervisor assigned to submit this entry"},
+/srv/apps/pgsims/backend/sims/logbook/api_views.py:374:        entry.status = "pending"
+/srv/apps/pgsims/backend/sims/logbook/api_views.py:376:        submit_event_type = (
+/srv/apps/pgsims/backend/sims/logbook/api_views.py:377:            "logbook.case.resubmitted" if previous_status == "returned" else "logbook.case.submitted"
+/srv/apps/pgsims/backend/sims/logbook/api_views.py:388:            metadata={"source": "pg_logbook_submit"},
+/srv/apps/pgsims/backend/sims/logbook/api_views.py:391:            event_type=submit_event_type,
+/srv/apps/pgsims/backend/sims/logbook/api_views.py:398:            event_key=f"logbook-submit:{entry.id}:{previous_status}",
+/srv/apps/pgsims/backend/sims/logbook/api_views.py:399:            metadata={"source": "pg_logbook_submit"},
+/srv/apps/pgsims/backend/sims/logbook/views.py:193:            queryset = queryset.filter(status="draft", date__lt=cutoff_date)
+/srv/apps/pgsims/backend/sims/logbook/views.py:197:        if review_filter == "pending":
+/srv/apps/pgsims/backend/sims/logbook/views.py:198:            queryset = queryset.filter(status="pending")
+/srv/apps/pgsims/backend/sims/logbook/views.py:245:            "draft": entries.filter(status="draft").count(),
+/srv/apps/pgsims/backend/sims/logbook/views.py:246:            "pending": entries.filter(status="pending").count(),
+/srv/apps/pgsims/backend/sims/logbook/views.py:247:            "approved": entries.filter(status="approved").count(),
+/srv/apps/pgsims/backend/sims/logbook/views.py:248:            "needs_revision": entries.filter(status="returned").count(),
+/srv/apps/pgsims/backend/sims/logbook/views.py:250:                status="draft", date__lt=timezone.now().date() - timedelta(days=7)
+/srv/apps/pgsims/backend/sims/logbook/views.py:355:            return entry.status == "submitted"
+/srv/apps/pgsims/backend/sims/logbook/views.py:357:            return user == entry.pg.supervisor and entry.status == "submitted"
+/srv/apps/pgsims/backend/sims/logbook/views.py:458:        elif "save_and_submit" in self.request.POST:
+/srv/apps/pgsims/backend/sims/logbook/views.py:459:            # Change status to pending
+/srv/apps/pgsims/backend/sims/logbook/views.py:460:            self.object.status = "pending"
+/srv/apps/pgsims/backend/sims/logbook/views.py:462:            messages.info(self.request, "Entry submitted for review")
+/srv/apps/pgsims/backend/sims/logbook/views.py:507:        # Reset status to draft if entry was in needs_revision status
+/srv/apps/pgsims/backend/sims/logbook/views.py:509:            form.instance.status = "draft"
+/srv/apps/pgsims/backend/sims/logbook/views.py:522:        elif "save_and_submit" in self.request.POST:
+/srv/apps/pgsims/backend/sims/logbook/views.py:523:            # Change status to pending
+/srv/apps/pgsims/backend/sims/logbook/views.py:524:            self.object.status = "pending"
+/srv/apps/pgsims/backend/sims/logbook/views.py:526:            messages.info(self.request, "Entry submitted for review")
+/srv/apps/pgsims/backend/sims/logbook/views.py:587:        if self.entry.status not in ["pending", "submitted"]:
+/srv/apps/pgsims/backend/sims/logbook/views.py:619:            self.request, f"Review submitted for entry '{self.entry.case_title or 'Entry'}'"
+/srv/apps/pgsims/backend/sims/logbook/views.py:686:            "draft_entries": entries.filter(status="draft").count(),
+/srv/apps/pgsims/backend/sims/logbook/views.py:687:            "pending_entries": entries.filter(status="pending").count(),
+/srv/apps/pgsims/backend/sims/logbook/views.py:688:            "approved_entries": entries.filter(status="approved").count(),
+/srv/apps/pgsims/backend/sims/logbook/views.py:689:            "revision_entries": entries.filter(status="returned").count(),
+/srv/apps/pgsims/backend/sims/logbook/views.py:691:                status="draft", date__lt=today - timedelta(days=7)
+/srv/apps/pgsims/backend/sims/logbook/views.py:702:            context["pending_reviews"] = entries.filter(status="pending").select_related(
+/srv/apps/pgsims/backend/sims/logbook/views.py:708:            status="draft", date__lt=today - timedelta(days=7)
+/srv/apps/pgsims/backend/sims/logbook/views.py:765:        approved_entries = entries.filter(status="approved")
+/srv/apps/pgsims/backend/sims/logbook/views.py:778:            metrics["completion_rate"] = (approved_entries.count() / entries.count()) * 100
+/srv/apps/pgsims/backend/sims/logbook/views.py:788:            metrics["cme_points"] = sum(e.get_cme_points() for e in approved_entries)
+/srv/apps/pgsims/backend/sims/logbook/views.py:805:                days_to_submit = (entry.created_at.date() - entry.date).days
+/srv/apps/pgsims/backend/sims/logbook/views.py:806:                if days_to_submit <= 7:
+/srv/apps/pgsims/backend/sims/logbook/views.py:825:            "pending_reviews": all_entries.filter(status="pending").count(),
+/srv/apps/pgsims/backend/sims/logbook/views.py:847:                "approved_entries": pg_entries.filter(status="approved").count(),
+/srv/apps/pgsims/backend/sims/logbook/views.py:848:                "pending_entries": pg_entries.filter(status="pending").count(),
+/srv/apps/pgsims/backend/sims/logbook/views.py:879:            approved_count = all_entries.filter(status="approved").count()
+/srv/apps/pgsims/backend/sims/logbook/views.py:880:            metrics["approval_rate"] = (approved_count / all_entries.count()) * 100
+/srv/apps/pgsims/backend/sims/logbook/views.py:889:            approved_entries = pg_entries.filter(status="approved")
+/srv/apps/pgsims/backend/sims/logbook/views.py:894:                "approved_entries": approved_entries.count(),
+/srv/apps/pgsims/backend/sims/logbook/views.py:896:                    (approved_entries.count() / pg_entries.count() * 100)
+/srv/apps/pgsims/backend/sims/logbook/views.py:972:                    if entry.status == "pending":
+/srv/apps/pgsims/backend/sims/logbook/views.py:973:                        entry.status = "approved"
+/srv/apps/pgsims/backend/sims/logbook/views.py:980:                    if entry.status == "pending":
+/srv/apps/pgsims/backend/sims/logbook/views.py:981:                        entry.status = "returned"
+/srv/apps/pgsims/backend/sims/logbook/views.py:986:                    if entry.status in ["approved", "needs_revision"]:
+/srv/apps/pgsims/backend/sims/logbook/views.py:1031:            status="draft", date__lt=timezone.now().date() - timedelta(days=7)
+/srv/apps/pgsims/backend/sims/logbook/views.py:1224:                approved=Count("id", filter=Q(status="approved")),
+/srv/apps/pgsims/backend/sims/logbook/views.py:1225:                pending=Count("id", filter=Q(status="pending")),
+/srv/apps/pgsims/backend/sims/logbook/views.py:1226:                draft=Count("id", filter=Q(status="draft")),
+/srv/apps/pgsims/backend/sims/logbook/views.py:1246:            approved_entries = pg_entries.filter(status="approved")
+/srv/apps/pgsims/backend/sims/logbook/views.py:1251:                (approved_entries.count() / total_entries * 100) if total_entries > 0 else 0
+/srv/apps/pgsims/backend/sims/logbook/views.py:1254:            avg_score = approved_entries.aggregate(avg=Avg("supervisor_assessment_score"))["avg"]
+/srv/apps/pgsims/backend/sims/logbook/views.py:1256:            cme_points = sum(e.get_cme_points() for e in approved_entries)
+/srv/apps/pgsims/backend/sims/logbook/views.py:1300:        reviewed_entries = entries.filter(verified_at__isnull=False)  # Should be approved_at
+/srv/apps/pgsims/backend/sims/logbook/views.py:1317:                (entries.filter(status="approved").count() / total_entries) * 100
+/srv/apps/pgsims/backend/sims/logbook/views.py:1322:                (entries.filter(status="returned").count() / total_entries) * 100
+/srv/apps/pgsims/backend/sims/logbook/views.py:1325:            ),  # 'returned' not 'needs_revision'
+/srv/apps/pgsims/backend/sims/logbook/views.py:1330:                        status="draft", date__lt=timezone.now().date() - timedelta(days=7)
+/srv/apps/pgsims/backend/sims/logbook/views.py:1365:            entry.status = "pending"  # Directly to pending if supervisor exists
+/srv/apps/pgsims/backend/sims/logbook/views.py:1366:            # entry.submitted_to_supervisor_at = timezone.now() # Model's save method handles this
+/srv/apps/pgsims/backend/sims/logbook/views.py:1368:                self.request, f"Logbook entry '{entry.case_title}' submitted for supervisor review."
+/srv/apps/pgsims/backend/sims/logbook/views.py:1371:            entry.status = "draft"  # Save as draft if no supervisor is assigned to the PG
+/srv/apps/pgsims/backend/sims/logbook/views.py:1426:        # Provide status choices for filtering UI, excluding 'draft' perhaps, or handling it.
+/srv/apps/pgsims/backend/sims/logbook/views.py:1434:            if s["value"] in ["pending", "approved", "returned", "rejected"]
+/srv/apps/pgsims/backend/sims/logbook/views.py:1448:        # PGs can only edit their own entries that are 'returned' or 'draft'
+/srv/apps/pgsims/backend/sims/logbook/views.py:1449:        return LogbookEntry.objects.filter(pg=self.request.user, status__in=["returned", "draft"])
+/srv/apps/pgsims/backend/sims/logbook/views.py:1462:        # If editing a 'returned' entry, it goes back to 'pending'.
+/srv/apps/pgsims/backend/sims/logbook/views.py:1463:        # If editing a 'draft', it stays 'draft' unless a specific action submits it.
+/srv/apps/pgsims/backend/sims/logbook/views.py:1464:        # For now, resaving a draft keeps it draft. Resaving 'returned' makes it 'pending'.
+/srv/apps/pgsims/backend/sims/logbook/views.py:1465:        if original_status == "returned":
+/srv/apps/pgsims/backend/sims/logbook/views.py:1466:            entry.status = "pending"
+/srv/apps/pgsims/backend/sims/logbook/views.py:1467:            # entry.submitted_to_supervisor_at = timezone.now() # Model's save will handle this
+/srv/apps/pgsims/backend/sims/logbook/views.py:1471:                f"Logbook entry '{entry.case_title}' has been updated and resubmitted for supervisor review.",
+/srv/apps/pgsims/backend/sims/logbook/views.py:1473:        elif original_status == "draft":
+/srv/apps/pgsims/backend/sims/logbook/views.py:1474:            # Retain draft status, or add a "Submit" button to change to 'pending'
+/srv/apps/pgsims/backend/sims/logbook/views.py:1475:            entry.status = "draft"  # Explicitly keep as draft
+/srv/apps/pgsims/backend/sims/logbook/views.py:1480:        # Supervisor should already be on the entry if it was 'returned'. If 'draft' and PG now has supervisor, model's save might assign.
+/srv/apps/pgsims/backend/sims/logbook/views.py:1483:        if original_status == "draft" and "submit_for_review" in self.request.POST:
+/srv/apps/pgsims/backend/sims/logbook/views.py:1487:                entry.status = "pending"
+/srv/apps/pgsims/backend/sims/logbook/views.py:1488:                # entry.submitted_to_supervisor_at = timezone.now() # Model's save handles this
+/srv/apps/pgsims/backend/sims/logbook/views.py:1491:                    f"Logbook entry '{entry.case_title}' submitted for supervisor review.",
+/srv/apps/pgsims/backend/sims/logbook/views.py:1496:                    self.request, "Cannot submit for review: No supervisor assigned to you."
+/srv/apps/pgsims/backend/sims/logbook/views.py:1498:                entry.status = "draft"  # Remain draft
+/srv/apps/pgsims/backend/sims/logbook/views.py:1512:        # Redirect to the PG's logbook list, perhaps with a filter for pending or drafts
+/srv/apps/pgsims/backend/sims/logbook/views.py:1520:    context_object_name = "pending_entries"
+/srv/apps/pgsims/backend/sims/logbook/views.py:1524:        # Supervisors see entries from their PGs that are 'pending'
+/srv/apps/pgsims/backend/sims/logbook/views.py:1527:            LogbookEntry.objects.filter(supervisor=self.request.user, status="pending")
+/srv/apps/pgsims/backend/sims/logbook/views.py:1529:            .order_by("submitted_to_supervisor_at")
+/srv/apps/pgsims/backend/sims/logbook/views.py:1536:        # context['approved_count'] = LogbookEntry.objects.filter(supervisor=self.request.user, status='approved').count()
+/srv/apps/pgsims/backend/sims/logbook/views.py:1537:        # context['returned_count'] = LogbookEntry.objects.filter(supervisor=self.request.user, status='returned').count()
+/srv/apps/pgsims/backend/sims/logbook/views.py:1582:        if review_status == "pending":
+/srv/apps/pgsims/backend/sims/logbook/views.py:1583:            queryset = queryset.filter(status="pending")
+/srv/apps/pgsims/backend/sims/logbook/views.py:1585:            queryset = queryset.filter(status__in=["approved", "rejected", "returned"])
+/srv/apps/pgsims/backend/sims/logbook/views.py:1587:            queryset = queryset.filter(status__in=["pending", "returned"])
+/srv/apps/pgsims/backend/sims/logbook/views.py:1602:        sort_by = self.request.GET.get("sort", "-submitted_to_supervisor_at")
+/srv/apps/pgsims/backend/sims/logbook/views.py:1608:            "submitted_to_supervisor_at",
+/srv/apps/pgsims/backend/sims/logbook/views.py:1609:            "-submitted_to_supervisor_at",
+/srv/apps/pgsims/backend/sims/logbook/views.py:1617:            queryset = queryset.order_by("-submitted_to_supervisor_at", "-date")
+/srv/apps/pgsims/backend/sims/logbook/views.py:1632:            "pending": all_entries.filter(status="pending").count(),
+/srv/apps/pgsims/backend/sims/logbook/views.py:1633:            "approved": all_entries.filter(status="approved").count(),
+/srv/apps/pgsims/backend/sims/logbook/views.py:1635:            "returned": all_entries.filter(status="returned").count(),
+/srv/apps/pgsims/backend/sims/logbook/views.py:1636:            "draft": all_entries.filter(status="draft").count(),
+/srv/apps/pgsims/backend/sims/logbook/views.py:1647:            "sort": self.request.GET.get("sort", "-submitted_to_supervisor_at"),
+/srv/apps/pgsims/backend/sims/logbook/views.py:1663:        # Ensure the entry belongs to this supervisor and is pending
+/srv/apps/pgsims/backend/sims/logbook/views.py:1665:            LogbookEntry, pk=entry_pk, supervisor=self.request.user, status="pending"
+/srv/apps/pgsims/backend/sims/logbook/views.py:1681:            entry.status = "approved"
+/srv/apps/pgsims/backend/sims/logbook/views.py:1682:            messages.success(self.request, f"Logbook entry '{entry.case_title}' approved.")
+/srv/apps/pgsims/backend/sims/logbook/views.py:1687:            entry.status = "returned"
+/srv/apps/pgsims/backend/sims/logbook/views.py:1689:                self.request, f"Logbook entry '{entry.case_title}' returned to resident for edits."
+/srv/apps/pgsims/backend/sims/logbook/views.py:1707:    #     #             'approved': 'approved',
+/srv/apps/pgsims/backend/sims/logbook/views.py:1709:    #     #             'return_for_edits': 'returned for edits'
+/srv/apps/pgsims/backend/sims/logbook/views.py:1761:            pg__supervisor=self.request.user, status="pending"
+/srv/apps/pgsims/backend/sims/logbook/views.py:1766:        context["pending_entries"] = self.get_queryset()
+/srv/apps/pgsims/backend/sims/logbook/views.py:1786:                entry.status = "approved"
+/srv/apps/pgsims/backend/sims/logbook/views.py:1788:                    comment or f"Bulk approved by {self.request.user.get_full_name()}"
+/srv/apps/pgsims/backend/sims/logbook/views.py:1803:                entry.status = "returned"

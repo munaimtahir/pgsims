@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Iterable, List
 
 from django.conf import settings
+from django.db.models import Count
 from django.http import HttpResponse
 from django.contrib.auth import get_user_model
 from rest_framework import permissions
@@ -24,6 +25,9 @@ from sims.analytics.dashboard_v1 import (
     resolve_filters,
     tab_payload_to_csv,
 )
+from sims.analytics.event_catalog import EVENT_CATALOG
+from sims.analytics.event_tracking import record_validation_rejection, track_event
+from sims.analytics.models import AnalyticsEvent, AnalyticsValidationRejection
 from sims.analytics.serializers import (
     AnalyticsFiltersSerializer,
     AnalyticsLivePayloadSerializer,
@@ -44,7 +48,6 @@ from sims.analytics.services import (
     dashboard_overview,
     dashboard_trends,
     get_accessible_users,
-    safe_track_event,
     performance_metrics,
     trend_for_user,
     validate_window,
@@ -191,9 +194,12 @@ class AnalyticsAccessPermission(permissions.BasePermission):
             return False
         if user.is_superuser or getattr(user, "role", None) == "admin":
             return True
-        if getattr(user, "role", None) == "supervisor" and getattr(
-            settings, "ANALYTICS_ALLOW_SUPERVISOR_ACCESS", False
-        ):
+        supervisor_enabled = getattr(
+            settings,
+            "ANALYTICS_SUPERVISOR_ACCESS_ENABLED",
+            getattr(settings, "ANALYTICS_ALLOW_SUPERVISOR_ACCESS", False),
+        )
+        if getattr(user, "role", None) == "supervisor" and supervisor_enabled:
             return True
         return False
 
@@ -222,7 +228,11 @@ class AnalyticsTabView(APIView):
         if tab not in TAB_KEYS:
             return Response({"detail": "Unknown analytics tab."}, status=status.HTTP_404_NOT_FOUND)
         filters = resolve_filters(request.query_params)
-        payload = get_cached_tab_payload(tab, filters)
+        payload = get_cached_tab_payload(
+            tab,
+            filters,
+            cache_scope=f"user:{request.user.id}:role:{getattr(request.user, 'role', '')}",
+        )
         serializer = AnalyticsTabPayloadSerializer(payload)
         return Response(serializer.data)
 
@@ -236,7 +246,11 @@ class AnalyticsTabExportView(APIView):
         if tab not in TAB_KEYS:
             return Response({"detail": "Unknown analytics tab."}, status=status.HTTP_404_NOT_FOUND)
         filters = resolve_filters(request.query_params)
-        payload = get_cached_tab_payload(tab, filters)
+        payload = get_cached_tab_payload(
+            tab,
+            filters,
+            cache_scope=f"user:{request.user.id}:role:{getattr(request.user, 'role', '')}",
+        )
         csv_text = tab_payload_to_csv(payload)
         response = HttpResponse(csv_text, content_type="text/csv")
         response["Content-Disposition"] = f'attachment; filename="analytics-{tab}.csv"'
@@ -251,7 +265,13 @@ class AnalyticsLiveView(APIView):
             return Response({"detail": "Analytics is disabled."}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
         filters = resolve_filters(request.query_params)
         limit = int(request.query_params.get("limit", 200))
-        payload = build_live_payload(filters, limit=min(limit, 200))
+        payload = build_live_payload(
+            filters,
+            limit=min(limit, 200),
+            cursor=request.query_params.get("cursor"),
+            event_type_prefix=request.query_params.get("event_type_prefix"),
+            entity_type=request.query_params.get("entity_type"),
+        )
         serializer = AnalyticsLivePayloadSerializer(payload)
         return Response(serializer.data)
 
@@ -282,25 +302,115 @@ class AnalyticsEventIngestView(APIView):
             if hospital is None:
                 return Response({"detail": "Invalid hospital_id"}, status=status.HTTP_400_BAD_REQUEST)
 
-        event = safe_track_event(
-            event_type=validated["event_type"],
-            actor=request.user,
-            request=request,
-            department=department,
-            hospital=hospital,
-            entity_type=validated.get("entity_type") or None,
-            entity_id=validated.get("entity_id") or None,
-            event_key=validated.get("event_key") or validated["event_type"],
-            metadata={
-                **(validated.get("metadata") or {}),
-                "event_source": "ui_ingest",
-            },
-            occurred_at=validated.get("occurred_at"),
-        )
+        try:
+            event = track_event(
+                event_type=validated["event_type"],
+                actor=request.user,
+                request=request,
+                department=department,
+                hospital=hospital,
+                entity_type=validated.get("entity_type") or None,
+                entity_id=validated.get("entity_id") or None,
+                event_key=validated.get("event_key") or validated["event_type"],
+                metadata={
+                    **(validated.get("metadata") or {}),
+                    "event_source": "ui_ingest",
+                },
+                occurred_at=validated.get("occurred_at"),
+            )
+        except ValueError as exc:
+            record_validation_rejection(
+                source="ui_ingest",
+                event_type=validated.get("event_type"),
+                reason=str(exc),
+                actor_role=getattr(request.user, "role", ""),
+                department_id=getattr(department, "id", None),
+                hospital_id=getattr(hospital, "id", None),
+                metadata_keys=sorted(list((validated.get("metadata") or {}).keys())),
+            )
+            return Response({"detail": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
         return Response(
             {"accepted": True, "event_id": str(event.id) if event is not None else None},
             status=status.HTTP_202_ACCEPTED,
         )
+
+
+class AnalyticsQualityView(APIView):
+    permission_classes = [permissions.IsAuthenticated, AnalyticsAccessPermission]
+
+    def get(self, request: Request) -> Response:
+        if not getattr(settings, "ANALYTICS_ENABLED", True):
+            return Response({"detail": "Analytics is disabled."}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+        filters = resolve_filters(request.query_params)
+        range_days = max((filters.end_date - filters.start_date).days + 1, 1)
+        start_dt, end_dt = _bounds(filters.start_date, filters.end_date)
+        baseline_start = start_dt - (end_dt - start_dt)
+        baseline_end = start_dt
+
+        current_total = AnalyticsEvent.objects.filter(occurred_at__gte=start_dt, occurred_at__lt=end_dt).count()
+        baseline_total = AnalyticsEvent.objects.filter(
+            occurred_at__gte=baseline_start, occurred_at__lt=baseline_end
+        ).count()
+        baseline_per_day = baseline_total / range_days if baseline_total else 0.0
+        current_per_day = current_total / range_days
+        anomaly = "stable"
+        if baseline_per_day > 0 and current_per_day >= baseline_per_day * 2:
+            anomaly = "spike"
+        elif baseline_per_day > 0 and current_per_day <= baseline_per_day * 0.5:
+            anomaly = "drop"
+
+        rejections = list(
+            AnalyticsValidationRejection.objects.filter(created_at__gte=start_dt, created_at__lt=end_dt)
+            .values("event_type", "reason")
+            .annotate(total=Count("id"))
+            .order_by("-total")[:10]
+        )
+        missing_hospital = AnalyticsEvent.objects.filter(
+            occurred_at__gte=start_dt, occurred_at__lt=end_dt, hospital__isnull=True
+        ).count()
+        missing_department = AnalyticsEvent.objects.filter(
+            occurred_at__gte=start_dt, occurred_at__lt=end_dt, department__isnull=True
+        ).count()
+
+        drift_counts: dict[str, int] = {}
+        for event in AnalyticsEvent.objects.filter(occurred_at__gte=start_dt, occurred_at__lt=end_dt).only(
+            "event_type", "metadata"
+        )[:1000]:
+            spec = EVENT_CATALOG.get(event.event_type)
+            if not spec or not isinstance(event.metadata, dict):
+                continue
+            for key in event.metadata.keys():
+                if key not in spec.allowed_metadata_keys:
+                    drift_counts[key] = drift_counts.get(key, 0) + 1
+
+        payload = {
+            "anomaly": {
+                "status": anomaly,
+                "current_events": current_total,
+                "baseline_events": baseline_total,
+                "current_per_day": round(current_per_day, 2),
+                "baseline_per_day": round(baseline_per_day, 2),
+            },
+            "top_rejections": rejections,
+            "missing_dimensions": {
+                "missing_hospital": missing_hospital,
+                "missing_department": missing_department,
+            },
+            "schema_drift": [
+                {"metadata_key": key, "count": value}
+                for key, value in sorted(drift_counts.items(), key=lambda item: item[1], reverse=True)[:20]
+            ],
+        }
+        return Response(payload)
+
+
+def _bounds(start_date, end_date):
+    from datetime import datetime, time, timedelta
+    from django.utils import timezone
+
+    start_dt = timezone.make_aware(datetime.combine(start_date, time.min))
+    end_dt = timezone.make_aware(datetime.combine(end_date + timedelta(days=1), time.min))
+    return start_dt, end_dt
 
 
 __all__ = [
@@ -315,4 +425,5 @@ __all__ = [
     "AnalyticsTabExportView",
     "AnalyticsLiveView",
     "AnalyticsEventIngestView",
+    "AnalyticsQualityView",
 ]

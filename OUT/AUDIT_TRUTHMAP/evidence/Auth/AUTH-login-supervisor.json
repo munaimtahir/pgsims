@@ -1,0 +1,14 @@
+{
+  "role": "supervisor",
+  "username": "e2e_supervisor",
+  "status_code": 502,
+  "headers": {
+    "Alt-Svc": "h3=\":443\"; ma=2592000",
+    "Server": "Caddy",
+    "Date": "Fri, 27 Feb 2026 00:37:27 GMT",
+    "Content-Length": "0"
+  },
+  "body": {
+    "raw": ""
+  }
+}

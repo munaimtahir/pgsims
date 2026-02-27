@@ -1,0 +1,22 @@
+[
+  {
+    "step": "login_pg",
+    "result": {
+      "role": "pg",
+      "status": 429,
+      "body": {
+        "detail": "Request was throttled. Expected available in 56 seconds."
+      }
+    }
+  },
+  {
+    "step": "login_supervisor",
+    "result": {
+      "role": "supervisor",
+      "status": 429,
+      "body": {
+        "detail": "Request was throttled. Expected available in 56 seconds."
+      }
+    }
+  }
+]

@@ -1,0 +1,4 @@
+time="2026-02-27T05:16:40+05:00" level=warning msg="/srv/apps/pgsims/docker/docker-compose.prod.yml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+[INFO] 2026-02-27 00:16:41,768 sims.certificates Certificate periodic tasks setup completed
+[INFO] 2026-02-27 00:16:41,782 sims.logbook Logbook periodic tasks setup completed
+Password reset for 'admin'. You can log in with admin / admin123

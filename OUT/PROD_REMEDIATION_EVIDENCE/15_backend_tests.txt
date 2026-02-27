@@ -1,0 +1,151 @@
+time="2026-02-27T05:20:21+05:00" level=warning msg="/srv/apps/pgsims/docker/docker-compose.prod.yml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+[INFO] 2026-02-27 00:20:23,131 sims.certificates Certificate periodic tasks setup completed
+[INFO] 2026-02-27 00:20:23,142 sims.logbook Logbook periodic tasks setup completed
+Status: 200
+FieldError: <ul class="errorlist"><li>Supervisor is required for PGs
+FieldError: Supervisor is required for PGs
+Form initialized successfully. dict_keys(['username', 'email', 'first_name', 'last_name', 'role', 'specialty', 'year', 'supervisor', 'password1', 'password2'])
+GET /admin/users/user/add/ Status Code: 200
+Found 158 test(s).
+Creating test database for alias 'default'...
+System check identified no issues (0 silenced).
+EEEEE.............................../home/sims/.local/lib/python3.11/site-packages/django/db/models/fields/__init__.py:1535: RuntimeWarning: DateTimeField User.date_joined received a naive datetime (2024-02-01 00:00:00) while time zone support is active.
+  warnings.warn(
+.../home/sims/.local/lib/python3.11/site-packages/django/db/models/fields/__init__.py:1535: RuntimeWarning: DateTimeField User.date_joined received a naive datetime (2024-01-10 00:00:00) while time zone support is active.
+  warnings.warn(
+........................................Processed 1 scheduled reports
+.Processed 0 scheduled reports
+.Processed 1 scheduled reports
+..............................FFF............................................
+======================================================================
+ERROR: sims.cases.tests (unittest.loader._FailedTest.sims.cases.tests)
+----------------------------------------------------------------------
+ImportError: Failed to import test module: sims.cases.tests
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.11/unittest/loader.py", line 419, in _find_test_path
+    module = self._get_module_from_name(name)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/unittest/loader.py", line 362, in _get_module_from_name
+    __import__(name)
+  File "/app/sims/cases/tests.py", line 8, in <module>
+    from sims.tests.factories.case_factories import ClinicalCaseFactory
+  File "/app/sims/tests/factories/__init__.py", line 3, in <module>
+    from .user_factories import AdminFactory, SupervisorFactory, PGFactory, UserFactory
+  File "/app/sims/tests/factories/user_factories.py", line 6, in <module>
+    import factory
+ModuleNotFoundError: No module named 'factory'
+
+
+======================================================================
+ERROR: sims.certificates.tests (unittest.loader._FailedTest.sims.certificates.tests)
+----------------------------------------------------------------------
+ImportError: Failed to import test module: sims.certificates.tests
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.11/unittest/loader.py", line 419, in _find_test_path
+    module = self._get_module_from_name(name)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/unittest/loader.py", line 362, in _get_module_from_name
+    __import__(name)
+  File "/app/sims/certificates/tests.py", line 9, in <module>
+    from sims.tests.factories.user_factories import AdminFactory, PGFactory, SupervisorFactory
+  File "/app/sims/tests/factories/__init__.py", line 3, in <module>
+    from .user_factories import AdminFactory, SupervisorFactory, PGFactory, UserFactory
+  File "/app/sims/tests/factories/user_factories.py", line 6, in <module>
+    import factory
+ModuleNotFoundError: No module named 'factory'
+
+
+======================================================================
+ERROR: sims.logbook.tests (unittest.loader._FailedTest.sims.logbook.tests)
+----------------------------------------------------------------------
+ImportError: Failed to import test module: sims.logbook.tests
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.11/unittest/loader.py", line 419, in _find_test_path
+    module = self._get_module_from_name(name)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/unittest/loader.py", line 362, in _get_module_from_name
+    __import__(name)
+  File "/app/sims/logbook/tests.py", line 10, in <module>
+    from sims.tests.factories.user_factories import AdminFactory, PGFactory, SupervisorFactory
+  File "/app/sims/tests/factories/__init__.py", line 3, in <module>
+    from .user_factories import AdminFactory, SupervisorFactory, PGFactory, UserFactory
+  File "/app/sims/tests/factories/user_factories.py", line 6, in <module>
+    import factory
+ModuleNotFoundError: No module named 'factory'
+
+
+======================================================================
+ERROR: sims.tests.factories (unittest.loader._FailedTest.sims.tests.factories)
+----------------------------------------------------------------------
+ImportError: Failed to import test module: sims.tests.factories
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.11/unittest/loader.py", line 452, in _find_test_path
+    package = self._get_module_from_name(name)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/unittest/loader.py", line 362, in _get_module_from_name
+    __import__(name)
+  File "/app/sims/tests/factories/__init__.py", line 3, in <module>
+    from .user_factories import AdminFactory, SupervisorFactory, PGFactory, UserFactory
+  File "/app/sims/tests/factories/user_factories.py", line 6, in <module>
+    import factory
+ModuleNotFoundError: No module named 'factory'
+
+
+======================================================================
+ERROR: test_frontend_create (unittest.loader._FailedTest.test_frontend_create)
+----------------------------------------------------------------------
+ImportError: Failed to import test module: test_frontend_create
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.11/unittest/loader.py", line 419, in _find_test_path
+    module = self._get_module_from_name(name)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/unittest/loader.py", line 362, in _get_module_from_name
+    __import__(name)
+  File "/app/test_frontend_create.py", line 13, in <module>
+    admin_supervisor = User.objects.create(username="sup", role="supervisor", specialty="medicine", email="sup@sup.com", is_active=True)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/sims/.local/lib/python3.11/site-packages/django/db/models/manager.py", line 87, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/sims/.local/lib/python3.11/site-packages/django/db/models/query.py", line 660, in create
+    obj.save(force_insert=True, using=self.db)
+  File "/app/sims/users/models.py", line 212, in save
+    self.full_clean()
+  File "/home/sims/.local/lib/python3.11/site-packages/django/db/models/base.py", line 1502, in full_clean
+    raise ValidationError(errors)
+django.core.exceptions.ValidationError: {'password': ['This field cannot be blank.']}
+
+
+======================================================================
+FAIL: test_search_users_admin_sees_all (sims.search.tests.SearchServiceTests.test_search_users_admin_sees_all)
+Admin can see all users.
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/sims/search/tests.py", line 137, in test_search_users_admin_sees_all
+    self.assertGreaterEqual(len(results), 2)  # At least pg1 and pg2
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 0 not greater than or equal to 2
+
+======================================================================
+FAIL: test_search_users_pg_sees_only_self (sims.search.tests.SearchServiceTests.test_search_users_pg_sees_only_self)
+PG sees only themselves.
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/sims/search/tests.py", line 152, in test_search_users_pg_sees_only_self
+    self.assertEqual(len(results), 1)
+AssertionError: 0 != 1
+
+======================================================================
+FAIL: test_search_users_supervisor_sees_supervised (sims.search.tests.SearchServiceTests.test_search_users_supervisor_sees_supervised)
+Supervisor sees only their PGs.
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/sims/search/tests.py", line 143, in test_search_users_supervisor_sees_supervised
+    self.assertGreaterEqual(len(results), 2)
+AssertionError: 0 not greater than or equal to 2
+
+----------------------------------------------------------------------
+Ran 158 tests in 12.011s
+
+FAILED (failures=3, errors=5)
+Destroying test database for alias 'default'...

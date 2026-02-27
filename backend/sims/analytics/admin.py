@@ -2,7 +2,7 @@
 
 from django.contrib import admin
 
-from sims.analytics.models import AnalyticsDailyRollup, AnalyticsEvent
+from sims.analytics.models import AnalyticsDailyRollup, AnalyticsEvent, AnalyticsValidationRejection
 
 
 @admin.register(AnalyticsEvent)
@@ -37,3 +37,10 @@ class AnalyticsDailyRollupAdmin(admin.ModelAdmin):
     list_display = ("day", "event_type", "department", "hospital", "count")
     list_filter = ("event_type", "department", "hospital")
     search_fields = ("event_type",)
+
+
+@admin.register(AnalyticsValidationRejection)
+class AnalyticsValidationRejectionAdmin(admin.ModelAdmin):
+    list_display = ("created_at", "source", "event_type", "reason", "actor_role", "hospital_id", "department_id")
+    list_filter = ("source", "event_type", "actor_role")
+    search_fields = ("event_type", "reason")

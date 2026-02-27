@@ -22,15 +22,52 @@ function parseExp(token: string): number {
   }
 }
 
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
 export async function loginAs(context: BrowserContext, page: Page, role: E2ERole) {
-  const appBaseURL = process.env.E2E_BASE_URL ?? 'http://localhost:3000';
-  const apiBaseURL = process.env.E2E_API_URL ?? 'http://localhost:8000';
+  const appBaseURL = process.env.E2E_BASE_URL ?? 'https://pgsims.alshifalab.pk';
+  const apiCandidates = Array.from(
+    new Set(
+      [
+        process.env.E2E_API_URL,
+        appBaseURL,
+        'http://localhost:8000',
+      ].filter((value): value is string => Boolean(value && value.trim()))
+    )
+  );
   const credentials = CREDENTIALS[role];
-  const response = await page.request.post(`${apiBaseURL}/api/auth/login/`, {
-    data: credentials,
-  });
-  if (!response.ok()) {
-    throw new Error(`Login failed for ${role}: ${response.status()} ${await response.text()}`);
+  let response: Awaited<ReturnType<typeof page.request.post>> | null = null;
+  let lastError: unknown = null;
+
+  for (const apiBaseURL of apiCandidates) {
+    try {
+      for (let attempt = 0; attempt < 3; attempt += 1) {
+        response = await page.request.post(`${apiBaseURL}/api/auth/login/`, {
+          data: credentials,
+        });
+        if (response.ok()) {
+          break;
+        }
+        if (response.status() === 429) {
+          const retryAfterHeader = response.headers()['retry-after'];
+          const retrySeconds = Number.parseInt(retryAfterHeader ?? '3', 10);
+          await sleep((Number.isNaN(retrySeconds) ? 3 : retrySeconds) * 1000);
+          continue;
+        }
+        break;
+      }
+      if (response?.ok()) {
+        break;
+      }
+      lastError = new Error(`Login failed via ${apiBaseURL}: ${response?.status()} ${await response?.text()}`);
+    } catch (error: unknown) {
+      lastError = error;
+    }
+  }
+
+  if (!response || !response.ok()) {
+    const reason = lastError instanceof Error ? lastError.message : String(lastError ?? 'unknown error');
+    throw new Error(`Login failed for ${role}. Tried: ${apiCandidates.join(', ')}. Last error: ${reason}`);
   }
   const payload = (await response.json()) as {
     user: {

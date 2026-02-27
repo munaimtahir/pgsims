@@ -1,0 +1,1 @@
+-rwxrwxr-x+ 1 munaim munaim 800 Feb 27 03:07 /srv/apps/pgsims/ops/caddy_sync_reload.sh

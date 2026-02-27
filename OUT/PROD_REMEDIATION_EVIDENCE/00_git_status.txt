@@ -1,0 +1,9 @@
+?? OUT/
+?? backend/sims/analytics/dashboard_v1.py
+?? backend/sims/analytics/event_tracking.py
+?? backend/sims/analytics/migrations/0001_initial.py
+?? docs/ANALYTICS_BLUEPRINT.md
+?? docs/ANALYTICS_OPENAPI.md
+?? docs/ANALYTICS_UI_SPEC.md
+?? docs/ARCHITECTURE/
+?? frontend/e2e/admin_analytics.spec.ts

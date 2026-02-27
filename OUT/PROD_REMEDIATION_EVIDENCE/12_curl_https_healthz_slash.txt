@@ -1,0 +1,22 @@
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0
+HTTP/2 405 
+allow: GET
+alt-svc: h3=":443"; ma=2592000
+cache-control: max-age=0, no-cache, no-store, must-revalidate, private
+content-type: text/html; charset=utf-8
+cross-origin-opener-policy: same-origin
+date: Fri, 27 Feb 2026 00:22:55 GMT
+expires: Fri, 27 Feb 2026 00:22:55 GMT
+permissions-policy: camera=(), microphone=(), geolocation=()
+referrer-policy: strict-origin-when-cross-origin
+strict-transport-security: max-age=31536000; includeSubDomains; preload
+vary: origin
+via: 1.1 Caddy
+x-content-type-options: nosniff
+x-frame-options: SAMEORIGIN
+x-request-id: 4138c34382cb4ae59e6f3fa6a9b984fb
+x-response-time: 0ms
+content-length: 0
+

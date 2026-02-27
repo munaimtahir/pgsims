@@ -1,0 +1,93 @@
+time="2026-02-27T05:16:32+05:00" level=warning msg="The \"SECRET_KEY\" variable is not set. Defaulting to a blank string."
+time="2026-02-27T05:16:32+05:00" level=warning msg="The \"DB_PASSWORD\" variable is not set. Defaulting to a blank string."
+time="2026-02-27T05:16:32+05:00" level=warning msg="The \"SECRET_KEY\" variable is not set. Defaulting to a blank string."
+time="2026-02-27T05:16:32+05:00" level=warning msg="The \"DB_PASSWORD\" variable is not set. Defaulting to a blank string."
+time="2026-02-27T05:16:32+05:00" level=warning msg="The \"SECRET_KEY\" variable is not set. Defaulting to a blank string."
+time="2026-02-27T05:16:32+05:00" level=warning msg="The \"DB_PASSWORD\" variable is not set. Defaulting to a blank string."
+time="2026-02-27T05:16:32+05:00" level=warning msg="The \"DB_PASSWORD\" variable is not set. Defaulting to a blank string."
+time="2026-02-27T05:16:32+05:00" level=warning msg="/srv/apps/pgsims/docker/docker-compose.prod.yml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+[INFO] 2026-02-27 00:16:34,290 sims.certificates Certificate periodic tasks setup completed
+[INFO] 2026-02-27 00:16:34,302 sims.logbook Logbook periodic tasks setup completed
+Creating test database for alias 'default' ('test_sims_db')...
+Found 1 test(s).
+Operations to perform:
+  Synchronize unmigrated apps: corsheaders, crispy_bootstrap5, crispy_forms, django_filters, humanize, import_export, messages, postgres, rest_framework, rest_framework_simplejwt, simple_history, staticfiles, widget_tweaks
+  Apply all migrations: academics, admin, analytics, attendance, audit, auth, bulk, cases, certificates, contenttypes, django_celery_beat, logbook, notifications, reports, results, rotations, search, sessions, users
+Synchronizing apps without migrations:
+  Creating tables...
+    Running deferred SQL...
+Running migrations:
+  Applying rotations.0001_initial... OK
+  Applying contenttypes.0001_initial... OK
+  Applying contenttypes.0002_remove_content_type_name... OK
+  Applying auth.0001_initial... OK
+  Applying auth.0002_alter_permission_name_max_length... OK
+  Applying auth.0003_alter_user_email_max_length... OK
+  Applying auth.0004_alter_user_username_opts... OK
+  Applying auth.0005_alter_user_last_login_null... OK
+  Applying auth.0006_require_contenttypes_0002... OK
+  Applying auth.0007_alter_validators_add_error_messages... OK
+  Applying auth.0008_alter_user_username_max_length... OK
+  Applying auth.0009_alter_user_last_name_max_length... OK
+  Applying auth.0010_alter_group_name_max_length... OK
+  Applying auth.0011_update_proxy_permissions... OK
+  Applying auth.0012_alter_user_first_name_max_length... OK
+  Applying academics.0001_initial... OK
+  Applying users.0001_initial... OK
+  Applying academics.0002_initial... OK
+  Applying admin.0001_initial... OK
+  Applying admin.0002_logentry_remove_auto_add... OK
+  Applying admin.0003_logentry_add_action_flag_choices... OK
+  Applying rotations.0002_initial... OK
+  Applying analytics.0001_initial... OK
+  Applying attendance.0001_initial... OK
+  Applying attendance.0002_initial... OK
+  Applying audit.0001_initial... OK
+  Applying audit.0002_initial... OK
+  Applying bulk.0001_initial... OK
+  Applying bulk.0002_initial... OK
+  Applying logbook.0001_initial... OK
+  Applying cases.0001_initial... OK
+  Applying cases.0002_initial... OK
+  Applying certificates.0001_initial... OK
+  Applying certificates.0002_initial... OK
+  Applying django_celery_beat.0001_initial... OK
+  Applying django_celery_beat.0002_auto_20161118_0346... OK
+  Applying django_celery_beat.0003_auto_20161209_0049... OK
+  Applying django_celery_beat.0004_auto_20170221_0000... OK
+  Applying django_celery_beat.0005_add_solarschedule_events_choices... OK
+  Applying django_celery_beat.0006_auto_20180322_0932... OK
+  Applying django_celery_beat.0007_auto_20180521_0826... OK
+  Applying django_celery_beat.0008_auto_20180914_1922... OK
+  Applying django_celery_beat.0006_auto_20180210_1226... OK
+  Applying django_celery_beat.0006_periodictask_priority... OK
+  Applying django_celery_beat.0009_periodictask_headers... OK
+  Applying django_celery_beat.0010_auto_20190429_0326... OK
+  Applying django_celery_beat.0011_auto_20190508_0153... OK
+  Applying django_celery_beat.0012_periodictask_expire_seconds... OK
+  Applying django_celery_beat.0013_auto_20200609_0727... OK
+  Applying django_celery_beat.0014_remove_clockedschedule_enabled... OK
+  Applying django_celery_beat.0015_edit_solarschedule_events_choices... OK
+  Applying django_celery_beat.0016_alter_crontabschedule_timezone... OK
+  Applying django_celery_beat.0017_alter_crontabschedule_month_of_year... OK
+  Applying django_celery_beat.0018_improve_crontab_helptext... OK
+  Applying django_celery_beat.0019_alter_periodictasks_options... OK
+  Applying logbook.0002_initial... OK
+  Applying notifications.0001_initial... OK
+  Applying notifications.0002_initial... OK
+  Applying reports.0001_initial... OK
+  Applying reports.0002_initial... OK
+  Applying results.0001_initial... OK
+  Applying results.0002_initial... OK
+  Applying search.0001_initial... OK
+  Applying search.0002_initial... OK
+  Applying sessions.0001_initial... OK
+System check identified no issues (0 silenced).
+test_submit_return_feedback_visible_and_resubmit_approve_flow (sims.logbook.test_api.PGLogbookEntryAPITests.test_submit_return_feedback_visible_and_resubmit_approve_flow)
+Smoke test for PG submit -> supervisor return -> PG sees feedback -> resubmit -> approve. ... ok
+
+----------------------------------------------------------------------
+Ran 1 test in 0.171s
+
+OK
+Destroying test database for alias 'default' ('test_sims_db')...

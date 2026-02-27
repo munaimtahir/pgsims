@@ -1,0 +1,6 @@
+db
+redis
+worker
+beat
+web
+frontend

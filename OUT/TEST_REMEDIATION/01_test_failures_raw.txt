@@ -1,0 +1,492 @@
+time="2026-02-27T05:34:40+05:00" level=warning msg="The \"DB_PASSWORD\" variable is not set. Defaulting to a blank string."
+time="2026-02-27T05:34:40+05:00" level=warning msg="The \"SECRET_KEY\" variable is not set. Defaulting to a blank string."
+time="2026-02-27T05:34:40+05:00" level=warning msg="The \"DB_PASSWORD\" variable is not set. Defaulting to a blank string."
+time="2026-02-27T05:34:40+05:00" level=warning msg="The \"SECRET_KEY\" variable is not set. Defaulting to a blank string."
+time="2026-02-27T05:34:40+05:00" level=warning msg="The \"DB_PASSWORD\" variable is not set. Defaulting to a blank string."
+time="2026-02-27T05:34:40+05:00" level=warning msg="The \"SECRET_KEY\" variable is not set. Defaulting to a blank string."
+time="2026-02-27T05:34:40+05:00" level=warning msg="The \"DB_PASSWORD\" variable is not set. Defaulting to a blank string."
+time="2026-02-27T05:34:40+05:00" level=warning msg="/srv/apps/pgsims/docker/docker-compose.prod.yml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+[INFO] 2026-02-27 00:34:42,084 sims.certificates Certificate periodic tasks setup completed
+[INFO] 2026-02-27 00:34:42,094 sims.logbook Logbook periodic tasks setup completed
+Status: 200
+FieldError: <ul class="errorlist"><li>Supervisor is required for PGs
+FieldError: Supervisor is required for PGs
+Form initialized successfully. dict_keys(['username', 'email', 'first_name', 'last_name', 'role', 'specialty', 'year', 'supervisor', 'password1', 'password2'])
+GET /admin/users/user/add/ Status Code: 200
+Found 158 test(s).
+Creating test database for alias 'default' ('test_sims_db')...
+Operations to perform:
+  Synchronize unmigrated apps: corsheaders, crispy_bootstrap5, crispy_forms, django_filters, humanize, import_export, messages, postgres, rest_framework, rest_framework_simplejwt, simple_history, staticfiles, widget_tweaks
+  Apply all migrations: academics, admin, analytics, attendance, audit, auth, bulk, cases, certificates, contenttypes, django_celery_beat, logbook, notifications, reports, results, rotations, search, sessions, users
+Synchronizing apps without migrations:
+  Creating tables...
+    Running deferred SQL...
+Running migrations:
+  Applying rotations.0001_initial... OK
+  Applying contenttypes.0001_initial... OK
+  Applying contenttypes.0002_remove_content_type_name... OK
+  Applying auth.0001_initial... OK
+  Applying auth.0002_alter_permission_name_max_length... OK
+  Applying auth.0003_alter_user_email_max_length... OK
+  Applying auth.0004_alter_user_username_opts... OK
+  Applying auth.0005_alter_user_last_login_null... OK
+  Applying auth.0006_require_contenttypes_0002... OK
+  Applying auth.0007_alter_validators_add_error_messages... OK
+  Applying auth.0008_alter_user_username_max_length... OK
+  Applying auth.0009_alter_user_last_name_max_length... OK
+  Applying auth.0010_alter_group_name_max_length... OK
+  Applying auth.0011_update_proxy_permissions... OK
+  Applying auth.0012_alter_user_first_name_max_length... OK
+  Applying academics.0001_initial... OK
+  Applying users.0001_initial... OK
+  Applying academics.0002_initial... OK
+  Applying admin.0001_initial... OK
+  Applying admin.0002_logentry_remove_auto_add... OK
+  Applying admin.0003_logentry_add_action_flag_choices... OK
+  Applying rotations.0002_initial... OK
+  Applying analytics.0001_initial... OK
+  Applying attendance.0001_initial... OK
+  Applying attendance.0002_initial... OK
+  Applying audit.0001_initial... OK
+  Applying audit.0002_initial... OK
+  Applying bulk.0001_initial... OK
+  Applying bulk.0002_initial... OK
+  Applying logbook.0001_initial... OK
+  Applying cases.0001_initial... OK
+  Applying cases.0002_initial... OK
+  Applying certificates.0001_initial... OK
+  Applying certificates.0002_initial... OK
+  Applying django_celery_beat.0001_initial... OK
+  Applying django_celery_beat.0002_auto_20161118_0346... OK
+  Applying django_celery_beat.0003_auto_20161209_0049... OK
+  Applying django_celery_beat.0004_auto_20170221_0000... OK
+  Applying django_celery_beat.0005_add_solarschedule_events_choices... OK
+  Applying django_celery_beat.0006_auto_20180322_0932... OK
+  Applying django_celery_beat.0007_auto_20180521_0826... OK
+  Applying django_celery_beat.0008_auto_20180914_1922... OK
+  Applying django_celery_beat.0006_auto_20180210_1226... OK
+  Applying django_celery_beat.0006_periodictask_priority... OK
+  Applying django_celery_beat.0009_periodictask_headers... OK
+  Applying django_celery_beat.0010_auto_20190429_0326... OK
+  Applying django_celery_beat.0011_auto_20190508_0153... OK
+  Applying django_celery_beat.0012_periodictask_expire_seconds... OK
+  Applying django_celery_beat.0013_auto_20200609_0727... OK
+  Applying django_celery_beat.0014_remove_clockedschedule_enabled... OK
+  Applying django_celery_beat.0015_edit_solarschedule_events_choices... OK
+  Applying django_celery_beat.0016_alter_crontabschedule_timezone... OK
+  Applying django_celery_beat.0017_alter_crontabschedule_month_of_year... OK
+  Applying django_celery_beat.0018_improve_crontab_helptext... OK
+  Applying django_celery_beat.0019_alter_periodictasks_options... OK
+  Applying logbook.0002_initial... OK
+  Applying notifications.0001_initial... OK
+  Applying notifications.0002_initial... OK
+  Applying reports.0001_initial... OK
+  Applying reports.0002_initial... OK
+  Applying results.0001_initial... OK
+  Applying results.0002_initial... OK
+  Applying search.0001_initial... OK
+  Applying search.0002_initial... OK
+  Applying sessions.0001_initial... OK
+System check identified no issues (0 silenced).
+sims.cases.tests (unittest.loader._FailedTest.sims.cases.tests) ... ERROR
+sims.certificates.tests (unittest.loader._FailedTest.sims.certificates.tests) ... ERROR
+sims.logbook.tests (unittest.loader._FailedTest.sims.logbook.tests) ... ERROR
+sims.tests.factories (unittest.loader._FailedTest.sims.tests.factories) ... ERROR
+test_frontend_create (unittest.loader._FailedTest.test_frontend_create) ... ERROR
+test_department_reference_data_write_restricted (sims._devtools.tests.test_rbac_api.RBACAPITestCase.test_department_reference_data_write_restricted) ... ok
+test_hospital_department_write_utrmc_admin_primary_with_admin_recovery (sims._devtools.tests.test_rbac_api.RBACAPITestCase.test_hospital_department_write_utrmc_admin_primary_with_admin_recovery) ... ok
+test_hospital_reference_data_write_restricted (sims._devtools.tests.test_rbac_api.RBACAPITestCase.test_hospital_reference_data_write_restricted) ... ok
+test_logbook_pending_queue_supervisor_scope_and_out_of_scope_verify_denied (sims._devtools.tests.test_rbac_api.RBACAPITestCase.test_logbook_pending_queue_supervisor_scope_and_out_of_scope_verify_denied) ... ok
+test_logbook_utrmc_read_only_access (sims._devtools.tests.test_rbac_api.RBACAPITestCase.test_logbook_utrmc_read_only_access) ... ok
+test_rotation_override_approval_requires_utrmc_admin (sims._devtools.tests.test_rbac_api.RBACAPITestCase.test_rotation_override_approval_requires_utrmc_admin) ... ok
+test_rotations_pg_only_sees_own_detail (sims._devtools.tests.test_rbac_api.RBACAPITestCase.test_rotations_pg_only_sees_own_detail) ... ok
+test_bulk_export_records_events (sims.analytics.tests.AnalyticsV1ApiTests.test_bulk_export_records_events) ... ok
+test_live_endpoint_limit (sims.analytics.tests.AnalyticsV1ApiTests.test_live_endpoint_limit) ... ok
+test_logbook_workflow_records_events (sims.analytics.tests.AnalyticsV1ApiTests.test_logbook_workflow_records_events) ... ok
+test_rbac_denied_event_recorded (sims.analytics.tests.AnalyticsV1ApiTests.test_rbac_denied_event_recorded) ... ok
+test_supervisor_access_is_flag_controlled (sims.analytics.tests.AnalyticsV1ApiTests.test_supervisor_access_is_flag_controlled) ... ok
+test_track_event_dedupes_by_request_id_and_event_key (sims.analytics.tests.AnalyticsV1ApiTests.test_track_event_dedupes_by_request_id_and_event_key) ... ok
+test_track_event_respects_global_flag (sims.analytics.tests.AnalyticsV1ApiTests.test_track_event_respects_global_flag) ... ok
+test_ui_ingest_normalizes_type_and_drops_pii (sims.analytics.tests.AnalyticsV1ApiTests.test_ui_ingest_normalizes_type_and_drops_pii) ... ok
+test_v1_all_tabs_empty_shape (sims.analytics.tests.AnalyticsV1ApiTests.test_v1_all_tabs_empty_shape) ... ok
+test_v1_overview_empty_shape (sims.analytics.tests.AnalyticsV1ApiTests.test_v1_overview_empty_shape) ... ok
+test_attendance_summary_admin (sims.attendance.tests.AttendanceAPITests.test_attendance_summary_admin)
+Admin can view any user's summary. ... ok
+test_attendance_summary_missing_dates (sims.attendance.tests.AttendanceAPITests.test_attendance_summary_missing_dates)
+Summary requires start_date and end_date. ... ok
+test_attendance_summary_own (sims.attendance.tests.AttendanceAPITests.test_attendance_summary_own)
+PG can view their own attendance summary. ... ok
+test_attendance_summary_supervisor (sims.attendance.tests.AttendanceAPITests.test_attendance_summary_supervisor)
+Supervisor can view assigned PG summary. ... ok
+test_bulk_upload_csv_success (sims.attendance.tests.AttendanceAPITests.test_bulk_upload_csv_success)
+Test successful CSV upload. ... ok
+test_bulk_upload_invalid_file_type (sims.attendance.tests.AttendanceAPITests.test_bulk_upload_invalid_file_type)
+Upload fails for non-CSV files. ... ok
+test_bulk_upload_pg_denied (sims.attendance.tests.AttendanceAPITests.test_bulk_upload_pg_denied)
+PG users cannot upload attendance. ... ok
+test_eligibility_threshold (sims.attendance.tests.AttendanceAPITests.test_eligibility_threshold)
+Test eligibility calculation with threshold. ... ok
+test_bulk_assignment_api (sims.bulk.tests.BulkOperationTests.test_bulk_assignment_api) ... ok
+test_bulk_department_import_maps_to_active_hospital (sims.bulk.tests.BulkOperationTests.test_bulk_department_import_maps_to_active_hospital) ... ok
+test_bulk_export_departments_csv (sims.bulk.tests.BulkOperationTests.test_bulk_export_departments_csv) ... ok
+test_bulk_import_dry_run (sims.bulk.tests.BulkOperationTests.test_bulk_import_dry_run) ... ok
+test_bulk_import_empty_file (sims.bulk.tests.BulkOperationTests.test_bulk_import_empty_file)
+Test bulk import with empty CSV file. ... ok
+test_bulk_operation_tracking (sims.bulk.tests.BulkOperationTests.test_bulk_operation_tracking)
+Test that bulk operations are properly tracked. ... ok
+test_bulk_resident_import_supports_spaced_headers (sims.bulk.tests.BulkOperationTests.test_bulk_resident_import_supports_spaced_headers) ... /home/sims/.local/lib/python3.11/site-packages/django/db/models/fields/__init__.py:1535: RuntimeWarning: DateTimeField User.date_joined received a naive datetime (2024-02-01 00:00:00) while time zone support is active.
+  warnings.warn(
+ok
+test_bulk_review_permission_denied (sims.bulk.tests.BulkOperationTests.test_bulk_review_permission_denied)
+Test that PG cannot perform bulk review. ... ok
+test_bulk_review_service (sims.bulk.tests.BulkOperationTests.test_bulk_review_service) ... ok
+test_bulk_trainee_import_accepts_csv_template (sims.bulk.tests.BulkOperationTests.test_bulk_trainee_import_accepts_csv_template) ... /home/sims/.local/lib/python3.11/site-packages/django/db/models/fields/__init__.py:1535: RuntimeWarning: DateTimeField User.date_joined received a naive datetime (2024-01-10 00:00:00) while time zone support is active.
+  warnings.warn(
+ok
+test_pg_can_create_list_submit_and_edit_own_case (sims.cases.test_api.CasesAPITests.test_pg_can_create_list_submit_and_edit_own_case) ... ok
+test_pg_cannot_view_other_pg_case (sims.cases.test_api.CasesAPITests.test_pg_cannot_view_other_pg_case) ... ok
+test_statistics_endpoint (sims.cases.test_api.CasesAPITests.test_statistics_endpoint) ... ok
+test_supervisor_pending_and_review_workflow (sims.cases.test_api.CasesAPITests.test_supervisor_pending_and_review_workflow) ... ok
+test_utrmc_user_read_only_pending_allowed_review_denied (sims.cases.test_api.CasesAPITests.test_utrmc_user_read_only_pending_allowed_review_denied) ... ok
+test_pending_entries_admin (sims.logbook.test_api.LogbookVerificationAPITests.test_pending_entries_admin)
+Admin can see all pending entries. ... ok
+test_pending_entries_pg_denied (sims.logbook.test_api.LogbookVerificationAPITests.test_pending_entries_pg_denied)
+PG users cannot access pending entries list. ... ok
+test_pending_entries_supervisor (sims.logbook.test_api.LogbookVerificationAPITests.test_pending_entries_supervisor)
+Supervisor can see pending entries from assigned PGs. ... ok
+test_pending_entries_utrmc_user_read_only_access (sims.logbook.test_api.LogbookVerificationAPITests.test_pending_entries_utrmc_user_read_only_access)
+UTRMC read-only user can see all pending entries. ... ok
+test_verify_already_verified (sims.logbook.test_api.LogbookVerificationAPITests.test_verify_already_verified)
+Cannot verify an already verified entry. ... ok
+test_verify_entry_admin (sims.logbook.test_api.LogbookVerificationAPITests.test_verify_entry_admin)
+Admin can verify any entry. ... ok
+test_verify_entry_pg_denied (sims.logbook.test_api.LogbookVerificationAPITests.test_verify_entry_pg_denied)
+PG users cannot verify entries. ... ok
+test_verify_entry_supervisor (sims.logbook.test_api.LogbookVerificationAPITests.test_verify_entry_supervisor)
+Supervisor can verify entry from assigned PG. ... ok
+test_verify_entry_utrmc_admin_denied (sims.logbook.test_api.LogbookVerificationAPITests.test_verify_entry_utrmc_admin_denied)
+UTRMC admin is oversight-only for logbook verification and cannot verify entries. ... ok
+test_verify_entry_utrmc_user_denied (sims.logbook.test_api.LogbookVerificationAPITests.test_verify_entry_utrmc_user_denied)
+UTRMC read-only user cannot verify entries. ... ok
+test_verify_entry_wrong_supervisor (sims.logbook.test_api.LogbookVerificationAPITests.test_verify_entry_wrong_supervisor)
+Supervisor cannot verify entries from non-assigned PGs. ... ok
+test_verify_nonexistent_entry (sims.logbook.test_api.LogbookVerificationAPITests.test_verify_nonexistent_entry)
+Returns 404 for nonexistent entry. ... ok
+test_cannot_submit_already_pending_entry (sims.logbook.test_api.PGLogbookEntryAPITests.test_cannot_submit_already_pending_entry)
+Submitting an entry that's already pending should fail. ... ok
+test_cannot_submit_approved_entry (sims.logbook.test_api.PGLogbookEntryAPITests.test_cannot_submit_approved_entry)
+Submitting an entry that's already approved should fail. ... ok
+test_create_entry_with_missing_required_fields (sims.logbook.test_api.PGLogbookEntryAPITests.test_create_entry_with_missing_required_fields)
+Creating an entry with missing required fields should fail. ... ok
+test_non_pg_user_cannot_access_pg_endpoints (sims.logbook.test_api.PGLogbookEntryAPITests.test_non_pg_user_cannot_access_pg_endpoints)
+Non-PG users (supervisor/admin) cannot access PG-only endpoints. ... ok
+test_pg_cannot_access_others_entries (sims.logbook.test_api.PGLogbookEntryAPITests.test_pg_cannot_access_others_entries)
+PG cannot access another PG's entries. ... ok
+test_pg_cannot_edit_after_submit (sims.logbook.test_api.PGLogbookEntryAPITests.test_pg_cannot_edit_after_submit)
+PG cannot edit entries after submission. ... ok
+test_pg_create_list_update_entry (sims.logbook.test_api.PGLogbookEntryAPITests.test_pg_create_list_update_entry)
+PG can create, list, and update their own draft entry. ... ok
+test_pg_submit_entry_shows_in_pending_queue (sims.logbook.test_api.PGLogbookEntryAPITests.test_pg_submit_entry_shows_in_pending_queue)
+Submitting a draft entry moves it to pending and appears in supervisor queue. ... ok
+test_submit_return_feedback_visible_and_resubmit_approve_flow (sims.logbook.test_api.PGLogbookEntryAPITests.test_submit_return_feedback_visible_and_resubmit_approve_flow)
+Smoke test for PG submit -> supervisor return -> PG sees feedback -> resubmit -> approve. ... ok
+test_mark_read_api (sims.notifications.tests.NotificationTests.test_mark_read_api) ... ok
+test_preferences_api (sims.notifications.tests.NotificationTests.test_preferences_api) ... ok
+test_rotation_deadline_trigger (sims.notifications.tests.NotificationTests.test_rotation_deadline_trigger) ... ok
+test_status_change_triggers_notification (sims.notifications.tests.NotificationTests.test_status_change_triggers_notification) ... ok
+test_generate_api_returns_base64 (sims.reports.tests.ReportingTests.test_generate_api_returns_base64) ... ok
+test_invalid_format_raises_error (sims.reports.tests.ReportingTests.test_invalid_format_raises_error)
+Test that invalid format raises error. ... ok
+test_list_templates_api (sims.reports.tests.ReportingTests.test_list_templates_api)
+Test listing available report templates. ... ok
+test_pdf_generation_with_empty_data (sims.reports.tests.ReportingTests.test_pdf_generation_with_empty_data)
+Test PDF generation with no entries. ... ok
+test_report_base64_encoding (sims.reports.tests.ReportingTests.test_report_base64_encoding)
+Test base64 encoding of report. ... ok
+test_report_catalog_and_run_endpoints (sims.reports.tests.ReportingTests.test_report_catalog_and_run_endpoints) ... ok
+test_report_export_endpoint_csv (sims.reports.tests.ReportingTests.test_report_export_endpoint_csv) ... ok
+test_report_permission_denied (sims.reports.tests.ReportingTests.test_report_permission_denied)
+Test that PG cannot generate reports for others. ... ok
+test_report_with_pg_filter (sims.reports.tests.ReportingTests.test_report_with_pg_filter)
+Test report filtered by specific PG. ... ok
+test_scheduled_report_email_sent (sims.reports.tests.ReportingTests.test_scheduled_report_email_sent)
+Test that scheduled report sends email. ... Processed 1 scheduled reports
+ok
+test_scheduled_report_failure_handling (sims.reports.tests.ReportingTests.test_scheduled_report_failure_handling)
+Test scheduled report handles failures. ... Processed 0 scheduled reports
+ok
+test_scheduled_report_runner (sims.reports.tests.ReportingTests.test_scheduled_report_runner) ... Processed 1 scheduled reports
+ok
+test_service_generates_pdf_and_excel (sims.reports.tests.ReportingTests.test_service_generates_pdf_and_excel) ... ok
+test_xlsx_column_widths (sims.reports.tests.ReportingTests.test_xlsx_column_widths)
+Test that Excel columns have appropriate widths. ... ok
+test_xlsx_generation_with_filters (sims.reports.tests.ReportingTests.test_xlsx_generation_with_filters)
+Test XLSX generation with date filters. ... ok
+test_migration_gate_deficiency_rule_no_utrmc_approval_required (sims.rotations.test_canonical_migration_gate.CanonicalRotationMigrationGateTests.test_migration_gate_deficiency_rule_no_utrmc_approval_required) ... ok
+test_migration_gate_inter_hospital_same_department_requires_override_and_utrmc_approval (sims.rotations.test_canonical_migration_gate.CanonicalRotationMigrationGateTests.test_migration_gate_inter_hospital_same_department_requires_override_and_utrmc_approval) ... ok
+test_rotation_summary_api_returns_contract_shape (sims.rotations.test_canonical_migration_gate.CanonicalRotationMigrationGateTests.test_rotation_summary_api_returns_contract_shape) ... ok
+test_override_policy_validator_requires_utrmc_admin_when_available_at_home (sims.rotations.tests.CanonicalRotationModelTests.test_override_policy_validator_requires_utrmc_admin_when_available_at_home) ... ok
+test_rotation_allows_hosted_department (sims.rotations.tests.CanonicalRotationModelTests.test_rotation_allows_hosted_department) ... ok
+test_rotation_requires_hospital_department_matrix_match (sims.rotations.tests.CanonicalRotationModelTests.test_rotation_requires_hospital_department_matrix_match) ... ok
+test_global_search_empty_query (sims.search.tests.SearchAPITests.test_global_search_empty_query)
+Search with empty query returns empty results. ... ok
+test_global_search_requires_auth (sims.search.tests.SearchAPITests.test_global_search_requires_auth)
+Search endpoint requires authentication. ... ok
+test_global_search_with_filters (sims.search.tests.SearchAPITests.test_global_search_with_filters)
+Search with filters works. ... ok
+test_global_search_with_query (sims.search.tests.SearchAPITests.test_global_search_with_query)
+Search endpoint returns results. ... ok
+test_search_history_endpoint (sims.search.tests.SearchAPITests.test_search_history_endpoint)
+Search history endpoint works. ... ok
+test_search_logs_query (sims.search.tests.SearchAPITests.test_search_logs_query)
+Search creates query log. ... ok
+test_search_permission_enforcement (sims.search.tests.SearchAPITests.test_search_permission_enforcement)
+Search enforces RBAC permissions. ... ok
+test_search_suggestions_endpoint (sims.search.tests.SearchAPITests.test_search_suggestions_endpoint)
+Search suggestions endpoint works. ... ok
+test_get_recent_history (sims.search.tests.SearchServiceTests.test_get_recent_history)
+Recent search history is retrieved. ... ok
+test_get_suggestions (sims.search.tests.SearchServiceTests.test_get_suggestions)
+Suggestions are retrieved. ... ok
+test_get_suggestions_empty_prefix (sims.search.tests.SearchServiceTests.test_get_suggestions_empty_prefix)
+Suggestions work with empty prefix. ... ok
+test_log_query (sims.search.tests.SearchServiceTests.test_log_query)
+Search logs are created. ... ok
+test_search_cases_pg_permission (sims.search.tests.SearchServiceTests.test_search_cases_pg_permission)
+PG can see only their own cases. ... ok
+test_search_certificates_supervisor_permission (sims.search.tests.SearchServiceTests.test_search_certificates_supervisor_permission)
+Supervisor can see supervised PG certificates. ... ok
+test_search_combined_results (sims.search.tests.SearchServiceTests.test_search_combined_results)
+Search combines results from all modules. ... ok
+test_search_empty_query (sims.search.tests.SearchServiceTests.test_search_empty_query)
+Empty query returns empty results. ... ok
+test_search_logbook_with_filters (sims.search.tests.SearchServiceTests.test_search_logbook_with_filters)
+Search logbook with status filter. ... ok
+test_search_rotations_admin_sees_all (sims.search.tests.SearchServiceTests.test_search_rotations_admin_sees_all)
+Admin can see all rotations. ... ok
+test_search_rotations_pg_sees_only_own (sims.search.tests.SearchServiceTests.test_search_rotations_pg_sees_only_own)
+PG sees only their own rotations. ... ok
+test_search_rotations_supervisor_sees_supervised (sims.search.tests.SearchServiceTests.test_search_rotations_supervisor_sees_supervised)
+Supervisor sees rotations they supervise. ... ok
+test_search_users_admin_sees_all (sims.search.tests.SearchServiceTests.test_search_users_admin_sees_all)
+Admin can see all users. ... FAIL
+test_search_users_pg_sees_only_self (sims.search.tests.SearchServiceTests.test_search_users_pg_sees_only_self)
+PG sees only themselves. ... FAIL
+test_search_users_supervisor_sees_supervised (sims.search.tests.SearchServiceTests.test_search_users_supervisor_sees_supervised)
+Supervisor sees only their PGs. ... FAIL
+test_public_registration_creates_pg_when_enabled (sims.users.test_registration_api.PublicRegistrationAPITests.test_public_registration_creates_pg_when_enabled) ... ok
+test_public_registration_disabled_by_default (sims.users.test_registration_api.PublicRegistrationAPITests.test_public_registration_disabled_by_default) ... ok
+test_public_registration_rejects_privileged_roles (sims.users.test_registration_api.PublicRegistrationAPITests.test_public_registration_rejects_privileged_roles) ... ok
+test_assigned_pgs_admin_forbidden (sims.users.tests.SupervisorAssignedPGsAPITestCase.test_assigned_pgs_admin_forbidden)
+Admin should not access assigned PGs endpoint. ... ok
+test_assigned_pgs_excludes_inactive_archived_pgs (sims.users.tests.SupervisorAssignedPGsAPITestCase.test_assigned_pgs_excludes_inactive_archived_pgs)
+Inactive or archived PGs should be excluded from results. ... ok
+test_assigned_pgs_pg_forbidden (sims.users.tests.SupervisorAssignedPGsAPITestCase.test_assigned_pgs_pg_forbidden)
+PG should not access assigned PGs endpoint. ... ok
+test_assigned_pgs_requires_authentication (sims.users.tests.SupervisorAssignedPGsAPITestCase.test_assigned_pgs_requires_authentication)
+Unauthenticated users should be rejected. ... ok
+test_assigned_pgs_supervisor_no_pgs (sims.users.tests.SupervisorAssignedPGsAPITestCase.test_assigned_pgs_supervisor_no_pgs)
+Supervisor with no assigned PGs should receive empty list. ... ok
+test_assigned_pgs_supervisor_success (sims.users.tests.SupervisorAssignedPGsAPITestCase.test_assigned_pgs_supervisor_success)
+Supervisor should see only their assigned PGs with correct fields. ... ok
+test_supervisors_by_specialty_api (sims.users.tests.UserAPITestCase.test_supervisors_by_specialty_api)
+Test supervisors by specialty API ... ok
+test_user_search_api_authenticated (sims.users.tests.UserAPITestCase.test_user_search_api_authenticated)
+Test user search API requires authentication ... ok
+test_profile_edit_form (sims.users.tests.UserFormsTestCase.test_profile_edit_form)
+Test profile edit form ... ok
+test_user_creation_form_pg_missing_supervisor (sims.users.tests.UserFormsTestCase.test_user_creation_form_pg_missing_supervisor)
+Test user creation form validation for PG without supervisor ... ok
+test_user_creation_form_valid (sims.users.tests.UserFormsTestCase.test_user_creation_form_valid)
+Test valid user creation form ... ok
+test_admin_cannot_have_supervisor (sims.users.tests.UserModelTestCase.test_admin_cannot_have_supervisor)
+Test admin cannot have a supervisor ... ok
+test_dashboard_urls (sims.users.tests.UserModelTestCase.test_dashboard_urls)
+Test dashboard URL generation ... ok
+test_pg_validation_missing_specialty (sims.users.tests.UserModelTestCase.test_pg_validation_missing_specialty)
+Test PG validation fails without specialty ... ok
+test_pg_validation_missing_supervisor (sims.users.tests.UserModelTestCase.test_pg_validation_missing_supervisor)
+Test PG validation fails without supervisor ... ok
+test_pg_validation_missing_year (sims.users.tests.UserModelTestCase.test_pg_validation_missing_year)
+Test PG validation fails without year ... ok
+test_self_supervision_prevention (sims.users.tests.UserModelTestCase.test_self_supervision_prevention)
+Test users cannot supervise themselves ... ok
+test_supervisor_relationship_methods (sims.users.tests.UserModelTestCase.test_supervisor_relationship_methods)
+Test supervisor-PG relationship methods ... ok
+test_supervisor_validation_missing_specialty (sims.users.tests.UserModelTestCase.test_supervisor_validation_missing_specialty)
+Test supervisor validation fails without specialty ... ok
+test_user_archiving (sims.users.tests.UserModelTestCase.test_user_archiving)
+Test user archiving functionality ... ok
+test_user_creation_admin (sims.users.tests.UserModelTestCase.test_user_creation_admin)
+Test admin user creation ... ok
+test_user_creation_pg (sims.users.tests.UserModelTestCase.test_user_creation_pg)
+Test PG user creation ... ok
+test_user_creation_supervisor (sims.users.tests.UserModelTestCase.test_user_creation_supervisor)
+Test supervisor user creation ... ok
+test_user_string_representation (sims.users.tests.UserModelTestCase.test_user_string_representation)
+Test __str__ method ... ok
+test_admin_can_see_all_users (sims.users.tests.UserPermissionsTestCase.test_admin_can_see_all_users)
+Test admins can access all users ... ok
+test_supervisor_can_only_see_assigned_pgs (sims.users.tests.UserPermissionsTestCase.test_supervisor_can_only_see_assigned_pgs)
+Test supervisors can only access their assigned PGs ... ok
+test_get_documents_pending_count (sims.users.tests.UserStatisticsTestCase.test_get_documents_pending_count)
+Test documents pending count for supervisors ... ok
+test_get_documents_submitted_count (sims.users.tests.UserStatisticsTestCase.test_get_documents_submitted_count)
+Test documents submitted count for PGs ... ok
+test_admin_dashboard_access (sims.users.tests.UserViewsTestCase.test_admin_dashboard_access)
+Test admin dashboard access control ... ok
+test_dashboard_redirect (sims.users.tests.UserViewsTestCase.test_dashboard_redirect)
+Test dashboard redirects to correct role-based dashboard ... ok
+test_login_view (sims.users.tests.UserViewsTestCase.test_login_view)
+Test login functionality ... ok
+test_pg_dashboard_access (sims.users.tests.UserViewsTestCase.test_pg_dashboard_access)
+Test PG dashboard access control ... ok
+test_profile_view (sims.users.tests.UserViewsTestCase.test_profile_view)
+Test profile view ... ok
+test_supervisor_dashboard_access (sims.users.tests.UserViewsTestCase.test_supervisor_dashboard_access)
+Test supervisor dashboard access control ... ok
+test_user_creation_admin_only (sims.users.tests.UserViewsTestCase.test_user_creation_admin_only)
+Test user creation is only accessible by admins ... ok
+test_user_list_admin_only (sims.users.tests.UserViewsTestCase.test_user_list_admin_only)
+Test user list is only accessible by admins ... ok
+test_middleware_adds_timing_header (sims_project.tests.PerformanceTimingMiddlewareTests.test_middleware_adds_timing_header)
+Test that middleware adds X-Response-Time header. ... ok
+test_middleware_handles_anonymous_user (sims_project.tests.PerformanceTimingMiddlewareTests.test_middleware_handles_anonymous_user)
+Test middleware with anonymous user. ... ok
+test_middleware_tracks_post_requests (sims_project.tests.PerformanceTimingMiddlewareTests.test_middleware_tracks_post_requests)
+Test middleware with POST request. ... ok
+test_duplicate_department_model_not_reintroduced (sims._devtools.tests.test_drift_guards.DriftGuardTests.test_duplicate_department_model_not_reintroduced) ... ok
+test_forbidden_notification_create_legacy_keys_not_used (sims._devtools.tests.test_drift_guards.DriftGuardTests.test_forbidden_notification_create_legacy_keys_not_used) ... ok
+
+======================================================================
+ERROR: sims.cases.tests (unittest.loader._FailedTest.sims.cases.tests)
+----------------------------------------------------------------------
+ImportError: Failed to import test module: sims.cases.tests
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.11/unittest/loader.py", line 419, in _find_test_path
+    module = self._get_module_from_name(name)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/unittest/loader.py", line 362, in _get_module_from_name
+    __import__(name)
+  File "/app/sims/cases/tests.py", line 8, in <module>
+    from sims.tests.factories.case_factories import ClinicalCaseFactory
+  File "/app/sims/tests/factories/__init__.py", line 3, in <module>
+    from .user_factories import AdminFactory, SupervisorFactory, PGFactory, UserFactory
+  File "/app/sims/tests/factories/user_factories.py", line 6, in <module>
+    import factory
+ModuleNotFoundError: No module named 'factory'
+
+
+======================================================================
+ERROR: sims.certificates.tests (unittest.loader._FailedTest.sims.certificates.tests)
+----------------------------------------------------------------------
+ImportError: Failed to import test module: sims.certificates.tests
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.11/unittest/loader.py", line 419, in _find_test_path
+    module = self._get_module_from_name(name)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/unittest/loader.py", line 362, in _get_module_from_name
+    __import__(name)
+  File "/app/sims/certificates/tests.py", line 9, in <module>
+    from sims.tests.factories.user_factories import AdminFactory, PGFactory, SupervisorFactory
+  File "/app/sims/tests/factories/__init__.py", line 3, in <module>
+    from .user_factories import AdminFactory, SupervisorFactory, PGFactory, UserFactory
+  File "/app/sims/tests/factories/user_factories.py", line 6, in <module>
+    import factory
+ModuleNotFoundError: No module named 'factory'
+
+
+======================================================================
+ERROR: sims.logbook.tests (unittest.loader._FailedTest.sims.logbook.tests)
+----------------------------------------------------------------------
+ImportError: Failed to import test module: sims.logbook.tests
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.11/unittest/loader.py", line 419, in _find_test_path
+    module = self._get_module_from_name(name)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/unittest/loader.py", line 362, in _get_module_from_name
+    __import__(name)
+  File "/app/sims/logbook/tests.py", line 10, in <module>
+    from sims.tests.factories.user_factories import AdminFactory, PGFactory, SupervisorFactory
+  File "/app/sims/tests/factories/__init__.py", line 3, in <module>
+    from .user_factories import AdminFactory, SupervisorFactory, PGFactory, UserFactory
+  File "/app/sims/tests/factories/user_factories.py", line 6, in <module>
+    import factory
+ModuleNotFoundError: No module named 'factory'
+
+
+======================================================================
+ERROR: sims.tests.factories (unittest.loader._FailedTest.sims.tests.factories)
+----------------------------------------------------------------------
+ImportError: Failed to import test module: sims.tests.factories
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.11/unittest/loader.py", line 452, in _find_test_path
+    package = self._get_module_from_name(name)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/unittest/loader.py", line 362, in _get_module_from_name
+    __import__(name)
+  File "/app/sims/tests/factories/__init__.py", line 3, in <module>
+    from .user_factories import AdminFactory, SupervisorFactory, PGFactory, UserFactory
+  File "/app/sims/tests/factories/user_factories.py", line 6, in <module>
+    import factory
+ModuleNotFoundError: No module named 'factory'
+
+
+======================================================================
+ERROR: test_frontend_create (unittest.loader._FailedTest.test_frontend_create)
+----------------------------------------------------------------------
+ImportError: Failed to import test module: test_frontend_create
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.11/unittest/loader.py", line 419, in _find_test_path
+    module = self._get_module_from_name(name)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/unittest/loader.py", line 362, in _get_module_from_name
+    __import__(name)
+  File "/app/test_frontend_create.py", line 13, in <module>
+    admin_supervisor = User.objects.create(username="sup", role="supervisor", specialty="medicine", email="sup@sup.com", is_active=True)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/sims/.local/lib/python3.11/site-packages/django/db/models/manager.py", line 87, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/sims/.local/lib/python3.11/site-packages/django/db/models/query.py", line 660, in create
+    obj.save(force_insert=True, using=self.db)
+  File "/app/sims/users/models.py", line 212, in save
+    self.full_clean()
+  File "/home/sims/.local/lib/python3.11/site-packages/django/db/models/base.py", line 1502, in full_clean
+    raise ValidationError(errors)
+django.core.exceptions.ValidationError: {'password': ['This field cannot be blank.']}
+
+
+======================================================================
+FAIL: test_search_users_admin_sees_all (sims.search.tests.SearchServiceTests.test_search_users_admin_sees_all)
+Admin can see all users.
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/sims/search/tests.py", line 137, in test_search_users_admin_sees_all
+    self.assertGreaterEqual(len(results), 2)  # At least pg1 and pg2
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 0 not greater than or equal to 2
+
+======================================================================
+FAIL: test_search_users_pg_sees_only_self (sims.search.tests.SearchServiceTests.test_search_users_pg_sees_only_self)
+PG sees only themselves.
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/sims/search/tests.py", line 152, in test_search_users_pg_sees_only_self
+    self.assertEqual(len(results), 1)
+AssertionError: 0 != 1
+
+======================================================================
+FAIL: test_search_users_supervisor_sees_supervised (sims.search.tests.SearchServiceTests.test_search_users_supervisor_sees_supervised)
+Supervisor sees only their PGs.
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/sims/search/tests.py", line 143, in test_search_users_supervisor_sees_supervised
+    self.assertGreaterEqual(len(results), 2)
+AssertionError: 0 not greater than or equal to 2
+
+----------------------------------------------------------------------
+Ran 158 tests in 11.703s
+
+FAILED (failures=3, errors=5)
+Destroying test database for alias 'default' ('test_sims_db')...

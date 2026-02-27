@@ -50,7 +50,8 @@ This contract defines authoritative backend authorization behavior. Frontend rou
 
 ### Analytics (API + Admin Dashboard)
 - Default: `admin` only
-- `supervisor`: allowed only if feature flag `ANALYTICS_ALLOW_SUPERVISOR_ACCESS=true`
+- `supervisor`: allowed only if feature flag `ANALYTICS_SUPERVISOR_ACCESS_ENABLED=true`
+- Legacy alias accepted: `ANALYTICS_ALLOW_SUPERVISOR_ACCESS=true`
 - `pg`, `utrmc_user`, `utrmc_admin`: forbidden
 - `POST /api/analytics/events/` follows same role rule and is additionally gated by
   `ANALYTICS_UI_INGEST_ENABLED`

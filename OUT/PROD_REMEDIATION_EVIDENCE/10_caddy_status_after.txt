@@ -1,0 +1,25 @@
+● caddy.service - Caddy
+     Loaded: loaded (/usr/lib/systemd/system/caddy.service; enabled; preset: enabled)
+    Drop-In: /etc/systemd/system/caddy.service.d
+             └─override.conf
+     Active: active (running) since Sun 2026-02-22 19:55:54 PKT; 4 days ago
+       Docs: https://caddyserver.com/docs/
+    Process: 1962797 ExecReload=/usr/bin/caddy reload --config /etc/caddy/Caddyfile --force (code=exited, status=0/SUCCESS)
+   Main PID: 689 (caddy)
+     Status: "loading new config: setting up custom log 'log0': opening log writer using &logging.FileWriter{Filename:"/var/log/caddy/pgsims_access.log", Mode:0x0, Roll:(*bool)(nil), RollSizeMB:0, RollInterval:0, RollAtMinutes:[]int(nil), RollAt:[]string(nil), RollCompress:(*bool)(nil), RollLocalTime:false, RollKeep:0, RollKeepDays:0, BackupTimeFormat:""}: open /var/log/caddy/pgsims_access.log: permission denied"
+      Tasks: 14 (limit: 26337)
+     Memory: 35.0M (peak: 76.9M)
+        CPU: 2min 42.747s
+     CGroup: /system.slice/caddy.service
+             └─689 /usr/bin/caddy run --environ --config /etc/caddy/Caddyfile
+
+Feb 27 05:23:50 vps.us-central1-f.c.munaimfinance.internal caddy[689]: {"level":"info","ts":1772151830.1013746,"logger":"http.log","msg":"server running","name":"srv0","protocols":["h1","h2","h3"]}
+Feb 27 05:23:50 vps.us-central1-f.c.munaimfinance.internal caddy[689]: {"level":"warn","ts":1772151830.1015372,"logger":"http","msg":"HTTP/2 skipped because it requires TLS","network":"tcp","addr":":80"}
+Feb 27 05:23:50 vps.us-central1-f.c.munaimfinance.internal caddy[689]: {"level":"warn","ts":1772151830.1016395,"logger":"http","msg":"HTTP/3 skipped because it requires TLS","network":"tcp","addr":":80"}
+Feb 27 05:23:50 vps.us-central1-f.c.munaimfinance.internal caddy[689]: {"level":"info","ts":1772151830.101714,"logger":"http.log","msg":"server running","name":"remaining_auto_https_redirects","protocols":["h1","h2","h3"]}
+Feb 27 05:23:50 vps.us-central1-f.c.munaimfinance.internal caddy[689]: {"level":"info","ts":1772151830.1017787,"logger":"http","msg":"enabling automatic TLS certificate management","domains":["pgsims.alshifalab.pk"]}
+Feb 27 05:23:50 vps.us-central1-f.c.munaimfinance.internal caddy[689]: {"level":"info","ts":1772151830.1018987,"logger":"http","msg":"servers shutting down with eternal grace period"}
+Feb 27 05:23:50 vps.us-central1-f.c.munaimfinance.internal caddy[689]: {"level":"info","ts":1772151830.1021845,"msg":"autosaved config (load with --resume flag)","file":"/var/lib/caddy/.config/caddy/autosave.json"}
+Feb 27 05:23:50 vps.us-central1-f.c.munaimfinance.internal caddy[689]: {"level":"info","ts":1772151830.1023767,"logger":"admin.api","msg":"load complete"}
+Feb 27 05:23:50 vps.us-central1-f.c.munaimfinance.internal caddy[689]: {"level":"info","ts":1772151830.1044953,"logger":"admin","msg":"stopped previous server","address":"localhost:2019"}
+Feb 27 05:23:50 vps.us-central1-f.c.munaimfinance.internal systemd[1]: Reloaded caddy.service - Caddy.

@@ -41,6 +41,7 @@ export interface AnalyticsLivePayload {
     start_date: string;
     end_date: string;
   };
+  cursor?: string | null;
   events: Array<Record<string, unknown>>;
 }
 
@@ -56,6 +57,13 @@ export interface AnalyticsQueryParams {
   department_id?: number | '';
   hospital_id?: number | '';
   role?: string;
+}
+
+export interface AnalyticsLiveQueryParams extends AnalyticsQueryParams {
+  limit?: number;
+  cursor?: string;
+  event_type_prefix?: string;
+  entity_type?: string;
 }
 
 export interface AnalyticsUIEventPayload {
@@ -101,6 +109,13 @@ export const analyticsApi = {
 
   getLive: async (params?: AnalyticsQueryParams & { limit?: number }) => {
     const response = await apiClient.get<AnalyticsLivePayload>('/api/analytics/v1/live/', {
+      params: cleanParams(params),
+    });
+    return response.data;
+  },
+
+  getLiveEvents: async (params?: AnalyticsLiveQueryParams) => {
+    const response = await apiClient.get<AnalyticsLivePayload>('/api/analytics/events/live', {
       params: cleanParams(params),
     });
     return response.data;

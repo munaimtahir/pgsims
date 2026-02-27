@@ -52,6 +52,7 @@ class AnalyticsEvent(models.Model):
             models.Index(fields=["department", "occurred_at"]),
             models.Index(fields=["hospital", "occurred_at"]),
             models.Index(fields=["request_id", "event_type"]),
+            models.Index(fields=["request_id", "event_type", "entity_id"]),
         ]
         constraints = [
             models.UniqueConstraint(
@@ -103,3 +104,26 @@ class AnalyticsDailyRollup(models.Model):
 
     def __str__(self) -> str:
         return f"{self.day} {self.event_type}: {self.count}"
+
+
+class AnalyticsValidationRejection(models.Model):
+    """Stores analytics validation failures for governance reporting."""
+
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+    source = models.CharField(max_length=32, default="track_event", db_index=True)
+    event_type = models.CharField(max_length=120, blank=True)
+    reason = models.CharField(max_length=200)
+    actor_role = models.CharField(max_length=32, blank=True)
+    department_id = models.IntegerField(null=True, blank=True)
+    hospital_id = models.IntegerField(null=True, blank=True)
+    metadata_keys = models.JSONField(default=list, blank=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        indexes = [
+            models.Index(fields=["event_type", "created_at"]),
+            models.Index(fields=["reason", "created_at"]),
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.source} {self.event_type or 'unknown'} ({self.reason})"

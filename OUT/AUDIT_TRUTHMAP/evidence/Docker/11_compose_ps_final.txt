@@ -1,0 +1,15 @@
+time="2026-02-27T05:36:31+05:00" level=warning msg="The \"SECRET_KEY\" variable is not set. Defaulting to a blank string."
+time="2026-02-27T05:36:31+05:00" level=warning msg="The \"DB_PASSWORD\" variable is not set. Defaulting to a blank string."
+time="2026-02-27T05:36:31+05:00" level=warning msg="The \"SECRET_KEY\" variable is not set. Defaulting to a blank string."
+time="2026-02-27T05:36:31+05:00" level=warning msg="The \"DB_PASSWORD\" variable is not set. Defaulting to a blank string."
+time="2026-02-27T05:36:31+05:00" level=warning msg="The \"SECRET_KEY\" variable is not set. Defaulting to a blank string."
+time="2026-02-27T05:36:31+05:00" level=warning msg="The \"DB_PASSWORD\" variable is not set. Defaulting to a blank string."
+time="2026-02-27T05:36:31+05:00" level=warning msg="The \"DB_PASSWORD\" variable is not set. Defaulting to a blank string."
+time="2026-02-27T05:36:31+05:00" level=warning msg="/srv/apps/pgsims/docker/docker-compose.prod.yml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+NAME                   IMAGE                COMMAND                  SERVICE    CREATED          STATUS                    PORTS
+pgsims_backend_prod    docker-web           "sh -c 'python manag…"   web        20 minutes ago   Up 20 minutes (healthy)   127.0.0.1:8014->8014/tcp
+pgsims_beat            docker-beat          "celery -A sims_proj…"   beat       20 minutes ago   Up 20 minutes             8014/tcp
+pgsims_db_prod         postgres:15-alpine   "docker-entrypoint.s…"   db         22 minutes ago   Up 22 minutes (healthy)   5432/tcp
+pgsims_frontend_prod   docker-frontend      "docker-entrypoint.s…"   frontend   22 minutes ago   Up 22 minutes (healthy)   127.0.0.1:8082->3000/tcp
+pgsims_redis_prod      redis:7-alpine       "docker-entrypoint.s…"   redis      22 minutes ago   Up 22 minutes (healthy)   6379/tcp
+pgsims_worker          docker-worker        "celery -A sims_proj…"   worker     20 minutes ago   Up 20 minutes             8014/tcp

@@ -1,0 +1,17 @@
+[
+  {
+    "endpoint": "/api/analytics/dashboard/overview/",
+    "status": 401,
+    "len": 58
+  },
+  {
+    "endpoint": "/api/analytics/dashboard/trends/",
+    "status": 401,
+    "len": 58
+  },
+  {
+    "endpoint": "/api/analytics/v1/live/",
+    "status": 401,
+    "len": 58
+  }
+]

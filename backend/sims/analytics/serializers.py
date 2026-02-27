@@ -116,6 +116,7 @@ class AnalyticsTabPayloadSerializer(serializers.Serializer):
 
 class AnalyticsLivePayloadSerializer(serializers.Serializer):
     date_range = serializers.DictField()
+    cursor = serializers.CharField(allow_null=True, required=False)
     events = serializers.ListField(child=serializers.DictField())
 
 

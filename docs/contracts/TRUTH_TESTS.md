@@ -15,3 +15,11 @@
 Fail if any forbidden patterns appear:
 - legacy Notification create keys (`user=`, `message=`, `type=`, `related_object_id=`)
 - reintroduction of duplicate Department models
+
+## Analytics Gate
+- `sims.analytics.tests.AnalyticsV1ApiTests`
+- Must include coverage for:
+  - event catalog validation + PII rejection
+  - rollup command idempotency
+  - live cursor endpoint behavior
+  - quality endpoint response shape

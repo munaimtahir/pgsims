@@ -1,0 +1,18 @@
+CONTAINER ID   IMAGE                COMMAND                  CREATED          STATUS                         PORTS                                                NAMES
+b38d9c92534d   docker-frontend      "docker-entrypoint.s…"   37 seconds ago   Up 26 seconds (healthy)        127.0.0.1:8082->3000/tcp                             pgsims_frontend_prod
+aaa3ce037f10   docker-web           "sh -c 'python manag…"   37 seconds ago   Restarting (1) 3 seconds ago                                                        pgsims_backend_prod
+d4e841317c3b   docker-beat          "celery -A sims_proj…"   37 seconds ago   Restarting (1) 3 seconds ago                                                        pgsims_beat
+94b229393e7d   docker-worker        "celery -A sims_proj…"   37 seconds ago   Up 37 seconds                  8014/tcp                                             pgsims_worker
+cc300acb5e3d   postgres:15-alpine   "docker-entrypoint.s…"   38 seconds ago   Up 37 seconds (healthy)        5432/tcp                                             pgsims_db_prod
+cc16a69eed3e   redis:7-alpine       "docker-entrypoint.s…"   38 seconds ago   Up 37 seconds (healthy)        6379/tcp                                             pgsims_redis_prod
+e99b9f20d713   vexel-admin          "docker-entrypoint.s…"   2 hours ago      Up 2 hours                     127.0.0.1:9023->3001/tcp                             vexel-admin-1
+24706264cf98   vexel-api            "./docker-entrypoint…"   2 hours ago      Up 2 hours (healthy)           127.0.0.1:9021->3000/tcp                             vexel-api-1
+fe26048a9c73   vexel-pdf            "dotnet VexelPdf.dll"    2 hours ago      Up 2 hours (healthy)           127.0.0.1:9022->8080/tcp                             vexel-pdf-1
+b34fb0bd1894   vexel-operator       "docker-entrypoint.s…"   2 hours ago      Up 2 hours                     127.0.0.1:9024->3000/tcp                             vexel-operator-1
+8b96c65bbe4d   vexel-worker         "docker-entrypoint.s…"   2 hours ago      Up 2 hours                                                                          vexel-worker-1
+09dd7d62ddf2   postgres:16-alpine   "docker-entrypoint.s…"   2 hours ago      Up 2 hours (healthy)           127.0.0.1:5433->5432/tcp                             vexel-postgres-1
+11c9b996b09e   minio/minio:latest   "/usr/bin/docker-ent…"   2 hours ago      Up 2 hours (healthy)           127.0.0.1:9027->9000/tcp, 127.0.0.1:9025->9001/tcp   vexel-minio-1
+4668b235963a   redis:7-alpine       "docker-entrypoint.s…"   2 hours ago      Up 2 hours (healthy)           127.0.0.1:6380->6379/tcp                             vexel-redis-1
+c26dceea9704   radreport-backend    "/app/scripts/entryp…"   3 days ago       Up 3 days (healthy)            127.0.0.1:8015->8000/tcp                             rims_backend_prod
+68ca8c1a0a1b   radreport-frontend   "/docker-entrypoint.…"   3 days ago       Up 3 days (healthy)            127.0.0.1:8081->80/tcp                               rims_frontend_prod
+0a8b50bd24a4   postgres:16-alpine   "docker-entrypoint.s…"   3 days ago       Up 3 days (healthy)            5432/tcp                                             rims_db_prod

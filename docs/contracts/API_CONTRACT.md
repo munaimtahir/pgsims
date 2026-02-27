@@ -53,6 +53,8 @@ Read endpoints:
     `rotations`, `research`, `data-ops`, `system`, `security`, `live`
 - `GET /v1/tabs/{tab}/export/` (CSV)
 - `GET /v1/live/`
+- `GET /events/live`
+- `GET /v1/quality/`
 
 Ingest:
 - `POST /events/` for UI events (flag-gated)
@@ -66,6 +68,9 @@ Query params (where applicable):
 - `hospital_id` (optional)
 - `role` (optional)
 - `limit` (live endpoint, max 200)
+- `cursor` (`occurred_at|id`, live endpoint)
+- `event_type_prefix` (live endpoint)
+- `entity_type` (live endpoint)
 
 Response shape for tab endpoints:
 - `title`
@@ -73,3 +78,8 @@ Response shape for tab endpoints:
 - `cards` [ { `key`, `title`, `value` } ]
 - `table` { `columns`, `rows` }
 - `series` [object]
+
+Response shape for `GET /events/live`:
+- `date_range` { `start_date`, `end_date` }
+- `cursor` (nullable)
+- `events` [ { `id`, `occurred_at`, `event_type`, `actor_role`, `department_id`, `hospital_id`, `entity_type`, `entity_id`, `drilldown_url`, `metadata` } ]

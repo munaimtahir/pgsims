@@ -12,6 +12,7 @@ gunicorn>=20.1.0
 requests>=2.25.0
 pytest>=6.0
 pytest-django>=4.0
+factory-boy>=3.3
 django-simple-history>=3.5
 django-redis>=5.4
 psycopg2-binary>=2.9
