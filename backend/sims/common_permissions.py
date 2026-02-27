@@ -14,13 +14,35 @@ def _role(user):
     return getattr(user, "role", None)
 
 
+def _track_rbac_denied(request, required_roles: str, reason: str):
+    from sims.analytics.services import safe_track_event
+
+    actor = request.user if _is_authenticated_user(request.user) else None
+    safe_track_event(
+        event_type="auth.rbac.denied",
+        actor=actor,
+        request=request,
+        event_key=f"rbac:{request.method}:{request.path}:{required_roles}",
+        metadata={
+            "source": "permissions",
+            "reason": reason,
+            "action": required_roles,
+            "path": request.path,
+            "http_method": request.method,
+        },
+    )
+
+
 class IsPGUser(permissions.BasePermission):
     """Allows access only to users with the 'pg' role."""
-    
+
     message = "Only PG users can access this resource."
 
     def has_permission(self, request, view):
-        return _is_authenticated_user(request.user) and _role(request.user) == "pg"
+        allowed = _is_authenticated_user(request.user) and _role(request.user) == "pg"
+        if not allowed:
+            _track_rbac_denied(request, "pg", "pg_role_required")
+        return allowed
 
 
 class IsUTRMCAdminUser(permissions.BasePermission):
@@ -29,7 +51,10 @@ class IsUTRMCAdminUser(permissions.BasePermission):
     message = "Only UTRMC admins can access this resource."
 
     def has_permission(self, request, view):
-        return _is_authenticated_user(request.user) and _role(request.user) == "utrmc_admin"
+        allowed = _is_authenticated_user(request.user) and _role(request.user) == "utrmc_admin"
+        if not allowed:
+            _track_rbac_denied(request, "utrmc_admin", "utrmc_admin_required")
+        return allowed
 
 
 class CanViewPendingLogbookQueue(permissions.BasePermission):
@@ -39,9 +64,15 @@ class CanViewPendingLogbookQueue(permissions.BasePermission):
 
     def has_permission(self, request, view):
         if not _is_authenticated_user(request.user):
+            _track_rbac_denied(request, "supervisor|admin|utrmc_user|utrmc_admin", "not_authenticated")
             return False
         role = _role(request.user)
-        return bool(request.user.is_superuser or role in {"supervisor", "admin", "utrmc_user", "utrmc_admin"})
+        allowed = bool(
+            request.user.is_superuser or role in {"supervisor", "admin", "utrmc_user", "utrmc_admin"}
+        )
+        if not allowed:
+            _track_rbac_denied(request, "supervisor|admin|utrmc_user|utrmc_admin", "role_not_allowed")
+        return allowed
 
 
 class CanVerifyLogbookEntry(permissions.BasePermission):
@@ -51,16 +82,24 @@ class CanVerifyLogbookEntry(permissions.BasePermission):
 
     def has_permission(self, request, view):
         if not _is_authenticated_user(request.user):
+            _track_rbac_denied(request, "supervisor|admin", "not_authenticated")
             return False
         role = _role(request.user)
-        return bool(request.user.is_superuser or role in {"supervisor", "admin"})
+        allowed = bool(request.user.is_superuser or role in {"supervisor", "admin"})
+        if not allowed:
+            _track_rbac_denied(request, "supervisor|admin", "role_not_allowed")
+        return allowed
 
     def has_object_permission(self, request, view, obj):
         user = request.user
         if getattr(user, "is_superuser", False) or _role(user) == "admin":
             return True
         if _role(user) == "supervisor":
-            return getattr(obj, "pg_id", None) and getattr(obj.pg, "supervisor_id", None) == user.id
+            allowed = getattr(obj, "pg_id", None) and getattr(obj.pg, "supervisor_id", None) == user.id
+            if not allowed:
+                _track_rbac_denied(request, "supervisor_assigned_pg", "object_scope_denied")
+            return allowed
+        _track_rbac_denied(request, "supervisor|admin", "object_role_not_allowed")
         return False
 
 
@@ -70,7 +109,10 @@ class CanApproveRotationOverride(permissions.BasePermission):
     message = "Only UTRMC admins can approve inter-hospital rotation overrides."
 
     def has_permission(self, request, view):
-        return _is_authenticated_user(request.user) and _role(request.user) == "utrmc_admin"
+        allowed = _is_authenticated_user(request.user) and _role(request.user) == "utrmc_admin"
+        if not allowed:
+            _track_rbac_denied(request, "utrmc_admin", "utrmc_admin_required")
+        return allowed
 
 
 class ReadAnyWriteAdminOrUTRMCAdmin(permissions.BasePermission):
@@ -80,10 +122,14 @@ class ReadAnyWriteAdminOrUTRMCAdmin(permissions.BasePermission):
 
     def has_permission(self, request, view):
         if not _is_authenticated_user(request.user):
+            _track_rbac_denied(request, "authenticated", "not_authenticated")
             return False
         if request.method in SAFE_METHODS:
             return True
-        return bool(request.user.is_superuser or _role(request.user) in {"admin", "utrmc_admin"})
+        allowed = bool(request.user.is_superuser or _role(request.user) in {"admin", "utrmc_admin"})
+        if not allowed:
+            _track_rbac_denied(request, "admin|utrmc_admin", "write_denied")
+        return allowed
 
 
 class ReadAnyWriteAdminOnly(permissions.BasePermission):
@@ -93,10 +139,14 @@ class ReadAnyWriteAdminOnly(permissions.BasePermission):
 
     def has_permission(self, request, view):
         if not _is_authenticated_user(request.user):
+            _track_rbac_denied(request, "authenticated", "not_authenticated")
             return False
         if request.method in SAFE_METHODS:
             return True
-        return bool(request.user.is_superuser or _role(request.user) == "admin")
+        allowed = bool(request.user.is_superuser or _role(request.user) == "admin")
+        if not allowed:
+            _track_rbac_denied(request, "admin", "write_denied")
+        return allowed
 
 
 class ReadAnyWriteUTRMCAdmin(permissions.BasePermission):
@@ -106,7 +156,11 @@ class ReadAnyWriteUTRMCAdmin(permissions.BasePermission):
 
     def has_permission(self, request, view):
         if not _is_authenticated_user(request.user):
+            _track_rbac_denied(request, "authenticated", "not_authenticated")
             return False
         if request.method in SAFE_METHODS:
             return True
-        return _role(request.user) == "utrmc_admin"
+        allowed = _role(request.user) == "utrmc_admin"
+        if not allowed:
+            _track_rbac_denied(request, "utrmc_admin", "write_denied")
+        return allowed

@@ -21,6 +21,7 @@ from sims.bulk.serializers import (
     TraineeImportSerializer,
 )
 from sims.bulk.services import BulkService
+from sims.analytics.services import safe_track_event
 
 User = get_user_model()
 
@@ -35,6 +36,31 @@ def _operation_payload(operation: BulkOperation) -> dict:
         "created_at": operation.created_at,
         "completed_at": operation.completed_at,
     }
+
+
+def _track_bulk_event(
+    request: Request,
+    *,
+    event_type: str,
+    resource: str,
+    operation: BulkOperation | None = None,
+    error_code: str | None = None,
+):
+    safe_track_event(
+        event_type=event_type,
+        actor=request.user if request.user.is_authenticated else None,
+        request=request,
+        entity_type="bulk_operation",
+        entity_id=operation.id if operation else None,
+        event_key=f"bulk:{resource}:{event_type}",
+        metadata={
+            "source": "bulk_api",
+            "resource": resource,
+            "record_count": operation.success_count if operation else 0,
+            "failure_count": operation.failure_count if operation else 0,
+            "error_code": error_code,
+        },
+    )
 
 
 class BulkReviewView(APIView):
@@ -75,6 +101,7 @@ class BulkImportView(APIView):
         serializer.is_valid(raise_exception=True)
         uploaded_file = serializer.validated_data["file"]
         service = BulkService(request.user)
+        _track_bulk_event(request, event_type="data.import.started", resource="logbook")
 
         try:
             operation = service.import_logbook_entries(
@@ -83,7 +110,29 @@ class BulkImportView(APIView):
                 allow_partial=serializer.validated_data["allow_partial"],
             )
         except DjangoValidationError as e:
+            _track_bulk_event(
+                request,
+                event_type="data.import.failed",
+                resource="logbook",
+                error_code="validation_error",
+            )
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+        if operation.status == BulkOperation.STATUS_COMPLETED:
+            _track_bulk_event(
+                request,
+                event_type="data.import.completed",
+                resource="logbook",
+                operation=operation,
+            )
+        else:
+            _track_bulk_event(
+                request,
+                event_type="data.import.failed",
+                resource="logbook",
+                operation=operation,
+                error_code="operation_failed",
+            )
 
         status_code = (
             status.HTTP_200_OK
@@ -103,6 +152,7 @@ class BulkTraineeImportView(APIView):
         serializer.is_valid(raise_exception=True)
         uploaded_file = serializer.validated_data["file"]
         service = BulkService(request.user)
+        _track_bulk_event(request, event_type="data.import.started", resource="trainees")
 
         try:
             operation = service.import_trainees(
@@ -111,7 +161,29 @@ class BulkTraineeImportView(APIView):
                 allow_partial=serializer.validated_data["allow_partial"],
             )
         except DjangoValidationError as e:
+            _track_bulk_event(
+                request,
+                event_type="data.import.failed",
+                resource="trainees",
+                error_code="validation_error",
+            )
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+        if operation.status == BulkOperation.STATUS_COMPLETED:
+            _track_bulk_event(
+                request,
+                event_type="data.import.completed",
+                resource="trainees",
+                operation=operation,
+            )
+        else:
+            _track_bulk_event(
+                request,
+                event_type="data.import.failed",
+                resource="trainees",
+                operation=operation,
+                error_code="operation_failed",
+            )
 
         status_code = (
             status.HTTP_200_OK
@@ -137,6 +209,7 @@ class BulkSupervisorImportView(APIView):
         serializer.is_valid(raise_exception=True)
         uploaded_file = serializer.validated_data["file"]
         service = BulkService(request.user)
+        _track_bulk_event(request, event_type="data.import.started", resource="supervisors")
 
         try:
             operation = service.import_supervisors(
@@ -146,7 +219,29 @@ class BulkSupervisorImportView(APIView):
                 generate_passwords=serializer.validated_data.get("generate_passwords", True),
             )
         except DjangoValidationError as e:
+            _track_bulk_event(
+                request,
+                event_type="data.import.failed",
+                resource="supervisors",
+                error_code="validation_error",
+            )
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+        if operation.status == BulkOperation.STATUS_COMPLETED:
+            _track_bulk_event(
+                request,
+                event_type="data.import.completed",
+                resource="supervisors",
+                operation=operation,
+            )
+        else:
+            _track_bulk_event(
+                request,
+                event_type="data.import.failed",
+                resource="supervisors",
+                operation=operation,
+                error_code="operation_failed",
+            )
 
         status_code = (
             status.HTTP_200_OK
@@ -173,6 +268,7 @@ class BulkResidentImportView(APIView):
         serializer.is_valid(raise_exception=True)
         uploaded_file = serializer.validated_data["file"]
         service = BulkService(request.user)
+        _track_bulk_event(request, event_type="data.import.started", resource="residents")
 
         try:
             operation = service.import_residents(
@@ -182,7 +278,29 @@ class BulkResidentImportView(APIView):
                 generate_passwords=serializer.validated_data.get("generate_passwords", True),
             )
         except DjangoValidationError as e:
+            _track_bulk_event(
+                request,
+                event_type="data.import.failed",
+                resource="residents",
+                error_code="validation_error",
+            )
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+        if operation.status == BulkOperation.STATUS_COMPLETED:
+            _track_bulk_event(
+                request,
+                event_type="data.import.completed",
+                resource="residents",
+                operation=operation,
+            )
+        else:
+            _track_bulk_event(
+                request,
+                event_type="data.import.failed",
+                resource="residents",
+                operation=operation,
+                error_code="operation_failed",
+            )
 
         status_code = (
             status.HTTP_200_OK
@@ -202,11 +320,27 @@ class BulkDepartmentImportView(APIView):
         serializer = DepartmentImportSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         service = BulkService(request.user)
+        _track_bulk_event(request, event_type="data.import.started", resource="departments")
         operation = service.import_departments(
             serializer.validated_data["file"],
             dry_run=serializer.validated_data["dry_run"],
             allow_partial=serializer.validated_data["allow_partial"],
         )
+        if operation.status == BulkOperation.STATUS_COMPLETED:
+            _track_bulk_event(
+                request,
+                event_type="data.import.completed",
+                resource="departments",
+                operation=operation,
+            )
+        else:
+            _track_bulk_event(
+                request,
+                event_type="data.import.failed",
+                resource="departments",
+                operation=operation,
+                error_code="operation_failed",
+            )
         status_code = (
             status.HTTP_200_OK
             if operation.status == BulkOperation.STATUS_COMPLETED
@@ -225,10 +359,18 @@ class BulkExportView(APIView):
             return Response({"detail": "Only admins can export bulk datasets."}, status=403)
         export_format = request.query_params.get("file_format", "xlsx").lower()
         service = BulkService(request.user)
+        _track_bulk_event(request, event_type="data.export.started", resource=resource)
         try:
             export_file = service.export_dataset(resource=resource, export_format=export_format)
         except DjangoValidationError as exc:
+            _track_bulk_event(
+                request,
+                event_type="data.export.failed",
+                resource=resource,
+                error_code="validation_error",
+            )
             return Response({"detail": str(exc)}, status=400)
+        _track_bulk_event(request, event_type="data.export.completed", resource=resource)
         response = HttpResponse(export_file.content, content_type=export_file.content_type)
         response["Content-Disposition"] = f'attachment; filename="{export_file.filename}"'
         return response

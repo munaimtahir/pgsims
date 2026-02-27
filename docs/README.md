@@ -6,3 +6,9 @@ Canonical contracts live in `docs/contracts/` and are the only authoritative doc
 
 `docs/_archive/` stores historical docs, audit runs, snapshots, and patches.
 `docs/_audit/` is for local-only working outputs (do not commit contents except `README.md`).
+
+Analytics documentation:
+- `docs/ANALYTICS_BLUEPRINT.md`
+- `docs/ANALYTICS_OPENAPI.md`
+- `docs/ANALYTICS_UI_SPEC.md`
+- `docs/ARCHITECTURE/ANALYTICS.md`

@@ -99,6 +99,7 @@ MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",  # CORS middleware (should be early)
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
+    "sims_project.middleware.RequestContextMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
@@ -405,6 +406,21 @@ SIMS_SETTINGS = {
     "BACKUP_RETENTION_DAYS": 30,
     "BACKUP_LOCATION": BASE_DIR / "backups",
 }
+
+ANALYTICS_ENABLED = os.environ.get(
+    "ANALYTICS_ENABLED", str(SIMS_SETTINGS["ENABLE_ANALYTICS"])
+).lower() in ("true", "1", "yes")
+ANALYTICS_UI_INGEST_ENABLED = os.environ.get(
+    "ANALYTICS_UI_INGEST_ENABLED", "true"
+).lower() in ("true", "1", "yes")
+ANALYTICS_ALLOW_SUPERVISOR_ACCESS = os.environ.get(
+    "ANALYTICS_ALLOW_SUPERVISOR_ACCESS", "false"
+).lower() in ("true", "1", "yes")
+ANALYTICS_REQUEST_SAMPLING = max(
+    0.0, min(float(os.environ.get("ANALYTICS_REQUEST_SAMPLING", "1.0")), 1.0)
+)
+ANALYTICS_CACHE_TTL = int(os.environ.get("ANALYTICS_CACHE_TTL", "60"))
+ANALYTICS_UI_INGEST_RATE = os.environ.get("ANALYTICS_UI_INGEST_RATE", "120/min")
 
 GLOBAL_SEARCH_CONFIG = {
     "MAX_RESULTS": int(os.environ.get("SEARCH_MAX_RESULTS", "100")),

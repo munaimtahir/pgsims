@@ -48,6 +48,13 @@ This contract defines authoritative backend authorization behavior. Frontend rou
   - Read/admin recovery operations per endpoint policy
   - Does not replace `utrmc_admin` for override approval endpoint
 
+### Analytics (API + Admin Dashboard)
+- Default: `admin` only
+- `supervisor`: allowed only if feature flag `ANALYTICS_ALLOW_SUPERVISOR_ACCESS=true`
+- `pg`, `utrmc_user`, `utrmc_admin`: forbidden
+- `POST /api/analytics/events/` follows same role rule and is additionally gated by
+  `ANALYTICS_UI_INGEST_ENABLED`
+
 ### Reference Data (API)
 #### Department (`academics.Department`)
 - Read (`list`, `retrieve`): any authenticated role

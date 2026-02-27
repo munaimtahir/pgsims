@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from rest_framework import serializers
 
+from sims.analytics.services import normalize_ui_event_type
+
 
 class TrendPointSerializer(serializers.Serializer):
     date = serializers.DateField()
@@ -82,6 +84,55 @@ class DashboardComplianceSerializer(serializers.Serializer):
     compliance = ComplianceDataSerializer(many=True)
 
 
+class AnalyticsFilterOptionSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    name = serializers.CharField()
+
+
+class AnalyticsFiltersSerializer(serializers.Serializer):
+    roles = serializers.ListField(child=serializers.CharField())
+    departments = AnalyticsFilterOptionSerializer(many=True)
+    hospitals = AnalyticsFilterOptionSerializer(many=True)
+
+
+class AnalyticsCardSerializer(serializers.Serializer):
+    key = serializers.CharField()
+    title = serializers.CharField()
+    value = serializers.FloatField()
+
+
+class AnalyticsTableSerializer(serializers.Serializer):
+    columns = serializers.ListField(child=serializers.CharField())
+    rows = serializers.ListField(child=serializers.DictField())
+
+
+class AnalyticsTabPayloadSerializer(serializers.Serializer):
+    title = serializers.CharField()
+    date_range = serializers.DictField()
+    cards = AnalyticsCardSerializer(many=True)
+    table = AnalyticsTableSerializer()
+    series = serializers.ListField(child=serializers.DictField())
+
+
+class AnalyticsLivePayloadSerializer(serializers.Serializer):
+    date_range = serializers.DictField()
+    events = serializers.ListField(child=serializers.DictField())
+
+
+class AnalyticsUIEventIngestSerializer(serializers.Serializer):
+    event_type = serializers.CharField()
+    metadata = serializers.DictField(required=False)
+    department_id = serializers.IntegerField(required=False, allow_null=True)
+    hospital_id = serializers.IntegerField(required=False, allow_null=True)
+    entity_type = serializers.CharField(required=False, allow_blank=True)
+    entity_id = serializers.CharField(required=False, allow_blank=True)
+    event_key = serializers.CharField(required=False, allow_blank=True)
+    occurred_at = serializers.DateTimeField(required=False)
+
+    def validate_event_type(self, value):
+        return normalize_ui_event_type(value)
+
+
 __all__ = [
     "TrendPointSerializer",
     "TrendResponseSerializer",
@@ -90,4 +141,8 @@ __all__ = [
     "DashboardOverviewSerializer",
     "DashboardTrendsSerializer",
     "DashboardComplianceSerializer",
+    "AnalyticsFiltersSerializer",
+    "AnalyticsTabPayloadSerializer",
+    "AnalyticsLivePayloadSerializer",
+    "AnalyticsUIEventIngestSerializer",
 ]

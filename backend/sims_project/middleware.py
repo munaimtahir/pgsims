@@ -2,8 +2,8 @@
 
 import json
 import logging
-import os
 import time
+import uuid
 
 from django.conf import settings
 from django.utils.deprecation import MiddlewareMixin
@@ -43,6 +43,19 @@ class HostDebugMiddleware(MiddlewareMixin):
         # #endregion
 
 
+class RequestContextMiddleware(MiddlewareMixin):
+    """Attach request-id to each request and response."""
+
+    def process_request(self, request):
+        request.request_id = request.META.get("HTTP_X_REQUEST_ID") or uuid.uuid4().hex
+
+    def process_response(self, request, response):
+        request_id = getattr(request, "request_id", None)
+        if request_id:
+            response["X-Request-ID"] = str(request_id)
+        return response
+
+
 class PerformanceTimingMiddleware(MiddlewareMixin):
     """Middleware to track request/response timing for performance monitoring."""
 
@@ -55,7 +68,7 @@ class PerformanceTimingMiddleware(MiddlewareMixin):
         if hasattr(request, "_start_time"):
             duration_ms = int((time.perf_counter() - request._start_time) * 1000)
             response["X-Response-Time"] = f"{duration_ms}ms"
-            
+
             # Log slow requests (> 1000ms)
             if duration_ms > 1000:
                 logger.warning(
@@ -76,5 +89,32 @@ class PerformanceTimingMiddleware(MiddlewareMixin):
                         "duration_ms": duration_ms,
                     },
                 )
-        
+
+            if (
+                getattr(settings, "ANALYTICS_ENABLED", True)
+                and request.path.startswith("/api/")
+                and response.status_code >= 400
+            ):
+                from sims.analytics.services import safe_track_event, should_sample
+
+                if should_sample():
+                    safe_track_event(
+                        event_type="system.api.error",
+                        actor=(
+                            request.user
+                            if getattr(request, "user", None) and request.user.is_authenticated
+                            else None
+                        ),
+                        request=request,
+                        event_key=f"api-error:{request.method}:{request.path}:{response.status_code}",
+                        metadata={
+                            "path": request.path,
+                            "http_method": request.method,
+                            "status_code": response.status_code,
+                            "duration_ms": duration_ms,
+                            "sampled": True,
+                            "source": "middleware",
+                        },
+                    )
+
         return response

@@ -4,7 +4,6 @@ from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from rest_framework import permissions, status
-from rest_framework.exceptions import PermissionDenied
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -20,6 +19,7 @@ from sims.common_permissions import (
     CanViewPendingLogbookQueue,
     IsPGUser,
 )
+from sims.analytics.services import safe_track_event
 
 User = get_user_model()
 READ_ONLY_OVERSIGHT_ROLES = {"utrmc_user", "utrmc_admin"}
@@ -149,6 +149,7 @@ class VerifyLogbookEntryView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
+        previous_status = entry.status
         # Update entry
         entry.status = next_status
         if next_status == "approved":
@@ -168,6 +169,34 @@ class VerifyLogbookEntryView(APIView):
         entry.supervisor_feedback = feedback
 
         entry.save()
+
+        status_event_map = {
+            "approved": "logbook.case.verified",
+            "returned": "logbook.case.sent_back",
+            "rejected": "logbook.case.rejected",
+        }
+        safe_track_event(
+            event_type="logbook.status.transitioned",
+            actor=user,
+            request=request,
+            entity_type="logbook_entry",
+            entity_id=entry.id,
+            status_from=previous_status,
+            status_to=entry.status,
+            event_key=f"logbook-status:{entry.id}:{previous_status}:{entry.status}",
+            metadata={"source": "verify_api", "action": action},
+        )
+        safe_track_event(
+            event_type=status_event_map[entry.status],
+            actor=user,
+            request=request,
+            entity_type="logbook_entry",
+            entity_id=entry.id,
+            status_from=previous_status,
+            status_to=entry.status,
+            event_key=f"logbook-action:{entry.id}:{entry.status}",
+            metadata={"source": "verify_api", "action": action},
+        )
 
         # Create notification (if notifications app exists)
         try:
@@ -223,11 +252,11 @@ class VerifyLogbookEntryView(APIView):
 class PGLogbookEntryListCreateView(APIView):
     """
     List and create PG logbook entries.
-    
+
     GET /api/logbook/my/
     Returns paginated list of logbook entries for the authenticated PG user.
     Authentication: Required (PG role only)
-    
+
     POST /api/logbook/my/
     Creates a new draft logbook entry for the authenticated PG user.
     Authentication: Required (PG role only)
@@ -250,6 +279,28 @@ class PGLogbookEntryListCreateView(APIView):
         serializer = PGLogbookEntryWriteSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         entry = serializer.save(pg=request.user, status="draft")
+        safe_track_event(
+            event_type="logbook.case.created",
+            actor=request.user,
+            request=request,
+            entity_type="logbook_entry",
+            entity_id=entry.id,
+            status_from=None,
+            status_to=entry.status,
+            event_key=f"logbook-created:{entry.id}",
+            metadata={"source": "pg_logbook_create"},
+        )
+        safe_track_event(
+            event_type="logbook.status.transitioned",
+            actor=request.user,
+            request=request,
+            entity_type="logbook_entry",
+            entity_id=entry.id,
+            status_from=None,
+            status_to=entry.status,
+            event_key=f"logbook-status:{entry.id}:created:{entry.status}",
+            metadata={"source": "pg_logbook_create"},
+        )
         response_serializer = PGLogbookEntrySerializer(entry)
         return Response(response_serializer.data, status=status.HTTP_201_CREATED)
 
@@ -257,7 +308,7 @@ class PGLogbookEntryListCreateView(APIView):
 class PGLogbookEntryDetailView(APIView):
     """
     Update a PG logbook entry.
-    
+
     PATCH /api/logbook/my/<id>/
     Updates an existing draft logbook entry for the authenticated PG user.
     Only draft entries can be edited.
@@ -288,7 +339,7 @@ class PGLogbookEntryDetailView(APIView):
 class PGLogbookEntrySubmitView(APIView):
     """
     Submit a PG logbook entry for review.
-    
+
     POST /api/logbook/my/<id>/submit/
     Submits a draft logbook entry for supervisor review.
     Changes status from 'draft' to 'pending'.
@@ -299,6 +350,7 @@ class PGLogbookEntrySubmitView(APIView):
 
     def post(self, request: Request, pk: int) -> Response:
         entry = get_object_or_404(LogbookEntry, pk=pk, pg=request.user)
+        previous_status = entry.status
 
         if entry.status not in {"draft", "returned"}:
             return Response(
@@ -321,6 +373,31 @@ class PGLogbookEntrySubmitView(APIView):
 
         entry.status = "pending"
         entry.save()
+        submit_event_type = (
+            "logbook.case.resubmitted" if previous_status == "returned" else "logbook.case.submitted"
+        )
+        safe_track_event(
+            event_type="logbook.status.transitioned",
+            actor=request.user,
+            request=request,
+            entity_type="logbook_entry",
+            entity_id=entry.id,
+            status_from=previous_status,
+            status_to=entry.status,
+            event_key=f"logbook-status:{entry.id}:{previous_status}:{entry.status}",
+            metadata={"source": "pg_logbook_submit"},
+        )
+        safe_track_event(
+            event_type=submit_event_type,
+            actor=request.user,
+            request=request,
+            entity_type="logbook_entry",
+            entity_id=entry.id,
+            status_from=previous_status,
+            status_to=entry.status,
+            event_key=f"logbook-submit:{entry.id}:{previous_status}",
+            metadata={"source": "pg_logbook_submit"},
+        )
         response_serializer = PGLogbookEntrySerializer(entry)
         return Response(response_serializer.data)
 

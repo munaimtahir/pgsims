@@ -11,6 +11,7 @@ Provides:
 
 from rest_framework import permissions, status
 from rest_framework.decorators import api_view, permission_classes
+from rest_framework.exceptions import AuthenticationFailed, ValidationError
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.throttling import AnonRateThrottle
@@ -26,6 +27,7 @@ from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from .models import User
 from .serializers import AssignedPGSerializer, UserSerializer, UserRegistrationSerializer
 from .permissions import IsSupervisor
+from sims.analytics.services import safe_track_event
 
 
 class LoginRateThrottle(AnonRateThrottle):
@@ -71,6 +73,38 @@ class CustomTokenObtainPairView(TokenObtainPairView):
 
     serializer_class = CustomTokenObtainPairSerializer
     throttle_classes = [LoginRateThrottle]
+
+    def post(self, request, *args, **kwargs):
+        try:
+            response = super().post(request, *args, **kwargs)
+        except (AuthenticationFailed, ValidationError):
+            safe_track_event(
+                event_type="auth.login.failed",
+                request=request,
+                event_key="login-failed",
+                metadata={
+                    "source": "auth_api",
+                    "reason": "invalid_credentials",
+                    "path": request.path,
+                    "http_method": request.method,
+                },
+            )
+            raise
+
+        user_payload = response.data.get("user", {}) if isinstance(response.data, dict) else {}
+        actor = User.objects.filter(pk=user_payload.get("id")).first() if user_payload else None
+        safe_track_event(
+            event_type="auth.login.succeeded",
+            actor=actor,
+            request=request,
+            event_key="login-succeeded",
+            metadata={
+                "source": "auth_api",
+                "path": request.path,
+                "http_method": request.method,
+            },
+        )
+        return response
 
 
 @api_view(["POST"])

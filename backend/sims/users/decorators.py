@@ -10,6 +10,24 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import PermissionDenied
 
 
+def _track_rbac_denied(request, required_roles: str, reason: str):
+    from sims.analytics.services import safe_track_event
+
+    safe_track_event(
+        event_type="auth.rbac.denied",
+        actor=request.user if request.user.is_authenticated else None,
+        request=request,
+        event_key=f"rbac-view:{request.method}:{request.path}:{required_roles}",
+        metadata={
+            "source": "decorators",
+            "reason": reason,
+            "action": required_roles,
+            "path": request.path,
+            "http_method": request.method,
+        },
+    )
+
+
 def admin_required(view_func):
     """Decorator to require admin role"""
 
@@ -18,6 +36,7 @@ def admin_required(view_func):
     def wrapper(request, *args, **kwargs):
         if not request.user.is_admin():
             messages.error(request, "You don't have permission to access this page.")
+            _track_rbac_denied(request, "admin", "admin_required")
             raise PermissionDenied("Admin access required")
         return view_func(request, *args, **kwargs)
 
@@ -32,6 +51,7 @@ def supervisor_required(view_func):
     def wrapper(request, *args, **kwargs):
         if not request.user.is_supervisor():
             messages.error(request, "You don't have permission to access this page.")
+            _track_rbac_denied(request, "supervisor", "supervisor_required")
             raise PermissionDenied("Supervisor access required")
         return view_func(request, *args, **kwargs)
 
@@ -46,6 +66,7 @@ def pg_required(view_func):
     def wrapper(request, *args, **kwargs):
         if not request.user.is_pg():
             messages.error(request, "You don't have permission to access this page.")
+            _track_rbac_denied(request, "pg", "pg_required")
             raise PermissionDenied("PG access required")
         return view_func(request, *args, **kwargs)
 
@@ -62,6 +83,7 @@ def supervisor_or_admin_required(view_func):
     def wrapper(request, *args, **kwargs):
         if not (request.user.is_supervisor() or request.user.is_admin()):
             messages.error(request, "You don't have permission to access this page.")
+            _track_rbac_denied(request, "supervisor|admin", "supervisor_or_admin_required")
             raise PermissionDenied("Supervisor or Admin access required")
         return view_func(request, *args, **kwargs)
 
@@ -77,6 +99,7 @@ class AdminRequiredMixin(LoginRequiredMixin):
 
         if not request.user.is_admin():
             messages.error(request, "You don't have permission to access this page.")
+            _track_rbac_denied(request, "admin", "admin_mixin_required")
             raise PermissionDenied("Admin access required")
 
         return super().dispatch(request, *args, **kwargs)
@@ -91,6 +114,7 @@ class SupervisorRequiredMixin(LoginRequiredMixin):
 
         if not request.user.is_supervisor():
             messages.error(request, "You don't have permission to access this page.")
+            _track_rbac_denied(request, "supervisor", "supervisor_mixin_required")
             raise PermissionDenied("Supervisor access required")
 
         return super().dispatch(request, *args, **kwargs)
@@ -105,6 +129,7 @@ class PGRequiredMixin(LoginRequiredMixin):
 
         if not request.user.is_pg():
             messages.error(request, "You don't have permission to access this page.")
+            _track_rbac_denied(request, "pg", "pg_mixin_required")
             raise PermissionDenied("PG access required")
 
         return super().dispatch(request, *args, **kwargs)
@@ -119,6 +144,7 @@ class SupervisorOrAdminRequiredMixin(LoginRequiredMixin):
 
         if not (request.user.is_supervisor() or request.user.is_admin()):
             messages.error(request, "You don't have permission to access this page.")
+            _track_rbac_denied(request, "supervisor|admin", "supervisor_or_admin_mixin_required")
             raise PermissionDenied("Supervisor or Admin access required")
 
         return super().dispatch(request, *args, **kwargs)
@@ -135,6 +161,11 @@ class RoleBasedAccessMixin(LoginRequiredMixin):
 
         if self.allowed_roles and request.user.role not in self.allowed_roles:
             messages.error(request, "You don't have permission to access this page.")
+            _track_rbac_denied(
+                request,
+                "|".join(self.allowed_roles),
+                "role_based_mixin_required",
+            )
             raise PermissionDenied(f"Access restricted to: {', '.join(self.allowed_roles)}")
 
         return super().dispatch(request, *args, **kwargs)

@@ -42,3 +42,34 @@ Rotation summary response must include:
 - `requires_utrmc_approval` (bool)
 - `override_reason` (nullable)
 - `approved_by`, `approved_at` (nullable)
+
+## Analytics (v1)
+Base: `/api/analytics/`
+
+Read endpoints:
+- `GET /v1/filters/`
+- `GET /v1/tabs/{tab}/` where tab in:
+  - `overview`, `adoption`, `logbook`, `review-sla`, `departments`,
+    `rotations`, `research`, `data-ops`, `system`, `security`, `live`
+- `GET /v1/tabs/{tab}/export/` (CSV)
+- `GET /v1/live/`
+
+Ingest:
+- `POST /events/` for UI events (flag-gated)
+  - accepted inbound: `page.view`, `feature.used`, `ui.page.view`, `ui.feature.used`
+  - normalized storage: `ui.page.view`, `ui.feature.used`
+
+Query params (where applicable):
+- `start_date` (YYYY-MM-DD; default last 14 days)
+- `end_date` (YYYY-MM-DD)
+- `department_id` (optional)
+- `hospital_id` (optional)
+- `role` (optional)
+- `limit` (live endpoint, max 200)
+
+Response shape for tab endpoints:
+- `title`
+- `date_range` { `start_date`, `end_date` }
+- `cards` [ { `key`, `title`, `value` } ]
+- `table` { `columns`, `rows` }
+- `series` [object]
