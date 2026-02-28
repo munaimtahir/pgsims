@@ -93,6 +93,7 @@ INSTALLED_APPS = [
     "sims.reports",
     "sims.attendance",
     "sims.results",
+    "sims.training",
 ]
 
 MIDDLEWARE = [

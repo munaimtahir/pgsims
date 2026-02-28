@@ -140,6 +140,7 @@ urlpatterns = [
     path("api/attendance/", include("sims.attendance.urls")),
     path("api/", include("sims.users.userbase_urls")),
     path("api/users/", include("sims.users.api_user_urls")),
+    path("api/", include("sims.training.urls")),
     # New apps
     path("academics/", include("sims.academics.urls")),
     path("results/", include("sims.results.urls")),

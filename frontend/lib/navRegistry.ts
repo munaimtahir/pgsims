@@ -55,6 +55,22 @@ export const NAV_SECTIONS: NavSection[] = [
     ],
   },
 
+  // ------------------------------------------------------------------ Training Admin (UTRMC)
+  {
+    title: 'Training Admin',
+    allowedRoles: ['admin', 'utrmc_admin'],
+    items: [
+      { label: 'Programs', href: '/dashboard/utrmc/programs', icon: 'academic-cap' },
+      { label: 'Rotation Templates', href: '/dashboard/utrmc/program-templates', icon: 'template' },
+      { label: 'Resident Records', href: '/dashboard/utrmc/resident-training', icon: 'users' },
+      { label: 'Rotations', href: '/dashboard/utrmc/rotations', icon: 'refresh' },
+      { label: 'Approvals – Rotations', href: '/dashboard/utrmc/approvals/rotations', icon: 'check-circle' },
+      { label: 'Approvals – Leaves', href: '/dashboard/utrmc/approvals/leaves', icon: 'calendar' },
+      { label: 'Leaves', href: '/dashboard/utrmc/leaves', icon: 'calendar' },
+      { label: 'Postings', href: '/dashboard/utrmc/postings', icon: 'location-marker' },
+    ],
+  },
+
   // ------------------------------------------------------------------ Data Admin
   {
     title: 'Data Admin',
@@ -80,6 +96,8 @@ export const NAV_SECTIONS: NavSection[] = [
       { label: 'Logbooks', href: '/dashboard/supervisor/logbooks', icon: 'book-open' },
       { label: 'Cases', href: '/dashboard/supervisor/cases', icon: 'folder-open' },
       { label: 'My PGs', href: '/dashboard/supervisor/pgs', icon: 'users' },
+      { label: 'Rotation Approvals', href: '/dashboard/supervisor/approvals', icon: 'check-circle' },
+      { label: 'Rotations', href: '/dashboard/supervisor/rotations', icon: 'refresh' },
     ],
   },
 
@@ -91,7 +109,10 @@ export const NAV_SECTIONS: NavSection[] = [
       { label: 'Overview', href: '/dashboard/pg', icon: 'home' },
       { label: 'Logbook', href: '/dashboard/pg/logbook', icon: 'book-open' },
       { label: 'Cases', href: '/dashboard/pg/cases', icon: 'folder-open' },
-      { label: 'Rotations', href: '/dashboard/pg/rotations', icon: 'refresh' },
+      { label: 'My Schedule', href: '/dashboard/my-training', icon: 'refresh' },
+      { label: 'Rotations (Legacy)', href: '/dashboard/pg/rotations', icon: 'refresh' },
+      { label: 'My Leaves', href: '/dashboard/my-leaves', icon: 'calendar' },
+      { label: 'My Postings', href: '/dashboard/my-postings', icon: 'location-marker' },
       { label: 'Results', href: '/dashboard/pg/results', icon: 'chart-bar' },
       { label: 'Certificates', href: '/dashboard/pg/certificates', icon: 'badge-check' },
       { label: 'Notifications', href: '/dashboard/pg/notifications', icon: 'bell' },
