@@ -2,7 +2,7 @@
 const nextConfig = {
   // Environment variable validation
   env: {
-    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000',
+    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || '/api',
   },
   
   // Output configuration for Docker

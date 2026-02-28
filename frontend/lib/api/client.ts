@@ -1,26 +1,42 @@
 /**
  * Base API client configuration using axios
- * Uses NEXT_PUBLIC_API_URL environment variable only
+ * Uses NEXT_PUBLIC_API_URL for browser and SERVER_API_URL for server-side execution
  */
 
 import axios from 'axios';
 import { clearAuthCookies, syncAuthCookies } from '@/lib/auth/cookies';
 
 /**
- * Get API URL from environment variable
- * MUST use NEXT_PUBLIC_API_URL only - no auto-detection
+ * Resolve API base URL:
+ * - Browser/client: default to same-origin paths (effective /api usage)
+ * - Server-only contexts: default to internal Docker DNS
  */
 function getApiUrl(): string {
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-  if (!apiUrl) {
-    // In development, provide a default but warn
-    if (process.env.NODE_ENV === 'development') {
-      console.warn('NEXT_PUBLIC_API_URL not set, using default http://localhost:8000');
-      return 'http://localhost:8000';
-    }
-    // In production, throw error
-    throw new Error('NEXT_PUBLIC_API_URL environment variable is required');
+  const isServer = typeof window === 'undefined';
+
+  if (isServer) {
+    return process.env.SERVER_API_URL || 'http://backend:8014';
   }
+
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+  if (!apiUrl || apiUrl === '/api') {
+    if (process.env.NODE_ENV === 'development' && !apiUrl) {
+      console.warn('NEXT_PUBLIC_API_URL not set, defaulting to same-origin API paths');
+    }
+    // Endpoints already include /api/... so keep base empty to avoid /api/api/* duplication.
+    return '';
+  }
+
+  // If an absolute URL points to the same origin, keep requests relative.
+  try {
+    const resolved = new URL(apiUrl, window.location.origin);
+    if (resolved.origin === window.location.origin) {
+      return '';
+    }
+  } catch {
+    // Keep raw value for non-URL strings.
+  }
+
   return apiUrl;
 }
 
