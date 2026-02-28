@@ -1,0 +1,3 @@
+hospital_code,department_code,active
+AH,MED,true
+AH,SURG,true

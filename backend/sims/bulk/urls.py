@@ -11,6 +11,7 @@ from sims.bulk.views import (
     BulkExportView,
     BulkSupervisorImportView,
     BulkTraineeImportView,
+    BulkImportEntityView,
 )
 
 app_name = "bulk_api"
@@ -24,4 +25,6 @@ urlpatterns = [
     path("import-residents/", BulkResidentImportView.as_view(), name="import_residents"),
     path("import-departments/", BulkDepartmentImportView.as_view(), name="import_departments"),
     path("exports/<str:resource>/", BulkExportView.as_view(), name="exports"),
+    # New unified import endpoint
+    path("import/<str:entity>/<str:action>/", BulkImportEntityView.as_view(), name="import_entity"),
 ]

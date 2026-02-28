@@ -55,9 +55,10 @@ class BulkService:
 
     def _validate_permissions(self) -> None:
         if not (
-            self.actor.is_superuser or getattr(self.actor, "role", None) in {"admin", "supervisor"}
+            self.actor.is_superuser
+            or getattr(self.actor, "role", None) in {"admin", "utrmc_admin", "supervisor"}
         ):
-            raise PermissionDenied("Bulk operations are restricted to supervisors and admins.")
+            raise PermissionDenied("Bulk operations are restricted to admins, utrmc_admin, and supervisors.")
 
     # ------------------------------------------------------------------
     # Review and assignment operations
@@ -1206,6 +1207,267 @@ class BulkService:
         )
         return operation
 
+    # ------------------------------------------------------------------
+    # NEW: import hospitals
+
+    def import_hospitals(
+        self,
+        uploaded_file,
+        *,
+        dry_run: bool = True,
+        allow_partial: bool = False,
+    ) -> BulkOperation:
+        operation = BulkOperation.objects.create(user=self.actor, operation=BulkOperation.OP_IMPORT)
+        if Hospital is None:
+            operation.mark_failed({"error": "Hospital model unavailable."})
+            return operation
+
+        try:
+            rows = list(_parse_csv_rows(uploaded_file, required_columns=None))
+        except ValidationError as exc:
+            operation.mark_failed({"error": str(exc)})
+            return operation
+
+        successes: List[dict] = []
+        failures: List[dict] = []
+        errors_triggered = False
+
+        def process_row(row: dict) -> None:
+            nonlocal errors_triggered
+            row_num = row.get("_row_number", "unknown")
+            code = (row.get("hospital_code") or row.get("code") or "").strip().upper()
+            name = (row.get("hospital_name") or row.get("name") or "").strip()
+            active_raw = (row.get("active") or "true").strip().lower()
+            active = active_raw not in {"false", "0", "no"}
+
+            if not code:
+                failures.append({"row": row_num, "error": "Missing hospital_code", "data": row})
+                errors_triggered = True
+                return
+            if not name:
+                name = code
+
+            try:
+                if dry_run:
+                    existing = Hospital.objects.filter(code=code).first()
+                    candidate = existing or Hospital(code=code, name=name)
+                    candidate.code = code
+                    candidate.name = name
+                    candidate.is_active = active
+                    candidate.full_clean()
+                else:
+                    Hospital.objects.update_or_create(
+                        code=code,
+                        defaults={"name": name, "is_active": active},
+                    )
+                successes.append({"row": row_num, "code": code, "name": name})
+            except ValidationError as exc:
+                failures.append(
+                    {"row": row_num, "error": exc.message_dict if hasattr(exc, "message_dict") else str(exc), "data": row}
+                )
+                errors_triggered = True
+
+        if dry_run or allow_partial:
+            for row in rows:
+                process_row(row)
+        else:
+            try:
+                with transaction.atomic():
+                    for row in rows:
+                        process_row(row)
+                    if errors_triggered:
+                        raise BulkProcessingError("Hospital import failed; rolling back")
+            except BulkProcessingError:
+                operation.mark_failed({"failures": failures})
+                return operation
+
+        operation.mark_completed(len(successes), len(failures), {"successes": successes, "failures": failures})
+        return operation
+
+    # ------------------------------------------------------------------
+    # NEW: import hospital-department matrix
+
+    def import_hospital_departments(
+        self,
+        uploaded_file,
+        *,
+        dry_run: bool = True,
+        allow_partial: bool = False,
+    ) -> BulkOperation:
+        operation = BulkOperation.objects.create(user=self.actor, operation=BulkOperation.OP_IMPORT)
+        if Hospital is None or Department is None or HospitalDepartment is None:
+            operation.mark_failed({"error": "Hospital/Department models unavailable."})
+            return operation
+
+        try:
+            rows = list(_parse_csv_rows(uploaded_file, required_columns=None))
+        except ValidationError as exc:
+            operation.mark_failed({"error": str(exc)})
+            return operation
+
+        successes: List[dict] = []
+        failures: List[dict] = []
+        errors_triggered = False
+
+        def process_row(row: dict) -> None:
+            nonlocal errors_triggered
+            row_num = row.get("_row_number", "unknown")
+            hospital_code = (row.get("hospital_code") or "").strip().upper()
+            department_code = (row.get("department_code") or "").strip().upper()
+            active_raw = (row.get("active") or "true").strip().lower()
+            active = active_raw not in {"false", "0", "no"}
+
+            if not hospital_code or not department_code:
+                failures.append({"row": row_num, "error": "Both hospital_code and department_code are required", "data": row})
+                errors_triggered = True
+                return
+
+            hospital = Hospital.objects.filter(code=hospital_code).first()
+            department = Department.objects.filter(code=department_code).first()
+
+            if not hospital:
+                failures.append({"row": row_num, "error": f"Hospital '{hospital_code}' not found", "data": row})
+                errors_triggered = True
+                return
+            if not department:
+                failures.append({"row": row_num, "error": f"Department '{department_code}' not found", "data": row})
+                errors_triggered = True
+                return
+
+            try:
+                if dry_run:
+                    successes.append({"row": row_num, "hospital_code": hospital_code, "department_code": department_code})
+                else:
+                    HospitalDepartment.objects.update_or_create(
+                        hospital=hospital,
+                        department=department,
+                        defaults={"is_active": active},
+                    )
+                    successes.append({"row": row_num, "hospital_code": hospital_code, "department_code": department_code})
+            except Exception as exc:
+                failures.append({"row": row_num, "error": str(exc), "data": row})
+                errors_triggered = True
+
+        if dry_run or allow_partial:
+            for row in rows:
+                process_row(row)
+        else:
+            try:
+                with transaction.atomic():
+                    for row in rows:
+                        process_row(row)
+                    if errors_triggered:
+                        raise BulkProcessingError("Matrix import failed; rolling back")
+            except BulkProcessingError:
+                operation.mark_failed({"failures": failures})
+                return operation
+
+        operation.mark_completed(len(successes), len(failures), {"successes": successes, "failures": failures})
+        return operation
+
+    # ------------------------------------------------------------------
+    # NEW: import supervisor-resident links
+
+    def import_supervision_links(
+        self,
+        uploaded_file,
+        *,
+        dry_run: bool = True,
+        allow_partial: bool = False,
+    ) -> BulkOperation:
+        from sims.users.models import SupervisorResidentLink
+
+        operation = BulkOperation.objects.create(user=self.actor, operation=BulkOperation.OP_IMPORT)
+
+        try:
+            rows = list(_parse_csv_rows(uploaded_file, required_columns=None))
+        except ValidationError as exc:
+            operation.mark_failed({"error": str(exc)})
+            return operation
+
+        successes: List[dict] = []
+        failures: List[dict] = []
+        errors_triggered = False
+
+        def process_row(row: dict) -> None:
+            nonlocal errors_triggered
+            row_num = row.get("_row_number", "unknown")
+            supervisor_email = (row.get("supervisor_email") or "").strip().lower()
+            resident_email = (row.get("resident_email") or "").strip().lower()
+            department_code = (row.get("department_code") or "").strip().upper()
+            start_date_raw = (row.get("start_date") or "").strip()
+            end_date_raw = (row.get("end_date") or "").strip()
+            active_raw = (row.get("active") or "true").strip().lower()
+            active = active_raw not in {"false", "0", "no"}
+
+            if not supervisor_email or not resident_email:
+                failures.append({"row": row_num, "error": "supervisor_email and resident_email are required", "data": row})
+                errors_triggered = True
+                return
+
+            supervisor = User.objects.filter(email__iexact=supervisor_email).first()
+            resident = User.objects.filter(email__iexact=resident_email).first()
+            if not supervisor:
+                failures.append({"row": row_num, "error": f"Supervisor '{supervisor_email}' not found", "data": row})
+                errors_triggered = True
+                return
+            if not resident:
+                failures.append({"row": row_num, "error": f"Resident '{resident_email}' not found", "data": row})
+                errors_triggered = True
+                return
+
+            department = None
+            if department_code and Department is not None:
+                department = Department.objects.filter(code=department_code).first()
+
+            start_date = _parse_date(start_date_raw) if start_date_raw else None
+            end_date = _parse_date(end_date_raw) if end_date_raw else None
+
+            try:
+                if dry_run:
+                    successes.append({
+                        "row": row_num,
+                        "supervisor": supervisor_email,
+                        "resident": resident_email,
+                    })
+                else:
+                    link, created = SupervisorResidentLink.objects.update_or_create(
+                        supervisor_user=supervisor,
+                        resident_user=resident,
+                        defaults={
+                            "department": department,
+                            "start_date": start_date,
+                            "end_date": end_date,
+                            "active": active,
+                        },
+                    )
+                    successes.append({
+                        "row": row_num,
+                        "supervisor": supervisor_email,
+                        "resident": resident_email,
+                        "created": created,
+                    })
+            except Exception as exc:
+                failures.append({"row": row_num, "error": str(exc), "data": row})
+                errors_triggered = True
+
+        if dry_run or allow_partial:
+            for row in rows:
+                process_row(row)
+        else:
+            try:
+                with transaction.atomic():
+                    for row in rows:
+                        process_row(row)
+                    if errors_triggered:
+                        raise BulkProcessingError("Supervision link import failed; rolling back")
+            except BulkProcessingError:
+                operation.mark_failed({"failures": failures})
+                return operation
+
+        operation.mark_completed(len(successes), len(failures), {"successes": successes, "failures": failures})
+        return operation
+
     def export_dataset(self, resource: str, export_format: str = "xlsx") -> BulkExportFile:
         if export_format not in {"xlsx", "csv"}:
             raise ValidationError("Unsupported export format. Use xlsx or csv.")
@@ -1259,6 +1521,41 @@ class BulkService:
                         "hospitals": ",".join(hospitals),
                     }
                 )
+        elif resource == "hospitals":
+            if Hospital is None:
+                raise ValidationError("Hospital model unavailable.")
+            rows = [
+                {
+                    "hospital_code": h.code,
+                    "hospital_name": h.name,
+                    "active": h.is_active,
+                }
+                for h in Hospital.objects.all().order_by("code")
+            ]
+        elif resource == "matrix":
+            if HospitalDepartment is None:
+                raise ValidationError("HospitalDepartment model unavailable.")
+            rows = [
+                {
+                    "hospital_code": hd.hospital.code,
+                    "department_code": hd.department.code,
+                    "active": hd.is_active,
+                }
+                for hd in HospitalDepartment.objects.all().select_related("hospital", "department").order_by("hospital__code", "department__code")
+            ]
+        elif resource == "supervision_links":
+            from sims.users.models import SupervisorResidentLink
+            rows = [
+                {
+                    "supervisor_email": link.supervisor_user.email,
+                    "resident_email": link.resident_user.email,
+                    "department_code": link.department.code if link.department else "",
+                    "start_date": str(link.start_date) if link.start_date else "",
+                    "end_date": str(link.end_date) if link.end_date else "",
+                    "active": link.active,
+                }
+                for link in SupervisorResidentLink.objects.all().select_related("supervisor_user", "resident_user", "department")
+            ]
         else:
             raise ValidationError("Unsupported export resource.")
 

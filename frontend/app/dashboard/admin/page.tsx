@@ -161,17 +161,31 @@ export default function AdminDashboardPage() {
                 </SectionCard>
               )}
 
-              {/* Quick Links */}
+              {/* Quick Actions */}
               <div className="bg-white shadow rounded-lg">
                 <div className="px-4 py-5 sm:p-6">
                   <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">Quick Actions</h3>
                   <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                     <Link
-                      href="/dashboard/admin/users"
+                      href="/dashboard/utrmc/users"
                       className="p-4 border border-gray-200 rounded-lg hover:border-indigo-500 hover:bg-indigo-50 transition"
                     >
                       <h4 className="font-medium text-gray-900">Manage Users</h4>
-                      <p className="mt-1 text-sm text-gray-500">View and manage all users</p>
+                      <p className="mt-1 text-sm text-gray-500">Create & manage all users</p>
+                    </Link>
+                    <Link
+                      href="/dashboard/utrmc/departments"
+                      className="p-4 border border-gray-200 rounded-lg hover:border-indigo-500 hover:bg-indigo-50 transition"
+                    >
+                      <h4 className="font-medium text-gray-900">Departments</h4>
+                      <p className="mt-1 text-sm text-gray-500">Manage departments & rosters</p>
+                    </Link>
+                    <Link
+                      href="/dashboard/utrmc/data-admin/residents"
+                      className="p-4 border border-gray-200 rounded-lg hover:border-indigo-500 hover:bg-indigo-50 transition"
+                    >
+                      <h4 className="font-medium text-gray-900">Import Residents</h4>
+                      <p className="mt-1 text-sm text-gray-500">Bulk import residents via CSV</p>
                     </Link>
                     <Link
                       href="/dashboard/admin/analytics"
@@ -179,20 +193,6 @@ export default function AdminDashboardPage() {
                     >
                       <h4 className="font-medium text-gray-900">Analytics</h4>
                       <p className="mt-1 text-sm text-gray-500">View system analytics</p>
-                    </Link>
-                    <Link
-                      href="/dashboard/admin/bulk-import"
-                      className="p-4 border border-gray-200 rounded-lg hover:border-indigo-500 hover:bg-indigo-50 transition"
-                    >
-                      <h4 className="font-medium text-gray-900">Bulk Import</h4>
-                      <p className="mt-1 text-sm text-gray-500">Import users in bulk</p>
-                    </Link>
-                    <Link
-                      href="/dashboard/admin/audit-logs"
-                      className="p-4 border border-gray-200 rounded-lg hover:border-indigo-500 hover:bg-indigo-50 transition"
-                    >
-                      <h4 className="font-medium text-gray-900">Audit Logs</h4>
-                      <p className="mt-1 text-sm text-gray-500">View system audit logs</p>
                     </Link>
                   </div>
                 </div>

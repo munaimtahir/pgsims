@@ -1,0 +1,2 @@
+email,full_name,phone,role,department_code,hospital_code,active
+supervisor@example.com,Dr. Jane Supervisor,03001234567,supervisor,MED,AH,true

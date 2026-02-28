@@ -1,0 +1,2 @@
+supervisor_email,resident_email,department_code,start_date,end_date,active
+supervisor@example.com,resident@example.com,MED,2024-01-01,,true

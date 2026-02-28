@@ -355,7 +355,7 @@ class BulkExportView(APIView):
     def get(self, request: Request, resource: str) -> HttpResponse:
         from django.core.exceptions import ValidationError as DjangoValidationError
 
-        if getattr(request.user, "role", None) != "admin":
+        if getattr(request.user, "role", None) not in {"admin", "utrmc_admin"}:
             return Response({"detail": "Only admins can export bulk datasets."}, status=403)
         export_format = request.query_params.get("file_format", "xlsx").lower()
         service = BulkService(request.user)
@@ -376,6 +376,75 @@ class BulkExportView(APIView):
         return response
 
 
+# ---------------------------------------------------------------------------
+# NEW unified import endpoint: /api/bulk/import/<entity>/<action>/
+# action = "dry-run" | "apply"
+# entity = hospitals | matrix | supervision-links | departments | supervisors | residents | trainees
+
+_ENTITY_METHOD_MAP = {
+    "hospitals": "import_hospitals",
+    "matrix": "import_hospital_departments",
+    "supervision-links": "import_supervision_links",
+    "departments": "import_departments",
+    "supervisors": "import_supervisors",
+    "residents": "import_residents",
+    "trainees": "import_trainees",
+}
+
+_ALLOWED_ROLES = {"admin", "utrmc_admin"}
+
+
+class BulkImportEntityView(APIView):
+    """Unified import endpoint.
+
+    POST /api/bulk/import/<entity>/dry-run/   — validate only
+    POST /api/bulk/import/<entity>/apply/     — write to DB
+    """
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request: Request, entity: str, action: str) -> Response:
+        from django.core.exceptions import ValidationError as DjangoValidationError
+
+        if getattr(request.user, "role", None) not in _ALLOWED_ROLES:
+            return Response({"detail": "Permission denied."}, status=status.HTTP_403_FORBIDDEN)
+        if action not in {"dry-run", "apply"}:
+            return Response({"detail": "action must be 'dry-run' or 'apply'."}, status=status.HTTP_400_BAD_REQUEST)
+
+        method_name = _ENTITY_METHOD_MAP.get(entity)
+        if not method_name:
+            return Response({"detail": f"Unknown entity '{entity}'."}, status=status.HTTP_400_BAD_REQUEST)
+
+        uploaded_file = request.FILES.get("file")
+        if not uploaded_file:
+            return Response({"detail": "No file provided."}, status=status.HTTP_400_BAD_REQUEST)
+
+        dry_run = (action == "dry-run")
+        try:
+            service = BulkService(request.user)
+        except Exception as exc:
+            return Response({"detail": str(exc)}, status=status.HTTP_403_FORBIDDEN)
+
+        _track_bulk_event(request, event_type="data.import.started", resource=entity)
+        try:
+            operation = getattr(service, method_name)(
+                uploaded_file,
+                dry_run=dry_run,
+                allow_partial=True,
+            )
+        except DjangoValidationError as exc:
+            return Response({"detail": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+
+        payload = _operation_payload(operation)
+        payload["dry_run"] = dry_run
+        status_code = (
+            status.HTTP_200_OK
+            if operation.status == BulkOperation.STATUS_COMPLETED
+            else status.HTTP_400_BAD_REQUEST
+        )
+        return Response(payload, status=status_code)
+
+
 __all__ = [
     "BulkReviewView",
     "BulkAssignmentView",
@@ -385,4 +454,5 @@ __all__ = [
     "BulkResidentImportView",
     "BulkDepartmentImportView",
     "BulkExportView",
+    "BulkImportEntityView",
 ]

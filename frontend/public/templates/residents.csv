@@ -1,0 +1,2 @@
+email,full_name,phone,role,pgr_id,training_start,department_code,hospital_code,active
+resident@example.com,Dr. Ali Resident,03009876543,resident,PGR001,2024-01-01,MED,AH,true
