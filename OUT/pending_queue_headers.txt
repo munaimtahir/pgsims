@@ -1,0 +1,17 @@
+HTTP/2 200 
+allow: GET, HEAD, OPTIONS
+alt-svc: h3=":443"; ma=2592000
+content-type: application/json
+cross-origin-opener-policy: same-origin
+date: Sat, 28 Feb 2026 07:19:51 GMT
+permissions-policy: camera=(), microphone=(), geolocation=()
+referrer-policy: strict-origin-when-cross-origin
+strict-transport-security: max-age=31536000; includeSubDomains; preload
+vary: Accept, origin
+via: 1.1 Caddy
+x-content-type-options: nosniff
+x-frame-options: SAMEORIGIN
+x-request-id: 692dcaa7477f44bdb8a56c5b3f99dee4
+x-response-time: 31ms
+content-length: 270
+

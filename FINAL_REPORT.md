@@ -15,8 +15,8 @@
   - `bash ops/caddy_sync_reload.sh`
 - Docker production stack:
   - `docker compose -f docker/docker-compose.prod.yml up -d --build`
-  - `docker compose -f docker/docker-compose.prod.yml exec -T web python manage.py migrate --noinput`
-  - `docker compose -f docker/docker-compose.prod.yml exec -T web python manage.py seed_e2e`
+  - `docker compose -f docker/docker-compose.prod.yml exec -T backend python manage.py migrate --noinput`
+  - `docker compose -f docker/docker-compose.prod.yml exec -T backend python manage.py seed_e2e`
 
 ## Test commands run
 - Backend targeted suite:

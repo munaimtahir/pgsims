@@ -1,0 +1,348 @@
+backend/sims/academics/views.py:14:    permission_classes = [ReadAnyWriteAdminOnly]
+backend/sims/academics/views.py:32:    permission_classes = [permissions.IsAuthenticated]
+backend/sims/academics/views.py:51:    permission_classes = [permissions.IsAuthenticated]
+backend/sims/users/permissions.py:6:class IsSupervisor(permissions.BasePermission):
+backend/sims/users/permissions.py:11:    def has_permission(self, request, view):
+backend/sims/users/api_views.py:15:from rest_framework.permissions import AllowAny, IsAuthenticated
+backend/sims/users/api_views.py:166:@permission_classes([IsAuthenticated])
+backend/sims/users/api_views.py:190:@permission_classes([IsAuthenticated])
+backend/sims/users/api_views.py:202:@permission_classes([IsAuthenticated])
+backend/sims/users/api_views.py:333:@permission_classes([IsAuthenticated])
+backend/sims/users/api_views.py:388:    permission_classes = [permissions.IsAuthenticated, IsSupervisor]
+backend/sims/attendance/api_views.py:28:    permission_classes = [permissions.IsAuthenticated]
+backend/sims/attendance/api_views.py:100:    permission_classes = [permissions.IsAuthenticated]
+backend/sims/audit/views.py:17:    permission_classes = [IsAdminUser]
+backend/sims/audit/views.py:43:    permission_classes = [IsAdminUser]
+backend/sims/results/views.py:14:    permission_classes = [permissions.IsAuthenticated]
+backend/sims/results/views.py:61:    permission_classes = [permissions.IsAuthenticated]
+backend/sims/common_permissions.py:36:class IsPGUser(permissions.BasePermission):
+backend/sims/common_permissions.py:41:    def has_permission(self, request, view):
+backend/sims/common_permissions.py:48:class IsUTRMCAdminUser(permissions.BasePermission):
+backend/sims/common_permissions.py:53:    def has_permission(self, request, view):
+backend/sims/common_permissions.py:60:class CanViewPendingLogbookQueue(permissions.BasePermission):
+backend/sims/common_permissions.py:65:    def has_permission(self, request, view):
+backend/sims/common_permissions.py:78:class CanVerifyLogbookEntry(permissions.BasePermission):
+backend/sims/common_permissions.py:83:    def has_permission(self, request, view):
+backend/sims/common_permissions.py:93:    def has_object_permission(self, request, view, obj):
+backend/sims/common_permissions.py:106:class CanApproveRotationOverride(permissions.BasePermission):
+backend/sims/common_permissions.py:111:    def has_permission(self, request, view):
+backend/sims/common_permissions.py:118:class ReadAnyWriteAdminOrUTRMCAdmin(permissions.BasePermission):
+backend/sims/common_permissions.py:123:    def has_permission(self, request, view):
+backend/sims/common_permissions.py:135:class ReadAnyWriteAdminOnly(permissions.BasePermission):
+backend/sims/common_permissions.py:140:    def has_permission(self, request, view):
+backend/sims/common_permissions.py:152:class ReadAnyWriteUTRMCAdmin(permissions.BasePermission):
+backend/sims/common_permissions.py:157:    def has_permission(self, request, view):
+backend/sims/logbook/api_views.py:45:    permission_classes = [CanViewPendingLogbookQueue]
+backend/sims/logbook/api_views.py:111:    permission_classes = [CanVerifyLogbookEntry]
+backend/sims/logbook/api_views.py:265:    permission_classes = [permissions.IsAuthenticated, IsPGUser]
+backend/sims/logbook/api_views.py:318:    permission_classes = [permissions.IsAuthenticated, IsPGUser]
+backend/sims/logbook/api_views.py:349:    permission_classes = [permissions.IsAuthenticated, IsPGUser]
+backend/sims/cases/api_views.py:6:from rest_framework.permissions import IsAuthenticated
+backend/sims/cases/api_views.py:32:    permission_classes = [IsAuthenticated]
+backend/sims/cases/api_views.py:40:    permission_classes = [IsAuthenticated]
+backend/sims/cases/api_views.py:73:    permission_classes = [IsAuthenticated]
+backend/sims/cases/api_views.py:114:    permission_classes = [IsAuthenticated]
+backend/sims/cases/api_views.py:132:    permission_classes = [IsAuthenticated]
+backend/sims/cases/api_views.py:145:    permission_classes = [IsAuthenticated]
+backend/sims/cases/api_views.py:179:    permission_classes = [IsAuthenticated]
+backend/sims/rotations/api_views.py:34:    permission_classes = [ReadAnyWriteAdminOnly]
+backend/sims/rotations/api_views.py:52:    permission_classes = [ReadAnyWriteAdminOrUTRMCAdmin]
+backend/sims/rotations/api_views.py:71:    permission_classes = [permissions.IsAuthenticated, IsPGUser]
+backend/sims/rotations/api_views.py:102:    permission_classes = [permissions.IsAuthenticated, IsPGUser]
+backend/sims/rotations/api_views.py:131:    permission_classes = [permissions.IsAuthenticated, IsUTRMCAdminUser, CanApproveRotationOverride]
+backend/sims/reports/views.py:25:    permission_classes = [permissions.IsAuthenticated]
+backend/sims/reports/views.py:29:    permission_classes = [permissions.IsAuthenticated]
+backend/sims/reports/views.py:50:    permission_classes = [permissions.IsAuthenticated]
+backend/sims/reports/views.py:61:    permission_classes = [permissions.IsAuthenticated]
+backend/sims/reports/views.py:68:    permission_classes = [permissions.IsAuthenticated]
+backend/sims/reports/views.py:75:    permission_classes = [permissions.IsAuthenticated]
+backend/sims/reports/views.py:88:    permission_classes = [permissions.IsAuthenticated]
+backend/sims/analytics/views.py:67:    permission_classes = [permissions.IsAuthenticated]
+backend/sims/analytics/views.py:120:    permission_classes = [permissions.IsAuthenticated]
+backend/sims/analytics/views.py:147:    permission_classes = [permissions.IsAuthenticated]
+backend/sims/analytics/views.py:158:    permission_classes = [permissions.IsAuthenticated]
+backend/sims/analytics/views.py:169:    permission_classes = [permissions.IsAuthenticated]
+backend/sims/analytics/views.py:180:    permission_classes = [permissions.IsAuthenticated]
+backend/sims/analytics/views.py:188:class AnalyticsAccessPermission(permissions.BasePermission):
+backend/sims/analytics/views.py:191:    def has_permission(self, request, view):
+backend/sims/analytics/views.py:212:    permission_classes = [permissions.IsAuthenticated, AnalyticsAccessPermission]
+backend/sims/analytics/views.py:223:    permission_classes = [permissions.IsAuthenticated, AnalyticsAccessPermission]
+backend/sims/analytics/views.py:241:    permission_classes = [permissions.IsAuthenticated, AnalyticsAccessPermission]
+backend/sims/analytics/views.py:261:    permission_classes = [permissions.IsAuthenticated, AnalyticsAccessPermission]
+backend/sims/analytics/views.py:280:    permission_classes = [permissions.IsAuthenticated, AnalyticsAccessPermission]
+backend/sims/analytics/views.py:339:    permission_classes = [permissions.IsAuthenticated, AnalyticsAccessPermission]
+backend/sims/bulk/views.py:67:    permission_classes = [permissions.IsAuthenticated]
+backend/sims/bulk/views.py:78:    permission_classes = [permissions.IsAuthenticated]
+backend/sims/bulk/views.py:95:    permission_classes = [permissions.IsAuthenticated]
+backend/sims/bulk/views.py:146:    permission_classes = [permissions.IsAuthenticated]
+backend/sims/bulk/views.py:203:    permission_classes = [permissions.IsAuthenticated]
+backend/sims/bulk/views.py:262:    permission_classes = [permissions.IsAuthenticated]
+backend/sims/bulk/views.py:314:    permission_classes = [permissions.IsAuthenticated]
+backend/sims/bulk/views.py:353:    permission_classes = [permissions.IsAuthenticated]
+backend/sims/certificates/api_views.py:22:    permission_classes = [permissions.IsAuthenticated, IsPGUser]
+backend/sims/certificates/api_views.py:40:    permission_classes = [permissions.IsAuthenticated, IsPGUser]
+backend/sims/notifications/views.py:28:    permission_classes = [permissions.IsAuthenticated]
+backend/sims/notifications/views.py:55:    permission_classes = [permissions.IsAuthenticated]
+backend/sims/notifications/views.py:67:    permission_classes = [permissions.IsAuthenticated]
+backend/sims/notifications/views.py:83:    permission_classes = [permissions.IsAuthenticated]
+backend/sims/search/views.py:7:from rest_framework.permissions import IsAuthenticated
+backend/sims/search/views.py:18:    permission_classes = [IsAuthenticated]
+backend/sims/search/views.py:47:    permission_classes = [IsAuthenticated]
+backend/sims/search/views.py:57:    permission_classes = [IsAuthenticated]
+backend/sims/_devtools/endpoints.json:585:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:595:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:605:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:615:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:625:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:635:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:645:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:655:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:665:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:675:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:685:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:695:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:705:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:715:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:725:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:735:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:745:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:755:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:765:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:775:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:785:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:795:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:805:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:815:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:825:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:835:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:845:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:855:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:865:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:875:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:885:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:895:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:905:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:915:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:925:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:935:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:945:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:955:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:965:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:975:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:985:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:995:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:1005:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:1015:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:1025:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:1035:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:1045:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:1055:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:1065:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:1075:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:1085:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:1095:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:1105:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:1115:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:1125:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:1135:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:1145:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:1155:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:1165:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:1175:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:1185:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:1195:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:1205:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:1215:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:1225:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:1235:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:1245:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:1255:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:1265:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:1275:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:1285:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:1295:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:1305:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:1315:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:1325:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:1335:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:1345:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:1355:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:1365:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:1375:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:1385:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:1395:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:1405:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:1415:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:1425:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:1435:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:1445:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:1455:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:1465:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:1475:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:1485:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:1495:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:1505:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:1515:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:1525:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:1535:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:1545:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:1555:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:1565:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:1575:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:1585:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:1595:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:1605:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:1615:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:1625:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:1635:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:1645:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:1655:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:1665:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:1675:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:1685:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:1695:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:1705:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:1715:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:1725:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:1735:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:1745:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:1755:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:1765:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:1775:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:1785:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:1795:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:1805:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:1815:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:1825:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:1835:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:1845:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:1855:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:1865:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:1875:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:1885:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:1895:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:1905:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:1915:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:1925:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:1935:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:1945:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:1955:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:1965:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:1975:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:1985:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:1995:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:2005:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:2015:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:2025:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:2035:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:2045:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:2055:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:2065:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:2075:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:2205:      "IsAuthenticated",
+backend/sims/_devtools/endpoints.json:2216:      "IsAuthenticated",
+backend/sims/_devtools/endpoints.json:2227:      "IsAuthenticated",
+backend/sims/_devtools/endpoints.json:2238:      "IsAuthenticated",
+backend/sims/_devtools/endpoints.json:2249:      "IsAuthenticated",
+backend/sims/_devtools/endpoints.json:2260:      "IsAuthenticated",
+backend/sims/_devtools/endpoints.json:2271:      "IsAuthenticated",
+backend/sims/_devtools/endpoints.json:2282:      "IsAuthenticated",
+backend/sims/_devtools/endpoints.json:2293:      "IsAuthenticated",
+backend/sims/_devtools/endpoints.json:2304:      "IsAuthenticated",
+backend/sims/_devtools/endpoints.json:2315:      "IsAuthenticated",
+backend/sims/_devtools/endpoints.json:2326:      "IsAuthenticated",
+backend/sims/_devtools/endpoints.json:2337:      "IsAuthenticated",
+backend/sims/_devtools/endpoints.json:2348:      "IsAuthenticated",
+backend/sims/_devtools/endpoints.json:2359:      "IsAuthenticated",
+backend/sims/_devtools/endpoints.json:2370:      "IsAuthenticated",
+backend/sims/_devtools/endpoints.json:2381:      "IsAuthenticated",
+backend/sims/_devtools/endpoints.json:2392:      "IsAuthenticated",
+backend/sims/_devtools/endpoints.json:2467:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:2477:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:2487:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:2497:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:2507:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:2517:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:2527:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:2537:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:2547:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:2557:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:2567:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:2577:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:2587:      "IsAuthenticated",
+backend/sims/_devtools/endpoints.json:2598:      "IsAuthenticated",
+backend/sims/_devtools/endpoints.json:2609:      "IsAuthenticated",
+backend/sims/_devtools/endpoints.json:2620:      "IsAuthenticated",
+backend/sims/_devtools/endpoints.json:2631:      "IsAuthenticated",
+backend/sims/_devtools/endpoints.json:2642:      "IsAuthenticated",
+backend/sims/_devtools/endpoints.json:2653:      "IsAuthenticated",
+backend/sims/_devtools/endpoints.json:2664:      "IsAuthenticated",
+backend/sims/_devtools/endpoints.json:2675:      "IsAuthenticated",
+backend/sims/_devtools/endpoints.json:2686:      "IsAuthenticated",
+backend/sims/_devtools/endpoints.json:2697:      "IsAuthenticated",
+backend/sims/_devtools/endpoints.json:2708:      "IsAuthenticated",
+backend/sims/_devtools/endpoints.json:2719:      "IsAuthenticated",
+backend/sims/_devtools/endpoints.json:2731:      "IsAuthenticated",
+backend/sims/_devtools/endpoints.json:2743:      "IsAuthenticated",
+backend/sims/_devtools/endpoints.json:2755:      "IsAuthenticated",
+backend/sims/_devtools/endpoints.json:2767:      "IsAuthenticated",
+backend/sims/_devtools/endpoints.json:2779:      "IsAuthenticated",
+backend/sims/_devtools/endpoints.json:2791:      "IsAuthenticated",
+backend/sims/_devtools/endpoints.json:2802:      "IsAuthenticated",
+backend/sims/_devtools/endpoints.json:2813:      "IsAuthenticated",
+backend/sims/_devtools/endpoints.json:2824:      "IsAuthenticated",
+backend/sims/_devtools/endpoints.json:2835:      "IsAuthenticated",
+backend/sims/_devtools/endpoints.json:2846:      "IsAuthenticated",
+backend/sims/_devtools/endpoints.json:2857:      "IsAuthenticated",
+backend/sims/_devtools/endpoints.json:2868:      "IsAuthenticated",
+backend/sims/_devtools/endpoints.json:2879:      "IsAuthenticated",
+backend/sims/_devtools/endpoints.json:2890:      "IsAuthenticated",
+backend/sims/_devtools/endpoints.json:2901:      "IsAuthenticated",
+backend/sims/_devtools/endpoints.json:2912:      "IsAuthenticated",
+backend/sims/_devtools/endpoints.json:2923:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:2933:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:2943:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:2953:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:2963:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:2973:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:2983:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:2993:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:3003:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:3013:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:3023:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:3033:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:3043:      "IsAuthenticated",
+backend/sims/_devtools/endpoints.json:3054:      "IsAuthenticated",
+backend/sims/_devtools/endpoints.json:3065:      "IsAuthenticated",
+backend/sims/_devtools/endpoints.json:3076:      "IsAuthenticated",
+backend/sims/_devtools/endpoints.json:3087:      "IsAuthenticated",
+backend/sims/_devtools/endpoints.json:3098:      "IsAuthenticated",
+backend/sims/_devtools/endpoints.json:3237:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:3247:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:3257:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:3267:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:3277:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:3287:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:3297:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:3307:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:3317:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:3327:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:3337:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:3347:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:3469:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:3479:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:3489:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:3499:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:3509:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:3519:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:3529:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:3539:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:3549:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:3559:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:3569:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:3579:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:3685:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:3705:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:3715:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:3725:      "IsAuthenticated"
+backend/sims/_devtools/endpoints.json:3755:      "IsAuthenticated"

@@ -1,0 +1,16 @@
+HTTP/2 404 
+alt-svc: h3=":443"; ma=2592000
+content-type: text/html; charset=utf-8
+cross-origin-opener-policy: same-origin
+date: Sat, 28 Feb 2026 08:38:38 GMT
+permissions-policy: camera=(), microphone=(), geolocation=()
+referrer-policy: strict-origin-when-cross-origin
+strict-transport-security: max-age=31536000; includeSubDomains; preload
+vary: Cookie, origin
+via: 1.1 Caddy
+x-content-type-options: nosniff
+x-frame-options: SAMEORIGIN
+x-request-id: ab4b69505a52410a968d984d32f113fd
+x-response-time: 1ms
+content-length: 179
+

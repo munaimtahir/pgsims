@@ -1,0 +1,19 @@
+HTTP/2 302 
+alt-svc: h3=":443"; ma=2592000
+cache-control: max-age=0, no-cache, no-store, must-revalidate, private
+content-type: text/html; charset=utf-8
+cross-origin-opener-policy: same-origin
+date: Sat, 28 Feb 2026 08:40:10 GMT
+expires: Sat, 28 Feb 2026 08:40:10 GMT
+location: /admin/login/?next=/admin/
+permissions-policy: camera=(), microphone=(), geolocation=()
+referrer-policy: strict-origin-when-cross-origin
+strict-transport-security: max-age=31536000; includeSubDomains; preload
+vary: Cookie, origin
+via: 1.1 Caddy
+x-content-type-options: nosniff
+x-frame-options: SAMEORIGIN
+x-request-id: d329ce0b7a664c65a7b7351f9ae65670
+x-response-time: 78ms
+content-length: 0
+

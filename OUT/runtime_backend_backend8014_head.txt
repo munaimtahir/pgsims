@@ -1,0 +1,9 @@
+HTTP/1.1 400 Bad Request
+Server: gunicorn
+Date: Sat, 28 Feb 2026 08:38:26 GMT
+Connection: close
+Content-Type: text/html; charset=utf-8
+X-Content-Type-Options: nosniff
+Referrer-Policy: same-origin
+Cross-Origin-Opener-Policy: same-origin
+

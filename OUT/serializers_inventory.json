@@ -1,0 +1,3782 @@
+[
+  {
+    "module": "sims.academics.serializers",
+    "name": "BatchSerializer",
+    "type": "ModelSerializer",
+    "fields": [
+      {
+        "name": "id",
+        "type": "IntegerField",
+        "required": false,
+        "read_only": true,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "name",
+        "type": "CharField",
+        "required": true,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "program",
+        "type": "ChoiceField",
+        "required": true,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "department",
+        "type": "PrimaryKeyRelatedField",
+        "required": true,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "department_name",
+        "type": "CharField",
+        "required": false,
+        "read_only": true,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "start_date",
+        "type": "DateField",
+        "required": true,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "end_date",
+        "type": "DateField",
+        "required": true,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "coordinator",
+        "type": "PrimaryKeyRelatedField",
+        "required": false,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": true
+      },
+      {
+        "name": "coordinator_name",
+        "type": "CharField",
+        "required": false,
+        "read_only": true,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "capacity",
+        "type": "IntegerField",
+        "required": false,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "current_strength",
+        "type": "IntegerField",
+        "required": false,
+        "read_only": true,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "is_full",
+        "type": "BooleanField",
+        "required": false,
+        "read_only": true,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "active",
+        "type": "BooleanField",
+        "required": false,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "created_at",
+        "type": "DateTimeField",
+        "required": false,
+        "read_only": true,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "updated_at",
+        "type": "DateTimeField",
+        "required": false,
+        "read_only": true,
+        "write_only": false,
+        "allow_null": false
+      }
+    ],
+    "example": {
+      "name": "string",
+      "program": "choice_value",
+      "department": 1,
+      "start_date": "2026-01-01",
+      "end_date": "2026-01-01",
+      "coordinator": 1,
+      "capacity": 1,
+      "active": true
+    },
+    "error": null
+  },
+  {
+    "module": "sims.academics.serializers",
+    "name": "DepartmentSerializer",
+    "type": "ModelSerializer",
+    "fields": [
+      {
+        "name": "id",
+        "type": "IntegerField",
+        "required": false,
+        "read_only": true,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "name",
+        "type": "CharField",
+        "required": true,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "code",
+        "type": "CharField",
+        "required": true,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "description",
+        "type": "CharField",
+        "required": false,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "head",
+        "type": "PrimaryKeyRelatedField",
+        "required": false,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": true
+      },
+      {
+        "name": "head_name",
+        "type": "CharField",
+        "required": false,
+        "read_only": true,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "active",
+        "type": "BooleanField",
+        "required": false,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "created_at",
+        "type": "DateTimeField",
+        "required": false,
+        "read_only": true,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "updated_at",
+        "type": "DateTimeField",
+        "required": false,
+        "read_only": true,
+        "write_only": false,
+        "allow_null": false
+      }
+    ],
+    "example": {
+      "name": "string",
+      "code": "string",
+      "description": "string",
+      "head": 1,
+      "active": true
+    },
+    "error": null
+  },
+  {
+    "module": "sims.academics.serializers",
+    "name": "StudentProfileSerializer",
+    "type": "ModelSerializer",
+    "fields": [
+      {
+        "name": "id",
+        "type": "IntegerField",
+        "required": false,
+        "read_only": true,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "user",
+        "type": "PrimaryKeyRelatedField",
+        "required": true,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "user_name",
+        "type": "CharField",
+        "required": false,
+        "read_only": true,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "user_email",
+        "type": "EmailField",
+        "required": false,
+        "read_only": true,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "batch",
+        "type": "PrimaryKeyRelatedField",
+        "required": true,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "batch_name",
+        "type": "CharField",
+        "required": false,
+        "read_only": true,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "department_name",
+        "type": "CharField",
+        "required": false,
+        "read_only": true,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "roll_number",
+        "type": "CharField",
+        "required": true,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "admission_date",
+        "type": "DateField",
+        "required": true,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "expected_graduation_date",
+        "type": "DateField",
+        "required": false,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": true
+      },
+      {
+        "name": "actual_graduation_date",
+        "type": "DateField",
+        "required": false,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": true
+      },
+      {
+        "name": "status",
+        "type": "ChoiceField",
+        "required": false,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "status_updated_at",
+        "type": "DateTimeField",
+        "required": false,
+        "read_only": true,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "cgpa",
+        "type": "DecimalField",
+        "required": false,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": true
+      },
+      {
+        "name": "previous_institution",
+        "type": "CharField",
+        "required": false,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "previous_qualification",
+        "type": "CharField",
+        "required": false,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "emergency_contact_name",
+        "type": "CharField",
+        "required": false,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "emergency_contact_phone",
+        "type": "CharField",
+        "required": false,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "emergency_contact_relation",
+        "type": "CharField",
+        "required": false,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "remarks",
+        "type": "CharField",
+        "required": false,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "is_active",
+        "type": "BooleanField",
+        "required": false,
+        "read_only": true,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "duration",
+        "type": "IntegerField",
+        "required": false,
+        "read_only": true,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "created_at",
+        "type": "DateTimeField",
+        "required": false,
+        "read_only": true,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "updated_at",
+        "type": "DateTimeField",
+        "required": false,
+        "read_only": true,
+        "write_only": false,
+        "allow_null": false
+      }
+    ],
+    "example": {
+      "user": 1,
+      "batch": 1,
+      "roll_number": "string",
+      "admission_date": "2026-01-01",
+      "expected_graduation_date": "2026-01-01",
+      "actual_graduation_date": "2026-01-01",
+      "status": "choice_value",
+      "cgpa": "10.00",
+      "previous_institution": "string",
+      "previous_qualification": "string",
+      "emergency_contact_name": "string",
+      "emergency_contact_phone": "string",
+      "emergency_contact_relation": "string",
+      "remarks": "string"
+    },
+    "error": null
+  },
+  {
+    "module": "sims.analytics.serializers",
+    "name": "AnalyticsCardSerializer",
+    "type": "Serializer",
+    "fields": [
+      {
+        "name": "key",
+        "type": "CharField",
+        "required": true,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "title",
+        "type": "CharField",
+        "required": true,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "value",
+        "type": "FloatField",
+        "required": true,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      }
+    ],
+    "example": {
+      "key": "string",
+      "title": "string",
+      "value": 1.5
+    },
+    "error": null
+  },
+  {
+    "module": "sims.analytics.serializers",
+    "name": "AnalyticsFilterOptionSerializer",
+    "type": "Serializer",
+    "fields": [
+      {
+        "name": "id",
+        "type": "IntegerField",
+        "required": true,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "name",
+        "type": "CharField",
+        "required": true,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      }
+    ],
+    "example": {
+      "id": 1,
+      "name": "string"
+    },
+    "error": null
+  },
+  {
+    "module": "sims.analytics.serializers",
+    "name": "AnalyticsFiltersSerializer",
+    "type": "Serializer",
+    "fields": [
+      {
+        "name": "roles",
+        "type": "ListField",
+        "required": true,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "departments",
+        "type": "ListSerializer",
+        "required": true,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "hospitals",
+        "type": "ListSerializer",
+        "required": true,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      }
+    ],
+    "example": {
+      "roles": [],
+      "departments": [],
+      "hospitals": []
+    },
+    "error": null
+  },
+  {
+    "module": "sims.analytics.serializers",
+    "name": "AnalyticsLivePayloadSerializer",
+    "type": "Serializer",
+    "fields": [
+      {
+        "name": "date_range",
+        "type": "DictField",
+        "required": true,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "cursor",
+        "type": "CharField",
+        "required": false,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": true
+      },
+      {
+        "name": "events",
+        "type": "ListField",
+        "required": true,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      }
+    ],
+    "example": {
+      "date_range": "value",
+      "cursor": "string",
+      "events": []
+    },
+    "error": null
+  },
+  {
+    "module": "sims.analytics.serializers",
+    "name": "AnalyticsTabPayloadSerializer",
+    "type": "Serializer",
+    "fields": [
+      {
+        "name": "title",
+        "type": "CharField",
+        "required": true,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "date_range",
+        "type": "DictField",
+        "required": true,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "cards",
+        "type": "ListSerializer",
+        "required": true,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "table",
+        "type": "AnalyticsTableSerializer",
+        "required": true,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "series",
+        "type": "ListField",
+        "required": true,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      }
+    ],
+    "example": {
+      "title": "string",
+      "date_range": "value",
+      "cards": [],
+      "table": {},
+      "series": []
+    },
+    "error": null
+  },
+  {
+    "module": "sims.analytics.serializers",
+    "name": "AnalyticsTableSerializer",
+    "type": "Serializer",
+    "fields": [
+      {
+        "name": "columns",
+        "type": "ListField",
+        "required": true,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "rows",
+        "type": "ListField",
+        "required": true,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      }
+    ],
+    "example": {
+      "columns": [],
+      "rows": []
+    },
+    "error": null
+  },
+  {
+    "module": "sims.analytics.serializers",
+    "name": "AnalyticsUIEventIngestSerializer",
+    "type": "Serializer",
+    "fields": [
+      {
+        "name": "event_type",
+        "type": "CharField",
+        "required": true,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "metadata",
+        "type": "DictField",
+        "required": false,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "department_id",
+        "type": "IntegerField",
+        "required": false,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": true
+      },
+      {
+        "name": "hospital_id",
+        "type": "IntegerField",
+        "required": false,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": true
+      },
+      {
+        "name": "entity_type",
+        "type": "CharField",
+        "required": false,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "entity_id",
+        "type": "CharField",
+        "required": false,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "event_key",
+        "type": "CharField",
+        "required": false,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "occurred_at",
+        "type": "DateTimeField",
+        "required": false,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      }
+    ],
+    "example": {
+      "event_type": "string",
+      "metadata": "value",
+      "department_id": 1,
+      "hospital_id": 1,
+      "entity_type": "string",
+      "entity_id": "string",
+      "event_key": "string",
+      "occurred_at": "2026-01-01T00:00:00Z"
+    },
+    "error": null
+  },
+  {
+    "module": "sims.analytics.serializers",
+    "name": "ComparativeGroupSerializer",
+    "type": "Serializer",
+    "fields": [
+      {
+        "name": "value",
+        "type": "FloatField",
+        "required": true,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "total_entries",
+        "type": "IntegerField",
+        "required": true,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "approved",
+        "type": "IntegerField",
+        "required": true,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "average_score",
+        "type": "FloatField",
+        "required": true,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      }
+    ],
+    "example": {
+      "value": 1.5,
+      "total_entries": 1,
+      "approved": 1,
+      "average_score": 1.5
+    },
+    "error": null
+  },
+  {
+    "module": "sims.analytics.serializers",
+    "name": "ComparativeResponseSerializer",
+    "type": "Serializer",
+    "fields": [
+      {
+        "name": "primary",
+        "type": "ComparativeGroupSerializer",
+        "required": true,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "secondary",
+        "type": "ComparativeGroupSerializer",
+        "required": true,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      }
+    ],
+    "example": {
+      "primary": {},
+      "secondary": {}
+    },
+    "error": null
+  },
+  {
+    "module": "sims.analytics.serializers",
+    "name": "ComplianceDataSerializer",
+    "type": "Serializer",
+    "fields": [
+      {
+        "name": "rotation_name",
+        "type": "CharField",
+        "required": true,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "total_logs",
+        "type": "IntegerField",
+        "required": true,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "verified_logs",
+        "type": "IntegerField",
+        "required": true,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "verification_percentage",
+        "type": "FloatField",
+        "required": true,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      }
+    ],
+    "example": {
+      "rotation_name": "string",
+      "total_logs": 1,
+      "verified_logs": 1,
+      "verification_percentage": 1.5
+    },
+    "error": null
+  },
+  {
+    "module": "sims.analytics.serializers",
+    "name": "DashboardComplianceSerializer",
+    "type": "Serializer",
+    "fields": [
+      {
+        "name": "compliance",
+        "type": "ListSerializer",
+        "required": true,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      }
+    ],
+    "example": {
+      "compliance": []
+    },
+    "error": null
+  },
+  {
+    "module": "sims.analytics.serializers",
+    "name": "DashboardOverviewSerializer",
+    "type": "Serializer",
+    "fields": [
+      {
+        "name": "total_residents",
+        "type": "IntegerField",
+        "required": true,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "active_rotations",
+        "type": "IntegerField",
+        "required": true,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "pending_certificates",
+        "type": "IntegerField",
+        "required": true,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "last_30d_logs",
+        "type": "IntegerField",
+        "required": true,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "last_30d_cases",
+        "type": "IntegerField",
+        "required": true,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "unverified_logs",
+        "type": "IntegerField",
+        "required": true,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      }
+    ],
+    "example": {
+      "total_residents": 1,
+      "active_rotations": 1,
+      "pending_certificates": 1,
+      "last_30d_logs": 1,
+      "last_30d_cases": 1,
+      "unverified_logs": 1
+    },
+    "error": null
+  },
+  {
+    "module": "sims.analytics.serializers",
+    "name": "DashboardTrendsSerializer",
+    "type": "Serializer",
+    "fields": [
+      {
+        "name": "trends",
+        "type": "ListSerializer",
+        "required": true,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      }
+    ],
+    "example": {
+      "trends": []
+    },
+    "error": null
+  },
+  {
+    "module": "sims.analytics.serializers",
+    "name": "MonthlyTrendSerializer",
+    "type": "Serializer",
+    "fields": [
+      {
+        "name": "month",
+        "type": "CharField",
+        "required": true,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "department",
+        "type": "CharField",
+        "required": true,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "case_count",
+        "type": "IntegerField",
+        "required": true,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "log_count",
+        "type": "IntegerField",
+        "required": true,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      }
+    ],
+    "example": {
+      "month": "string",
+      "department": "string",
+      "case_count": 1,
+      "log_count": 1
+    },
+    "error": null
+  },
+  {
+    "module": "sims.analytics.serializers",
+    "name": "PerformanceMetricsSerializer",
+    "type": "Serializer",
+    "fields": [
+      {
+        "name": "total_entries",
+        "type": "FloatField",
+        "required": true,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "pending",
+        "type": "FloatField",
+        "required": true,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "approved",
+        "type": "FloatField",
+        "required": true,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "approval_rate",
+        "type": "FloatField",
+        "required": true,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "rejection_rate",
+        "type": "FloatField",
+        "required": true,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "pending_rate",
+        "type": "FloatField",
+        "required": true,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "average_review_hours",
+        "type": "FloatField",
+        "required": true,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      }
+    ],
+    "example": {
+      "total_entries": 1.5,
+      "pending": 1.5,
+      "approved": 1.5,
+      "approval_rate": 1.5,
+      "rejection_rate": 1.5,
+      "pending_rate": 1.5,
+      "average_review_hours": 1.5
+    },
+    "error": null
+  },
+  {
+    "module": "sims.analytics.serializers",
+    "name": "TrendPointSerializer",
+    "type": "Serializer",
+    "fields": [
+      {
+        "name": "date",
+        "type": "DateField",
+        "required": true,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "count",
+        "type": "IntegerField",
+        "required": true,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "approved",
+        "type": "IntegerField",
+        "required": true,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "avg_score",
+        "type": "FloatField",
+        "required": true,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": true
+      },
+      {
+        "name": "moving_average",
+        "type": "FloatField",
+        "required": true,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": true
+      }
+    ],
+    "example": {
+      "date": "2026-01-01",
+      "count": 1,
+      "approved": 1,
+      "avg_score": 1.5,
+      "moving_average": 1.5
+    },
+    "error": null
+  },
+  {
+    "module": "sims.analytics.serializers",
+    "name": "TrendResponseSerializer",
+    "type": "Serializer",
+    "fields": [
+      {
+        "name": "metric",
+        "type": "CharField",
+        "required": true,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "window",
+        "type": "IntegerField",
+        "required": true,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "series",
+        "type": "ListSerializer",
+        "required": true,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      }
+    ],
+    "example": {
+      "metric": "string",
+      "window": 1,
+      "series": []
+    },
+    "error": null
+  },
+  {
+    "module": "sims.audit.serializers",
+    "name": "ActivityLogSerializer",
+    "type": "ModelSerializer",
+    "fields": [
+      {
+        "name": "id",
+        "type": "IntegerField",
+        "required": false,
+        "read_only": true,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "actor",
+        "type": "PrimaryKeyRelatedField",
+        "required": false,
+        "read_only": true,
+        "write_only": false,
+        "allow_null": true
+      },
+      {
+        "name": "actor_display",
+        "type": "CharField",
+        "required": false,
+        "read_only": true,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "action",
+        "type": "ChoiceField",
+        "required": false,
+        "read_only": true,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "verb",
+        "type": "CharField",
+        "required": false,
+        "read_only": true,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "target_object_id",
+        "type": "CharField",
+        "required": false,
+        "read_only": true,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "target_repr",
+        "type": "CharField",
+        "required": false,
+        "read_only": true,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "metadata",
+        "type": "JSONField",
+        "required": false,
+        "read_only": true,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "ip_address",
+        "type": "IPAddressField",
+        "required": false,
+        "read_only": true,
+        "write_only": false,
+        "allow_null": true
+      },
+      {
+        "name": "is_sensitive",
+        "type": "BooleanField",
+        "required": false,
+        "read_only": true,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "created_at",
+        "type": "DateTimeField",
+        "required": false,
+        "read_only": true,
+        "write_only": false,
+        "allow_null": false
+      }
+    ],
+    "example": {},
+    "error": null
+  },
+  {
+    "module": "sims.audit.serializers",
+    "name": "AuditReportSerializer",
+    "type": "ModelSerializer",
+    "fields": [
+      {
+        "name": "id",
+        "type": "IntegerField",
+        "required": false,
+        "read_only": true,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "start",
+        "type": "DateTimeField",
+        "required": true,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "end",
+        "type": "DateTimeField",
+        "required": true,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "generated_at",
+        "type": "DateTimeField",
+        "required": false,
+        "read_only": true,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "payload",
+        "type": "JSONField",
+        "required": false,
+        "read_only": true,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "created_by",
+        "type": "PrimaryKeyRelatedField",
+        "required": false,
+        "read_only": true,
+        "write_only": false,
+        "allow_null": true
+      }
+    ],
+    "example": {
+      "start": "2026-01-01T00:00:00Z",
+      "end": "2026-01-01T00:00:00Z"
+    },
+    "error": null
+  },
+  {
+    "module": "sims.bulk.serializers",
+    "name": "BulkAssignmentSerializer",
+    "type": "Serializer",
+    "fields": [
+      {
+        "name": "entry_ids",
+        "type": "ListField",
+        "required": true,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "supervisor_id",
+        "type": "IntegerField",
+        "required": true,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      }
+    ],
+    "example": {
+      "entry_ids": [],
+      "supervisor_id": 1
+    },
+    "error": null
+  },
+  {
+    "module": "sims.bulk.serializers",
+    "name": "BulkImportSerializer",
+    "type": "Serializer",
+    "fields": [
+      {
+        "name": "file",
+        "type": "FileField",
+        "required": true,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "dry_run",
+        "type": "BooleanField",
+        "required": false,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "allow_partial",
+        "type": "BooleanField",
+        "required": false,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      }
+    ],
+    "example": {
+      "file": "value",
+      "dry_run": true,
+      "allow_partial": true
+    },
+    "error": null
+  },
+  {
+    "module": "sims.bulk.serializers",
+    "name": "BulkReviewSerializer",
+    "type": "Serializer",
+    "fields": [
+      {
+        "name": "entry_ids",
+        "type": "ListField",
+        "required": true,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "status",
+        "type": "ChoiceField",
+        "required": true,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      }
+    ],
+    "example": {
+      "entry_ids": [],
+      "status": "choice_value"
+    },
+    "error": null
+  },
+  {
+    "module": "sims.bulk.serializers",
+    "name": "DepartmentImportSerializer",
+    "type": "Serializer",
+    "fields": [
+      {
+        "name": "file",
+        "type": "FileField",
+        "required": true,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "dry_run",
+        "type": "BooleanField",
+        "required": false,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "allow_partial",
+        "type": "BooleanField",
+        "required": false,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      }
+    ],
+    "example": {
+      "file": "value",
+      "dry_run": true,
+      "allow_partial": true
+    },
+    "error": null
+  },
+  {
+    "module": "sims.bulk.serializers",
+    "name": "ResidentImportSerializer",
+    "type": "Serializer",
+    "fields": [
+      {
+        "name": "file",
+        "type": "FileField",
+        "required": true,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "dry_run",
+        "type": "BooleanField",
+        "required": false,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "allow_partial",
+        "type": "BooleanField",
+        "required": false,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "generate_passwords",
+        "type": "BooleanField",
+        "required": false,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      }
+    ],
+    "example": {
+      "file": "value",
+      "dry_run": true,
+      "allow_partial": true,
+      "generate_passwords": true
+    },
+    "error": null
+  },
+  {
+    "module": "sims.bulk.serializers",
+    "name": "SupervisorImportSerializer",
+    "type": "Serializer",
+    "fields": [
+      {
+        "name": "file",
+        "type": "FileField",
+        "required": true,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "dry_run",
+        "type": "BooleanField",
+        "required": false,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "allow_partial",
+        "type": "BooleanField",
+        "required": false,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "generate_passwords",
+        "type": "BooleanField",
+        "required": false,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      }
+    ],
+    "example": {
+      "file": "value",
+      "dry_run": true,
+      "allow_partial": true,
+      "generate_passwords": true
+    },
+    "error": null
+  },
+  {
+    "module": "sims.bulk.serializers",
+    "name": "TraineeImportSerializer",
+    "type": "Serializer",
+    "fields": [
+      {
+        "name": "file",
+        "type": "FileField",
+        "required": true,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "dry_run",
+        "type": "BooleanField",
+        "required": false,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "allow_partial",
+        "type": "BooleanField",
+        "required": false,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      }
+    ],
+    "example": {
+      "file": "value",
+      "dry_run": true,
+      "allow_partial": true
+    },
+    "error": null
+  },
+  {
+    "module": "sims.cases.api_serializers",
+    "name": "CaseCategorySerializer",
+    "type": "ModelSerializer",
+    "fields": [
+      {
+        "name": "id",
+        "type": "IntegerField",
+        "required": false,
+        "read_only": true,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "name",
+        "type": "CharField",
+        "required": true,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "description",
+        "type": "CharField",
+        "required": false,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "color_code",
+        "type": "CharField",
+        "required": false,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      }
+    ],
+    "example": {
+      "name": "string",
+      "description": "string",
+      "color_code": "string"
+    },
+    "error": null
+  },
+  {
+    "module": "sims.cases.api_serializers",
+    "name": "CaseReviewSerializer",
+    "type": "ModelSerializer",
+    "fields": [
+      {
+        "name": "status",
+        "type": "ChoiceField",
+        "required": true,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "overall_feedback",
+        "type": "CharField",
+        "required": true,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "clinical_reasoning_feedback",
+        "type": "CharField",
+        "required": false,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "documentation_feedback",
+        "type": "CharField",
+        "required": false,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "learning_points_feedback",
+        "type": "CharField",
+        "required": false,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "strengths_identified",
+        "type": "CharField",
+        "required": false,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "areas_for_improvement",
+        "type": "CharField",
+        "required": false,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "recommendations",
+        "type": "CharField",
+        "required": false,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "follow_up_required",
+        "type": "BooleanField",
+        "required": false,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "clinical_knowledge_score",
+        "type": "IntegerField",
+        "required": false,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": true
+      },
+      {
+        "name": "clinical_reasoning_score",
+        "type": "IntegerField",
+        "required": false,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": true
+      },
+      {
+        "name": "documentation_score",
+        "type": "IntegerField",
+        "required": false,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": true
+      },
+      {
+        "name": "overall_score",
+        "type": "IntegerField",
+        "required": false,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": true
+      }
+    ],
+    "example": {
+      "status": "choice_value",
+      "overall_feedback": "string",
+      "clinical_reasoning_feedback": "string",
+      "documentation_feedback": "string",
+      "learning_points_feedback": "string",
+      "strengths_identified": "string",
+      "areas_for_improvement": "string",
+      "recommendations": "string",
+      "follow_up_required": true,
+      "clinical_knowledge_score": 1,
+      "clinical_reasoning_score": 1,
+      "documentation_score": 1,
+      "overall_score": 1
+    },
+    "error": null
+  },
+  {
+    "module": "sims.cases.api_serializers",
+    "name": "ClinicalCaseSerializer",
+    "type": "ModelSerializer",
+    "fields": [
+      {
+        "name": "id",
+        "type": "IntegerField",
+        "required": false,
+        "read_only": true,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "case_title",
+        "type": "CharField",
+        "required": true,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "status",
+        "type": "ChoiceField",
+        "required": false,
+        "read_only": true,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "date_encountered",
+        "type": "DateField",
+        "required": true,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "patient_age",
+        "type": "IntegerField",
+        "required": true,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "patient_gender",
+        "type": "ChoiceField",
+        "required": true,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "complexity",
+        "type": "ChoiceField",
+        "required": false,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "chief_complaint",
+        "type": "CharField",
+        "required": true,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "history_of_present_illness",
+        "type": "CharField",
+        "required": true,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "physical_examination",
+        "type": "CharField",
+        "required": true,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "management_plan",
+        "type": "CharField",
+        "required": true,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "clinical_reasoning",
+        "type": "CharField",
+        "required": true,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "learning_points",
+        "type": "CharField",
+        "required": true,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "supervisor_feedback",
+        "type": "CharField",
+        "required": false,
+        "read_only": true,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "category",
+        "type": "PrimaryKeyRelatedField",
+        "required": false,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": true
+      },
+      {
+        "name": "category_name",
+        "type": "CharField",
+        "required": false,
+        "read_only": true,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "primary_diagnosis",
+        "type": "PrimaryKeyRelatedField",
+        "required": false,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": true
+      },
+      {
+        "name": "rotation",
+        "type": "PrimaryKeyRelatedField",
+        "required": false,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": true
+      },
+      {
+        "name": "pg",
+        "type": "PrimaryKeyRelatedField",
+        "required": false,
+        "read_only": true,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "pg_name",
+        "type": "CharField",
+        "required": false,
+        "read_only": true,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "supervisor",
+        "type": "PrimaryKeyRelatedField",
+        "required": false,
+        "read_only": true,
+        "write_only": false,
+        "allow_null": true
+      },
+      {
+        "name": "supervisor_name",
+        "type": "CharField",
+        "required": false,
+        "read_only": true,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "created_at",
+        "type": "DateTimeField",
+        "required": false,
+        "read_only": true,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "updated_at",
+        "type": "DateTimeField",
+        "required": false,
+        "read_only": true,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "reviewed_at",
+        "type": "DateTimeField",
+        "required": false,
+        "read_only": true,
+        "write_only": false,
+        "allow_null": true
+      }
+    ],
+    "example": {
+      "case_title": "string",
+      "date_encountered": "2026-01-01",
+      "patient_age": 1,
+      "patient_gender": "choice_value",
+      "complexity": "choice_value",
+      "chief_complaint": "string",
+      "history_of_present_illness": "string",
+      "physical_examination": "string",
+      "management_plan": "string",
+      "clinical_reasoning": "string",
+      "learning_points": "string",
+      "category": 1,
+      "primary_diagnosis": 1,
+      "rotation": 1
+    },
+    "error": null
+  },
+  {
+    "module": "sims.certificates.api_serializers",
+    "name": "CertificateSerializer",
+    "type": "ModelSerializer",
+    "fields": [
+      {
+        "name": "id",
+        "type": "IntegerField",
+        "required": false,
+        "read_only": true,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "title",
+        "type": "CharField",
+        "required": true,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "certificate_type_name",
+        "type": "CharField",
+        "required": false,
+        "read_only": true,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "issue_date",
+        "type": "DateField",
+        "required": true,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "status",
+        "type": "ChoiceField",
+        "required": false,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "has_file",
+        "type": "SerializerMethodField",
+        "required": false,
+        "read_only": true,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "file_name",
+        "type": "SerializerMethodField",
+        "required": false,
+        "read_only": true,
+        "write_only": false,
+        "allow_null": false
+      }
+    ],
+    "example": {
+      "title": "string",
+      "issue_date": "2026-01-01",
+      "status": "choice_value"
+    },
+    "error": null
+  },
+  {
+    "module": "sims.logbook.api_serializers",
+    "name": "PGLogbookEntrySerializer",
+    "type": "ModelSerializer",
+    "fields": [
+      {
+        "name": "id",
+        "type": "IntegerField",
+        "required": false,
+        "read_only": true,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "case_title",
+        "type": "CharField",
+        "required": true,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "date",
+        "type": "DateField",
+        "required": true,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "location_of_activity",
+        "type": "CharField",
+        "required": false,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "patient_history_summary",
+        "type": "CharField",
+        "required": false,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "management_action",
+        "type": "CharField",
+        "required": false,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "topic_subtopic",
+        "type": "CharField",
+        "required": false,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "status",
+        "type": "ChoiceField",
+        "required": false,
+        "read_only": true,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "created_at",
+        "type": "DateTimeField",
+        "required": false,
+        "read_only": true,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "updated_at",
+        "type": "DateTimeField",
+        "required": false,
+        "read_only": true,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "supervisor_feedback",
+        "type": "CharField",
+        "required": false,
+        "read_only": true,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "feedback",
+        "type": "CharField",
+        "required": false,
+        "read_only": true,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "submitted_to_supervisor_at",
+        "type": "DateTimeField",
+        "required": false,
+        "read_only": true,
+        "write_only": false,
+        "allow_null": true
+      },
+      {
+        "name": "submitted_at",
+        "type": "DateTimeField",
+        "required": false,
+        "read_only": true,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "verified_at",
+        "type": "DateTimeField",
+        "required": false,
+        "read_only": true,
+        "write_only": false,
+        "allow_null": true
+      }
+    ],
+    "example": {
+      "case_title": "string",
+      "date": "2026-01-01",
+      "location_of_activity": "string",
+      "patient_history_summary": "string",
+      "management_action": "string",
+      "topic_subtopic": "string"
+    },
+    "error": null
+  },
+  {
+    "module": "sims.logbook.api_serializers",
+    "name": "PGLogbookEntryWriteSerializer",
+    "type": "ModelSerializer",
+    "fields": [
+      {
+        "name": "case_title",
+        "type": "CharField",
+        "required": true,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "date",
+        "type": "DateField",
+        "required": true,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "location_of_activity",
+        "type": "CharField",
+        "required": false,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "patient_history_summary",
+        "type": "CharField",
+        "required": false,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "management_action",
+        "type": "CharField",
+        "required": false,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "topic_subtopic",
+        "type": "CharField",
+        "required": false,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      }
+    ],
+    "example": {
+      "case_title": "string",
+      "date": "2026-01-01",
+      "location_of_activity": "string",
+      "patient_history_summary": "string",
+      "management_action": "string",
+      "topic_subtopic": "string"
+    },
+    "error": null
+  },
+  {
+    "module": "sims.notifications.serializers",
+    "name": "NotificationMarkReadSerializer",
+    "type": "Serializer",
+    "fields": [
+      {
+        "name": "notification_ids",
+        "type": "ListField",
+        "required": true,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      }
+    ],
+    "example": {
+      "notification_ids": []
+    },
+    "error": null
+  },
+  {
+    "module": "sims.notifications.serializers",
+    "name": "NotificationPreferenceSerializer",
+    "type": "ModelSerializer",
+    "fields": [
+      {
+        "name": "email_enabled",
+        "type": "BooleanField",
+        "required": false,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "in_app_enabled",
+        "type": "BooleanField",
+        "required": false,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "quiet_hours_start",
+        "type": "TimeField",
+        "required": false,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": true
+      },
+      {
+        "name": "quiet_hours_end",
+        "type": "TimeField",
+        "required": false,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": true
+      }
+    ],
+    "example": {
+      "email_enabled": true,
+      "in_app_enabled": true,
+      "quiet_hours_start": "value",
+      "quiet_hours_end": "value"
+    },
+    "error": null
+  },
+  {
+    "module": "sims.notifications.serializers",
+    "name": "NotificationSerializer",
+    "type": "ModelSerializer",
+    "fields": [
+      {
+        "name": "id",
+        "type": "IntegerField",
+        "required": false,
+        "read_only": true,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "verb",
+        "type": "CharField",
+        "required": true,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "title",
+        "type": "CharField",
+        "required": true,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "body",
+        "type": "CharField",
+        "required": true,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "channel",
+        "type": "ChoiceField",
+        "required": false,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "metadata",
+        "type": "JSONField",
+        "required": false,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "is_read",
+        "type": "ReadOnlyField",
+        "required": false,
+        "read_only": true,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "created_at",
+        "type": "DateTimeField",
+        "required": false,
+        "read_only": true,
+        "write_only": false,
+        "allow_null": false
+      }
+    ],
+    "example": {
+      "verb": "string",
+      "title": "string",
+      "body": "string",
+      "channel": "choice_value",
+      "metadata": "value"
+    },
+    "error": null
+  },
+  {
+    "module": "sims.reports.serializers",
+    "name": "ReportRequestSerializer",
+    "type": "Serializer",
+    "fields": [
+      {
+        "name": "template_slug",
+        "type": "SlugField",
+        "required": true,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "format",
+        "type": "ChoiceField",
+        "required": true,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "params",
+        "type": "DictField",
+        "required": false,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      }
+    ],
+    "example": {
+      "template_slug": "sample-slug",
+      "format": "choice_value",
+      "params": "value"
+    },
+    "error": null
+  },
+  {
+    "module": "sims.reports.serializers",
+    "name": "ReportTemplateSerializer",
+    "type": "ModelSerializer",
+    "fields": [
+      {
+        "name": "slug",
+        "type": "SlugField",
+        "required": true,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "name",
+        "type": "CharField",
+        "required": true,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "description",
+        "type": "CharField",
+        "required": false,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "template_name",
+        "type": "CharField",
+        "required": true,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "default_params",
+        "type": "JSONField",
+        "required": false,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      }
+    ],
+    "example": {
+      "slug": "sample-slug",
+      "name": "string",
+      "description": "string",
+      "template_name": "string",
+      "default_params": "value"
+    },
+    "error": null
+  },
+  {
+    "module": "sims.reports.serializers",
+    "name": "ScheduledReportSerializer",
+    "type": "ModelSerializer",
+    "fields": [
+      {
+        "name": "id",
+        "type": "IntegerField",
+        "required": false,
+        "read_only": true,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "template",
+        "type": "PrimaryKeyRelatedField",
+        "required": true,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "email_to",
+        "type": "CharField",
+        "required": true,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "params",
+        "type": "JSONField",
+        "required": false,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "cron",
+        "type": "CharField",
+        "required": true,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "last_run_at",
+        "type": "DateTimeField",
+        "required": false,
+        "read_only": true,
+        "write_only": false,
+        "allow_null": true
+      },
+      {
+        "name": "next_run_at",
+        "type": "DateTimeField",
+        "required": false,
+        "read_only": true,
+        "write_only": false,
+        "allow_null": true
+      },
+      {
+        "name": "is_active",
+        "type": "BooleanField",
+        "required": false,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      }
+    ],
+    "example": {
+      "template": 1,
+      "email_to": "string",
+      "params": "value",
+      "cron": "string",
+      "is_active": true
+    },
+    "error": null
+  },
+  {
+    "module": "sims.results.serializers",
+    "name": "ExamSerializer",
+    "type": "ModelSerializer",
+    "fields": [
+      {
+        "name": "id",
+        "type": "IntegerField",
+        "required": false,
+        "read_only": true,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "title",
+        "type": "CharField",
+        "required": true,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "exam_type",
+        "type": "ChoiceField",
+        "required": false,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "rotation",
+        "type": "PrimaryKeyRelatedField",
+        "required": false,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": true
+      },
+      {
+        "name": "rotation_name",
+        "type": "CharField",
+        "required": false,
+        "read_only": true,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "module_name",
+        "type": "CharField",
+        "required": false,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "date",
+        "type": "DateField",
+        "required": true,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "start_time",
+        "type": "TimeField",
+        "required": false,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": true
+      },
+      {
+        "name": "duration_minutes",
+        "type": "IntegerField",
+        "required": false,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": true
+      },
+      {
+        "name": "max_marks",
+        "type": "DecimalField",
+        "required": false,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "passing_marks",
+        "type": "DecimalField",
+        "required": false,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "requires_eligibility",
+        "type": "BooleanField",
+        "required": false,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "status",
+        "type": "ChoiceField",
+        "required": false,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "conducted_by",
+        "type": "PrimaryKeyRelatedField",
+        "required": false,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": true
+      },
+      {
+        "name": "conducted_by_name",
+        "type": "CharField",
+        "required": false,
+        "read_only": true,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "instructions",
+        "type": "CharField",
+        "required": false,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "remarks",
+        "type": "CharField",
+        "required": false,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "total_scores",
+        "type": "IntegerField",
+        "required": false,
+        "read_only": true,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "created_at",
+        "type": "DateTimeField",
+        "required": false,
+        "read_only": true,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "updated_at",
+        "type": "DateTimeField",
+        "required": false,
+        "read_only": true,
+        "write_only": false,
+        "allow_null": false
+      }
+    ],
+    "example": {
+      "title": "string",
+      "exam_type": "choice_value",
+      "rotation": 1,
+      "module_name": "string",
+      "date": "2026-01-01",
+      "start_time": "value",
+      "duration_minutes": 1,
+      "max_marks": "10.00",
+      "passing_marks": "10.00",
+      "requires_eligibility": true,
+      "status": "choice_value",
+      "conducted_by": 1,
+      "instructions": "string",
+      "remarks": "string"
+    },
+    "error": null
+  },
+  {
+    "module": "sims.results.serializers",
+    "name": "ScoreSerializer",
+    "type": "ModelSerializer",
+    "fields": [
+      {
+        "name": "id",
+        "type": "IntegerField",
+        "required": false,
+        "read_only": true,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "exam",
+        "type": "PrimaryKeyRelatedField",
+        "required": true,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "exam_title",
+        "type": "CharField",
+        "required": false,
+        "read_only": true,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "exam_date",
+        "type": "DateField",
+        "required": false,
+        "read_only": true,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "student",
+        "type": "PrimaryKeyRelatedField",
+        "required": true,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "student_name",
+        "type": "CharField",
+        "required": false,
+        "read_only": true,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "student_roll",
+        "type": "CharField",
+        "required": false,
+        "read_only": true,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "marks_obtained",
+        "type": "DecimalField",
+        "required": true,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "percentage",
+        "type": "DecimalField",
+        "required": false,
+        "read_only": true,
+        "write_only": false,
+        "allow_null": true
+      },
+      {
+        "name": "grade",
+        "type": "ChoiceField",
+        "required": false,
+        "read_only": true,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "is_passing",
+        "type": "BooleanField",
+        "required": false,
+        "read_only": true,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "is_eligible",
+        "type": "BooleanField",
+        "required": false,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "ineligibility_reason",
+        "type": "CharField",
+        "required": false,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "remarks",
+        "type": "CharField",
+        "required": false,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "entered_by",
+        "type": "PrimaryKeyRelatedField",
+        "required": false,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": true
+      },
+      {
+        "name": "entered_by_name",
+        "type": "CharField",
+        "required": false,
+        "read_only": true,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "created_at",
+        "type": "DateTimeField",
+        "required": false,
+        "read_only": true,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "updated_at",
+        "type": "DateTimeField",
+        "required": false,
+        "read_only": true,
+        "write_only": false,
+        "allow_null": false
+      }
+    ],
+    "example": {
+      "exam": 1,
+      "student": 1,
+      "marks_obtained": "10.00",
+      "is_eligible": true,
+      "ineligibility_reason": "string",
+      "remarks": "string",
+      "entered_by": 1
+    },
+    "error": null
+  },
+  {
+    "module": "sims.rotations.api_serializers",
+    "name": "DepartmentRefSerializer",
+    "type": "Serializer",
+    "fields": [
+      {
+        "name": "id",
+        "type": "IntegerField",
+        "required": true,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "name",
+        "type": "CharField",
+        "required": true,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "code",
+        "type": "CharField",
+        "required": false,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": true
+      }
+    ],
+    "example": {
+      "id": 1,
+      "name": "string",
+      "code": "string"
+    },
+    "error": null
+  },
+  {
+    "module": "sims.rotations.api_serializers",
+    "name": "HospitalDepartmentSerializer",
+    "type": "ModelSerializer",
+    "fields": [
+      {
+        "name": "id",
+        "type": "IntegerField",
+        "required": false,
+        "read_only": true,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "hospital",
+        "type": "HospitalRefSerializer",
+        "required": false,
+        "read_only": true,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "department",
+        "type": "DepartmentRefSerializer",
+        "required": false,
+        "read_only": true,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "hospital_id",
+        "type": "IntegerField",
+        "required": true,
+        "read_only": false,
+        "write_only": true,
+        "allow_null": false
+      },
+      {
+        "name": "department_id",
+        "type": "IntegerField",
+        "required": true,
+        "read_only": false,
+        "write_only": true,
+        "allow_null": false
+      },
+      {
+        "name": "is_active",
+        "type": "BooleanField",
+        "required": false,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "created_at",
+        "type": "DateTimeField",
+        "required": false,
+        "read_only": true,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "updated_at",
+        "type": "DateTimeField",
+        "required": false,
+        "read_only": true,
+        "write_only": false,
+        "allow_null": false
+      }
+    ],
+    "example": {
+      "hospital_id": 1,
+      "department_id": 1,
+      "is_active": true
+    },
+    "error": null
+  },
+  {
+    "module": "sims.rotations.api_serializers",
+    "name": "HospitalRefSerializer",
+    "type": "Serializer",
+    "fields": [
+      {
+        "name": "id",
+        "type": "IntegerField",
+        "required": true,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "name",
+        "type": "CharField",
+        "required": true,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "code",
+        "type": "CharField",
+        "required": false,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": true
+      }
+    ],
+    "example": {
+      "id": 1,
+      "name": "string",
+      "code": "string"
+    },
+    "error": null
+  },
+  {
+    "module": "sims.rotations.api_serializers",
+    "name": "HospitalSerializer",
+    "type": "ModelSerializer",
+    "fields": [
+      {
+        "name": "id",
+        "type": "IntegerField",
+        "required": false,
+        "read_only": true,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "name",
+        "type": "CharField",
+        "required": true,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "code",
+        "type": "CharField",
+        "required": false,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": true
+      },
+      {
+        "name": "address",
+        "type": "CharField",
+        "required": false,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "phone",
+        "type": "CharField",
+        "required": false,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "email",
+        "type": "EmailField",
+        "required": false,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "website",
+        "type": "URLField",
+        "required": false,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "description",
+        "type": "CharField",
+        "required": false,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "facilities",
+        "type": "CharField",
+        "required": false,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "is_active",
+        "type": "BooleanField",
+        "required": false,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "created_at",
+        "type": "DateTimeField",
+        "required": false,
+        "read_only": true,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "updated_at",
+        "type": "DateTimeField",
+        "required": false,
+        "read_only": true,
+        "write_only": false,
+        "allow_null": false
+      }
+    ],
+    "example": {
+      "name": "string",
+      "code": "string",
+      "address": "string",
+      "phone": "string",
+      "email": "user@example.com",
+      "website": "https://example.com",
+      "description": "string",
+      "facilities": "string",
+      "is_active": true
+    },
+    "error": null
+  },
+  {
+    "module": "sims.rotations.api_serializers",
+    "name": "RotationSummarySerializer",
+    "type": "ModelSerializer",
+    "fields": [
+      {
+        "name": "id",
+        "type": "IntegerField",
+        "required": false,
+        "read_only": true,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "name",
+        "type": "SerializerMethodField",
+        "required": false,
+        "read_only": true,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "department",
+        "type": "SerializerMethodField",
+        "required": false,
+        "read_only": true,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "hospital",
+        "type": "SerializerMethodField",
+        "required": false,
+        "read_only": true,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "start_date",
+        "type": "DateField",
+        "required": true,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "end_date",
+        "type": "DateField",
+        "required": true,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "status",
+        "type": "ChoiceField",
+        "required": false,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "supervisor_name",
+        "type": "SerializerMethodField",
+        "required": false,
+        "read_only": true,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "source_department",
+        "type": "SerializerMethodField",
+        "required": false,
+        "read_only": true,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "source_hospital",
+        "type": "SerializerMethodField",
+        "required": false,
+        "read_only": true,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "requires_utrmc_approval",
+        "type": "SerializerMethodField",
+        "required": false,
+        "read_only": true,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "override_reason",
+        "type": "CharField",
+        "required": false,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": true
+      },
+      {
+        "name": "approved_by",
+        "type": "SerializerMethodField",
+        "required": false,
+        "read_only": true,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "approved_at",
+        "type": "DateTimeField",
+        "required": false,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": true
+      },
+      {
+        "name": "utrmc_approved_by",
+        "type": "PrimaryKeyRelatedField",
+        "required": false,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": true
+      },
+      {
+        "name": "utrmc_approved_at",
+        "type": "DateTimeField",
+        "required": false,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": true
+      }
+    ],
+    "example": {
+      "start_date": "2026-01-01",
+      "end_date": "2026-01-01",
+      "status": "choice_value",
+      "override_reason": "string",
+      "approved_at": "2026-01-01T00:00:00Z",
+      "utrmc_approved_by": 1,
+      "utrmc_approved_at": "2026-01-01T00:00:00Z"
+    },
+    "error": null
+  },
+  {
+    "module": "sims.search.serializers",
+    "name": "SearchQueryLogSerializer",
+    "type": "ModelSerializer",
+    "fields": [
+      {
+        "name": "id",
+        "type": "IntegerField",
+        "required": false,
+        "read_only": true,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "query",
+        "type": "CharField",
+        "required": false,
+        "read_only": true,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "filters",
+        "type": "JSONField",
+        "required": false,
+        "read_only": true,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "result_count",
+        "type": "IntegerField",
+        "required": false,
+        "read_only": true,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "duration_ms",
+        "type": "IntegerField",
+        "required": false,
+        "read_only": true,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "created_at",
+        "type": "DateTimeField",
+        "required": false,
+        "read_only": true,
+        "write_only": false,
+        "allow_null": false
+      }
+    ],
+    "example": {},
+    "error": null
+  },
+  {
+    "module": "sims.search.serializers",
+    "name": "SearchResultSerializer",
+    "type": "Serializer",
+    "fields": [
+      {
+        "name": "module",
+        "type": "CharField",
+        "required": true,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "object_id",
+        "type": "IntegerField",
+        "required": true,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "title",
+        "type": "CharField",
+        "required": true,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "summary",
+        "type": "CharField",
+        "required": true,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "url",
+        "type": "CharField",
+        "required": true,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "score",
+        "type": "FloatField",
+        "required": true,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      }
+    ],
+    "example": {
+      "module": "string",
+      "object_id": 1,
+      "title": "string",
+      "summary": "string",
+      "url": "string",
+      "score": 1.5
+    },
+    "error": null
+  },
+  {
+    "module": "sims.users.serializers",
+    "name": "AssignedPGSerializer",
+    "type": "ModelSerializer",
+    "fields": [
+      {
+        "name": "id",
+        "type": "IntegerField",
+        "required": false,
+        "read_only": true,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "username",
+        "type": "CharField",
+        "required": true,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "full_name",
+        "type": "CharField",
+        "required": false,
+        "read_only": true,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "email",
+        "type": "EmailField",
+        "required": false,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "specialty",
+        "type": "ChoiceField",
+        "required": false,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": true
+      },
+      {
+        "name": "year",
+        "type": "ChoiceField",
+        "required": false,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": true
+      },
+      {
+        "name": "is_active",
+        "type": "BooleanField",
+        "required": false,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      }
+    ],
+    "example": {
+      "username": "string",
+      "email": "user@example.com",
+      "specialty": "choice_value",
+      "year": "choice_value",
+      "is_active": true
+    },
+    "error": null
+  },
+  {
+    "module": "sims.users.serializers",
+    "name": "UserDetailSerializer",
+    "type": "UserSerializer",
+    "fields": [],
+    "example": {},
+    "error": "Field name `bio` is not valid for model `User` in `sims.users.serializers.UserDetailSerializer`."
+  },
+  {
+    "module": "sims.users.serializers",
+    "name": "UserRegistrationSerializer",
+    "type": "ModelSerializer",
+    "fields": [
+      {
+        "name": "username",
+        "type": "CharField",
+        "required": true,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "email",
+        "type": "EmailField",
+        "required": true,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "password",
+        "type": "CharField",
+        "required": true,
+        "read_only": false,
+        "write_only": true,
+        "allow_null": false
+      },
+      {
+        "name": "password2",
+        "type": "CharField",
+        "required": true,
+        "read_only": false,
+        "write_only": true,
+        "allow_null": false
+      },
+      {
+        "name": "first_name",
+        "type": "CharField",
+        "required": true,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "last_name",
+        "type": "CharField",
+        "required": true,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "role",
+        "type": "ChoiceField",
+        "required": true,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "specialty",
+        "type": "ChoiceField",
+        "required": false,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": true
+      },
+      {
+        "name": "year",
+        "type": "ChoiceField",
+        "required": false,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": true
+      },
+      {
+        "name": "supervisor",
+        "type": "PrimaryKeyRelatedField",
+        "required": false,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": true
+      },
+      {
+        "name": "registration_number",
+        "type": "CharField",
+        "required": false,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": true
+      },
+      {
+        "name": "phone_number",
+        "type": "CharField",
+        "required": false,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": true
+      }
+    ],
+    "example": {
+      "username": "string",
+      "email": "user@example.com",
+      "password": "string",
+      "password2": "string",
+      "first_name": "string",
+      "last_name": "string",
+      "role": "choice_value",
+      "specialty": "choice_value",
+      "year": "choice_value",
+      "supervisor": 1,
+      "registration_number": "string",
+      "phone_number": "string"
+    },
+    "error": null
+  },
+  {
+    "module": "sims.users.serializers",
+    "name": "UserSerializer",
+    "type": "ModelSerializer",
+    "fields": [
+      {
+        "name": "id",
+        "type": "IntegerField",
+        "required": false,
+        "read_only": true,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "username",
+        "type": "CharField",
+        "required": true,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "email",
+        "type": "EmailField",
+        "required": false,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "first_name",
+        "type": "CharField",
+        "required": false,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "last_name",
+        "type": "CharField",
+        "required": false,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "full_name",
+        "type": "CharField",
+        "required": false,
+        "read_only": true,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "display_name",
+        "type": "CharField",
+        "required": false,
+        "read_only": true,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "role",
+        "type": "ChoiceField",
+        "required": true,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "specialty",
+        "type": "ChoiceField",
+        "required": false,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": true
+      },
+      {
+        "name": "year",
+        "type": "ChoiceField",
+        "required": false,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": true
+      },
+      {
+        "name": "registration_number",
+        "type": "CharField",
+        "required": false,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": true
+      },
+      {
+        "name": "phone_number",
+        "type": "CharField",
+        "required": false,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": true
+      },
+      {
+        "name": "date_joined",
+        "type": "DateTimeField",
+        "required": false,
+        "read_only": true,
+        "write_only": false,
+        "allow_null": false
+      },
+      {
+        "name": "is_active",
+        "type": "BooleanField",
+        "required": false,
+        "read_only": false,
+        "write_only": false,
+        "allow_null": false
+      }
+    ],
+    "example": {
+      "username": "string",
+      "email": "user@example.com",
+      "first_name": "string",
+      "last_name": "string",
+      "role": "choice_value",
+      "specialty": "choice_value",
+      "year": "choice_value",
+      "registration_number": "string",
+      "phone_number": "string",
+      "is_active": true
+    },
+    "error": null
+  }
+]

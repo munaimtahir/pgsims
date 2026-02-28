@@ -1,0 +1,34 @@
+pgsims_backend_prod  | [INFO] 2026-02-28 08:37:37,439 sims.certificates Certificate periodic tasks setup completed
+pgsims_backend_prod  | [INFO] 2026-02-28 08:37:37,453 sims.logbook Logbook periodic tasks setup completed
+pgsims_backend_prod  | Operations to perform:
+pgsims_backend_prod  |   Apply all migrations: academics, admin, analytics, attendance, audit, auth, bulk, cases, certificates, contenttypes, django_celery_beat, logbook, notifications, reports, results, rotations, search, sessions, users
+pgsims_backend_prod  | Running migrations:
+pgsims_backend_prod  |   No migrations to apply.
+pgsims_backend_prod  |   Your models in app(s): 'analytics', 'cases' have changes that are not yet reflected in a migration, and so won't be applied.
+pgsims_backend_prod  |   Run 'manage.py makemigrations' to make new migrations, and then re-run 'manage.py migrate' to apply them.
+pgsims_backend_prod  | [INFO] 2026-02-28 08:37:40,068 sims.certificates Certificate periodic tasks setup completed
+pgsims_backend_prod  | [INFO] 2026-02-28 08:37:40,078 sims.logbook Logbook periodic tasks setup completed
+pgsims_backend_prod  | 
+pgsims_backend_prod  | 165 static files copied to '/app/staticfiles', 3 unmodified, 435 post-processed.
+pgsims_backend_prod  | [2026-02-28 08:37:41 +0000] [29] [INFO] Starting gunicorn 25.1.0
+pgsims_backend_prod  | [2026-02-28 08:37:41 +0000] [29] [INFO] Listening at: http://0.0.0.0:8014 (29)
+pgsims_backend_prod  | [2026-02-28 08:37:41 +0000] [29] [INFO] Using worker: sync
+pgsims_backend_prod  | [2026-02-28 08:37:41 +0000] [29] [INFO] Control socket listening at /app/gunicorn.ctl
+pgsims_backend_prod  | [2026-02-28 08:37:41 +0000] [31] [INFO] Booting worker with pid: 31
+pgsims_backend_prod  | [2026-02-28 08:37:41 +0000] [32] [INFO] Booting worker with pid: 32
+pgsims_backend_prod  | [2026-02-28 08:37:41 +0000] [33] [INFO] Booting worker with pid: 33
+pgsims_backend_prod  | [2026-02-28 08:37:41 +0000] [34] [INFO] Booting worker with pid: 34
+pgsims_backend_prod  | [INFO] 2026-02-28 08:37:42,382 sims.certificates Certificate periodic tasks setup completed
+pgsims_backend_prod  | [INFO] 2026-02-28 08:37:42,395 sims.logbook Logbook periodic tasks setup completed
+pgsims_backend_prod  | [INFO] 2026-02-28 08:37:42,479 sims.wsgi SIMS WSGI application initialized successfully
+pgsims_backend_prod  | [INFO] 2026-02-28 08:37:42,621 sims.certificates Certificate periodic tasks setup completed
+pgsims_backend_prod  | [INFO] 2026-02-28 08:37:42,631 sims.logbook Logbook periodic tasks setup completed
+pgsims_backend_prod  | [INFO] 2026-02-28 08:37:42,684 sims.wsgi SIMS WSGI application initialized successfully
+pgsims_backend_prod  | [INFO] 2026-02-28 08:37:42,709 sims.certificates Certificate periodic tasks setup completed
+pgsims_backend_prod  | [INFO] 2026-02-28 08:37:42,721 sims.logbook Logbook periodic tasks setup completed
+pgsims_backend_prod  | [INFO] 2026-02-28 08:37:42,775 sims.wsgi SIMS WSGI application initialized successfully
+pgsims_backend_prod  | [INFO] 2026-02-28 08:37:42,781 sims.certificates Certificate periodic tasks setup completed
+pgsims_backend_prod  | [INFO] 2026-02-28 08:37:42,792 sims.logbook Logbook periodic tasks setup completed
+pgsims_backend_prod  | [INFO] 2026-02-28 08:37:42,841 sims.wsgi SIMS WSGI application initialized successfully
+pgsims_backend_prod  | [WARNING] 2026-02-28 08:37:47,046 sims.performance Slow request: GET /healthz/ took 1406ms
+pgsims_backend_prod  | [WARNING] 2026-02-28 08:38:18,096 sims.performance Slow request: GET /healthz/ took 1006ms

@@ -1,0 +1,40 @@
+OUT/RELEASE_LOCK/evidence/04_summary_extracts.txt:3:pgsims_backend_prod    docker-web           "sh -c 'python manag…"   web        50 seconds ago   Up 39 seconds (healthy)   127.0.0.1:8014->8014/tcp
+OUT/TEST_REMEDIATION/00_BASELINE.md:6:Backend service: `web`
+OUT/TEST_REMEDIATION/00_BASELINE.md:15:`docker compose -f docker/docker-compose.prod.yml exec -T web python manage.py test -v 2`
+OUT/TEST_REMEDIATION/00_ps.txt:2:pgsims_backend_prod    docker-web           "sh -c 'python manag…"   web        11 seconds ago   Up Less than a second (health: starting)   127.0.0.1:8014->8014/tcp
+OUT/TEST_REMEDIATION/00_services.txt:5:web
+OUT/TEST_REMEDIATION/02_FIX_LOG.md:22:- Rebuilt `web` image to apply dependency changes.
+README.md:3:A comprehensive Django web application for managing postgraduate medical residents' academic and training records.
+README.md:26:SIMS (Surgical Information Management System) is a comprehensive web-based management system designed specifically for postgraduate medical training programs. It provides a complete solution for tracking trainee progress, managing rotations, maintaining digital logbooks, and handling clinical case submissions.
+README.md:400:- **web**: Django application (Gunicorn)
+docs/_archive/DOCS_CLEAN_20260226_045559/DEMO_SETUP.md:23:- Modern web browser (Chrome, Firefox, Safari, or Edge)
+docs/_archive/DOCS_CLEAN_20260226_045559/DEPLOY_COOLIFY_TRAEFIK.md:157:3. Select the `web` container
+docs/_archive/DOCS_CLEAN_20260226_045559/DEPLOY_COOLIFY_TRAEFIK.md:183:4. Traefik forwards to `web:8000` with `X-Forwarded-Proto: https`
+docs/_archive/DOCS_CLEAN_20260226_045559/DEPLOY_COOLIFY_TRAEFIK.md:297:3. Filter by service (web, worker, db, redis)
+docs/_archive/DOCS_CLEAN_20260226_045559/DEVELOPMENT_GUIDELINES.md:23:SIMS is a Django-based web application designed for managing postgraduate medical training programs. The system supports three primary user roles (Admin, Supervisor, Postgraduate) and provides modules for user management, rotations, certificates, logbook, and clinical cases.
+docs/_archive/DOCS_CLEAN_20260226_045559/FEATURES_STATUS.md:261:- **Priority**: Low (responsive web interface exists)
+docs/_archive/DOCS_CLEAN_20260226_045559/LOCAL_DEV.md:41:- Django web application (port 8000)
+docs/_archive/DOCS_CLEAN_20260226_045559/LOCAL_DEV.md:96:docker-compose -f docker-compose.local.yml logs -f web
+docs/_archive/DOCS_CLEAN_20260226_045559/LOCAL_DEV.md:341:docker-compose -f docker-compose.local.yml exec -u $(id -u):$(id -g) web bash
+docs/_archive/DOCS_CLEAN_20260226_045559/PRODUCTION_READINESS_ASSESSMENT.md:226:- Session-based authentication for web interface
+docs/_archive/DOCS_CLEAN_20260226_045559/RELEASE_NOTES.md:248:   sudo systemctl restart sims-web sims-worker sims-beat
+docs/_archive/DOCS_CLEAN_20260226_045559/RELEASE_NOTES.md:327:sudo systemctl restart sims-web sims-worker sims-beat
+docs/_archive/DOCS_CLEAN_20260226_045559/SECURITY.md:307:docker-compose run -e SECRET_KEY=$SECRET_KEY web
+docs/_archive/DOCS_CLEAN_20260226_045559/SYSTEM_STATUS.md:17:The SIMS (Surgical Information Management System) is a comprehensive Django-based web application designed for managing postgraduate medical training programs. The system provides role-based dashboards, analytics, and management tools for administrators, supervisors, and postgraduate trainees.
+docs/_archive/DOCS_CLEAN_20260226_045559/SYSTEM_STATUS.md:168:- Django 5.0+ web framework
+docs/contracts/RELEASE_NOTES_20260226.md:111:- **Services**: web, worker, beat, db, redis, nginx
+frontend/.eslintrc.json:2:  "extends": ["next/core-web-vitals", "next/typescript"]
+scripts/e2e_seed.sh:7:docker compose -f docker/docker-compose.yml exec -T web python manage.py migrate --noinput
+scripts/e2e_seed.sh:8:docker compose -f docker/docker-compose.yml exec -T web python manage.py seed_e2e
+scripts/local_dev/both.sh:4:# Rebuilds and redeploys frontend, web, worker, and beat services
+scripts/local_dev/both.sh:20:echo "Stopping frontend, web, worker, and beat services (pgsims project only)..."
+scripts/local_dev/both.sh:21:docker compose -f ../../docker/docker-compose.yml -p "$COMPOSE_PROJECT_NAME" stop frontend web worker beat || true
+scripts/local_dev/both.sh:25:docker compose -f ../../docker/docker-compose.yml -p "$COMPOSE_PROJECT_NAME" rm -f frontend web worker beat || true
+scripts/local_dev/both.sh:29:docker compose -f ../../docker/docker-compose.yml -p "$COMPOSE_PROJECT_NAME" rmi -f frontend web worker beat || true
+scripts/local_dev/both.sh:32:docker rmi $(docker images -q --filter "reference=pgsims*web*" 2>/dev/null) 2>/dev/null || true
+scripts/local_dev/both.sh:41:echo "Rebuilding frontend, web, worker, and beat images (no cache)..."
+scripts/local_dev/both.sh:42:docker compose -f ../../docker/docker-compose.yml -p "$COMPOSE_PROJECT_NAME" build --no-cache frontend web worker beat
+scripts/local_dev/both.sh:45:echo "Starting frontend, web, worker, and beat services..."
+scripts/local_dev/both.sh:46:docker compose -f ../../docker/docker-compose.yml -p "$COMPOSE_PROJECT_NAME" up -d frontend web worker beat
+scripts/local_dev/both.sh:61:docker compose -f ../../docker/docker-compose.yml -p "$COMPOSE_PROJECT_NAME" logs --tail=30 web
+scripts/local_dev/both.sh:77:docker compose -f ../../docker/docker-compose.yml -p "$COMPOSE_PROJECT_NAME" ps frontend web worker beat

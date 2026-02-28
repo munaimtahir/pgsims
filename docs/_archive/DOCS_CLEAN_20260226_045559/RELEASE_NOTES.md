@@ -302,7 +302,7 @@ git pull origin main
 docker-compose build --no-cache
 
 # Run migrations
-docker-compose exec web python manage.py migrate
+docker-compose exec backend python manage.py migrate
 
 # Restart services
 docker-compose restart

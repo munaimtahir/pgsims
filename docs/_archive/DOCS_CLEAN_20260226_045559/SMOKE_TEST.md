@@ -48,7 +48,7 @@ docker-compose -f docker-compose.coolify.yml exec db pg_isready -U sims_user
 docker-compose -f docker-compose.coolify.yml exec redis redis-cli ping
 
 # Web application
-docker-compose -f docker-compose.coolify.yml exec web curl -f http://localhost:8000/healthz/
+docker-compose -f docker-compose.coolify.yml exec backend curl -f http://localhost:8000/healthz/
 ```
 
 **Expected Results:**
@@ -113,7 +113,7 @@ Check that Django correctly detects HTTPS:
 
 ```bash
 # Access any page and check X-Forwarded-Proto in logs
-docker-compose -f docker-compose.coolify.yml logs web | grep "X-Forwarded-Proto"
+docker-compose -f docker-compose.coolify.yml logs backend | grep "X-Forwarded-Proto"
 ```
 
 **Verification Points:**
@@ -269,7 +269,7 @@ docker-compose -f docker-compose.coolify.yml exec worker celery -A sims_project 
 
 Test a simple task:
 ```bash
-docker-compose -f docker-compose.coolify.yml exec web python manage.py shell
+docker-compose -f docker-compose.coolify.yml exec backend python manage.py shell
 ```
 
 ```python

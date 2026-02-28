@@ -1,0 +1,108 @@
+diff --git a/docker/docker-compose.prod.yml b/docker/docker-compose.prod.yml
+index 230406a..81a5f8b 100644
+--- a/docker/docker-compose.prod.yml
++++ b/docker/docker-compose.prod.yml
+@@ -54,8 +54,8 @@ services:
+     networks:
+       - sims_network
+ 
+-  # Django Web Application (runs on port 8014 for Caddy proxy)
+-  web:
++  # Django Backend Application (runs on port 8014 for Caddy proxy)
++  backend:
+     build:
+       context: ../backend
+       dockerfile: Dockerfile
+@@ -166,17 +166,18 @@ services:
+       context: ../frontend
+       dockerfile: Dockerfile
+       args:
+-        - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-https://pgsims.alshifalab.pk}
++        - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-/api}
+     container_name: pgsims_frontend_prod
+     environment:
+       - NODE_ENV=production
+-      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-https://pgsims.alshifalab.pk}
++      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-/api}
++      - SERVER_API_URL=${SERVER_API_URL:-http://backend:8014}
+       - PORT=3000
+       - HOSTNAME=0.0.0.0
+     ports:
+       - "127.0.0.1:8082:3000" # Exposed for Caddy reverse proxy
+     depends_on:
+-      - web
++      - backend
+     healthcheck:
+       test: [ "CMD", "node", "-e", "require('http').get('http://localhost:3000', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})" ]
+       interval: 30s
+diff --git a/frontend/Dockerfile b/frontend/Dockerfile
+index e45858f..15972c3 100644
+--- a/frontend/Dockerfile
++++ b/frontend/Dockerfile
+@@ -19,7 +19,7 @@ COPY --from=deps /app/node_modules ./node_modules
+ COPY . .
+ 
+ # Set build-time environment variable (can be overridden)
+-ARG NEXT_PUBLIC_API_URL=http://localhost:8000
++ARG NEXT_PUBLIC_API_URL=/api
+ ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+ 
+ # Build Next.js application
+diff --git a/frontend/lib/api/client.ts b/frontend/lib/api/client.ts
+index 374e5c2..459a033 100644
+--- a/frontend/lib/api/client.ts
++++ b/frontend/lib/api/client.ts
+@@ -1,25 +1,30 @@
+ /**
+  * Base API client configuration using axios
+- * Uses NEXT_PUBLIC_API_URL environment variable only
++ * Uses NEXT_PUBLIC_API_URL for browser and SERVER_API_URL for server-side execution
+  */
+ 
+ import axios from 'axios';
+ import { clearAuthCookies, syncAuthCookies } from '@/lib/auth/cookies';
+ 
+ /**
+- * Get API URL from environment variable
+- * MUST use NEXT_PUBLIC_API_URL only - no auto-detection
++ * Resolve API base URL:
++ * - Browser/client: default to same-origin paths (effective /api usage)
++ * - Server-only contexts: default to internal Docker DNS
+  */
+ function getApiUrl(): string {
++  const isServer = typeof window === 'undefined';
++
++  if (isServer) {
++    return process.env.SERVER_API_URL || 'http://backend:8014';
++  }
++
+   const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+-  if (!apiUrl) {
+-    // In development, provide a default but warn
+-    if (process.env.NODE_ENV === 'development') {
+-      console.warn('NEXT_PUBLIC_API_URL not set, using default http://localhost:8000');
+-      return 'http://localhost:8000';
++  if (!apiUrl || apiUrl === '/api') {
++    if (process.env.NODE_ENV === 'development' && !apiUrl) {
++      console.warn('NEXT_PUBLIC_API_URL not set, defaulting to same-origin API paths');
+     }
+-    // In production, throw error
+-    throw new Error('NEXT_PUBLIC_API_URL environment variable is required');
++    // Endpoints already include /api/... so keep base empty to avoid /api/api/* duplication.
++    return '';
+   }
+   return apiUrl;
+ }
+diff --git a/frontend/next.config.mjs b/frontend/next.config.mjs
+index 16513a5..26b443e 100644
+--- a/frontend/next.config.mjs
++++ b/frontend/next.config.mjs
+@@ -2,7 +2,7 @@
+ const nextConfig = {
+   // Environment variable validation
+   env: {
+-    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000',
++    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || '/api',
+   },
+   
+   // Output configuration for Docker

@@ -27,7 +27,7 @@ up:
 	docker compose -f docker/docker-compose.yml up -d
 	@echo "Waiting for services to be healthy..."
 	@sleep 5
-	docker compose -f docker/docker-compose.yml logs web | tail -20
+	docker compose -f docker/docker-compose.yml logs backend | tail -20
 
 down:
 	docker compose -f docker/docker-compose.yml down
@@ -39,16 +39,16 @@ shell:
 	cd backend && python manage.py shell
 
 migrate:
-	docker compose -f docker/docker-compose.yml exec web python manage.py migrate
+	docker compose -f docker/docker-compose.yml exec backend python manage.py migrate
 
 makemigrations:
-	docker compose -f docker/docker-compose.yml exec web python manage.py makemigrations
+	docker compose -f docker/docker-compose.yml exec backend python manage.py makemigrations
 
 seed:
-	docker compose -f docker/docker-compose.yml exec web python manage.py sims_seed_demo
+	docker compose -f docker/docker-compose.yml exec backend python manage.py sims_seed_demo
 
 collectstatic:
-	docker compose -f docker/docker-compose.yml exec web python manage.py collectstatic --noinput
+	docker compose -f docker/docker-compose.yml exec backend python manage.py collectstatic --noinput
 
 clean:
 	find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
@@ -68,10 +68,10 @@ deploy-check:
 	cd backend && python manage.py check --deploy
 
 deploy-migrate:
-	docker compose -f docker/docker-compose.yml exec web python manage.py migrate --noinput
+	docker compose -f docker/docker-compose.yml exec backend python manage.py migrate --noinput
 
 deploy-collectstatic:
-	docker compose -f docker/docker-compose.yml exec web python manage.py collectstatic --noinput --clear
+	docker compose -f docker/docker-compose.yml exec backend python manage.py collectstatic --noinput --clear
 
 deploy-restart:
-	docker compose -f docker/docker-compose.yml restart web worker beat
+	docker compose -f docker/docker-compose.yml restart backend worker beat

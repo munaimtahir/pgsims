@@ -54,8 +54,8 @@ services:
     networks:
       - sims_network
 
-  # Django Web Application (runs on port 8014 for Caddy proxy)
-  web:
+  # Django Backend Application (runs on port 8014 for Caddy proxy)
+  backend:
     build:
       context: ../backend
       dockerfile: Dockerfile
@@ -176,7 +176,7 @@ services:
     ports:
       - "127.0.0.1:8082:3000" # Exposed for Caddy reverse proxy
     depends_on:
-      - web
+      - backend
     healthcheck:
       test: [ "CMD", "node", "-e", "require('http').get('http://localhost:3000', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})" ]
       interval: 30s

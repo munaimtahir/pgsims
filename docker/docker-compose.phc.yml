@@ -49,8 +49,8 @@ services:
     networks:
       - sims_network_phc
 
-  # Django Web Application (runs on port 8014 for Caddy proxy)
-  web:
+  # Django Backend Application (runs on port 8014 for Caddy proxy)
+  backend:
     build:
       context: ../backend
       dockerfile: Dockerfile

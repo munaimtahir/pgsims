@@ -1,0 +1,746 @@
+backend/sims/users/apps.py:11:    - PG (Postgraduate): Uploads documents, views own progress
+backend/sims/users/forms.py:213:    """Form for bulk supervisor assignment"""
+backend/sims/users/forms.py:282:class BulkUserUploadForm(forms.Form):
+backend/sims/users/forms.py:283:    """Form for bulk user upload via CSV/Excel"""
+backend/sims/users/forms.py:286:        widget=forms.FileInput(attrs={"class": "form-control", "accept": ".csv,.xlsx,.xls"}),
+backend/sims/users/forms.py:287:        help_text="Upload CSV or Excel file with user data",
+backend/sims/users/forms.py:308:        if not file.name.endswith((".csv", ".xlsx", ".xls")):
+backend/sims/users/forms.py:309:            raise ValidationError("File must be CSV or Excel format")
+backend/sims/users/management/commands/import_trainees.py:6:from sims.bulk.services import BulkService
+backend/sims/users/management/commands/import_trainees.py:33:            default='import_admin',
+backend/sims/users/management/commands/import_trainees.py:34:            help='Username of admin user to perform import (default: import_admin)',
+backend/sims/users/management/commands/import_trainees.py:69:                service = BulkService(admin_user)
+backend/sims/users/management/commands/import_trainees.py:79:                operation = service.import_trainees(
+backend/sims/users/management/commands/preview_trainees.py:9:from sims.bulk.services import _parse_trainee_rows, _parse_name, _parse_date, _infer_training_year
+backend/sims/users/management/commands/preview_trainees.py:191:                self.stdout.write('Run "python manage.py import_trainees <file> --dry-run" to validate the data.\n')
+backend/sims/users/management/commands/import_demo_cases.py:3:import csv
+backend/sims/users/management/commands/import_demo_cases.py:29:CSV_STATUS_MAP = {
+backend/sims/users/management/commands/import_demo_cases.py:56:    help = "Import demo logbook cases from CSV for screenshot-ready analytics."
+backend/sims/users/management/commands/import_demo_cases.py:59:        parser.add_argument("--file", required=True, help="Path to CSV file")
+backend/sims/users/management/commands/import_demo_cases.py:70:            raise CommandError(f"CSV file not found: {file_path}")
+backend/sims/users/management/commands/import_demo_cases.py:76:            self.stdout.write(self.style.WARNING("No rows found in CSV; nothing to import."))
+backend/sims/users/management/commands/import_demo_cases.py:96:        imported, updated, status_counter = self._import_logbook_entries(
+backend/sims/users/management/commands/import_demo_cases.py:182:            reader = csv.DictReader(handle)
+backend/sims/users/management/commands/import_demo_cases.py:198:                raise CommandError(f"CSV missing required columns: {', '.join(missing)}")
+backend/sims/users/management/commands/import_demo_cases.py:207:                if status_key not in CSV_STATUS_MAP:
+backend/sims/users/management/commands/import_demo_cases.py:209:                        f"Unsupported Status '{status_src}' at CSV line {idx}. "
+backend/sims/users/management/commands/import_demo_cases.py:236:                        target_status=CSV_STATUS_MAP[status_key],
+backend/sims/users/management/commands/import_demo_cases.py:331:            description="Demo department seeded by import_demo_cases command.",
+backend/sims/users/management/commands/import_demo_cases.py:505:                    "notes": f"Imported via import_demo_cases {ROTATION_DEMO_SUFFIX.strip()}",
+backend/sims/users/management/commands/import_demo_cases.py:518:    def _import_logbook_entries(
+backend/sims/users/management/commands/import_demo_cases.py:548:                        f"{row.procedure_name} performed; imported from demo CSV {row.case_id}."
+backend/sims/users/urls.py:85:    path("pgs/bulk-upload/", views.PGBulkUploadView.as_view(), name="pg_bulk_upload"),
+backend/sims/users/urls.py:86:    path("pgs/template-download/", views.TraineeTemplateDownloadView.as_view(), name="trainee_template_download"),
+backend/sims/users/urls.py:91:    path("reports/export/", views.UserExportView.as_view(), name="user_export"),
+backend/sims/users/permissions.py:9:    message = "Only supervisors can access this resource."
+backend/sims/users/admin.py:5:from import_export import resources
+backend/sims/users/admin.py:6:from import_export.admin import ImportExportModelAdmin
+backend/sims/users/admin.py:11:class UserResource(resources.ModelResource):
+backend/sims/users/admin.py:12:    """Resource for bulk import/export of users via CSV/Excel"""
+backend/sims/users/admin.py:29:        export_order = fields
+backend/sims/users/admin.py:30:        import_id_fields = ("username",)
+backend/sims/users/admin.py:32:    def before_import_row(self, row, **kwargs):
+backend/sims/users/admin.py:71:class UserAdmin(BaseUserAdmin, ImportExportModelAdmin):
+backend/sims/users/admin.py:72:    """Enhanced user admin with bulk import/export and role-based management"""
+backend/sims/users/admin.py:74:    resource_class = UserResource
+backend/sims/users/views.py:634:class PGBulkUploadView(AdminRequiredMixin, View):
+backend/sims/users/views.py:635:    """Bulk upload PGs (admin only)"""
+backend/sims/users/views.py:638:        return render(request, "users/pg_bulk_upload.html")
+backend/sims/users/views.py:641:        from sims.bulk.services import BulkService
+backend/sims/users/views.py:645:            return JsonResponse({"success": False, "error": "No file uploaded"}, status=400)
+backend/sims/users/views.py:647:        uploaded_file = request.FILES['file']
+backend/sims/users/views.py:652:            service = BulkService(request.user)
+backend/sims/users/views.py:653:            operation = service.import_trainees(
+backend/sims/users/views.py:654:                uploaded_file,
+backend/sims/users/views.py:692:class TraineeTemplateDownloadView(AdminRequiredMixin, View):
+backend/sims/users/views.py:693:    """Download template Excel file for trainee import"""
+backend/sims/users/views.py:696:        from sims.bulk.services import generate_trainee_template
+backend/sims/users/views.py:703:        response['Content-Disposition'] = 'attachment; filename="trainee_import_template.xlsx"'
+backend/sims/users/views.py:711:        from sims.bulk.services import convert_excel_to_trainee_format
+backend/sims/users/views.py:715:            return JsonResponse({"success": False, "error": "No file uploaded"}, status=400)
+backend/sims/users/views.py:717:        uploaded_file = request.FILES['file']
+backend/sims/users/views.py:720:            converted_file = convert_excel_to_trainee_format(uploaded_file)
+backend/sims/users/views.py:725:            response['Content-Disposition'] = 'attachment; filename="converted_trainee_template.xlsx"'
+backend/sims/users/views.py:776:class UserExportView(AdminRequiredMixin, View):
+backend/sims/users/views.py:777:    """Export user data (admin only)"""
+backend/sims/users/views.py:780:        # Implementation for data export
+backend/sims/attendance/services.py:3:import csv
+backend/sims/attendance/services.py:22:def process_csv_upload(csv_file, uploaded_by) -> Dict:
+backend/sims/attendance/services.py:24:    Process CSV file for bulk attendance upload.
+backend/sims/attendance/services.py:26:    Expected CSV format:
+backend/sims/attendance/services.py:35:        # Read CSV content
+backend/sims/attendance/services.py:36:        content = csv_file.read().decode("utf-8")
+backend/sims/attendance/services.py:37:        csv_reader = csv.DictReader(io.StringIO(content))
+backend/sims/attendance/services.py:41:        if not required_headers.issubset(set(csv_reader.fieldnames)):
+backend/sims/attendance/services.py:46:                "errors": [f"CSV must contain columns: {', '.join(required_headers)}"],
+backend/sims/attendance/services.py:50:            for row_num, row in enumerate(csv_reader, start=2):  # Start at 2 (header is 1)
+backend/sims/attendance/services.py:86:                            "recorded_by": uploaded_by,
+backend/sims/attendance/services.py:105:            "errors": [f"Failed to parse CSV file: {str(e)}"],
+backend/sims/attendance/urls.py:5:from .api_views import AttendanceSummaryView, BulkAttendanceUploadView
+backend/sims/attendance/urls.py:10:    path("upload/", BulkAttendanceUploadView.as_view(), name="upload"),
+backend/sims/attendance/api_views.py:13:from .services import calculate_attendance_summary, process_csv_upload
+backend/sims/attendance/api_views.py:18:class BulkAttendanceUploadView(APIView):
+backend/sims/attendance/api_views.py:20:    POST /api/attendance/upload/
+backend/sims/attendance/api_views.py:22:    Bulk CSV upload for attendance records.
+backend/sims/attendance/api_views.py:25:    Accepts CSV file with columns: session_id,user_id,status,check_in_time,remarks
+backend/sims/attendance/api_views.py:34:        # Only supervisors and admins can upload attendance
+backend/sims/attendance/api_views.py:36:            raise PermissionDenied("Only supervisors and admins can upload attendance")
+backend/sims/attendance/api_views.py:38:        # Get uploaded file
+backend/sims/attendance/api_views.py:40:            raise ValidationError({"file": "CSV file is required"})
+backend/sims/attendance/api_views.py:42:        csv_file = request.FILES["file"]
+backend/sims/attendance/api_views.py:45:        if not csv_file.name.endswith(".csv"):
+backend/sims/attendance/api_views.py:46:            raise ValidationError({"file": "File must be a CSV file"})
+backend/sims/attendance/api_views.py:48:        # Process the CSV
+backend/sims/attendance/api_views.py:49:        result = process_csv_upload(csv_file, user)
+backend/sims/attendance/api_views.py:57:                action="bulk_attendance_upload",
+backend/sims/attendance/api_views.py:59:                    "filename": csv_file.name,
+backend/sims/attendance/api_views.py:70:                    "message": f"Successfully uploaded {result['success_count']} attendance records",
+backend/sims/attendance/api_views.py:78:                    "message": "Upload completed with errors",
+backend/sims/attendance/api_views.py:151:__all__ = ["BulkAttendanceUploadView", "AttendanceSummaryView"]
+backend/sims/audit/models.py:20:        ("export", "Export"),
+backend/sims/audit/views.py:27:    @action(detail=False, methods=["get"], url_path="export")
+backend/sims/audit/views.py:28:    def export_csv(self, request, *args, **kwargs):
+backend/sims/audit/views.py:30:        response = HttpResponse(content_type="text/csv")
+backend/sims/audit/views.py:31:        response["Content-Disposition"] = "attachment; filename=audit-log.csv"
+backend/sims/common_permissions.py:39:    message = "Only PG users can access this resource."
+backend/sims/common_permissions.py:51:    message = "Only UTRMC admins can access this resource."
+backend/sims/logbook/apps.py:50:                ("can_export_entries", "Can export logbook data", logbook_ct),
+backend/sims/logbook/apps.py:51:                ("can_bulk_edit_entries", "Can bulk edit logbook entries", logbook_ct),
+backend/sims/logbook/forms.py:830:class BulkLogbookActionForm(forms.Form):
+backend/sims/logbook/forms.py:832:    Form for bulk actions on logbook entries.
+backend/sims/logbook/forms.py:857:    bulk_comments = forms.CharField(
+backend/sims/logbook/forms.py:899:        """Validate bulk action data"""
+backend/sims/logbook/forms.py:909:        if action == "request_revision" and not cleaned_data.get("bulk_comments"):
+backend/sims/logbook/forms.py:911:                {"bulk_comments": "Comments are required when requesting revision"}
+backend/sims/logbook/forms.py:1159:    export_format = forms.ChoiceField(
+backend/sims/logbook/forms.py:1162:            ("csv", "Export as CSV"),
+backend/sims/logbook/forms.py:1163:            ("pdf", "Export as PDF"),
+backend/sims/logbook/forms.py:1570:class SupervisorBulkActionForm(forms.Form):
+backend/sims/logbook/forms.py:1571:    """Form for selecting entries and action for bulk review"""
+backend/sims/logbook/forms.py:1573:    BULK_ACTION_CHOICES = [
+backend/sims/logbook/forms.py:1585:        choices=BULK_ACTION_CHOICES,
+backend/sims/logbook/forms.py:1630:class SupervisorBulkApproveForm(forms.Form):
+backend/sims/logbook/forms.py:1631:    """Simplified form for bulk approval"""
+backend/sims/logbook/forms.py:1648:class SupervisorBulkRejectForm(forms.Form):
+backend/sims/logbook/forms.py:1649:    """Form for bulk rejection with required feedback"""
+backend/sims/logbook/urls.py:11:    path("analytics/", views.LogbookAnalyticsView.as_view(), name="analytics"),
+backend/sims/logbook/urls.py:48:        "supervisor/bulk-review/",
+backend/sims/logbook/urls.py:49:        views.SupervisorBulkReviewView.as_view(),
+backend/sims/logbook/urls.py:50:        name="supervisor_bulk_review",
+backend/sims/logbook/urls.py:60:    # Bulk operations
+backend/sims/logbook/urls.py:61:    path("bulk-actions/", views.BulkLogbookActionView.as_view(), name="bulk_actions"),
+backend/sims/logbook/urls.py:62:    # Export and reporting
+backend/sims/logbook/urls.py:63:    path("export/csv/", views.export_logbook_csv, name="export_csv"),
+backend/sims/logbook/admin.py:6:from import_export import resources
+backend/sims/logbook/admin.py:7:from import_export.admin import ImportExportModelAdmin
+backend/sims/logbook/admin.py:20:class LogbookEntryResource(resources.ModelResource):
+backend/sims/logbook/admin.py:21:    """Resource for bulk import/export of logbook entries via CSV/Excel"""
+backend/sims/logbook/admin.py:40:        export_order = fields
+backend/sims/logbook/admin.py:41:        import_id_fields = ("id",)
+backend/sims/logbook/admin.py:43:    def before_import_row(self, row, **kwargs):
+backend/sims/logbook/admin.py:274:class LogbookEntryAdmin(ImportExportModelAdmin):
+backend/sims/logbook/admin.py:275:    """Enhanced logbook entry admin with role-based access and bulk operations"""
+backend/sims/logbook/admin.py:277:    resource_class = LogbookEntryResource
+backend/sims/logbook/admin.py:382:    actions = ["approve_entries", "request_revision", "mark_verified", "bulk_assign_supervisor"]
+backend/sims/logbook/admin.py:597:        """Bulk approve selected entries"""
+backend/sims/logbook/admin.py:657:    def bulk_assign_supervisor(self, request, queryset):
+backend/sims/logbook/admin.py:658:        """Bulk assign supervisor to entries"""
+backend/sims/logbook/admin.py:668:    bulk_assign_supervisor.short_description = "Assign supervisor to selected entries"
+backend/sims/logbook/views.py:1:import csv
+backend/sims/logbook/views.py:29:    BulkLogbookActionForm,
+backend/sims/logbook/views.py:36:    SupervisorBulkActionForm,
+backend/sims/logbook/views.py:37:    SupervisorBulkApproveForm,
+backend/sims/logbook/views.py:38:    SupervisorBulkRejectForm,
+backend/sims/logbook/views.py:944:class BulkLogbookActionView(LoginRequiredMixin, LogbookAccessMixin, FormView):
+backend/sims/logbook/views.py:945:    """View for bulk actions on logbook entries"""
+backend/sims/logbook/views.py:947:    template_name = "logbook/bulk_actions.html"
+backend/sims/logbook/views.py:948:    form_class = BulkLogbookActionForm
+backend/sims/logbook/views.py:952:        """Only supervisors and admins can perform bulk actions"""
+backend/sims/logbook/views.py:956:        """Process bulk actions"""
+backend/sims/logbook/views.py:1039:def export_logbook_csv(request):
+backend/sims/logbook/views.py:1040:    """Export logbook entries to CSV"""
+backend/sims/logbook/views.py:1051:        raise PermissionDenied("You don't have permission to export entries")
+backend/sims/logbook/views.py:1053:    # Create CSV response
+backend/sims/logbook/views.py:1054:    response = HttpResponse(content_type="text/csv")
+backend/sims/logbook/views.py:1055:    response["Content-Disposition"] = 'attachment; filename="logbook_export.csv"'
+backend/sims/logbook/views.py:1057:    writer = csv.writer(response)
+backend/sims/logbook/views.py:1174:class LogbookAnalyticsView(LoginRequiredMixin, LogbookAccessMixin, TemplateView):
+backend/sims/logbook/views.py:1741:class SupervisorBulkReviewView(LoginRequiredMixin, SupervisorRequiredMixin, FormView):
+backend/sims/logbook/views.py:1743:    Allow supervisors to perform bulk review actions on multiple entries
+backend/sims/logbook/views.py:1746:    template_name = "logbook/supervisor_bulk_review.html"
+backend/sims/logbook/views.py:1751:        if action == "bulk_approve":
+backend/sims/logbook/views.py:1752:            return SupervisorBulkApproveForm
+backend/sims/logbook/views.py:1753:        elif action == "bulk_reject":
+backend/sims/logbook/views.py:1754:            return SupervisorBulkRejectForm
+backend/sims/logbook/views.py:1756:            return SupervisorBulkActionForm
+backend/sims/logbook/views.py:1759:        """Get entries that can be bulk reviewed"""
+backend/sims/logbook/views.py:1767:        context["page_title"] = "Bulk Review Logbook Entries"
+backend/sims/logbook/views.py:1771:        """Process bulk review actions"""
+backend/sims/logbook/views.py:1788:                    comment or f"Bulk approved by {self.request.user.get_full_name()}"
+backend/sims/logbook/views.py:1797:                entry.supervisor_feedback = comment or "Rejected in bulk review"
+backend/sims/logbook/views.py:1804:                entry.supervisor_feedback = comment or "Returned for revision in bulk review"
+backend/sims/cases/api_urls.py:14:    path("statistics/", api_views.CaseStatisticsView.as_view(), name="statistics"),
+backend/sims/cases/urls.py:19:    path("export/", views.case_export_data, name="case_export"),
+backend/sims/cases/models.py:14:def case_file_upload_path(instance, filename):
+backend/sims/cases/models.py:15:    """Generate upload path for case files"""
+backend/sims/cases/models.py:19:def case_image_upload_path(instance, filename):
+backend/sims/cases/models.py:20:    """Generate upload path for case images"""
+backend/sims/cases/models.py:245:        upload_to=case_file_upload_path,
+backend/sims/cases/models.py:252:        upload_to=case_image_upload_path,
+backend/sims/cases/admin.py:381:    """Bulk action to mark selected cases as reviewed"""
+backend/sims/cases/admin.py:397:    """Bulk action to regenerate statistics for selected PGs"""
+backend/sims/cases/admin.py:409:# Register the bulk actions
+backend/sims/cases/api_views.py:178:class CaseStatisticsView(APIView):
+backend/sims/cases/views.py:429:def case_export_data(request):
+backend/sims/cases/views.py:430:    """Export case data for analytics (JSON endpoint)"""
+backend/sims/cases/views.py:442:    # Prepare data for export
+backend/sims/rotations/forms.py:162:class BulkRotationAssignmentForm(forms.Form):
+backend/sims/rotations/urls.py:24:    # Bulk operations
+backend/sims/rotations/urls.py:25:    path("bulk-assignment/", views.BulkRotationAssignmentView.as_view(), name="bulk_assignment"),
+backend/sims/rotations/urls.py:26:    # Export and reporting
+backend/sims/rotations/urls.py:27:    path("export/csv/", views.export_rotations_csv, name="export_csv"),
+backend/sims/rotations/models.py:199:        upload_to="rotations/certificates/",
+backend/sims/rotations/views.py:1:import csv
+backend/sims/rotations/views.py:25:    BulkRotationAssignmentForm,
+backend/sims/rotations/views.py:531:class BulkRotationAssignmentView(LoginRequiredMixin, RotationAccessMixin, FormView):
+backend/sims/rotations/views.py:532:    """View for bulk rotation assignment"""
+backend/sims/rotations/views.py:534:    template_name = "rotations/bulk_assignment.html"
+backend/sims/rotations/views.py:535:    form_class = BulkRotationAssignmentForm
+backend/sims/rotations/views.py:539:        """Allow admins and supervisors to do bulk assignments"""
+backend/sims/rotations/views.py:549:        """Process bulk assignment"""
+backend/sims/rotations/views.py:672:def export_rotations_csv(request):
+backend/sims/rotations/views.py:673:    """Export rotations to CSV"""
+backend/sims/rotations/views.py:684:        raise PermissionDenied("You don't have permission to export rotations")
+backend/sims/rotations/views.py:686:    # Create CSV response
+backend/sims/rotations/views.py:687:    response = HttpResponse(content_type="text/csv")
+backend/sims/rotations/views.py:688:    response["Content-Disposition"] = 'attachment; filename="rotations_export.csv"'
+backend/sims/rotations/views.py:690:    writer = csv.writer(response)
+backend/sims/reports/serializers.py:18:    format = serializers.ChoiceField(choices=["pdf", "xlsx"])
+backend/sims/reports/services.py:110:            filename=f"{filename}.xlsx",
+backend/sims/reports/services.py:126:        if fmt == "xlsx":
+backend/sims/reports/urls.py:7:    ReportExportView,
+backend/sims/reports/urls.py:21:    path("export/<str:key>/", ReportExportView.as_view(), name="export"),
+backend/sims/reports/registry.py:3:import csv
+backend/sims/reports/registry.py:15:from sims.bulk.models import BulkOperation
+backend/sims/reports/registry.py:318:def _bulk_import_summary(_user, _filters):
+backend/sims/reports/registry.py:327:        for op in BulkOperation.objects.filter(operation=BulkOperation.OP_IMPORT).select_related("user")[:200]
+backend/sims/reports/registry.py:380:    {"key": "bulk-import-run-summary", "title": "Bulk import run summary", "runner": _bulk_import_summary, "roles": {"admin", "utrmc_admin", "utrmc_user"}},
+backend/sims/reports/registry.py:403:def export_rows(rows: Rows, key: str, export_format: str) -> Tuple[bytes, str, str]:
+backend/sims/reports/registry.py:404:    if export_format == "csv":
+backend/sims/reports/registry.py:407:        writer = csv.DictWriter(output, fieldnames=headers)
+backend/sims/reports/registry.py:411:        return output.getvalue().encode("utf-8"), "text/csv", f"{key}.csv"
+backend/sims/reports/registry.py:426:        f"{key}.xlsx",
+backend/sims/reports/views.py:18:from sims.reports.registry import export_rows, report_catalog_for, run_report_for
+backend/sims/reports/views.py:87:class ReportExportView(APIView):
+backend/sims/reports/views.py:91:        export_format = request.query_params.get("file_format", "xlsx").lower()
+backend/sims/reports/views.py:98:        if export_format not in {"xlsx", "csv"}:
+backend/sims/reports/views.py:99:            return Response({"detail": "Format must be xlsx or csv."}, status=400)
+backend/sims/reports/views.py:100:        content, content_type, filename = export_rows(rows, key, export_format)
+backend/sims/reports/views.py:113:    "ReportExportView",
+backend/sims/analytics/dashboard_v1.py:5:import csv
+backend/sims/analytics/dashboard_v1.py:333:            "data.export.completed",
+backend/sims/analytics/dashboard_v1.py:382:            "data.export.started",
+backend/sims/analytics/dashboard_v1.py:383:            "data.export.completed",
+backend/sims/analytics/dashboard_v1.py:384:            "data.export.failed",
+backend/sims/analytics/dashboard_v1.py:507:def tab_payload_to_csv(tab_payload: dict[str, Any]) -> str:
+backend/sims/analytics/dashboard_v1.py:512:    writer = csv.writer(output)
+backend/sims/analytics/event_tracking.py:27:from sims.analytics.models import AnalyticsValidationRejection
+backend/sims/analytics/event_tracking.py:145:    AnalyticsValidationRejection.objects.create(
+backend/sims/analytics/event_catalog.py:31:    "resource",
+backend/sims/analytics/event_catalog.py:87:    "data.export.started": _spec("Data export started"),
+backend/sims/analytics/event_catalog.py:88:    "data.export.completed": _spec("Data export completed"),
+backend/sims/analytics/event_catalog.py:89:    "data.export.failed": _spec("Data export failed"),
+backend/sims/analytics/urls.py:10:    AnalyticsTabExportView,
+backend/sims/analytics/urls.py:12:    ComparativeAnalyticsView,
+backend/sims/analytics/urls.py:16:    PerformanceMetricsView,
+backend/sims/analytics/urls.py:17:    TrendAnalyticsView,
+backend/sims/analytics/urls.py:23:    path("trends/", TrendAnalyticsView.as_view(), name="trends"),
+backend/sims/analytics/urls.py:24:    path("comparative/", ComparativeAnalyticsView.as_view(), name="comparative"),
+backend/sims/analytics/urls.py:25:    path("performance/", PerformanceMetricsView.as_view(), name="performance"),
+backend/sims/analytics/urls.py:33:    path("v1/tabs/<str:tab>/export/", AnalyticsTabExportView.as_view(), name="v1-tab-export"),
+backend/sims/analytics/models.py:109:class AnalyticsValidationRejection(models.Model):
+backend/sims/analytics/admin.py:5:from sims.analytics.models import AnalyticsDailyRollup, AnalyticsEvent, AnalyticsValidationRejection
+backend/sims/analytics/admin.py:42:@admin.register(AnalyticsValidationRejection)
+backend/sims/analytics/admin.py:43:class AnalyticsValidationRejectionAdmin(admin.ModelAdmin):
+backend/sims/analytics/views.py:26:    tab_payload_to_csv,
+backend/sims/analytics/views.py:30:from sims.analytics.models import AnalyticsEvent, AnalyticsValidationRejection
+backend/sims/analytics/views.py:66:class TrendAnalyticsView(APIView):
+backend/sims/analytics/views.py:119:class ComparativeAnalyticsView(APIView):
+backend/sims/analytics/views.py:146:class PerformanceMetricsView(APIView):
+backend/sims/analytics/views.py:240:class AnalyticsTabExportView(APIView):
+backend/sims/analytics/views.py:254:        csv_text = tab_payload_to_csv(payload)
+backend/sims/analytics/views.py:255:        response = HttpResponse(csv_text, content_type="text/csv")
+backend/sims/analytics/views.py:256:        response["Content-Disposition"] = f'attachment; filename="analytics-{tab}.csv"'
+backend/sims/analytics/views.py:363:            AnalyticsValidationRejection.objects.filter(created_at__gte=start_dt, created_at__lt=end_dt)
+backend/sims/analytics/views.py:417:    "TrendAnalyticsView",
+backend/sims/analytics/views.py:418:    "ComparativeAnalyticsView",
+backend/sims/analytics/views.py:419:    "PerformanceMetricsView",
+backend/sims/analytics/views.py:425:    "AnalyticsTabExportView",
+backend/sims/bulk/serializers.py:1:"""Serializers for bulk operation APIs."""
+backend/sims/bulk/serializers.py:10:class BulkReviewSerializer(serializers.Serializer):
+backend/sims/bulk/serializers.py:17:class BulkAssignmentSerializer(serializers.Serializer):
+backend/sims/bulk/serializers.py:24:class BulkImportSerializer(serializers.Serializer):
+backend/sims/bulk/serializers.py:57:    "BulkReviewSerializer",
+backend/sims/bulk/serializers.py:58:    "BulkAssignmentSerializer",
+backend/sims/bulk/serializers.py:59:    "BulkImportSerializer",
+backend/sims/bulk/apps.py:4:class BulkConfig(AppConfig):
+backend/sims/bulk/apps.py:6:    name = "sims.bulk"
+backend/sims/bulk/services.py:1:"""Service layer for bulk operations."""
+backend/sims/bulk/services.py:5:import csv
+backend/sims/bulk/services.py:20:from sims.bulk.models import BulkOperation
+backend/sims/bulk/services.py:34:class BulkResult:
+backend/sims/bulk/services.py:40:class BulkExportFile:
+backend/sims/bulk/services.py:46:class BulkProcessingError(Exception):
+backend/sims/bulk/services.py:47:    """Raised when a bulk operation fails in transactional mode."""
+backend/sims/bulk/services.py:50:class BulkService:
+backend/sims/bulk/services.py:60:            raise PermissionDenied("Bulk operations are restricted to supervisors and admins.")
+backend/sims/bulk/services.py:65:    def review_entries(self, entry_ids: Sequence[int], status: str) -> BulkOperation:
+backend/sims/bulk/services.py:66:        operation = BulkOperation.objects.create(user=self.actor, operation=BulkOperation.OP_REVIEW)
+backend/sims/bulk/services.py:90:    def assign_supervisor(self, entry_ids: Sequence[int], supervisor: User) -> BulkOperation:
+backend/sims/bulk/services.py:91:        operation = BulkOperation.objects.create(
+backend/sims/bulk/services.py:92:            user=self.actor, operation=BulkOperation.OP_ASSIGNMENT
+backend/sims/bulk/services.py:117:    # Bulk import
+backend/sims/bulk/services.py:119:    def import_logbook_entries(
+backend/sims/bulk/services.py:121:        uploaded_file,
+backend/sims/bulk/services.py:125:    ) -> BulkOperation:
+backend/sims/bulk/services.py:126:        operation = BulkOperation.objects.create(user=self.actor, operation=BulkOperation.OP_IMPORT)
+backend/sims/bulk/services.py:127:        rows = list(_parse_rows(uploaded_file))
+backend/sims/bulk/services.py:183:                        raise BulkProcessingError("Import failed; rolling back")
+backend/sims/bulk/services.py:184:            except BulkProcessingError:
+backend/sims/bulk/services.py:195:    def import_supervisors(
+backend/sims/bulk/services.py:197:        uploaded_file,
+backend/sims/bulk/services.py:202:    ) -> BulkOperation:
+backend/sims/bulk/services.py:204:        Import supervisor/faculty data from CSV or Excel file.
+backend/sims/bulk/services.py:217:        operation = BulkOperation.objects.create(
+backend/sims/bulk/services.py:218:            user=self.actor, operation=BulkOperation.OP_IMPORT
+backend/sims/bulk/services.py:225:            rows = list(_parse_csv_rows(uploaded_file, required_columns=None))
+backend/sims/bulk/services.py:445:                        raise BulkProcessingError("Import failed; rolling back")
+backend/sims/bulk/services.py:446:            except BulkProcessingError:
+backend/sims/bulk/services.py:463:    def import_residents(
+backend/sims/bulk/services.py:465:        uploaded_file,
+backend/sims/bulk/services.py:470:    ) -> BulkOperation:
+backend/sims/bulk/services.py:472:        Import resident/postgraduate data from CSV or Excel file.
+backend/sims/bulk/services.py:489:        operation = BulkOperation.objects.create(
+backend/sims/bulk/services.py:490:            user=self.actor, operation=BulkOperation.OP_IMPORT
+backend/sims/bulk/services.py:494:            rows = list(_parse_csv_rows(uploaded_file, required_columns=None))
+backend/sims/bulk/services.py:842:                        raise BulkProcessingError("Import failed; rolling back")
+backend/sims/bulk/services.py:843:            except BulkProcessingError:
+backend/sims/bulk/services.py:861:    def import_trainees(
+backend/sims/bulk/services.py:863:        uploaded_file,
+backend/sims/bulk/services.py:867:    ) -> BulkOperation:
+backend/sims/bulk/services.py:878:        operation = BulkOperation.objects.create(
+backend/sims/bulk/services.py:879:            user=self.actor, operation=BulkOperation.OP_IMPORT
+backend/sims/bulk/services.py:881:        rows = list(_parse_trainee_rows(uploaded_file))
+backend/sims/bulk/services.py:1084:                        raise BulkProcessingError("Import failed; rolling back")
+backend/sims/bulk/services.py:1085:            except BulkProcessingError:
+backend/sims/bulk/services.py:1103:    def import_departments(
+backend/sims/bulk/services.py:1105:        uploaded_file,
+backend/sims/bulk/services.py:1109:    ) -> BulkOperation:
+backend/sims/bulk/services.py:1110:        operation = BulkOperation.objects.create(user=self.actor, operation=BulkOperation.OP_IMPORT)
+backend/sims/bulk/services.py:1121:            rows = list(_parse_csv_rows(uploaded_file, required_columns=None))
+backend/sims/bulk/services.py:1197:                        raise BulkProcessingError("Department import failed; rolling back")
+backend/sims/bulk/services.py:1198:            except BulkProcessingError:
+backend/sims/bulk/services.py:1209:    def export_dataset(self, resource: str, export_format: str = "xlsx") -> BulkExportFile:
+backend/sims/bulk/services.py:1210:        if export_format not in {"xlsx", "csv"}:
+backend/sims/bulk/services.py:1211:            raise ValidationError("Unsupported export format. Use xlsx or csv.")
+backend/sims/bulk/services.py:1213:        if resource == "residents":
+backend/sims/bulk/services.py:1228:        elif resource == "supervisors":
+backend/sims/bulk/services.py:1242:        elif resource == "departments":
+backend/sims/bulk/services.py:1263:            raise ValidationError("Unsupported export resource.")
+backend/sims/bulk/services.py:1265:        return _render_export_rows(rows, resource, export_format)
+backend/sims/bulk/services.py:1268:def _render_export_rows(rows: List[dict], resource: str, export_format: str) -> BulkExportFile:
+backend/sims/bulk/services.py:1269:    if export_format == "csv":
+backend/sims/bulk/services.py:1272:        writer = csv.DictWriter(output, fieldnames=fieldnames)
+backend/sims/bulk/services.py:1278:        return BulkExportFile(
+backend/sims/bulk/services.py:1279:            filename=f"{resource}_export.csv",
+backend/sims/bulk/services.py:1281:            content_type="text/csv",
+backend/sims/bulk/services.py:1286:    sheet.title = "Export"
+backend/sims/bulk/services.py:1296:    return BulkExportFile(
+backend/sims/bulk/services.py:1297:        filename=f"{resource}_export.xlsx",
+backend/sims/bulk/services.py:1317:def _parse_rows(uploaded_file) -> Iterator[dict]:
+backend/sims/bulk/services.py:1318:    name = getattr(uploaded_file, "name", "uploaded")
+backend/sims/bulk/services.py:1319:    content = uploaded_file.read()
+backend/sims/bulk/services.py:1325:    if name.endswith(".csv"):
+backend/sims/bulk/services.py:1329:        reader = csv.DictReader(text_stream)
+backend/sims/bulk/services.py:1333:    elif name.endswith(".xlsx"):
+backend/sims/bulk/services.py:1641:def _parse_csv_rows(uploaded_file, required_columns: Optional[set] = None) -> Iterator[dict]:
+backend/sims/bulk/services.py:1643:    Parse CSV file and yield row dictionaries.
+backend/sims/bulk/services.py:1644:    Supports both CSV and Excel files.
+backend/sims/bulk/services.py:1647:        uploaded_file: File object
+backend/sims/bulk/services.py:1653:    name = getattr(uploaded_file, "name", "uploaded")
+backend/sims/bulk/services.py:1654:    content = uploaded_file.read()
+backend/sims/bulk/services.py:1667:    # Handle CSV files
+backend/sims/bulk/services.py:1668:    if name.endswith(".csv"):
+backend/sims/bulk/services.py:1673:        reader = csv.DictReader(text_stream)
+backend/sims/bulk/services.py:1699:    elif name.endswith((".xlsx", ".xls")):
+backend/sims/bulk/services.py:1733:        raise ValidationError("Unsupported file format. Please upload CSV or Excel file.")
+backend/sims/bulk/services.py:1736:def _parse_trainee_rows(uploaded_file) -> Iterator[dict]:
+backend/sims/bulk/services.py:1741:    name = getattr(uploaded_file, "name", "uploaded")
+backend/sims/bulk/services.py:1742:    content = uploaded_file.read()
+backend/sims/bulk/services.py:1763:    if name.endswith(".csv"):
+backend/sims/bulk/services.py:1765:        reader = csv.DictReader(text_stream)
+backend/sims/bulk/services.py:1782:    if not name.endswith((".xlsx", ".xls")):
+backend/sims/bulk/services.py:1783:        raise ValidationError("Trainee import supports CSV or Excel files (.csv, .xlsx, .xls)")
+backend/sims/bulk/services.py:1845:def convert_excel_to_trainee_format(uploaded_file) -> io.BytesIO:
+backend/sims/bulk/services.py:1848:    Attempts to intelligently map columns from the uploaded file to the required format.
+backend/sims/bulk/services.py:1851:    name = getattr(uploaded_file, "name", "uploaded")
+backend/sims/bulk/services.py:1852:    content = uploaded_file.read()
+backend/sims/bulk/services.py:1859:    if not name.endswith((".xlsx", ".xls")):
+backend/sims/bulk/services.py:1860:        raise ValidationError("Only Excel files (.xlsx, .xls) are supported")
+backend/sims/bulk/services.py:1862:    # Load the uploaded workbook
+backend/sims/bulk/urls.py:1:"""Routing for bulk operations APIs."""
+backend/sims/bulk/urls.py:5:from sims.bulk.views import (
+backend/sims/bulk/urls.py:6:    BulkAssignmentView,
+backend/sims/bulk/urls.py:7:    BulkImportView,
+backend/sims/bulk/urls.py:8:    BulkDepartmentImportView,
+backend/sims/bulk/urls.py:9:    BulkResidentImportView,
+backend/sims/bulk/urls.py:10:    BulkReviewView,
+backend/sims/bulk/urls.py:11:    BulkExportView,
+backend/sims/bulk/urls.py:12:    BulkSupervisorImportView,
+backend/sims/bulk/urls.py:13:    BulkTraineeImportView,
+backend/sims/bulk/urls.py:16:app_name = "bulk_api"
+backend/sims/bulk/urls.py:19:    path("review/", BulkReviewView.as_view(), name="review"),
+backend/sims/bulk/urls.py:20:    path("assignment/", BulkAssignmentView.as_view(), name="assignment"),
+backend/sims/bulk/urls.py:21:    path("import/", BulkImportView.as_view(), name="import"),
+backend/sims/bulk/urls.py:22:    path("import-trainees/", BulkTraineeImportView.as_view(), name="import_trainees"),
+backend/sims/bulk/urls.py:23:    path("import-supervisors/", BulkSupervisorImportView.as_view(), name="import_supervisors"),
+backend/sims/bulk/urls.py:24:    path("import-residents/", BulkResidentImportView.as_view(), name="import_residents"),
+backend/sims/bulk/urls.py:25:    path("import-departments/", BulkDepartmentImportView.as_view(), name="import_departments"),
+backend/sims/bulk/urls.py:26:    path("exports/<str:resource>/", BulkExportView.as_view(), name="exports"),
+backend/sims/bulk/models.py:1:"""Models for tracking bulk operations."""
+backend/sims/bulk/models.py:14:class BulkOperation(models.Model):
+backend/sims/bulk/models.py:15:    """Audit trail for a bulk action executed by a user."""
+backend/sims/bulk/models.py:21:        (OP_REVIEW, "Bulk Review"),
+backend/sims/bulk/models.py:22:        (OP_ASSIGNMENT, "Bulk Assignment"),
+backend/sims/bulk/models.py:23:        (OP_IMPORT, "Bulk Import"),
+backend/sims/bulk/models.py:35:    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="bulk_operations")
+backend/sims/bulk/models.py:79:__all__ = ["BulkOperation"]
+backend/sims/bulk/admin.py:1:"""Admin registrations for bulk operations."""
+backend/sims/bulk/views.py:1:"""API views for executing bulk operations."""
+backend/sims/bulk/views.py:13:from sims.bulk.models import BulkOperation
+backend/sims/bulk/views.py:14:from sims.bulk.serializers import (
+backend/sims/bulk/views.py:15:    BulkAssignmentSerializer,
+backend/sims/bulk/views.py:16:    BulkImportSerializer,
+backend/sims/bulk/views.py:17:    BulkReviewSerializer,
+backend/sims/bulk/views.py:23:from sims.bulk.services import BulkService
+backend/sims/bulk/views.py:29:def _operation_payload(operation: BulkOperation) -> dict:
+backend/sims/bulk/views.py:41:def _track_bulk_event(
+backend/sims/bulk/views.py:45:    resource: str,
+backend/sims/bulk/views.py:46:    operation: BulkOperation | None = None,
+backend/sims/bulk/views.py:53:        entity_type="bulk_operation",
+backend/sims/bulk/views.py:55:        event_key=f"bulk:{resource}:{event_type}",
+backend/sims/bulk/views.py:57:            "source": "bulk_api",
+backend/sims/bulk/views.py:58:            "resource": resource,
+backend/sims/bulk/views.py:66:class BulkReviewView(APIView):
+backend/sims/bulk/views.py:70:        serializer = BulkReviewSerializer(data=request.data)
+backend/sims/bulk/views.py:72:        service = BulkService(request.user)
+backend/sims/bulk/views.py:77:class BulkAssignmentView(APIView):
+backend/sims/bulk/views.py:81:        serializer = BulkAssignmentSerializer(data=request.data)
+backend/sims/bulk/views.py:87:        service = BulkService(request.user)
+backend/sims/bulk/views.py:94:class BulkImportView(APIView):
+backend/sims/bulk/views.py:100:        serializer = BulkImportSerializer(data=request.data)
+backend/sims/bulk/views.py:102:        uploaded_file = serializer.validated_data["file"]
+backend/sims/bulk/views.py:103:        service = BulkService(request.user)
+backend/sims/bulk/views.py:104:        _track_bulk_event(request, event_type="data.import.started", resource="logbook")
+backend/sims/bulk/views.py:107:            operation = service.import_logbook_entries(
+backend/sims/bulk/views.py:108:                uploaded_file,
+backend/sims/bulk/views.py:113:            _track_bulk_event(
+backend/sims/bulk/views.py:116:                resource="logbook",
+backend/sims/bulk/views.py:121:        if operation.status == BulkOperation.STATUS_COMPLETED:
+backend/sims/bulk/views.py:122:            _track_bulk_event(
+backend/sims/bulk/views.py:125:                resource="logbook",
+backend/sims/bulk/views.py:129:            _track_bulk_event(
+backend/sims/bulk/views.py:132:                resource="logbook",
+backend/sims/bulk/views.py:139:            if operation.status == BulkOperation.STATUS_COMPLETED
+backend/sims/bulk/views.py:145:class BulkTraineeImportView(APIView):
+backend/sims/bulk/views.py:153:        uploaded_file = serializer.validated_data["file"]
+backend/sims/bulk/views.py:154:        service = BulkService(request.user)
+backend/sims/bulk/views.py:155:        _track_bulk_event(request, event_type="data.import.started", resource="trainees")
+backend/sims/bulk/views.py:158:            operation = service.import_trainees(
+backend/sims/bulk/views.py:159:                uploaded_file,
+backend/sims/bulk/views.py:164:            _track_bulk_event(
+backend/sims/bulk/views.py:167:                resource="trainees",
+backend/sims/bulk/views.py:172:        if operation.status == BulkOperation.STATUS_COMPLETED:
+backend/sims/bulk/views.py:173:            _track_bulk_event(
+backend/sims/bulk/views.py:176:                resource="trainees",
+backend/sims/bulk/views.py:180:            _track_bulk_event(
+backend/sims/bulk/views.py:183:                resource="trainees",
+backend/sims/bulk/views.py:190:            if operation.status == BulkOperation.STATUS_COMPLETED
+backend/sims/bulk/views.py:196:class BulkSupervisorImportView(APIView):
+backend/sims/bulk/views.py:198:    Bulk import view for supervisors/faculty.
+backend/sims/bulk/views.py:200:    Accepts CSV or Excel files with supervisor data.
+backend/sims/bulk/views.py:210:        uploaded_file = serializer.validated_data["file"]
+backend/sims/bulk/views.py:211:        service = BulkService(request.user)
+backend/sims/bulk/views.py:212:        _track_bulk_event(request, event_type="data.import.started", resource="supervisors")
+backend/sims/bulk/views.py:215:            operation = service.import_supervisors(
+backend/sims/bulk/views.py:216:                uploaded_file,
+backend/sims/bulk/views.py:222:            _track_bulk_event(
+backend/sims/bulk/views.py:225:                resource="supervisors",
+backend/sims/bulk/views.py:230:        if operation.status == BulkOperation.STATUS_COMPLETED:
+backend/sims/bulk/views.py:231:            _track_bulk_event(
+backend/sims/bulk/views.py:234:                resource="supervisors",
+backend/sims/bulk/views.py:238:            _track_bulk_event(
+backend/sims/bulk/views.py:241:                resource="supervisors",
+backend/sims/bulk/views.py:248:            if operation.status == BulkOperation.STATUS_COMPLETED
+backend/sims/bulk/views.py:254:class BulkResidentImportView(APIView):
+backend/sims/bulk/views.py:256:    Bulk import view for residents/postgraduates.
+backend/sims/bulk/views.py:258:    Accepts CSV or Excel files with resident data.
+backend/sims/bulk/views.py:269:        uploaded_file = serializer.validated_data["file"]
+backend/sims/bulk/views.py:270:        service = BulkService(request.user)
+backend/sims/bulk/views.py:271:        _track_bulk_event(request, event_type="data.import.started", resource="residents")
+backend/sims/bulk/views.py:274:            operation = service.import_residents(
+backend/sims/bulk/views.py:275:                uploaded_file,
+backend/sims/bulk/views.py:281:            _track_bulk_event(
+backend/sims/bulk/views.py:284:                resource="residents",
+backend/sims/bulk/views.py:289:        if operation.status == BulkOperation.STATUS_COMPLETED:
+backend/sims/bulk/views.py:290:            _track_bulk_event(
+backend/sims/bulk/views.py:293:                resource="residents",
+backend/sims/bulk/views.py:297:            _track_bulk_event(
+backend/sims/bulk/views.py:300:                resource="residents",
+backend/sims/bulk/views.py:307:            if operation.status == BulkOperation.STATUS_COMPLETED
+backend/sims/bulk/views.py:313:class BulkDepartmentImportView(APIView):
+backend/sims/bulk/views.py:322:        service = BulkService(request.user)
+backend/sims/bulk/views.py:323:        _track_bulk_event(request, event_type="data.import.started", resource="departments")
+backend/sims/bulk/views.py:324:        operation = service.import_departments(
+backend/sims/bulk/views.py:329:        if operation.status == BulkOperation.STATUS_COMPLETED:
+backend/sims/bulk/views.py:330:            _track_bulk_event(
+backend/sims/bulk/views.py:333:                resource="departments",
+backend/sims/bulk/views.py:337:            _track_bulk_event(
+backend/sims/bulk/views.py:340:                resource="departments",
+backend/sims/bulk/views.py:346:            if operation.status == BulkOperation.STATUS_COMPLETED
+backend/sims/bulk/views.py:352:class BulkExportView(APIView):
+backend/sims/bulk/views.py:355:    def get(self, request: Request, resource: str) -> HttpResponse:
+backend/sims/bulk/views.py:359:            return Response({"detail": "Only admins can export bulk datasets."}, status=403)
+backend/sims/bulk/views.py:360:        export_format = request.query_params.get("file_format", "xlsx").lower()
+backend/sims/bulk/views.py:361:        service = BulkService(request.user)
+backend/sims/bulk/views.py:362:        _track_bulk_event(request, event_type="data.export.started", resource=resource)
+backend/sims/bulk/views.py:364:            export_file = service.export_dataset(resource=resource, export_format=export_format)
+backend/sims/bulk/views.py:366:            _track_bulk_event(
+backend/sims/bulk/views.py:368:                event_type="data.export.failed",
+backend/sims/bulk/views.py:369:                resource=resource,
+backend/sims/bulk/views.py:373:        _track_bulk_event(request, event_type="data.export.completed", resource=resource)
+backend/sims/bulk/views.py:374:        response = HttpResponse(export_file.content, content_type=export_file.content_type)
+backend/sims/bulk/views.py:375:        response["Content-Disposition"] = f'attachment; filename="{export_file.filename}"'
+backend/sims/bulk/views.py:380:    "BulkReviewView",
+backend/sims/bulk/views.py:381:    "BulkAssignmentView",
+backend/sims/bulk/views.py:382:    "BulkImportView",
+backend/sims/bulk/views.py:383:    "BulkTraineeImportView",
+backend/sims/bulk/views.py:384:    "BulkSupervisorImportView",
+backend/sims/bulk/views.py:385:    "BulkResidentImportView",
+backend/sims/bulk/views.py:386:    "BulkDepartmentImportView",
+backend/sims/bulk/views.py:387:    "BulkExportView",
+backend/sims/certificates/api_urls.py:4:from sims.certificates.api_views import PGCertificatesListView, PGCertificateDownloadView
+backend/sims/certificates/api_urls.py:10:    path("my/<int:pk>/download/", PGCertificateDownloadView.as_view(), name="my_certificate_download"),
+backend/sims/certificates/apps.py:10:    - Certificate upload and storage
+backend/sims/certificates/forms.py:190:            "Upload the certificate document (PDF, JPG, PNG format, max 10MB)"
+backend/sims/certificates/forms.py:261:                    raise ValidationError("Uploaded file contains suspicious content")
+backend/sims/certificates/forms.py:490:        ("-created_at", "Upload Date (Newest First)"),
+backend/sims/certificates/forms.py:491:        ("created_at", "Upload Date (Oldest First)"),
+backend/sims/certificates/forms.py:556:class BulkCertificateApprovalForm(forms.Form):
+backend/sims/certificates/forms.py:558:    Form for bulk approval/rejection of certificates.
+backend/sims/certificates/forms.py:582:    bulk_comments = forms.CharField(
+backend/sims/certificates/forms.py:610:        """Validate bulk action data"""
+backend/sims/certificates/forms.py:618:        if action == "reject" and not cleaned_data.get("bulk_comments"):
+backend/sims/certificates/forms.py:689:class QuickCertificateUploadForm(forms.Form):
+backend/sims/certificates/forms.py:691:    Simplified form for quick certificate upload.
+backend/sims/certificates/forms.py:723:        """Validate uploaded file"""
+backend/sims/certificates/forms.py:727:            # Check file size (5MB limit for quick upload)
+backend/sims/certificates/forms.py:729:                raise ValidationError("File size cannot exceed 5MB for quick upload")
+backend/sims/certificates/forms.py:780:    export_format = forms.ChoiceField(
+backend/sims/certificates/forms.py:783:            ("csv", "Export as CSV"),
+backend/sims/certificates/forms.py:784:            ("pdf", "Export as PDF"),
+backend/sims/certificates/urls.py:21:    path("bulk-approval/", views.BulkCertificateApprovalView.as_view(), name="bulk_approval"),
+backend/sims/certificates/urls.py:24:    path("<int:pk>/download/", views.certificate_download, name="download"),
+backend/sims/certificates/urls.py:25:    # Export and reporting
+backend/sims/certificates/urls.py:26:    path("export/csv/", views.export_certificates_csv, name="export_csv"),
+backend/sims/certificates/models.py:14:def certificate_upload_path(instance, filename):
+backend/sims/certificates/models.py:15:    """Generate upload path for certificate files"""
+backend/sims/certificates/models.py:16:    # Upload to certificates/pg_username/year/filename
+backend/sims/certificates/models.py:21:def additional_documents_upload_path(instance, filename):
+backend/sims/certificates/models.py:22:    """Generate upload path for additional certificate documents"""
+backend/sims/certificates/models.py:191:        upload_to=certificate_upload_path,
+backend/sims/certificates/models.py:192:        help_text="Upload the certificate document (PDF, JPG, PNG)",
+backend/sims/certificates/models.py:196:        upload_to=additional_documents_upload_path,
+backend/sims/certificates/models.py:233:        help_text="User who uploaded this certificate",
+backend/sims/certificates/admin.py:6:from import_export import resources
+backend/sims/certificates/admin.py:7:from import_export.admin import ImportExportModelAdmin
+backend/sims/certificates/admin.py:12:class CertificateResource(resources.ModelResource):
+backend/sims/certificates/admin.py:13:    """Resource for bulk import/export of certificates via CSV/Excel"""
+backend/sims/certificates/admin.py:28:        export_order = fields
+backend/sims/certificates/admin.py:29:        import_id_fields = ("id",)
+backend/sims/certificates/admin.py:31:    def before_import_row(self, row, **kwargs):
+backend/sims/certificates/admin.py:123:class CertificateAdmin(ImportExportModelAdmin):
+backend/sims/certificates/admin.py:124:    """Enhanced certificate admin with role-based access and bulk operations"""
+backend/sims/certificates/admin.py:126:    resource_class = CertificateResource
+backend/sims/certificates/admin.py:305:            self.send_certificate_notification(obj, "uploaded")
+backend/sims/certificates/admin.py:319:                if action == "uploaded":
+backend/sims/certificates/admin.py:320:                    title = "Certificate Uploaded"
+backend/sims/certificates/admin.py:321:                    message = f"Your certificate '{certificate.title}' has been uploaded and is pending review."
+backend/sims/certificates/admin.py:341:            # Notify supervisor for uploaded certificates
+backend/sims/certificates/admin.py:342:            if action == "uploaded" and certificate.pg and certificate.pg.supervisor:
+backend/sims/certificates/admin.py:347:                    body=f"{certificate.pg.get_full_name()} has uploaded a new certificate: {certificate.title}",
+backend/sims/certificates/admin.py:357:        """Bulk approve selected certificates"""
+backend/sims/certificates/admin.py:376:        """Bulk reject selected certificates"""
+backend/sims/certificates/api_views.py:34:class PGCertificateDownloadView(APIView):
+backend/sims/certificates/api_views.py:36:    Download a specific certificate for the authenticated PG user.
+backend/sims/certificates/api_views.py:38:    GET /api/certificates/my/<id>/download/
+backend/sims/certificates/api_views.py:47:            raise PermissionDenied("You can only download your own certificates.")
+backend/sims/certificates/views.py:1:import csv
+backend/sims/certificates/views.py:26:    BulkCertificateApprovalForm,
+backend/sims/certificates/views.py:223:        context["can_download"] = self.can_user_download(certificate)
+backend/sims/certificates/views.py:271:    def can_user_download(self, certificate):
+backend/sims/certificates/views.py:272:        """Check if current user can download this certificate"""
+backend/sims/certificates/views.py:308:            f"Certificate '{form.instance.title}' uploaded successfully and is pending review",
+backend/sims/certificates/views.py:587:        """Calculate average time from upload to approval"""
+backend/sims/certificates/views.py:604:class BulkCertificateApprovalView(LoginRequiredMixin, CertificateAccessMixin, FormView):
+backend/sims/certificates/views.py:605:    """View for bulk certificate approval"""
+backend/sims/certificates/views.py:607:    template_name = "certificates/bulk_approval.html"
+backend/sims/certificates/views.py:608:    form_class = BulkCertificateApprovalForm
+backend/sims/certificates/views.py:612:        """Only admins and supervisors can do bulk approvals"""
+backend/sims/certificates/views.py:616:        """Process bulk approval"""
+backend/sims/certificates/views.py:699:def certificate_download(request, pk):
+backend/sims/certificates/views.py:700:    """Download certificate file"""
+backend/sims/certificates/views.py:707:            raise PermissionDenied("You don't have permission to download this certificate")
+backend/sims/certificates/views.py:710:            raise PermissionDenied("You can only download your own certificates")
+backend/sims/certificates/views.py:712:        raise PermissionDenied("You don't have permission to download certificates")
+backend/sims/certificates/views.py:725:def export_certificates_csv(request):
+backend/sims/certificates/views.py:726:    """Export certificates to CSV"""
+backend/sims/certificates/views.py:737:        raise PermissionDenied("You don't have permission to export certificates")
+backend/sims/certificates/views.py:739:    # Create CSV response
+backend/sims/certificates/views.py:740:    response = HttpResponse(content_type="text/csv")
+backend/sims/certificates/views.py:741:    response["Content-Disposition"] = 'attachment; filename="certificates_export.csv"'
+backend/sims/certificates/views.py:743:    writer = csv.writer(response)
+backend/sims/_devtools/endpoints.json:515:    "path": "api/audit/^activity/export/$",
+backend/sims/_devtools/endpoints.json:523:    "path": "api/audit/^activity/export\\.(?P<format>[a-z0-9]+)/?$",
+backend/sims/_devtools/endpoints.json:881:    "view": "TrendAnalyticsView",
+backend/sims/_devtools/endpoints.json:891:    "view": "TrendAnalyticsView",
+backend/sims/_devtools/endpoints.json:901:    "view": "TrendAnalyticsView",
+backend/sims/_devtools/endpoints.json:911:    "view": "TrendAnalyticsView",
+backend/sims/_devtools/endpoints.json:921:    "view": "TrendAnalyticsView",
+backend/sims/_devtools/endpoints.json:931:    "view": "TrendAnalyticsView",
+backend/sims/_devtools/endpoints.json:941:    "view": "ComparativeAnalyticsView",
+backend/sims/_devtools/endpoints.json:951:    "view": "ComparativeAnalyticsView",
+backend/sims/_devtools/endpoints.json:961:    "view": "ComparativeAnalyticsView",
+backend/sims/_devtools/endpoints.json:971:    "view": "ComparativeAnalyticsView",
+backend/sims/_devtools/endpoints.json:981:    "view": "ComparativeAnalyticsView",
+backend/sims/_devtools/endpoints.json:991:    "view": "ComparativeAnalyticsView",
+backend/sims/_devtools/endpoints.json:1001:    "view": "PerformanceMetricsView",
+backend/sims/_devtools/endpoints.json:1011:    "view": "PerformanceMetricsView",
+backend/sims/_devtools/endpoints.json:1021:    "view": "PerformanceMetricsView",
+backend/sims/_devtools/endpoints.json:1031:    "view": "PerformanceMetricsView",
+backend/sims/_devtools/endpoints.json:1041:    "view": "PerformanceMetricsView",
+backend/sims/_devtools/endpoints.json:1051:    "view": "PerformanceMetricsView",
+backend/sims/_devtools/endpoints.json:1239:    "path": "api/bulk/review/",
+backend/sims/_devtools/endpoints.json:1241:    "view": "BulkReviewView",
+backend/sims/_devtools/endpoints.json:1249:    "path": "api/bulk/review/",
+backend/sims/_devtools/endpoints.json:1251:    "view": "BulkReviewView",
+backend/sims/_devtools/endpoints.json:1259:    "path": "api/bulk/review/",
+backend/sims/_devtools/endpoints.json:1261:    "view": "BulkReviewView",
+backend/sims/_devtools/endpoints.json:1269:    "path": "api/bulk/review/",
+backend/sims/_devtools/endpoints.json:1271:    "view": "BulkReviewView",
+backend/sims/_devtools/endpoints.json:1279:    "path": "api/bulk/review/",
+backend/sims/_devtools/endpoints.json:1281:    "view": "BulkReviewView",
+backend/sims/_devtools/endpoints.json:1289:    "path": "api/bulk/review/",
+backend/sims/_devtools/endpoints.json:1291:    "view": "BulkReviewView",
+backend/sims/_devtools/endpoints.json:1299:    "path": "api/bulk/assignment/",
+backend/sims/_devtools/endpoints.json:1301:    "view": "BulkAssignmentView",
+backend/sims/_devtools/endpoints.json:1309:    "path": "api/bulk/assignment/",
+backend/sims/_devtools/endpoints.json:1311:    "view": "BulkAssignmentView",
+backend/sims/_devtools/endpoints.json:1319:    "path": "api/bulk/assignment/",
+backend/sims/_devtools/endpoints.json:1321:    "view": "BulkAssignmentView",
+backend/sims/_devtools/endpoints.json:1329:    "path": "api/bulk/assignment/",
+backend/sims/_devtools/endpoints.json:1331:    "view": "BulkAssignmentView",
+backend/sims/_devtools/endpoints.json:1339:    "path": "api/bulk/assignment/",
+backend/sims/_devtools/endpoints.json:1341:    "view": "BulkAssignmentView",
+backend/sims/_devtools/endpoints.json:1349:    "path": "api/bulk/assignment/",
+backend/sims/_devtools/endpoints.json:1351:    "view": "BulkAssignmentView",
+backend/sims/_devtools/endpoints.json:1359:    "path": "api/bulk/import/",
+backend/sims/_devtools/endpoints.json:1361:    "view": "BulkImportView",
+backend/sims/_devtools/endpoints.json:1369:    "path": "api/bulk/import/",
+backend/sims/_devtools/endpoints.json:1371:    "view": "BulkImportView",
+backend/sims/_devtools/endpoints.json:1379:    "path": "api/bulk/import/",
+backend/sims/_devtools/endpoints.json:1381:    "view": "BulkImportView",
+backend/sims/_devtools/endpoints.json:1389:    "path": "api/bulk/import/",
+backend/sims/_devtools/endpoints.json:1391:    "view": "BulkImportView",
+backend/sims/_devtools/endpoints.json:1399:    "path": "api/bulk/import/",
+backend/sims/_devtools/endpoints.json:1401:    "view": "BulkImportView",
+backend/sims/_devtools/endpoints.json:1409:    "path": "api/bulk/import/",
+backend/sims/_devtools/endpoints.json:1411:    "view": "BulkImportView",
+backend/sims/_devtools/endpoints.json:1419:    "path": "api/bulk/import-trainees/",
+backend/sims/_devtools/endpoints.json:1421:    "view": "BulkTraineeImportView",
+backend/sims/_devtools/endpoints.json:1429:    "path": "api/bulk/import-trainees/",
+backend/sims/_devtools/endpoints.json:1431:    "view": "BulkTraineeImportView",
+backend/sims/_devtools/endpoints.json:1439:    "path": "api/bulk/import-trainees/",
+backend/sims/_devtools/endpoints.json:1441:    "view": "BulkTraineeImportView",
+backend/sims/_devtools/endpoints.json:1449:    "path": "api/bulk/import-trainees/",
+backend/sims/_devtools/endpoints.json:1451:    "view": "BulkTraineeImportView",
+backend/sims/_devtools/endpoints.json:1459:    "path": "api/bulk/import-trainees/",
+backend/sims/_devtools/endpoints.json:1461:    "view": "BulkTraineeImportView",
+backend/sims/_devtools/endpoints.json:1469:    "path": "api/bulk/import-trainees/",
+backend/sims/_devtools/endpoints.json:1471:    "view": "BulkTraineeImportView",
+backend/sims/_devtools/endpoints.json:1479:    "path": "api/bulk/import-supervisors/",
+backend/sims/_devtools/endpoints.json:1481:    "view": "BulkSupervisorImportView",
+backend/sims/_devtools/endpoints.json:1489:    "path": "api/bulk/import-supervisors/",
+backend/sims/_devtools/endpoints.json:1491:    "view": "BulkSupervisorImportView",
+backend/sims/_devtools/endpoints.json:1499:    "path": "api/bulk/import-supervisors/",
+backend/sims/_devtools/endpoints.json:1501:    "view": "BulkSupervisorImportView",
+backend/sims/_devtools/endpoints.json:1509:    "path": "api/bulk/import-supervisors/",
+backend/sims/_devtools/endpoints.json:1511:    "view": "BulkSupervisorImportView",
+backend/sims/_devtools/endpoints.json:1519:    "path": "api/bulk/import-supervisors/",
+backend/sims/_devtools/endpoints.json:1521:    "view": "BulkSupervisorImportView",
+backend/sims/_devtools/endpoints.json:1529:    "path": "api/bulk/import-supervisors/",
+backend/sims/_devtools/endpoints.json:1531:    "view": "BulkSupervisorImportView",
+backend/sims/_devtools/endpoints.json:1539:    "path": "api/bulk/import-residents/",
+backend/sims/_devtools/endpoints.json:1541:    "view": "BulkResidentImportView",
+backend/sims/_devtools/endpoints.json:1549:    "path": "api/bulk/import-residents/",
+backend/sims/_devtools/endpoints.json:1551:    "view": "BulkResidentImportView",
+backend/sims/_devtools/endpoints.json:1559:    "path": "api/bulk/import-residents/",
+backend/sims/_devtools/endpoints.json:1561:    "view": "BulkResidentImportView",
+backend/sims/_devtools/endpoints.json:1569:    "path": "api/bulk/import-residents/",
+backend/sims/_devtools/endpoints.json:1571:    "view": "BulkResidentImportView",
+backend/sims/_devtools/endpoints.json:1579:    "path": "api/bulk/import-residents/",
+backend/sims/_devtools/endpoints.json:1581:    "view": "BulkResidentImportView",
+backend/sims/_devtools/endpoints.json:1589:    "path": "api/bulk/import-residents/",
+backend/sims/_devtools/endpoints.json:1591:    "view": "BulkResidentImportView",
+backend/sims/_devtools/endpoints.json:2851:    "path": "api/certificates/my/<int:pk>/download/",
+backend/sims/_devtools/endpoints.json:2853:    "view": "PGCertificateDownloadView",
+backend/sims/_devtools/endpoints.json:2862:    "path": "api/certificates/my/<int:pk>/download/",
+backend/sims/_devtools/endpoints.json:2864:    "view": "PGCertificateDownloadView",
+backend/sims/_devtools/endpoints.json:2873:    "path": "api/certificates/my/<int:pk>/download/",
+backend/sims/_devtools/endpoints.json:2875:    "view": "PGCertificateDownloadView",
+backend/sims/_devtools/endpoints.json:2884:    "path": "api/certificates/my/<int:pk>/download/",
+backend/sims/_devtools/endpoints.json:2886:    "view": "PGCertificateDownloadView",
+backend/sims/_devtools/endpoints.json:2895:    "path": "api/certificates/my/<int:pk>/download/",
+backend/sims/_devtools/endpoints.json:2897:    "view": "PGCertificateDownloadView",
+backend/sims/_devtools/endpoints.json:2906:    "path": "api/certificates/my/<int:pk>/download/",
+backend/sims/_devtools/endpoints.json:2908:    "view": "PGCertificateDownloadView",
+backend/sims/_devtools/endpoints.json:2917:    "path": "api/attendance/upload/",
+backend/sims/_devtools/endpoints.json:2919:    "view": "BulkAttendanceUploadView",
+backend/sims/_devtools/endpoints.json:2927:    "path": "api/attendance/upload/",
+backend/sims/_devtools/endpoints.json:2929:    "view": "BulkAttendanceUploadView",
+backend/sims/_devtools/endpoints.json:2937:    "path": "api/attendance/upload/",
+backend/sims/_devtools/endpoints.json:2939:    "view": "BulkAttendanceUploadView",
+backend/sims/_devtools/endpoints.json:2947:    "path": "api/attendance/upload/",
+backend/sims/_devtools/endpoints.json:2949:    "view": "BulkAttendanceUploadView",
+backend/sims/_devtools/endpoints.json:2957:    "path": "api/attendance/upload/",
+backend/sims/_devtools/endpoints.json:2959:    "view": "BulkAttendanceUploadView",
+backend/sims/_devtools/endpoints.json:2967:    "path": "api/attendance/upload/",
+backend/sims/_devtools/endpoints.json:2969:    "view": "BulkAttendanceUploadView",
+backend/sims_project/settings.py:74:    "import_export",  # For CSV/Excel import/export
+backend/sims_project/settings.py:91:    "sims.bulk",
+backend/sims_project/settings.py:220:# Media files (User uploads)
+backend/sims_project/settings.py:354:# File Upload Settings
+backend/sims_project/settings.py:355:FILE_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024  # 10MB
+backend/sims_project/settings.py:356:DATA_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024  # 10MB
+backend/sims_project/settings.py:357:FILE_UPLOAD_PERMISSIONS = 0o644
+backend/sims_project/settings.py:359:# Allowed file extensions for uploads
+backend/sims_project/settings.py:360:ALLOWED_UPLOAD_EXTENSIONS = [
+backend/sims_project/settings.py:368:    ".xlsx",
+backend/sims_project/settings.py:370:    ".csv",
+backend/sims_project/settings.py:373:# Maximum file size for uploads (in bytes)
+backend/sims_project/settings.py:374:MAX_UPLOAD_SIZE = 10 * 1024 * 1024  # 10MB
+backend/sims_project/settings.py:521:# Import/Export Settings
+backend/sims_project/settings.py:522:IMPORT_EXPORT_USE_TRANSACTIONS = True
+backend/sims_project/settings.py:523:IMPORT_EXPORT_SKIP_ADMIN_LOG = False
+backend/sims_project/settings.py:524:IMPORT_EXPORT_TMP_STORAGE_CLASS = "import_export.tmp_storages.TempFolderStorage"
+backend/sims_project/urls.py:131:    path("api/bulk/", include("sims.bulk.urls")),

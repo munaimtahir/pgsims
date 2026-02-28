@@ -397,7 +397,7 @@ The Docker Compose setup includes:
 
 - **db**: PostgreSQL database
 - **redis**: Redis cache and message broker
-- **web**: Django application (Gunicorn)
+- **backend**: Django application (Gunicorn)
 - **worker**: Celery worker for background tasks
 - **beat**: Celery beat scheduler
 - **caddy**: External reverse proxy (host service)

@@ -1,0 +1,240 @@
+     1	name: docker
+     2	services:
+     3	  backend:
+     4	    build:
+     5	      context: /home/munaim/srv/apps/pgsims/backend
+     6	      dockerfile: Dockerfile
+     7	    command:
+     8	      - sh
+     9	      - -c
+    10	      - |-
+    11	        python manage.py migrate --noinput &&
+    12	               python manage.py collectstatic --noinput &&
+    13	               gunicorn sims_project.wsgi:application --bind 0.0.0.0:8014 --workers 4 --timeout 60
+    14	    container_name: pgsims_backend_prod
+    15	    depends_on:
+    16	      db:
+    17	        condition: service_healthy
+    18	        required: true
+    19	      redis:
+    20	        condition: service_healthy
+    21	        required: true
+    22	    environment:
+    23	      ALLOWED_HOSTS: pgsims.alshifalab.pk,34.16.82.13,localhost,127.0.0.1
+    24	      CELERY_BROKER_URL: redis://redis:6379/1
+    25	      CELERY_RESULT_BACKEND: redis://redis:6379/1
+    26	      CORS_ALLOWED_ORIGINS: https://pgsims.alshifalab.pk
+    27	      CSRF_COOKIE_SECURE: "True"
+    28	      CSRF_TRUSTED_ORIGINS: https://pgsims.alshifalab.pk
+    29	      DATABASE_URL: postgresql://sims_user:@db:5432/sims_db
+    30	      DEBUG: "False"
+    31	      EMAIL_BACKEND: django.core.mail.backends.console.EmailBackend
+    32	      EMAIL_HOST: ""
+    33	      EMAIL_HOST_PASSWORD: ""
+    34	      EMAIL_HOST_USER: ""
+    35	      EMAIL_PORT: "587"
+    36	      EMAIL_USE_TLS: "True"
+    37	      LOG_FILE_PATH: /tmp/sims_error.log
+    38	      REDIS_URL: redis://redis:6379/0
+    39	      SECRET_KEY: ""
+    40	      SECURE_SSL_REDIRECT: "True"
+    41	      SESSION_COOKIE_SECURE: "True"
+    42	      USE_PROXY_HEADERS: "True"
+    43	    healthcheck:
+    44	      test:
+    45	        - CMD
+    46	        - curl
+    47	        - -f
+    48	        - http://localhost:8014/healthz/
+    49	      timeout: 10s
+    50	      interval: 30s
+    51	      retries: 3
+    52	      start_period: 40s
+    53	    networks:
+    54	      sims_network: null
+    55	    ports:
+    56	      - mode: ingress
+    57	        host_ip: 127.0.0.1
+    58	        target: 8014
+    59	        published: "8014"
+    60	        protocol: tcp
+    61	    restart: unless-stopped
+    62	    volumes:
+    63	      - type: bind
+    64	        source: /home/munaim/srv/apps/pgsims/backend/staticfiles
+    65	        target: /app/staticfiles
+    66	        bind: {}
+    67	      - type: bind
+    68	        source: /home/munaim/srv/apps/pgsims/backend/media
+    69	        target: /app/media
+    70	        bind: {}
+    71	      - type: bind
+    72	        source: /home/munaim/srv/apps/pgsims/backend/logs
+    73	        target: /app/logs
+    74	        bind: {}
+    75	  beat:
+    76	    build:
+    77	      context: /home/munaim/srv/apps/pgsims/backend
+    78	      dockerfile: Dockerfile
+    79	    command:
+    80	      - celery
+    81	      - -A
+    82	      - sims_project
+    83	      - beat
+    84	      - -l
+    85	      - info
+    86	      - --scheduler
+    87	      - django_celery_beat.schedulers:DatabaseScheduler
+    88	    container_name: pgsims_beat
+    89	    depends_on:
+    90	      db:
+    91	        condition: service_started
+    92	        required: true
+    93	      redis:
+    94	        condition: service_started
+    95	        required: true
+    96	    environment:
+    97	      CELERY_BROKER_URL: redis://redis:6379/1
+    98	      CELERY_RESULT_BACKEND: redis://redis:6379/1
+    99	      DATABASE_URL: postgresql://sims_user:@db:5432/sims_db
+   100	      DEBUG: "False"
+   101	      LOG_FILE_PATH: /tmp/sims_error.log
+   102	      REDIS_URL: redis://redis:6379/0
+   103	      SECRET_KEY: ""
+   104	    healthcheck:
+   105	      disable: true
+   106	    networks:
+   107	      sims_network: null
+   108	    restart: unless-stopped
+   109	    volumes:
+   110	      - type: bind
+   111	        source: /home/munaim/srv/apps/pgsims/backend/logs
+   112	        target: /app/logs
+   113	        bind: {}
+   114	  db:
+   115	    container_name: pgsims_db_prod
+   116	    environment:
+   117	      POSTGRES_DB: sims_db
+   118	      POSTGRES_PASSWORD: ""
+   119	      POSTGRES_USER: sims_user
+   120	    healthcheck:
+   121	      test:
+   122	        - CMD-SHELL
+   123	        - pg_isready -U sims_user
+   124	      timeout: 5s
+   125	      interval: 10s
+   126	      retries: 5
+   127	    image: postgres:15-alpine
+   128	    networks:
+   129	      sims_network: null
+   130	    restart: unless-stopped
+   131	    volumes:
+   132	      - type: volume
+   133	        source: PROD_pgsims_pgdata
+   134	        target: /var/lib/postgresql/data
+   135	        volume: {}
+   136	  frontend:
+   137	    build:
+   138	      context: /home/munaim/srv/apps/pgsims/frontend
+   139	      dockerfile: Dockerfile
+   140	      args:
+   141	        NEXT_PUBLIC_API_URL: https://pgsims.alshifalab.pk
+   142	    container_name: pgsims_frontend_prod
+   143	    depends_on:
+   144	      backend:
+   145	        condition: service_started
+   146	        required: true
+   147	    environment:
+   148	      HOSTNAME: 0.0.0.0
+   149	      NEXT_PUBLIC_API_URL: https://pgsims.alshifalab.pk
+   150	      NODE_ENV: production
+   151	      PORT: "3000"
+   152	    healthcheck:
+   153	      test:
+   154	        - CMD
+   155	        - node
+   156	        - -e
+   157	        - 'require(''http'').get(''http://localhost:3000'', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})'
+   158	      timeout: 10s
+   159	      interval: 30s
+   160	      retries: 3
+   161	      start_period: 40s
+   162	    networks:
+   163	      sims_network: null
+   164	    ports:
+   165	      - mode: ingress
+   166	        host_ip: 127.0.0.1
+   167	        target: 3000
+   168	        published: "8082"
+   169	        protocol: tcp
+   170	    restart: unless-stopped
+   171	  redis:
+   172	    command:
+   173	      - redis-server
+   174	      - --appendonly
+   175	      - "yes"
+   176	    container_name: pgsims_redis_prod
+   177	    healthcheck:
+   178	      test:
+   179	        - CMD
+   180	        - redis-cli
+   181	        - ping
+   182	      timeout: 5s
+   183	      interval: 10s
+   184	      retries: 5
+   185	    image: redis:7-alpine
+   186	    networks:
+   187	      sims_network: null
+   188	    restart: unless-stopped
+   189	    volumes:
+   190	      - type: volume
+   191	        source: PROD_pgsims_redis_data
+   192	        target: /data
+   193	        volume: {}
+   194	  worker:
+   195	    build:
+   196	      context: /home/munaim/srv/apps/pgsims/backend
+   197	      dockerfile: Dockerfile
+   198	    command:
+   199	      - celery
+   200	      - -A
+   201	      - sims_project
+   202	      - worker
+   203	      - -l
+   204	      - info
+   205	      - --concurrency=2
+   206	    container_name: pgsims_worker
+   207	    depends_on:
+   208	      db:
+   209	        condition: service_started
+   210	        required: true
+   211	      redis:
+   212	        condition: service_started
+   213	        required: true
+   214	    environment:
+   215	      CELERY_BROKER_URL: redis://redis:6379/1
+   216	      CELERY_RESULT_BACKEND: redis://redis:6379/1
+   217	      DATABASE_URL: postgresql://sims_user:@db:5432/sims_db
+   218	      DEBUG: "False"
+   219	      LOG_FILE_PATH: /tmp/sims_error.log
+   220	      REDIS_URL: redis://redis:6379/0
+   221	      SECRET_KEY: ""
+   222	    healthcheck:
+   223	      disable: true
+   224	    networks:
+   225	      sims_network: null
+   226	    restart: unless-stopped
+   227	    volumes:
+   228	      - type: bind
+   229	        source: /home/munaim/srv/apps/pgsims/backend/media
+   230	        target: /app/media
+   231	        bind: {}
+   232	      - type: bind
+   233	        source: /home/munaim/srv/apps/pgsims/backend/logs
+   234	        target: /app/logs
+   235	        bind: {}
+   236	networks:
+   237	  sims_network:
+   238	    name: docker_sims_network
+   239	    driver: bridge
+   240	volumes:

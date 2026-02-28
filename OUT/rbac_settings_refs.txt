@@ -1,0 +1,57 @@
+backend/sims_project/settings.py:75:    "rest_framework",  # For API endpoints
+backend/sims_project/settings.py:76:    "rest_framework_simplejwt",  # For JWT authentication
+backend/sims_project/settings.py:98:MIDDLEWARE = [
+backend/sims_project/settings.py:99:    "django.middleware.security.SecurityMiddleware",
+backend/sims_project/settings.py:100:    "whitenoise.middleware.WhiteNoiseMiddleware",  # Serve static files efficiently
+backend/sims_project/settings.py:101:    "sims_project.middleware.HostDebugMiddleware",  # Debug: capture Host header (retain until verification)
+backend/sims_project/settings.py:102:    "corsheaders.middleware.CorsMiddleware",  # CORS middleware (should be early)
+backend/sims_project/settings.py:103:    "django.contrib.sessions.middleware.SessionMiddleware",
+backend/sims_project/settings.py:104:    "django.middleware.common.CommonMiddleware",
+backend/sims_project/settings.py:105:    "sims_project.middleware.RequestContextMiddleware",
+backend/sims_project/settings.py:106:    "django.middleware.csrf.CsrfViewMiddleware",
+backend/sims_project/settings.py:107:    "django.contrib.auth.middleware.AuthenticationMiddleware",
+backend/sims_project/settings.py:108:    "django.contrib.messages.middleware.MessageMiddleware",
+backend/sims_project/settings.py:109:    "django.middleware.clickjacking.XFrameOptionsMiddleware",
+backend/sims_project/settings.py:110:    "simple_history.middleware.HistoryRequestMiddleware",
+backend/sims_project/settings.py:111:    "sims_project.middleware.PerformanceTimingMiddleware",  # Performance monitoring
+backend/sims_project/settings.py:163:AUTH_USER_MODEL = "users.User"
+backend/sims_project/settings.py:287:REST_FRAMEWORK = {
+backend/sims_project/settings.py:289:        "rest_framework_simplejwt.authentication.JWTAuthentication",
+backend/sims_project/settings.py:290:        "rest_framework.authentication.SessionAuthentication",
+backend/sims_project/settings.py:293:        "rest_framework.permissions.IsAuthenticated",
+backend/sims_project/settings.py:295:    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
+backend/sims_project/settings.py:298:        "django_filters.rest_framework.DjangoFilterBackend",
+backend/sims_project/settings.py:299:        "rest_framework.filters.SearchFilter",
+backend/sims_project/settings.py:300:        "rest_framework.filters.OrderingFilter",
+backend/sims_project/settings.py:303:        "rest_framework.throttling.AnonRateThrottle",
+backend/sims_project/settings.py:304:        "rest_framework.throttling.UserRateThrottle",
+backend/sims_project/settings.py:539:        MIDDLEWARE.insert(1, "debug_toolbar.middleware.DebugToolbarMiddleware")
+backend/sims_project/settings.py:659:    "AUTH_TOKEN_CLASSES": ("rest_framework_simplejwt.tokens.AccessToken",),
+backend/sims_project/wsgi.py:57:        from sentry_sdk.integrations.wsgi import SentryWsgiMiddleware
+backend/sims_project/wsgi.py:65:        application = SentryWsgiMiddleware(application)
+backend/sims_project/wsgi.py:80:class HealthCheckMiddleware:
+backend/sims_project/wsgi.py:95:# Apply health check middleware
+backend/sims_project/wsgi.py:96:application = HealthCheckMiddleware(application)
+backend/sims_project/middleware.py:1:"""Custom middleware for performance monitoring and debugging."""
+backend/sims_project/middleware.py:9:from django.utils.deprecation import MiddlewareMixin
+backend/sims_project/middleware.py:14:class HostDebugMiddleware(MiddlewareMixin):
+backend/sims_project/middleware.py:16:    Debug middleware to capture Host header and ALLOWED_HOSTS for Bad Request 400 diagnostics.
+backend/sims_project/middleware.py:29:                "location": "sims_project/middleware.py:HostDebugMiddleware",
+backend/sims_project/middleware.py:46:class RequestContextMiddleware(MiddlewareMixin):
+backend/sims_project/middleware.py:59:class PerformanceTimingMiddleware(MiddlewareMixin):
+backend/sims_project/middleware.py:60:    """Middleware to track request/response timing for performance monitoring."""
+backend/sims_project/middleware.py:116:                            "source": "middleware",
+backend/sims_project/tests.py:1:"""Tests for project middleware and utilities."""
+backend/sims_project/tests.py:6:from .middleware import PerformanceTimingMiddleware
+backend/sims_project/tests.py:11:class PerformanceTimingMiddlewareTests(TestCase):
+backend/sims_project/tests.py:12:    """Test performance timing middleware."""
+backend/sims_project/tests.py:17:        self.middleware = PerformanceTimingMiddleware(lambda r: self._get_response(r))
+backend/sims_project/tests.py:30:    def test_middleware_adds_timing_header(self):
+backend/sims_project/tests.py:31:        """Test that middleware adds X-Response-Time header."""
+backend/sims_project/tests.py:35:        response = self.middleware(request)
+backend/sims_project/tests.py:40:    def test_middleware_handles_anonymous_user(self):
+backend/sims_project/tests.py:41:        """Test middleware with anonymous user."""
+backend/sims_project/tests.py:47:        response = self.middleware(request)
+backend/sims_project/tests.py:51:    def test_middleware_tracks_post_requests(self):
+backend/sims_project/tests.py:52:        """Test middleware with POST request."""
+backend/sims_project/tests.py:56:        response = self.middleware(request)

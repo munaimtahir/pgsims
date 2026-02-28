@@ -1,0 +1,88 @@
+backend/sims/users/decorators.py:21:        metadata={
+backend/sims/users/api_views.py:85:                metadata={
+backend/sims/users/api_views.py:101:            metadata={
+backend/sims/audit/utils.py:11:    request: HttpRequest, verb: str, *, target=None, metadata=None, sensitive=False
+backend/sims/audit/utils.py:25:        verb=verb,
+backend/sims/audit/utils.py:27:        metadata=metadata or {},
+backend/sims/audit/utils.py:38:    metadata=None,
+backend/sims/audit/utils.py:51:        verb=verb,
+backend/sims/audit/utils.py:53:        metadata=metadata or {},
+backend/sims/audit/models.py:78:            verb=verb,
+backend/sims/audit/models.py:82:            metadata=metadata,
+backend/sims/audit/signals.py:30:        verb=f"{sender.__name__}:{history_instance.pk}",
+backend/sims/audit/signals.py:32:        metadata={
+backend/sims/common_permissions.py:26:        metadata={
+backend/sims/logbook/models.py:725:                Notification.objects.create(
+backend/sims/logbook/models.py:726:                    recipient=self.supervisor,
+backend/sims/logbook/models.py:727:                    verb="logbook_submission",
+backend/sims/logbook/models.py:729:                    body=f"{self.pg.get_full_name()} has submitted a logbook entry for your review.",
+backend/sims/logbook/models.py:730:                    metadata={
+backend/sims/logbook/admin.py:566:            Notification.objects.create(
+backend/sims/logbook/admin.py:567:                recipient=entry.pg.supervisor,
+backend/sims/logbook/admin.py:568:                verb="logbook",
+backend/sims/logbook/admin.py:570:                body=f"{entry.pg.get_full_name()} has submitted a new logbook entry: {entry.case_title or 'Untitled'}",
+backend/sims/logbook/admin.py:571:                metadata={"object_type": "logbook_entry", "object_id": entry.id, "action": action},
+backend/sims/logbook/admin.py:587:            Notification.objects.create(
+backend/sims/logbook/admin.py:588:                recipient=entry.pg,
+backend/sims/logbook/admin.py:589:                verb="logbook",
+backend/sims/logbook/admin.py:591:                body=message,
+backend/sims/logbook/admin.py:592:                metadata={"object_type": "logbook_entry", "object_id": entry.id, "action": action},
+backend/sims/logbook/api_views.py:187:            metadata={"source": "verify_api", "action": action},
+backend/sims/logbook/api_views.py:198:            metadata={"source": "verify_api", "action": action},
+backend/sims/logbook/api_views.py:206:                recipient=entry.pg,
+backend/sims/logbook/api_views.py:208:                body=f"Your logbook entry '{entry.case_title}' has been verified by {user.get_full_name()}.",
+backend/sims/logbook/api_views.py:291:            metadata={"source": "pg_logbook_create"},
+backend/sims/logbook/api_views.py:302:            metadata={"source": "pg_logbook_create"},
+backend/sims/logbook/api_views.py:388:            metadata={"source": "pg_logbook_submit"},
+backend/sims/logbook/api_views.py:399:            metadata={"source": "pg_logbook_submit"},
+backend/sims/logbook/views.py:1712:    #     #         Notification.objects.create(
+backend/sims/reports/services.py:198:            body="Please find the attached report.",
+backend/sims/analytics/event_tracking.py:188:        metadata=safe_metadata,
+backend/sims/analytics/views.py:315:                metadata={
+backend/sims/bulk/views.py:56:        metadata={
+backend/sims/certificates/admin.py:329:                Notification.objects.create(
+backend/sims/certificates/admin.py:330:                    recipient=certificate.pg,
+backend/sims/certificates/admin.py:331:                    verb="certificate",
+backend/sims/certificates/admin.py:333:                    body=message,
+backend/sims/certificates/admin.py:334:                    metadata={
+backend/sims/certificates/admin.py:343:                Notification.objects.create(
+backend/sims/certificates/admin.py:344:                    recipient=certificate.pg.supervisor,
+backend/sims/certificates/admin.py:345:                    verb="certificate",
+backend/sims/certificates/admin.py:347:                    body=f"{certificate.pg.get_full_name()} has uploaded a new certificate: {certificate.title}",
+backend/sims/certificates/admin.py:348:                    metadata={
+backend/sims/notifications/services.py:30:class NotificationService:
+backend/sims/notifications/services.py:45:        channels = channels or (Notification.CHANNEL_IN_APP, Notification.CHANNEL_EMAIL)
+backend/sims/notifications/services.py:56:                if channel == Notification.CHANNEL_IN_APP:
+backend/sims/notifications/services.py:58:                elif channel == Notification.CHANNEL_EMAIL:
+backend/sims/notifications/services.py:70:        Notification.objects.create(
+backend/sims/notifications/services.py:71:            recipient=recipient,
+backend/sims/notifications/services.py:73:            verb=verb,
+backend/sims/notifications/services.py:75:            body=body,
+backend/sims/notifications/services.py:76:            channel=Notification.CHANNEL_IN_APP,
+backend/sims/notifications/services.py:77:            metadata=self._serialise_metadata(context),
+backend/sims/notifications/services.py:86:            body=text_body,
+backend/sims/notifications/services.py:114:                recipient=entry.supervisor,
+backend/sims/notifications/services.py:115:                verb="logbook-submitted",
+backend/sims/notifications/services.py:122:                recipient=entry.pg,
+backend/sims/notifications/services.py:123:                verb="logbook-approved",
+backend/sims/notifications/services.py:140:                recipient=rotation.pg,
+backend/sims/notifications/services.py:141:                verb="rotation-ending",
+backend/sims/notifications/services.py:145:                channels=(Notification.CHANNEL_IN_APP,),
+backend/sims/notifications/services.py:149:                    recipient=rotation.supervisor,
+backend/sims/notifications/services.py:150:                    verb="rotation-ending",
+backend/sims/notifications/services.py:154:                    channels=(Notification.CHANNEL_IN_APP,),
+backend/sims/notifications/services.py:164:__all__ = ["NotificationService", "NotificationResult", "ensure_preferences_exist"]
+backend/sims/notifications/models.py:17:    CHANNEL_EMAIL = "email"
+backend/sims/notifications/models.py:18:    CHANNEL_IN_APP = "in_app"
+backend/sims/notifications/models.py:19:    CHANNEL_CHOICES = (
+backend/sims/notifications/models.py:20:        (CHANNEL_EMAIL, "Email"),
+backend/sims/notifications/models.py:21:        (CHANNEL_IN_APP, "In-App"),
+backend/sims/notifications/models.py:39:    channel = models.CharField(max_length=20, choices=CHANNEL_CHOICES, default=CHANNEL_IN_APP)
+backend/sims/notifications/models.py:82:        if channel == Notification.CHANNEL_EMAIL and not self.email_enabled:
+backend/sims/notifications/models.py:84:        if channel == Notification.CHANNEL_IN_APP and not self.in_app_enabled:
+backend/sims/notifications/signals.py:9:from sims.notifications.services import NotificationService, ensure_preferences_exist
+backend/sims/notifications/signals.py:27:    service = NotificationService(actor=instance.supervisor or instance.pg)
+backend/sims/notifications/views.py:33:        queryset = Notification.objects.filter(recipient=user).select_related("actor")
+backend/sims/notifications/views.py:61:        queryset = Notification.objects.filter(recipient=request.user, pk__in=ids)
+backend/sims/notifications/views.py:86:        count = Notification.objects.filter(recipient=request.user, read_at__isnull=True).count()
+backend/sims/search/views.py:33:        log_view(request, "global-search", metadata={"query": query, "filters": filters})

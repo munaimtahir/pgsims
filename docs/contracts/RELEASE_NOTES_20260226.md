@@ -108,7 +108,7 @@ This release establishes the **frozen baseline** for PGSIMS/UTRMC production rol
 ### Infrastructure
 - **Deployment**: Docker Compose (Coolify/Traefik recommended)
 - **Reverse Proxy**: Nginx or Traefik
-- **Services**: web, worker, beat, db, redis, nginx
+- **Services**: backend, worker, beat, db, redis, nginx
 
 ---
 

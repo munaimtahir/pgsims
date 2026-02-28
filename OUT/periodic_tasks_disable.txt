@@ -1,0 +1,2 @@
+BEFORE [('cleanup-old-notifications', 'sims.notifications.tasks.cleanup_old_notifications', True), ('calculate-monthly-attendance', 'sims.attendance.tasks.calculate_monthly_summaries', True), ('generate-daily-reports', 'sims.reports.tasks.generate_daily_reports', True)]
+AFTER [('cleanup-old-notifications', 'sims.notifications.tasks.cleanup_old_notifications', False), ('calculate-monthly-attendance', 'sims.attendance.tasks.calculate_monthly_summaries', False), ('generate-daily-reports', 'sims.reports.tasks.generate_daily_reports', False)]

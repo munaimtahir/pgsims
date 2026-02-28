@@ -1,0 +1,76 @@
+time="2026-02-28T12:20:21+05:00" level=warning msg="/srv/apps/pgsims/docker/docker-compose.prod.yml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+pgsims_worker  | [INFO] 2026-02-27 00:16:13,999 sims.certificates Certificate periodic tasks setup completed
+pgsims_worker  | [INFO] 2026-02-27 00:16:14,014 sims.logbook Logbook periodic tasks setup completed
+pgsims_worker  |  
+pgsims_worker  |  -------------- celery@eacd06d06b27 v5.6.2 (recovery)
+pgsims_worker  | --- ***** ----- 
+pgsims_worker  | -- ******* ---- Linux-6.17.0-1008-gcp-x86_64-with-glibc2.41 2026-02-27 00:16:14
+pgsims_worker  | - *** --- * --- 
+pgsims_worker  | - ** ---------- [config]
+pgsims_worker  | - ** ---------- .> app:         sims:0x716379cac990
+pgsims_worker  | - ** ---------- .> transport:   redis://redis:6379/1
+pgsims_worker  | - ** ---------- .> results:     redis://redis:6379/1
+pgsims_worker  | - *** --- * --- .> concurrency: 2 (prefork)
+pgsims_worker  | -- ******* ---- .> task events: OFF (enable -E to monitor tasks in this worker)
+pgsims_worker  | --- ***** ----- 
+pgsims_worker  |  -------------- [queues]
+pgsims_worker  |                 .> celery           exchange=celery(direct) key=celery
+pgsims_worker  |                 
+pgsims_worker  | 
+pgsims_worker  | [tasks]
+pgsims_worker  |   . sims_project.celery.debug_task
+pgsims_worker  | 
+pgsims_worker  | [2026-02-27 00:16:14,971: INFO/MainProcess] Connected to redis://redis:6379/1
+pgsims_worker  | [2026-02-27 00:16:14,975: INFO/MainProcess] mingle: searching for neighbors
+pgsims_worker  | [2026-02-27 00:16:15,986: INFO/MainProcess] mingle: all alone
+pgsims_worker  | [2026-02-27 00:16:16,003: INFO/MainProcess] celery@eacd06d06b27 ready.
+pgsims_worker  | [2026-02-27 02:00:00,042: ERROR/MainProcess] Received unregistered task of type 'sims.reports.tasks.generate_daily_reports'.
+pgsims_worker  | The message has been ignored and discarded.
+pgsims_worker  | 
+pgsims_worker  | Did you remember to import the module containing this task?
+pgsims_worker  | Or maybe you're using relative imports?
+pgsims_worker  | 
+pgsims_worker  | Please see
+pgsims_worker  | https://docs.celeryq.dev/en/latest/internals/protocol.html
+pgsims_worker  | for more information.
+pgsims_worker  | 
+pgsims_worker  | The full contents of the message body was:
+pgsims_worker  | b'[[], {}, {"callbacks": null, "errbacks": null, "chain": null, "chord": null}]' (77b)
+pgsims_worker  | 
+pgsims_worker  | The full contents of the message headers:
+pgsims_worker  | {'lang': 'py', 'task': 'sims.reports.tasks.generate_daily_reports', 'id': '56db89ac-eb7c-4400-a166-0585565e0221', 'shadow': None, 'eta': None, 'expires': None, 'group': None, 'group_index': None, 'retries': 0, 'timelimit': [None, None], 'root_id': '56db89ac-eb7c-4400-a166-0585565e0221', 'parent_id': None, 'argsrepr': '()', 'kwargsrepr': '{}', 'origin': 'gen1@cd2ebdc860cd', 'ignore_result': False, 'replaced_task_nesting': 0, 'stamped_headers': None, 'stamps': {}, 'periodic_task_name': 'generate-daily-reports'}
+pgsims_worker  | 
+pgsims_worker  | The delivery info for this task is:
+pgsims_worker  | {'exchange': '', 'routing_key': 'celery'}
+pgsims_worker  | Traceback (most recent call last):
+pgsims_worker  |   File "/home/sims/.local/lib/python3.11/site-packages/celery/worker/consumer/consumer.py", line 668, in on_task_received
+pgsims_worker  |     strategy = strategies[type_]
+pgsims_worker  |                ~~~~~~~~~~^^^^^^^
+pgsims_worker  | KeyError: 'sims.reports.tasks.generate_daily_reports'
+pgsims_worker  | [2026-02-27 04:00:00,004: INFO/MainProcess] Task celery.backend_cleanup[85b8df87-f028-46b0-92d8-bd844cfab9d7] received
+pgsims_worker  | [2026-02-27 04:00:00,011: INFO/ForkPoolWorker-1] Task celery.backend_cleanup[85b8df87-f028-46b0-92d8-bd844cfab9d7] succeeded in 0.006593229016289115s: None
+pgsims_worker  | [2026-02-28 02:00:00,003: ERROR/MainProcess] Received unregistered task of type 'sims.reports.tasks.generate_daily_reports'.
+pgsims_worker  | The message has been ignored and discarded.
+pgsims_worker  | 
+pgsims_worker  | Did you remember to import the module containing this task?
+pgsims_worker  | Or maybe you're using relative imports?
+pgsims_worker  | 
+pgsims_worker  | Please see
+pgsims_worker  | https://docs.celeryq.dev/en/latest/internals/protocol.html
+pgsims_worker  | for more information.
+pgsims_worker  | 
+pgsims_worker  | The full contents of the message body was:
+pgsims_worker  | b'[[], {}, {"callbacks": null, "errbacks": null, "chain": null, "chord": null}]' (77b)
+pgsims_worker  | 
+pgsims_worker  | The full contents of the message headers:
+pgsims_worker  | {'lang': 'py', 'task': 'sims.reports.tasks.generate_daily_reports', 'id': '518c2ee2-8ee2-4ce8-a92b-7e5dc31a1d82', 'shadow': None, 'eta': None, 'expires': None, 'group': None, 'group_index': None, 'retries': 0, 'timelimit': [None, None], 'root_id': '518c2ee2-8ee2-4ce8-a92b-7e5dc31a1d82', 'parent_id': None, 'argsrepr': '()', 'kwargsrepr': '{}', 'origin': 'gen1@cd2ebdc860cd', 'ignore_result': False, 'replaced_task_nesting': 0, 'stamped_headers': None, 'stamps': {}, 'periodic_task_name': 'generate-daily-reports'}
+pgsims_worker  | 
+pgsims_worker  | The delivery info for this task is:
+pgsims_worker  | {'exchange': '', 'routing_key': 'celery'}
+pgsims_worker  | Traceback (most recent call last):
+pgsims_worker  |   File "/home/sims/.local/lib/python3.11/site-packages/celery/worker/consumer/consumer.py", line 668, in on_task_received
+pgsims_worker  |     strategy = strategies[type_]
+pgsims_worker  |                ~~~~~~~~~~^^^^^^^
+pgsims_worker  | KeyError: 'sims.reports.tasks.generate_daily_reports'
+pgsims_worker  | [2026-02-28 04:00:00,003: INFO/MainProcess] Task celery.backend_cleanup[c40eaa27-d9b9-4c6c-9289-c259620a5a82] received
+pgsims_worker  | [2026-02-28 04:00:00,006: INFO/ForkPoolWorker-1] Task celery.backend_cleanup[c40eaa27-d9b9-4c6c-9289-c259620a5a82] succeeded in 0.0021820739493705332s: None

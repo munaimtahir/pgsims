@@ -1,0 +1,61 @@
+time="2026-02-28T12:25:29+05:00" level=warning msg="/srv/apps/pgsims/docker/docker-compose.prod.yml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+[INFO] 2026-02-28 07:25:31,070 sims.certificates Certificate periodic tasks setup completed
+[INFO] 2026-02-28 07:25:31,080 sims.logbook Logbook periodic tasks setup completed
+Status: 200
+ErrorNote: Please correct the error below.
+FieldError: Supervisor is required for PGs
+Form initialized successfully. dict_keys(['username', 'email', 'first_name', 'last_name', 'role', 'specialty', 'year', 'supervisor', 'password1', 'password2'])
+GET /admin/users/user/add/ Status Code: 200
+Found 286 test(s).
+Creating test database for alias 'default'...
+System check identified no issues (0 silenced).
+.............Rebuilding analytics rollups for 2026-02-27 -> 2026-02-27
+Rollup rows updated: 1
+Rebuilding analytics rollups for 2026-02-27 -> 2026-02-27
+Rollup rows updated: 1
+....................[WARNING] 2026-02-28 07:25:43,778 sims.analytics.event_tracking analytics_event_dropped
+[WARNING] 2026-02-28 07:25:43,782 sims.analytics.event_tracking analytics_event_dropped
+.[WARNING] 2026-02-28 07:25:43,836 sims.analytics.event_tracking analytics_event_dropped
+[WARNING] 2026-02-28 07:25:43,841 sims.analytics.event_tracking analytics_event_dropped
+[WARNING] 2026-02-28 07:25:43,845 sims.analytics.event_tracking analytics_event_dropped
+[WARNING] 2026-02-28 07:25:43,853 sims.analytics.event_tracking analytics_event_dropped
+.[WARNING] 2026-02-28 07:25:43,911 sims.analytics.event_tracking analytics_event_dropped
+[WARNING] 2026-02-28 07:25:43,913 sims.analytics.event_tracking analytics_event_dropped
+..[WARNING] 2026-02-28 07:25:44,005 sims.analytics.event_tracking analytics_event_dropped
+/home/sims/.local/lib/python3.11/site-packages/django/db/models/fields/__init__.py:1535: RuntimeWarning: DateTimeField User.date_joined received a naive datetime (2024-02-01 00:00:00) while time zone support is active.
+  warnings.warn(
+[WARNING] 2026-02-28 07:25:44,024 sims.analytics.event_tracking analytics_event_dropped
+...[WARNING] 2026-02-28 07:25:44,131 sims.analytics.event_tracking analytics_event_dropped
+/home/sims/.local/lib/python3.11/site-packages/django/db/models/fields/__init__.py:1535: RuntimeWarning: DateTimeField User.date_joined received a naive datetime (2024-01-10 00:00:00) while time zone support is active.
+  warnings.warn(
+[WARNING] 2026-02-28 07:25:44,150 sims.analytics.event_tracking analytics_event_dropped
+...................................................................[WARNING] 2026-02-28 07:25:48,898 sims.analytics.event_tracking analytics_event_dropped
+[WARNING] 2026-02-28 07:25:48,903 sims.analytics.event_tracking analytics_event_dropped
+....................[WARNING] 2026-02-28 07:25:50,766 sims.analytics.event_tracking analytics_event_dropped
+[WARNING] 2026-02-28 07:25:50,771 sims.analytics.event_tracking analytics_event_dropped
+...[WARNING] 2026-02-28 07:25:50,992 sims.analytics.event_tracking analytics_event_dropped
+[WARNING] 2026-02-28 07:25:50,994 sims.analytics.event_tracking analytics_event_dropped
+.[WARNING] 2026-02-28 07:25:51,212 sims.analytics.event_tracking analytics_event_dropped
+[WARNING] 2026-02-28 07:25:51,215 sims.analytics.event_tracking analytics_event_dropped
+.[WARNING] 2026-02-28 07:25:51,336 sims.analytics.event_tracking analytics_event_dropped
+[WARNING] 2026-02-28 07:25:51,338 sims.analytics.event_tracking analytics_event_dropped
+[WARNING] 2026-02-28 07:25:51,352 sims.analytics.event_tracking analytics_event_dropped
+[WARNING] 2026-02-28 07:25:51,353 sims.analytics.event_tracking analytics_event_dropped
+[WARNING] 2026-02-28 07:25:51,365 sims.analytics.event_tracking analytics_event_dropped
+[WARNING] 2026-02-28 07:25:51,366 sims.analytics.event_tracking analytics_event_dropped
+[WARNING] 2026-02-28 07:25:51,387 sims.analytics.event_tracking analytics_event_dropped
+[WARNING] 2026-02-28 07:25:51,389 sims.analytics.event_tracking analytics_event_dropped
+[WARNING] 2026-02-28 07:25:51,398 sims.analytics.event_tracking analytics_event_dropped
+[WARNING] 2026-02-28 07:25:51,400 sims.analytics.event_tracking analytics_event_dropped
+...........................................................................Processed 1 scheduled reports
+.Processed 0 scheduled reports
+.Processed 1 scheduled reports
+................................................................[WARNING] 2026-02-28 07:25:59,574 sims.analytics.event_tracking analytics_event_dropped
+.....[WARNING] 2026-02-28 07:26:00,037 sims.analytics.event_tracking analytics_event_dropped
+..[WARNING] 2026-02-28 07:26:00,213 sims.analytics.event_tracking analytics_event_dropped
+......
+----------------------------------------------------------------------
+Ran 286 tests in 20.482s
+
+OK
+Destroying test database for alias 'default'...

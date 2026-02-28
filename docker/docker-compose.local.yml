@@ -57,8 +57,8 @@ services:
     profiles:
       - with-redis  # Only start if explicitly requested
 
-  # Django Web Application
-  web:
+  # Django Backend Application
+  backend:
     build:
       context: ../backend
       dockerfile: Dockerfile
@@ -176,13 +176,13 @@ services:
     container_name: sims_frontend_localhost
     environment:
       - NODE_ENV=production
-      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://web:8000}
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://backend:8000}
       - PORT=3000
       - HOSTNAME=0.0.0.0
     ports:
       - "3000:3000"  # Frontend server
     depends_on:
-      - web
+      - backend
     healthcheck:
       test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"]
       interval: 30s
@@ -204,7 +204,7 @@ services:
       - static_volume_localhost:/app/staticfiles:ro
       - media_volume_localhost:/app/media:ro
     depends_on:
-      - web
+      - backend
     healthcheck:
       test: ["CMD-SHELL", "wget --quiet --tries=1 --spider http://localhost:8000/healthz/"]
       interval: 30s

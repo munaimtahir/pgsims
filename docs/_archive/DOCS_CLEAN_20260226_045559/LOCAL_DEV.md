@@ -44,7 +44,7 @@ This will start:
 
 ### 4. Create Superuser
 ```bash
-docker-compose -f docker-compose.local.yml exec web python manage.py createsuperuser
+docker-compose -f docker-compose.local.yml exec backend python manage.py createsuperuser
 ```
 
 ### 5. Access Application
@@ -99,19 +99,19 @@ docker-compose -f docker-compose.local.yml logs -f web
 #### Execute Commands
 ```bash
 # Django shell
-docker-compose -f docker-compose.local.yml exec web python manage.py shell
+docker-compose -f docker-compose.local.yml exec backend python manage.py shell
 
 # Create migrations
-docker-compose -f docker-compose.local.yml exec web python manage.py makemigrations
+docker-compose -f docker-compose.local.yml exec backend python manage.py makemigrations
 
 # Run tests
-docker-compose -f docker-compose.local.yml exec web pytest
+docker-compose -f docker-compose.local.yml exec backend pytest
 ```
 
 #### Restart Services
 ```bash
 # Restart specific service
-docker-compose -f docker-compose.local.yml restart web
+docker-compose -f docker-compose.local.yml restart backend
 
 # Restart all services
 docker-compose -f docker-compose.local.yml restart
@@ -207,47 +207,47 @@ docker-compose -f docker-compose.local.yml --profile with-postgres up -d
 
 ### Run All Tests
 ```bash
-docker-compose -f docker-compose.local.yml exec web pytest
+docker-compose -f docker-compose.local.yml exec backend pytest
 ```
 
 ### Run Specific Tests
 ```bash
-docker-compose -f docker-compose.local.yml exec web pytest tests/test_users.py
+docker-compose -f docker-compose.local.yml exec backend pytest tests/test_users.py
 ```
 
 ### Run with Coverage
 ```bash
-docker-compose -f docker-compose.local.yml exec web pytest --cov=sims --cov-report=html
+docker-compose -f docker-compose.local.yml exec backend pytest --cov=sims --cov-report=html
 ```
 
 ### Run Linting
 ```bash
-docker-compose -f docker-compose.local.yml exec web flake8
+docker-compose -f docker-compose.local.yml exec backend flake8
 ```
 
 ## Database Management
 
 ### Apply Migrations
 ```bash
-docker-compose -f docker-compose.local.yml exec web python manage.py migrate
+docker-compose -f docker-compose.local.yml exec backend python manage.py migrate
 ```
 
 ### Create Migrations
 ```bash
-docker-compose -f docker-compose.local.yml exec web python manage.py makemigrations
+docker-compose -f docker-compose.local.yml exec backend python manage.py makemigrations
 ```
 
 ### Database Shell
 ```bash
-docker-compose -f docker-compose.local.yml exec web python manage.py dbshell
+docker-compose -f docker-compose.local.yml exec backend python manage.py dbshell
 ```
 
 ### Reset Database
 ```bash
 docker-compose -f docker-compose.local.yml down -v
 docker-compose -f docker-compose.local.yml up -d
-docker-compose -f docker-compose.local.yml exec web python manage.py migrate
-docker-compose -f docker-compose.local.yml exec web python manage.py createsuperuser
+docker-compose -f docker-compose.local.yml exec backend python manage.py migrate
+docker-compose -f docker-compose.local.yml exec backend python manage.py createsuperuser
 ```
 
 ## Debugging
@@ -265,12 +265,12 @@ pip install django-debug-toolbar
 
 ### View Django Logs
 ```bash
-docker-compose -f docker-compose.local.yml exec web tail -f /app/logs/django.log
+docker-compose -f docker-compose.local.yml exec backend tail -f /app/logs/django.log
 ```
 
 ### Access Django Shell
 ```bash
-docker-compose -f docker-compose.local.yml exec web python manage.py shell
+docker-compose -f docker-compose.local.yml exec backend python manage.py shell
 ```
 
 ### Connect to PostgreSQL
@@ -356,7 +356,7 @@ docker-compose -f docker-compose.local.yml restart db
 ### Static Files Not Loading
 ```bash
 # Collect static files
-docker-compose -f docker-compose.local.yml exec web python manage.py collectstatic --noinput
+docker-compose -f docker-compose.local.yml exec backend python manage.py collectstatic --noinput
 
 # Clear browser cache (Ctrl+Shift+R)
 ```

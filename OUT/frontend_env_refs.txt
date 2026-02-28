@@ -1,0 +1,200 @@
+frontend/.env.local.example:8:NEXT_PUBLIC_API_URL=http://localhost:8000
+frontend/app/dashboard/utrmc/page.tsx:7:import { casesApi } from '@/lib/api/cases';
+frontend/app/dashboard/utrmc/page.tsx:8:import { reportsApi } from '@/lib/api/reports';
+frontend/app/dashboard/utrmc/reports/page.tsx:8:import { reportsApi, ReportCatalogItem } from '@/lib/api/reports';
+frontend/app/dashboard/utrmc/cases/page.tsx:8:import { casesApi, CaseStatistics, ClinicalCase } from '@/lib/api/cases';
+frontend/app/dashboard/search/page.tsx:6:import { searchApi } from '@/lib/api';
+frontend/app/dashboard/search/page.tsx:12:import { SearchResult, SearchHistory, SearchSuggestion } from '@/lib/api/search';
+frontend/app/login/page.tsx:6:import { authApi } from '@/lib/api/auth';
+frontend/app/dashboard/admin/page.tsx:8:import { analyticsApi } from '@/lib/api';
+frontend/app/dashboard/admin/page.tsx:9:import { notificationsApi } from '@/lib/api';
+frontend/app/dashboard/admin/page.tsx:13:import { DashboardOverview } from '@/lib/api/analytics';
+frontend/app/dashboard/admin/audit-logs/page.tsx:6:import { auditApi } from '@/lib/api';
+frontend/app/dashboard/admin/audit-logs/page.tsx:12:import { ActivityLog } from '@/lib/api/audit';
+frontend/app/dashboard/admin/bulk-import/page.tsx:6:import { bulkApi } from '@/lib/api';
+frontend/app/dashboard/admin/bulk-import/page.tsx:10:import { BulkImportResult } from '@/lib/api/bulk';
+frontend/e2e/helpers/auth.ts:28:  const appBaseURL = process.env.E2E_BASE_URL ?? 'https://pgsims.alshifalab.pk';
+frontend/e2e/helpers/auth.ts:32:        process.env.E2E_API_URL,
+frontend/e2e/helpers/auth.ts:45:        response = await page.request.post(`${apiBaseURL}/api/auth/login/`, {
+frontend/app/dashboard/admin/analytics/page.tsx:11:import { analyticsApi, AnalyticsTabPayload } from '@/lib/api/analytics';
+frontend/app/dashboard/admin/reports/page.tsx:8:import { reportsApi, ReportCatalogItem } from '@/lib/api/reports';
+frontend/lib/adapters/logbookAdapter.ts:1:import type { LogbookEntry, PendingLogbookEntry } from '@/lib/api/logbook';
+frontend/app/dashboard/admin/exports/page.tsx:9:import { bulkApi } from '@/lib/api';
+frontend/lib/adapters/rotationAdapter.ts:1:import type { RotationSummary } from '@/lib/api/rotations';
+frontend/components/layout/DashboardLayout.tsx:6:import { authApi } from '@/lib/api/auth';
+frontend/app/dashboard/pg/page.tsx:7:import { authApi } from '@/lib/api';
+frontend/app/dashboard/pg/page.tsx:8:import { notificationsApi } from '@/lib/api';
+frontend/app/dashboard/pg/page.tsx:9:import { attendanceApi } from '@/lib/api';
+frontend/app/dashboard/pg/notifications/page.tsx:6:import { notificationsApi } from '@/lib/api';
+frontend/app/dashboard/pg/notifications/page.tsx:13:import { Notification } from '@/lib/api/notifications';
+frontend/app/dashboard/pg/certificates/page.tsx:14:import { certificatesApi, CertificateSummary } from '@/lib/api/certificates';
+frontend/app/dashboard/pg/rotations/page.tsx:12:import { rotationsApi } from '@/lib/api';
+frontend/app/dashboard/pg/cases/page.tsx:10:import { casesApi, ClinicalCase, ClinicalCasePayload } from '@/lib/api/cases';
+frontend/app/dashboard/pg/logbook/page.tsx:13:import { logbookApi, PGLogbookEntryPayload } from '@/lib/api';
+frontend/lib/api/reports.ts:48:    const response = await apiClient.get<{ results: ReportCatalogItem[] }>('/api/reports/catalog/');
+frontend/lib/api/reports.ts:58:    const response = await apiClient.get<ReportRunResponse>(`/api/reports/run/${key}/${query ? `?${query}` : ''}`);
+frontend/lib/api/reports.ts:67:    const response = await apiClient.get(`/api/reports/export/${key}/?${params.toString()}`, {
+frontend/lib/api/reports.ts:77:    const response = await apiClient.get<{ results: ReportTemplate[]; count: number }>('/api/reports/templates/');
+frontend/lib/api/reports.ts:85:    const response = await apiClient.post<GeneratedReport>('/api/reports/generate/', {
+frontend/lib/api/reports.ts:96:    const response = await apiClient.get<{ results: ScheduledReport[]; count: number }>('/api/reports/scheduled/');
+frontend/lib/api/reports.ts:104:    const response = await apiClient.post<ScheduledReport>('/api/reports/scheduled/', data);
+frontend/lib/api/reports.ts:112:    const response = await apiClient.get<ScheduledReport>(`/api/reports/scheduled/${id}/`);
+frontend/lib/api/results.ts:54:      const response = await apiClient.get<{ results: Exam[]; count: number }>('/results/api/exams/', { params });
+frontend/lib/api/results.ts:58:      const response = await apiClient.get<Exam>(`/results/api/exams/${id}/`);
+frontend/lib/api/results.ts:62:      const response = await apiClient.post<Exam>('/results/api/exams/', data);
+frontend/lib/api/results.ts:66:      const response = await apiClient.put<Exam>(`/results/api/exams/${id}/`, data);
+frontend/lib/api/results.ts:70:      await apiClient.delete(`/results/api/exams/${id}/`);
+frontend/lib/api/results.ts:73:      const response = await apiClient.get<Score[]>(`/results/api/exams/${id}/scores/`);
+frontend/lib/api/results.ts:77:      const response = await apiClient.get<ExamStatistics>(`/results/api/exams/${id}/statistics/`);
+frontend/lib/api/results.ts:87:      const response = await apiClient.get<{ results: Score[]; count: number }>('/results/api/scores/', { params });
+frontend/lib/api/results.ts:91:      const response = await apiClient.get<Score>(`/results/api/scores/${id}/`);
+frontend/lib/api/results.ts:95:      const response = await apiClient.post<Score>('/results/api/scores/', data);
+frontend/lib/api/results.ts:99:      const response = await apiClient.put<Score>(`/results/api/scores/${id}/`, data);
+frontend/lib/api/results.ts:103:      await apiClient.delete(`/results/api/scores/${id}/`);
+frontend/lib/api/results.ts:106:      const response = await apiClient.get<Score[]>('/results/api/scores/my_scores/');
+frontend/lib/api/audit.ts:31:    const response = await apiClient.get<{ results: ActivityLog[]; count: number }>('/api/audit/activity/', { params });
+frontend/lib/api/audit.ts:39:    const response = await apiClient.get<{ results: AuditReport[]; count: number }>('/api/audit/reports/', { params });
+frontend/lib/api/audit.ts:47:    const response = await apiClient.post<AuditReport>('/api/audit/reports/', data);
+frontend/lib/api/academics.ts:48:      const response = await apiClient.get<{ results: Department[]; count: number }>('/academics/api/departments/', { params });
+frontend/lib/api/academics.ts:52:      const response = await apiClient.get<Department>(`/academics/api/departments/${id}/`);
+frontend/lib/api/academics.ts:56:      const response = await apiClient.post<Department>('/academics/api/departments/', data);
+frontend/lib/api/academics.ts:60:      const response = await apiClient.put<Department>(`/academics/api/departments/${id}/`, data);
+frontend/lib/api/academics.ts:64:      await apiClient.delete(`/academics/api/departments/${id}/`);
+frontend/lib/api/academics.ts:73:      const response = await apiClient.get<{ results: Batch[]; count: number }>('/academics/api/batches/', { params });
+frontend/lib/api/academics.ts:77:      const response = await apiClient.get<Batch>(`/academics/api/batches/${id}/`);
+frontend/lib/api/academics.ts:81:      const response = await apiClient.post<Batch>('/academics/api/batches/', data);
+frontend/lib/api/academics.ts:85:      const response = await apiClient.put<Batch>(`/academics/api/batches/${id}/`, data);
+frontend/lib/api/academics.ts:89:      await apiClient.delete(`/academics/api/batches/${id}/`);
+frontend/lib/api/academics.ts:92:      const response = await apiClient.get<StudentProfile[]>(`/academics/api/batches/${id}/students/`);
+frontend/lib/api/academics.ts:102:      const response = await apiClient.get<{ results: StudentProfile[]; count: number }>('/academics/api/students/', { params });
+frontend/lib/api/academics.ts:106:      const response = await apiClient.get<StudentProfile>(`/academics/api/students/${id}/`);
+frontend/lib/api/academics.ts:110:      const response = await apiClient.post<StudentProfile>('/academics/api/students/', data);
+frontend/lib/api/academics.ts:114:      const response = await apiClient.put<StudentProfile>(`/academics/api/students/${id}/`, data);
+frontend/lib/api/academics.ts:118:      await apiClient.delete(`/academics/api/students/${id}/`);
+frontend/lib/api/academics.ts:121:      const response = await apiClient.post<StudentProfile>(`/academics/api/students/${id}/update_status/`, { status });
+frontend/lib/api/notifications.ts:30:    const response = await apiClient.get<{ results: Notification[]; count: number }>('/api/notifications/', { params });
+frontend/lib/api/notifications.ts:39:    const response = await apiClient.get<{ results: Notification[]; count: number }>('/api/notifications/', {
+frontend/lib/api/notifications.ts:50:    const response = await apiClient.get<{ unread: number }>('/api/notifications/unread-count/');
+frontend/lib/api/notifications.ts:59:    const response = await apiClient.post<{ marked: number }>(`/api/notifications/mark-read/`, {
+frontend/lib/api/notifications.ts:69:    const response = await apiClient.get<NotificationPreferences>('/api/notifications/preferences/');
+frontend/lib/api/notifications.ts:77:    const response = await apiClient.patch<NotificationPreferences>('/api/notifications/preferences/', preferences);
+frontend/lib/api/bulk.ts:41:    const response = await apiClient.post<BulkImportResult>('/api/bulk/import/', formData, {
+frontend/lib/api/bulk.ts:58:    const response = await apiClient.post<BulkImportResult>('/api/bulk/import-trainees/', formData, {
+frontend/lib/api/bulk.ts:75:    const response = await apiClient.post<BulkImportResult>('/api/bulk/import-supervisors/', formData, {
+frontend/lib/api/bulk.ts:92:    const response = await apiClient.post<BulkImportResult>('/api/bulk/import-residents/', formData, {
+frontend/lib/api/bulk.ts:106:    const response = await apiClient.post<BulkImportResult>('/api/bulk/import-departments/', formData, {
+frontend/lib/api/bulk.ts:118:    const response = await apiClient.post<BulkAssignmentResult>('/api/bulk/assignment/', data);
+frontend/lib/api/bulk.ts:126:    const response = await apiClient.post<BulkImportResult>('/api/bulk/review/', payload);
+frontend/lib/api/bulk.ts:131:    const response = await apiClient.get(`/api/bulk/exports/${resource}/?file_format=${format}`, {
+frontend/lib/api/cases.ts:51:    const response = await apiClient.get<CaseCategory[]>('/api/cases/categories/');
+frontend/lib/api/cases.ts:55:    const response = await apiClient.get<ClinicalCase[]>('/api/cases/my/');
+frontend/lib/api/cases.ts:59:    const response = await apiClient.post<ClinicalCase>('/api/cases/my/', payload);
+frontend/lib/api/cases.ts:63:    const response = await apiClient.patch<ClinicalCase>(`/api/cases/my/${id}/`, payload);
+frontend/lib/api/cases.ts:67:    const response = await apiClient.post<ClinicalCase>(`/api/cases/my/${id}/submit/`);
+frontend/lib/api/cases.ts:71:    const response = await apiClient.get<ClinicalCase[]>('/api/cases/pending/');
+frontend/lib/api/cases.ts:79:      `/api/cases/${id}/review/`,
+frontend/lib/api/cases.ts:85:    const response = await apiClient.get<CaseStatistics>('/api/cases/statistics/');
+frontend/lib/api/analytics.ts:94:    const response = await apiClient.get<DashboardOverview>('/api/analytics/dashboard/overview/');
+frontend/lib/api/analytics.ts:99:    const response = await apiClient.get<AnalyticsFiltersPayload>('/api/analytics/v1/filters/');
+frontend/lib/api/analytics.ts:104:    const response = await apiClient.get<AnalyticsTabPayload>(`/api/analytics/v1/tabs/${tab}/`, {
+frontend/lib/api/analytics.ts:111:    const response = await apiClient.get<AnalyticsLivePayload>('/api/analytics/v1/live/', {
+frontend/lib/api/analytics.ts:118:    const response = await apiClient.get<AnalyticsLivePayload>('/api/analytics/events/live', {
+frontend/lib/api/analytics.ts:125:    const response = await apiClient.get(`/api/analytics/v1/tabs/${tab}/export/`, {
+frontend/lib/api/analytics.ts:134:      '/api/analytics/events/',
+frontend/app/dashboard/pg/results/page.tsx:6:import { resultsApi } from '@/lib/api';
+frontend/app/dashboard/supervisor/page.tsx:7:import { logbookApi } from '@/lib/api';
+frontend/app/dashboard/supervisor/page.tsx:8:import { notificationsApi } from '@/lib/api';
+frontend/app/dashboard/supervisor/pgs/page.tsx:11:import { AssignedPG, usersApi } from '@/lib/api';
+frontend/app/dashboard/supervisor/logbooks/page.tsx:6:import { logbookApi } from '@/lib/api';
+frontend/node_modules/@isaacs/cliui/README.md:48:[ESM](https://nodejs.org/api/esm.html#esm_ecmascript_modules):
+frontend/lib/api/rotations.ts:25:    const response = await apiClient.get<{ count: number; results: RotationSummary[] }>('/api/rotations/my/');
+frontend/lib/api/rotations.ts:33:    const response = await apiClient.get<RotationSummary>(`/api/rotations/my/${id}/`);
+frontend/lib/api/search.ts:34:    const response = await apiClient.get<{ results: SearchResult[]; count: number }>('/api/search/', {
+frontend/lib/api/search.ts:44:    const response = await apiClient.get<{ results: SearchHistory[]; count: number }>('/api/search/history/');
+frontend/lib/api/search.ts:52:    const response = await apiClient.get<{ results: SearchSuggestion[] }>('/api/search/suggestions/', {
+frontend/lib/api/attendance.ts:38:    const response = await apiClient.get<AttendanceSummary>('/api/attendance/summary/', { params });
+frontend/lib/api/attendance.ts:49:    const response = await apiClient.post<BulkUploadResult>('/api/attendance/upload/', formData, {
+frontend/lib/api/client.ts:3: * Uses NEXT_PUBLIC_API_URL environment variable only
+frontend/lib/api/client.ts:11: * MUST use NEXT_PUBLIC_API_URL only - no auto-detection
+frontend/lib/api/client.ts:14:  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+frontend/lib/api/client.ts:18:      console.warn('NEXT_PUBLIC_API_URL not set, using default http://localhost:8000');
+frontend/lib/api/client.ts:22:    throw new Error('NEXT_PUBLIC_API_URL environment variable is required');
+frontend/lib/api/client.ts:27:const API_URL = getApiUrl();
+frontend/lib/api/client.ts:30:  baseURL: API_URL,
+frontend/lib/api/client.ts:65:            // Use allowed endpoint: POST /api/auth/refresh/
+frontend/lib/api/client.ts:66:            const response = await axios.post(`${API_URL}/api/auth/refresh/`, {
+frontend/lib/api/logbook.ts:68:    const response = await apiClient.get<{ count: number; results: PendingLogbookEntry[] }>('/api/logbook/pending/');
+frontend/lib/api/logbook.ts:80:      `/api/logbook/${id}/verify/`,
+frontend/lib/api/logbook.ts:91:      '/api/logbook/my/'
+frontend/lib/api/logbook.ts:100:    const response = await apiClient.post<LogbookEntry>('/api/logbook/my/', payload);
+frontend/lib/api/logbook.ts:108:    const response = await apiClient.patch<LogbookEntry>(`/api/logbook/my/${id}/`, payload);
+frontend/lib/api/logbook.ts:116:    const response = await apiClient.post<LogbookEntry>(`/api/logbook/my/${id}/submit/`);
+frontend/lib/api/auth.ts:59:    const response = await apiClient.post<LoginResponse>('/api/auth/login/', credentials);
+frontend/lib/api/auth.ts:67:    const response = await apiClient.post<RegisterResponse>('/api/auth/register/', data);
+frontend/lib/api/auth.ts:78:        await apiClient.post('/api/auth/logout/', { refresh: refreshToken });
+frontend/lib/api/auth.ts:94:   * Uses allowed endpoint: GET /api/auth/profile/
+frontend/lib/api/auth.ts:97:    const response = await apiClient.get<User>('/api/auth/profile/');
+frontend/lib/api/auth.ts:103:   * Uses allowed endpoint: POST /api/auth/refresh/
+frontend/lib/api/auth.ts:106:    const response = await apiClient.post<{ access: string }>('/api/auth/refresh/', {
+frontend/lib/api/auth.ts:114:   * Uses allowed endpoint: PUT/PATCH /api/auth/profile/update/
+frontend/lib/api/auth.ts:117:    const response = await apiClient.patch<User>('/api/auth/profile/update/', data);
+frontend/lib/api/auth.ts:123:   * Uses allowed endpoint: POST /api/auth/password-reset/
+frontend/lib/api/auth.ts:126:    const response = await apiClient.post<{ message: string }>('/api/auth/password-reset/', { email });
+frontend/lib/api/auth.ts:132:   * Uses allowed endpoint: POST /api/auth/password-reset/confirm/
+frontend/lib/api/auth.ts:140:    const response = await apiClient.post<{ message: string }>('/api/auth/password-reset/confirm/', data);
+frontend/lib/api/auth.ts:146:   * Uses allowed endpoint: POST /api/auth/change-password/
+frontend/lib/api/auth.ts:153:    const response = await apiClient.post<{ message: string }>('/api/auth/change-password/', data);
+frontend/lib/api/certificates.ts:22:    const response = await apiClient.get<{ count: number; results: CertificateSummary[] }>('/api/certificates/my/');
+frontend/lib/api/certificates.ts:33:    return `${baseUrl}/api/certificates/my/${id}/download/`;
+frontend/lib/api/users.ts:15:    const response = await apiClient.get<AssignedPG[]>('/api/users/assigned-pgs/');
+frontend/node_modules/@pkgjs/parseargs/README.md:239:| [v18.3.0](https://nodejs.org/docs/latest-v18.x/api/util.html#utilparseargsconfig) | [v0.9.1](https://github.com/pkgjs/parseargs/tree/v0.9.1#utilparseargsconfig) |
+frontend/node_modules/@pkgjs/parseargs/README.md:240:| [v16.17.0](https://nodejs.org/dist/latest-v16.x/docs/api/util.html#utilparseargsconfig), [v18.7.0](https://nodejs.org/docs/latest-v18.x/api/util.html#utilparseargsconfig) | [0.10.0](https://github.com/pkgjs/parseargs/tree/v0.10.0#utilparseargsconfig) |
+frontend/app/dashboard/supervisor/cases/page.tsx:9:import { casesApi, ClinicalCase } from '@/lib/api/cases';
+frontend/node_modules/@reduxjs/toolkit/src/configureStore.ts:58:   * @see https://redux-toolkit.js.org/api/getDefaultMiddleware#intended-usage
+frontend/node_modules/@reduxjs/toolkit/src/createSlice.ts:677:            "The object notation for `createSlice.extraReducers` has been removed. Please use the 'builder callback' notation instead: https://redux-toolkit.js.org/api/createSlice",
+frontend/node_modules/@reduxjs/toolkit/src/utils.ts:18:If your state or actions are very large, you may want to disable the middleware as it might cause too much of a slowdown in development mode. See https://redux-toolkit.js.org/api/getDefaultMiddleware for instructions.
+frontend/node_modules/@reduxjs/toolkit/src/createReducer.ts:147:        "The object notation for `createReducer` has been removed. Please use the 'builder callback' notation instead: https://redux-toolkit.js.org/api/createReducer",
+frontend/node_modules/@reduxjs/toolkit/src/query/defaultSerializeQueryArgs.ts:1:import type { QueryCacheKey } from './core/apiState'
+frontend/node_modules/@reduxjs/toolkit/src/query/fetchBaseQuery.ts:158: *   baseUrl: 'https://api.your-really-great-app.com/v1/',
+frontend/node_modules/@reduxjs/toolkit/src/query/core/buildSelectors.ts:28:} from './apiState'
+frontend/node_modules/@reduxjs/toolkit/src/query/core/buildSelectors.ts:29:import { QueryStatus, getRequestStatusFlags } from './apiState'
+frontend/node_modules/@reduxjs/toolkit/src/query/core/module.ts:14:import type { Api, Module } from '../apiTypes'
+frontend/node_modules/@reduxjs/toolkit/src/query/core/module.ts:38:} from './apiState'
+frontend/node_modules/@reduxjs/toolkit/src/query/core/module.ts:477:   * @link https://redux-toolkit.js.org/rtk-query/api/setupListeners
+frontend/node_modules/@reduxjs/toolkit/src/query/core/module.ts:483:   * @link https://redux-toolkit.js.org/rtk-query/api/setupListeners
+frontend/node_modules/@reduxjs/toolkit/src/query/core/buildInitiate.ts:10:import type { Api, ApiContext } from '../apiTypes'
+frontend/node_modules/@reduxjs/toolkit/src/query/core/buildInitiate.ts:31:} from './apiState'
+frontend/node_modules/@reduxjs/toolkit/src/query/core/buildMiddleware/batchActions.ts:2:import type { SubscriptionInternalState, SubscriptionState } from '../apiState'
+frontend/node_modules/@reduxjs/toolkit/src/query/core/buildMiddleware/cacheCollection.ts:2:import type { ConfigState, QueryCacheKey, QuerySubState } from '../apiState'
+frontend/node_modules/@reduxjs/toolkit/src/query/core/buildMiddleware/types.ts:11:import type { Api, ApiContext } from '../../apiTypes'
+frontend/node_modules/@reduxjs/toolkit/src/query/core/buildMiddleware/types.ts:22:} from '../apiState'
+frontend/node_modules/@reduxjs/toolkit/src/query/core/buildMiddleware/cacheLifecycle.ts:9:import type { QueryCacheKey, RootState } from '../apiState'
+frontend/node_modules/@reduxjs/toolkit/src/query/core/buildMiddleware/index.ts:11:import type { QueryStatus, QuerySubState, RootState } from '../apiState'
+frontend/node_modules/@reduxjs/toolkit/src/query/core/buildMiddleware/windowEventHandling.ts:1:import { QueryStatus } from '../apiState'
+frontend/node_modules/@reduxjs/toolkit/src/query/core/buildMiddleware/windowEventHandling.ts:2:import type { QueryCacheKey } from '../apiState'
+frontend/node_modules/@reduxjs/toolkit/src/query/core/buildMiddleware/invalidationByTags.ts:13:import type { CombinedState, QueryCacheKey } from '../apiState'
+frontend/node_modules/@reduxjs/toolkit/src/query/core/buildMiddleware/invalidationByTags.ts:14:import { QueryStatus } from '../apiState'
+frontend/node_modules/@reduxjs/toolkit/src/query/core/buildMiddleware/polling.ts:6:} from '../apiState'
+frontend/node_modules/@reduxjs/toolkit/src/query/core/buildMiddleware/polling.ts:7:import { QueryStatus } from '../apiState'
+frontend/node_modules/@reduxjs/toolkit/src/query/core/buildThunks.ts:11:import type { Api, ApiContext } from '../apiTypes'
+frontend/node_modules/@reduxjs/toolkit/src/query/core/buildThunks.ts:52:} from './apiState'
+frontend/node_modules/@reduxjs/toolkit/src/query/core/buildThunks.ts:53:import { QueryStatus } from './apiState'
+frontend/node_modules/@reduxjs/toolkit/src/query/core/buildSlice.ts:28:} from './apiState'
+frontend/node_modules/@reduxjs/toolkit/src/query/core/buildSlice.ts:29:import { QueryStatus } from './apiState'
+frontend/node_modules/@reduxjs/toolkit/src/query/core/buildSlice.ts:56:import type { ApiContext } from '../apiTypes'
+frontend/node_modules/@reduxjs/toolkit/src/query/core/index.ts:6:export { QueryStatus } from './apiState'
+frontend/node_modules/@reduxjs/toolkit/src/query/core/index.ts:18:} from './apiState'
+frontend/node_modules/@reduxjs/toolkit/src/query/index.ts:12:} from './core/apiState'
+frontend/node_modules/@reduxjs/toolkit/src/query/index.ts:13:export { QueryStatus } from './core/apiState'
+frontend/node_modules/@reduxjs/toolkit/src/query/index.ts:14:export type { Api, ApiContext, Module } from './apiTypes'
+frontend/node_modules/@reduxjs/toolkit/src/query/endpointDefinitions.ts:368:   * @see https://redux-toolkit.js.org/api/other-exports#copywithstructuralsharing
+frontend/node_modules/@reduxjs/toolkit/src/query/endpointDefinitions.ts:922:   *   baseQuery: fetchBaseQuery({ baseUrl: 'https://pokeapi.co/api/v2/' }),
+frontend/node_modules/@reduxjs/toolkit/src/query/createApi.ts:1:import type { Api, ApiContext, Module, ModuleName } from './apiTypes'
+frontend/node_modules/@reduxjs/toolkit/src/query/createApi.ts:2:import type { CombinedState } from './core/apiState'
+frontend/node_modules/@reduxjs/toolkit/src/query/createApi.ts:311:   * @link https://redux-toolkit.js.org/rtk-query/api/createApi
+frontend/node_modules/@bcoe/v8-coverage/README.md:6:[![Build status (AppVeyor)](https://ci.appveyor.com/api/projects/status/qgcbdffyb9e09d0e?svg=true)](https://ci.appveyor.com/project/demurgos/v8-coverage)
+frontend/node_modules/@eslint-community/eslint-utils/README.md:14:-   [`getStaticValue`](https://eslint-community.github.io/eslint-utils/api/ast-utils.html#getstaticvalue) evaluates static value on AST.
+frontend/node_modules/@eslint-community/eslint-utils/README.md:15:-   [`ReferenceTracker`](https://eslint-community.github.io/eslint-utils/api/scope-utils.html#referencetracker-class) checks the members of modules/globals as handling assignments and destructuring.
+frontend/node_modules/@reduxjs/toolkit/src/query/tests/utils.test.ts:79:    ['/api/', '/banana', '/api/banana'],
+frontend/node_modules/@reduxjs/toolkit/src/query/tests/utils.test.ts:80:    ['/api/', 'banana', '/api/banana'],
+frontend/node_modules/@reduxjs/toolkit/src/query/tests/utils.test.ts:81:    ['/api', '/banana', '/api/banana'],

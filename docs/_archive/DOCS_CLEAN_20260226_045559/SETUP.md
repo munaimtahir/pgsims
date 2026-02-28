@@ -79,13 +79,13 @@
 
 3. **Run migrations**
    ```bash
-   docker-compose exec web python manage.py migrate
+   docker-compose exec backend python manage.py migrate
    # Or use: make migrate
    ```
 
 4. **Create superuser**
    ```bash
-   docker-compose exec web python manage.py createsuperuser
+   docker-compose exec backend python manage.py createsuperuser
    ```
 
 5. **View logs**
@@ -124,7 +124,7 @@ pytest sims/users/tests.py::UserModelTests::test_user_creation -v
 python manage.py sims_seed_demo
 
 # Docker
-docker-compose exec web python manage.py sims_seed_demo
+docker-compose exec backend python manage.py sims_seed_demo
 # Or use: make seed
 ```
 
@@ -247,7 +247,7 @@ docker-compose down -v  # Remove volumes
 docker system prune -a  # Clean Docker system
 
 # View container logs
-docker-compose logs web
+docker-compose logs backend
 ```
 
 ## Next Steps

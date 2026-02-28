@@ -1,0 +1,14 @@
+Status: 200
+ErrorNote: Please correct the error below.
+FieldError: Supervisor is required for PGs
+Form initialized successfully. dict_keys(['username', 'email', 'first_name', 'last_name', 'role', 'specialty', 'year', 'supervisor', 'password1', 'password2'])
+GET /admin/users/user/add/ Status Code: 200
+Found 286 test(s).
+System check identified no issues (0 silenced).
+Rebuilding analytics rollups for 2026-02-27 -> 2026-02-27
+Rollup rows updated: 1
+Rebuilding analytics rollups for 2026-02-27 -> 2026-02-27
+Rollup rows updated: 1
+Processed 1 scheduled reports
+Processed 0 scheduled reports
+Processed 1 scheduled reports

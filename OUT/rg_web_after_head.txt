@@ -1,0 +1,4 @@
+OUT/AUDIT_TRUTHMAP/evidence/Docker/02_compose_config.txt:80:      web:
+OUT/AUDIT_TRUTHMAP/evidence/Docker/02_compose_config.txt:130:  web:
+OUT/AUDIT_TRUTHMAP/evidence/StaticMedia/03_compose_mounts.txt:80:      web:
+OUT/AUDIT_TRUTHMAP/evidence/StaticMedia/03_compose_mounts.txt:130:  web:

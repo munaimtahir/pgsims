@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Full deployment script for PGSIMS
-# Rebuilds and redeploys frontend, web, worker, and beat services
+# Rebuilds and redeploys frontend, backend, worker, and beat services
 
 set -e  # Exit on error
 
@@ -17,33 +17,33 @@ cd "$SCRIPT_DIR"
 COMPOSE_PROJECT_NAME="pgsims"
 
 # Stop all services (frontend and backend)
-echo "Stopping frontend, web, worker, and beat services (pgsims project only)..."
-docker compose -f ../../docker/docker-compose.yml -p "$COMPOSE_PROJECT_NAME" stop frontend web worker beat || true
+echo "Stopping frontend, backend, worker, and beat services (pgsims project only)..."
+docker compose -f ../../docker/docker-compose.yml -p "$COMPOSE_PROJECT_NAME" stop frontend backend worker beat || true
 
 # Remove containers if they exist
 echo "Removing containers..."
-docker compose -f ../../docker/docker-compose.yml -p "$COMPOSE_PROJECT_NAME" rm -f frontend web worker beat || true
+docker compose -f ../../docker/docker-compose.yml -p "$COMPOSE_PROJECT_NAME" rm -f frontend backend worker beat || true
 
 # Remove existing images to force rebuild (scoped to pgsims project)
 echo "Removing existing images..."
-docker compose -f ../../docker/docker-compose.yml -p "$COMPOSE_PROJECT_NAME" rmi -f frontend web worker beat || true
+docker compose -f ../../docker/docker-compose.yml -p "$COMPOSE_PROJECT_NAME" rmi -f frontend backend worker beat || true
 # Also remove by container name patterns specific to pgsims
 docker rmi $(docker images -q --filter "reference=pgsims*frontend*" 2>/dev/null) 2>/dev/null || true
-docker rmi $(docker images -q --filter "reference=pgsims*web*" 2>/dev/null) 2>/dev/null || true
+docker rmi $(docker images -q --filter "reference=pgsims*backend*" 2>/dev/null) 2>/dev/null || true
 docker rmi $(docker images -q --filter "reference=pgsims*worker*" 2>/dev/null) 2>/dev/null || true
 docker rmi $(docker images -q --filter "reference=pgsims*beat*" 2>/dev/null) 2>/dev/null || true
 docker rmi $(docker images -q --filter "reference=*sims_frontend*" 2>/dev/null) 2>/dev/null || true
-docker rmi $(docker images -q --filter "reference=*sims_web*" 2>/dev/null) 2>/dev/null || true
+docker rmi $(docker images -q --filter "reference=*sims_backend*" 2>/dev/null) 2>/dev/null || true
 docker rmi $(docker images -q --filter "reference=*sims_worker*" 2>/dev/null) 2>/dev/null || true
 docker rmi $(docker images -q --filter "reference=*sims_beat*" 2>/dev/null) 2>/dev/null || true
 
 # Rebuild all images without cache
-echo "Rebuilding frontend, web, worker, and beat images (no cache)..."
-docker compose -f ../../docker/docker-compose.yml -p "$COMPOSE_PROJECT_NAME" build --no-cache frontend web worker beat
+echo "Rebuilding frontend, backend, worker, and beat images (no cache)..."
+docker compose -f ../../docker/docker-compose.yml -p "$COMPOSE_PROJECT_NAME" build --no-cache frontend backend worker beat
 
 # Start all services
-echo "Starting frontend, web, worker, and beat services..."
-docker compose -f ../../docker/docker-compose.yml -p "$COMPOSE_PROJECT_NAME" up -d frontend web worker beat
+echo "Starting frontend, backend, worker, and beat services..."
+docker compose -f ../../docker/docker-compose.yml -p "$COMPOSE_PROJECT_NAME" up -d frontend backend worker beat
 
 # Wait a moment for services to start
 echo "Waiting for services to start..."
@@ -56,9 +56,9 @@ echo "=========================================="
 docker compose -f ../../docker/docker-compose.yml -p "$COMPOSE_PROJECT_NAME" logs --tail=20 frontend
 
 echo "=========================================="
-echo "Web service logs (last 30 lines):"
+echo "Backend service logs (last 30 lines):"
 echo "=========================================="
-docker compose -f ../../docker/docker-compose.yml -p "$COMPOSE_PROJECT_NAME" logs --tail=30 web
+docker compose -f ../../docker/docker-compose.yml -p "$COMPOSE_PROJECT_NAME" logs --tail=30 backend
 
 echo "=========================================="
 echo "Worker service logs (last 20 lines):"
@@ -74,7 +74,7 @@ docker compose -f ../../docker/docker-compose.yml -p "$COMPOSE_PROJECT_NAME" log
 echo "=========================================="
 echo "Full deployment complete!"
 echo "Checking service status..."
-docker compose -f ../../docker/docker-compose.yml -p "$COMPOSE_PROJECT_NAME" ps frontend web worker beat
+docker compose -f ../../docker/docker-compose.yml -p "$COMPOSE_PROJECT_NAME" ps frontend backend worker beat
 
 echo "=========================================="
 echo "Services are now running:"

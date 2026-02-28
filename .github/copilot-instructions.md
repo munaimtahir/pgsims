@@ -106,7 +106,7 @@ docker compose -f docker/docker-compose.yml logs -f
 # Or: make logs
 
 # Run migrations in container
-docker compose -f docker/docker-compose.yml exec web python manage.py migrate
+docker compose -f docker/docker-compose.yml exec backend python manage.py migrate
 # Or: make migrate
 
 # Stop all services
@@ -334,7 +334,7 @@ cd backend && celery -A sims_project beat -l info --scheduler django_celery_beat
 **Docker services**:
 - `db` - PostgreSQL database
 - `redis` - Redis cache and message broker
-- `web` - Django app (Gunicorn)
+- `backend` - Django app (Gunicorn)
 - `worker` - Celery worker
 - `beat` - Celery beat scheduler
 - `nginx` - Reverse proxy (or omit for Coolify/Traefik)

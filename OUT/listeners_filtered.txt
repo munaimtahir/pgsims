@@ -1,0 +1,5 @@
+3:LISTEN 0      4096       127.0.0.1:2019       0.0.0.0:*    users:(("caddy",pid=689,fd=7))                         
+18:LISTEN 0      4096       127.0.0.1:8014       0.0.0.0:*    users:(("docker-proxy",pid=908871,fd=8))               
+19:LISTEN 0      4096       127.0.0.1:8082       0.0.0.0:*    users:(("docker-proxy",pid=1938590,fd=8))              
+35:LISTEN 0      4096               *:80               *:*    users:(("caddy",pid=689,fd=12))                        
+36:LISTEN 0      4096               *:443              *:*    users:(("caddy",pid=689,fd=13))                        
