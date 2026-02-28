@@ -9,7 +9,7 @@ export default defineConfig({
   workers: 1,
   reporter: [['html', { outputFolder: '../OUT/E2E_REMEDIATION/playwright-report', open: 'never' }], ['list']],
   use: {
-    baseURL: 'https://pgsims.alshifalab.pk',
+    baseURL: process.env.E2E_BASE_URL ?? 'https://pgsims.alshifalab.pk',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
