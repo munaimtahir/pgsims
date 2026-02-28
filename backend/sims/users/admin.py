@@ -5,7 +5,15 @@ from django.utils.translation import gettext_lazy as _
 from import_export import resources
 from import_export.admin import ImportExportModelAdmin
 
-from .models import User
+from .models import (
+    DepartmentMembership,
+    HODAssignment,
+    HospitalAssignment,
+    ResidentProfile,
+    StaffProfile,
+    SupervisorResidentLink,
+    User,
+)
 
 
 class UserResource(resources.ModelResource):
@@ -163,7 +171,7 @@ class UserAdmin(BaseUserAdmin, ImportExportModelAdmin):
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         """Filter supervisor choices to only show supervisors"""
         if db_field.name == "supervisor":
-            kwargs["queryset"] = User.objects.filter(role="supervisor")
+            kwargs["queryset"] = User.objects.filter(role__in=["supervisor", "faculty"])
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
     def has_add_permission(self, request):
@@ -193,3 +201,96 @@ class UserAdmin(BaseUserAdmin, ImportExportModelAdmin):
 
 
 # Admin branding overrides disabled to restore vanilla Django admin defaults.
+
+
+@admin.register(StaffProfile)
+class StaffProfileAdmin(admin.ModelAdmin):
+    list_display = ("user", "designation", "phone", "active", "updated_at")
+    list_filter = ("active", "user__role")
+    search_fields = (
+        "user__username",
+        "user__first_name",
+        "user__last_name",
+        "designation",
+        "phone",
+    )
+
+
+@admin.register(ResidentProfile)
+class ResidentProfileAdmin(admin.ModelAdmin):
+    list_display = ("user", "pgr_id", "training_start", "training_end", "training_level", "active")
+    list_filter = ("active", "training_level")
+    search_fields = ("user__username", "user__first_name", "user__last_name", "pgr_id")
+
+
+@admin.register(DepartmentMembership)
+class DepartmentMembershipAdmin(admin.ModelAdmin):
+    list_display = (
+        "user",
+        "department",
+        "member_type",
+        "is_primary",
+        "active",
+        "start_date",
+        "end_date",
+    )
+    list_filter = ("member_type", "is_primary", "active", "department")
+    search_fields = (
+        "user__username",
+        "user__first_name",
+        "user__last_name",
+        "department__name",
+        "department__code",
+    )
+
+
+@admin.register(HospitalAssignment)
+class HospitalAssignmentAdmin(admin.ModelAdmin):
+    list_display = (
+        "user",
+        "hospital_department",
+        "assignment_type",
+        "active",
+        "start_date",
+        "end_date",
+    )
+    list_filter = ("assignment_type", "active", "hospital_department__hospital")
+    search_fields = (
+        "user__username",
+        "user__first_name",
+        "user__last_name",
+        "hospital_department__hospital__name",
+        "hospital_department__department__name",
+    )
+
+
+@admin.register(SupervisorResidentLink)
+class SupervisorResidentLinkAdmin(admin.ModelAdmin):
+    list_display = (
+        "supervisor_user",
+        "resident_user",
+        "department",
+        "active",
+        "start_date",
+        "end_date",
+    )
+    list_filter = ("active", "department")
+    search_fields = (
+        "supervisor_user__username",
+        "resident_user__username",
+        "supervisor_user__first_name",
+        "resident_user__first_name",
+    )
+
+
+@admin.register(HODAssignment)
+class HODAssignmentAdmin(admin.ModelAdmin):
+    list_display = ("department", "hod_user", "active", "start_date", "end_date")
+    list_filter = ("active", "department")
+    search_fields = (
+        "department__name",
+        "department__code",
+        "hod_user__username",
+        "hod_user__first_name",
+        "hod_user__last_name",
+    )

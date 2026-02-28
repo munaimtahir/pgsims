@@ -218,10 +218,10 @@ class RBACAPITestCase(TestCase):
 
     def test_hospital_reference_data_write_restricted(self):
         self.client.force_authenticate(self.supervisor)
-        list_resp = self.client.get("/api/rotations/hospitals/")
+        list_resp = self.client.get("/api/hospitals/")
         self.assertEqual(list_resp.status_code, 200)
         sup_create = self.client.post(
-            "/api/rotations/hospitals/",
+            "/api/hospitals/",
             {"name": "New Hospital", "code": "NH"},
             format="json",
         )
@@ -229,7 +229,7 @@ class RBACAPITestCase(TestCase):
 
         self.client.force_authenticate(self.admin)
         admin_create = self.client.post(
-            "/api/rotations/hospitals/",
+            "/api/hospitals/",
             {"name": "New Hospital", "code": "NH"},
             format="json",
         )
@@ -237,30 +237,30 @@ class RBACAPITestCase(TestCase):
 
         self.client.force_authenticate(self.utrmc_admin)
         uadmin_create = self.client.post(
-            "/api/rotations/hospitals/",
+            "/api/hospitals/",
             {"name": "UTRMC Attempt", "code": "UA"},
             format="json",
         )
         self.assertEqual(uadmin_create.status_code, 403)
         uadmin_patch = self.client.patch(
-            f"/api/rotations/hospitals/{self.home_hospital.id}/",
+            f"/api/hospitals/{self.home_hospital.id}/",
             {"description": "Nope"},
             format="json",
         )
         self.assertEqual(uadmin_patch.status_code, 403)
         uadmin_put = self.client.put(
-            f"/api/rotations/hospitals/{self.home_hospital.id}/",
+            f"/api/hospitals/{self.home_hospital.id}/",
             {"name": self.home_hospital.name, "code": self.home_hospital.code, "is_active": True},
             format="json",
         )
         self.assertEqual(uadmin_put.status_code, 403)
-        uadmin_delete = self.client.delete(f"/api/rotations/hospitals/{self.home_hospital.id}/")
+        uadmin_delete = self.client.delete(f"/api/hospitals/{self.home_hospital.id}/")
         self.assertEqual(uadmin_delete.status_code, 403)
 
     def test_hospital_department_write_utrmc_admin_primary_with_admin_recovery(self):
         self.client.force_authenticate(self.admin)
         admin_create = self.client.post(
-            "/api/rotations/hospital-departments/",
+            "/api/hospital-departments/",
             {
                 "hospital_id": self.home_hospital.id,
                 "department_id": self.medicine.id,
@@ -272,7 +272,7 @@ class RBACAPITestCase(TestCase):
 
         self.client.force_authenticate(self.utrmc_admin)
         uadmin_create = self.client.post(
-            "/api/rotations/hospital-departments/",
+            "/api/hospital-departments/",
             {
                 "hospital_id": self.other_hospital.id,
                 "department_id": self.pathology.id,

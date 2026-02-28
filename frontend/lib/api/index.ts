@@ -17,3 +17,4 @@ export * from './search';
 export * from './bulk';
 export * from './audit';
 export * from './users';
+export * from './userbase';

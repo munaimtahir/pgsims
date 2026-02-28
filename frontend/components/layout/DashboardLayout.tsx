@@ -44,7 +44,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     Dashboard
                   </Link>
                 )}
-                {(user?.role === 'utrmc_user' || user?.role === 'utrmc_admin') && (
+                {(user?.role === 'utrmc_user' || user?.role === 'utrmc_admin' || user?.role === 'admin') && (
                   <Link
                     href="/dashboard/utrmc"
                     className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
@@ -52,7 +52,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     Dashboard
                   </Link>
                 )}
-                {(user?.role === 'utrmc_user' || user?.role === 'utrmc_admin') && (
+                {(user?.role === 'utrmc_user' || user?.role === 'utrmc_admin' || user?.role === 'admin') && (
                   <Link
                     href="/dashboard/utrmc/cases"
                     className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
@@ -60,7 +60,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     Cases
                   </Link>
                 )}
-                {(user?.role === 'utrmc_user' || user?.role === 'utrmc_admin') && (
+                {(user?.role === 'utrmc_user' || user?.role === 'utrmc_admin' || user?.role === 'admin') && (
                   <Link
                     href="/dashboard/utrmc/reports"
                     className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
@@ -68,7 +68,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     Reports
                   </Link>
                 )}
-                {user?.role === 'pg' && (
+                {(user?.role === 'pg' || user?.role === 'resident') && (
                   <>
                     <Link
                       href="/dashboard/pg"
@@ -114,7 +114,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     </Link>
                   </>
                 )}
-                {user?.role === 'supervisor' && (
+                {(user?.role === 'supervisor' || user?.role === 'faculty') && (
                   <>
                     <Link
                       href="/dashboard/supervisor/logbooks"
@@ -167,6 +167,34 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                       className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
                     >
                       Reports
+                    </Link>
+                  </>
+                )}
+                {(user?.role === 'utrmc_admin' || user?.role === 'admin') && (
+                  <>
+                    <Link
+                      href="/dashboard/utrmc/hospitals"
+                      className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
+                    >
+                      UTRMC Hospitals
+                    </Link>
+                    <Link
+                      href="/dashboard/utrmc/departments"
+                      className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
+                    >
+                      UTRMC Departments
+                    </Link>
+                    <Link
+                      href="/dashboard/utrmc/matrix"
+                      className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
+                    >
+                      UTRMC Matrix
+                    </Link>
+                    <Link
+                      href="/dashboard/utrmc/users"
+                      className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
+                    >
+                      UTRMC Users
                     </Link>
                   </>
                 )}

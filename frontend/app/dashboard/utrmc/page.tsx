@@ -79,6 +79,16 @@ export default function UTRMCDashboardPage() {
               <a href="/dashboard/utrmc/cases" className="text-sm font-medium text-indigo-600 hover:text-indigo-500">
                 View Cases
               </a>
+              {!isReadOnly && (
+                <>
+                  <a href="/dashboard/utrmc/users" className="text-sm font-medium text-indigo-600 hover:text-indigo-500">
+                    Manage Users
+                  </a>
+                  <a href="/dashboard/utrmc/matrix" className="text-sm font-medium text-indigo-600 hover:text-indigo-500">
+                    Matrix
+                  </a>
+                </>
+              )}
             </div>
           </SectionCard>
         </div>

@@ -43,6 +43,67 @@ Rotation summary response must include:
 - `override_reason` (nullable)
 - `approved_by`, `approved_at` (nullable)
 
+## Userbase + Org Graph (v1)
+
+### Roles
+- Canonical role semantics supported by API:
+  - `admin`, `utrmc_admin`, `utrmc_user`, `supervisor`, `faculty`, `resident`
+- Backward compatibility:
+  - `pg` remains accepted as resident-equivalent for legacy flows.
+
+### Auth
+- `GET /api/auth/me/` returns current authenticated user payload.
+
+### Master Data
+- Hospitals:
+  - `GET/POST /api/hospitals/`
+  - `GET/PATCH /api/hospitals/{id}/`
+  - Fields: `id, name, code, active, created_at, updated_at`
+- Departments:
+  - `GET/POST /api/departments/`
+  - `GET/PATCH /api/departments/{id}/`
+  - Fields: `id, name, code, description, active, created_at, updated_at`
+- HospitalDepartment matrix:
+  - `GET/POST /api/hospital-departments/`
+  - `GET/PATCH /api/hospital-departments/{id}/`
+  - Fields: `id, hospital, department, active, created_at, updated_at`
+
+### Users + Profiles
+- Users:
+  - `GET/POST /api/users/`
+  - `GET/PATCH /api/users/{id}/`
+  - Filters: `role`, `department`, `active`, `search`
+- Resident profiles:
+  - `GET/PATCH /api/residents/{user_id}/`
+- Staff profiles:
+  - `GET/PATCH /api/staff/{user_id}/`
+
+### Memberships + Assignments
+- Department memberships:
+  - `GET/POST /api/department-memberships/`
+  - `PATCH/DELETE /api/department-memberships/{id}/` (`DELETE` = soft deactivate)
+- Hospital assignments:
+  - `GET/POST /api/hospital-assignments/`
+  - `PATCH/DELETE /api/hospital-assignments/{id}/` (`DELETE` = soft deactivate)
+
+### Linking
+- Supervisor links:
+  - `GET/POST /api/supervision-links/`
+  - `PATCH /api/supervision-links/{id}/`
+- HOD assignments:
+  - `GET/POST /api/hod-assignments/`
+  - `PATCH /api/hod-assignments/{id}/`
+
+### Rosters
+- `GET /api/departments/{id}/roster/`
+  - Response includes:
+    - `department`
+    - `hod` (nullable)
+    - `faculty[]`
+    - `supervisors[]`
+    - `residents[]`
+- `GET /api/hospitals/{id}/departments/`
+
 ## Analytics (v1)
 Base: `/api/analytics/`
 

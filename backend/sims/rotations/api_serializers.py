@@ -4,7 +4,7 @@ from typing import Optional
 
 from rest_framework import serializers
 
-from sims.rotations.models import Hospital, HospitalDepartment, Rotation
+from sims.rotations.models import Rotation
 
 
 class DepartmentRefSerializer(serializers.Serializer):
@@ -17,61 +17,6 @@ class HospitalRefSerializer(serializers.Serializer):
     id = serializers.IntegerField()
     name = serializers.CharField()
     code = serializers.CharField(allow_null=True, required=False)
-
-
-class HospitalSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Hospital
-        fields = [
-            "id",
-            "name",
-            "code",
-            "address",
-            "phone",
-            "email",
-            "website",
-            "description",
-            "facilities",
-            "is_active",
-            "created_at",
-            "updated_at",
-        ]
-        read_only_fields = ["created_at", "updated_at"]
-
-
-class HospitalDepartmentSerializer(serializers.ModelSerializer):
-    department = DepartmentRefSerializer(read_only=True)
-    hospital = HospitalRefSerializer(read_only=True)
-    department_id = serializers.IntegerField(write_only=True, required=True)
-    hospital_id = serializers.IntegerField(write_only=True, required=True)
-
-    class Meta:
-        model = HospitalDepartment
-        fields = [
-            "id",
-            "hospital",
-            "department",
-            "hospital_id",
-            "department_id",
-            "is_active",
-            "created_at",
-            "updated_at",
-        ]
-        read_only_fields = ["created_at", "updated_at"]
-
-    def create(self, validated_data):
-        return HospitalDepartment.objects.create(
-            hospital_id=validated_data.pop("hospital_id"),
-            department_id=validated_data.pop("department_id"),
-            **validated_data,
-        )
-
-    def update(self, instance, validated_data):
-        if "hospital_id" in validated_data:
-            instance.hospital_id = validated_data.pop("hospital_id")
-        if "department_id" in validated_data:
-            instance.department_id = validated_data.pop("department_id")
-        return super().update(instance, validated_data)
 
 
 class RotationSummarySerializer(serializers.ModelSerializer):

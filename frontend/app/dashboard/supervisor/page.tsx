@@ -142,7 +142,7 @@ export default function SupervisorDashboardPage() {
   ];
 
   return (
-    <ProtectedRoute allowedRoles={['supervisor']}>
+    <ProtectedRoute allowedRoles={['supervisor', 'faculty']}>
       <DashboardLayout>
         <div className="space-y-6">
           <div>

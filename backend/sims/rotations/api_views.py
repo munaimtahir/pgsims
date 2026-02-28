@@ -2,67 +2,30 @@
 
 from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
-from rest_framework import permissions, viewsets
+from rest_framework import permissions
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from sims.rotations.api_serializers import (
-    HospitalDepartmentSerializer,
-    HospitalSerializer,
     RotationSummarySerializer,
 )
-from sims.rotations.models import Hospital, HospitalDepartment, Rotation
+from sims.rotations.models import Rotation
 from sims.common_permissions import (
     CanApproveRotationOverride,
     IsPGUser,
     IsUTRMCAdminUser,
-    ReadAnyWriteAdminOnly,
-    ReadAnyWriteAdminOrUTRMCAdmin,
 )
 from sims.rotations.services import approve_rotation_override
 
 User = get_user_model()
 
 
-class HospitalViewSet(viewsets.ModelViewSet):
-    """Reference-data CRUD for hospitals (authenticated read, admin/UTRMC admin write)."""
-
-    queryset = Hospital.objects.all().order_by("name")
-    serializer_class = HospitalSerializer
-    permission_classes = [ReadAnyWriteAdminOnly]
-
-    def get_queryset(self):
-        qs = super().get_queryset()
-        user = self.request.user
-        if user.is_superuser or getattr(user, "role", None) in {"admin", "utrmc_admin"}:
-            return qs
-        return qs.filter(is_active=True)
-
-
-class HospitalDepartmentViewSet(viewsets.ModelViewSet):
-    """Hospital/Department matrix governance API (UTRMC admin write)."""
-
-    queryset = HospitalDepartment.objects.select_related("hospital", "department").order_by(
-        "hospital__name",
-        "department__name",
-    )
-    serializer_class = HospitalDepartmentSerializer
-    permission_classes = [ReadAnyWriteAdminOrUTRMCAdmin]
-
-    def get_queryset(self):
-        qs = super().get_queryset()
-        user = self.request.user
-        if user.is_superuser or getattr(user, "role", None) in {"admin", "utrmc_admin"}:
-            return qs
-        return qs.filter(is_active=True, hospital__is_active=True, department__active=True)
-
-
 class PGMyRotationsListView(APIView):
     """
     List rotations for authenticated PG user.
-    
+
     GET /api/rotations/my/
     Returns all rotations for the authenticated PG user.
     Authentication: Required (PG role only)
@@ -93,7 +56,7 @@ class PGMyRotationsListView(APIView):
 class PGMyRotationDetailView(APIView):
     """
     Get details of a specific rotation for authenticated PG user.
-    
+
     GET /api/rotations/my/<id>/
     Returns a single rotation for the authenticated PG user.
     Authentication: Required (PG role only)

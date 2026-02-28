@@ -84,7 +84,7 @@ export default function PGDashboardPage() {
   }
 
   return (
-    <ProtectedRoute allowedRoles={['pg']}>
+    <ProtectedRoute allowedRoles={['pg', 'resident']}>
       <DashboardLayout>
         <div className="space-y-6">
           <div>

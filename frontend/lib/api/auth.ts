@@ -12,7 +12,7 @@ export interface User {
   first_name: string;
   last_name: string;
   full_name?: string;
-  role: 'pg' | 'supervisor' | 'admin' | 'utrmc_user' | 'utrmc_admin';
+  role: 'pg' | 'resident' | 'supervisor' | 'faculty' | 'admin' | 'utrmc_user' | 'utrmc_admin';
   specialty?: string;
   year?: string;
   phone_number?: string;
@@ -30,7 +30,7 @@ export interface RegisterData {
   password2: string;
   first_name: string;
   last_name: string;
-  role: 'pg' | 'supervisor' | 'admin' | 'utrmc_user' | 'utrmc_admin';
+  role: 'pg' | 'resident' | 'supervisor' | 'faculty' | 'admin' | 'utrmc_user' | 'utrmc_admin';
   specialty?: string;
   year?: string;
   supervisor?: number;

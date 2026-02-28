@@ -7,7 +7,7 @@ import { getDashboardPathForRole } from '@/lib/rbac';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
-  allowedRoles?: ('pg' | 'supervisor' | 'admin' | 'utrmc_user' | 'utrmc_admin')[];
+  allowedRoles?: ('pg' | 'resident' | 'supervisor' | 'faculty' | 'admin' | 'utrmc_user' | 'utrmc_admin')[];
 }
 
 export default function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) {

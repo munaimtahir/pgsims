@@ -10,6 +10,8 @@ USER_ROLES = (
     ("admin", "Admin"),
     ("supervisor", "Supervisor"),
     ("pg", "Postgraduate"),
+    ("resident", "Resident"),
+    ("faculty", "Faculty"),
     ("utrmc_user", "UTRMC User"),
     ("utrmc_admin", "UTRMC Admin"),
 )
@@ -88,7 +90,7 @@ class User(AbstractUser):
         null=True,
         blank=True,
         related_name="assigned_pgs",
-        limit_choices_to={"role": "supervisor"},
+        limit_choices_to={"role__in": ["supervisor", "faculty"]},
         help_text="Assigned supervisor (required for PGs)",
     )
 
@@ -176,35 +178,38 @@ class User(AbstractUser):
     def clean(self):
         """Validate model fields and business rules"""
         super().clean()
+        resident_roles = {"pg", "resident"}
 
         # PGs must have specialty, year, and supervisor
-        if self.role == "pg":
+        if self.role in resident_roles:
             if not self.specialty:
-                raise ValidationError({"specialty": "Specialty is required for PGs"})
+                raise ValidationError({"specialty": "Specialty is required for residents"})
             if not self.year:
-                raise ValidationError({"year": "Training year is required for PGs"})
-            if not self.supervisor:
+                raise ValidationError({"year": "Training year is required for residents"})
+            if self.role == "pg" and not self.supervisor:
                 raise ValidationError({"supervisor": "Supervisor is required for PGs"})
 
-        # Supervisors must have specialty
-        if self.role == "supervisor" and not self.specialty:
-            raise ValidationError({"specialty": "Specialty is required for Supervisors"})
+        # Supervisors/faculty must have specialty
+        if self.role in {"supervisor", "faculty"} and not self.specialty:
+            raise ValidationError({"specialty": "Specialty is required for supervisors/faculty"})
 
         # Admins don't need specialty/year/supervisor
         if self.role == "admin":
             if self.supervisor:
                 raise ValidationError({"supervisor": "Admins cannot have supervisors"})
 
-        if self.role in {"utrmc_user", "utrmc_admin"} and self.supervisor:
-            raise ValidationError({"supervisor": "UTRMC users cannot have supervisors"})
+        if self.role in {"utrmc_user", "utrmc_admin", "faculty"} and self.supervisor:
+            raise ValidationError({"supervisor": "This role cannot have a supervisor assignment"})
 
         # Prevent self-supervision
         if self.supervisor == self:
             raise ValidationError({"supervisor": "Users cannot supervise themselves"})
 
         # Ensure supervisor is actually a supervisor
-        if self.supervisor and self.supervisor.role != "supervisor":
-            raise ValidationError({"supervisor": "Assigned supervisor must have supervisor role"})
+        if self.supervisor and self.supervisor.role not in {"supervisor", "faculty"}:
+            raise ValidationError(
+                {"supervisor": "Assigned supervisor must have supervisor/faculty role"}
+            )
 
     def save(self, *args, **kwargs):
         """Override save to handle archiving and validation"""
@@ -231,8 +236,16 @@ class User(AbstractUser):
         return self.role == "supervisor"
 
     def is_pg(self):
-        """Check if user is a postgraduate"""
-        return self.role == "pg"
+        """Check if user is a resident/postgraduate."""
+        return self.role in {"pg", "resident"}
+
+    def is_resident(self):
+        """Check if user is explicitly resident role."""
+        return self.role == "resident"
+
+    def is_faculty(self):
+        """Check if user is faculty role."""
+        return self.role == "faculty"
 
     def is_utrmc_user(self):
         """Check if user is UTRMC read-only oversight user."""
@@ -247,6 +260,8 @@ class User(AbstractUser):
         """Get all PGs assigned to this supervisor"""
         if self.is_supervisor():
             return self.assigned_pgs.filter(is_active=True, is_archived=False)
+        if self.is_faculty():
+            return self.assigned_pgs.filter(is_active=True, is_archived=False)
         return User.objects.none()
 
     def get_supervisor_name(self):
@@ -260,7 +275,7 @@ class User(AbstractUser):
         """Get appropriate dashboard URL based on role"""
         if self.is_admin():
             return reverse("admin:index")
-        elif self.is_supervisor():
+        elif self.is_supervisor() or self.is_faculty():
             return reverse("users:supervisor_dashboard")
         elif self.is_pg():
             return reverse("users:pg_dashboard")
@@ -284,6 +299,8 @@ class User(AbstractUser):
             "admin": "badge-danger",
             "supervisor": "badge-warning",
             "pg": "badge-info",
+            "resident": "badge-info",
+            "faculty": "badge-primary",
             "utrmc_user": "badge-secondary",
             "utrmc_admin": "badge-dark",
         }
@@ -330,6 +347,411 @@ class User(AbstractUser):
             pass
 
         return count
+
+    def get_documents_submitted_count(self):
+        """Get count of documents submitted by this PG/resident."""
+        if not self.is_pg():
+            return 0
+
+        count = 0
+        try:
+            from django.apps import apps
+
+            if apps.is_installed("sims.certificates"):
+                from sims.certificates.models import Certificate
+
+                count += Certificate.objects.filter(pg=self).count()
+
+            if apps.is_installed("sims.rotations"):
+                from sims.rotations.models import Rotation
+
+                count += Rotation.objects.filter(pg=self).count()
+
+            if apps.is_installed("sims.logbook"):
+                from sims.logbook.models import LogbookEntry
+
+                count += LogbookEntry.objects.filter(pg=self).count()
+
+            if apps.is_installed("sims.cases"):
+                from sims.cases.models import ClinicalCase
+
+                count += ClinicalCase.objects.filter(pg=self).count()
+
+        except ImportError:
+            pass
+
+        return count
+
+
+class StaffProfile(models.Model):
+    """Profile metadata for faculty and supervisors."""
+
+    user = models.OneToOneField(
+        "users.User",
+        on_delete=models.CASCADE,
+        related_name="staff_profile",
+        limit_choices_to={"role__in": ["supervisor", "faculty"]},
+    )
+    designation = models.CharField(max_length=120, blank=True)
+    phone = models.CharField(max_length=20, blank=True)
+    active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["user__last_name", "user__first_name"]
+        indexes = [models.Index(fields=["active"])]
+
+    def __str__(self):
+        return f"StaffProfile<{self.user_id}>"
+
+    def clean(self):
+        super().clean()
+        if self.user_id and self.user.role not in {"supervisor", "faculty"}:
+            raise ValidationError({"user": "Staff profile requires supervisor/faculty role."})
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        return super().save(*args, **kwargs)
+
+
+class ResidentProfile(models.Model):
+    """Training metadata for residents/postgraduates."""
+
+    user = models.OneToOneField(
+        "users.User",
+        on_delete=models.CASCADE,
+        related_name="resident_profile",
+        limit_choices_to={"role__in": ["pg", "resident"]},
+    )
+    pgr_id = models.CharField(max_length=60, blank=True)
+    training_start = models.DateField()
+    training_end = models.DateField(null=True, blank=True)
+    training_level = models.CharField(max_length=50, blank=True)
+    active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["user__last_name", "user__first_name"]
+        indexes = [models.Index(fields=["active"]), models.Index(fields=["training_start"])]
+
+    def __str__(self):
+        return f"ResidentProfile<{self.user_id}>"
+
+    def clean(self):
+        super().clean()
+        if self.user_id and self.user.role not in {"pg", "resident"}:
+            raise ValidationError({"user": "Resident profile requires pg/resident role."})
+        if self.training_end and self.training_end < self.training_start:
+            raise ValidationError({"training_end": "Training end must be on/after training_start."})
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        return super().save(*args, **kwargs)
+
+
+class DepartmentMembership(models.Model):
+    """Membership mapping between users and departments."""
+
+    MEMBER_FACULTY = "faculty"
+    MEMBER_SUPERVISOR = "supervisor"
+    MEMBER_RESIDENT = "resident"
+    MEMBER_TYPE_CHOICES = (
+        (MEMBER_FACULTY, "Faculty"),
+        (MEMBER_SUPERVISOR, "Supervisor"),
+        (MEMBER_RESIDENT, "Resident"),
+    )
+
+    user = models.ForeignKey(
+        "users.User", on_delete=models.CASCADE, related_name="department_memberships"
+    )
+    department = models.ForeignKey(
+        "academics.Department",
+        on_delete=models.CASCADE,
+        related_name="memberships",
+    )
+    member_type = models.CharField(max_length=20, choices=MEMBER_TYPE_CHOICES)
+    is_primary = models.BooleanField(default=False)
+    active = models.BooleanField(default=True)
+    start_date = models.DateField()
+    end_date = models.DateField(null=True, blank=True)
+    created_by = models.ForeignKey(
+        "users.User",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="department_memberships_created",
+    )
+    updated_by = models.ForeignKey(
+        "users.User",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="department_memberships_updated",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["department__name", "user__last_name", "user__first_name"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["user"],
+                condition=models.Q(is_primary=True, active=True),
+                name="uniq_active_primary_dept_member_user",
+            ),
+            models.CheckConstraint(
+                check=models.Q(end_date__isnull=True)
+                | models.Q(end_date__gte=models.F("start_date")),
+                name="dept_member_dates_valid",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["department", "member_type", "active"]),
+            models.Index(fields=["user", "active"]),
+        ]
+
+    def __str__(self):
+        return f"{self.department} / {self.user} / {self.member_type}"
+
+    def clean(self):
+        super().clean()
+        role_map = {
+            self.MEMBER_FACULTY: {"faculty"},
+            self.MEMBER_SUPERVISOR: {"supervisor"},
+            self.MEMBER_RESIDENT: {"pg", "resident"},
+        }
+        if self.user_id and self.user.role not in role_map[self.member_type]:
+            raise ValidationError({"member_type": "member_type must match user role."})
+        if self.end_date and self.end_date < self.start_date:
+            raise ValidationError({"end_date": "end_date must be on/after start_date."})
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        return super().save(*args, **kwargs)
+
+
+class HospitalAssignment(models.Model):
+    """Maps users to hospital/department matrix sites."""
+
+    ASSIGNMENT_PRIMARY_TRAINING = "primary_training"
+    ASSIGNMENT_POSTING = "posting"
+    ASSIGNMENT_FACULTY_SITE = "faculty_site"
+    ASSIGNMENT_TYPE_CHOICES = (
+        (ASSIGNMENT_PRIMARY_TRAINING, "Primary Training"),
+        (ASSIGNMENT_POSTING, "Posting"),
+        (ASSIGNMENT_FACULTY_SITE, "Faculty Site"),
+    )
+
+    user = models.ForeignKey(
+        "users.User", on_delete=models.CASCADE, related_name="hospital_assignments"
+    )
+    hospital_department = models.ForeignKey(
+        "rotations.HospitalDepartment",
+        on_delete=models.CASCADE,
+        related_name="assignments",
+    )
+    assignment_type = models.CharField(max_length=30, choices=ASSIGNMENT_TYPE_CHOICES)
+    start_date = models.DateField()
+    end_date = models.DateField(null=True, blank=True)
+    active = models.BooleanField(default=True)
+    created_by = models.ForeignKey(
+        "users.User",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="hospital_assignments_created",
+    )
+    updated_by = models.ForeignKey(
+        "users.User",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="hospital_assignments_updated",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["hospital_department__hospital__name", "user__last_name"]
+        constraints = [
+            models.CheckConstraint(
+                check=models.Q(end_date__isnull=True)
+                | models.Q(end_date__gte=models.F("start_date")),
+                name="hospital_assignment_dates_valid",
+            )
+        ]
+        indexes = [
+            models.Index(fields=["user", "active"]),
+            models.Index(fields=["hospital_department", "active"]),
+        ]
+
+    def __str__(self):
+        return f"{self.user} @ {self.hospital_department}"
+
+    def clean(self):
+        super().clean()
+        if self.end_date and self.end_date < self.start_date:
+            raise ValidationError({"end_date": "end_date must be on/after start_date."})
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        return super().save(*args, **kwargs)
+
+
+class SupervisorResidentLink(models.Model):
+    """Tracks dated supervisor/faculty to resident links."""
+
+    supervisor_user = models.ForeignKey(
+        "users.User",
+        on_delete=models.CASCADE,
+        related_name="supervisor_links",
+    )
+    resident_user = models.ForeignKey(
+        "users.User",
+        on_delete=models.CASCADE,
+        related_name="resident_links",
+    )
+    department = models.ForeignKey(
+        "academics.Department",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="supervision_links",
+    )
+    start_date = models.DateField()
+    end_date = models.DateField(null=True, blank=True)
+    active = models.BooleanField(default=True)
+    created_by = models.ForeignKey(
+        "users.User",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="supervision_links_created",
+    )
+    updated_by = models.ForeignKey(
+        "users.User",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="supervision_links_updated",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-active", "resident_user__last_name"]
+        constraints = [
+            models.CheckConstraint(
+                check=models.Q(end_date__isnull=True)
+                | models.Q(end_date__gte=models.F("start_date")),
+                name="supervision_link_dates_valid",
+            ),
+            models.UniqueConstraint(
+                fields=["supervisor_user", "resident_user", "department"],
+                condition=models.Q(active=True),
+                name="uniq_active_supervision_link",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["supervisor_user", "active"]),
+            models.Index(fields=["resident_user", "active"]),
+            models.Index(fields=["department", "active"]),
+        ]
+
+    def __str__(self):
+        return f"{self.supervisor_user} -> {self.resident_user}"
+
+    def clean(self):
+        super().clean()
+        if self.supervisor_user_id and self.supervisor_user.role not in {"supervisor", "faculty"}:
+            raise ValidationError(
+                {"supervisor_user": "Supervisor must have supervisor/faculty role."}
+            )
+        if self.resident_user_id and self.resident_user.role not in {"pg", "resident"}:
+            raise ValidationError({"resident_user": "Resident must have pg/resident role."})
+        if (
+            self.supervisor_user_id
+            and self.resident_user_id
+            and self.supervisor_user_id == self.resident_user_id
+        ):
+            raise ValidationError(
+                {"resident_user": "Supervisor and resident must be different users."}
+            )
+        if self.end_date and self.end_date < self.start_date:
+            raise ValidationError({"end_date": "end_date must be on/after start_date."})
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        return super().save(*args, **kwargs)
+
+
+class HODAssignment(models.Model):
+    """Tracks dated HOD assignment per department."""
+
+    department = models.ForeignKey(
+        "academics.Department",
+        on_delete=models.CASCADE,
+        related_name="hod_assignments",
+    )
+    hod_user = models.ForeignKey(
+        "users.User",
+        on_delete=models.CASCADE,
+        related_name="hod_assignments",
+    )
+    start_date = models.DateField()
+    end_date = models.DateField(null=True, blank=True)
+    active = models.BooleanField(default=True)
+    created_by = models.ForeignKey(
+        "users.User",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="hod_assignments_created",
+    )
+    updated_by = models.ForeignKey(
+        "users.User",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="hod_assignments_updated",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["department__name", "-start_date"]
+        constraints = [
+            models.CheckConstraint(
+                check=models.Q(end_date__isnull=True)
+                | models.Q(end_date__gte=models.F("start_date")),
+                name="hod_assignment_dates_valid",
+            ),
+            models.UniqueConstraint(
+                fields=["department"],
+                condition=models.Q(active=True),
+                name="uniq_active_hod_assignment_per_department",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["department", "active"]),
+            models.Index(fields=["hod_user", "active"]),
+        ]
+
+    def __str__(self):
+        return f"HOD<{self.department}>: {self.hod_user}"
+
+    def clean(self):
+        super().clean()
+        if self.hod_user_id and self.hod_user.role not in {"faculty", "supervisor"}:
+            raise ValidationError({"hod_user": "HOD must have faculty/supervisor role."})
+        if self.end_date and self.end_date < self.start_date:
+            raise ValidationError({"end_date": "end_date must be on/after start_date."})
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        return super().save(*args, **kwargs)
 
     def get_documents_submitted_count(self):
         """Get count of documents submitted by this PG"""

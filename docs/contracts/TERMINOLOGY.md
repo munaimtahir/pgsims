@@ -10,6 +10,9 @@ These are user-facing terms. Do not change once pilot begins.
 - **Home Hospital**: trainee’s primary hospital until graduation
 - **Home Department**: trainee’s primary department until graduation
 - **Rotation**: time-bounded posting in a (Hospital, Department) pair
+- **Resident**: postgraduate trainee role (legacy `pg` remains accepted)
+- **Faculty**: senior academic role that may supervise residents and hold HOD assignment
+- **HOD**: active head-of-department assignment tracked with effective dates
 
 Notes:
 - UI displays **Submitted** even if backend enum is `pending`.

@@ -60,7 +60,9 @@ def home_view(request):
                     # Role-based redirection
                     if user.is_admin():
                         messages.success(request, f"Welcome back, Admin {user.get_display_name()}!")
-                        return redirect("users:admin_dashboard")  # Redirect to admin dashboard with navigation
+                        return redirect(
+                            "users:admin_dashboard"
+                        )  # Redirect to admin dashboard with navigation
                     elif user.is_supervisor():
                         messages.success(request, f"Welcome back, Dr. {user.get_display_name()}!")
                         return redirect("users:supervisor_dashboard")
@@ -136,6 +138,7 @@ urlpatterns = [
     path("api/rotations/", include("sims.rotations.api_urls")),
     path("api/certificates/", include("sims.certificates.api_urls")),
     path("api/attendance/", include("sims.attendance.urls")),
+    path("api/", include("sims.users.userbase_urls")),
     path("api/users/", include("sims.users.api_user_urls")),
     # New apps
     path("academics/", include("sims.academics.urls")),

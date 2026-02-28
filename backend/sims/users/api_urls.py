@@ -4,7 +4,7 @@ API URLs for JWT authentication endpoints.
 
 from django.urls import path
 from rest_framework_simplejwt.views import TokenRefreshView
-from . import api_views
+from . import api_views, userbase_views
 
 app_name = "auth_api"
 
@@ -16,6 +16,7 @@ urlpatterns = [
     # User registration
     path("register/", api_views.register_view, name="register"),
     # User profile
+    path("me/", userbase_views.AuthMeView.as_view(), name="me"),
     path("profile/", api_views.user_profile_view, name="profile"),
     path("profile/update/", api_views.update_profile_view, name="profile_update"),
     # Password management

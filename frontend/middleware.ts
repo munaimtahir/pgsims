@@ -1,6 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-type Role = 'pg' | 'supervisor' | 'admin' | 'utrmc_user' | 'utrmc_admin';
+type Role =
+  | 'pg'
+  | 'resident'
+  | 'supervisor'
+  | 'faculty'
+  | 'admin'
+  | 'utrmc_user'
+  | 'utrmc_admin';
 
 function decodeJwtPayload(token: string | undefined): Record<string, unknown> | null {
   if (!token) return null;
@@ -25,8 +32,10 @@ function isExpired(expEpochSeconds: number | null): boolean {
 function getRoleHome(role?: string | null) {
   switch (role) {
     case 'pg':
+    case 'resident':
       return '/dashboard/pg';
     case 'supervisor':
+    case 'faculty':
       return '/dashboard/supervisor';
     case 'admin':
       return '/dashboard/admin';
@@ -40,8 +49,10 @@ function getRoleHome(role?: string | null) {
 
 function roleAllowedForPath(pathname: string, role: string | null): boolean {
   if (!role) return false;
-  if (pathname.startsWith('/dashboard/pg')) return role === 'pg' || role === 'admin';
-  if (pathname.startsWith('/dashboard/supervisor')) return role === 'supervisor' || role === 'admin';
+  if (pathname.startsWith('/dashboard/pg')) return role === 'pg' || role === 'resident' || role === 'admin';
+  if (pathname.startsWith('/dashboard/supervisor')) {
+    return role === 'supervisor' || role === 'faculty' || role === 'admin';
+  }
   if (pathname.startsWith('/dashboard/admin')) return role === 'admin';
   if (pathname.startsWith('/dashboard/utrmc')) {
     return role === 'utrmc_user' || role === 'utrmc_admin' || role === 'admin';

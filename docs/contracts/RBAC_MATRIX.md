@@ -69,6 +69,31 @@ This contract defines authoritative backend authorization behavior. Frontend rou
 - Read (`list`, `retrieve`): any authenticated role
 - Write (`create`, `update`, `delete`): `utrmc_admin` primary; `admin` allowed for incident recovery
 
+### Userbase + Org Graph (API)
+#### User management (`/api/users/*`)
+- `admin`, `utrmc_admin`
+  - list/create/update userbase users: **allowed**
+- `supervisor`, `faculty`, `pg`/`resident`, `utrmc_user`
+  - list/create/update userbase users: **forbidden**
+  - retrieve own user record only: **allowed**
+
+#### Profiles (`/api/residents/*`, `/api/staff/*`)
+- `admin`, `utrmc_admin`: full CRUD scope
+- non-manager users: retrieve own profile only
+
+#### Membership/assignment/linking
+- `/api/department-memberships/*`
+- `/api/hospital-assignments/*`
+- `/api/supervision-links/*`
+- `/api/hod-assignments/*`
+  - `admin`, `utrmc_admin`: **allowed**
+  - other roles: **forbidden**
+
+#### Roster reads (`/api/departments/{id}/roster/`)
+- `admin`, `utrmc_admin`, `utrmc_user`: **allowed**
+- `supervisor`, `faculty`: **allowed** for own active department memberships
+- `pg`/`resident`: **allowed** for own active resident membership departments
+
 ## Notes
 - Backend queryset scoping + object-level checks are the source of truth.
 - Frontend middleware redirects improve UX but do not grant access.
