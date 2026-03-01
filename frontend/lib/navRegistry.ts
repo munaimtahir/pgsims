@@ -57,6 +57,7 @@ export const NAV_SECTIONS: NavSection[] = [
     items: [
       { label: 'Overview', href: '/dashboard/supervisor', icon: 'home' },
       { label: 'Research Approvals', href: '/dashboard/supervisor/research-approvals', icon: 'clipboard-check' },
+      { label: 'My Residents', href: '/dashboard/supervisor', icon: 'users' },
     ],
   },
 
@@ -66,6 +67,7 @@ export const NAV_SECTIONS: NavSection[] = [
     allowedRoles: ['pg', 'resident'],
     items: [
       { label: 'My Dashboard', href: '/dashboard/resident', icon: 'home' },
+      { label: 'My Schedule', href: '/dashboard/resident/schedule', icon: 'calendar' },
       { label: 'Academic Progress', href: '/dashboard/resident/progress', icon: 'chart-bar' },
       { label: 'Research', href: '/dashboard/resident/research', icon: 'beaker' },
       { label: 'Thesis', href: '/dashboard/resident/thesis', icon: 'document-text' },

@@ -6,26 +6,6 @@ Provides reusable fixtures for all test modules.
 import pytest
 from django.test import Client
 
-from sims.tests.factories.user_factories import AdminFactory, PGFactory, SupervisorFactory
-
-
-@pytest.fixture
-def admin_user(db):
-    """Create an admin user."""
-    return AdminFactory()
-
-
-@pytest.fixture
-def supervisor(db):
-    """Create a supervisor user with required specialty."""
-    return SupervisorFactory()
-
-
-@pytest.fixture
-def pg_user(db, supervisor):
-    """Create a PG user with all required fields."""
-    return PGFactory(supervisor=supervisor)
-
 
 @pytest.fixture
 def client_auth_admin(admin_user):

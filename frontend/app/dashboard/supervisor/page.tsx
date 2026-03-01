@@ -1,75 +1,124 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { useAuthStore } from '@/store/authStore';
+import Link from 'next/link';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
+import { trainingApi, SupervisorSummary } from '@/lib/api/training';
 
-import apiClient from '@/lib/api/client';
-
-interface Rotation {
-  id: number;
-  pg?: { username?: string; full_name?: string };
-  pg_username?: string;
-  department?: { name?: string } | string;
-  hospital?: { name?: string } | string;
-  start_date?: string;
-  end_date?: string;
-  status?: string;
+function CountCard({ label, count, color }: { label: string; count: number; color: string }) {
+  return (
+    <div className={`rounded-xl border p-4 flex flex-col ${color}`}>
+      <span className="text-3xl font-bold">{count}</span>
+      <span className="text-sm mt-1 opacity-80">{label}</span>
+    </div>
+  );
 }
 
-export default function SupervisorDashboardPage() {
-  const { user } = useAuthStore();
-  const [rotations, setRotations] = useState<Rotation[]>([]);
+function StatusBadge({ status }: { status: string }) {
+  const map: Record<string, string> = {
+    ELIGIBLE: 'bg-green-100 text-green-800',
+    NOT_READY: 'bg-red-100 text-red-700',
+    PARTIALLY_READY: 'bg-yellow-100 text-yellow-700',
+    APPROVED_BY_SUPERVISOR: 'bg-green-100 text-green-800',
+    SUBMITTED_TO_SUPERVISOR: 'bg-yellow-100 text-yellow-700',
+    SUBMITTED_TO_UNIVERSITY: 'bg-blue-100 text-blue-700',
+    ACCEPTED_BY_UNIVERSITY: 'bg-green-100 text-green-800',
+    DRAFT: 'bg-gray-100 text-gray-600',
+  };
+  return <span className={`px-2 py-0.5 rounded text-xs font-medium ${map[status] || 'bg-gray-100 text-gray-600'}`}>{status.replace(/_/g, ' ')}</span>;
+}
+
+export default function SupervisorHomePage() {
+  const [summary, setSummary] = useState<SupervisorSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   useEffect(() => {
-    apiClient.get('/api/supervisor/rotations/pending/')
-      .then(r => {
-        const data = r.data;
-        setRotations(Array.isArray(data) ? data : data.results || []);
-      })
-      .catch(() => setError('Failed to load pending rotations'))
+    trainingApi.getSupervisorSummary()
+      .then(setSummary)
+      .catch(() => setError('Failed to load supervisor summary'))
       .finally(() => setLoading(false));
   }, []);
 
-  function getName(v: any): string {
-    if (!v) return '—';
-    if (typeof v === 'object') return v.name || v.full_name || v.username || '—';
-    return String(v);
-  }
-
   return (
-    <ProtectedRoute allowedRoles={['supervisor', 'faculty']}>
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Supervisor Dashboard</h1>
-          <p className="text-gray-600 mb-6">Welcome, {user?.full_name || user?.username || 'Supervisor'}</p>
+    <ProtectedRoute allowedRoles={['supervisor', 'faculty', 'admin', 'utrmc_admin']}>
+      <div className="max-w-6xl mx-auto">
+        <h1 className="text-2xl font-bold text-gray-900 mb-6">Supervisor Dashboard</h1>
 
-          <h2 className="text-lg font-semibold text-gray-800 mb-3">Pending Rotations</h2>
-          {loading && <p className="text-gray-500">Loading...</p>}
-          {error && <p className="text-red-600">{error}</p>}
-          {!loading && !error && (
-            <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-              <table className="w-full text-sm">
-                <thead className="bg-gray-50">
-                  <tr>{['Resident','Department','Hospital','Start','End','Status'].map(h=><th key={h} className="text-left px-4 py-2 font-medium text-gray-600">{h}</th>)}</tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100">
-                  {rotations.length === 0 && <tr><td colSpan={6} className="px-4 py-4 text-center text-gray-400">No pending rotations</td></tr>}
-                  {rotations.map(r=>(
-                    <tr key={r.id} className="hover:bg-gray-50">
-                      <td className="px-4 py-2">{getName(r.pg)||r.pg_username||'—'}</td>
-                      <td className="px-4 py-2">{getName(r.department)}</td>
-                      <td className="px-4 py-2">{getName(r.hospital)}</td>
-                      <td className="px-4 py-2 text-gray-500 text-xs">{r.start_date||'—'}</td>
-                      <td className="px-4 py-2 text-gray-500 text-xs">{r.end_date||'—'}</td>
-                      <td className="px-4 py-2"><span className="px-2 py-0.5 bg-yellow-50 text-yellow-700 rounded text-xs">{r.status||'pending'}</span></td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
+        {loading && <div className="flex justify-center py-16"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600" /></div>}
+        {error && <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg p-4">{error}</div>}
+
+        {summary && (
+          <div className="space-y-8">
+            {/* Pending Inbox */}
+            <section>
+              <h2 className="text-lg font-semibold text-gray-800 mb-3">Pending Actions</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <Link href="/dashboard/supervisor/research-approvals">
+                  <CountCard
+                    label="Research Approvals"
+                    count={summary.pending.research_approvals}
+                    color="bg-yellow-50 border-yellow-200 text-yellow-900 hover:bg-yellow-100 cursor-pointer transition"
+                  />
+                </Link>
+                <CountCard
+                  label="Rotation Approvals"
+                  count={summary.pending.rotation_approvals}
+                  color="bg-blue-50 border-blue-200 text-blue-900"
+                />
+                <CountCard
+                  label="Leave Approvals"
+                  count={summary.pending.leave_approvals}
+                  color="bg-orange-50 border-orange-200 text-orange-900"
+                />
+              </div>
+            </section>
+
+            {/* Residents Table */}
+            <section>
+              <h2 className="text-lg font-semibold text-gray-800 mb-3">My Residents</h2>
+              {summary.residents.length === 0 ? (
+                <div className="text-center py-10 text-gray-400 bg-gray-50 rounded-xl border border-gray-200">
+                  No residents assigned to you yet.
+                </div>
+              ) : (
+                <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+                  <table className="w-full text-sm">
+                    <thead className="bg-gray-50 text-gray-600 text-xs uppercase tracking-wider">
+                      <tr>
+                        <th className="px-4 py-3 text-left">Resident</th>
+                        <th className="px-4 py-3 text-left">Program</th>
+                        <th className="px-4 py-3 text-left">Rotation</th>
+                        <th className="px-4 py-3 text-left">IMM</th>
+                        <th className="px-4 py-3 text-left">Final</th>
+                        <th className="px-4 py-3 text-left">Research</th>
+                        <th className="px-4 py-3 text-left"></th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100">
+                      {summary.residents.map(r => (
+                        <tr key={r.id} className="hover:bg-gray-50 transition">
+                          <td className="px-4 py-3 font-medium text-gray-900">{r.name}</td>
+                          <td className="px-4 py-3 text-gray-600">{r.program}</td>
+                          <td className="px-4 py-3 text-gray-600 text-xs">{r.current_rotation || <span className="text-gray-400">None</span>}</td>
+                          <td className="px-4 py-3"><StatusBadge status={r.imm_status} /></td>
+                          <td className="px-4 py-3"><StatusBadge status={r.final_status} /></td>
+                          <td className="px-4 py-3"><StatusBadge status={r.research_status} /></td>
+                          <td className="px-4 py-3">
+                            <Link href={`/dashboard/supervisor/residents/${r.id}/progress`}
+                              className="text-indigo-600 hover:underline text-xs font-medium">
+                              View Progress →
+                            </Link>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </section>
+          </div>
+        )}
+      </div>
     </ProtectedRoute>
   );
 }

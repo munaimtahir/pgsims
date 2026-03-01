@@ -1130,3 +1130,409 @@ class SystemSettingsView(APIView):
             "WORKSHOP_MANAGEMENT_ENABLED": getattr(settings, "WORKSHOP_MANAGEMENT_ENABLED", False),
             "ANALYTICS_ENABLED": getattr(settings, "ANALYTICS_ENABLED", True),
         })
+
+
+# =============================================================================
+# Phase 6B/6C — Resident & Supervisor Summary Endpoints
+# =============================================================================
+
+class ResidentSummaryView(APIView):
+    """Single-call summary for the resident command-center dashboard."""
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        from django.utils import timezone
+        user = request.user
+        if not _is_resident(user) and not _is_admin_or_utrmc_admin(user):
+            return Response({"detail": "Resident access required."}, status=403)
+
+        rtr = _get_active_rtr(user)
+        today = timezone.now().date()
+
+        # --- Training record ---
+        training_data = {
+            "program_code": rtr.program.code,
+            "program_name": rtr.program.name,
+            "degree_type": rtr.program.degree_type,
+            "start_date": rtr.start_date.isoformat(),
+            "current_month_index": rtr.current_month_index(),
+        }
+
+        # --- Rotations (current + next) ---
+        rotations_qs = RotationAssignment.objects.filter(
+            resident_training=rtr,
+            status__in={
+                RotationAssignment.STATUS_ACTIVE,
+                RotationAssignment.STATUS_APPROVED,
+                RotationAssignment.STATUS_SUBMITTED,
+                RotationAssignment.STATUS_DRAFT,
+                RotationAssignment.STATUS_COMPLETED,
+            },
+        ).select_related(
+            "hospital_department__hospital",
+            "hospital_department__department",
+        ).order_by("start_date")
+
+        current_rotation = None
+        next_rotation = None
+        for r in rotations_qs:
+            active = r.status in {RotationAssignment.STATUS_ACTIVE, RotationAssignment.STATUS_APPROVED}
+            if active and r.start_date <= today and r.end_date >= today:
+                current_rotation = {
+                    "id": r.id,
+                    "department": r.hospital_department.department.name,
+                    "hospital": r.hospital_department.hospital.name,
+                    "start_date": r.start_date.isoformat(),
+                    "end_date": r.end_date.isoformat(),
+                    "status": r.status,
+                }
+            elif active and r.start_date > today and next_rotation is None:
+                next_rotation = {
+                    "id": r.id,
+                    "department": r.hospital_department.department.name,
+                    "hospital": r.hospital_department.hospital.name,
+                    "start_date": r.start_date.isoformat(),
+                    "end_date": r.end_date.isoformat(),
+                    "status": r.status,
+                }
+
+        # All rotations for schedule (chronological)
+        all_rotations = []
+        for r in rotations_qs:
+            all_rotations.append({
+                "id": r.id,
+                "department": r.hospital_department.department.name,
+                "hospital": r.hospital_department.hospital.name,
+                "start_date": r.start_date.isoformat(),
+                "end_date": r.end_date.isoformat(),
+                "status": r.status,
+            })
+
+        # --- Leaves ---
+        leaves_qs = LeaveRequest.objects.filter(resident_training=rtr)
+        leaves_active = leaves_qs.filter(status=LeaveRequest.STATUS_APPROVED).count()
+        leaves_pending = leaves_qs.filter(status=LeaveRequest.STATUS_SUBMITTED).count()
+        leaves_list = list(
+            leaves_qs.values("id", "leave_type", "start_date", "end_date", "status")
+            .order_by("-start_date")
+        )
+        for item in leaves_list:
+            if item["start_date"]:
+                item["start_date"] = item["start_date"].isoformat()
+            if item["end_date"]:
+                item["end_date"] = item["end_date"].isoformat()
+
+        # --- Postings ---
+        postings_qs = DeputationPosting.objects.filter(resident_training=rtr)
+        postings_active = postings_qs.filter(status=DeputationPosting.STATUS_APPROVED).count()
+        postings_pending = postings_qs.filter(status=DeputationPosting.STATUS_SUBMITTED).count()
+
+        # --- Research ---
+        try:
+            research = rtr.research_project
+            research_data = {
+                "status": research.status,
+                "supervisor_name": (
+                    research.supervisor.get_full_name() or research.supervisor.username
+                ) if research.supervisor else None,
+                "synopsis_uploaded": bool(research.synopsis_file),
+                "university_submitted": research.status in (
+                    ResidentResearchProject.STATUS_SUBMITTED_UNIVERSITY,
+                    ResidentResearchProject.STATUS_ACCEPTED_UNIVERSITY,
+                ),
+            }
+        except ResidentResearchProject.DoesNotExist:
+            research_data = {
+                "status": None,
+                "supervisor_name": None,
+                "synopsis_uploaded": False,
+                "university_submitted": False,
+            }
+
+        # --- Thesis ---
+        try:
+            thesis = rtr.thesis
+            thesis_data = {
+                "status": thesis.status,
+                "submitted_at": thesis.submitted_at.isoformat() if thesis.submitted_at else None,
+            }
+        except ResidentThesis.DoesNotExist:
+            thesis_data = {"status": ResidentThesis.STATUS_NOT_STARTED, "submitted_at": None}
+
+        # --- Workshops ---
+        completions_qs = ResidentWorkshopCompletion.objects.filter(
+            resident_training_record=rtr
+        ).select_related("workshop").order_by("completed_at")
+        completions = list(completions_qs)
+
+        milestones = ProgramMilestone.objects.filter(
+            program=rtr.program, is_active=True
+        ).prefetch_related("workshop_requirements")
+        imm_ws_req = 0
+        final_ws_req = 0
+        for ms in milestones:
+            total = sum(wr.required_count for wr in ms.workshop_requirements.all())
+            if ms.code == "IMM":
+                imm_ws_req = total
+            elif ms.code == "FINAL":
+                final_ws_req = total
+
+        workshops_data = {
+            "total_completed": len(completions),
+            "required_for_imm": imm_ws_req,
+            "required_for_final": final_ws_req,
+            "completed_list": [
+                {
+                    "id": c.id,
+                    "workshop_name": c.workshop.name,
+                    "completed_at": c.completed_at.isoformat() if c.completed_at else None,
+                }
+                for c in completions
+            ],
+        }
+
+        # --- Eligibility (recompute + snapshot) ---
+        try:
+            from sims.training.eligibility import recompute_for_record
+            recompute_for_record(rtr)
+        except Exception:
+            pass
+
+        eligibility_qs = ResidentMilestoneEligibility.objects.filter(
+            resident_training_record=rtr
+        ).select_related("milestone")
+
+        imm_eli = {"status": None, "reasons": []}
+        final_eli = {"status": None, "reasons": []}
+        for eli in eligibility_qs:
+            reasons = sorted(eli.reasons_json) if isinstance(eli.reasons_json, list) else []
+            entry = {"status": eli.status, "reasons": reasons}
+            if eli.milestone.code == "IMM":
+                imm_eli = entry
+            elif eli.milestone.code == "FINAL":
+                final_eli = entry
+
+        return Response({
+            "training_record": training_data,
+            "rotation": {"current": current_rotation, "next": next_rotation},
+            "schedule": all_rotations,
+            "leaves": {
+                "active_count": leaves_active,
+                "pending_count": leaves_pending,
+                "list": leaves_list,
+            },
+            "postings": {"active_count": postings_active, "pending_count": postings_pending},
+            "research": research_data,
+            "thesis": thesis_data,
+            "workshops": workshops_data,
+            "eligibility": {"IMM": imm_eli, "FINAL": final_eli},
+        })
+
+
+class SupervisorSummaryView(APIView):
+    """Single-call summary for the supervisor dashboard."""
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        from django.utils import timezone
+        user = request.user
+        if not _is_supervisor_or_hod(user) and not _is_admin_or_utrmc_admin(user):
+            return Response({"detail": "Supervisor access required."}, status=403)
+
+        # ---- Determine scoped resident users ----
+        from sims.users.models import SupervisorResidentLink, User as SIMSUser
+
+        if _is_admin_or_utrmc_admin(user):
+            resident_users = list(
+                SIMSUser.objects.filter(role__in=["pg", "resident"], is_active=True)
+            )
+        else:
+            links = SupervisorResidentLink.objects.filter(
+                supervisor_user=user, active=True
+            ).select_related("resident_user")
+            resident_users = [ln.resident_user for ln in links]
+
+        resident_ids = [u.id for u in resident_users]
+
+        # ---- Active training records ----
+        rtrs = list(
+            ResidentTrainingRecord.objects.filter(
+                resident_user_id__in=resident_ids, active=True
+            ).select_related("resident_user", "program")
+        )
+        rtr_ids = [r.id for r in rtrs]
+        rtr_by_id = {r.id: r for r in rtrs}
+
+        # ---- Pending approval counts ----
+        pending_rotations = RotationAssignment.objects.filter(
+            resident_training_id__in=rtr_ids,
+            status=RotationAssignment.STATUS_SUBMITTED,
+        ).count()
+
+        pending_leaves = LeaveRequest.objects.filter(
+            resident_training_id__in=rtr_ids,
+            status=LeaveRequest.STATUS_SUBMITTED,
+        ).count()
+
+        if _is_admin_or_utrmc_admin(user):
+            pending_research = ResidentResearchProject.objects.filter(
+                status=ResidentResearchProject.STATUS_SUBMITTED_SUPERVISOR,
+            ).count()
+        else:
+            pending_research = ResidentResearchProject.objects.filter(
+                status=ResidentResearchProject.STATUS_SUBMITTED_SUPERVISOR,
+                resident_training_record_id__in=rtr_ids,
+            ).count()
+
+        # ---- Current rotations ----
+        today = timezone.now().date()
+        active_statuses = {RotationAssignment.STATUS_ACTIVE, RotationAssignment.STATUS_APPROVED}
+        cur_rotations = RotationAssignment.objects.filter(
+            resident_training_id__in=rtr_ids,
+            status__in=active_statuses,
+            start_date__lte=today,
+            end_date__gte=today,
+        ).select_related("hospital_department__department", "hospital_department__hospital")
+        rotation_map = {
+            r.resident_training_id: (
+                f"{r.hospital_department.department.name}"
+                f" @ {r.hospital_department.hospital.name}"
+            )
+            for r in cur_rotations
+        }
+
+        # ---- Eligibility ----
+        eligibilities = ResidentMilestoneEligibility.objects.filter(
+            resident_training_record_id__in=rtr_ids
+        ).select_related("milestone")
+        eli_map = {}
+        for eli in eligibilities:
+            eli_map.setdefault(eli.resident_training_record_id, {})[eli.milestone.code] = eli.status
+
+        # ---- Research status ----
+        research_qs = ResidentResearchProject.objects.filter(
+            resident_training_record_id__in=rtr_ids
+        )
+        research_map = {rp.resident_training_record_id: rp.status for rp in research_qs}
+
+        # ---- Build residents list (sorted by display name) ----
+        rtrs_sorted = sorted(
+            rtrs,
+            key=lambda r: (r.resident_user.get_full_name() or r.resident_user.username).lower(),
+        )
+        residents_list = []
+        for rtr in rtrs_sorted:
+            rtr_eli = eli_map.get(rtr.id, {})
+            residents_list.append({
+                "id": rtr.resident_user_id,
+                "rtr_id": rtr.id,
+                "name": rtr.resident_user.get_full_name() or rtr.resident_user.username,
+                "program": rtr.program.name,
+                "current_rotation": rotation_map.get(rtr.id),
+                "imm_status": rtr_eli.get("IMM"),
+                "final_status": rtr_eli.get("FINAL"),
+                "research_status": research_map.get(rtr.id),
+            })
+
+        return Response({
+            "pending": {
+                "rotation_approvals": pending_rotations,
+                "leave_approvals": pending_leaves,
+                "research_approvals": pending_research,
+            },
+            "residents": residents_list,
+        })
+
+
+class SupervisorResidentProgressView(APIView):
+    """Read-only progress snapshot for a specific resident (supervisor/admin view)."""
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, resident_id):
+        user = request.user
+        if not _is_supervisor_or_hod(user) and not _is_admin_or_utrmc_admin(user):
+            return Response({"detail": "Permission denied."}, status=403)
+
+        from django.shortcuts import get_object_or_404
+        from sims.users.models import User as SIMSUser
+        resident = get_object_or_404(SIMSUser, pk=resident_id)
+        rtr = get_object_or_404(ResidentTrainingRecord, resident_user=resident, active=True)
+
+        from django.utils import timezone
+        today = timezone.now().date()
+
+        # Training record
+        training_data = {
+            "program_code": rtr.program.code,
+            "program_name": rtr.program.name,
+            "degree_type": rtr.program.degree_type,
+            "start_date": rtr.start_date.isoformat(),
+            "current_month_index": rtr.current_month_index(),
+        }
+
+        # Current rotation
+        current_rotation = None
+        cur = RotationAssignment.objects.filter(
+            resident_training=rtr,
+            status__in={RotationAssignment.STATUS_ACTIVE, RotationAssignment.STATUS_APPROVED},
+            start_date__lte=today,
+            end_date__gte=today,
+        ).select_related("hospital_department__department", "hospital_department__hospital").first()
+        if cur:
+            current_rotation = {
+                "department": cur.hospital_department.department.name,
+                "hospital": cur.hospital_department.hospital.name,
+                "start_date": cur.start_date.isoformat(),
+                "end_date": cur.end_date.isoformat(),
+                "status": cur.status,
+            }
+
+        # Research
+        try:
+            research = rtr.research_project
+            research_data = {"status": research.status, "title": research.title}
+        except ResidentResearchProject.DoesNotExist:
+            research_data = {"status": None, "title": None}
+
+        # Thesis
+        try:
+            thesis = rtr.thesis
+            thesis_data = {"status": thesis.status}
+        except ResidentThesis.DoesNotExist:
+            thesis_data = {"status": ResidentThesis.STATUS_NOT_STARTED}
+
+        # Workshops
+        ws_count = ResidentWorkshopCompletion.objects.filter(resident_training_record=rtr).count()
+
+        # Eligibility
+        try:
+            from sims.training.eligibility import recompute_for_record
+            recompute_for_record(rtr)
+        except Exception:
+            pass
+        eligibilities = ResidentMilestoneEligibility.objects.filter(
+            resident_training_record=rtr
+        ).select_related("milestone")
+        imm_eli = {"status": None, "reasons": []}
+        final_eli = {"status": None, "reasons": []}
+        for eli in eligibilities:
+            reasons = sorted(eli.reasons_json) if isinstance(eli.reasons_json, list) else []
+            entry = {"status": eli.status, "reasons": reasons}
+            if eli.milestone.code == "IMM":
+                imm_eli = entry
+            elif eli.milestone.code == "FINAL":
+                final_eli = entry
+
+        return Response({
+            "resident": {
+                "id": resident.id,
+                "name": resident.get_full_name() or resident.username,
+                "username": resident.username,
+            },
+            "training_record": training_data,
+            "current_rotation": current_rotation,
+            "research": research_data,
+            "thesis": thesis_data,
+            "workshops": {"total_completed": ws_count},
+            "eligibility": {"IMM": imm_eli, "FINAL": final_eli},
+        })

@@ -28,6 +28,10 @@ from .views import (
     UTRMCEligibilityView,
     SupervisorResearchApprovalsView,
     SystemSettingsView,
+    # Phase 6B/6C — Summary endpoints
+    ResidentSummaryView,
+    SupervisorSummaryView,
+    SupervisorResidentProgressView,
 )
 
 router = DefaultRouter()
@@ -67,6 +71,10 @@ urlpatterns = [
     # Supervisor routes
     path("supervisor/rotations/pending/", SupervisorPendingRotationsView.as_view(), name="supervisor-pending-rotations"),
     path("supervisor/research-approvals/", SupervisorResearchApprovalsView.as_view(), name="supervisor-research-approvals"),
+    # Summary endpoints (Phase 6B/6C)
+    path("residents/me/summary/", ResidentSummaryView.as_view(), name="resident-summary"),
+    path("supervisors/me/summary/", SupervisorSummaryView.as_view(), name="supervisor-summary"),
+    path("supervisors/residents/<int:resident_id>/progress/", SupervisorResidentProgressView.as_view(), name="supervisor-resident-progress"),
     # System settings
     path("system/settings/", SystemSettingsView.as_view(), name="system-settings"),
 ]

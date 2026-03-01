@@ -446,3 +446,190 @@ class SystemSettingsAPITests(APITestCase):
         self.assertEqual(resp.status_code, 200)
         self.assertIn("WORKSHOP_MANAGEMENT_ENABLED", resp.data)
         self.assertFalse(resp.data["WORKSHOP_MANAGEMENT_ENABLED"])
+
+
+# =============================================================================
+# Phase 6B/6C Tests — Summary Endpoints
+# =============================================================================
+
+def _make_milestone(program, code, name):
+    """Helper to create a ProgramMilestone for tests."""
+    from sims.training.models import ProgramMilestone
+    ms, _ = ProgramMilestone.objects.get_or_create(
+        program=program, code=code,
+        defaults={"name": name, "is_active": True},
+    )
+    return ms
+
+
+class ResidentSummaryTests(APITestCase):
+    """Tests for GET /api/residents/me/summary/"""
+
+    def setUp(self):
+        dept = Department.objects.create(name="Medicine", code="MED")
+        hospital = Hospital.objects.create(name="Main Hospital", code="MH")
+        self.hd = HospitalDepartment.objects.create(hospital=hospital, department=dept)
+
+        self.prog = TrainingProgram.objects.create(
+            name="FCPS Medicine", code="FCPS-MED", degree_type="fcps", duration_months=60
+        )
+        _make_milestone(self.prog, "IMM", "Intermediate Milestone")
+        _make_milestone(self.prog, "FINAL", "Final Milestone")
+
+        self.resident = _make_user("res_summary", "pg")
+        self.client.force_authenticate(user=self.resident)
+
+        self.rtr = ResidentTrainingRecord.objects.create(
+            resident_user=self.resident,
+            program=self.prog,
+            start_date=date.today() - timedelta(days=60),
+            active=True,
+        )
+
+    def test_summary_returns_correct_structure(self):
+        resp = self.client.get("/api/residents/me/summary/")
+        self.assertEqual(resp.status_code, 200)
+        data = resp.data
+        # Top-level keys deterministic
+        expected_keys = {"training_record", "rotation", "schedule", "leaves", "postings",
+                         "research", "thesis", "workshops", "eligibility"}
+        self.assertEqual(set(data.keys()), expected_keys)
+
+    def test_training_record_fields(self):
+        resp = self.client.get("/api/residents/me/summary/")
+        tr = resp.data["training_record"]
+        self.assertEqual(tr["program_code"], "FCPS-MED")
+        self.assertIn("current_month_index", tr)
+        self.assertIsInstance(tr["current_month_index"], int)
+
+    def test_eligibility_keys(self):
+        resp = self.client.get("/api/residents/me/summary/")
+        eli = resp.data["eligibility"]
+        self.assertIn("IMM", eli)
+        self.assertIn("FINAL", eli)
+
+    def test_unauthenticated_denied(self):
+        self.client.force_authenticate(user=None)
+        resp = self.client.get("/api/residents/me/summary/")
+        self.assertIn(resp.status_code, [401, 403])
+
+    def test_supervisor_denied(self):
+        sup = _make_user("sup_summary_test", "supervisor")
+        self.client.force_authenticate(user=sup)
+        resp = self.client.get("/api/residents/me/summary/")
+        # Supervisor role is rejected by RBAC check before RTR lookup
+        self.assertEqual(resp.status_code, 403)
+
+
+class SupervisorSummaryTests(APITestCase):
+    """Tests for GET /api/supervisors/me/summary/"""
+
+    def setUp(self):
+        dept = Department.objects.create(name="Surgery", code="SURG")
+        hospital = Hospital.objects.create(name="City Hospital", code="CH")
+        self.hd = HospitalDepartment.objects.create(hospital=hospital, department=dept)
+
+        self.prog = TrainingProgram.objects.create(
+            name="FCPS Surgery", code="FCPS-SURG", degree_type="fcps", duration_months=60
+        )
+        self.supervisor = _make_user("sup_summary", "supervisor")
+        self.resident1 = _make_user("res_sup_sum1", "pg")
+        self.resident2 = _make_user("res_sup_sum2", "pg")
+        self.client.force_authenticate(user=self.supervisor)
+
+        from sims.users.models import SupervisorResidentLink
+        SupervisorResidentLink.objects.create(
+            supervisor_user=self.supervisor,
+            resident_user=self.resident1,
+            active=True,
+            start_date=date.today(),
+        )
+
+        self.rtr1 = ResidentTrainingRecord.objects.create(
+            resident_user=self.resident1,
+            program=self.prog,
+            start_date=date.today() - timedelta(days=30),
+            active=True,
+        )
+
+    def test_summary_structure(self):
+        resp = self.client.get("/api/supervisors/me/summary/")
+        self.assertEqual(resp.status_code, 200)
+        data = resp.data
+        self.assertIn("pending", data)
+        self.assertIn("residents", data)
+        pending = data["pending"]
+        self.assertIn("rotation_approvals", pending)
+        self.assertIn("leave_approvals", pending)
+        self.assertIn("research_approvals", pending)
+
+    def test_scoping_only_linked_residents(self):
+        """Supervisor sees only linked residents, not unlinked ones."""
+        resp = self.client.get("/api/supervisors/me/summary/")
+        self.assertEqual(resp.status_code, 200)
+        ids = [r["id"] for r in resp.data["residents"]]
+        self.assertIn(self.resident1.id, ids)
+        self.assertNotIn(self.resident2.id, ids)
+
+    def test_residents_sorted_by_name(self):
+        from sims.users.models import SupervisorResidentLink
+        # Add second resident to same supervisor
+        res_a = _make_user("res_alpha", "pg")
+        res_a.last_name = "Aardvark"; res_a.save()
+        res_z = _make_user("res_zeta", "pg")
+        res_z.last_name = "Zebra"; res_z.save()
+
+        for res in [res_a, res_z]:
+            SupervisorResidentLink.objects.create(
+                supervisor_user=self.supervisor, resident_user=res,
+                active=True, start_date=date.today()
+            )
+            ResidentTrainingRecord.objects.create(
+                resident_user=res, program=self.prog,
+                start_date=date.today() - timedelta(days=10), active=True
+            )
+
+        resp = self.client.get("/api/supervisors/me/summary/")
+        names = [r["name"] for r in resp.data["residents"]]
+        self.assertEqual(names, sorted(names, key=str.lower))
+
+    def test_resident_denied(self):
+        res = _make_user("res_denied_sup", "pg")
+        self.client.force_authenticate(user=res)
+        resp = self.client.get("/api/supervisors/me/summary/")
+        self.assertEqual(resp.status_code, 403)
+
+
+class ResidentProgressViewTests(APITestCase):
+    """Tests for GET /api/supervisors/residents/<id>/progress/"""
+
+    def setUp(self):
+        dept = Department.objects.create(name="Pediatrics", code="PED")
+        hospital = Hospital.objects.create(name="Peds Hospital", code="PH")
+        HospitalDepartment.objects.create(hospital=hospital, department=dept)
+
+        self.prog = TrainingProgram.objects.create(
+            name="FCPS Peds", code="FCPS-PEDS", degree_type="fcps", duration_months=60
+        )
+        self.supervisor = _make_user("sup_progress", "supervisor")
+        self.resident = _make_user("res_progress", "pg")
+        self.rtr = ResidentTrainingRecord.objects.create(
+            resident_user=self.resident,
+            program=self.prog,
+            start_date=date.today() - timedelta(days=90),
+            active=True,
+        )
+
+    def test_supervisor_can_view_progress(self):
+        self.client.force_authenticate(user=self.supervisor)
+        resp = self.client.get(f"/api/supervisors/residents/{self.resident.id}/progress/")
+        self.assertEqual(resp.status_code, 200)
+        data = resp.data
+        self.assertIn("resident", data)
+        self.assertIn("training_record", data)
+        self.assertIn("eligibility", data)
+
+    def test_resident_cannot_view_own_progress(self):
+        self.client.force_authenticate(user=self.resident)
+        resp = self.client.get(f"/api/supervisors/residents/{self.resident.id}/progress/")
+        self.assertEqual(resp.status_code, 403)

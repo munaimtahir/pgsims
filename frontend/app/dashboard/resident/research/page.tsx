@@ -1,159 +1,243 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
-
 import { trainingApi, ResidentResearchProject } from '@/lib/api/training';
+import apiClient from '@/lib/api/client';
+
+const STEPS = [
+  { key: 'topic', label: 'Topic & Supervisor' },
+  { key: 'synopsis', label: 'Upload Synopsis' },
+  { key: 'supervisor', label: 'Submit to Supervisor' },
+  { key: 'approval', label: 'Supervisor Approval' },
+  { key: 'university', label: 'University Submission' },
+];
+
+function stepIndex(project: ResidentResearchProject | null): number {
+  if (!project) return 0;
+  switch (project.status) {
+    case 'DRAFT': return project.synopsis_file ? 2 : (project.title ? 1 : 0);
+    case 'SUBMITTED_TO_SUPERVISOR': return 3;
+    case 'APPROVED_BY_SUPERVISOR': return 3;
+    case 'SUBMITTED_TO_UNIVERSITY': return 4;
+    case 'ACCEPTED_BY_UNIVERSITY': return 4;
+    default: return 0;
+  }
+}
 
 const STATUS_LABELS: Record<string, string> = {
-  draft: 'Draft',
-  submitted_to_supervisor: 'Submitted to Supervisor',
-  approved_by_supervisor: 'Approved by Supervisor',
-  submitted_to_university: 'Submitted to University',
-  accepted_by_university: 'Accepted',
+  DRAFT: 'Draft',
+  SUBMITTED_TO_SUPERVISOR: 'Awaiting Supervisor',
+  APPROVED_BY_SUPERVISOR: 'Approved by Supervisor',
+  SUBMITTED_TO_UNIVERSITY: 'Submitted to University',
+  ACCEPTED_BY_UNIVERSITY: 'Accepted ✓',
 };
 
 export default function ResidentResearchPage() {
   const [project, setProject] = useState<ResidentResearchProject | null>(null);
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
-  const [creating, setCreating] = useState(false);
-  const [form, setForm] = useState({ title: '', topic_area: '' });
-  const [actionLoading, setActionLoading] = useState(false);
+  const [success, setSuccess] = useState('');
+  const [supervisors, setSupervisors] = useState<Array<{ id: number; full_name?: string; username: string }>>([]);
+  const [form, setForm] = useState({ title: '', topic_area: '', supervisor: '' });
+  const fileRef = useRef<HTMLInputElement>(null);
 
-  const load = () => {
-    setLoading(true);
+  const loadProject = () => {
     trainingApi.getMyResearch()
-      .then(setProject)
+      .then((p) => { setProject(p); setForm({ title: p.title, topic_area: p.topic_area, supervisor: String(p.supervisor || '') }); })
       .catch(() => setProject(null))
       .finally(() => setLoading(false));
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    loadProject();
+    apiClient.get('/api/users/?role=supervisor').then(r => {
+      const data = r.data;
+      setSupervisors(Array.isArray(data) ? data : data.results || []);
+    }).catch(() => {});
+  }, []);
 
-  const handleCreate = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
+  const msg = (s: string, isErr = false) => { isErr ? setError(s) : setSuccess(s); setTimeout(() => { setError(''); setSuccess(''); }, 4000); };
+
+  const saveTopicSupervisor = async () => {
+    setSaving(true);
     try {
-      const p = await trainingApi.createResearch(form);
-      setProject(p);
-      setCreating(false);
-    } catch {
-      setError('Failed to create research project.');
-    }
+      if (!project) {
+        const p = await trainingApi.createResearch({ title: form.title, topic_area: form.topic_area, supervisor: form.supervisor ? Number(form.supervisor) : undefined });
+        setProject(p);
+      } else {
+        const p = await trainingApi.patchResearch({ title: form.title, topic_area: form.topic_area, supervisor: form.supervisor ? Number(form.supervisor) : undefined });
+        setProject(p);
+      }
+      msg('Saved');
+    } catch { msg('Save failed', true); } finally { setSaving(false); }
   };
 
-  const handleAction = async (action: string) => {
-    setActionLoading(true);
-    setError('');
+  const uploadSynopsis = async () => {
+    const file = fileRef.current?.files?.[0];
+    if (!file || !project) return;
+    setSaving(true);
     try {
-      const p = await trainingApi.researchAction(action);
-      setProject(p);
-    } catch (err: any) {
-      setError(err?.response?.data?.detail || 'Action failed.');
-    } finally {
-      setActionLoading(false);
-    }
+      const fd = new FormData();
+      fd.append('synopsis_file', file);
+      const r = await apiClient.patch(`/api/my/research/`, fd, { headers: { 'Content-Type': 'multipart/form-data' } });
+      setProject(r.data);
+      msg('Synopsis uploaded');
+    } catch { msg('Upload failed', true); } finally { setSaving(false); }
   };
 
-  const canSubmitToSupervisor = project?.status === 'draft';
-  const canSubmitToUniversity = project?.status === 'approved_by_supervisor';
+  const submitToSupervisor = async () => {
+    setSaving(true);
+    try {
+      const p = await trainingApi.researchAction('submit-to-supervisor');
+      setProject(p);
+      msg('Submitted to supervisor');
+    } catch (e: any) { msg(e?.response?.data?.detail || 'Failed', true); } finally { setSaving(false); }
+  };
+
+  const submitToUniversity = async () => {
+    setSaving(true);
+    try {
+      const p = await trainingApi.researchAction('submit-to-university');
+      setProject(p);
+      msg('Submitted to university');
+    } catch (e: any) { msg(e?.response?.data?.detail || 'Failed', true); } finally { setSaving(false); }
+  };
+
+  const curStep = stepIndex(project);
 
   return (
-    <ProtectedRoute allowedRoles={['resident', 'pg']}>
-        <div className="max-w-3xl mx-auto">
-          <h1 className="text-2xl font-bold text-gray-900 mb-6">Research Project</h1>
-
-          {loading && <p className="text-gray-500">Loading…</p>}
-          {error && <p className="text-red-600 mb-4">{error}</p>}
-
-          {!loading && !project && !creating && (
-            <div className="bg-white border border-gray-200 rounded-lg p-6 text-center">
-              <p className="text-gray-500 mb-4">You have not started a research project yet.</p>
-              <button
-                onClick={() => setCreating(true)}
-                className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
-              >
-                Start Research Project
-              </button>
-            </div>
-          )}
-
-          {creating && (
-            <form onSubmit={handleCreate} className="bg-white border border-gray-200 rounded-lg p-6 space-y-4">
-              <h2 className="font-semibold text-gray-800">New Research Project</h2>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Title *</label>
-                <input
-                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
-                  value={form.title}
-                  onChange={(e) => setForm({ ...form, title: e.target.value })}
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Topic Area</label>
-                <input
-                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
-                  value={form.topic_area}
-                  onChange={(e) => setForm({ ...form, topic_area: e.target.value })}
-                />
-              </div>
-              <div className="flex gap-3">
-                <button type="submit" className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 text-sm">
-                  Create
-                </button>
-                <button type="button" onClick={() => setCreating(false)} className="px-4 py-2 text-sm text-gray-600 hover:text-gray-900">
-                  Cancel
-                </button>
-              </div>
-            </form>
-          )}
-
+    <ProtectedRoute allowedRoles={['pg', 'resident']}>
+      <div className="max-w-3xl mx-auto">
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-2xl font-bold text-gray-900">Research Project</h1>
           {project && (
-            <div className="bg-white border border-gray-200 rounded-lg p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold text-gray-900">{project.title}</h2>
-                <span className="text-xs bg-indigo-100 text-indigo-800 font-medium px-2 py-1 rounded-full">
-                  {STATUS_LABELS[project.status] || project.status_display}
-                </span>
-              </div>
-
-              {project.topic_area && (
-                <p className="text-sm text-gray-600 mb-2">Topic: {project.topic_area}</p>
-              )}
-              {project.supervisor_name && (
-                <p className="text-sm text-gray-600 mb-2">Supervisor: {project.supervisor_name}</p>
-              )}
-              {project.supervisor_feedback && (
-                <div className="bg-yellow-50 border border-yellow-200 rounded p-3 mb-4">
-                  <p className="text-sm font-medium text-yellow-800">Supervisor Feedback</p>
-                  <p className="text-sm text-yellow-700 mt-1">{project.supervisor_feedback}</p>
-                </div>
-              )}
-
-              <div className="flex gap-3 mt-4">
-                {canSubmitToSupervisor && (
-                  <button
-                    disabled={actionLoading}
-                    onClick={() => handleAction('submit-to-supervisor')}
-                    className="px-4 py-2 bg-indigo-600 text-white text-sm rounded-md hover:bg-indigo-700 disabled:opacity-50"
-                  >
-                    Submit to Supervisor
-                  </button>
-                )}
-                {canSubmitToUniversity && (
-                  <button
-                    disabled={actionLoading}
-                    onClick={() => handleAction('submit-to-university')}
-                    className="px-4 py-2 bg-green-600 text-white text-sm rounded-md hover:bg-green-700 disabled:opacity-50"
-                  >
-                    Submit to University
-                  </button>
-                )}
-              </div>
-            </div>
+            <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+              project.status === 'ACCEPTED_BY_UNIVERSITY' ? 'bg-green-100 text-green-800' :
+              project.status === 'APPROVED_BY_SUPERVISOR' ? 'bg-green-100 text-green-800' :
+              project.status === 'SUBMITTED_TO_SUPERVISOR' ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-700'
+            }`}>{STATUS_LABELS[project.status] || project.status}</span>
           )}
         </div>
+
+        {error && <div className="mb-4 bg-red-50 border border-red-200 text-red-700 rounded-lg p-3 text-sm">{error}</div>}
+        {success && <div className="mb-4 bg-green-50 border border-green-200 text-green-700 rounded-lg p-3 text-sm">{success}</div>}
+
+        {/* Stepper */}
+        <div className="flex items-center gap-0 mb-8 overflow-x-auto pb-2">
+          {STEPS.map((s, i) => (
+            <div key={s.key} className="flex items-center flex-shrink-0">
+              <div className="flex flex-col items-center">
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold border-2 ${
+                  i < curStep ? 'bg-indigo-600 border-indigo-600 text-white' :
+                  i === curStep ? 'border-indigo-600 text-indigo-600 bg-white' :
+                  'border-gray-300 text-gray-400 bg-white'
+                }`}>{i < curStep ? '✓' : i + 1}</div>
+                <span className={`text-xs mt-1 whitespace-nowrap ${i === curStep ? 'text-indigo-600 font-semibold' : 'text-gray-500'}`}>{s.label}</span>
+              </div>
+              {i < STEPS.length - 1 && <div className={`h-0.5 w-8 mx-1 mb-4 ${i < curStep ? 'bg-indigo-600' : 'bg-gray-200'}`} />}
+            </div>
+          ))}
+        </div>
+
+        {loading && <div className="flex justify-center py-16"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600" /></div>}
+
+        {!loading && (
+          <div className="space-y-6">
+            {/* Step 1: Topic + Supervisor */}
+            <div className={`bg-white border rounded-xl p-5 ${curStep === 0 || (project && project.status === 'DRAFT') ? 'border-indigo-200 shadow-sm' : 'border-gray-200'}`}>
+              <h2 className="font-semibold text-gray-800 mb-4">Step 1: Research Topic & Supervisor</h2>
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Title *</label>
+                  <input value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
+                    disabled={project?.status !== 'DRAFT' && !!project}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm disabled:bg-gray-50" placeholder="Research title" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Topic Area</label>
+                  <input value={form.topic_area} onChange={e => setForm(f => ({ ...f, topic_area: e.target.value }))}
+                    disabled={project?.status !== 'DRAFT' && !!project}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm disabled:bg-gray-50" placeholder="e.g., Cardiology, Oncology" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Supervisor</label>
+                  <select value={form.supervisor} onChange={e => setForm(f => ({ ...f, supervisor: e.target.value }))}
+                    disabled={project?.status !== 'DRAFT' && !!project}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm disabled:bg-gray-50">
+                    <option value="">— Select supervisor —</option>
+                    {supervisors.map(s => <option key={s.id} value={s.id}>{s.full_name || s.username}</option>)}
+                  </select>
+                </div>
+                {(!project || project.status === 'DRAFT') && (
+                  <button onClick={saveTopicSupervisor} disabled={saving || !form.title}
+                    className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 disabled:opacity-50">
+                    {saving ? 'Saving…' : 'Save'}
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Step 2: Upload Synopsis */}
+            <div className={`bg-white border rounded-xl p-5 ${!project ? 'opacity-50 pointer-events-none' : 'border-gray-200'}`}>
+              <h2 className="font-semibold text-gray-800 mb-4">Step 2: Upload Synopsis</h2>
+              {project?.synopsis_file && (
+                <p className="text-sm text-green-700 mb-3">✓ Synopsis uploaded. <a href={project.synopsis_file} target="_blank" rel="noreferrer" className="underline">View</a></p>
+              )}
+              {project?.status === 'DRAFT' && (
+                <div className="flex items-center gap-3">
+                  <input ref={fileRef} type="file" accept=".pdf,.doc,.docx" className="text-sm" />
+                  <button onClick={uploadSynopsis} disabled={saving}
+                    className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 disabled:opacity-50">
+                    {saving ? 'Uploading…' : 'Upload'}
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Step 3: Submit to Supervisor */}
+            <div className={`bg-white border rounded-xl p-5 ${project?.status === 'DRAFT' && project?.synopsis_file ? 'border-indigo-200' : 'border-gray-200'} ${!project?.synopsis_file ? 'opacity-50 pointer-events-none' : ''}`}>
+              <h2 className="font-semibold text-gray-800 mb-2">Step 3: Submit to Supervisor</h2>
+              {project?.status === 'DRAFT' && project?.synopsis_file && (
+                <button onClick={submitToSupervisor} disabled={saving}
+                  className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 disabled:opacity-50">
+                  {saving ? 'Submitting…' : 'Submit to Supervisor'}
+                </button>
+              )}
+              {project?.status === 'SUBMITTED_TO_SUPERVISOR' && <p className="text-sm text-yellow-700">⏳ Awaiting supervisor review…</p>}
+            </div>
+
+            {/* Step 4: Supervisor Approval */}
+            <div className="bg-white border border-gray-200 rounded-xl p-5">
+              <h2 className="font-semibold text-gray-800 mb-2">Step 4: Supervisor Approval</h2>
+              {project?.status === 'APPROVED_BY_SUPERVISOR' && (
+                <p className="text-sm text-green-700">✓ Approved on {project.synopsis_approved_at?.slice(0, 10)}</p>
+              )}
+              {project?.supervisor_feedback && (
+                <div className="mt-2 bg-gray-50 rounded-lg p-3 text-sm text-gray-700">
+                  <span className="font-medium">Feedback:</span> {project.supervisor_feedback}
+                </div>
+              )}
+              {!project || !['APPROVED_BY_SUPERVISOR', 'SUBMITTED_TO_UNIVERSITY', 'ACCEPTED_BY_UNIVERSITY'].includes(project.status) && !project?.supervisor_feedback && (
+                <p className="text-sm text-gray-400">Pending supervisor review</p>
+              )}
+            </div>
+
+            {/* Step 5: University Submission */}
+            <div className={`bg-white border rounded-xl p-5 ${project?.status === 'APPROVED_BY_SUPERVISOR' ? 'border-indigo-200' : 'border-gray-200'} ${project?.status !== 'APPROVED_BY_SUPERVISOR' && project?.status !== 'SUBMITTED_TO_UNIVERSITY' && project?.status !== 'ACCEPTED_BY_UNIVERSITY' ? 'opacity-50 pointer-events-none' : ''}`}>
+              <h2 className="font-semibold text-gray-800 mb-2">Step 5: University Submission</h2>
+              {project?.status === 'APPROVED_BY_SUPERVISOR' && (
+                <button onClick={submitToUniversity} disabled={saving}
+                  className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 disabled:opacity-50">
+                  {saving ? 'Submitting…' : 'Submit to University'}
+                </button>
+              )}
+              {project?.status === 'SUBMITTED_TO_UNIVERSITY' && <p className="text-sm text-yellow-700">⏳ Awaiting university acceptance</p>}
+              {project?.status === 'ACCEPTED_BY_UNIVERSITY' && <p className="text-sm text-green-700">✓ Accepted by university on {project.accepted_at?.slice(0, 10)}</p>}
+            </div>
+          </div>
+        )}
+      </div>
     </ProtectedRoute>
   );
 }

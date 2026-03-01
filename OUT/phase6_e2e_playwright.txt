@@ -1,0 +1,8 @@
+
+Running 3 tests using 1 worker
+
+  ✓  1 [setup] › e2e/auth.setup.ts:9:6 › admin login and persist storage state (663ms)
+  ✓  2 [chromium] › e2e/critical/phase6_research_eligibility.spec.ts:47:5 › Phase 6: Resident research draft → supervisor approve → eligibility updates (2.0s)
+  ✓  3 [chromium] › e2e/critical/phase6_research_eligibility.spec.ts:285:5 › Phase 6: UTRMC programs CRUD and policy management (300ms)
+
+  3 passed (4.6s)

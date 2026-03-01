@@ -71,6 +71,7 @@ services:
       - REDIS_URL=redis://redis:6379/0
       - CELERY_BROKER_URL=redis://redis:6379/1
       - CELERY_RESULT_BACKEND=redis://redis:6379/1
+      - LOGIN_RATE_LIMIT=${LOGIN_RATE_LIMIT:-30/min}
       # Reverse proxy settings for Caddy
       - USE_PROXY_HEADERS=${USE_PROXY_HEADERS:-True}
       - SECURE_SSL_REDIRECT=${SECURE_SSL_REDIRECT:-True}

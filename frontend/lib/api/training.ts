@@ -218,6 +218,14 @@ export const trainingApi = {
     return r.data;
   },
 
+  async supervisorReturnResearch(projectId: number, feedback: string): Promise<ResidentResearchProject> {
+    const r = await apiClient.post<ResidentResearchProject>('/api/my/research/action/supervisor-return/', {
+      project_id: projectId,
+      feedback,
+    });
+    return r.data;
+  },
+
   // Thesis
   async getMyThesis(): Promise<ResidentThesis> {
     const r = await apiClient.get<ResidentThesis>('/api/my/thesis/');
@@ -276,9 +284,79 @@ export const trainingApi = {
     return r.data;
   },
 
+
+  // Summary endpoints (Phase 6B/6C)
+  async getResidentSummary(): Promise<ResidentSummary> {
+    const r = await apiClient.get<ResidentSummary>('/api/residents/me/summary/');
+    return r.data;
+  },
+
+  async getSupervisorSummary(): Promise<SupervisorSummary> {
+    const r = await apiClient.get<SupervisorSummary>('/api/supervisors/me/summary/');
+    return r.data;
+  },
+
+  async getResidentProgress(residentId: number): Promise<ResidentProgressSnapshot> {
+    const r = await apiClient.get<ResidentProgressSnapshot>(`/api/supervisors/residents/${residentId}/progress/`);
+    return r.data;
+  },
   // System settings
   async getSystemSettings(): Promise<SystemSettings> {
     const r = await apiClient.get<SystemSettings>('/api/system/settings/');
     return r.data;
   },
 };
+
+// ------------------------------------------------------------------ Summary types
+
+export interface ResidentSummary {
+  training_record: {
+    program_code: string;
+    program_name: string;
+    degree_type: string;
+    start_date: string;
+    current_month_index: number;
+  };
+  rotation: {
+    current: { id: number; department: string; hospital: string; start_date: string; end_date: string; status: string } | null;
+    next: { id: number; department: string; hospital: string; start_date: string; end_date: string; status: string } | null;
+  };
+  schedule: Array<{ id: number; department: string; hospital: string; start_date: string; end_date: string; status: string }>;
+  leaves: { active_count: number; pending_count: number; list: Array<{ id: number; leave_type: string; start_date: string; end_date: string; status: string }> };
+  postings: { active_count: number; pending_count: number };
+  research: { status: string | null; supervisor_name: string | null; synopsis_uploaded: boolean; university_submitted: boolean };
+  thesis: { status: string; submitted_at: string | null };
+  workshops: { total_completed: number; required_for_imm: number; required_for_final: number; completed_list: Array<{ id: number; workshop_name: string; completed_at: string }> };
+  eligibility: {
+    IMM: { status: string | null; reasons: string[] };
+    FINAL: { status: string | null; reasons: string[] };
+  };
+}
+
+export interface SupervisorSummary {
+  pending: { rotation_approvals: number; leave_approvals: number; research_approvals: number };
+  residents: Array<{
+    id: number;
+    rtr_id: number;
+    name: string;
+    program: string;
+    current_rotation: string | null;
+    imm_status: string | null;
+    final_status: string | null;
+    research_status: string | null;
+  }>;
+}
+
+export interface ResidentProgressSnapshot {
+  resident: { id: number; name: string; username: string };
+  resident_name: string;
+  training_record: { program_code: string; program_name: string; degree_type: string; start_date: string; current_month_index: number };
+  program_name: string;
+  current_month_index: number;
+  current_rotation: { department: string; hospital: string; start_date: string; end_date: string; status: string } | null;
+  research: { status: string | null; title: string | null; synopsis_file?: string | null } | null;
+  thesis: { status: string; submitted_at?: string | null } | null;
+  workshops: { total_completed: number; required_for_imm?: number; required_for_final?: number; completed_list?: string[] };
+  eligibility: { IMM: { status: string | null; reasons: string[] } | null; FINAL: { status: string | null; reasons: string[] } | null };
+}
+
