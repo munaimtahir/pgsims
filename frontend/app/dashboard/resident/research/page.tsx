@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
-import DashboardLayout from '@/components/layout/DashboardLayout';
+
 import { trainingApi, ResidentResearchProject } from '@/lib/api/training';
 
 const STATUS_LABELS: Record<string, string> = {
@@ -60,7 +60,6 @@ export default function ResidentResearchPage() {
 
   return (
     <ProtectedRoute allowedRoles={['resident', 'pg']}>
-      <DashboardLayout>
         <div className="max-w-3xl mx-auto">
           <h1 className="text-2xl font-bold text-gray-900 mb-6">Research Project</h1>
 
@@ -155,7 +154,6 @@ export default function ResidentResearchPage() {
             </div>
           )}
         </div>
-      </DashboardLayout>
     </ProtectedRoute>
   );
 }

@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
-import DashboardLayout from '@/components/layout/DashboardLayout';
+
 import { trainingApi, ResidentThesis } from '@/lib/api/training';
 
 export default function ResidentThesisPage() {
@@ -54,7 +54,6 @@ export default function ResidentThesisPage() {
 
   return (
     <ProtectedRoute allowedRoles={['resident', 'pg']}>
-      <DashboardLayout>
         <div className="max-w-2xl mx-auto">
           <h1 className="text-2xl font-bold text-gray-900 mb-6">Thesis</h1>
 
@@ -109,7 +108,6 @@ export default function ResidentThesisPage() {
             </div>
           )}
         </div>
-      </DashboardLayout>
     </ProtectedRoute>
   );
 }

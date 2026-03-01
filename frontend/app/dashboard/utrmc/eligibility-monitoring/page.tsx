@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
-import DashboardLayout from '@/components/layout/DashboardLayout';
+
 import { trainingApi, MilestoneEligibility } from '@/lib/api/training';
 
 const STATUS_COLOR: Record<string, string> = {
@@ -36,7 +36,6 @@ export default function UTRMCEligibilityMonitoringPage() {
 
   return (
     <ProtectedRoute allowedRoles={['admin', 'utrmc_admin', 'utrmc_user']}>
-      <DashboardLayout>
         <div className="max-w-5xl mx-auto">
           <h1 className="text-2xl font-bold text-gray-900 mb-6">Eligibility Monitoring</h1>
 
@@ -96,7 +95,6 @@ export default function UTRMCEligibilityMonitoringPage() {
             ))}
           </div>
         </div>
-      </DashboardLayout>
     </ProtectedRoute>
   );
 }

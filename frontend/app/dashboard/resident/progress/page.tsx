@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
-import DashboardLayout from '@/components/layout/DashboardLayout';
+
 import { trainingApi, MilestoneEligibility, ResidentResearchProject } from '@/lib/api/training';
 
 const STATUS_COLOR: Record<string, string> = {
@@ -27,7 +27,6 @@ export default function ResidentProgressPage() {
 
   return (
     <ProtectedRoute allowedRoles={['resident', 'pg']}>
-      <DashboardLayout>
         <div className="max-w-4xl mx-auto">
           <h1 className="text-2xl font-bold text-gray-900 mb-6">Academic Progress</h1>
 
@@ -91,7 +90,6 @@ export default function ResidentProgressPage() {
             </div>
           </section>
         </div>
-      </DashboardLayout>
     </ProtectedRoute>
   );
 }

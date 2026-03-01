@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
-import DashboardLayout from '@/components/layout/DashboardLayout';
+
 import { trainingApi, TrainingProgram, ProgramPolicy, ProgramMilestone } from '@/lib/api/training';
 
 type Tab = 'overview' | 'policy' | 'milestones';
@@ -53,7 +53,6 @@ export default function UTRMCProgramsPage() {
 
   return (
     <ProtectedRoute allowedRoles={['admin', 'utrmc_admin', 'utrmc_user']}>
-      <DashboardLayout>
         <div className="flex gap-6">
           {/* Program list */}
           <div className="w-64 flex-shrink-0">
@@ -195,7 +194,6 @@ export default function UTRMCProgramsPage() {
             )}
           </div>
         </div>
-      </DashboardLayout>
     </ProtectedRoute>
   );
 }

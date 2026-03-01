@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
-import DashboardLayout from '@/components/layout/DashboardLayout';
+
 import { trainingApi, ResidentResearchProject } from '@/lib/api/training';
 
 export default function SupervisorResearchApprovalsPage() {
@@ -39,7 +39,6 @@ export default function SupervisorResearchApprovalsPage() {
 
   return (
     <ProtectedRoute allowedRoles={['supervisor', 'faculty']}>
-      <DashboardLayout>
         <div className="max-w-4xl mx-auto">
           <h1 className="text-2xl font-bold text-gray-900 mb-6">Research Approvals</h1>
 
@@ -108,7 +107,6 @@ export default function SupervisorResearchApprovalsPage() {
             </section>
           )}
         </div>
-      </DashboardLayout>
     </ProtectedRoute>
   );
 }

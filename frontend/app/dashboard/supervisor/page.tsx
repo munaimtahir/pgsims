@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import { useAuthStore } from '@/store/authStore';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
-import DashboardLayout from '@/components/layout/DashboardLayout';
+
 import apiClient from '@/lib/api/client';
 
 interface Rotation {
@@ -40,7 +40,6 @@ export default function SupervisorDashboardPage() {
 
   return (
     <ProtectedRoute allowedRoles={['supervisor', 'faculty']}>
-      <DashboardLayout>
         <div>
           <h1 className="text-2xl font-bold text-gray-900 mb-2">Supervisor Dashboard</h1>
           <p className="text-gray-600 mb-6">Welcome, {user?.full_name || user?.username || 'Supervisor'}</p>
@@ -71,7 +70,6 @@ export default function SupervisorDashboardPage() {
             </div>
           )}
         </div>
-      </DashboardLayout>
     </ProtectedRoute>
   );
 }

@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
-import DashboardLayout from '@/components/layout/DashboardLayout';
+
 import { trainingApi, WorkshopCompletion, Workshop } from '@/lib/api/training';
 
 export default function ResidentWorkshopsPage() {
@@ -58,7 +58,6 @@ export default function ResidentWorkshopsPage() {
 
   return (
     <ProtectedRoute allowedRoles={['resident', 'pg']}>
-      <DashboardLayout>
         <div className="max-w-3xl mx-auto">
           <div className="flex items-center justify-between mb-6">
             <h1 className="text-2xl font-bold text-gray-900">Workshops</h1>
@@ -141,7 +140,6 @@ export default function ResidentWorkshopsPage() {
             ))}
           </div>
         </div>
-      </DashboardLayout>
     </ProtectedRoute>
   );
 }
