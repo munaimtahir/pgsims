@@ -324,11 +324,13 @@ class User(AbstractUser):
                 for pg in self.get_assigned_pgs():
                     count += Certificate.objects.filter(pg=pg, status="pending").count()
 
-            if apps.is_installed("sims.rotations"):
-                from sims.rotations.models import Rotation
+            if apps.is_installed("sims.training"):
+                from sims.training.models import RotationAssignment
 
                 for pg in self.get_assigned_pgs():
-                    count += Rotation.objects.filter(pg=pg, status="pending").count()
+                    count += RotationAssignment.objects.filter(
+                        resident_training__resident_user=pg, status="SUBMITTED"
+                    ).count()
 
             if apps.is_installed("sims.logbook"):
                 from sims.logbook.models import LogbookEntry
@@ -362,10 +364,12 @@ class User(AbstractUser):
 
                 count += Certificate.objects.filter(pg=self).count()
 
-            if apps.is_installed("sims.rotations"):
-                from sims.rotations.models import Rotation
+            if apps.is_installed("sims.training"):
+                from sims.training.models import RotationAssignment
 
-                count += Rotation.objects.filter(pg=self).count()
+                count += RotationAssignment.objects.filter(
+                    resident_training__resident_user=self
+                ).count()
 
             if apps.is_installed("sims.logbook"):
                 from sims.logbook.models import LogbookEntry
@@ -769,10 +773,12 @@ class HODAssignment(models.Model):
 
                 count += Certificate.objects.filter(pg=self).count()
 
-            if apps.is_installed("sims.rotations"):
-                from sims.rotations.models import Rotation
+            if apps.is_installed("sims.training"):
+                from sims.training.models import RotationAssignment
 
-                count += Rotation.objects.filter(pg=self).count()
+                count += RotationAssignment.objects.filter(
+                    resident_training__resident_user=self
+                ).count()
 
             if apps.is_installed("sims.logbook"):
                 from sims.logbook.models import LogbookEntry

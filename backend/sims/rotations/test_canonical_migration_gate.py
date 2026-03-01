@@ -1,7 +1,13 @@
+"""
+Canonical migration gate tests for Hospital/Department/Rotation domain logic.
+
+NOTE (Phase 6 cleanup): The legacy rotations_api URL namespace and UTRMCRotationOverrideApproveView
+(PATCH /api/rotations/<id>/utrmc-approve/) have been removed. Tests that used the API endpoint
+have been removed. Domain validator tests are preserved.
+"""
 from datetime import date, timedelta
 
 from django.test import TestCase
-from django.urls import reverse
 from rest_framework.test import APIClient
 
 from sims.academics.models import Department
@@ -68,50 +74,18 @@ class CanonicalRotationMigrationGateTests(TestCase):
             override_reason=override_reason,
         )
 
-    def test_migration_gate_inter_hospital_same_department_requires_override_and_utrmc_approval(self):
+    def test_migration_gate_inter_hospital_same_department_requires_utrmc_approval(self):
+        """Domain rule: same-department inter-hospital rotation requires UTRMC approval."""
         rotation = self._make_rotation(department=self.surgery, hospital=self.external_hospital)
-
         policy = evaluate_rotation_override_policy(rotation.pg, rotation.hospital, rotation.department)
         self.assertTrue(policy.requires_utrmc_approval)
 
-        self.client.force_authenticate(self.utrmc_user)
-        url = reverse("rotations_api:utrmc_approve", kwargs={"pk": rotation.id})
-        denied = self.client.patch(url, {"override_reason": "Read-only cannot approve"}, format="json")
-        self.assertEqual(denied.status_code, 403)
-
-        self.client.force_authenticate(self.utrmc_admin)
-        response = self.client.patch(
-            url,
-            {"override_reason": "Home department exception approved by UTRMC"},
-            format="json",
-        )
-        self.assertEqual(response.status_code, 200)
-        self.assertTrue(response.data["requires_utrmc_approval"])
-
-        rotation.refresh_from_db()
-        self.assertEqual(rotation.utrmc_approved_by, self.utrmc_admin)
-        self.assertIsNotNone(rotation.utrmc_approved_at)
-
     def test_migration_gate_deficiency_rule_no_utrmc_approval_required(self):
+        """Domain rule: different-department inter-hospital (deficiency) does not require override."""
         rotation = self._make_rotation(
             department=self.medicine,
             hospital=self.external_hospital,
             override_reason=None,
         )
-
         policy = evaluate_rotation_override_policy(rotation.pg, rotation.hospital, rotation.department)
         self.assertFalse(policy.requires_utrmc_approval)
-
-    def test_rotation_summary_api_returns_contract_shape(self):
-        rotation = self._make_rotation(
-            department=self.surgery,
-            hospital=self.external_hospital,
-            override_reason="Awaiting approval",
-        )
-        self.client.force_authenticate(self.pg)
-        response = self.client.get(reverse("rotations_api:my_rotation_detail", kwargs={"pk": rotation.id}))
-        self.assertEqual(response.status_code, 200)
-        self.assertIsInstance(response.data["department"], dict)
-        self.assertIn("name", response.data["department"])
-        self.assertIsInstance(response.data["hospital"], dict)
-        self.assertIn("requires_utrmc_approval", response.data)

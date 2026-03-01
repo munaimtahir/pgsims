@@ -135,7 +135,8 @@ urlpatterns = [
     path("api/reports/", include("sims.reports.urls")),
     path("api/logbook/", include("sims.logbook.api_urls")),
     path("api/cases/", include("sims.cases.api_urls")),
-    path("api/rotations/", include("sims.rotations.api_urls")),
+    # Legacy rotation API URLs removed in Phase 6 cleanup (superseded by sims.training)
+    # path("api/rotations/", include("sims.rotations.api_urls")),
     path("api/certificates/", include("sims.certificates.api_urls")),
     path("api/attendance/", include("sims.attendance.urls")),
     path("api/", include("sims.users.userbase_urls")),

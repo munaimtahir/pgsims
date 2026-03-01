@@ -135,9 +135,9 @@ def pg_dashboard(request):
         certificates_count = 0
 
     try:
-        from sims.rotations.models import Rotation
+        from sims.training.models import RotationAssignment
 
-        rotations_count = Rotation.objects.filter(pg=request.user).count()
+        rotations_count = RotationAssignment.objects.filter(resident_training__resident_user=request.user).count()
     except Exception:
         rotations_count = 0
 
@@ -1010,8 +1010,8 @@ class UserPerformanceAPIView(AdminRequiredMixin, View):
                 pass
             
             try:
-                from sims.rotations.models import Rotation
-                total_submissions += Rotation.objects.filter(pg=user).count()
+                from sims.training.models import RotationAssignment
+                total_submissions += RotationAssignment.objects.filter(resident_training__resident_user=user).count()
             except ImportError:
                 pass
             
@@ -1130,13 +1130,13 @@ def supervisor_analytics_view(request):
         try:
             from sims.certificates.models import Certificate
             from sims.logbook.models import LogbookEntry
-            from sims.rotations.models import Rotation
+            from sims.training.models import RotationAssignment
 
             pg_stats = {
                 "pg": pg,
                 "certificates": Certificate.objects.filter(pg=pg).count(),
                 "logbook_entries": LogbookEntry.objects.filter(pg=pg).count(),
-                "rotations": Rotation.objects.filter(pg=pg).count(),
+                "rotations": RotationAssignment.objects.filter(resident_training__resident_user=pg).count(),
                 "completion_percentage": 0,  # Calculate based on requirements
             }
             pg_progress_stats.append(pg_stats)
@@ -1230,11 +1230,11 @@ def pg_analytics_view(request):
         monthly_progress = []
 
     try:
-        from sims.rotations.models import Rotation
+        from sims.training.models import RotationAssignment
 
-        my_rotations = Rotation.objects.filter(pg=request.user).count()
-        completed_rotations = Rotation.objects.filter(pg=request.user, status="completed").count()
-        current_rotation = Rotation.objects.filter(pg=request.user, status="active").first()
+        my_rotations = RotationAssignment.objects.filter(resident_training__resident_user=request.user).count()
+        completed_rotations = RotationAssignment.objects.filter(resident_training__resident_user=request.user, status="COMPLETED").count()
+        current_rotation = RotationAssignment.objects.filter(resident_training__resident_user=request.user, status="ACTIVE").first()
     except ImportError:
         my_rotations = 0
         completed_rotations = 0
