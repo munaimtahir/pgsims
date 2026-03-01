@@ -246,7 +246,7 @@ def dashboard_overview(user: User) -> Dict:
         - unverified_logs: count of unverified logbook entries
     """
     from datetime import datetime, timedelta
-    from sims.rotations.models import Rotation
+    from sims.training.models import RotationAssignment
     from sims.certificates.models import Certificate
     from sims.cases.models import ClinicalCase
 
@@ -255,28 +255,30 @@ def dashboard_overview(user: User) -> Dict:
     # Base queries - scope by user role
     if user.is_superuser or getattr(user, "role", None) == "admin":
         users_qs = User.objects.all()
-        rotations_qs = Rotation.objects.all()
+        rotations_qs = RotationAssignment.objects.all()
         certificates_qs = Certificate.objects.all()
         logs_qs = LogbookEntry.objects.all()
         cases_qs = ClinicalCase.objects.all()
     elif getattr(user, "role", None) == "supervisor":
         supervised_users = User.objects.filter(supervisor=user)
         users_qs = supervised_users
-        rotations_qs = Rotation.objects.filter(pg__in=supervised_users)
+        rotations_qs = RotationAssignment.objects.filter(
+            resident_training__resident_user__in=supervised_users
+        )
         certificates_qs = Certificate.objects.filter(resident__in=supervised_users)
         logs_qs = LogbookEntry.objects.filter(user__in=supervised_users)
         cases_qs = ClinicalCase.objects.filter(pg__in=supervised_users)
     else:
         # PG user - own data only
         users_qs = User.objects.filter(id=user.id)
-        rotations_qs = Rotation.objects.filter(pg=user)
+        rotations_qs = RotationAssignment.objects.filter(resident_training__resident_user=user)
         certificates_qs = Certificate.objects.filter(resident=user)
         logs_qs = LogbookEntry.objects.filter(user=user)
         cases_qs = ClinicalCase.objects.filter(pg=user)
 
     return {
         "total_residents": users_qs.filter(role="pg").count(),
-        "active_rotations": rotations_qs.filter(status="ongoing").count(),
+        "active_rotations": rotations_qs.filter(status=RotationAssignment.STATUS_ACTIVE).count(),
         "pending_certificates": certificates_qs.filter(status="pending").count(),
         "last_30d_logs": logs_qs.filter(date__gte=thirty_days_ago).count(),
         "last_30d_cases": cases_qs.filter(created_at__gte=thirty_days_ago).count(),
@@ -364,16 +366,18 @@ def dashboard_compliance(user: User) -> Dict:
     """
     Get compliance data showing % verified vs unverified logs by rotation.
     """
-    from sims.rotations.models import Rotation
+    from sims.training.models import RotationAssignment
 
     # Scope by user role
     if user.is_superuser or getattr(user, "role", None) == "admin":
-        rotations = Rotation.objects.all()
+        rotations = RotationAssignment.objects.all()
     elif getattr(user, "role", None) == "supervisor":
         supervised_users = User.objects.filter(supervisor=user)
-        rotations = Rotation.objects.filter(pg__in=supervised_users)
+        rotations = RotationAssignment.objects.filter(
+            resident_training__resident_user__in=supervised_users
+        )
     else:
-        rotations = Rotation.objects.filter(pg=user)
+        rotations = RotationAssignment.objects.filter(resident_training__resident_user=user)
 
     compliance_data = []
     for rotation in rotations:
@@ -386,8 +390,9 @@ def dashboard_compliance(user: User) -> Dict:
         else:
             percentage = 0.0
 
-        # Create a descriptive name for the rotation
-        rotation_desc = f"{rotation.department.name} - {rotation.hospital.name}"
+        dept = getattr(getattr(rotation.hospital_department, "department", None), "name", "")
+        hosp = getattr(getattr(rotation.hospital_department, "hospital", None), "name", "")
+        rotation_desc = f"{dept} - {hosp}" if dept or hosp else str(rotation)
 
         compliance_data.append(
             {

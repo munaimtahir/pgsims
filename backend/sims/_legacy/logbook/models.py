@@ -451,14 +451,6 @@ class LogbookEntry(models.Model):
         blank=False,
         default="",
     )
-    rotation = models.ForeignKey(
-        "rotations.Rotation",
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name="logbook_entries",
-        help_text="Rotation during which this case occurred",
-    )
     supervisor = models.ForeignKey(
         User,
         on_delete=models.SET_NULL,
@@ -467,6 +459,14 @@ class LogbookEntry(models.Model):
         related_name="supervised_entries",
         limit_choices_to={"role__in": [SUPERVISOR_ROLE_STRING, ADMIN_ROLE_STRING]},
         help_text="Assigned supervising consultant",
+    )
+    rotation = models.ForeignKey(
+        "training.RotationAssignment",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="logbook_entries",
+        help_text="Rotation assignment during which this case occurred",
     )
     template = models.ForeignKey(
         LogbookTemplate,
@@ -595,7 +595,6 @@ class LogbookEntry(models.Model):
             models.Index(fields=["pg", "date"]),
             models.Index(fields=["status"]),
             models.Index(fields=["date"]),
-            models.Index(fields=["rotation"]),
             models.Index(fields=["supervisor"]),
             models.Index(fields=["primary_diagnosis"]),
             models.Index(fields=["created_at"]),

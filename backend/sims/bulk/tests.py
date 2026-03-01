@@ -11,7 +11,6 @@ from rest_framework.test import APITestCase
 from sims.bulk.models import BulkOperation
 from sims.bulk.services import BulkService
 from sims.academics.models import Department
-from sims.logbook.models import LogbookEntry
 from sims.rotations.models import Hospital, HospitalDepartment
 from sims.users.models import User
 

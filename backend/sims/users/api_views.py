@@ -27,7 +27,6 @@ from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from .models import User
 from .serializers import AssignedPGSerializer, UserSerializer, UserRegistrationSerializer
 from .permissions import IsSupervisor
-from sims.analytics.services import safe_track_event
 
 
 class LoginRateThrottle(AnonRateThrottle):

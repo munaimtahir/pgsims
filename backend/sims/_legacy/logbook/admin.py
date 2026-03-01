@@ -26,7 +26,6 @@ class LogbookEntryResource(resources.ModelResource):
             "id",
             "pg__username",
             "date",
-            "rotation__department__name",
             "patient_age",
             "patient_gender",
             "primary_diagnosis__name",
@@ -504,12 +503,14 @@ class LogbookEntryAdmin(ImportExportModelAdmin):
             kwargs["queryset"] = User.objects.filter(role="supervisor", is_active=True)
 
         elif db_field.name == "rotation":
-            from sims.rotations.models import Rotation
+            from sims.training.models import RotationAssignment
 
             if request.user.role == "supervisor":
-                kwargs["queryset"] = Rotation.objects.filter(pg__supervisor=request.user)
+                kwargs["queryset"] = RotationAssignment.objects.filter(
+                    resident_training__resident_user__supervisor=request.user
+                )
             else:
-                kwargs["queryset"] = Rotation.objects.all()
+                kwargs["queryset"] = RotationAssignment.objects.all()
 
         elif db_field.name == "primary_diagnosis":
             kwargs["queryset"] = Diagnosis.objects.filter(is_active=True)

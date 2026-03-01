@@ -12,112 +12,207 @@ export type AppRole =
   | 'pg'
   | 'resident';
 
-export interface NavItem {
+export interface NavSubItem {
   label: string;
   href: string;
+  allowedRoles?: AppRole[];
+}
+
+export interface NavItem {
+  label: string;
+  href?: string;
   icon: string; // Heroicons outline name (snake_case)
+  allowedRoles?: AppRole[];
+  subItems?: NavSubItem[];
 }
 
 export interface NavSection {
   title: string;
   allowedRoles: AppRole[];
-  items: (NavItem & { allowedRoles?: AppRole[] })[];
+  items: NavItem[];
 }
 
 export const NAV_SECTIONS: NavSection[] = [
-  // ------------------------------------------------------------------ Admin
+  // ------------------------------------------------------------------ Admin Console
   {
-    title: 'Admin Console',
+    title: 'System Admin',
     allowedRoles: ['admin'],
     items: [
       { label: 'Overview', href: '/dashboard/admin', icon: 'home' },
-      { label: 'Users', href: '/dashboard/admin/users', icon: 'users' },
-      { label: 'Analytics', href: '/dashboard/admin/analytics', icon: 'chart-bar' },
-      { label: 'Audit Logs', href: '/dashboard/admin/audit-logs', icon: 'clipboard-list' },
-      { label: 'Reports', href: '/dashboard/admin/reports', icon: 'document-text' },
+      { label: 'Users & Roles', href: '/dashboard/admin/users', icon: 'users' },
+      {
+        label: 'System Monitoring',
+        icon: 'chart-bar',
+        subItems: [
+          { label: 'Analytics', href: '/dashboard/admin/analytics' },
+          { label: 'Audit Logs', href: '/dashboard/admin/audit-logs' },
+          { label: 'System Reports', href: '/dashboard/admin/reports' },
+        ],
+      },
     ],
   },
 
-  // ------------------------------------------------------------------ UTRMC
+  // ------------------------------------------------------------------ Program Administration (Formerly UTRMC)
   {
-    title: 'UTRMC',
+    title: 'Program Administration',
     allowedRoles: ['admin', 'utrmc_admin', 'utrmc_user'],
     items: [
-      { label: 'Overview', href: '/dashboard/utrmc', icon: 'view-grid' },
-      { label: 'Hospitals', href: '/dashboard/utrmc/hospitals', icon: 'office-building', allowedRoles: ['admin', 'utrmc_admin'] },
-      { label: 'Departments', href: '/dashboard/utrmc/departments', icon: 'academic-cap', allowedRoles: ['admin', 'utrmc_admin'] },
-      { label: 'H-D Matrix', href: '/dashboard/utrmc/matrix', icon: 'table', allowedRoles: ['admin', 'utrmc_admin'] },
-      { label: 'Users', href: '/dashboard/utrmc/users', icon: 'user-group', allowedRoles: ['admin', 'utrmc_admin'] },
-      { label: 'Supervision Links', href: '/dashboard/utrmc/linking/supervision', icon: 'link', allowedRoles: ['admin', 'utrmc_admin'] },
-      { label: 'HOD Assignments', href: '/dashboard/utrmc/linking/hod', icon: 'star', allowedRoles: ['admin', 'utrmc_admin'] },
-      { label: 'Cases', href: '/dashboard/utrmc/cases', icon: 'folder' },
-      { label: 'Reports', href: '/dashboard/utrmc/reports', icon: 'document-report' },
+      { label: 'Dashboard', href: '/dashboard/utrmc', icon: 'view-grid' },
+      {
+        label: 'Institution Setup',
+        icon: 'office-building',
+        allowedRoles: ['admin', 'utrmc_admin'],
+        subItems: [
+          { label: 'Hospitals', href: '/dashboard/utrmc/hospitals' },
+          { label: 'Departments', href: '/dashboard/utrmc/departments' },
+          { label: 'H-D Matrix', href: '/dashboard/utrmc/matrix' },
+        ],
+      },
+      {
+        label: 'User Management',
+        icon: 'user-group',
+        allowedRoles: ['admin', 'utrmc_admin'],
+        subItems: [
+          { label: 'All Users', href: '/dashboard/utrmc/users' },
+          { label: 'Supervision Links', href: '/dashboard/utrmc/linking/supervision' },
+          { label: 'HOD Assignments', href: '/dashboard/utrmc/linking/hod' },
+        ],
+      },
+      {
+        label: 'Academic Config',
+        icon: 'academic-cap',
+        allowedRoles: ['admin', 'utrmc_admin'],
+        subItems: [
+          { label: 'Programs', href: '/dashboard/utrmc/programs' },
+          { label: 'Rotation Templates', href: '/dashboard/utrmc/program-templates' },
+        ],
+      },
+      {
+        label: 'Trainee Management',
+        icon: 'users',
+        allowedRoles: ['admin', 'utrmc_admin'],
+        subItems: [
+          { label: 'Resident Records', href: '/dashboard/utrmc/resident-training' },
+          { label: 'Rotations', href: '/dashboard/utrmc/rotations' },
+          { label: 'Postings', href: '/dashboard/utrmc/postings' },
+          { label: 'Leaves', href: '/dashboard/utrmc/leaves' },
+        ],
+      },
+      {
+        label: 'Approvals',
+        icon: 'check-circle',
+        allowedRoles: ['admin', 'utrmc_admin'],
+        subItems: [
+          { label: 'Rotations', href: '/dashboard/utrmc/approvals/rotations' },
+          { label: 'Leaves', href: '/dashboard/utrmc/approvals/leaves' },
+        ],
+      },
+      {
+        label: 'Records & Reports',
+        icon: 'folder',
+        subItems: [
+          { label: 'Cases', href: '/dashboard/utrmc/cases' },
+          { label: 'Reports', href: '/dashboard/utrmc/reports' },
+        ],
+      },
     ],
   },
 
-  // ------------------------------------------------------------------ Training Admin (UTRMC)
+  // ------------------------------------------------------------------ Data Operations
   {
-    title: 'Training Admin',
+    title: 'Data Operations',
     allowedRoles: ['admin', 'utrmc_admin'],
     items: [
-      { label: 'Programs', href: '/dashboard/utrmc/programs', icon: 'academic-cap' },
-      { label: 'Rotation Templates', href: '/dashboard/utrmc/program-templates', icon: 'template' },
-      { label: 'Resident Records', href: '/dashboard/utrmc/resident-training', icon: 'users' },
-      { label: 'Rotations', href: '/dashboard/utrmc/rotations', icon: 'refresh' },
-      { label: 'Approvals – Rotations', href: '/dashboard/utrmc/approvals/rotations', icon: 'check-circle' },
-      { label: 'Approvals – Leaves', href: '/dashboard/utrmc/approvals/leaves', icon: 'calendar' },
-      { label: 'Leaves', href: '/dashboard/utrmc/leaves', icon: 'calendar' },
-      { label: 'Postings', href: '/dashboard/utrmc/postings', icon: 'location-marker' },
-    ],
-  },
-
-  // ------------------------------------------------------------------ Data Admin
-  {
-    title: 'Data Admin',
-    allowedRoles: ['admin', 'utrmc_admin'],
-    items: [
-      { label: 'Import Hospitals', href: '/dashboard/utrmc/data-admin/hospitals', icon: 'upload' },
-      { label: 'Import Departments', href: '/dashboard/utrmc/data-admin/departments', icon: 'upload' },
-      { label: 'Import Matrix', href: '/dashboard/utrmc/data-admin/matrix', icon: 'upload' },
-      { label: 'Import Supervisors', href: '/dashboard/utrmc/data-admin/supervisors', icon: 'upload' },
-      { label: 'Import Residents', href: '/dashboard/utrmc/data-admin/residents', icon: 'upload' },
-      { label: 'Import Links', href: '/dashboard/utrmc/data-admin/links', icon: 'link' },
-      { label: 'Import Programs', href: '/dashboard/utrmc/data-admin/training-programs', icon: 'upload' },
-      { label: 'Import Templates', href: '/dashboard/utrmc/data-admin/rotation-templates', icon: 'upload' },
-      { label: 'Import Training Records', href: '/dashboard/utrmc/data-admin/resident-training-records', icon: 'upload' },
-      { label: 'Export Data', href: '/dashboard/utrmc/data-admin/export', icon: 'download' },
-      { label: 'Templates', href: '/dashboard/utrmc/data-admin/templates', icon: 'template' },
+      {
+        label: 'Import Config',
+        icon: 'upload',
+        subItems: [
+          { label: 'Hospitals', href: '/dashboard/utrmc/data-admin/hospitals' },
+          { label: 'Departments', href: '/dashboard/utrmc/data-admin/departments' },
+          { label: 'Matrix', href: '/dashboard/utrmc/data-admin/matrix' },
+          { label: 'Programs', href: '/dashboard/utrmc/data-admin/training-programs' },
+          { label: 'Templates', href: '/dashboard/utrmc/data-admin/rotation-templates' },
+        ],
+      },
+      {
+        label: 'Import Personnel',
+        icon: 'user-group',
+        subItems: [
+          { label: 'Supervisors', href: '/dashboard/utrmc/data-admin/supervisors' },
+          { label: 'Residents/PGs', href: '/dashboard/utrmc/data-admin/residents' },
+          { label: 'Supervision Links', href: '/dashboard/utrmc/data-admin/links' },
+          { label: 'Training Records', href: '/dashboard/utrmc/data-admin/resident-training-records' },
+        ],
+      },
+      {
+        label: 'Exports & Templates',
+        icon: 'download',
+        subItems: [
+          { label: 'Export Data', href: '/dashboard/utrmc/data-admin/export' },
+          { label: 'Templates', href: '/dashboard/utrmc/data-admin/templates' },
+        ],
+      },
     ],
   },
 
   // ------------------------------------------------------------------ Supervisor
   {
-    title: 'Supervisor',
+    title: 'Supervisory Dashboard',
     allowedRoles: ['supervisor', 'faculty'],
     items: [
       { label: 'Overview', href: '/dashboard/supervisor', icon: 'home' },
-      { label: 'Logbooks', href: '/dashboard/supervisor/logbooks', icon: 'book-open' },
-      { label: 'Cases', href: '/dashboard/supervisor/cases', icon: 'folder-open' },
-      { label: 'My PGs', href: '/dashboard/supervisor/pgs', icon: 'users' },
-      { label: 'Rotation Approvals', href: '/dashboard/supervisor/approvals', icon: 'check-circle' },
-      { label: 'Rotations', href: '/dashboard/supervisor/rotations', icon: 'refresh' },
+      { label: 'My Trainees (PGs)', href: '/dashboard/supervisor/pgs', icon: 'users' },
+      {
+        label: 'Academics',
+        icon: 'book-open',
+        subItems: [
+          { label: 'Logbooks', href: '/dashboard/supervisor/logbooks' },
+          { label: 'Cases', href: '/dashboard/supervisor/cases' },
+        ],
+      },
+      {
+        label: 'Rotations',
+        icon: 'refresh',
+        subItems: [
+          { label: 'My Rotations', href: '/dashboard/supervisor/rotations' },
+          { label: 'Approvals', href: '/dashboard/supervisor/approvals' },
+        ],
+      },
     ],
   },
 
   // ------------------------------------------------------------------ PG / Resident
   {
-    title: 'My Training',
+    title: 'Postgraduate Portfolio',
     allowedRoles: ['pg', 'resident'],
     items: [
       { label: 'Overview', href: '/dashboard/pg', icon: 'home' },
-      { label: 'Logbook', href: '/dashboard/pg/logbook', icon: 'book-open' },
-      { label: 'Cases', href: '/dashboard/pg/cases', icon: 'folder-open' },
-      { label: 'My Schedule', href: '/dashboard/my-training', icon: 'refresh' },
-      { label: 'Rotations (Legacy)', href: '/dashboard/pg/rotations', icon: 'refresh' },
-      { label: 'My Leaves', href: '/dashboard/my-leaves', icon: 'calendar' },
-      { label: 'My Postings', href: '/dashboard/my-postings', icon: 'location-marker' },
-      { label: 'Results', href: '/dashboard/pg/results', icon: 'chart-bar' },
-      { label: 'Certificates', href: '/dashboard/pg/certificates', icon: 'badge-check' },
+      {
+        label: 'Academics',
+        icon: 'book-open',
+        subItems: [
+          { label: 'Logbook', href: '/dashboard/pg/logbook' },
+          { label: 'Cases', href: '/dashboard/pg/cases' },
+        ],
+      },
+      {
+        label: 'Training Schedule',
+        icon: 'calendar',
+        subItems: [
+          { label: 'My Schedule', href: '/dashboard/my-training' },
+          { label: 'Rotations', href: '/dashboard/pg/rotations' },
+          { label: 'Leaves', href: '/dashboard/my-leaves' },
+          { label: 'Postings', href: '/dashboard/my-postings' },
+        ],
+      },
+      {
+        label: 'Achievements',
+        icon: 'badge-check',
+        subItems: [
+          { label: 'Results', href: '/dashboard/pg/results' },
+          { label: 'Certificates', href: '/dashboard/pg/certificates' },
+        ],
+      },
       { label: 'Notifications', href: '/dashboard/pg/notifications', icon: 'bell' },
     ],
   },
@@ -131,9 +226,21 @@ export function getNavForRole(role: AppRole | string): NavSection[] {
   return NAV_SECTIONS.filter((s) => s.allowedRoles.includes(role as AppRole))
     .map((s) => ({
       ...s,
-      items: s.items.filter(
-        (item) => !item.allowedRoles || item.allowedRoles.includes(role as AppRole)
-      ),
+      items: s.items
+        .filter((item) => !item.allowedRoles || item.allowedRoles.includes(role as AppRole))
+        .map((item) => {
+          if (item.subItems) {
+            return {
+              ...item,
+              subItems: item.subItems.filter(
+                (sub) => !sub.allowedRoles || sub.allowedRoles.includes(role as AppRole)
+              ),
+            };
+          }
+          return item;
+        })
+        .filter((item) => !item.subItems || item.subItems.length > 0),
     }))
     .filter((s) => s.items.length > 0);
 }
+

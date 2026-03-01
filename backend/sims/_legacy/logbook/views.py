@@ -270,20 +270,22 @@ class LogbookEntryListView(LoginRequiredMixin, LogbookAccessMixin, ListView):
 
     def _get_rotation_choices(self):
         """Get rotation choices based on user role"""
-        from sims.rotations.models import Rotation
+        from sims.training.models import RotationAssignment
 
         if self.request.user.role == "admin":
-            return Rotation.objects.select_related("department", "hospital")
+            return RotationAssignment.objects.select_related(
+                "hospital_department__department", "hospital_department__hospital"
+            )
         elif self.request.user.role == "supervisor":
-            return Rotation.objects.filter(pg__supervisor=self.request.user).select_related(
-                "department", "hospital"
-            )
+            return RotationAssignment.objects.filter(
+                resident_training__resident_user__supervisor=self.request.user
+            ).select_related("hospital_department__department", "hospital_department__hospital")
         elif self.request.user.role == "pg":
-            return Rotation.objects.filter(pg=self.request.user).select_related(
-                "department", "hospital"
-            )
+            return RotationAssignment.objects.filter(
+                resident_training__resident_user=self.request.user
+            ).select_related("hospital_department__department", "hospital_department__hospital")
 
-        return Rotation.objects.none()
+        return RotationAssignment.objects.none()
 
 
 class LogbookEntryDetailView(LoginRequiredMixin, LogbookAccessMixin, DetailView):
@@ -414,15 +416,16 @@ class LogbookEntryCreateView(LoginRequiredMixin, LogbookAccessMixin, CreateView)
         rotation_id = self.request.GET.get("rotation")
         if rotation_id:
             try:
-                from sims.rotations.models import Rotation
+                from sims.training.models import RotationAssignment
 
-                rotation = Rotation.objects.get(id=rotation_id)
+                rotation = RotationAssignment.objects.get(id=rotation_id)
+                resident_user = rotation.resident_training.resident_user
                 # Check if user has access to this rotation
                 if (
-                    (self.request.user.role == "pg" and rotation.pg == self.request.user)
+                    (self.request.user.role == "pg" and resident_user == self.request.user)
                     or (
                         self.request.user.role == "supervisor"
-                        and rotation.pg.supervisor == self.request.user
+                        and resident_user.supervisor == self.request.user
                     )
                     or (self.request.user.role == "admin")
                 ):

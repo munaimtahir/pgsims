@@ -114,15 +114,6 @@ class ClinicalCase(models.Model):
 
     date_encountered = models.DateField(help_text="Date when the case was encountered")
 
-    rotation = models.ForeignKey(
-        "rotations.Rotation",
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name="clinical_cases",
-        help_text="Rotation during which this case occurred",
-    )
-
     supervisor = models.ForeignKey(
         User,
         on_delete=models.SET_NULL,
@@ -335,9 +326,9 @@ class ClinicalCase(models.Model):
         ):
             errors["date_encountered"] = "Case date cannot be more than 2 years old"
 
-        # Validate supervisor assignment for PG's rotation
+        # Validate supervisor assignment for PG
         # Guard: only validate if both FKs are set (avoids RelatedObjectDoesNotExist before save)
-        if self.supervisor_id and self.pg_id and self.rotation_id:
+        if self.supervisor_id and self.pg_id:
             if (
                 self.pg.supervisor
                 and self.supervisor != self.pg.supervisor

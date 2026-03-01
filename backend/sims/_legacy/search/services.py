@@ -14,7 +14,7 @@ from django.urls import reverse
 from sims.cases.models import ClinicalCase
 from sims.certificates.models import Certificate
 from sims.logbook.models import LogbookEntry
-from sims.rotations.models import Rotation
+from sims.training.models import RotationAssignment
 
 from .models import SavedSearchSuggestion, SearchQueryLog
 
@@ -120,12 +120,18 @@ class SearchService:
         ]
 
     def _search_rotations(self, query: str, filters: Dict[str, str]) -> Sequence[SearchResult]:
-        qs = Rotation.objects.select_related("pg", "department", "hospital")
+        qs = RotationAssignment.objects.select_related(
+            "resident_training__resident_user",
+            "hospital_department__department",
+            "hospital_department__hospital",
+        )
         if not self.user.is_superuser and getattr(self.user, "role", "") != "admin":
             if hasattr(self.user, "is_supervisor") and self.user.is_supervisor():
-                qs = qs.filter(Q(supervisor=self.user) | Q(pg__supervisor=self.user))
+                qs = qs.filter(
+                    resident_training__resident_user__supervisor=self.user
+                )
             else:
-                qs = qs.filter(pg=self.user)
+                qs = qs.filter(resident_training__resident_user=self.user)
 
         if status := filters.get("status"):
             qs = qs.filter(status=status)
@@ -134,14 +140,18 @@ class SearchService:
             qs,
             query,
             module="rotations",
-            title=lambda obj: f"{obj.pg.get_full_name()} - {obj.department.name}",
-            summary=lambda obj: f"{obj.hospital.name} ({obj.start_date} - {obj.end_date})",
+            title=lambda obj: (
+                f"{obj.resident_training.resident_user.get_full_name()} - "
+                f"{obj.hospital_department.department.name}"
+            ),
+            summary=lambda obj: (
+                f"{obj.hospital_department.hospital.name} "
+                f"({obj.start_date} - {obj.end_date})"
+            ),
             url_name="rotations:detail",
             fields=[
-                "department__name",
-                "hospital__name",
-                "pg__first_name",
-                "pg__last_name",
+                "hospital_department__department__name",
+                "hospital_department__hospital__name",
                 "notes",
             ],
         )
@@ -150,7 +160,7 @@ class SearchService:
         qs = LogbookEntry.objects.select_related("pg", "rotation").prefetch_related("procedures")
         if not self.user.is_superuser and getattr(self.user, "role", "") != "admin":
             if hasattr(self.user, "is_supervisor") and self.user.is_supervisor():
-                qs = qs.filter(Q(supervisor=self.user) | Q(rotation__supervisor=self.user))
+                qs = qs.filter(Q(supervisor=self.user))
             else:
                 qs = qs.filter(pg=self.user)
 

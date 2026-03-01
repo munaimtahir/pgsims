@@ -9,10 +9,9 @@ from django.utils import timezone
 from rest_framework.test import APITestCase
 
 from sims.academics.models import Department
-from sims.logbook.models import LogbookEntry
 from sims.notifications.models import Notification, NotificationPreference
 from sims.notifications.services import NotificationService
-from sims.rotations.models import Hospital, HospitalDepartment, Rotation
+from sims.rotations.models import Hospital, HospitalDepartment
 from sims.users.models import User
 
 

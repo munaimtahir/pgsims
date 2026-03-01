@@ -11,7 +11,6 @@ from django.core.exceptions import PermissionDenied
 
 
 def _track_rbac_denied(request, required_roles: str, reason: str):
-    from sims.analytics.services import safe_track_event
 
     safe_track_event(
         event_type="auth.rbac.denied",

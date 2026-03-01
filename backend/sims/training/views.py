@@ -658,3 +658,475 @@ class SupervisorPendingRotationsView(APIView):
         )
         serializer = RotationAssignmentSerializer(qs, many=True, context={"request": request})
         return Response({"count": qs.count(), "results": serializer.data})
+
+
+# =============================================================================
+# Phase 6 Views — Program Policy, Milestones, Research, Thesis,
+#                 Workshops, Eligibility
+# =============================================================================
+
+from .models import (
+    ProgramPolicy,
+    ProgramMilestone,
+    ProgramMilestoneResearchRequirement,
+    ProgramMilestoneWorkshopRequirement,
+    ProgramMilestoneLogbookRequirement,
+    ResidentResearchProject,
+    ResidentThesis,
+    Workshop,
+    WorkshopBlock,
+    WorkshopRun,
+    ResidentWorkshopCompletion,
+    ResidentMilestoneEligibility,
+)
+from .serializers import (
+    ProgramPolicySerializer,
+    ProgramMilestoneSerializer,
+    ProgramMilestoneResearchRequirementSerializer,
+    ProgramMilestoneWorkshopRequirementSerializer,
+    ProgramMilestoneLogbookRequirementSerializer,
+    ResidentResearchProjectSerializer,
+    ResidentThesisSerializer,
+    WorkshopSerializer,
+    WorkshopBlockSerializer,
+    WorkshopRunSerializer,
+    ResidentWorkshopCompletionSerializer,
+    ResidentMilestoneEligibilitySerializer,
+)
+
+
+# ------------------------------------------------------------------
+# Program Policy
+# ------------------------------------------------------------------
+
+class ProgramPolicyView(APIView):
+    """GET + PUT/PATCH the policy for a specific program. Admin/UTRMC-admin only."""
+    permission_classes = [IsAuthenticated]
+
+    def _get_program(self, program_id):
+        from django.shortcuts import get_object_or_404
+        return get_object_or_404(TrainingProgram, pk=program_id)
+
+    def get(self, request, program_id):
+        if not _is_admin_or_utrmc_admin(request.user):
+            return Response({"detail": "Permission denied."}, status=403)
+        program = self._get_program(program_id)
+        policy, _ = ProgramPolicy.objects.get_or_create(program=program)
+        return Response(ProgramPolicySerializer(policy).data)
+
+    def put(self, request, program_id):
+        if not _is_admin_or_utrmc_admin(request.user):
+            return Response({"detail": "Permission denied."}, status=403)
+        program = self._get_program(program_id)
+        policy, _ = ProgramPolicy.objects.get_or_create(program=program)
+        serializer = ProgramPolicySerializer(policy, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
+
+
+# ------------------------------------------------------------------
+# Program Milestones
+# ------------------------------------------------------------------
+
+class ProgramMilestoneViewSet(viewsets.ModelViewSet):
+    """CRUD for milestones of a given program. Admin/UTRMC-admin only."""
+    serializer_class = ProgramMilestoneSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return ProgramMilestone.objects.filter(
+            program_id=self.kwargs["program_id"]
+        ).prefetch_related(
+            "research_requirement",
+            "workshop_requirements__workshop",
+            "logbook_requirements",
+        )
+
+    def perform_create(self, serializer):
+        if not _is_admin_or_utrmc_admin(self.request.user):
+            from rest_framework.exceptions import PermissionDenied
+            raise PermissionDenied()
+        program = TrainingProgram.objects.get(pk=self.kwargs["program_id"])
+        serializer.save(program=program)
+
+    def get_permissions(self):
+        if self.action in ("list", "retrieve"):
+            return [IsAuthenticated()]
+        return [IsAuthenticated()]
+
+    def check_write_permission(self, request):
+        if not _is_admin_or_utrmc_admin(request.user):
+            self.permission_denied(request, message="Admin or UTRMC admin required.")
+
+    def update(self, request, *args, **kwargs):
+        self.check_write_permission(request)
+        return super().update(request, *args, **kwargs)
+
+    def destroy(self, request, *args, **kwargs):
+        self.check_write_permission(request)
+        return super().destroy(request, *args, **kwargs)
+
+
+class MilestoneResearchRequirementView(APIView):
+    """GET + PUT research requirements for a milestone."""
+    permission_classes = [IsAuthenticated]
+
+    def _get_milestone(self, milestone_id):
+        from django.shortcuts import get_object_or_404
+        return get_object_or_404(ProgramMilestone, pk=milestone_id)
+
+    def get(self, request, milestone_id):
+        m = self._get_milestone(milestone_id)
+        req, _ = ProgramMilestoneResearchRequirement.objects.get_or_create(milestone=m)
+        return Response(ProgramMilestoneResearchRequirementSerializer(req).data)
+
+    def put(self, request, milestone_id):
+        if not _is_admin_or_utrmc_admin(request.user):
+            return Response({"detail": "Permission denied."}, status=403)
+        m = self._get_milestone(milestone_id)
+        req, _ = ProgramMilestoneResearchRequirement.objects.get_or_create(milestone=m)
+        serializer = ProgramMilestoneResearchRequirementSerializer(req, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
+
+
+# ------------------------------------------------------------------
+# Research Project
+# ------------------------------------------------------------------
+
+def _get_active_rtr(user):
+    """Return the user's active ResidentTrainingRecord or raise 404."""
+    from django.shortcuts import get_object_or_404
+    return get_object_or_404(ResidentTrainingRecord, resident_user=user, active=True)
+
+
+class ResidentResearchProjectView(APIView):
+    """
+    GET / POST / PATCH own research project.
+    Residents manage their own project; supervisors can view their assigned residents'.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def _get_project_or_none(self, rtr):
+        try:
+            return rtr.research_project
+        except ResidentResearchProject.DoesNotExist:
+            return None
+
+    def get(self, request, rtr_id=None):
+        if rtr_id:
+            rtr = ResidentTrainingRecord.objects.get(pk=rtr_id)
+        else:
+            rtr = _get_active_rtr(request.user)
+        project = self._get_project_or_none(rtr)
+        if project is None:
+            return Response({"detail": "No research project found."}, status=404)
+        return Response(ResidentResearchProjectSerializer(project, context={"request": request}).data)
+
+    def post(self, request):
+        rtr = _get_active_rtr(request.user)
+        if hasattr(rtr, "research_project"):
+            return Response({"detail": "Research project already exists. Use PATCH to update."}, status=400)
+        serializer = ResidentResearchProjectSerializer(data=request.data, context={"request": request})
+        serializer.is_valid(raise_exception=True)
+        serializer.save(resident_training_record=rtr)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    def patch(self, request):
+        rtr = _get_active_rtr(request.user)
+        project = self._get_project_or_none(rtr)
+        if project is None:
+            return Response({"detail": "No research project found."}, status=404)
+        if project.status not in (
+            ResidentResearchProject.STATUS_DRAFT,
+        ):
+            return Response({"detail": "Research project can only be edited in Draft status."}, status=400)
+        serializer = ResidentResearchProjectSerializer(
+            project, data=request.data, partial=True, context={"request": request}
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
+
+
+class ResearchProjectActionView(APIView):
+    """State machine transition endpoints for research project."""
+    permission_classes = [IsAuthenticated]
+
+    VALID_ACTIONS = {
+        "submit-to-supervisor": ResidentResearchProject.STATUS_SUBMITTED_SUPERVISOR,
+        "supervisor-approve": ResidentResearchProject.STATUS_APPROVED_SUPERVISOR,
+        "submit-to-university": ResidentResearchProject.STATUS_SUBMITTED_UNIVERSITY,
+        "accept-by-university": ResidentResearchProject.STATUS_ACCEPTED_UNIVERSITY,
+        "return-to-draft": ResidentResearchProject.STATUS_DRAFT,
+    }
+
+    def post(self, request, action):
+        new_status = self.VALID_ACTIONS.get(action)
+        if new_status is None:
+            return Response({"detail": f"Unknown action '{action}'."}, status=400)
+
+        user = request.user
+
+        if action == "submit-to-supervisor":
+            rtr = _get_active_rtr(user)
+            project = rtr.research_project
+        elif action in ("supervisor-approve", "return-to-draft"):
+            # Supervisor approves/returns
+            if not _is_supervisor_or_hod(user) and not _is_admin_or_utrmc_admin(user):
+                return Response({"detail": "Supervisor/admin role required."}, status=403)
+            project_id = request.data.get("project_id")
+            if not project_id:
+                return Response({"detail": "project_id required."}, status=400)
+            project = ResidentResearchProject.objects.get(pk=project_id)
+            if action == "supervisor-approve":
+                feedback = request.data.get("feedback", "")
+                project.supervisor_feedback = feedback
+                project.supervisor = user
+                project.save()
+        elif action in ("submit-to-university", "accept-by-university"):
+            # Resident submits; UTRMC accepts
+            if action == "submit-to-university":
+                rtr = _get_active_rtr(user)
+                project = rtr.research_project
+            else:
+                if not _is_admin_or_utrmc_admin(user):
+                    return Response({"detail": "UTRMC admin required."}, status=403)
+                project_id = request.data.get("project_id")
+                project = ResidentResearchProject.objects.get(pk=project_id)
+                ref = request.data.get("university_submission_ref", "")
+                if ref:
+                    project.university_submission_ref = ref
+                    project.save()
+        else:
+            return Response({"detail": "Unknown action."}, status=400)
+
+        try:
+            project.transition_to(new_status, actor=user)
+        except Exception as exc:
+            return Response({"detail": str(exc)}, status=400)
+
+        return Response(
+            ResidentResearchProjectSerializer(project, context={"request": request}).data
+        )
+
+
+# ------------------------------------------------------------------
+# Thesis
+# ------------------------------------------------------------------
+
+class ResidentThesisView(APIView):
+    """GET / POST / PATCH own thesis record."""
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        rtr = _get_active_rtr(request.user)
+        try:
+            thesis = rtr.thesis
+        except ResidentThesis.DoesNotExist:
+            return Response({"detail": "No thesis record found."}, status=404)
+        return Response(ResidentThesisSerializer(thesis, context={"request": request}).data)
+
+    def post(self, request):
+        rtr = _get_active_rtr(request.user)
+        if hasattr(rtr, "thesis"):
+            return Response({"detail": "Thesis already exists. Use PATCH to update."}, status=400)
+        serializer = ResidentThesisSerializer(data=request.data, context={"request": request})
+        serializer.is_valid(raise_exception=True)
+        serializer.save(
+            resident_training_record=rtr,
+            status=ResidentThesis.STATUS_IN_PROGRESS,
+        )
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    def patch(self, request):
+        rtr = _get_active_rtr(request.user)
+        try:
+            thesis = rtr.thesis
+        except ResidentThesis.DoesNotExist:
+            return Response({"detail": "No thesis record found."}, status=404)
+        serializer = ResidentThesisSerializer(
+            thesis, data=request.data, partial=True, context={"request": request}
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
+
+
+class ThesisSubmitView(APIView):
+    """POST to submit thesis (transitions status to SUBMITTED)."""
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        from django.utils import timezone
+        rtr = _get_active_rtr(request.user)
+        try:
+            thesis = rtr.thesis
+        except ResidentThesis.DoesNotExist:
+            return Response({"detail": "No thesis record found."}, status=404)
+        if thesis.status == ResidentThesis.STATUS_SUBMITTED:
+            return Response({"detail": "Thesis already submitted."}, status=400)
+        if not thesis.thesis_file:
+            return Response({"detail": "Upload thesis file before submitting."}, status=400)
+        thesis.status = ResidentThesis.STATUS_SUBMITTED
+        thesis.submitted_at = timezone.now()
+        ref = request.data.get("final_submission_ref")
+        if ref:
+            thesis.final_submission_ref = ref
+        thesis.save()
+        return Response(ResidentThesisSerializer(thesis, context={"request": request}).data)
+
+
+# ------------------------------------------------------------------
+# Workshop Completions (always available — manual upload)
+# ------------------------------------------------------------------
+
+class MyWorkshopCompletionsView(APIView):
+    """Resident's own workshop completion records."""
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        rtr = _get_active_rtr(request.user)
+        qs = rtr.workshop_completions.select_related("workshop").order_by("-completed_at")
+        serializer = ResidentWorkshopCompletionSerializer(qs, many=True, context={"request": request})
+        return Response({"count": qs.count(), "results": serializer.data})
+
+    def post(self, request):
+        rtr = _get_active_rtr(request.user)
+        serializer = ResidentWorkshopCompletionSerializer(
+            data=request.data, context={"request": request}
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save(resident_training_record=rtr)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
+class MyWorkshopCompletionDetailView(APIView):
+    """GET / DELETE a single workshop completion record."""
+    permission_classes = [IsAuthenticated]
+
+    def _get_completion(self, request, pk):
+        from django.shortcuts import get_object_or_404
+        rtr = _get_active_rtr(request.user)
+        return get_object_or_404(ResidentWorkshopCompletion, pk=pk, resident_training_record=rtr)
+
+    def get(self, request, pk):
+        obj = self._get_completion(request, pk)
+        return Response(ResidentWorkshopCompletionSerializer(obj, context={"request": request}).data)
+
+    def delete(self, request, pk):
+        obj = self._get_completion(request, pk)
+        obj.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+# ------------------------------------------------------------------
+# Workshops (management) — only exposed if WORKSHOP_MANAGEMENT_ENABLED
+# ------------------------------------------------------------------
+
+class WorkshopViewSet(viewsets.ReadOnlyModelViewSet):
+    """Read-only list of workshops (always visible)."""
+    serializer_class = WorkshopSerializer
+    permission_classes = [IsAuthenticated]
+    queryset = Workshop.objects.filter(is_active=True).order_by("name")
+
+
+# ------------------------------------------------------------------
+# Eligibility
+# ------------------------------------------------------------------
+
+class MyEligibilityView(APIView):
+    """Resident's own eligibility snapshot (IMM + FINAL)."""
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        rtr = _get_active_rtr(request.user)
+        # Trigger recompute on-demand for freshness
+        try:
+            from sims.training.eligibility import recompute_for_record
+            recompute_for_record(rtr)
+        except Exception:
+            pass
+
+        qs = ResidentMilestoneEligibility.objects.filter(
+            resident_training_record=rtr
+        ).select_related("milestone")
+        serializer = ResidentMilestoneEligibilitySerializer(qs, many=True, context={"request": request})
+        return Response({
+            "resident_training_record": rtr.id,
+            "program": {"id": rtr.program_id, "code": rtr.program.code, "name": rtr.program.name},
+            "current_month_index": rtr.current_month_index(),
+            "eligibilities": serializer.data,
+        })
+
+
+class UTRMCEligibilityView(APIView):
+    """UTRMC/admin view: list eligibility with optional filters."""
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        if not _is_admin_or_utrmc_admin(request.user):
+            return Response({"detail": "Permission denied."}, status=403)
+
+        qs = ResidentMilestoneEligibility.objects.select_related(
+            "resident_training_record__resident_user",
+            "resident_training_record__program",
+            "milestone",
+        )
+
+        # Optional filters
+        program_id = request.query_params.get("program")
+        milestone_code = request.query_params.get("milestone_code")
+        eli_status = request.query_params.get("status")
+
+        if program_id:
+            qs = qs.filter(resident_training_record__program_id=program_id)
+        if milestone_code:
+            qs = qs.filter(milestone__code=milestone_code)
+        if eli_status:
+            qs = qs.filter(status=eli_status)
+
+        serializer = ResidentMilestoneEligibilitySerializer(qs, many=True, context={"request": request})
+        return Response({"count": qs.count(), "results": serializer.data})
+
+
+class SupervisorResearchApprovalsView(APIView):
+    """Supervisor inbox: pending research projects awaiting approval."""
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        if not (_is_supervisor_or_hod(request.user) or _is_admin_or_utrmc_admin(request.user)):
+            return Response({"detail": "Permission denied."}, status=403)
+
+        # Find all pending research projects for residents supervised by this user
+        if _is_admin_or_utrmc_admin(request.user):
+            qs = ResidentResearchProject.objects.filter(
+                status=ResidentResearchProject.STATUS_SUBMITTED_SUPERVISOR
+            )
+        else:
+            qs = ResidentResearchProject.objects.filter(
+                status=ResidentResearchProject.STATUS_SUBMITTED_SUPERVISOR,
+                resident_training_record__resident_user__supervisor=request.user,
+            )
+
+        qs = qs.select_related(
+            "resident_training_record__resident_user",
+            "resident_training_record__program",
+            "supervisor",
+        )
+        serializer = ResidentResearchProjectSerializer(qs, many=True, context={"request": request})
+        return Response({"count": qs.count(), "results": serializer.data})
+
+
+class SystemSettingsView(APIView):
+    """Read-only system settings for the frontend (toggles, labels, etc.)."""
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        from django.conf import settings
+        return Response({
+            "WORKSHOP_MANAGEMENT_ENABLED": getattr(settings, "WORKSHOP_MANAGEMENT_ENABLED", False),
+            "ANALYTICS_ENABLED": getattr(settings, "ANALYTICS_ENABLED", True),
+        })

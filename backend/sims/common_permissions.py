@@ -14,7 +14,6 @@ def _role(user):
 
 
 def _track_rbac_denied(request, required_roles: str, reason: str):
-    from sims.analytics.services import safe_track_event
 
     actor = request.user if _is_authenticated_user(request.user) else None
     safe_track_event(

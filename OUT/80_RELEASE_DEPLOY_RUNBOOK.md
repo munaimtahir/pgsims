@@ -19,7 +19,7 @@
 
 ### git push origin main
 ```
-To github.com:munaimtahir/pgsims
+Tno github.com:munaimtahir/pgsims
    c816659..64e9550  main -> main
 ```
 

@@ -18,7 +18,6 @@ from openpyxl import Workbook, load_workbook
 from openpyxl.styles import Font
 
 from sims.bulk.models import BulkOperation
-from sims.logbook.models import LogbookEntry
 from sims.users.models import SPECIALTY_CHOICES, YEAR_CHOICES, User
 
 try:

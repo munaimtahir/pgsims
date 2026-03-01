@@ -121,30 +121,16 @@ urlpatterns = [
     path("__fingerprint/", fingerprint_view, name="fingerprint"),
     # Django Admin
     path("admin/", admin.site.urls),
-    # SIMS App URLs
+    # SIMS App URLs — active
     path("users/", include("sims.users.urls")),
     path("rotations/", include("sims.rotations.urls")),
-    path("certificates/", include("sims.certificates.urls")),
-    path("logbook/", include("sims.logbook.urls")),
-    path("cases/", include("sims.cases.urls")),
     path("api/audit/", include("sims.audit.urls")),
-    path("api/search/", include("sims.search.urls")),
-    path("api/analytics/", include("sims.analytics.urls")),
     path("api/bulk/", include("sims.bulk.urls")),
     path("api/notifications/", include("sims.notifications.urls")),
-    path("api/reports/", include("sims.reports.urls")),
-    path("api/logbook/", include("sims.logbook.api_urls")),
-    path("api/cases/", include("sims.cases.api_urls")),
-    # Legacy rotation API URLs removed in Phase 6 cleanup (superseded by sims.training)
-    # path("api/rotations/", include("sims.rotations.api_urls")),
-    path("api/certificates/", include("sims.certificates.api_urls")),
-    path("api/attendance/", include("sims.attendance.urls")),
     path("api/", include("sims.users.userbase_urls")),
     path("api/users/", include("sims.users.api_user_urls")),
     path("api/", include("sims.training.urls")),
-    # New apps
     path("academics/", include("sims.academics.urls")),
-    path("results/", include("sims.results.urls")),
     # JWT Authentication endpoints
     path("api/auth/", include("sims.users.api_urls")),
 ]

@@ -1,11 +1,8 @@
-from datetime import date, timedelta
-
 from django.contrib.auth import get_user_model
-from django.core.exceptions import ValidationError
 from django.test import TestCase
 
 from sims.academics.models import Department
-from sims.rotations.models import Hospital, HospitalDepartment, Rotation
+from sims.rotations.models import Hospital, HospitalDepartment
 from sims.rotations.services import validate_rotation_override_requirements
 
 User = get_user_model()
@@ -45,30 +42,6 @@ class CanonicalRotationModelTests(TestCase):
             home_hospital=self.home_hospital,
             home_department=self.medicine,
         )
-
-    def test_rotation_requires_hospital_department_matrix_match(self):
-        rotation = Rotation(
-            pg=self.pg,
-            department=self.surgery,
-            hospital=self.home_hospital,
-            supervisor=self.supervisor,
-            start_date=date.today(),
-            end_date=date.today() + timedelta(days=30),
-        )
-        with self.assertRaises(ValidationError):
-            rotation.full_clean()
-
-    def test_rotation_allows_hosted_department(self):
-        rotation = Rotation.objects.create(
-            pg=self.pg,
-            department=self.medicine,
-            hospital=self.home_hospital,
-            supervisor=self.supervisor,
-            start_date=date.today(),
-            end_date=date.today() + timedelta(days=30),
-            status="planned",
-        )
-        self.assertEqual(rotation.department, self.medicine)
 
     def test_override_policy_validator_requires_utrmc_admin_when_available_at_home(self):
         with self.assertRaisesMessage(ValueError, "override_reason"):

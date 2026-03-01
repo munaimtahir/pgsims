@@ -2,8 +2,8 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useState } from 'react';
-import { getNavForRole, AppRole, NavSection } from '@/lib/navRegistry';
+import { useState, useEffect } from 'react';
+import { getNavForRole, AppRole, NavSection, NavItem } from '@/lib/navRegistry';
 
 interface SidebarProps {
   role: string;
@@ -38,6 +38,11 @@ function Icon({ name, className = 'h-5 w-5' }: { name: string; className?: strin
     bell: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />,
     'chevron-left': <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />,
     'chevron-right': <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />,
+    'chevron-down': <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />,
+    'chevron-up': <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />,
+    calendar: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />,
+    'location-marker': <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.243-4.243a8 8 0 1111.314 0z M15 11a3 3 0 11-6 0 3 3 0 016 0z" />,
+    'check-circle': <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />,
     logout: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />,
     menu: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />,
   };
@@ -47,6 +52,116 @@ function Icon({ name, className = 'h-5 w-5' }: { name: string; className?: strin
     <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
       {path}
     </svg>
+  );
+}
+
+function NavItemView({
+  item,
+  collapsed,
+  pathname,
+}: {
+  item: NavItem;
+  collapsed: boolean;
+  pathname: string;
+}) {
+  const hasSubItems = item.subItems && item.subItems.length > 0;
+  const isSubItemActive = item.subItems?.some(
+    (sub) => pathname === sub.href || pathname.startsWith(sub.href + '/')
+  );
+  const isActive =
+    (!hasSubItems &&
+      item.href &&
+      (pathname === item.href || pathname.startsWith(item.href + '/'))) ||
+    isSubItemActive;
+
+  const [isOpen, setIsOpen] = useState(isSubItemActive || false);
+
+  // Automatically open folder if active route matches inside it
+  useEffect(() => {
+    if (isSubItemActive) {
+      setIsOpen(true);
+    }
+  }, [isSubItemActive]);
+
+  if (hasSubItems) {
+    return (
+      <div className="mb-1">
+        <button
+          onClick={() => setIsOpen(!isOpen)}
+          title={collapsed ? item.label : undefined}
+          className={`group flex w-full items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${isActive || isOpen
+              ? 'bg-gradient-to-r from-indigo-500/20 to-indigo-500/5 text-indigo-300 shadow-sm border border-indigo-500/20'
+              : 'text-slate-400 hover:bg-slate-800/60 hover:text-slate-200 border border-transparent'
+            }`}
+        >
+          <div className="flex items-center gap-3">
+            <Icon
+              name={item.icon}
+              className={`h-5 w-5 flex-shrink-0 transition-colors ${isActive || isOpen ? 'text-indigo-400' : 'text-slate-500 group-hover:text-indigo-300'
+                }`}
+            />
+            {!collapsed && <span className="truncate">{item.label}</span>}
+          </div>
+          {!collapsed && (
+            <Icon
+              name={isOpen ? 'chevron-up' : 'chevron-down'}
+              className={`h-4 w-4 transition-transform duration-200 ${isOpen ? 'text-indigo-400' : 'text-slate-500'
+                }`}
+            />
+          )}
+        </button>
+
+        {!collapsed && (
+          <div
+            className={`overflow-hidden transition-all duration-300 ease-in-out ${isOpen ? 'max-h-96 opacity-100 mt-1' : 'max-h-0 opacity-0'
+              }`}
+          >
+            <div className="ml-4 pl-3 border-l border-slate-700/50 space-y-1 py-1">
+              {item.subItems!.map((sub) => {
+                const isSubActive = pathname === sub.href || pathname.startsWith(sub.href + '/');
+                return (
+                  <Link
+                    key={sub.href}
+                    href={sub.href}
+                    className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${isSubActive
+                        ? 'bg-indigo-500/10 text-indigo-300'
+                        : 'text-slate-400 hover:bg-slate-800/40 hover:text-indigo-200'
+                      }`}
+                  >
+                    <div
+                      className={`w-1.5 h-1.5 rounded-full transition-colors ${isSubActive ? 'bg-indigo-400 shadow-[0_0_8px_rgba(129,140,248,0.8)]' : 'bg-slate-600'
+                        }`}
+                    />
+                    <span className="truncate">{sub.label}</span>
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // Normal Link
+  return (
+    <div className="mb-1">
+      <Link
+        href={item.href || '#'}
+        title={collapsed ? item.label : undefined}
+        className={`group flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${isActive
+            ? 'bg-gradient-to-r from-indigo-500/20 to-indigo-500/5 text-indigo-300 shadow-sm border border-indigo-500/20'
+            : 'text-slate-400 hover:bg-slate-800/60 hover:text-slate-200 border border-transparent'
+          }`}
+      >
+        <Icon
+          name={item.icon}
+          className={`h-5 w-5 flex-shrink-0 transition-colors ${isActive ? 'text-indigo-400' : 'text-slate-500 group-hover:text-indigo-300'
+            }`}
+        />
+        {!collapsed && <span className="truncate">{item.label}</span>}
+      </Link>
+    </div>
   );
 }
 
@@ -60,30 +175,22 @@ function NavSectionView({
   pathname: string;
 }) {
   return (
-    <div className="mb-4">
+    <div className="mb-6">
       {!collapsed && (
-        <p className="px-3 mb-1 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+        <p className="px-3 mb-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest">
           {section.title}
         </p>
       )}
-      {section.items.map((item) => {
-        const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
-        return (
-          <Link
-            key={item.href}
-            href={item.href}
-            title={collapsed ? item.label : undefined}
-            className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-              isActive
-                ? 'bg-indigo-50 text-indigo-700'
-                : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-            }`}
-          >
-            <Icon name={item.icon} className="h-5 w-5 flex-shrink-0" />
-            {!collapsed && <span className="truncate">{item.label}</span>}
-          </Link>
-        );
-      })}
+      <div className="space-y-1">
+        {section.items.map((item) => (
+          <NavItemView
+            key={item.label}
+            item={item}
+            collapsed={collapsed}
+            pathname={pathname}
+          />
+        ))}
+      </div>
     </div>
   );
 }
@@ -96,28 +203,33 @@ export default function Sidebar({ role, userName, onLogout }: SidebarProps) {
 
   return (
     <div
-      className={`flex flex-col bg-white border-r border-gray-200 h-screen sticky top-0 transition-all duration-200 ${
-        collapsed ? 'w-16' : 'w-56'
-      }`}
+      className={`flex flex-col bg-[#0B1120] border-r border-slate-800/60 h-screen sticky top-0 transition-all duration-300 ease-in-out shadow-2xl z-50 ${collapsed ? 'w-20' : 'w-72'
+        }`}
     >
       {/* Logo + toggle */}
-      <div className="flex items-center justify-between h-14 px-3 border-b border-gray-200 flex-shrink-0">
+      <div className="flex items-center justify-between h-16 px-4 border-b border-slate-800/60 flex-shrink-0 bg-slate-900/50 backdrop-blur-md">
         {!collapsed && (
-          <Link href="/dashboard" className="text-lg font-bold text-indigo-600 truncate">
-            PGSIMS
+          <Link href="/dashboard" className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/20">
+              <span className="text-white font-bold text-lg">P</span>
+            </div>
+            <span className="text-xl font-bold bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent tracking-tight">
+              PGSIMS
+            </span>
           </Link>
         )}
         <button
           onClick={() => setCollapsed((c) => !c)}
-          className={`p-1.5 rounded-lg text-gray-500 hover:bg-gray-100 transition-colors ${collapsed ? 'mx-auto' : ''}`}
+          className={`p-2 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white transition-all duration-200 ${collapsed ? 'mx-auto' : ''
+            }`}
           aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
         >
-          <Icon name={collapsed ? 'chevron-right' : 'chevron-left'} className="h-4 w-4" />
+          <Icon name={collapsed ? 'chevron-right' : 'chevron-left'} className="h-5 w-5" />
         </button>
       </div>
 
       {/* Nav sections */}
-      <nav className="flex-1 overflow-y-auto px-2 py-3">
+      <nav className="flex-1 overflow-y-auto px-3 py-6 custom-scrollbar">
         {sections.map((section) => (
           <NavSectionView
             key={section.title}
@@ -129,21 +241,45 @@ export default function Sidebar({ role, userName, onLogout }: SidebarProps) {
       </nav>
 
       {/* Footer: user + logout */}
-      <div className="border-t border-gray-200 px-2 py-3 flex-shrink-0">
+      <div className="border-t border-slate-800/60 p-4 bg-slate-900/30 flex-shrink-0">
         {!collapsed && (
-          <p className="px-3 mb-1 text-xs text-gray-500 truncate" title={userName}>
-            {userName}
-          </p>
+          <div className="flex items-center gap-3 px-2 mb-4">
+            <div className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center border border-slate-700">
+              <Icon name="users" className="h-4 w-4 text-slate-400" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-slate-200 truncate" title={userName}>
+                {userName}
+              </p>
+              <p className="text-xs text-slate-500 capitalize">{role.replace('_', ' ')}</p>
+            </div>
+          </div>
         )}
         <button
           onClick={onLogout}
           title={collapsed ? 'Logout' : undefined}
-          className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm font-medium text-gray-600 hover:bg-red-50 hover:text-red-700 transition-colors"
+          className="group flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:bg-red-500/10 hover:text-red-400 border border-transparent hover:border-red-500/20 transition-all duration-200"
         >
-          <Icon name="logout" className="h-5 w-5 flex-shrink-0" />
-          {!collapsed && <span>Logout</span>}
+          <Icon name="logout" className="h-5 w-5 flex-shrink-0 transition-transform group-hover:-translate-x-1" />
+          {!collapsed && <span>Sign out</span>}
         </button>
       </div>
+
+      <style jsx global>{`
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background-color: #334155;
+          border-radius: 20px;
+        }
+        .custom-scrollbar:hover::-webkit-scrollbar-thumb {
+          background-color: #475569;
+        }
+      `}</style>
     </div>
   );
 }

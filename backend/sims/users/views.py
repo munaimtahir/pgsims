@@ -1046,285 +1046,32 @@ class UserPerformanceAPIView(AdminRequiredMixin, View):
         return JsonResponse({"users": users_data})
 
 
-# Analytics Views
+
+
+# Analytics Views — PLACEHOLDER (legacy analytics removed; will be rebuilt per-feature)
+from django.http import HttpResponse as _HttpResponse
+
+
 @admin_required
 def admin_analytics_view(request):
-    """Admin analytics with system-wide statistics"""
-    from sims.analytics.services import (
-        dashboard_overview,
-        dashboard_trends,
-        dashboard_compliance,
-        get_specialty_stats
-    )
-
-    # Core user counts
-    total_users = User.objects.filter(is_archived=False).count()
-    active_users = User.objects.filter(is_active=True, is_archived=False).count()
-    total_pgs = User.objects.filter(role="pg", is_archived=False).count()
-    total_supervisors = User.objects.filter(role="supervisor", is_archived=False).count()
-
-    # Enhanced specialty distribution (using service with colors)
-    specialty_data = get_specialty_stats(request.user, role="all", period="all")
-    specialty_stats = specialty_data["specialty_stats"]
-    specialty_summary = specialty_data["summary"]
-    
-    # Enrichment from analytics module
-    overview = dashboard_overview(request.user)
-    trends = dashboard_trends(request.user)
-    compliance = dashboard_compliance(request.user)
-    from sims.analytics.services import performance_metrics
-    performance = performance_metrics(request.user)
-
-    # Prepare JSON for frontend charts
-    specialty_stats_json = json.dumps(specialty_stats)
-    trends_json = json.dumps(trends.get("trends", []))
-    compliance_json = json.dumps(compliance.get("compliance", []))
-
-    # Recent system-wide activity (Details logs)
-    from sims.logbook.models import LogbookEntry
-    recent_logs = (
-        LogbookEntry.objects.select_related("pg", "rotation", "supervisor")
-        .order_by("-date", "-created_at")[:10]
-    )
-
-    context = {
-        # Core user counts
-        "total_users": total_users,
-        "active_users": active_users,
-        "total_pgs": total_pgs,
-        "total_supervisors": total_supervisors,
-        
-        # Specialty stats
-        "specialty_distribution": specialty_stats,
-        "specialty_stats_json": specialty_stats_json,
-        "specialty_summary": specialty_summary,
-
-        # Training overview from analytics module
-        "overview": overview,
-        "performance": performance,
-        
-        # Trends & Compliance (JSON for charts)
-        "trends_json": trends_json,
-        "compliance_json": compliance_json,
-        "compliance_list": compliance.get("compliance", []),
-        
-        # Detailed Logs
-        "recent_logs": recent_logs,
-        
-        "analytics_type": "admin",
-    }
-    return render(request, "users/admin_analytics.html", context)
+    """Admin analytics — placeholder (legacy analytics removed)."""
+    return _HttpResponse("Analytics coming soon.", status=200)
 
 
 @supervisor_required
 def supervisor_analytics_view(request):
-    """Supervisor analytics with assigned PGs statistics"""
-
-    # Get assigned PGs
-    assigned_pgs = request.user.get_assigned_pgs()
-    assigned_pgs_count = assigned_pgs.count()
-
-    # PG progress statistics
-    pg_progress_stats = []
-    for pg in assigned_pgs:
-        try:
-            from sims.certificates.models import Certificate
-            from sims.logbook.models import LogbookEntry
-            from sims.training.models import RotationAssignment
-
-            pg_stats = {
-                "pg": pg,
-                "certificates": Certificate.objects.filter(pg=pg).count(),
-                "logbook_entries": LogbookEntry.objects.filter(pg=pg).count(),
-                "rotations": RotationAssignment.objects.filter(resident_training__resident_user=pg).count(),
-                "completion_percentage": 0,  # Calculate based on requirements
-            }
-            pg_progress_stats.append(pg_stats)
-        except ImportError:
-            pg_stats = {
-                "pg": pg,
-                "certificates": 0,
-                "logbook_entries": 0,
-                "rotations": 0,
-                "completion_percentage": 0,
-            }
-            pg_progress_stats.append(pg_stats)
-
-    # Monthly progress data for assigned PGs
-    from django.utils import timezone
-
-    current_month = timezone.now().month
-    current_year = timezone.now().year
-
-    try:
-        from sims.logbook.models import LogbookEntry
-
-        monthly_entries = LogbookEntry.objects.filter(
-            pg__in=assigned_pgs, created_at__month=current_month, created_at__year=current_year
-        ).count()
-    except ImportError:
-        monthly_entries = 0
-
-    try:
-        from sims.certificates.models import Certificate
-
-        monthly_certificates = Certificate.objects.filter(
-            pg__in=assigned_pgs, created_at__month=current_month, created_at__year=current_year
-        ).count()
-    except ImportError:
-        monthly_certificates = 0
-
-    context = {
-        "assigned_pgs_count": assigned_pgs_count,
-        "pg_progress_stats": pg_progress_stats,
-        "monthly_entries": monthly_entries,
-        "monthly_certificates": monthly_certificates,
-        "analytics_type": "supervisor",
-    }
-    return render(request, "users/supervisor_analytics.html", context)
+    """Supervisor analytics — placeholder."""
+    return _HttpResponse("Analytics coming soon.", status=200)
 
 
 @pg_required
 def pg_analytics_view(request):
-    """PG analytics with personal progress tracking"""
-
-    # Personal progress statistics
-    try:
-        from sims.certificates.models import Certificate
-
-        my_certificates = Certificate.objects.filter(pg=request.user).count()
-        certificates_this_month = Certificate.objects.filter(
-            pg=request.user,
-            created_at__month=timezone.now().month,
-            created_at__year=timezone.now().year,
-        ).count()
-    except ImportError:
-        my_certificates = 0
-        certificates_this_month = 0
-
-    try:
-        from sims.logbook.models import LogbookEntry
-
-        my_logbook_entries = LogbookEntry.objects.filter(pg=request.user).count()
-        entries_this_month = LogbookEntry.objects.filter(
-            pg=request.user,
-            created_at__month=timezone.now().month,
-            created_at__year=timezone.now().year,
-        ).count()
-
-        # Monthly progress chart data (last 6 months)
-        from datetime import timedelta
-
-        six_months_ago = timezone.now().date() - timedelta(days=180)
-        monthly_progress = (
-            LogbookEntry.objects.filter(pg=request.user, created_at__date__gte=six_months_ago)
-            .extra(select={"month": 'strftime("%%Y-%%m", created_at)'})
-            .values("month")
-            .annotate(count=Count("id"))
-            .order_by("month")
-        )
-
-    except ImportError:
-        my_logbook_entries = 0
-        entries_this_month = 0
-        monthly_progress = []
-
-    try:
-        from sims.training.models import RotationAssignment
-
-        my_rotations = RotationAssignment.objects.filter(resident_training__resident_user=request.user).count()
-        completed_rotations = RotationAssignment.objects.filter(resident_training__resident_user=request.user, status="COMPLETED").count()
-        current_rotation = RotationAssignment.objects.filter(resident_training__resident_user=request.user, status="ACTIVE").first()
-    except ImportError:
-        my_rotations = 0
-        completed_rotations = 0
-        current_rotation = None
-
-    try:
-        from sims.cases.models import ClinicalCase
-
-        my_cases = ClinicalCase.objects.filter(pg=request.user).count()
-    except ImportError:
-        my_cases = 0
-
-    # Calculate overall completion percentage
-    # This would be based on program requirements
-    total_required = 100  # Placeholder - should come from program requirements
-    completed = my_certificates + completed_rotations
-    completion_percentage = (
-        min((completed / total_required) * 100, 100) if total_required > 0 else 0
-    )
-
-    context = {
-        "my_certificates": my_certificates,
-        "certificates_this_month": certificates_this_month,
-        "my_logbook_entries": my_logbook_entries,
-        "entries_this_month": entries_this_month,
-        "my_rotations": my_rotations,
-        "completed_rotations": completed_rotations,
-        "current_rotation": current_rotation,
-        "my_cases": my_cases,
-        "completion_percentage": round(completion_percentage, 1),
-        "monthly_progress": list(monthly_progress),
-        "analytics_type": "pg",
-    }
-    return render(request, "users/pg_analytics.html", context)
+    """PG analytics — placeholder."""
+    return _HttpResponse("Analytics coming soon.", status=200)
 
 
 @staff_member_required
 def admin_stats_api(request):
-    """Enhanced API endpoint for admin dashboard statistics with filters"""
+    """Admin stats API — placeholder."""
     from django.http import JsonResponse
-    from sims.analytics.services import (
-        get_specialty_stats,
-        dashboard_overview,
-        performance_metrics
-    )
-
-    # Get filter parameters
-    role_filter = request.GET.get("role", "all")
-    period_filter = request.GET.get("period", "all")
-
-    # Base queryset for active users
-    base_qs = User.objects.filter(is_archived=False)
-
-    # Get enhanced specialty stats using the service
-    stats_data = get_specialty_stats(request.user, role=role_filter, period=period_filter)
-    
-    # Get training overview and performance
-    overview = dashboard_overview(request.user)
-    performance = performance_metrics(request.user)
-
-    # Basic counts
-    total_users = base_qs.count()
-    total_pgs = base_qs.filter(role="pg").count()
-    total_supervisors = base_qs.filter(role="supervisor").count()
-    
-    # Recent users (last 5)
-    recent_users_qs = base_qs.order_by("-date_joined")[:5]
-    recent_users = [
-        {
-            "username": user.username,
-            "full_name": user.get_full_name(),
-            "role_display": user.get_role_display(),
-            "specialty": user.specialty or "Unspecified",
-            "date_joined_display": f"{(timezone.now() - user.date_joined).days} days ago",
-        }
-        for user in recent_users_qs
-    ]
-
-    response_data = {
-        "user_stats": {
-            "total_users": total_users,
-            "total_pgs": total_pgs,
-            "total_supervisors": total_supervisors,
-            "recent_users": recent_users,
-        },
-        "training_stats": overview,
-        "performance_stats": performance,
-        "specialty_distribution": stats_data["specialty_stats"],
-        "summary": stats_data["summary"],
-        "filter_applied": stats_data["filter_applied"]
-    }
-
-    return JsonResponse(response_data)
+    return JsonResponse({"status": "coming soon"})

@@ -21,7 +21,6 @@ from sims.bulk.serializers import (
     TraineeImportSerializer,
 )
 from sims.bulk.services import BulkService
-from sims.analytics.services import safe_track_event
 
 User = get_user_model()
 

@@ -3,8 +3,6 @@
 from dataclasses import dataclass
 from typing import Optional
 
-from django.utils import timezone
-
 
 @dataclass(frozen=True)
 class RotationOverrideDecision:
@@ -66,18 +64,3 @@ def validate_rotation_override_requirements(
         raise ValueError("utrmc_admin approval is required for this inter-hospital rotation")
     return decision
 
-
-def approve_rotation_override(*, rotation, approver):
-    """Persist UTRMC approval on a rotation using the shared validator."""
-    role = getattr(approver, "role", None)
-    validate_rotation_override_requirements(
-        rotation.pg,
-        rotation.hospital,
-        rotation.department,
-        rotation.override_reason,
-        role,
-    )
-    rotation.utrmc_approved_by = approver
-    rotation.utrmc_approved_at = timezone.now()
-    rotation.save(update_fields=["utrmc_approved_by", "utrmc_approved_at", "updated_at"])
-    return evaluate_rotation_override_policy(rotation.pg, rotation.hospital, rotation.department)

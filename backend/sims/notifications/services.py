@@ -12,9 +12,8 @@ from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.utils import timezone
 
-from sims.logbook.models import LogbookEntry
 from sims.notifications.models import Notification, NotificationPreference
-from sims.rotations.models import Rotation
+from sims.training.models import RotationAssignment
 from sims.users.models import User
 
 logger = logging.getLogger(__name__)
@@ -105,54 +104,25 @@ class NotificationService:
 
     # Trigger helpers -------------------------------------------------
 
-    def logbook_status_change(self, entry: LogbookEntry, previous_status: Optional[str]) -> None:
-        if entry.status == previous_status:
-            return
-        context = {"entry": entry, "previous_status": previous_status}
-        if entry.status == "pending" and entry.supervisor:
-            self.send(
-                recipient=entry.supervisor,
-                verb="logbook-submitted",
-                title=f"Logbook entry submitted by {entry.pg.get_full_name()}",
-                template="emails/logbook_pending",
-                context=context,
-            )
-        elif entry.status == "approved":
-            self.send(
-                recipient=entry.pg,
-                verb="logbook-approved",
-                title=f"Logbook entry '{entry.case_title}' approved",
-                template="emails/logbook_approved",
-                context=context,
-            )
-
     def upcoming_rotation_deadlines(self, days: int = 3) -> int:
         today = timezone.now().date()
         threshold = today + timedelta(days=days)
-        rotations = Rotation.objects.filter(
-            status__in=["ongoing", "planned"],
+        rotations = RotationAssignment.objects.filter(
+            status__in=[RotationAssignment.STATUS_ACTIVE, RotationAssignment.STATUS_APPROVED],
             end_date__range=(today, threshold),
-        ).select_related("pg", "supervisor")
+        ).select_related("resident_training__resident_user")
         count = 0
         for rotation in rotations:
+            resident = rotation.resident_training.resident_user
             context = {"rotation": rotation, "days": (rotation.end_date - today).days}
             self.send(
-                recipient=rotation.pg,
+                recipient=resident,
                 verb="rotation-ending",
                 title=f"Rotation ending on {rotation.end_date:%d %b %Y}",
                 template="emails/rotation_deadline",
                 context=context,
                 channels=(Notification.CHANNEL_IN_APP,),
             )
-            if rotation.supervisor:
-                self.send(
-                    recipient=rotation.supervisor,
-                    verb="rotation-ending",
-                    title=f"Rotation for {rotation.pg.get_full_name()} ending soon",
-                    template="emails/rotation_deadline",
-                    context=context,
-                    channels=(Notification.CHANNEL_IN_APP,),
-                )
             count += 1
         return count
 

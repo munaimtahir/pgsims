@@ -78,21 +78,13 @@ INSTALLED_APPS = [
     "widget_tweaks",  # For form widget customization
     "simple_history",  # For audit history
     "django_celery_beat",  # For Celery beat periodic task scheduling
-    # SIMS apps
+    # SIMS apps — active
     "sims.users",
     "sims.academics",
     "sims.rotations",
-    "sims.certificates",
-    "sims.logbook",
-    "sims.cases",
-    "sims.search",
     "sims.audit",
-    "sims.analytics",
     "sims.bulk",
     "sims.notifications",
-    "sims.reports",
-    "sims.attendance",
-    "sims.results",
     "sims.training",
 ]
 
@@ -409,6 +401,10 @@ SIMS_SETTINGS = {
     "AUTO_BACKUP_ENABLED": True,
     "BACKUP_RETENTION_DAYS": 30,
     "BACKUP_LOCATION": BASE_DIR / "backups",
+    # Academic / Workshop Toggle
+    # Set to True to enable full workshop management (applications, blocks, attendance).
+    # When False, only manual certificate uploads are permitted.
+    "WORKSHOP_MANAGEMENT_ENABLED": False,
 }
 
 ANALYTICS_ENABLED = os.environ.get(
@@ -423,6 +419,11 @@ ANALYTICS_ALLOW_SUPERVISOR_ACCESS = os.environ.get(
 ANALYTICS_SUPERVISOR_ACCESS_ENABLED = os.environ.get(
     "ANALYTICS_SUPERVISOR_ACCESS_ENABLED",
     str(ANALYTICS_ALLOW_SUPERVISOR_ACCESS).lower(),
+).lower() in ("true", "1", "yes")
+
+WORKSHOP_MANAGEMENT_ENABLED = os.environ.get(
+    "WORKSHOP_MANAGEMENT_ENABLED",
+    str(SIMS_SETTINGS["WORKSHOP_MANAGEMENT_ENABLED"]),
 ).lower() in ("true", "1", "yes")
 ANALYTICS_REQUEST_SAMPLING = max(
     0.0, min(float(os.environ.get("ANALYTICS_REQUEST_SAMPLING", "1.0")), 1.0)

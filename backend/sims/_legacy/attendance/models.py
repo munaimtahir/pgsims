@@ -41,16 +41,6 @@ class Session(models.Model):
     start_time = models.TimeField(help_text="Start time of the session")
     end_time = models.TimeField(help_text="End time of the session")
 
-    # Link to module or rotation (optional)
-    rotation = models.ForeignKey(
-        "rotations.Rotation",
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name="sessions",
-        help_text="Associated rotation (if applicable)",
-    )
-
     module_name = models.CharField(
         max_length=200,
         blank=True,
@@ -86,7 +76,6 @@ class Session(models.Model):
         ordering = ["-date", "-start_time"]
         indexes = [
             models.Index(fields=["date", "status"]),
-            models.Index(fields=["rotation"]),
         ]
 
     def __str__(self):

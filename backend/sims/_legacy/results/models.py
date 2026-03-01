@@ -40,16 +40,6 @@ class Exam(models.Model):
         help_text="Type of exam",
     )
 
-    # Link to rotation or module
-    rotation = models.ForeignKey(
-        "rotations.Rotation",
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name="exams",
-        help_text="Associated rotation (if applicable)",
-    )
-
     module_name = models.CharField(
         max_length=200,
         blank=True,
@@ -118,7 +108,6 @@ class Exam(models.Model):
         indexes = [
             models.Index(fields=["date", "status"]),
             models.Index(fields=["exam_type"]),
-            models.Index(fields=["rotation"]),
         ]
 
     def __str__(self):

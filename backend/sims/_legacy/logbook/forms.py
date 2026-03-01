@@ -148,11 +148,12 @@ class LogbookEntryCreateForm(forms.ModelForm):
             ).order_by("last_name", "first_name")
 
             # All rotations
-            from sims.rotations.models import Rotation
+            from sims.training.models import RotationAssignment
 
-            self.fields["rotation"].queryset = Rotation.objects.select_related(
-                "department", "hospital"
-            ).order_by("department__name", "start_date")
+            self.fields["rotation"].queryset = RotationAssignment.objects.select_related(
+                "hospital_department__department", "hospital_department__hospital",
+                "resident_training__resident_user"
+            ).order_by("start_date")
 
         elif self.user.role == "supervisor":
             # Supervisors see only their assigned PGs
@@ -165,12 +166,14 @@ class LogbookEntryCreateForm(forms.ModelForm):
             self.fields["supervisor"].initial = self.user
 
             # Rotations for their PGs
-            from sims.rotations.models import Rotation
+            from sims.training.models import RotationAssignment
 
             self.fields["rotation"].queryset = (
-                Rotation.objects.filter(pg__supervisor=self.user)
-                .select_related("department", "hospital")
-                .order_by("department__name")
+                RotationAssignment.objects.filter(
+                    resident_training__resident_user__supervisor=self.user
+                )
+                .select_related("hospital_department__department", "hospital_department__hospital")
+                .order_by("start_date")
             )
 
         elif self.user.role == "pg":
@@ -185,11 +188,13 @@ class LogbookEntryCreateForm(forms.ModelForm):
                 self.fields["supervisor"].initial = self.user.supervisor
 
             # Their rotations
-            from sims.rotations.models import Rotation
+            from sims.training.models import RotationAssignment
 
             self.fields["rotation"].queryset = (
-                Rotation.objects.filter(pg=self.user)
-                .select_related("department", "hospital")
+                RotationAssignment.objects.filter(
+                    resident_training__resident_user=self.user
+                )
+                .select_related("hospital_department__department", "hospital_department__hospital")
                 .order_by("start_date")
             )
 
@@ -330,7 +335,10 @@ class LogbookEntryCreateForm(forms.ModelForm):
 
         # Validate rotation assignment
         if rotation and pg:
-            if rotation.pg and rotation.pg != pg:
+            resident_user = getattr(
+                getattr(rotation, "resident_training", None), "resident_user", None
+            )
+            if resident_user and resident_user != pg:
                 raise ValidationError(
                     {"rotation": "Selected rotation does not belong to the selected PG"}
                 )
@@ -700,20 +708,20 @@ class LogbookSearchForm(forms.Form):
 
         # Setup rotation queryset based on user role
         if user:
-            from sims.rotations.models import Rotation
+            from sims.training.models import RotationAssignment
 
             if user.role == "admin":
-                self.fields["rotation"].queryset = Rotation.objects.select_related(
-                    "department", "hospital"
+                self.fields["rotation"].queryset = RotationAssignment.objects.select_related(
+                    "hospital_department__department", "hospital_department__hospital"
                 )
             elif user.role == "supervisor":
-                self.fields["rotation"].queryset = Rotation.objects.filter(
-                    pg__supervisor=user
-                ).select_related("department", "hospital")
+                self.fields["rotation"].queryset = RotationAssignment.objects.filter(
+                    resident_training__resident_user__supervisor=user
+                ).select_related("hospital_department__department", "hospital_department__hospital")
             elif user.role == "pg":
-                self.fields["rotation"].queryset = Rotation.objects.filter(pg=user).select_related(
-                    "department", "hospital"
-                )
+                self.fields["rotation"].queryset = RotationAssignment.objects.filter(
+                    resident_training__resident_user=user
+                ).select_related("hospital_department__department", "hospital_department__hospital")
 
 
 class LogbookFilterForm(forms.Form):
@@ -998,11 +1006,11 @@ class QuickLogbookEntryForm(forms.ModelForm):
 
         # User-specific rotations
         if self.user.role == "pg":
-            from sims.rotations.models import Rotation
+            from sims.training.models import RotationAssignment
 
-            self.fields["rotation"].queryset = Rotation.objects.filter(pg=self.user).select_related(
-                "department"
-            )
+            self.fields["rotation"].queryset = RotationAssignment.objects.filter(
+                resident_training__resident_user=self.user
+            ).select_related("hospital_department__department")
 
 
 class LogbookTemplateForm(forms.ModelForm):
