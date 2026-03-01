@@ -1,7 +1,6 @@
 from django.contrib.auth.models import AbstractUser
 from django.core.exceptions import ValidationError
 from django.db import models
-from django.urls import reverse
 from django.utils import timezone
 from simple_history.models import HistoricalRecords
 
@@ -176,54 +175,17 @@ class User(AbstractUser):
         return f"{self.username} ({self.get_role_display()})"
 
     def clean(self):
-        """Validate model fields and business rules"""
+        """Validate model fields — only prevent self-supervision."""
         super().clean()
-        resident_roles = {"pg", "resident"}
-
-        # PGs must have specialty, year, and supervisor
-        if self.role in resident_roles:
-            if not self.specialty:
-                raise ValidationError({"specialty": "Specialty is required for residents"})
-            if not self.year:
-                raise ValidationError({"year": "Training year is required for residents"})
-            if self.role == "pg" and not self.supervisor:
-                raise ValidationError({"supervisor": "Supervisor is required for PGs"})
-
-        # Supervisors/faculty must have specialty
-        if self.role in {"supervisor", "faculty"} and not self.specialty:
-            raise ValidationError({"specialty": "Specialty is required for supervisors/faculty"})
-
-        # Admins don't need specialty/year/supervisor
-        if self.role == "admin":
-            if self.supervisor:
-                raise ValidationError({"supervisor": "Admins cannot have supervisors"})
-
-        if self.role in {"utrmc_user", "utrmc_admin", "faculty"} and self.supervisor:
-            raise ValidationError({"supervisor": "This role cannot have a supervisor assignment"})
-
-        # Prevent self-supervision
-        if self.supervisor == self:
+        if self.supervisor and self.pk and self.supervisor_id == self.pk:
             raise ValidationError({"supervisor": "Users cannot supervise themselves"})
 
-        # Ensure supervisor is actually a supervisor
-        if self.supervisor and self.supervisor.role not in {"supervisor", "faculty"}:
-            raise ValidationError(
-                {"supervisor": "Assigned supervisor must have supervisor/faculty role"}
-            )
-
     def save(self, *args, **kwargs):
-        """Override save to handle archiving and validation"""
-        # Run validation
-        self.full_clean()
-
-        # Set archived date if being archived
+        """Override save to handle archiving."""
         if self.is_archived and not self.archived_date:
             self.archived_date = timezone.now()
-
-        # Clear archived date if un-archiving
         if not self.is_archived and self.archived_date:
             self.archived_date = None
-
         super().save(*args, **kwargs)
 
     # Role checking methods
@@ -273,19 +235,16 @@ class User(AbstractUser):
     # Dashboard URLs
     def get_dashboard_url(self):
         """Get appropriate dashboard URL based on role"""
-        if self.is_admin():
-            return reverse("admin:index")
-        elif self.is_supervisor() or self.is_faculty():
-            return reverse("users:supervisor_dashboard")
-        elif self.is_pg():
-            return reverse("users:pg_dashboard")
-        elif self.is_utrmc_user() or self.is_utrmc_admin():
+        if self.role in {"admin", "utrmc_admin", "utrmc_user"}:
             return "/dashboard/utrmc"
-        return reverse("users:profile")
+        elif self.role in {"supervisor", "faculty"}:
+            return "/dashboard/supervisor"
+        elif self.role in {"pg", "resident"}:
+            return "/dashboard/resident"
+        return "/dashboard"
 
     def get_absolute_url(self):
-        """Get URL for user detail/profile"""
-        return reverse("users:profile", kwargs={"pk": self.pk})
+        return "/dashboard"
 
     # Display methods
     def get_display_name(self):
@@ -305,87 +264,6 @@ class User(AbstractUser):
             "utrmc_admin": "badge-dark",
         }
         return role_classes.get(self.role, "badge-secondary")
-
-    # Statistics methods (for analytics)
-    def get_documents_pending_count(self):
-        """Get count of documents pending review (for supervisors)"""
-        if not self.is_supervisor():
-            return 0
-
-        count = 0
-        try:
-            # Import here to avoid circular imports
-            from django.apps import apps
-
-            # Check if apps exist before importing
-            if apps.is_installed("sims.certificates"):
-                from sims.certificates.models import Certificate
-
-                for pg in self.get_assigned_pgs():
-                    count += Certificate.objects.filter(pg=pg, status="pending").count()
-
-            if apps.is_installed("sims.training"):
-                from sims.training.models import RotationAssignment
-
-                for pg in self.get_assigned_pgs():
-                    count += RotationAssignment.objects.filter(
-                        resident_training__resident_user=pg, status="SUBMITTED"
-                    ).count()
-
-            if apps.is_installed("sims.logbook"):
-                from sims.logbook.models import LogbookEntry
-
-                for pg in self.get_assigned_pgs():
-                    count += LogbookEntry.objects.filter(pg=pg, status="pending").count()
-
-            if apps.is_installed("sims.cases"):
-                from sims.cases.models import ClinicalCase
-
-                for pg in self.get_assigned_pgs():
-                    count += ClinicalCase.objects.filter(pg=pg, status="pending").count()
-
-        except ImportError:
-            # Handle case where related models don't exist yet
-            pass
-
-        return count
-
-    def get_documents_submitted_count(self):
-        """Get count of documents submitted by this PG/resident."""
-        if not self.is_pg():
-            return 0
-
-        count = 0
-        try:
-            from django.apps import apps
-
-            if apps.is_installed("sims.certificates"):
-                from sims.certificates.models import Certificate
-
-                count += Certificate.objects.filter(pg=self).count()
-
-            if apps.is_installed("sims.training"):
-                from sims.training.models import RotationAssignment
-
-                count += RotationAssignment.objects.filter(
-                    resident_training__resident_user=self
-                ).count()
-
-            if apps.is_installed("sims.logbook"):
-                from sims.logbook.models import LogbookEntry
-
-                count += LogbookEntry.objects.filter(pg=self).count()
-
-            if apps.is_installed("sims.cases"):
-                from sims.cases.models import ClinicalCase
-
-                count += ClinicalCase.objects.filter(pg=self).count()
-
-        except ImportError:
-            pass
-
-        return count
-
 
 class StaffProfile(models.Model):
     """Profile metadata for faculty and supervisors."""

@@ -1,112 +1,90 @@
 'use client';
+import { useEffect, useState } from 'react';
+import { userbaseApi, UserbaseHospital, UserbaseDepartment, UserbaseHospitalDepartment } from '@/lib/api/userbase';
 
-import { useEffect, useMemo, useState } from 'react';
-import DashboardLayout from '@/components/layout/DashboardLayout';
-import ProtectedRoute from '@/components/auth/ProtectedRoute';
-import { userbaseApi, UserbaseDepartment, UserbaseHospital, UserbaseHospitalDepartment } from '@/lib/api/userbase';
-
-export default function UTRMCMatrixPage() {
-  const [matrix, setMatrix] = useState<UserbaseHospitalDepartment[]>([]);
+export default function MatrixPage() {
   const [hospitals, setHospitals] = useState<UserbaseHospital[]>([]);
   const [departments, setDepartments] = useState<UserbaseDepartment[]>([]);
-  const [hospitalId, setHospitalId] = useState<number | null>(null);
-  const [departmentId, setDepartmentId] = useState<number | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [matrix, setMatrix] = useState<UserbaseHospitalDepartment[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [toggling, setToggling] = useState<string | null>(null);
 
-  const load = async () => {
+  const load = () => Promise.all([
+    userbaseApi.hospitals.list(),
+    userbaseApi.departments.list(),
+    userbaseApi.matrix.list(),
+  ]).then(([h, d, m]) => { setHospitals(h); setDepartments(d); setMatrix(m); })
+    .catch(() => setError('Failed to load'))
+    .finally(() => setLoading(false));
+
+  useEffect(() => { load(); }, []);
+
+  const getCellEntry = (hId: number, dId: number) =>
+    matrix.find(m => {
+      const hIdM = typeof m.hospital === 'object' ? m.hospital.id : (m.hospital_id ?? m.hospital);
+      const dIdM = typeof m.department === 'object' ? m.department.id : (m.department_id ?? m.department);
+      return hIdM === hId && dIdM === dId;
+    });
+
+  const toggle = async (hId: number, dId: number) => {
+    const key = `${hId}-${dId}`;
+    const existing = getCellEntry(hId, dId);
+    setToggling(key);
     try {
-      const [m, h, d] = await Promise.all([
-        userbaseApi.matrix.list(),
-        userbaseApi.hospitals.list(),
-        userbaseApi.departments.list(),
-      ]);
-      setMatrix(m);
-      setHospitals(h);
-      setDepartments(d);
-      if (!hospitalId && h[0]) setHospitalId(h[0].id);
-      if (!departmentId && d[0]) setDepartmentId(d[0].id);
-    } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Failed to load matrix');
-    }
-  };
-
-  useEffect(() => {
-    load();
-  }, []);
-
-  const createMatrix = async () => {
-    if (!hospitalId || !departmentId) return;
-    try {
-      setError(null);
-      await userbaseApi.matrix.create({ hospital_id: hospitalId, department_id: departmentId, active: true });
+      if (existing) {
+        if (existing.active) await userbaseApi.matrix.update(existing.id, { active: false });
+        else await userbaseApi.matrix.update(existing.id, { active: true });
+      } else {
+        await userbaseApi.matrix.create({ hospital_id: hId, department_id: dId, active: true });
+      }
       await load();
-    } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Create failed');
-    }
+    } catch { setError('Toggle failed'); }
+    finally { setToggling(null); }
   };
 
-  const toggle = async (item: UserbaseHospitalDepartment) => {
-    try {
-      await userbaseApi.matrix.update(item.id, { active: !item.active });
-      await load();
-    } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Update failed');
-    }
-  };
-
-  const options = useMemo(() => ({ hospitals, departments }), [hospitals, departments]);
+  if (loading) return <p className="text-gray-500">Loading...</p>;
 
   return (
-    <ProtectedRoute allowedRoles={['utrmc_admin', 'admin']}>
-      <DashboardLayout>
-        <div className="space-y-4">
-          <h1 className="text-2xl font-bold">Hospital-Department Matrix</h1>
-          {error && <p className="text-sm text-red-600">{error}</p>}
-          <div className="grid grid-cols-1 gap-2 md:grid-cols-3">
-            <select className="rounded border p-2" value={hospitalId ?? ''} onChange={(e) => setHospitalId(Number(e.target.value))}>
-              {options.hospitals.map((h) => (
-                <option key={h.id} value={h.id}>
-                  {h.name}
-                </option>
+    <div>
+      <h1 className="text-2xl font-bold text-gray-900 mb-4">Hospital–Department Matrix</h1>
+      {error && <p className="text-red-600 mb-2">{error}</p>}
+      <div className="overflow-auto">
+        <table className="text-xs border-collapse">
+          <thead>
+            <tr>
+              <th className="border border-gray-200 px-2 py-1 bg-gray-50 text-left min-w-32">Hospital \ Dept</th>
+              {departments.map(d => (
+                <th key={d.id} className="border border-gray-200 px-2 py-1 bg-gray-50 text-center max-w-20 truncate" title={d.name}>{d.code}</th>
               ))}
-            </select>
-            <select className="rounded border p-2" value={departmentId ?? ''} onChange={(e) => setDepartmentId(Number(e.target.value))}>
-              {options.departments.map((d) => (
-                <option key={d.id} value={d.id}>
-                  {d.name}
-                </option>
-              ))}
-            </select>
-            <button className="rounded bg-indigo-600 px-3 py-2 text-white" onClick={createMatrix}>
-              Add Mapping
-            </button>
-          </div>
-          <table className="min-w-full border bg-white text-sm">
-            <thead>
-              <tr>
-                <th className="border px-2 py-1 text-left">Hospital</th>
-                <th className="border px-2 py-1 text-left">Department</th>
-                <th className="border px-2 py-1 text-left">Active</th>
-                <th className="border px-2 py-1 text-left">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {hospitals.map(h => (
+              <tr key={h.id}>
+                <td className="border border-gray-200 px-2 py-1 font-medium bg-gray-50">{h.name}</td>
+                {departments.map(d => {
+                  const entry = getCellEntry(h.id, d.id);
+                  const active = entry?.active ?? false;
+                  const key = `${h.id}-${d.id}`;
+                  return (
+                    <td key={d.id} className="border border-gray-200 px-2 py-1 text-center">
+                      <button
+                        onClick={() => toggle(h.id, d.id)}
+                        disabled={toggling === key}
+                        className={`w-5 h-5 rounded border-2 text-xs ${active ? 'bg-indigo-600 border-indigo-600 text-white' : 'bg-white border-gray-300'} disabled:opacity-40`}
+                        title={active ? 'Active - click to deactivate' : 'Inactive - click to activate'}
+                      >
+                        {active ? '✓' : ''}
+                      </button>
+                    </td>
+                  );
+                })}
               </tr>
-            </thead>
-            <tbody>
-              {matrix.map((item) => (
-                <tr key={item.id}>
-                  <td className="border px-2 py-1">{item.hospital?.name}</td>
-                  <td className="border px-2 py-1">{item.department?.name}</td>
-                  <td className="border px-2 py-1">{item.active ? 'Yes' : 'No'}</td>
-                  <td className="border px-2 py-1">
-                    <button className="text-indigo-600" onClick={() => toggle(item)}>
-                      {item.active ? 'Deactivate' : 'Activate'}
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </DashboardLayout>
-    </ProtectedRoute>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
   );
 }

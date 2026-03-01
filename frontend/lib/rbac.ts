@@ -10,16 +10,15 @@ export type AppRole =
 export function getDashboardPathForRole(role?: string | null): string {
   switch (role) {
     case 'admin':
-      return '/dashboard/admin';
+    case 'utrmc_admin':
+    case 'utrmc_user':
+      return '/dashboard/utrmc';
     case 'supervisor':
     case 'faculty':
       return '/dashboard/supervisor';
     case 'pg':
     case 'resident':
-      return '/dashboard/pg';
-    case 'utrmc_user':
-    case 'utrmc_admin':
-      return '/dashboard/utrmc';
+      return '/dashboard/resident';
     default:
       return '/unauthorized';
   }

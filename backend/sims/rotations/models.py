@@ -1,5 +1,4 @@
 from django.db import models
-from simple_history.models import HistoricalRecords
 
 from sims.academics.models import Department
 
@@ -42,7 +41,6 @@ class Hospital(models.Model):
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    history = HistoricalRecords()
 
     class Meta:
         verbose_name = "Hospital"

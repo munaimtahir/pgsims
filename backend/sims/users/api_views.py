@@ -74,35 +74,7 @@ class CustomTokenObtainPairView(TokenObtainPairView):
     throttle_classes = [LoginRateThrottle]
 
     def post(self, request, *args, **kwargs):
-        try:
-            response = super().post(request, *args, **kwargs)
-        except (AuthenticationFailed, ValidationError):
-            safe_track_event(
-                event_type="auth.login.failed",
-                request=request,
-                event_key="login-failed",
-                metadata={
-                    "source": "auth_api",
-                    "reason": "invalid_credentials",
-                    "path": request.path,
-                    "http_method": request.method,
-                },
-            )
-            raise
-
-        user_payload = response.data.get("user", {}) if isinstance(response.data, dict) else {}
-        actor = User.objects.filter(pk=user_payload.get("id")).first() if user_payload else None
-        safe_track_event(
-            event_type="auth.login.succeeded",
-            actor=actor,
-            request=request,
-            event_key="login-succeeded",
-            metadata={
-                "source": "auth_api",
-                "path": request.path,
-                "http_method": request.method,
-            },
-        )
+        response = super().post(request, *args, **kwargs)
         return response
 
 

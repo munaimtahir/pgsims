@@ -33,125 +33,20 @@ export interface NavSection {
 }
 
 export const NAV_SECTIONS: NavSection[] = [
-  // ------------------------------------------------------------------ Admin Console
-  {
-    title: 'System Admin',
-    allowedRoles: ['admin'],
-    items: [
-      { label: 'Overview', href: '/dashboard/admin', icon: 'home' },
-      { label: 'Users & Roles', href: '/dashboard/admin/users', icon: 'users' },
-      {
-        label: 'System Monitoring',
-        icon: 'chart-bar',
-        subItems: [
-          { label: 'Analytics', href: '/dashboard/admin/analytics' },
-          { label: 'Audit Logs', href: '/dashboard/admin/audit-logs' },
-          { label: 'System Reports', href: '/dashboard/admin/reports' },
-        ],
-      },
-    ],
-  },
-
-  // ------------------------------------------------------------------ Program Administration (Formerly UTRMC)
+  // ------------------------------------------------------------------ Program Administration
   {
     title: 'Program Administration',
     allowedRoles: ['admin', 'utrmc_admin', 'utrmc_user'],
     items: [
-      { label: 'Dashboard', href: '/dashboard/utrmc', icon: 'view-grid' },
-      {
-        label: 'Institution Setup',
-        icon: 'office-building',
-        allowedRoles: ['admin', 'utrmc_admin'],
-        subItems: [
-          { label: 'Hospitals', href: '/dashboard/utrmc/hospitals' },
-          { label: 'Departments', href: '/dashboard/utrmc/departments' },
-          { label: 'H-D Matrix', href: '/dashboard/utrmc/matrix' },
-        ],
-      },
-      {
-        label: 'User Management',
-        icon: 'user-group',
-        allowedRoles: ['admin', 'utrmc_admin'],
-        subItems: [
-          { label: 'All Users', href: '/dashboard/utrmc/users' },
-          { label: 'Supervision Links', href: '/dashboard/utrmc/linking/supervision' },
-          { label: 'HOD Assignments', href: '/dashboard/utrmc/linking/hod' },
-        ],
-      },
-      {
-        label: 'Academic Config',
-        icon: 'academic-cap',
-        allowedRoles: ['admin', 'utrmc_admin'],
-        subItems: [
-          { label: 'Programs', href: '/dashboard/utrmc/programs' },
-          { label: 'Rotation Templates', href: '/dashboard/utrmc/program-templates' },
-        ],
-      },
-      {
-        label: 'Trainee Management',
-        icon: 'users',
-        allowedRoles: ['admin', 'utrmc_admin'],
-        subItems: [
-          { label: 'Resident Records', href: '/dashboard/utrmc/resident-training' },
-          { label: 'Rotations', href: '/dashboard/utrmc/rotations' },
-          { label: 'Postings', href: '/dashboard/utrmc/postings' },
-          { label: 'Leaves', href: '/dashboard/utrmc/leaves' },
-        ],
-      },
-      {
-        label: 'Approvals',
-        icon: 'check-circle',
-        allowedRoles: ['admin', 'utrmc_admin'],
-        subItems: [
-          { label: 'Rotations', href: '/dashboard/utrmc/approvals/rotations' },
-          { label: 'Leaves', href: '/dashboard/utrmc/approvals/leaves' },
-        ],
-      },
-      {
-        label: 'Records & Reports',
-        icon: 'folder',
-        subItems: [
-          { label: 'Cases', href: '/dashboard/utrmc/cases' },
-          { label: 'Reports', href: '/dashboard/utrmc/reports' },
-        ],
-      },
-    ],
-  },
-
-  // ------------------------------------------------------------------ Data Operations
-  {
-    title: 'Data Operations',
-    allowedRoles: ['admin', 'utrmc_admin'],
-    items: [
-      {
-        label: 'Import Config',
-        icon: 'upload',
-        subItems: [
-          { label: 'Hospitals', href: '/dashboard/utrmc/data-admin/hospitals' },
-          { label: 'Departments', href: '/dashboard/utrmc/data-admin/departments' },
-          { label: 'Matrix', href: '/dashboard/utrmc/data-admin/matrix' },
-          { label: 'Programs', href: '/dashboard/utrmc/data-admin/training-programs' },
-          { label: 'Templates', href: '/dashboard/utrmc/data-admin/rotation-templates' },
-        ],
-      },
-      {
-        label: 'Import Personnel',
-        icon: 'user-group',
-        subItems: [
-          { label: 'Supervisors', href: '/dashboard/utrmc/data-admin/supervisors' },
-          { label: 'Residents/PGs', href: '/dashboard/utrmc/data-admin/residents' },
-          { label: 'Supervision Links', href: '/dashboard/utrmc/data-admin/links' },
-          { label: 'Training Records', href: '/dashboard/utrmc/data-admin/resident-training-records' },
-        ],
-      },
-      {
-        label: 'Exports & Templates',
-        icon: 'download',
-        subItems: [
-          { label: 'Export Data', href: '/dashboard/utrmc/data-admin/export' },
-          { label: 'Templates', href: '/dashboard/utrmc/data-admin/templates' },
-        ],
-      },
+      { label: 'Overview', href: '/dashboard/utrmc', icon: 'home' },
+      { label: 'Hospitals', href: '/dashboard/utrmc/hospitals', icon: 'office-building' },
+      { label: 'Departments', href: '/dashboard/utrmc/departments', icon: 'academic-cap' },
+      { label: 'H-D Matrix', href: '/dashboard/utrmc/matrix', icon: 'table' },
+      { label: 'Users', href: '/dashboard/utrmc/users', icon: 'users' },
+      { label: 'Supervision Links', href: '/dashboard/utrmc/supervision', icon: 'link' },
+      { label: 'HOD Assignments', href: '/dashboard/utrmc/hod', icon: 'badge-check' },
+      { label: 'Programmes', href: '/dashboard/utrmc/programs', icon: 'book-open' },
+      { label: 'Eligibility Monitor', href: '/dashboard/utrmc/eligibility-monitoring', icon: 'chart-bar' },
     ],
   },
 
@@ -161,59 +56,20 @@ export const NAV_SECTIONS: NavSection[] = [
     allowedRoles: ['supervisor', 'faculty'],
     items: [
       { label: 'Overview', href: '/dashboard/supervisor', icon: 'home' },
-      { label: 'My Trainees (PGs)', href: '/dashboard/supervisor/pgs', icon: 'users' },
-      {
-        label: 'Academics',
-        icon: 'book-open',
-        subItems: [
-          { label: 'Logbooks', href: '/dashboard/supervisor/logbooks' },
-          { label: 'Cases', href: '/dashboard/supervisor/cases' },
-        ],
-      },
-      {
-        label: 'Rotations',
-        icon: 'refresh',
-        subItems: [
-          { label: 'My Rotations', href: '/dashboard/supervisor/rotations' },
-          { label: 'Approvals', href: '/dashboard/supervisor/approvals' },
-        ],
-      },
+      { label: 'Research Approvals', href: '/dashboard/supervisor/research-approvals', icon: 'clipboard-check' },
     ],
   },
 
-  // ------------------------------------------------------------------ PG / Resident
+  // ------------------------------------------------------------------ Resident / PG
   {
-    title: 'Postgraduate Portfolio',
+    title: 'Resident Portfolio',
     allowedRoles: ['pg', 'resident'],
     items: [
-      { label: 'Overview', href: '/dashboard/pg', icon: 'home' },
-      {
-        label: 'Academics',
-        icon: 'book-open',
-        subItems: [
-          { label: 'Logbook', href: '/dashboard/pg/logbook' },
-          { label: 'Cases', href: '/dashboard/pg/cases' },
-        ],
-      },
-      {
-        label: 'Training Schedule',
-        icon: 'calendar',
-        subItems: [
-          { label: 'My Schedule', href: '/dashboard/my-training' },
-          { label: 'Rotations', href: '/dashboard/pg/rotations' },
-          { label: 'Leaves', href: '/dashboard/my-leaves' },
-          { label: 'Postings', href: '/dashboard/my-postings' },
-        ],
-      },
-      {
-        label: 'Achievements',
-        icon: 'badge-check',
-        subItems: [
-          { label: 'Results', href: '/dashboard/pg/results' },
-          { label: 'Certificates', href: '/dashboard/pg/certificates' },
-        ],
-      },
-      { label: 'Notifications', href: '/dashboard/pg/notifications', icon: 'bell' },
+      { label: 'My Dashboard', href: '/dashboard/resident', icon: 'home' },
+      { label: 'Academic Progress', href: '/dashboard/resident/progress', icon: 'chart-bar' },
+      { label: 'Research', href: '/dashboard/resident/research', icon: 'beaker' },
+      { label: 'Thesis', href: '/dashboard/resident/thesis', icon: 'document-text' },
+      { label: 'Workshops', href: '/dashboard/resident/workshops', icon: 'collection' },
     ],
   },
 ];

@@ -1,0 +1,30 @@
+[
+  {
+    "id": 1,
+    "milestone": 1,
+    "milestone_code": "IMM",
+    "milestone_name": "Intermediate Membership Exam",
+    "status": "PARTIALLY_READY",
+    "status_display": "Partially Ready",
+    "reasons": [
+      "Synopsis not yet approved by supervisor",
+      "logbook engine pending — logbook requirements cannot be verified yet"
+    ],
+    "computed_at": "2026-03-01T07:54:00Z"
+  },
+  {
+    "id": 2,
+    "milestone": 2,
+    "milestone_code": "FINAL",
+    "milestone_name": "Final Fellowship Exam",
+    "status": "NOT_READY",
+    "status_display": "Not Ready",
+    "reasons": [
+      "Synopsis not yet approved by supervisor",
+      "Thesis not yet submitted",
+      "ACLS workshop not completed (need 1)",
+      "logbook engine pending — logbook requirements cannot be verified yet"
+    ],
+    "computed_at": "2026-03-01T07:54:00Z"
+  }
+]

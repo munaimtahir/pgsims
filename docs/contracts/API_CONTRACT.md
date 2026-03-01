@@ -144,3 +144,48 @@ Response shape for `GET /events/live`:
 - `date_range` { `start_date`, `end_date` }
 - `cursor` (nullable)
 - `events` [ { `id`, `occurred_at`, `event_type`, `actor_role`, `department_id`, `hospital_id`, `entity_type`, `entity_id`, `drilldown_url`, `metadata` } ]
+
+---
+
+## Phase 6 — Academic Core (2026-03-01)
+
+### Program Policy
+- `GET /api/programs/{id}/policy/` — get policy (admin/utrmc_admin only)
+- `PUT /api/programs/{id}/policy/` — update policy
+
+### Program Milestones
+- `GET /api/programs/{id}/milestones/` — list milestones
+- `POST /api/programs/{id}/milestones/` — create milestone
+
+### Resident Research Project
+- `GET /api/my/research/` — get own research project
+- `POST /api/my/research/` — create research project (resident)
+- `PATCH /api/my/research/` — update draft project
+- `POST /api/my/research/action/{action}/` — state transition; actions: `submit-to-supervisor`, `supervisor-approve`, `submit-to-university`, `accept-by-university`, `return-to-draft`
+  - `supervisor-approve` payload: `{ "project_id": int, "feedback": str }`
+
+### Supervisor Research Approvals
+- `GET /api/supervisor/research-approvals/` — list residents' projects (supervisor/faculty/hod)
+
+### Thesis
+- `GET /api/my/thesis/` — get own thesis record
+- `POST /api/my/thesis/` — create thesis record
+- `POST /api/my/thesis/submit/` — submit thesis
+
+### Workshop Completions
+- `GET /api/my/workshops/` — list completions (paginated: count, results)
+- `POST /api/my/workshops/` — record manual completion; payload: `{ workshop, completed_at, notes? }`
+- `GET /api/my/workshops/{id}/` — detail
+- `DELETE /api/my/workshops/{id}/` — remove
+
+### Eligibility
+- `GET /api/my/eligibility/` — resident's eligibility snapshots (triggers recompute)
+- `GET /api/utrmc/eligibility/` — all records; query params: `status`, `program`, `department`
+
+### System Settings
+- `GET /api/system/settings/` — returns `{ WORKSHOP_MANAGEMENT_ENABLED: bool, ... }`
+
+### Eligibility Status Values
+- `NOT_READY` — all requirements unmet
+- `PARTIALLY_READY` — some requirements met
+- `ELIGIBLE` — all requirements met

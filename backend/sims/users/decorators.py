@@ -11,20 +11,7 @@ from django.core.exceptions import PermissionDenied
 
 
 def _track_rbac_denied(request, required_roles: str, reason: str):
-
-    safe_track_event(
-        event_type="auth.rbac.denied",
-        actor=request.user if request.user.is_authenticated else None,
-        request=request,
-        event_key=f"rbac-view:{request.method}:{request.path}:{required_roles}",
-        metadata={
-            "source": "decorators",
-            "reason": reason,
-            "action": required_roles,
-            "path": request.path,
-            "http_method": request.method,
-        },
-    )
+    pass  # analytics module removed
 
 
 def admin_required(view_func):

@@ -37,29 +37,8 @@ def _operation_payload(operation: BulkOperation) -> dict:
     }
 
 
-def _track_bulk_event(
-    request: Request,
-    *,
-    event_type: str,
-    resource: str,
-    operation: BulkOperation | None = None,
-    error_code: str | None = None,
-):
-    safe_track_event(
-        event_type=event_type,
-        actor=request.user if request.user.is_authenticated else None,
-        request=request,
-        entity_type="bulk_operation",
-        entity_id=operation.id if operation else None,
-        event_key=f"bulk:{resource}:{event_type}",
-        metadata={
-            "source": "bulk_api",
-            "resource": resource,
-            "record_count": operation.success_count if operation else 0,
-            "failure_count": operation.failure_count if operation else 0,
-            "error_code": error_code,
-        },
-    )
+def _track_bulk_event(request, *, event_type, resource, operation=None, error_code=None):
+    pass  # analytics module removed
 
 
 class BulkReviewView(APIView):

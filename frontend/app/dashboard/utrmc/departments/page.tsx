@@ -1,93 +1,80 @@
 'use client';
-
-import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import DashboardLayout from '@/components/layout/DashboardLayout';
-import ProtectedRoute from '@/components/auth/ProtectedRoute';
 import { userbaseApi, UserbaseDepartment } from '@/lib/api/userbase';
 
-export default function UTRMCDepartmentsPage() {
-  const [items, setItems] = useState<UserbaseDepartment[]>([]);
-  const [name, setName] = useState('');
-  const [code, setCode] = useState('');
-  const [error, setError] = useState<string | null>(null);
+export default function DepartmentsPage() {
+  const [rows, setRows] = useState<UserbaseDepartment[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [showModal, setShowModal] = useState(false);
+  const [editing, setEditing] = useState<UserbaseDepartment | null>(null);
+  const [form, setForm] = useState<any>({ name: '', code: '', description: '', active: true });
+  const [saving, setSaving] = useState(false);
 
-  const load = async () => {
+  const load = () => userbaseApi.departments.list().then(setRows).catch(() => setError('Failed to load')).finally(() => setLoading(false));
+  useEffect(() => { load(); }, []);
+
+  const openAdd = () => { setForm({ name:'',code:'',description:'',active:true }); setEditing(null); setShowModal(true); };
+  const openEdit = (d: UserbaseDepartment) => { setForm({ name:d.name,code:d.code,description:d.description||'',active:d.active }); setEditing(d); setShowModal(true); };
+
+  const save = async () => {
+    setSaving(true);
     try {
-      setItems(await userbaseApi.departments.list());
-    } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Failed to load departments');
-    }
+      if (editing) await userbaseApi.departments.update(editing.id, form);
+      else await userbaseApi.departments.create(form);
+      setShowModal(false);
+      load();
+    } catch { setError('Save failed'); }
+    finally { setSaving(false); }
   };
 
-  useEffect(() => {
-    load();
-  }, []);
-
-  const createDepartment = async () => {
-    try {
-      setError(null);
-      await userbaseApi.departments.create({ name, code, active: true });
-      setName('');
-      setCode('');
-      await load();
-    } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Create failed');
-    }
-  };
-
-  const toggle = async (item: UserbaseDepartment) => {
-    try {
-      await userbaseApi.departments.update(item.id, { active: !item.active });
-      await load();
-    } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Update failed');
-    }
-  };
+  if (loading) return <p className="text-gray-500">Loading...</p>;
 
   return (
-    <ProtectedRoute allowedRoles={['utrmc_admin', 'admin']}>
-      <DashboardLayout>
-        <div className="space-y-4">
-          <h1 className="text-2xl font-bold">UTRMC Departments</h1>
-          {error && <p className="text-sm text-red-600">{error}</p>}
-          <div className="grid grid-cols-1 gap-2 md:grid-cols-3">
-            <input className="rounded border p-2" placeholder="Department name" value={name} onChange={(e) => setName(e.target.value)} />
-            <input className="rounded border p-2" placeholder="Code" value={code} onChange={(e) => setCode(e.target.value)} />
-            <button className="rounded bg-indigo-600 px-3 py-2 text-white" onClick={createDepartment}>Create</button>
-          </div>
-          <table className="min-w-full border bg-white text-sm">
-            <thead>
-              <tr>
-                <th className="border px-2 py-1 text-left">Name</th>
-                <th className="border px-2 py-1 text-left">Code</th>
-                <th className="border px-2 py-1 text-left">Active</th>
-                <th className="border px-2 py-1 text-left">Roster</th>
-                <th className="border px-2 py-1 text-left">Action</th>
+    <div>
+      <div className="flex justify-between items-center mb-4">
+        <h1 className="text-2xl font-bold text-gray-900">Departments</h1>
+        <button onClick={openAdd} className="bg-indigo-600 text-white px-4 py-2 rounded text-sm hover:bg-indigo-700">+ Add Department</button>
+      </div>
+      {error && <p className="text-red-600 mb-2">{error}</p>}
+      <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+        <table className="w-full text-sm">
+          <thead className="bg-gray-50"><tr>{['Name','Code','Active','Actions'].map(h => <th key={h} className="text-left px-4 py-2 font-medium text-gray-600">{h}</th>)}</tr></thead>
+          <tbody className="divide-y divide-gray-100">
+            {rows.map(d => (
+              <tr key={d.id} className="hover:bg-gray-50">
+                <td className="px-4 py-2">{d.name}</td>
+                <td className="px-4 py-2 text-gray-500">{d.code}</td>
+                <td className="px-4 py-2">{d.active ? <span className="text-green-600">Yes</span> : <span className="text-gray-400">No</span>}</td>
+                <td className="px-4 py-2">
+                  <button onClick={() => openEdit(d)} className="text-indigo-600 hover:underline text-xs">Edit</button>
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              {items.map((item) => (
-                <tr key={item.id}>
-                  <td className="border px-2 py-1">{item.name}</td>
-                  <td className="border px-2 py-1">{item.code}</td>
-                  <td className="border px-2 py-1">{item.active ? 'Yes' : 'No'}</td>
-                  <td className="border px-2 py-1">
-                    <Link className="text-indigo-600" href={`/dashboard/utrmc/departments/${item.id}/roster`}>
-                      View
-                    </Link>
-                  </td>
-                  <td className="border px-2 py-1">
-                    <button className="text-indigo-600" onClick={() => toggle(item)}>
-                      {item.active ? 'Deactivate' : 'Activate'}
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      {showModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md shadow-xl">
+            <h2 className="text-lg font-semibold mb-4">{editing ? 'Edit' : 'Add'} Department</h2>
+            {[{k:'name',l:'Name'},{k:'code',l:'Code'},{k:'description',l:'Description'}].map(({k,l}) => (
+              <div key={k} className="mb-3">
+                <label className="block text-sm font-medium text-gray-700 mb-1">{l}</label>
+                <input className="w-full border border-gray-300 rounded px-3 py-2 text-sm" value={form[k]||''} onChange={e=>setForm({...form,[k]:e.target.value})} />
+              </div>
+            ))}
+            <div className="mb-4 flex items-center gap-2">
+              <input type="checkbox" id="dactive" checked={!!form.active} onChange={e=>setForm({...form,active:e.target.checked})} />
+              <label htmlFor="dactive" className="text-sm">Active</label>
+            </div>
+            <div className="flex gap-2 justify-end">
+              <button onClick={() => setShowModal(false)} className="px-4 py-2 text-sm border rounded">Cancel</button>
+              <button onClick={save} disabled={saving} className="px-4 py-2 text-sm bg-indigo-600 text-white rounded disabled:opacity-50">{saving ? 'Saving...' : 'Save'}</button>
+            </div>
+          </div>
         </div>
-      </DashboardLayout>
-    </ProtectedRoute>
+      )}
+    </div>
   );
 }

@@ -1,20 +1,10 @@
-/**
- * Central export for all API clients
- */
-
 export { default as apiClient } from './client';
 export * from './auth';
-export * from './academics';
-export * from './results';
-export * from './logbook';
-export * from './rotations';
-export * from './attendance';
-export * from './analytics';
-export * from './notifications';
-export * from './reports';
-export * from './cases';
-export * from './search';
 export * from './bulk';
 export * from './audit';
+export * from './notifications';
 export * from './users';
 export * from './userbase';
+export * from './hospitals';
+export * from './departments';
+export * from './training';

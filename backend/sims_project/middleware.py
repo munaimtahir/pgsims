@@ -90,31 +90,7 @@ class PerformanceTimingMiddleware(MiddlewareMixin):
                     },
                 )
 
-            if (
-                getattr(settings, "ANALYTICS_ENABLED", True)
-                and request.path.startswith("/api/")
-                and response.status_code >= 400
-            ):
-                from sims.analytics.services import safe_track_event, should_sample
-
-                if should_sample():
-                    safe_track_event(
-                        event_type="system.api.error",
-                        actor=(
-                            request.user
-                            if getattr(request, "user", None) and request.user.is_authenticated
-                            else None
-                        ),
-                        request=request,
-                        event_key=f"api-error:{request.method}:{request.path}:{response.status_code}",
-                        metadata={
-                            "path": request.path,
-                            "http_method": request.method,
-                            "status_code": response.status_code,
-                            "duration_ms": duration_ms,
-                            "sampled": True,
-                            "source": "middleware",
-                        },
-                    )
+            # analytics module removed — skip error tracking
+            pass
 
         return response

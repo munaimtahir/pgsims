@@ -21,3 +21,22 @@ Current userbase/org graph screens under frozen area:
 - `/dashboard/utrmc/linking/hod`
 
 Do not rename these paths after pilot begins.
+
+---
+
+## Phase 6 — Academic Core Routes (2026-03-01)
+
+### Resident / PG
+- `/dashboard/resident/progress` — Academic progress + eligibility snapshot
+- `/dashboard/resident/research` — Synopsis workflow (create, submit, track)
+- `/dashboard/resident/thesis` — Thesis submission
+- `/dashboard/resident/workshops` — Workshop completion recording
+
+### Supervisor
+- `/dashboard/supervisor/research-approvals` — Inbox: approve/review synopses
+
+### UTRMC Admin
+- `/dashboard/utrmc/programs` — Programme definitions, policy editor, milestone viewer
+- `/dashboard/utrmc/eligibility-monitoring` — Eligibility monitoring with filters
+
+These routes are frozen after pilot begins.

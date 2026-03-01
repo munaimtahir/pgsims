@@ -256,7 +256,7 @@ class ResidentResearchProjectSerializer(serializers.ModelSerializer):
             "accepted_at", "created_at", "updated_at",
         ]
         read_only_fields = [
-            "id", "status", "synopsis_approved_at",
+            "id", "resident_training_record", "status", "synopsis_approved_at",
             "submitted_to_supervisor_at", "submitted_to_university_at",
             "accepted_at", "created_at", "updated_at",
         ]
@@ -334,7 +334,7 @@ class ResidentWorkshopCompletionSerializer(serializers.ModelSerializer):
             "source", "source_display", "notes",
             "created_at", "updated_at",
         ]
-        read_only_fields = ["id", "source", "created_at", "updated_at"]
+        read_only_fields = ["id", "resident_training_record", "source", "created_at", "updated_at"]
 
     def create(self, validated_data):
         validated_data["source"] = ResidentWorkshopCompletion.SOURCE_MANUAL

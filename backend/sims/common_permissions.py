@@ -14,21 +14,7 @@ def _role(user):
 
 
 def _track_rbac_denied(request, required_roles: str, reason: str):
-
-    actor = request.user if _is_authenticated_user(request.user) else None
-    safe_track_event(
-        event_type="auth.rbac.denied",
-        actor=actor,
-        request=request,
-        event_key=f"rbac:{request.method}:{request.path}:{required_roles}",
-        metadata={
-            "source": "permissions",
-            "reason": reason,
-            "action": required_roles,
-            "path": request.path,
-            "http_method": request.method,
-        },
-    )
+    pass  # analytics module removed
 
 
 class IsPGUser(permissions.BasePermission):
