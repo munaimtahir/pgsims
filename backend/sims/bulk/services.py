@@ -1468,6 +1468,169 @@ class BulkService:
         operation.mark_completed(len(successes), len(failures), {"successes": successes, "failures": failures})
         return operation
 
+    # ------------------------------------------------------------------
+    # Training module imports
+    # ------------------------------------------------------------------
+
+    def import_training_programs(
+        self,
+        uploaded_file,
+        *,
+        dry_run: bool = True,
+        allow_partial: bool = False,
+    ) -> BulkOperation:
+        from sims.training.models import TrainingProgram
+
+        operation = BulkOperation.objects.create(user=self.actor, operation=BulkOperation.OP_IMPORT)
+        try:
+            rows = list(_parse_csv_rows(uploaded_file, required_columns=None))
+        except ValidationError as exc:
+            operation.mark_failed({"error": str(exc)})
+            return operation
+
+        successes: List[dict] = []
+        failures: List[dict] = []
+
+        for row in rows:
+            row_num = row.get("_row_number", "?")
+            code = (row.get("program_code") or row.get("code") or "").strip().upper()
+            name = (row.get("program_name") or row.get("name") or "").strip()
+            try:
+                duration = int(row.get("duration_months") or 0)
+            except (ValueError, TypeError):
+                failures.append({"row": row_num, "error": "Invalid duration_months"})
+                continue
+            active_raw = (row.get("active") or "true").strip().lower()
+            active = active_raw not in {"false", "0", "no"}
+
+            if not code or not name or not duration:
+                failures.append({"row": row_num, "error": "Missing required fields (program_code, program_name, duration_months)"})
+                continue
+            try:
+                if not dry_run:
+                    TrainingProgram.objects.update_or_create(
+                        code=code, defaults={"name": name, "duration_months": duration, "active": active}
+                    )
+                successes.append({"row": row_num, "code": code})
+            except Exception as exc:
+                failures.append({"row": row_num, "error": str(exc)})
+
+        operation.mark_completed(len(successes), len(failures), {"successes": successes, "failures": failures})
+        return operation
+
+    def import_rotation_templates(
+        self,
+        uploaded_file,
+        *,
+        dry_run: bool = True,
+        allow_partial: bool = False,
+    ) -> BulkOperation:
+        from sims.training.models import TrainingProgram, ProgramRotationTemplate
+
+        try:
+            from sims.academics.models import Department
+        except ImportError:
+            Department = None
+
+        operation = BulkOperation.objects.create(user=self.actor, operation=BulkOperation.OP_IMPORT)
+        try:
+            rows = list(_parse_csv_rows(uploaded_file, required_columns=None))
+        except ValidationError as exc:
+            operation.mark_failed({"error": str(exc)})
+            return operation
+
+        successes: List[dict] = []
+        failures: List[dict] = []
+
+        for row in rows:
+            row_num = row.get("_row_number", "?")
+            prog_code = (row.get("program_code") or "").strip().upper()
+            tname = (row.get("template_name") or row.get("name") or "").strip()
+            dept_code = (row.get("department_code") or "").strip().upper()
+            try:
+                dur = int(row.get("duration_weeks") or 0)
+            except (ValueError, TypeError):
+                failures.append({"row": row_num, "error": "Invalid duration_weeks"})
+                continue
+            required_raw = (row.get("required") or "true").strip().lower()
+            required = required_raw not in {"false", "0", "no"}
+
+            if not prog_code or not tname or not dept_code:
+                failures.append({"row": row_num, "error": "Missing program_code, template_name, or department_code"})
+                continue
+            try:
+                program = TrainingProgram.objects.get(code=prog_code)
+                dept = Department.objects.get(code=dept_code)
+                if not dry_run:
+                    ProgramRotationTemplate.objects.update_or_create(
+                        program=program, name=tname,
+                        defaults={"department": dept, "duration_weeks": dur or 4, "required": required, "active": True}
+                    )
+                successes.append({"row": row_num, "program": prog_code, "template": tname})
+            except TrainingProgram.DoesNotExist:
+                failures.append({"row": row_num, "error": f"Program '{prog_code}' not found"})
+            except Exception as exc:
+                failures.append({"row": row_num, "error": str(exc)})
+
+        operation.mark_completed(len(successes), len(failures), {"successes": successes, "failures": failures})
+        return operation
+
+    def import_resident_training_records(
+        self,
+        uploaded_file,
+        *,
+        dry_run: bool = True,
+        allow_partial: bool = False,
+    ) -> BulkOperation:
+        from sims.training.models import TrainingProgram, ResidentTrainingRecord
+
+        operation = BulkOperation.objects.create(user=self.actor, operation=BulkOperation.OP_IMPORT)
+        try:
+            rows = list(_parse_csv_rows(uploaded_file, required_columns=None))
+        except ValidationError as exc:
+            operation.mark_failed({"error": str(exc)})
+            return operation
+
+        successes: List[dict] = []
+        failures: List[dict] = []
+
+        for row in rows:
+            row_num = row.get("_row_number", "?")
+            email = (row.get("resident_email") or "").strip().lower()
+            prog_code = (row.get("program_code") or "").strip().upper()
+            start_date = (row.get("start_date") or "").strip()
+
+            if not email or not prog_code or not start_date:
+                failures.append({"row": row_num, "error": "Missing resident_email, program_code, or start_date"})
+                continue
+            try:
+                resident = User.objects.get(email=email, role__in=["pg", "resident"])
+                program = TrainingProgram.objects.get(code=prog_code)
+                if not dry_run:
+                    from datetime import date
+                    end_raw = (row.get("expected_end_date") or "").strip() or None
+                    level = (row.get("current_level") or "").strip()
+                    ResidentTrainingRecord.objects.update_or_create(
+                        resident_user=resident, program=program,
+                        defaults={
+                            "start_date": start_date,
+                            "expected_end_date": end_raw or None,
+                            "current_level": level,
+                            "active": True,
+                            "created_by": self.actor,
+                        }
+                    )
+                successes.append({"row": row_num, "email": email, "program": prog_code})
+            except User.DoesNotExist:
+                failures.append({"row": row_num, "error": f"Resident '{email}' not found"})
+            except TrainingProgram.DoesNotExist:
+                failures.append({"row": row_num, "error": f"Program '{prog_code}' not found"})
+            except Exception as exc:
+                failures.append({"row": row_num, "error": str(exc)})
+
+        operation.mark_completed(len(successes), len(failures), {"successes": successes, "failures": failures})
+        return operation
+
     def export_dataset(self, resource: str, export_format: str = "xlsx") -> BulkExportFile:
         if export_format not in {"xlsx", "csv"}:
             raise ValidationError("Unsupported export format. Use xlsx or csv.")
@@ -1555,6 +1718,38 @@ class BulkService:
                     "active": link.active,
                 }
                 for link in SupervisorResidentLink.objects.all().select_related("supervisor_user", "resident_user", "department")
+            ]
+        elif resource == "training_programs":
+            from sims.training.models import TrainingProgram
+            rows = [
+                {"program_code": p.code, "program_name": p.name, "duration_months": p.duration_months, "active": p.active}
+                for p in TrainingProgram.objects.all().order_by("code")
+            ]
+        elif resource == "rotation_templates":
+            from sims.training.models import ProgramRotationTemplate
+            rows = [
+                {
+                    "program_code": t.program.code,
+                    "template_name": t.name,
+                    "department_code": t.department.code,
+                    "duration_weeks": t.duration_weeks,
+                    "required": t.required,
+                    "sequence_order": t.sequence_order,
+                }
+                for t in ProgramRotationTemplate.objects.select_related("program", "department").order_by("program__code", "sequence_order")
+            ]
+        elif resource == "resident_training_records":
+            from sims.training.models import ResidentTrainingRecord
+            rows = [
+                {
+                    "resident_email": r.resident_user.email,
+                    "program_code": r.program.code,
+                    "start_date": str(r.start_date),
+                    "expected_end_date": str(r.expected_end_date) if r.expected_end_date else "",
+                    "current_level": r.current_level,
+                    "active": r.active,
+                }
+                for r in ResidentTrainingRecord.objects.select_related("resident_user", "program").order_by("-start_date")
             ]
         else:
             raise ValidationError("Unsupported export resource.")

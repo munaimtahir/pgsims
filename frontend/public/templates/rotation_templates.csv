@@ -1,0 +1,6 @@
+program_code,template_name,department_code,duration_weeks,required,sequence_order
+MED,General Medicine Rotation,MED,8,true,1
+MED,Cardiology Rotation,CARD,4,true,2
+MED,Gastroenterology Rotation,GASTRO,4,false,3
+SURG,General Surgery Block,SURG,12,true,1
+SURG,Orthopedics Rotation,ORTHO,4,false,2

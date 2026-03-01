@@ -11,6 +11,9 @@ const TEMPLATES = [
   { name: 'Supervisors', file: 'supervisors.csv', columns: 'email*, full_name*, phone, role, department_code*, hospital_code, active' },
   { name: 'Residents', file: 'residents.csv', columns: 'email*, full_name*, phone, role, pgr_id, training_start, department_code*, hospital_code, active' },
   { name: 'Supervision Links', file: 'supervisor_resident_links.csv', columns: 'supervisor_email*, resident_email*, department_code, start_date, end_date, active' },
+  { name: 'Training Programs', file: 'training_programs.csv', columns: 'program_code*, program_name*, duration_months*, active' },
+  { name: 'Rotation Templates', file: 'rotation_templates.csv', columns: 'program_code*, template_name*, department_code*, duration_weeks*, required, sequence_order' },
+  { name: 'Resident Training Records', file: 'resident_training_records.csv', columns: 'resident_email*, program_code*, start_date*, expected_end_date, current_level, active' },
 ];
 
 export default function DataAdminTemplatesPage() {

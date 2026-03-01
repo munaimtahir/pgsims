@@ -1,0 +1,5 @@
+program_code,program_name,duration_months,active
+MED,Internal Medicine,36,true
+SURG,General Surgery,48,true
+PED,Pediatrics,36,true
+OBGYN,Obstetrics & Gynecology,36,true

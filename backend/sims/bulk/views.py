@@ -389,6 +389,10 @@ _ENTITY_METHOD_MAP = {
     "supervisors": "import_supervisors",
     "residents": "import_residents",
     "trainees": "import_trainees",
+    # Training module
+    "training-programs": "import_training_programs",
+    "rotation-templates": "import_rotation_templates",
+    "resident-training-records": "import_resident_training_records",
 }
 
 _ALLOWED_ROLES = {"admin", "utrmc_admin"}
