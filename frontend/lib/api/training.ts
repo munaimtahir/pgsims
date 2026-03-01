@@ -129,13 +129,21 @@ export interface SystemSettings {
   [key: string]: unknown;
 }
 
+// ------------------------------------------------------------------ helpers
+
+function toArray<T>(data: unknown): T[] {
+  if (Array.isArray(data)) return data as T[];
+  if (data && typeof data === 'object' && 'results' in data) return ((data as { results?: T[] }).results) || [];
+  return [];
+}
+
 // ------------------------------------------------------------------ API
 
 export const trainingApi = {
   // Programs
   async listPrograms(): Promise<TrainingProgram[]> {
-    const r = await apiClient.get<TrainingProgram[]>('/api/programs/');
-    return r.data;
+    const r = await apiClient.get('/api/programs/');
+    return toArray<TrainingProgram>(r.data);
   },
 
   async getProgram(id: number): Promise<TrainingProgram> {
@@ -166,8 +174,8 @@ export const trainingApi = {
 
   // Milestones
   async listMilestones(programId: number): Promise<ProgramMilestone[]> {
-    const r = await apiClient.get<ProgramMilestone[]>(`/api/programs/${programId}/milestones/`);
-    return r.data;
+    const r = await apiClient.get(`/api/programs/${programId}/milestones/`);
+    return toArray<ProgramMilestone>(r.data);
   },
 
   async createMilestone(programId: number, data: Partial<ProgramMilestone>): Promise<ProgramMilestone> {
@@ -198,8 +206,8 @@ export const trainingApi = {
 
   // Supervisor research approvals
   async getSupervisorResearchApprovals(): Promise<ResidentResearchProject[]> {
-    const r = await apiClient.get<ResidentResearchProject[]>('/api/supervisor/research-approvals/');
-    return r.data;
+    const r = await apiClient.get('/api/supervisor/research-approvals/');
+    return toArray<ResidentResearchProject>(r.data);
   },
 
   async supervisorApproveResearch(projectId: number, feedback?: string): Promise<ResidentResearchProject> {
@@ -228,8 +236,8 @@ export const trainingApi = {
 
   // Workshops
   async listWorkshops(): Promise<Workshop[]> {
-    const r = await apiClient.get<Workshop[]>('/api/workshops/');
-    return r.data;
+    const r = await apiClient.get('/api/workshops/');
+    return toArray<Workshop>(r.data);
   },
 
   async listMyWorkshopCompletions(): Promise<{ count: number; results: WorkshopCompletion[] }> {
@@ -252,8 +260,8 @@ export const trainingApi = {
 
   // Eligibility
   async getMyEligibility(): Promise<MilestoneEligibility[]> {
-    const r = await apiClient.get<MilestoneEligibility[]>('/api/my/eligibility/');
-    return r.data;
+    const r = await apiClient.get('/api/my/eligibility/');
+    return toArray<MilestoneEligibility>(r.data);
   },
 
   async getUTRMCEligibility(params?: {
