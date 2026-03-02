@@ -1,0 +1,9 @@
+{
+  "name": "pgsims-mcp-tooling",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Pinned MCP tooling dependencies for reproducible local agent setup",
+  "devDependencies": {
+    "@playwright/mcp": "0.0.68"
+  }
+}

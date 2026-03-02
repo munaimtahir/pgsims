@@ -53,3 +53,9 @@ A task is complete only when:
 - Duplicate Department models
 - Breaking API payloads without updating contracts and frontend SDK
 - Direct DB edits for state changes
+
+## 10) MCP Agent Reproducibility Policy
+- MCP server configs required for agent workflows MUST be committed (for example: `.mcp.json`, launcher scripts).
+- MCP dependency manifests and lockfiles MUST be committed for reproducibility (for example: `package.json` + `package-lock.json` in tooling folders).
+- Do NOT rely on floating versions (for example: `@latest`) in committed launcher scripts.
+- Runtime artifacts/output folders from MCP tools MUST remain untracked.

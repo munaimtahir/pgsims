@@ -105,3 +105,6 @@ docs/_audit/**
 # Large backups and patches
 docs/_archive/_snapshots/*.tar.gz
 docs/_archive/_patches/*.patch
+
+# MCP runtime artifacts
+output/playwright/

@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "playwright": {
+      "command": "bash",
+      "args": [
+        "scripts/mcp/playwright-mcp.sh"
+      ],
+      "env": {
+        "PLAYWRIGHT_MCP_OUTPUT_DIR": "output/playwright/mcp"
+      }
+    }
+  }
+}
