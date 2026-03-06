@@ -55,7 +55,7 @@ test('utrmc admin can build userbase graph and resident scope is enforced', asyn
   });
   expect(utrmcAccessToken).toBeTruthy();
   const utrmcAuthHeaders = { Authorization: `Bearer ${utrmcAccessToken as string}` };
-  await expect(page.getByRole('heading', { name: 'Hospital-Department Matrix' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Hospital\u2013Department Matrix' })).toBeVisible();
   const createMatrixResponse = await page.request.post('/api/hospital-departments/', {
     headers: utrmcAuthHeaders,
     data: { hospital_id: hospitalId, department_id: departmentId, active: true },

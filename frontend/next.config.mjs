@@ -8,6 +8,9 @@ const nextConfig = {
   // Output configuration for Docker
   output: 'standalone',
 
+  // Don't redirect trailing slashes so Django API routes work correctly
+  skipTrailingSlashRedirect: true,
+
   // Keep production image builds unblockable by lint policy.
   eslint: {
     ignoreDuringBuilds: true,
@@ -19,19 +22,10 @@ const nextConfig = {
   // Image domains if using next/image
   images: {
     domains: [],
-    // Add your image domains here if needed
-    // domains: ['your-cdn-domain.com'],
   },
   
-  // API rewrites if needed (optional)
-  // async rewrites() {
-  //   return [
-  //     {
-  //       source: '/api/:path*',
-  //       destination: `${process.env.NEXT_PUBLIC_API_URL}/api/:path*`,
-  //     },
-  //   ];
-  // },
+  // INTERNAL_API_URL is used by app/api/[...path]/route.ts at runtime (not needed in rewrites)
+
 };
 
 export default nextConfig;

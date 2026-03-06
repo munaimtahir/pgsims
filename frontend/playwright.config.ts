@@ -56,11 +56,52 @@ export default defineConfig({
     },
 
     // Smoke suite — fast, self-contained; no storageState dependency
-    // Each test that needs auth calls loginAs() directly
     {
       name: 'smoke',
       use: { ...devices['Desktop Chrome'] },
       testMatch: /smoke\/.*\.spec\.ts/,
+    },
+
+    // Auth/session suite
+    {
+      name: 'auth',
+      use: { ...devices['Desktop Chrome'] },
+      testMatch: /auth\/.*\.spec\.ts/,
+    },
+
+    // RBAC/access control suite
+    {
+      name: 'rbac',
+      use: { ...devices['Desktop Chrome'] },
+      testMatch: /rbac\/.*\.spec\.ts/,
+    },
+
+    // Navigation suite
+    {
+      name: 'navigation',
+      use: { ...devices['Desktop Chrome'] },
+      testMatch: /navigation\/.*\.spec\.ts/,
+    },
+
+    // Dashboard suite
+    {
+      name: 'dashboard',
+      use: { ...devices['Desktop Chrome'] },
+      testMatch: /dashboard\/.*\.spec\.ts/,
+    },
+
+    // Workflow tests
+    {
+      name: 'workflows',
+      use: { ...devices['Desktop Chrome'] },
+      testMatch: /workflows\/.*\.spec\.ts/,
+    },
+
+    // Negative/validation tests
+    {
+      name: 'negative',
+      use: { ...devices['Desktop Chrome'] },
+      testMatch: /negative\/.*\.spec\.ts/,
     },
 
     // Critical suite — full user-flow tests; requires setup to have run

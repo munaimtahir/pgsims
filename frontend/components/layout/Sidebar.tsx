@@ -258,6 +258,7 @@ export default function Sidebar({ role, userName, onLogout }: SidebarProps) {
         <button
           onClick={onLogout}
           title={collapsed ? 'Logout' : undefined}
+          data-testid="sidebar-logout-btn"
           className="group flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:bg-red-500/10 hover:text-red-400 border border-transparent hover:border-red-500/20 transition-all duration-200"
         >
           <Icon name="logout" className="h-5 w-5 flex-shrink-0 transition-transform group-hover:-translate-x-1" />

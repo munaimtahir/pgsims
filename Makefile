@@ -24,10 +24,10 @@ test:
 	pytest backend/sims --cov=backend/sims --cov-report=html --cov-report=term-missing --maxfail=5 -v
 
 up:
-	docker compose -f docker/docker-compose.yml up -d
+	docker compose -f docker/docker-compose.yml --env-file .env up -d
 	@echo "Waiting for services to be healthy..."
 	@sleep 5
-	docker compose -f docker/docker-compose.yml logs backend | tail -20
+	docker compose -f docker/docker-compose.yml --env-file .env logs backend | tail -20
 
 down:
 	docker compose -f docker/docker-compose.yml down
@@ -58,10 +58,10 @@ clean:
 	rm -rf htmlcov .pytest_cache .coverage
 
 build:
-	docker compose -f docker/docker-compose.yml build --no-cache
+	docker compose -f docker/docker-compose.yml --env-file .env build --no-cache
 
 restart:
-	docker compose -f docker/docker-compose.yml restart
+	docker compose -f docker/docker-compose.yml --env-file .env restart
 
 # Production deployment helpers
 deploy-check:

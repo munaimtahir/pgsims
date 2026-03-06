@@ -38,7 +38,7 @@ function getRoleHome(role?: string | null) {
     case 'faculty':
       return '/dashboard/supervisor';
     case 'admin':
-      return '/dashboard/admin';
+      return '/dashboard/utrmc';
     case 'utrmc_user':
     case 'utrmc_admin':
       return '/dashboard/utrmc';

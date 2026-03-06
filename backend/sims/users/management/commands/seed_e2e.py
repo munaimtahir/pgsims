@@ -5,7 +5,7 @@ from django.db import transaction
 from django.utils import timezone
 
 from sims.academics.models import Department
-from sims.rotations.models import Hospital, HospitalDepartment, Rotation
+from sims.rotations.models import Hospital, HospitalDepartment
 from sims.users.models import User
 
 
@@ -35,11 +35,17 @@ class Command(BaseCommand):
 
         departments = []
         for code, name in departments_seed:
-            # Department.name is unique; key on name to avoid collisions if legacy codes differ.
-            department, _ = Department.objects.update_or_create(
-                name=name,
-                defaults={"code": code, "active": True},
-            )
+            # Use code as the lookup key (unique); fall back to name-based lookup.
+            department = Department.objects.filter(code=code).first()
+            if department is None:
+                department = Department.objects.filter(name=name).first()
+            if department is not None:
+                department.code = code
+                department.name = name
+                department.active = True
+                department.save()
+            else:
+                department = Department.objects.create(code=code, name=name, active=True)
             departments.append(department)
             HospitalDepartment.objects.update_or_create(
                 hospital=hospital,
@@ -107,26 +113,5 @@ class Command(BaseCommand):
             first_name="E2E",
             last_name="PG",
         )
-
-        rotation_specs = [
-            # completed
-            (departments[0], today - timedelta(days=90), today - timedelta(days=61), "completed"),
-            # ongoing
-            (departments[1], today - timedelta(days=20), today + timedelta(days=20), "ongoing"),
-            # planned
-            (departments[2], today + timedelta(days=30), today + timedelta(days=60), "planned"),
-        ]
-        for department, start_date, end_date, status in rotation_specs:
-            Rotation.objects.update_or_create(
-                pg=pg,
-                department=department,
-                start_date=start_date,
-                end_date=end_date,
-                defaults={
-                    "hospital": hospital,
-                    "supervisor": supervisor,
-                    "status": status,
-                },
-            )
 
         self.stdout.write(self.style.SUCCESS("seed_e2e completed successfully."))

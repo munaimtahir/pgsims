@@ -10,7 +10,7 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
-    "test:e2e": "playwright test --project=smoke --project=setup --project=critical",
+    "test:e2e": "playwright test --project=smoke --project=setup --project=critical --project=auth --project=rbac --project=navigation --project=dashboard --project=workflows --project=negative",
     "test:e2e:smoke": "playwright test --project=smoke",
     "test:e2e:critical": "playwright test --project=setup --project=critical",
     "test:e2e:headed": "playwright test --headed",
@@ -18,7 +18,15 @@
     "test:e2e:debug": "playwright test --debug",
     "test:e2e:report": "playwright show-report playwright-report",
     "test:e2e:codegen": "playwright codegen",
-    "test:e2e:install": "playwright install chromium"
+    "test:e2e:install": "playwright install chromium",
+    "test:e2e:auth": "playwright test --project=auth",
+    "test:e2e:rbac": "playwright test --project=rbac",
+    "test:e2e:navigation": "playwright test --project=navigation",
+    "test:e2e:dashboard": "playwright test --project=dashboard",
+    "test:e2e:workflows": "playwright test --project=workflows",
+    "test:e2e:negative": "playwright test --project=negative",
+    "test:e2e:regression": "playwright test --project=setup --project=critical --project=workflows --project=negative --project=rbac",
+    "test:e2e:full": "playwright test"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.90.5",
