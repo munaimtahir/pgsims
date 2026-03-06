@@ -10,6 +10,8 @@
 /coverage
 /playwright-report/
 /test-results/
+/pw-test-results/
+/blob-report/
 /e2e/.auth/
 
 # next.js
