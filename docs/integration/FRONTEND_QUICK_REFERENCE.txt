@@ -1,0 +1,343 @@
+================================================================================
+PGSIMS FRONTEND - QUICK REFERENCE
+================================================================================
+
+API CLIENT SETUP
+================================================================================
+Location:        lib/api/client.ts
+Framework:       Axios
+Base URL:        - Server: process.env.SERVER_API_URL || 'http://backend:8014'
+                 - Client: process.env.NEXT_PUBLIC_API_URL (same-origin default)
+Auth Header:     Bearer token from localStorage
+Token Refresh:   Auto on 401 via POST /api/auth/refresh/
+Proxy Route:     app/api/[...path]/route.ts (supports GET/POST/PUT/PATCH/DELETE)
+
+================================================================================
+DIRECTORY STRUCTURE
+================================================================================
+frontend/
+├── app/                          # Next.js pages
+│   ├── api/[...path]/route.ts    # API proxy
+│   ├── login/page.tsx            # Login
+│   ├── register/page.tsx         # Registration (disabled)
+│   ├── forgot-password/page.tsx  # Password reset (TODO)
+│   └── dashboard/                # Role-based dashboards
+│       ├── resident/             # Resident pages
+│       ├── supervisor/           # Supervisor pages
+│       ├── pg/                   # Faculty pages
+│       └── utrmc/                # UTRMC admin pages
+│
+├── lib/
+│   ├── api/                      # API service modules
+│   │   ├── client.ts             # Axios instance
+│   │   ├── auth.ts               # Auth endpoints
+│   │   ├── training.ts           # Training/academic endpoints
+│   │   ├── userbase.ts           # User management endpoints
+│   │   ├── notifications.ts      # Notifications
+│   │   ├── bulk.ts               # Bulk import/export
+│   │   ├── audit.ts              # Audit logs
+│   │   ├── users.ts              # User queries
+│   │   ├── departments.ts        # Departments (legacy)
+│   │   ├── hospitals.ts          # Hospitals (legacy)
+│   │   └── index.ts              # Centralized exports
+│   │
+│   ├── auth/
+│   │   └── cookies.ts            # Cookie management
+│   │
+│   ├── rbac.ts                   # Role-based access control
+│   ├── navRegistry.ts            # Navigation menu
+│   └── utils.ts                  # Utilities
+│
+├── components/
+│   ├── auth/
+│   │   └── ProtectedRoute.tsx    # Route protection
+│   ├── layout/
+│   │   ├── DashboardLayout.tsx
+│   │   └── Sidebar.tsx
+│   └── ui/                        # UI components
+│
+├── store/
+│   └── authStore.ts              # Zustand auth state
+│
+└── types/
+    └── index.ts                  # Type definitions
+
+================================================================================
+ENDPOINT SUMMARY (grouped by domain)
+================================================================================
+
+AUTHENTICATION (8 endpoints)
+  POST   /api/auth/login/                  → authApi.login()
+  POST   /api/auth/logout/                 → authApi.logout()
+  GET    /api/auth/profile/                → authApi.getCurrentUser()
+  PATCH  /api/auth/profile/update/         → authApi.updateProfile()
+  POST   /api/auth/password-reset/         → authApi.passwordReset()
+  POST   /api/auth/password-reset/confirm/ → authApi.passwordResetConfirm()
+  POST   /api/auth/change-password/        → authApi.changePassword()
+  POST   /api/auth/refresh/                → authApi.refreshToken() [AUTO on 401]
+
+TRAINING - Programs (5 endpoints)
+  GET    /api/programs/                    → trainingApi.listPrograms()
+  GET    /api/programs/{id}/               → trainingApi.getProgram()
+  PUT    /api/programs/{id}/               → trainingApi.updateProgram()
+  GET    /api/programs/{id}/policy/        → trainingApi.getProgramPolicy()
+  PUT    /api/programs/{id}/policy/        → trainingApi.updateProgramPolicy()
+
+TRAINING - Milestones (2 endpoints)
+  GET    /api/programs/{id}/milestones/    → trainingApi.listMilestones()
+  POST   /api/programs/{id}/milestones/    → trainingApi.createMilestone()
+
+TRAINING - Research (4 endpoints)
+  GET    /api/my/research/                 → trainingApi.getMyResearch()
+  POST   /api/my/research/                 → trainingApi.createResearch()
+  PATCH  /api/my/research/                 → trainingApi.patchResearch() [also: file upload]
+  POST   /api/my/research/action/{action}/ → trainingApi.researchAction()
+
+TRAINING - Research Approval (1 endpoint)
+  GET    /api/supervisor/research-approvals/ → trainingApi.getSupervisorResearchApprovals()
+
+TRAINING - Thesis (2 endpoints)
+  GET    /api/my/thesis/                   → trainingApi.getMyThesis()
+  POST   /api/my/thesis/submit/            → trainingApi.submitThesis()
+
+TRAINING - Workshops (4 endpoints)
+  GET    /api/workshops/                   → trainingApi.listWorkshops()
+  GET    /api/my/workshops/                → trainingApi.listMyWorkshopCompletions()
+  POST   /api/my/workshops/                → trainingApi.createWorkshopCompletion()
+  DELETE /api/my/workshops/{id}/           → trainingApi.deleteWorkshopCompletion()
+
+TRAINING - Eligibility (2 endpoints)
+  GET    /api/my/eligibility/              → trainingApi.getMyEligibility()
+  GET    /api/utrmc/eligibility/           → trainingApi.getUTRMCEligibility()
+
+TRAINING - Dashboard/Summary (3 endpoints)
+  GET    /api/residents/me/summary/        → trainingApi.getResidentSummary()
+  GET    /api/supervisors/me/summary/      → trainingApi.getSupervisorSummary()
+  GET    /api/supervisors/residents/{id}/progress/ → trainingApi.getResidentProgress()
+
+TRAINING - System Settings (1 endpoint)
+  GET    /api/system/settings/             → trainingApi.getSystemSettings()
+
+USERS & DEPARTMENTS (14 endpoints)
+  GET    /api/hospitals/                   → userbaseApi.hospitals.list()
+  POST   /api/hospitals/                   → userbaseApi.hospitals.create()
+  PATCH  /api/hospitals/{id}/              → userbaseApi.hospitals.update()
+  GET    /api/hospitals/{id}/departments/  → userbaseApi.hospitals.listDepartments()
+  
+  GET    /api/departments/                 → userbaseApi.departments.list()
+  POST   /api/departments/                 → userbaseApi.departments.create()
+  PATCH  /api/departments/{id}/            → userbaseApi.departments.update()
+  GET    /api/departments/{id}/roster/     → userbaseApi.departments.roster()
+  
+  GET    /api/hospital-departments/        → userbaseApi.matrix.list()
+  POST   /api/hospital-departments/        → userbaseApi.matrix.create()
+  PATCH  /api/hospital-departments/{id}/   → userbaseApi.matrix.update()
+  
+  GET    /api/users/                       → userbaseApi.users.list(params)
+  POST   /api/users/                       → userbaseApi.users.create()
+  PATCH  /api/users/{id}/                  → userbaseApi.users.update()
+
+DEPARTMENT MEMBERSHIPS (3 endpoints)
+  POST   /api/department-memberships/      → userbaseApi.memberships.create()
+  PATCH  /api/department-memberships/{id}/ → userbaseApi.memberships.update()
+  DELETE /api/department-memberships/{id}/ → userbaseApi.memberships.remove()
+
+SUPERVISION LINKS (3 endpoints)
+  GET    /api/supervision-links/           → userbaseApi.supervisionLinks.list()
+  POST   /api/supervision-links/           → userbaseApi.supervisionLinks.create()
+  PATCH  /api/supervision-links/{id}/      → userbaseApi.supervisionLinks.update()
+
+HOD ASSIGNMENTS (3 endpoints)
+  GET    /api/hod-assignments/             → userbaseApi.hodAssignments.list()
+  POST   /api/hod-assignments/             → userbaseApi.hodAssignments.create()
+  PATCH  /api/hod-assignments/{id}/        → userbaseApi.hodAssignments.update()
+
+HOSPITAL ASSIGNMENTS (3 endpoints)
+  POST   /api/hospital-assignments/        → userbaseApi.hospitalAssignments.create()
+  PATCH  /api/hospital-assignments/{id}/   → userbaseApi.hospitalAssignments.update()
+  DELETE /api/hospital-assignments/{id}/   → userbaseApi.hospitalAssignments.remove()
+
+NOTIFICATIONS (5 endpoints)
+  GET    /api/notifications/               → notificationsApi.list(params)
+  GET    /api/notifications/unread-count/  → notificationsApi.getUnreadCount()
+  POST   /api/notifications/mark-read/     → notificationsApi.markRead(id)
+  GET    /api/notifications/preferences/   → notificationsApi.getPreferences()
+  PATCH  /api/notifications/preferences/   → notificationsApi.updatePreferences()
+
+BULK OPERATIONS (8 endpoints)
+  POST   /api/bulk/import/                 → bulkApi.import()
+  POST   /api/bulk/import-trainees/        → bulkApi.importTrainees()
+  POST   /api/bulk/import-supervisors/     → bulkApi.importSupervisors()
+  POST   /api/bulk/import-residents/       → bulkApi.importResidents()
+  POST   /api/bulk/import-departments/     → bulkApi.importDepartments()
+  POST   /api/bulk/assignment/             → bulkApi.assignment()
+  POST   /api/bulk/review/                 → bulkApi.review()
+  GET    /api/bulk/exports/{resource}/     → bulkApi.exportDataset()
+
+AUDIT (3 endpoints)
+  GET    /api/audit/activity/              → auditApi.getActivityLogs()
+  GET    /api/audit/reports/               → auditApi.getReports()
+  POST   /api/audit/reports/               → auditApi.createReport()
+
+ADDITIONAL USER QUERIES (1 endpoint)
+  GET    /api/users/assigned-pgs/          → usersApi.getAssignedPGs()
+
+TOTAL: 84 endpoints
+
+================================================================================
+PAGES BY ROLE
+================================================================================
+
+RESIDENT/PG (Roles: pg, resident)
+  /dashboard/resident                  → GET /api/residents/me/summary/
+  /dashboard/resident/research         → GET /api/my/research/, POST/PATCH, file upload
+  /dashboard/resident/thesis           → GET /api/my/thesis/
+  /dashboard/resident/workshops        → GET/POST/DELETE /api/my/workshops/
+  /dashboard/resident/schedule         → GET /api/residents/me/summary/
+  /dashboard/resident/progress         → [info only, no API calls]
+
+SUPERVISOR/FACULTY (Roles: supervisor, faculty)
+  /dashboard/supervisor                → GET /api/supervisors/me/summary/
+  /dashboard/supervisor/research-approvals → GET /api/supervisor/research-approvals/
+  /dashboard/supervisor/residents/[id]/progress → GET /api/supervisors/residents/{id}/progress/
+
+PG/FACULTY (Role: pg)
+  /dashboard/pg/departments/[id]/roster → GET /api/departments/{id}/roster/
+
+UTRMC ADMIN (Roles: utrmc_admin, utrmc_user, admin)
+  /dashboard/utrmc                       → GET /api/hospitals/, /api/departments/, /api/users/
+  /dashboard/utrmc/users                 → GET/POST/PATCH /api/users/
+  /dashboard/utrmc/hospitals             → GET/POST/PATCH /api/hospitals/
+  /dashboard/utrmc/departments           → GET/POST/PATCH /api/departments/
+  /dashboard/utrmc/departments/[id]/roster → GET /api/departments/{id}/roster/
+  /dashboard/utrmc/programs              → GET/PUT /api/programs/*, /api/programs/{id}/policy/
+  /dashboard/utrmc/matrix                → GET /api/hospital-departments/
+  /dashboard/utrmc/supervision           → GET /api/supervision-links/
+  /dashboard/utrmc/hod                   → GET /api/hod-assignments/
+  /dashboard/utrmc/eligibility-monitoring → GET /api/utrmc/eligibility/
+
+PUBLIC
+  /login                                 → POST /api/auth/login/
+  /register                              → [disabled]
+  /forgot-password                       → [not implemented]
+
+================================================================================
+KEY TYPE DEFINITIONS (lib/api/training.ts, types/index.ts)
+================================================================================
+
+User Roles:
+  - pg (Postgraduate)
+  - resident (Resident)
+  - supervisor (Supervisor)
+  - faculty (Faculty)
+  - admin (System Admin)
+  - utrmc_user (UTRMC Read-Only)
+  - utrmc_admin (UTRMC Admin)
+
+Main Data Objects:
+  ResidentSummary {
+    training_record: { program_code, program_name, degree_type, start_date, current_month_index }
+    rotation: { current?, next? }
+    schedule: [ { id, department, hospital, start_date, end_date, status } ]
+    leaves: { active_count, pending_count, list }
+    postings: { active_count, pending_count }
+    research: { status, supervisor_name, synopsis_uploaded, university_submitted }
+    thesis: { status, submitted_at }
+    workshops: { total_completed, required_for_imm, required_for_final, completed_list }
+    eligibility: { IMM: { status, reasons }, FINAL: { status, reasons } }
+  }
+
+  SupervisorSummary {
+    pending: { rotation_approvals, leave_approvals, research_approvals }
+    residents: [ { id, rtr_id, name, program, current_rotation, imm_status, final_status, research_status } ]
+  }
+
+  TrainingProgram { id, code, name, degree_type, department, duration_months, is_active, notes }
+  
+  ProgramMilestone { id, program, code, name, recommended_month, research_requirement, workshop_requirements, logbook_requirements }
+  
+  ResidentResearchProject {
+    id, resident_training_record, title, topic_area, supervisor, supervisor_name, resident_name,
+    status (DRAFT|SUBMITTED_TO_SUPERVISOR|APPROVED_BY_SUPERVISOR|SUBMITTED_TO_UNIVERSITY|ACCEPTED_BY_UNIVERSITY),
+    synopsis_file, synopsis_approved_at, supervisor_feedback, university_submission_ref, submitted_to_supervisor_at,
+    submitted_to_university_at, accepted_at, created_at, updated_at
+  }
+
+  ResidentThesis { id, resident_training_record, status, thesis_file, submitted_at, final_submission_ref, notes, created_at, updated_at }
+  
+  WorkshopCompletion { id, resident_training_record, workshop, workshop_name, completed_at, certificate_file, source, notes }
+  
+  MilestoneEligibility { id, milestone, milestone_code, milestone_name, status, reasons (array), computed_at }
+    Status: ELIGIBLE | PARTIALLY_READY | NOT_READY
+
+================================================================================
+AUTHENTICATION & STATE MANAGEMENT
+================================================================================
+
+Auth Store (store/authStore.ts - Zustand with persistence):
+  - Stores: user, accessToken, refreshToken, isAuthenticated, isLoading, hasHydrated
+  - Methods: setAuth(), setUser(), clearAuth(), setLoading(), setHasHydrated()
+  - Persists to localStorage: auth-storage
+
+Cookie Storage (lib/auth/cookies.ts):
+  - pgsims_access_token: Access token value
+  - pgsims_access_exp: Token expiry epoch
+  - pgsims_user_role: User role
+
+Route Protection (components/auth/ProtectedRoute.tsx):
+  - Checks: isAuthenticated, allowedRoles
+  - Redirects unauthenticated → /login
+  - Redirects unauthorized role → role dashboard
+
+Token Refresh (lib/api/client.ts):
+  - Auto-refresh on 401 via POST /api/auth/refresh/
+  - Updates localStorage + cookies
+  - Retry original request
+  - Redirect to /login on refresh failure
+
+================================================================================
+DIRECT API CALLS (NOT in service modules)
+================================================================================
+
+1. app/dashboard/resident/research/page.tsx (line 54):
+   GET /api/users/?role=supervisor
+
+2. app/dashboard/resident/research/page.tsx (line 83):
+   PATCH /api/my/research/ (file upload with multipart/form-data)
+
+All other pages use service functions from lib/api/*.ts
+
+================================================================================
+FILE UPLOAD EXAMPLE (Research Synopsis)
+================================================================================
+
+const fd = new FormData();
+fd.append('synopsis_file', file);
+const r = await apiClient.patch(`/api/my/research/`, fd, { 
+  headers: { 'Content-Type': 'multipart/form-data' } 
+});
+
+================================================================================
+BULK IMPORT EXAMPLE
+================================================================================
+
+const formData = new FormData();
+formData.append('file', file);
+formData.append('import_type', importType);
+formData.append('dry_run', 'false');
+formData.append('allow_partial', 'true');
+
+const response = await apiClient.post('/api/bulk/import/', formData, {
+  headers: { 'Content-Type': 'multipart/form-data' }
+});
+
+================================================================================
+ENVIRONMENT VARIABLES
+================================================================================
+
+Frontend (.env):
+  NEXT_PUBLIC_API_URL      - Client-side API base URL (optional, defaults to same-origin)
+  SERVER_API_URL           - Server-side API base URL (optional, defaults to http://backend:8014)
+  INTERNAL_API_URL         - For API proxy (defaults to http://backend:8014)
+
+================================================================================

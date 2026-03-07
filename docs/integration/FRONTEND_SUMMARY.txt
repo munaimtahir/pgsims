@@ -1,0 +1,271 @@
+================================================================================
+PGSIMS FRONTEND - EXECUTIVE SUMMARY
+================================================================================
+
+OVERVIEW
+================================================================================
+The PGSIMS frontend is a Next.js (React) application that manages postgraduate
+medical training systems. It provides role-based dashboards for residents,
+supervisors, faculty, and administrators.
+
+TECHNOLOGY STACK
+================================================================================
+- Framework:      Next.js 14+ (TypeScript)
+- HTTP Client:    Axios
+- State Mgmt:     Zustand (auth only) + React hooks
+- UI Framework:   Tailwind CSS
+- Component Lib:  Custom components + shadcn/ui (implicit)
+- Testing:        Playwright (e2e)
+
+API ARCHITECTURE
+================================================================================
+- Backend:        Django REST Framework (http://backend:8014)
+- Auth:           JWT tokens (access + refresh)
+- Proxy:          Next.js API route proxies requests to backend
+- Interceptors:   Auto token refresh on 401
+- Base URL:       Same-origin (/api/* → backend:/api/*)
+
+KEY STATISTICS
+================================================================================
+- Total API Endpoints:        84+
+- Service Modules:            11 (auth, training, userbase, notifications, bulk, audit, etc.)
+- Pages with API calls:       27
+- User Roles:                 7 (pg, resident, supervisor, faculty, admin, utrmc_user, utrmc_admin)
+- Source files:               50+ TypeScript files
+- Directory structure:        Modular (app/, lib/api/, components/, store/, types/)
+
+FOLDER ORGANIZATION
+================================================================================
+
+app/                               # Next.js App Router pages
+├── api/[...path]/route.ts        # API proxy to backend
+├── login/, register/, forgot-password/  # Auth pages
+├── dashboard/
+│   ├── resident/                 # 6 resident pages
+│   ├── supervisor/               # 3 supervisor pages
+│   ├── pg/                       # 1 faculty page
+│   └── utrmc/                    # 10 UTRMC admin pages
+└── layout.tsx, page.tsx, globals.css
+
+lib/api/                           # Modular API services
+├── client.ts                     # Axios instance + interceptors
+├── auth.ts                       # Login, logout, token refresh
+├── training.ts                   # Programs, research, thesis, workshops, eligibility
+├── userbase.ts                   # Users, departments, hospitals, memberships
+├── notifications.ts              # Notifications
+├── bulk.ts                       # Bulk import/export
+├── audit.ts                      # Audit logs
+├── users.ts, departments.ts, hospitals.ts  # Legacy endpoints
+└── index.ts                      # Centralized exports
+
+lib/auth/                          # Auth utilities
+└── cookies.ts                    # Cookie management
+
+lib/rbac.ts                        # Role-based access control
+lib/navRegistry.ts                 # Navigation menu
+
+components/
+├── auth/ProtectedRoute.tsx       # Route protection wrapper
+├── layout/DashboardLayout.tsx, Sidebar.tsx
+└── ui/                           # Reusable UI components
+
+store/
+└── authStore.ts                  # Zustand auth state store
+
+types/
+└── index.ts                      # TypeScript type definitions
+
+API ENDPOINTS BREAKDOWN
+================================================================================
+
+Authentication (8):
+  - Login, logout, refresh token, password reset, profile management
+
+Training & Academic (28):
+  - Programs (5), Milestones (2), Research (4), Thesis (2), Workshops (4)
+  - Eligibility (2), Dashboard/Summary (3), System settings (1)
+  - Supervisor research approvals (1)
+  - User queries (1)
+
+Users & Departments (20):
+  - Hospitals, departments, users, memberships (CRUD operations)
+  - Supervision links, HOD assignments, hospital assignments
+  - Department rosters
+
+Notifications (5):
+  - List, unread count, mark as read, preferences
+
+Bulk Operations (8):
+  - Import trainees/supervisors/residents/departments
+  - Bulk assignment, review, export
+
+Audit (3):
+  - Activity logs, reports generation
+
+PAGE BREAKDOWN BY ROLE
+================================================================================
+
+RESIDENT (pg, resident) - 6 pages:
+  1. Dashboard          - Summary with eligibility status
+  2. Research           - Project management with supervisor approval flow
+  3. Thesis             - Submission tracking
+  4. Workshops          - Record completions
+  5. Schedule           - View rotations and leaves
+  6. Progress           - [info only]
+
+SUPERVISOR (supervisor, faculty) - 3 pages:
+  1. Dashboard          - Pending approvals and resident list
+  2. Research Approvals - Approve/return resident research
+  3. Resident Progress  - Track individual resident progress
+
+FACULTY (pg) - 1 page:
+  1. Department Roster  - View department members
+
+UTRMC ADMIN (admin, utrmc_admin, utrmc_user) - 10 pages:
+  1. Overview           - System stats
+  2. Users              - User management (CRUD)
+  3. Hospitals          - Hospital management
+  4. Departments        - Department management
+  5. Department Roster  - View department members
+  6. Programs           - Program configuration and policies
+  7. Hospital-Dept Matrix - Hospital-department mapping
+  8. Supervision Links  - Supervision assignments
+  9. HOD Assignments    - Head of department assignments
+  10. Eligibility Monitoring - Filter residents by eligibility status
+
+PUBLIC - 4 pages:
+  1. Home              - Redirect to dashboard
+  2. Login             - Authentication
+  3. Register          - Disabled (admin provisioning only)
+  4. Forgot Password   - Not implemented
+  5. Unauthorized      - Access denied error
+
+KEY FEATURES
+================================================================================
+
+1. AUTHENTICATION
+   - JWT token-based (access + refresh)
+   - Auto token refresh on 401
+   - Persistent across page reloads (localStorage + cookies)
+   - Role-based route protection
+
+2. ROLE-BASED ACCESS CONTROL
+   - 7 distinct roles with different dashboards
+   - Protected routes with allowedRoles prop
+   - Automatic redirection based on role
+
+3. DATA MANAGEMENT
+   - CRUD operations for users, departments, hospitals, programs
+   - Research project workflow with supervisor approval
+   - Thesis submission tracking
+   - Workshop completion recording
+   - Eligibility calculation and monitoring
+
+4. FILE HANDLING
+   - Research synopsis upload (multipart/form-data)
+   - Bulk import from Excel/CSV (trainees, supervisors, residents, departments)
+   - Export to Excel/CSV
+
+5. NOTIFICATIONS
+   - Real-time notification management
+   - Mark as read functionality
+   - Notification preferences
+
+6. AUDIT TRAIL
+   - Activity logging
+   - Report generation
+
+API RESPONSE PATTERNS
+================================================================================
+
+Most endpoints return one of two formats:
+
+1. Paginated: { count: number, results: T[] }
+2. Array: T[]
+3. Single object: T
+4. File download: Blob (responseType: 'blob')
+
+Helper function `toArray()` in training.ts handles both paginated and array
+responses transparently.
+
+AUTHENTICATION FLOW
+================================================================================
+
+1. User submits login form → POST /api/auth/login/
+2. Backend returns { user, access, refresh }
+3. Frontend stores in localStorage and Zustand store
+4. Cookies synced for SSR compatibility
+5. Authorization header added: "Bearer {access}"
+6. On 401 response: POST /api/auth/refresh/ to get new access token
+7. Retry original request with new token
+8. On refresh failure: redirect to /login
+
+TOKEN STORAGE
+================================================================================
+
+localStorage:
+  - access_token        (JWT access token)
+  - refresh_token       (JWT refresh token)
+  - user                (JSON user object)
+  - auth-storage        (Zustand persisted state)
+
+Cookies (for SSR):
+  - pgsims_access_token (access token)
+  - pgsims_access_exp   (token expiry epoch)
+  - pgsims_user_role    (user role)
+
+ERROR HANDLING
+================================================================================
+
+- 401 responses: Auto token refresh
+- 403 responses: Redirect to /unauthorized
+- Network errors: User-friendly error messages
+- Form validation: Client-side validation before submission
+- API errors: Display backend error details when available
+
+ENVIRONMENT CONFIGURATION
+================================================================================
+
+NEXT_PUBLIC_API_URL  - Client API base (optional, defaults to same-origin)
+SERVER_API_URL       - Server API base (optional, defaults to http://backend:8014)
+INTERNAL_API_URL     - API proxy backend (optional, defaults to http://backend:8014)
+
+Note: In production, the frontend proxy (/api/*) routes requests to the Django
+backend. This allows same-origin requests from the browser without CORS issues.
+
+STATE MANAGEMENT
+================================================================================
+
+Auth State (Zustand):
+  - Persisted to localStorage
+  - Hydration check before rendering
+  - Methods: setAuth(), setUser(), clearAuth()
+
+UI State (React hooks):
+  - Loading states
+  - Form data
+  - Error/success messages
+  - Modal visibility
+
+No Redux or Context API used - simple and lightweight.
+
+PERFORMANCE CONSIDERATIONS
+================================================================================
+
+1. Lazy route-based code splitting (Next.js default)
+2. Static rendering where possible
+3. Client-side data fetching for dynamic content
+4. Token refresh cached to avoid duplicate requests
+5. Axios interceptors prevent unnecessary API calls
+
+DEPLOYMENT
+================================================================================
+
+Frontend runs on:  http://localhost:3000 (dev) or production URL
+Backend runs on:   http://backend:8014
+API Proxy:         /api/[...path] → backend:/api/[...path]
+
+The frontend uses Next.js as a proxy to avoid CORS issues and handle same-origin
+API requests transparently.
+
+================================================================================
