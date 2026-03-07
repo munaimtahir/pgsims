@@ -199,6 +199,15 @@ export const trainingApi = {
     return r.data;
   },
 
+  async patchResearchFile(file: File): Promise<ResidentResearchProject> {
+    const fd = new FormData();
+    fd.append('synopsis_file', file);
+    const r = await apiClient.patch<ResidentResearchProject>('/api/my/research/', fd, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return r.data;
+  },
+
   async researchAction(action: string, data?: object): Promise<ResidentResearchProject> {
     const r = await apiClient.post<ResidentResearchProject>(`/api/my/research/action/${action}/`, data || {});
     return r.data;

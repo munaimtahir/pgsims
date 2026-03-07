@@ -97,10 +97,8 @@ dmypy.json
 node_modules/
 logs/sims.log
 
-# Local audit outputs (keep README only)
-docs/_audit/**
-!docs/_audit/
-!docs/_audit/README.md
+# Audit outputs are committed as part of governance
+# docs/_audit/**  (removed restriction)
 
 # Large backups and patches
 docs/_archive/_snapshots/*.tar.gz

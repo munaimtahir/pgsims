@@ -2,7 +2,7 @@
 import { useEffect, useState, useRef } from 'react';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
 import { trainingApi, ResidentResearchProject } from '@/lib/api/training';
-import apiClient from '@/lib/api/client';
+import { usersApi } from '@/lib/api/users';
 
 const STEPS = [
   { key: 'topic', label: 'Topic & Supervisor' },
@@ -51,10 +51,7 @@ export default function ResidentResearchPage() {
 
   useEffect(() => {
     loadProject();
-    apiClient.get('/api/users/?role=supervisor').then(r => {
-      const data = r.data;
-      setSupervisors(Array.isArray(data) ? data : data.results || []);
-    }).catch(() => {});
+    usersApi.getSupervisors().then(data => setSupervisors(data)).catch(() => {});
   }, []);
 
   const msg = (s: string, isErr = false) => { isErr ? setError(s) : setSuccess(s); setTimeout(() => { setError(''); setSuccess(''); }, 4000); };
@@ -78,10 +75,8 @@ export default function ResidentResearchPage() {
     if (!file || !project) return;
     setSaving(true);
     try {
-      const fd = new FormData();
-      fd.append('synopsis_file', file);
-      const r = await apiClient.patch(`/api/my/research/`, fd, { headers: { 'Content-Type': 'multipart/form-data' } });
-      setProject(r.data);
+      const p = await trainingApi.patchResearchFile(file);
+      setProject(p);
       msg('Synopsis uploaded');
     } catch { msg('Upload failed', true); } finally { setSaving(false); }
   };
