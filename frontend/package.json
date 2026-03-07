@@ -26,6 +26,7 @@
     "test:e2e:workflows": "playwright test --project=workflows",
     "test:e2e:negative": "playwright test --project=negative",
     "test:e2e:regression": "playwright test --project=setup --project=critical --project=workflows --project=negative --project=rbac",
+    "test:e2e:screenshots": "playwright test --project=screenshots",
     "test:e2e:full": "playwright test"
   },
   "dependencies": {

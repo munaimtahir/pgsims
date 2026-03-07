@@ -111,5 +111,16 @@ export default defineConfig({
       dependencies: ['setup'],
       testMatch: /critical\/.*\.spec\.ts/,
     },
+
+    // Screenshot tour — captures every screen/workflow for every role
+    {
+      name: 'screenshots',
+      use: {
+        ...devices['Desktop Chrome'],
+        viewport: { width: 1400, height: 900 },
+        screenshot: 'on',
+      },
+      testMatch: /screenshots\/.*\.spec\.ts/,
+    },
   ],
 });
