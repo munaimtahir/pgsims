@@ -1,1 +1,0 @@
-/srv/apps/pgsims/docker/docker-compose.prod.yml

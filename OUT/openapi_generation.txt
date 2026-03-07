@@ -1,5 +1,0 @@
-time="2026-02-28T12:20:21+05:00" level=warning msg="/srv/apps/pgsims/docker/docker-compose.prod.yml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
-[INFO] 2026-02-28 07:20:22,597 sims.certificates Certificate periodic tasks setup completed
-[INFO] 2026-02-28 07:20:22,605 sims.logbook Logbook periodic tasks setup completed
-Unknown command: 'spectacular'
-Type 'manage.py help' for usage.

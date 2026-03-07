@@ -1,4 +1,0 @@
-time="2026-02-28T13:40:09+05:00" level=warning msg="/home/munaim/srv/apps/pgsims/docker/docker-compose.prod.yml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
-[INFO] 2026-02-28 08:40:10,292 sims.certificates Certificate periodic tasks setup completed
-[INFO] 2026-02-28 08:40:10,302 sims.logbook Logbook periodic tasks setup completed
-ADMIN_REGISTRY 36

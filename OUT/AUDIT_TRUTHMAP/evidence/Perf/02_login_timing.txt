@@ -1,1 +1,0 @@
-status=200 total=0.011242 connect=0.001690 starttransfer=0.010840

@@ -1,20 +1,0 @@
-  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
-                                 Dload  Upload   Total   Spent    Left  Speed
-  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0
-HTTP/1.1 405 Method Not Allowed
-Server: gunicorn
-Date: Fri, 27 Feb 2026 00:39:06 GMT
-Connection: close
-Content-Type: text/html; charset=utf-8
-Allow: GET
-Expires: Fri, 27 Feb 2026 00:39:06 GMT
-Cache-Control: max-age=0, no-cache, no-store, must-revalidate, private
-X-Response-Time: 335ms
-X-Frame-Options: DENY
-X-Request-ID: f0f3db005e2b4c109bbe43c9d1a567e7
-Content-Length: 0
-Vary: origin
-X-Content-Type-Options: nosniff
-Referrer-Policy: same-origin
-Cross-Origin-Opener-Policy: same-origin
-

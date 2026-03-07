@@ -1,2 +1,0 @@
-
-0 static files copied to '/app/staticfiles', 168 unmodified, 435 post-processed.

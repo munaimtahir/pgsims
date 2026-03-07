@@ -1,6 +1,0 @@
-Operations to perform:
-  Apply all migrations: academics, admin, analytics, attendance, audit, auth, bulk, cases, certificates, contenttypes, django_celery_beat, logbook, notifications, reports, results, rotations, search, sessions, users
-Running migrations:
-  No migrations to apply.
-  Your models in app(s): 'analytics', 'cases' have changes that are not yet reflected in a migration, and so won't be applied.
-  Run 'manage.py makemigrations' to make new migrations, and then re-run 'manage.py migrate' to apply them.

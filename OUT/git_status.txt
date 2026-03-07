@@ -1,4 +1,0 @@
-## main...origin/main
-?? OUT/28_VERIFICATION_EVIDENCE_LOG.md
-?? OUT/git_head.txt
-?? OUT/git_status.txt

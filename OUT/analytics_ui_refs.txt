@@ -1,8 +1,0 @@
-/home/munaim/srv/apps/pgsims/frontend/e2e/critical/admin_analytics_live_feed.spec.ts:5:test('admin live feed updates after PG logbook submit workflow', async ({ page, context }) => {
-/home/munaim/srv/apps/pgsims/frontend/e2e/critical/admin_analytics_live_feed.spec.ts:6:  const caseTitle = `E2E live feed ${Date.now()}`;
-/home/munaim/srv/apps/pgsims/frontend/e2e/critical/admin_analytics_live_feed.spec.ts:21:  await page.getByTestId('logbook-form-management').fill('Submit for analytics live feed');
-/home/munaim/srv/apps/pgsims/frontend/e2e/admin_analytics.spec.ts:5:test('admin live feed updates after PG logbook submit workflow', async ({ page, context }) => {
-/home/munaim/srv/apps/pgsims/frontend/e2e/admin_analytics.spec.ts:6:  const caseTitle = `E2E live feed ${Date.now()}`;
-/home/munaim/srv/apps/pgsims/frontend/e2e/admin_analytics.spec.ts:20:  await page.getByTestId('logbook-form-management').fill('Submit for analytics live feed');
-/home/munaim/srv/apps/pgsims/frontend/app/dashboard/admin/analytics/page.tsx:90:      const payload = await analyticsApi.getLiveEvents({
-/home/munaim/srv/apps/pgsims/frontend/app/dashboard/admin/analytics/page.tsx:112:      setError(err instanceof Error ? err.message : 'Failed to load live feed.');

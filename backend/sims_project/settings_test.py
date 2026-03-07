@@ -31,6 +31,39 @@ SECURE_SSL_REDIRECT = False
 SESSION_COOKIE_SECURE = False
 CSRF_COOKIE_SECURE = False
 
+# Disable file-based logging during tests to avoid missing logs/ directory errors.
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+        },
+    },
+    "root": {
+        "handlers": ["console"],
+        "level": "WARNING",
+    },
+}
+
+# Disable all throttling during tests.
+REST_FRAMEWORK = {
+    **globals().get("REST_FRAMEWORK", {}),
+    "DEFAULT_THROTTLE_CLASSES": [],
+    "DEFAULT_THROTTLE_RATES": {},
+}
+
+# Use in-memory cache so throttle counters don't bleed from production Redis.
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+    }
+}
+
+# Set a very high login rate limit so throttling never triggers in tests.
+LOGIN_RATE_LIMIT = "10000/min"
+LOGIN_RATE_LIMIT_BLOCK_DURATION = 1
+
 import tempfile
 import atexit
 import shutil

@@ -1,8 +1,0 @@
-NETWORK ID     NAME                     DRIVER    SCOPE
-fcc60a272586   bridge                   bridge    local
-1afb203e5f8c   docker_sims_network      bridge    local
-c1319ff4c7b0   host                     host      local
-fffa42f41109   none                     null      local
-2e363463a6bf   pgsims_sims_network      bridge    local
-612b80908b9d   radreport_rims_network   bridge    local
-9fdb1fc85bde   vexel_default            bridge    local

@@ -1,7 +1,0 @@
-NAME                   IMAGE                COMMAND                  SERVICE    CREATED        STATUS                  PORTS
-pgsims_backend_prod    docker-web           "sh -c 'python manag…"   web        10 hours ago   Up 10 hours (healthy)   127.0.0.1:8014->8014/tcp
-pgsims_beat            docker-beat          "celery -A sims_proj…"   beat       31 hours ago   Up 31 hours             8014/tcp
-pgsims_db_prod         postgres:15-alpine   "docker-entrypoint.s…"   db         10 hours ago   Up 10 hours (healthy)   5432/tcp
-pgsims_frontend_prod   docker-frontend      "docker-entrypoint.s…"   frontend   31 hours ago   Up 31 hours (healthy)   127.0.0.1:8082->3000/tcp
-pgsims_redis_prod      redis:7-alpine       "docker-entrypoint.s…"   redis      31 hours ago   Up 31 hours (healthy)   6379/tcp
-pgsims_worker          docker-worker        "celery -A sims_proj…"   worker     31 hours ago   Up 31 hours             8014/tcp

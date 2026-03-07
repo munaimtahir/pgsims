@@ -1,3 +1,0 @@
-total 8
-drwxrwxr-x+ 2 munaim munaim 4096 Feb 27 05:36 .
-drwxrwxr-x+ 7 munaim munaim 4096 Feb 27 05:38 ..

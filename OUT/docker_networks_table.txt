@@ -1,8 +1,0 @@
-NAME                     DRIVER
-bridge                   bridge
-docker_sims_network      bridge
-host                     host
-none                     null
-pgsims_sims_network      bridge
-radreport_rims_network   bridge
-vexel_default            bridge

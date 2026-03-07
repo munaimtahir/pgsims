@@ -1,1 +1,0 @@
--rw-rw-r--+ 1 munaim munaim 6455 Feb 27 03:07 /srv/apps/pgsims/docker/docker-compose.prod.yml

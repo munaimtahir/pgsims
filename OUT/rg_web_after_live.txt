@@ -1,3 +1,0 @@
-README.md:3:A comprehensive Django web application for managing postgraduate medical residents' academic and training records.
-README.md:26:SIMS (Surgical Information Management System) is a comprehensive web-based management system designed specifically for postgraduate medical training programs. It provides a complete solution for tracking trainee progress, managing rotations, maintaining digital logbooks, and handling clinical case submissions.
-frontend/.eslintrc.json:2:  "extends": ["next/core-web-vitals", "next/typescript"]

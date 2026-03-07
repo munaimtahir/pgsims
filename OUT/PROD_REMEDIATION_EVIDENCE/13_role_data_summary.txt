@@ -1,5 +1,0 @@
-admin_overview_keys= ['active_rotations', 'last_30d_cases', 'last_30d_logs', 'pending_certificates', 'total_residents', 'unverified_logs']
-pg_total_cases= 0
-pg_pending_cases= 0
-supervisor_pending_count= 0
-utrmc_report_catalog_count= 20
