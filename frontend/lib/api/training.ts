@@ -129,6 +129,40 @@ export interface SystemSettings {
   [key: string]: unknown;
 }
 
+export interface ProgramRotationTemplate {
+  id: number;
+  program: number;
+  program_name: string;
+  name: string;
+  department: number;
+  department_name: string;
+  duration_weeks: number;
+  required: boolean;
+  sequence_order: number;
+  allowed_hospitals: number[];
+  allowed_hospital_names: string[];
+  active: boolean;
+  created_at: string;
+}
+
+export interface DeputationPosting {
+  id: number;
+  resident_training: number;
+  resident_name: string;
+  posting_type: string;
+  institution_name: string;
+  city: string;
+  start_date: string;
+  end_date: string;
+  status: string;
+  notes: string;
+  approved_by: number | null;
+  approved_at: string | null;
+  reject_reason: string;
+  created_at: string;
+  updated_at: string;
+}
+
 // ------------------------------------------------------------------ helpers
 
 function toArray<T>(data: unknown): T[] {
@@ -313,6 +347,49 @@ export const trainingApi = {
   async getSystemSettings(): Promise<SystemSettings> {
     const r = await apiClient.get<SystemSettings>('/api/system/settings/');
     return r.data;
+  },
+
+  // ------------------------------------------------------------------ Program Rotation Templates
+
+  async listProgramTemplates(programId: number): Promise<ProgramRotationTemplate[]> {
+    const r = await apiClient.get(`/api/program-templates/?program=${programId}`);
+    return toArray<ProgramRotationTemplate>(r.data);
+  },
+
+  async createProgramTemplate(data: Partial<ProgramRotationTemplate>): Promise<ProgramRotationTemplate> {
+    const r = await apiClient.post<ProgramRotationTemplate>('/api/program-templates/', data);
+    return r.data;
+  },
+
+  async updateProgramTemplate(id: number, data: Partial<ProgramRotationTemplate>): Promise<ProgramRotationTemplate> {
+    const r = await apiClient.patch<ProgramRotationTemplate>(`/api/program-templates/${id}/`, data);
+    return r.data;
+  },
+
+  async deleteProgramTemplate(id: number): Promise<void> {
+    await apiClient.delete(`/api/program-templates/${id}/`);
+  },
+
+  // ------------------------------------------------------------------ Deputation Postings
+
+  async listPostings(params?: { status?: string }): Promise<DeputationPosting[]> {
+    const qs = params?.status ? `?status=${params.status}` : '';
+    const r = await apiClient.get(`/api/postings/${qs}`);
+    return toArray<DeputationPosting>(r.data);
+  },
+
+  async createPosting(data: Partial<DeputationPosting>): Promise<DeputationPosting> {
+    const r = await apiClient.post<DeputationPosting>('/api/postings/', data);
+    return r.data;
+  },
+
+  async postingAction(id: number, action: 'approve' | 'reject' | 'complete', data?: object): Promise<DeputationPosting> {
+    const r = await apiClient.post<DeputationPosting>(`/api/postings/${id}/${action}/`, data || {});
+    return r.data;
+  },
+
+  async deletePosting(id: number): Promise<void> {
+    await apiClient.delete(`/api/postings/${id}/`);
   },
 };
 

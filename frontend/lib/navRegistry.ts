@@ -46,6 +46,7 @@ export const NAV_SECTIONS: NavSection[] = [
       { label: 'Supervision Links', href: '/dashboard/utrmc/supervision', icon: 'link' },
       { label: 'HOD Assignments', href: '/dashboard/utrmc/hod', icon: 'badge-check' },
       { label: 'Programmes', href: '/dashboard/utrmc/programs', icon: 'book-open' },
+      { label: 'Postings', href: '/dashboard/utrmc/postings', icon: 'folder-open', allowedRoles: ['admin', 'utrmc_admin'] as AppRole[] },
       { label: 'Eligibility Monitor', href: '/dashboard/utrmc/eligibility-monitoring', icon: 'chart-bar' },
     ],
   },
@@ -72,6 +73,7 @@ export const NAV_SECTIONS: NavSection[] = [
       { label: 'Research', href: '/dashboard/resident/research', icon: 'beaker' },
       { label: 'Thesis', href: '/dashboard/resident/thesis', icon: 'document-text' },
       { label: 'Workshops', href: '/dashboard/resident/workshops', icon: 'collection' },
+      { label: 'Postings', href: '/dashboard/resident/postings', icon: 'folder-open' },
     ],
   },
 ];

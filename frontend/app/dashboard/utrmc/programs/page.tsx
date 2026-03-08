@@ -2,20 +2,24 @@
 import { useEffect, useState } from 'react';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
 
-import { trainingApi, TrainingProgram, ProgramPolicy, ProgramMilestone } from '@/lib/api/training';
+import { trainingApi, TrainingProgram, ProgramPolicy, ProgramMilestone, ProgramRotationTemplate } from '@/lib/api/training';
 
-type Tab = 'overview' | 'policy' | 'milestones';
+type Tab = 'overview' | 'policy' | 'milestones' | 'templates';
 
 export default function UTRMCProgramsPage() {
   const [programs, setPrograms] = useState<TrainingProgram[]>([]);
   const [selected, setSelected] = useState<TrainingProgram | null>(null);
   const [policy, setPolicy] = useState<ProgramPolicy | null>(null);
   const [milestones, setMilestones] = useState<ProgramMilestone[]>([]);
+  const [templates, setTemplates] = useState<ProgramRotationTemplate[]>([]);
   const [tab, setTab] = useState<Tab>('overview');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [policyForm, setPolicyForm] = useState<Partial<ProgramPolicy>>({});
   const [savingPolicy, setSavingPolicy] = useState(false);
+  const [showTemplateForm, setShowTemplateForm] = useState(false);
+  const [templateForm, setTemplateForm] = useState({ name: '', department: '', duration_weeks: '4', required: true, sequence_order: '1' });
+  const [savingTemplate, setSavingTemplate] = useState(false);
 
   useEffect(() => {
     trainingApi.listPrograms()
@@ -29,12 +33,15 @@ export default function UTRMCProgramsPage() {
     setTab('overview');
     setPolicy(null);
     setMilestones([]);
-    const [pol, mils] = await Promise.allSettled([
+    setTemplates([]);
+    const [pol, mils, tmpl] = await Promise.allSettled([
       trainingApi.getProgramPolicy(p.id),
       trainingApi.listMilestones(p.id),
+      trainingApi.listProgramTemplates(p.id),
     ]);
     if (pol.status === 'fulfilled') { setPolicy(pol.value); setPolicyForm(pol.value); }
     if (mils.status === 'fulfilled') setMilestones(mils.value);
+    if (tmpl.status === 'fulfilled') setTemplates(tmpl.value);
   };
 
   const savePolicy = async () => {
@@ -48,6 +55,39 @@ export default function UTRMCProgramsPage() {
       setError('Failed to save policy.');
     } finally {
       setSavingPolicy(false);
+    }
+  };
+
+  const addTemplate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selected) return;
+    setSavingTemplate(true);
+    try {
+      const created = await trainingApi.createProgramTemplate({
+        program: selected.id,
+        name: templateForm.name,
+        department: templateForm.department ? Number(templateForm.department) : undefined,
+        duration_weeks: Number(templateForm.duration_weeks),
+        required: templateForm.required,
+        sequence_order: Number(templateForm.sequence_order),
+      });
+      setTemplates((prev) => [...prev, created]);
+      setShowTemplateForm(false);
+      setTemplateForm({ name: '', department: '', duration_weeks: '4', required: true, sequence_order: String(templates.length + 2) });
+    } catch {
+      setError('Failed to add template.');
+    } finally {
+      setSavingTemplate(false);
+    }
+  };
+
+  const deleteTemplate = async (id: number) => {
+    if (!confirm('Delete this rotation template?')) return;
+    try {
+      await trainingApi.deleteProgramTemplate(id);
+      setTemplates((prev) => prev.filter((t) => t.id !== id));
+    } catch {
+      setError('Failed to delete template.');
     }
   };
 
@@ -95,7 +135,7 @@ export default function UTRMCProgramsPage() {
 
                 {/* Tabs */}
                 <div className="flex gap-1 border-b border-gray-200 mb-6">
-                  {(['overview', 'policy', 'milestones'] as Tab[]).map((t) => (
+                  {(['overview', 'policy', 'milestones', 'templates'] as Tab[]).map((t) => (
                     <button
                       key={t}
                       onClick={() => setTab(t)}
@@ -188,6 +228,121 @@ export default function UTRMCProgramsPage() {
                         )}
                       </div>
                     ))}
+                  </div>
+                )}
+                {/* Templates Tab */}
+                {tab === 'templates' && (
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm text-gray-500">Rotation schedule templates define the sequence of rotations for this programme.</p>
+                      <button
+                        onClick={() => { setShowTemplateForm(true); setTemplateForm({ name: '', department: '', duration_weeks: '4', required: true, sequence_order: String(templates.length + 1) }); }}
+                        className="px-3 py-1.5 bg-indigo-600 text-white text-xs font-medium rounded-lg hover:bg-indigo-700"
+                      >
+                        + Add Template
+                      </button>
+                    </div>
+
+                    {showTemplateForm && (
+                      <form onSubmit={addTemplate} className="bg-indigo-50 border border-indigo-200 rounded-lg p-4 space-y-3">
+                        <h3 className="text-sm font-semibold text-indigo-800">New Rotation Template</h3>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <label className="block text-xs font-medium text-gray-700 mb-1">Template Name *</label>
+                            <input
+                              required
+                              type="text"
+                              value={templateForm.name}
+                              onChange={(e) => setTemplateForm({ ...templateForm, name: e.target.value })}
+                              placeholder="e.g. Internal Medicine Block"
+                              className="w-full border border-gray-300 rounded-md px-2.5 py-1.5 text-sm"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-medium text-gray-700 mb-1">Department ID</label>
+                            <input
+                              type="number"
+                              value={templateForm.department}
+                              onChange={(e) => setTemplateForm({ ...templateForm, department: e.target.value })}
+                              placeholder="Department ID"
+                              className="w-full border border-gray-300 rounded-md px-2.5 py-1.5 text-sm"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-medium text-gray-700 mb-1">Duration (weeks) *</label>
+                            <input
+                              required
+                              type="number"
+                              min={1}
+                              value={templateForm.duration_weeks}
+                              onChange={(e) => setTemplateForm({ ...templateForm, duration_weeks: e.target.value })}
+                              className="w-full border border-gray-300 rounded-md px-2.5 py-1.5 text-sm"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-medium text-gray-700 mb-1">Sequence Order *</label>
+                            <input
+                              required
+                              type="number"
+                              min={1}
+                              value={templateForm.sequence_order}
+                              onChange={(e) => setTemplateForm({ ...templateForm, sequence_order: e.target.value })}
+                              className="w-full border border-gray-300 rounded-md px-2.5 py-1.5 text-sm"
+                            />
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            id="tmpl_required"
+                            checked={templateForm.required}
+                            onChange={(e) => setTemplateForm({ ...templateForm, required: e.target.checked })}
+                          />
+                          <label htmlFor="tmpl_required" className="text-xs text-gray-700">Required rotation</label>
+                        </div>
+                        <div className="flex gap-2">
+                          <button type="submit" disabled={savingTemplate} className="px-3 py-1.5 bg-indigo-600 text-white text-xs rounded-md hover:bg-indigo-700 disabled:opacity-50">
+                            {savingTemplate ? 'Saving…' : 'Add'}
+                          </button>
+                          <button type="button" onClick={() => setShowTemplateForm(false)} className="text-xs text-gray-500 hover:text-gray-700">Cancel</button>
+                        </div>
+                      </form>
+                    )}
+
+                    {templates.length === 0 && !showTemplateForm && (
+                      <p className="text-sm text-gray-400 text-center py-8">No rotation templates yet.</p>
+                    )}
+
+                    <div className="space-y-2">
+                      {[...templates].sort((a, b) => a.sequence_order - b.sequence_order).map((t) => (
+                        <div key={t.id} className="bg-white border border-gray-200 rounded-lg px-4 py-3 flex items-center justify-between">
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <span className="w-6 h-6 bg-indigo-100 text-indigo-700 rounded-full text-xs font-bold flex items-center justify-center">
+                                {t.sequence_order}
+                              </span>
+                              <span className="font-medium text-gray-900 text-sm">{t.name}</span>
+                              {t.required && (
+                                <span className="text-xs bg-red-50 text-red-600 px-1.5 py-0.5 rounded">Required</span>
+                              )}
+                              {!t.active && (
+                                <span className="text-xs bg-gray-100 text-gray-400 px-1.5 py-0.5 rounded">Inactive</span>
+                              )}
+                            </div>
+                            <p className="text-xs text-gray-500 mt-0.5 ml-8">
+                              {t.department_name || `Dept ${t.department}`} · {t.duration_weeks} weeks
+                              {t.allowed_hospital_names.length > 0 && ` · Allowed: ${t.allowed_hospital_names.join(', ')}`}
+                            </p>
+                          </div>
+                          <button
+                            onClick={() => deleteTemplate(t.id)}
+                            className="text-red-400 hover:text-red-600 text-xs ml-4"
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 )}
               </>
