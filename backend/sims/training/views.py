@@ -858,8 +858,10 @@ class ResearchProjectActionView(APIView):
     VALID_ACTIONS = {
         "submit-to-supervisor": ResidentResearchProject.STATUS_SUBMITTED_SUPERVISOR,
         "supervisor-approve": ResidentResearchProject.STATUS_APPROVED_SUPERVISOR,
+        "supervisor-return": ResidentResearchProject.STATUS_DRAFT,
         "submit-to-university": ResidentResearchProject.STATUS_SUBMITTED_UNIVERSITY,
         "accept-by-university": ResidentResearchProject.STATUS_ACCEPTED_UNIVERSITY,
+        # Backward-compatible alias retained for existing clients.
         "return-to-draft": ResidentResearchProject.STATUS_DRAFT,
     }
 
@@ -873,7 +875,7 @@ class ResearchProjectActionView(APIView):
         if action == "submit-to-supervisor":
             rtr = _get_active_rtr(user)
             project = rtr.research_project
-        elif action in ("supervisor-approve", "return-to-draft"):
+        elif action in ("supervisor-approve", "supervisor-return", "return-to-draft"):
             # Supervisor approves/returns
             if not _is_supervisor_or_hod(user) and not _is_admin_or_utrmc_admin(user):
                 return Response({"detail": "Supervisor/admin role required."}, status=403)
@@ -881,7 +883,7 @@ class ResearchProjectActionView(APIView):
             if not project_id:
                 return Response({"detail": "project_id required."}, status=400)
             project = ResidentResearchProject.objects.get(pk=project_id)
-            if action == "supervisor-approve":
+            if action in ("supervisor-approve", "supervisor-return", "return-to-draft"):
                 feedback = request.data.get("feedback", "")
                 project.supervisor_feedback = feedback
                 project.supervisor = user

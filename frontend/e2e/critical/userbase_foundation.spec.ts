@@ -181,7 +181,7 @@ test('utrmc admin can build userbase graph and resident scope is enforced', asyn
     refresh: string;
     user: { role: string; username: string; id: number; email: string; first_name: string; last_name: string; full_name: string };
   };
-  const appBaseURL = process.env.E2E_BASE_URL ?? 'https://pgsims.alshifalab.pk';
+  const appBaseURL = process.env.E2E_BASE_URL ?? 'http://127.0.0.1:8082';
   await context.addCookies([
     { name: 'pgsims_access_token', value: residentAuth.access, url: appBaseURL },
     { name: 'pgsims_user_role', value: residentAuth.user.role, url: appBaseURL },

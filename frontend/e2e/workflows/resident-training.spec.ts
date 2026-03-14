@@ -38,7 +38,7 @@ test.describe('Resident schedule', () => {
     });
     expect(token).toBeTruthy();
 
-    const appBase = process.env.E2E_BASE_URL ?? 'https://pgsims.alshifalab.pk';
+    const appBase = process.env.E2E_BASE_URL ?? 'http://127.0.0.1:8082';
     const res = await page.request.get(`${appBase}/api/my/rotations/`, {
       headers: { Authorization: `Bearer ${token}` },
     });
@@ -85,7 +85,7 @@ test.describe('Resident academic progress', () => {
       return parsed.state?.accessToken ?? '';
     });
 
-    const appBase = process.env.E2E_BASE_URL ?? 'https://pgsims.alshifalab.pk';
+    const appBase = process.env.E2E_BASE_URL ?? 'http://127.0.0.1:8082';
     const res = await page.request.get(`${appBase}/api/my/eligibility/`, {
       headers: { Authorization: `Bearer ${token}` },
     });
@@ -125,7 +125,7 @@ test.describe('Resident research workflow', () => {
       return parsed.state?.accessToken ?? '';
     });
 
-    const appBase = process.env.E2E_BASE_URL ?? 'https://pgsims.alshifalab.pk';
+    const appBase = process.env.E2E_BASE_URL ?? 'http://127.0.0.1:8082';
     const res = await page.request.get(`${appBase}/api/my/research/`, {
       headers: { Authorization: `Bearer ${token}` },
     });
@@ -171,7 +171,7 @@ test.describe('Resident workshops page', () => {
       return parsed.state?.accessToken ?? '';
     });
 
-    const appBase = process.env.E2E_BASE_URL ?? 'https://pgsims.alshifalab.pk';
+    const appBase = process.env.E2E_BASE_URL ?? 'http://127.0.0.1:8082';
     const res = await page.request.get(`${appBase}/api/my/workshops/`, {
       headers: { Authorization: `Bearer ${token}` },
     });
@@ -195,7 +195,7 @@ test.describe('Resident summary API', () => {
       return parsed.state?.accessToken ?? '';
     });
 
-    const appBase = process.env.E2E_BASE_URL ?? 'https://pgsims.alshifalab.pk';
+    const appBase = process.env.E2E_BASE_URL ?? 'http://127.0.0.1:8082';
     const res = await page.request.get(`${appBase}/api/residents/me/summary/`, {
       headers: { Authorization: `Bearer ${token}` },
     });

@@ -124,6 +124,11 @@ export interface MilestoneEligibility {
   computed_at: string;
 }
 
+interface MilestoneEligibilityApiShape extends Omit<MilestoneEligibility, 'reasons'> {
+  reasons?: string[];
+  reasons_json?: string[];
+}
+
 export interface SystemSettings {
   WORKSHOP_MANAGEMENT_ENABLED: boolean;
   [key: string]: unknown;
@@ -169,6 +174,17 @@ function toArray<T>(data: unknown): T[] {
   if (Array.isArray(data)) return data as T[];
   if (data && typeof data === 'object' && 'results' in data) return ((data as { results?: T[] }).results) || [];
   return [];
+}
+
+function normalizeEligibility(item: MilestoneEligibilityApiShape): MilestoneEligibility {
+  const reasons = Array.isArray(item.reasons)
+    ? item.reasons
+    : (Array.isArray(item.reasons_json) ? item.reasons_json : []);
+
+  return {
+    ...item,
+    reasons,
+  };
 }
 
 // ------------------------------------------------------------------ API
@@ -312,7 +328,14 @@ export const trainingApi = {
   // Eligibility
   async getMyEligibility(): Promise<MilestoneEligibility[]> {
     const r = await apiClient.get('/api/my/eligibility/');
-    return toArray<MilestoneEligibility>(r.data);
+    const payload = r.data as {
+      eligibilities?: MilestoneEligibilityApiShape[];
+      results?: MilestoneEligibilityApiShape[];
+    } | MilestoneEligibilityApiShape[];
+    const items = Array.isArray(payload)
+      ? payload
+      : (payload.eligibilities || payload.results || []);
+    return items.map(normalizeEligibility);
   },
 
   async getUTRMCEligibility(params?: {
@@ -320,11 +343,14 @@ export const trainingApi = {
     department?: number;
     status?: string;
   }): Promise<{ count: number; results: MilestoneEligibility[] }> {
-    const r = await apiClient.get<{ count: number; results: MilestoneEligibility[] }>(
+    const r = await apiClient.get<{ count: number; results: MilestoneEligibilityApiShape[] }>(
       '/api/utrmc/eligibility/',
       { params }
     );
-    return r.data;
+    return {
+      count: r.data.count,
+      results: (r.data.results || []).map(normalizeEligibility),
+    };
   },
 
 
@@ -445,4 +471,3 @@ export interface ResidentProgressSnapshot {
   workshops: { total_completed: number; required_for_imm?: number; required_for_final?: number; completed_list?: string[] };
   eligibility: { IMM: { status: string | null; reasons: string[] } | null; FINAL: { status: string | null; reasons: string[] } | null };
 }
-

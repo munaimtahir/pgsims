@@ -350,6 +350,7 @@ class ResidentMilestoneEligibilitySerializer(serializers.ModelSerializer):
     milestone_name = serializers.CharField(source="milestone.name", read_only=True)
     status_display = serializers.CharField(source="get_status_display", read_only=True)
     resident_name = serializers.SerializerMethodField()
+    reasons = serializers.ListField(source="reasons_json", child=serializers.CharField(), read_only=True)
 
     class Meta:
         model = ResidentMilestoneEligibility
@@ -357,9 +358,9 @@ class ResidentMilestoneEligibilitySerializer(serializers.ModelSerializer):
             "id", "resident_training_record", "resident_name",
             "milestone", "milestone_code", "milestone_name",
             "status", "status_display",
-            "reasons_json", "computed_at",
+            "reasons", "computed_at",
         ]
-        read_only_fields = ["id", "status", "reasons_json", "computed_at"]
+        read_only_fields = ["id", "status", "reasons", "computed_at"]
 
     def get_resident_name(self, obj):
         user = obj.resident_training_record.resident_user

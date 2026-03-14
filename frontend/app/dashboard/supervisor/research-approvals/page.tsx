@@ -80,7 +80,7 @@ export default function ResearchApprovalsPage() {
                       <div className="flex-1 min-w-0">
                         <p className="font-semibold text-gray-900">{p.title}</p>
                         <p className="text-sm text-gray-500 mt-0.5">Topic: {p.topic_area || '—'}</p>
-                        <p className="text-xs text-gray-400 mt-1">Resident ID: {p.resident}</p>
+                        <p className="text-xs text-gray-400 mt-1">Resident: {p.resident_name || '—'}</p>
                         {p.synopsis_file && (
                           <a href={p.synopsis_file} target="_blank" rel="noreferrer"
                             className="inline-block mt-2 text-xs text-indigo-600 underline">📄 View Synopsis</a>

@@ -3,25 +3,27 @@ import { defineConfig, devices } from '@playwright/test';
 /**
  * PGSIMS Playwright Configuration
  *
- * Target app: Next.js frontend (pgsims.alshifalab.pk or localhost:3000)
+ * Target app: Next.js frontend (canonical local Docker URL: http://127.0.0.1:8082)
  * Test suites:
  *   - smoke    Fast sanity checks on public pages and role dashboards (no setup dep)
  *   - critical Full user-flow tests requiring pre-authenticated storageState
  *
  * Run commands (see package.json for scripts):
  *   npm run test:e2e:smoke    — smoke suite only (fast, good for CI)
+ *   npm run test:e2e:workflow — promoted workflow gate
  *   npm run test:e2e          — smoke + critical suites
  *   npm run test:e2e:headed   — run with visible browser
  *   npm run test:e2e:ui       — interactive Playwright UI
  *
  * Environment variables:
- *   E2E_BASE_URL   Frontend base URL (default: https://pgsims.alshifalab.pk)
- *   E2E_API_URL    Backend API URL — if unset, loginAs() falls back to E2E_BASE_URL then localhost:8000
+ *   E2E_BASE_URL   Frontend base URL (default: http://127.0.0.1:8082)
+ *   E2E_API_URL    Backend API URL (default: http://127.0.0.1:8014)
  *
  * App startup: The app is NOT started automatically. Start the Docker stack before running:
  *   docker compose -f docker/docker-compose.yml --env-file .env up -d
  *   (or `make up` from repo root)
- * For local dev: `cd frontend && npm run dev` (sets E2E_BASE_URL=http://localhost:3000)
+ * For non-Docker local runs (optional), set both:
+ *   E2E_BASE_URL=http://127.0.0.1:3000 E2E_API_URL=http://127.0.0.1:8000
  */
 export default defineConfig({
   testDir: './e2e',
@@ -33,12 +35,12 @@ export default defineConfig({
   expect: { timeout: 10_000 },
 
   reporter: [
-    ['html', { outputFolder: 'playwright-report', open: 'never' }],
+    ['html', { outputFolder: '../output/playwright/report', open: 'never' }],
     ['list'],
   ],
 
   use: {
-    baseURL: process.env.E2E_BASE_URL ?? 'https://pgsims.alshifalab.pk',
+    baseURL: process.env.E2E_BASE_URL ?? 'http://127.0.0.1:8082',
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
@@ -46,7 +48,7 @@ export default defineConfig({
     testIdAttribute: 'data-testid',
   },
 
-  outputDir: 'pw-test-results',
+  outputDir: '../output/playwright/results',
 
   projects: [
     // Auth setup — saves admin storageState for the critical suite
@@ -60,6 +62,13 @@ export default defineConfig({
       name: 'smoke',
       use: { ...devices['Desktop Chrome'] },
       testMatch: /smoke\/.*\.spec\.ts/,
+    },
+
+    // Workflow gate — small deterministic contract-critical browser flows
+    {
+      name: 'workflow-gate',
+      use: { ...devices['Desktop Chrome'] },
+      testMatch: /workflow-gate\/.*\.spec\.ts/,
     },
 
     // Auth/session suite

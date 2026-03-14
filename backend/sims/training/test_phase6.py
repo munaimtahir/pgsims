@@ -383,6 +383,25 @@ class ResearchProjectAPITests(APITestCase):
         self.assertEqual(resp.status_code, 200)
         self.assertEqual(resp.data["status"], ResidentResearchProject.STATUS_APPROVED_SUPERVISOR)
 
+    def test_supervisor_return_transitions_project_to_draft(self):
+        self.client.force_authenticate(user=self.pg)
+        created = self.client.post("/api/my/research/", {
+            "title": "Research needs revision",
+            "supervisor": self.supervisor.pk,
+        }, format="json")
+        project_id = created.data["id"]
+        self.client.post("/api/my/research/action/submit-to-supervisor/", {}, format="json")
+
+        self.client.force_authenticate(user=self.supervisor)
+        resp = self.client.post("/api/my/research/action/supervisor-return/", {
+            "project_id": project_id,
+            "feedback": "Please revise methodology.",
+        }, format="json")
+
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(resp.data["status"], ResidentResearchProject.STATUS_DRAFT)
+        self.assertEqual(resp.data["supervisor_feedback"], "Please revise methodology.")
+
 
 class WorkshopCompletionAPITests(APITestCase):
     def setUp(self):
@@ -425,6 +444,28 @@ class EligibilityAPITests(APITestCase):
         self.assertIn("eligibilities", resp.data)
         self.assertEqual(resp.data["eligibilities"], [])
 
+    def test_my_eligibility_items_use_reasons_field(self):
+        milestone = ProgramMilestone.objects.create(
+            program=self.program,
+            code=ProgramMilestone.CODE_IMM,
+            name="IMM",
+            is_active=True,
+        )
+        ProgramMilestoneResearchRequirement.objects.create(
+            milestone=milestone,
+            requires_thesis_submitted=True,
+        )
+
+        self.client.force_authenticate(user=self.pg)
+        resp = self.client.get("/api/my/eligibility/")
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(len(resp.data["eligibilities"]), 1)
+        item = resp.data["eligibilities"][0]
+        self.assertIn("reasons", item)
+        self.assertNotIn("reasons_json", item)
+        self.assertIsInstance(item["reasons"], list)
+        self.assertGreaterEqual(len(item["reasons"]), 1)
+
     def test_utrmc_eligibility_requires_admin(self):
         self.client.force_authenticate(user=self.pg)
         resp = self.client.get("/api/utrmc/eligibility/")
@@ -434,6 +475,29 @@ class EligibilityAPITests(APITestCase):
         self.client.force_authenticate(user=self.admin)
         resp = self.client.get("/api/utrmc/eligibility/")
         self.assertEqual(resp.status_code, 200)
+
+    def test_utrmc_eligibility_items_use_reasons_field(self):
+        milestone = ProgramMilestone.objects.create(
+            program=self.program,
+            code=ProgramMilestone.CODE_FINAL,
+            name="FINAL",
+            is_active=True,
+        )
+        ResidentMilestoneEligibility.objects.create(
+            resident_training_record=self.rtr,
+            milestone=milestone,
+            status=ResidentMilestoneEligibility.STATUS_PARTIALLY_READY,
+            reasons_json=["Thesis not submitted"],
+        )
+
+        self.client.force_authenticate(user=self.admin)
+        resp = self.client.get("/api/utrmc/eligibility/")
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(resp.data["count"], 1)
+        item = resp.data["results"][0]
+        self.assertIn("reasons", item)
+        self.assertNotIn("reasons_json", item)
+        self.assertEqual(item["reasons"], ["Thesis not submitted"])
 
 
 class SystemSettingsAPITests(APITestCase):

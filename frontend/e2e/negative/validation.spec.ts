@@ -161,7 +161,7 @@ test.describe('Cross-role URL access blocked', () => {
 
 test.describe('API unauthorized access', () => {
   test('calling users API without auth returns 401', async ({ page }) => {
-    const appBase = process.env.E2E_BASE_URL ?? 'https://pgsims.alshifalab.pk';
+    const appBase = process.env.E2E_BASE_URL ?? 'http://127.0.0.1:8082';
     const res = await page.request.get(`${appBase}/api/users/`);
     expect([401, 403]).toContain(res.status());
   });
@@ -177,7 +177,7 @@ test.describe('API unauthorized access', () => {
       return parsed.state?.accessToken ?? '';
     });
 
-    const appBase = process.env.E2E_BASE_URL ?? 'https://pgsims.alshifalab.pk';
+    const appBase = process.env.E2E_BASE_URL ?? 'http://127.0.0.1:8082';
     const res = await page.request.get(`${appBase}/api/supervisors/me/summary/`, {
       headers: { Authorization: `Bearer ${token}` },
     });

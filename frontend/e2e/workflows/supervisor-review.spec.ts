@@ -86,7 +86,7 @@ test.describe('Supervisor research approvals', () => {
       return;
     }
 
-    const appBase = process.env.E2E_BASE_URL ?? 'https://pgsims.alshifalab.pk';
+    const appBase = process.env.E2E_BASE_URL ?? 'http://127.0.0.1:8082';
 
     // Create/update research project for e2e_pg
     const researchRes = await pgPage.request.post(`${appBase}/api/my/research/`, {
@@ -140,7 +140,7 @@ test.describe('Supervisor resident progress view', () => {
       return;
     }
 
-    const appBase = process.env.E2E_BASE_URL ?? 'https://pgsims.alshifalab.pk';
+    const appBase = process.env.E2E_BASE_URL ?? 'http://127.0.0.1:8082';
     const summaryRes = await page.request.get(`${appBase}/api/supervisors/me/summary/`, {
       headers: { Authorization: `Bearer ${token}` },
     });

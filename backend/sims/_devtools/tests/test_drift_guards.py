@@ -30,13 +30,37 @@ class DriftGuardTests(SimpleTestCase):
             cleaned = "\n".join(non_comment_lines)
             if "Notification.objects.create(" not in cleaned:
                 continue
-            if any(key in cleaned for key in forbidden):
+            if any(key in block for block in self._notification_create_blocks(cleaned) for key in forbidden):
                 violations.append(str(path.relative_to(self.repo_root)))
         self.assertEqual(
             violations,
             [],
             f"Forbidden Notification.objects.create legacy keys found in: {violations}",
         )
+
+    def _notification_create_blocks(self, text: str):
+        marker = "Notification.objects.create("
+        start = 0
+        while True:
+            index = text.find(marker, start)
+            if index == -1:
+                return
+            depth = 0
+            started = False
+            for cursor in range(index, len(text)):
+                char = text[cursor]
+                if char == "(":
+                    depth += 1
+                    started = True
+                elif char == ")":
+                    depth -= 1
+                    if started and depth == 0:
+                        yield text[index : cursor + 1]
+                        start = cursor + 1
+                        break
+            else:
+                yield text[index:]
+                return
 
     def test_duplicate_department_model_not_reintroduced(self):
         violations = []

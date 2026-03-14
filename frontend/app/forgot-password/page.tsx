@@ -2,6 +2,9 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import axios from 'axios';
+
+import authApi from '@/lib/api/auth';
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
@@ -15,12 +18,27 @@ export default function ForgotPasswordPage() {
     setMessage('');
     setLoading(true);
 
-    // TODO: Implement password reset API call
-    // For MVP, show placeholder message
-    setTimeout(() => {
-      setMessage('Password reset functionality coming soon. Please contact your administrator.');
+    const normalizedEmail = email.trim();
+    if (!normalizedEmail) {
+      setError('Email is required');
       setLoading(false);
-    }, 1000);
+      return;
+    }
+
+    try {
+      const response = await authApi.passwordReset(normalizedEmail);
+      setMessage(response.message || 'If your account exists, a password reset email has been sent.');
+      setEmail('');
+    } catch (err) {
+      if (axios.isAxiosError(err)) {
+        const payload = err.response?.data as { error?: string; message?: string } | undefined;
+        setError(payload?.error || payload?.message || 'Failed to request password reset. Please try again.');
+      } else {
+        setError('Failed to request password reset. Please try again.');
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

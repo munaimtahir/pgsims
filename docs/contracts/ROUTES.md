@@ -6,8 +6,9 @@ Stable role areas:
 - `/login`
 - `/dashboard/pg/*`
 - `/dashboard/supervisor/*`
-- `/dashboard/admin/*`
 - `/dashboard/utrmc/*`
+
+Admin users are routed to `/dashboard/utrmc/*` in the current implementation.
 
 Current userbase/org graph screens under frozen area:
 - `/dashboard/utrmc/hospitals`
@@ -17,8 +18,8 @@ Current userbase/org graph screens under frozen area:
 - `/dashboard/utrmc/users`
 - `/dashboard/utrmc/users/new`
 - `/dashboard/utrmc/users/[id]`
-- `/dashboard/utrmc/linking/supervision`
-- `/dashboard/utrmc/linking/hod`
+- `/dashboard/utrmc/supervision`
+- `/dashboard/utrmc/hod`
 
 Do not rename these paths after pilot begins.
 

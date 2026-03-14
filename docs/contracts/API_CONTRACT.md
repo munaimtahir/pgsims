@@ -161,11 +161,14 @@ Response shape for `GET /events/live`:
 - `GET /api/my/research/` — get own research project
 - `POST /api/my/research/` — create research project (resident)
 - `PATCH /api/my/research/` — update draft project
-- `POST /api/my/research/action/{action}/` — state transition; actions: `submit-to-supervisor`, `supervisor-approve`, `submit-to-university`, `accept-by-university`, `return-to-draft`
+- `POST /api/my/research/action/{action}/` — state transition; actions: `submit-to-supervisor`, `supervisor-approve`, `supervisor-return`, `submit-to-university`, `accept-by-university`, `return-to-draft`
   - `supervisor-approve` payload: `{ "project_id": int, "feedback": str }`
+  - `supervisor-return` payload: `{ "project_id": int, "feedback": str }`
+  - `return-to-draft` is retained as a backward-compatible alias for supervisor return.
 
 ### Supervisor Research Approvals
 - `GET /api/supervisor/research-approvals/` — list residents' projects (supervisor/faculty/hod)
+  - Response rows include `resident_name` for display.
 
 ### Thesis
 - `GET /api/my/thesis/` — get own thesis record
@@ -180,7 +183,12 @@ Response shape for `GET /events/live`:
 
 ### Eligibility
 - `GET /api/my/eligibility/` — resident's eligibility snapshots (triggers recompute)
+  - Response shape:
+    - `{ resident_training_record, program: {id, code, name}, current_month_index, eligibilities: MilestoneEligibility[] }`
+  - `MilestoneEligibility` item shape:
+    - `{ id, resident_training_record, resident_name, milestone, milestone_code, milestone_name, status, status_display, reasons: string[], computed_at }`
 - `GET /api/utrmc/eligibility/` — all records; query params: `status`, `program`, `department`
+  - Response shape: `{ count, results: MilestoneEligibility[] }`
 
 ### System Settings
 - `GET /api/system/settings/` — returns `{ WORKSHOP_MANAGEMENT_ENABLED: bool, ... }`
@@ -204,7 +212,7 @@ Response shape for `GET /events/live`:
 - `PATCH /api/auth/profile/` — update own profile fields
 - `POST /api/auth/change-password/` — change own password; payload: `{ old_password, new_password }`
 - `POST /api/auth/password-reset/` — request password reset email; payload: `{ email }`
-- `POST /api/auth/password-reset/confirm/` — confirm reset; payload: `{ token, new_password }`
+- `POST /api/auth/password-reset/confirm/` — confirm reset; payload: `{ uid, token, new_password, new_password2 }`
 
 ### Rotation Assignments
 
@@ -275,19 +283,19 @@ Response shape for `GET /events/live`:
 
 - `GET /api/residents/me/summary/` — dashboard summary for resident
   - Roles: pg/resident
-  - Response: `{ training_record: {...}, rotation: { current, next }, schedule, leaves, research, thesis, workshops }`
+  - Response: `{ training_record, rotation: { current, next }, schedule, leaves, postings, research, thesis, workshops, eligibility: { IMM, FINAL } }`
 
 ### Supervisor Dashboard Summary
 
 - `GET /api/supervisors/me/summary/` — dashboard summary for supervisor
   - Roles: supervisor
-  - Response: `{ residents_count: int, pending_rotations: int, pending_leaves: int, pending_research: int, residents: [...] }`
+  - Response: `{ pending: { rotation_approvals, leave_approvals, research_approvals }, residents: [...] }`
 
 ### Resident Progress (Supervisor view)
 
 - `GET /api/supervisors/residents/{id}/progress/` — progress snapshot for a specific resident
   - Roles: supervisor (own residents), admin, utrmc_admin
-  - Response: `{ resident: {...}, training_record: {...}, rotation_compliance: {...}, leave_summary: {...}, logbook_summary: {...}, research_status: str }`
+  - Response: `{ resident, training_record, current_rotation, research, thesis, workshops, eligibility }`
 
 ### Audit Reports
 

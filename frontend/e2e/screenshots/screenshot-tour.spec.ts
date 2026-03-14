@@ -119,7 +119,7 @@ test.describe('02 — UTRMC Admin dashboard', () => {
   test('04 department roster (Surgery dept)', async ({ page, context }) => {
     await loginAs(context, page, 'utrmc_admin');
     // First find Surgery department id
-    const appBase = process.env.E2E_BASE_URL ?? 'https://pgsims.alshifalab.pk';
+    const appBase = process.env.E2E_BASE_URL ?? 'http://127.0.0.1:8082';
     const token = await (async () => {
       await page.goto('/dashboard/utrmc');
       return page.evaluate(() => {
@@ -246,7 +246,7 @@ test.describe('03 — Supervisor dashboard', () => {
   test('03 resident progress view (e2e_pg)', async ({ page, context }) => {
     await loginAs(context, page, 'supervisor');
     // Find e2e_pg's id
-    const appBase = process.env.E2E_BASE_URL ?? 'https://pgsims.alshifalab.pk';
+    const appBase = process.env.E2E_BASE_URL ?? 'http://127.0.0.1:8082';
     await page.goto('/dashboard/supervisor');
     const token = await page.evaluate(() => {
       const raw = localStorage.getItem('auth-storage');
@@ -562,7 +562,7 @@ test.describe('09 — Workflow: Supervisor Research Review', () => {
   test('step 3 — supervisor API summary state', async ({ page, context }) => {
     await loginAs(context, page, 'supervisor');
     await page.goto('/dashboard/supervisor');
-    const appBase = process.env.E2E_BASE_URL ?? 'https://pgsims.alshifalab.pk';
+    const appBase = process.env.E2E_BASE_URL ?? 'http://127.0.0.1:8082';
     const token = await page.evaluate(() => {
       const raw = localStorage.getItem('auth-storage');
       if (!raw) return '';

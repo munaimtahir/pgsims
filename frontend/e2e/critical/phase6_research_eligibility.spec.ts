@@ -7,7 +7,7 @@
  */
 import { expect, test } from '@playwright/test';
 
-const API_BASE = process.env.E2E_BASE_URL ?? 'https://pgsims.alshifalab.pk';
+const API_BASE = process.env.E2E_BASE_URL ?? 'http://127.0.0.1:8082';
 const BACKEND_DIRECT = process.env.E2E_BACKEND_DIRECT ?? API_BASE;
 
 async function apiPost(

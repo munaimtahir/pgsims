@@ -562,8 +562,9 @@ else:
     if django_allowed_hosts:
         ALLOWED_HOSTS = [host.strip() for host in django_allowed_hosts.split(",") if host.strip()]
 
-    # Database from environment (SQLite for now, PostgreSQL for full production)
-    if os.environ.get("DB_NAME"):
+    # Database from environment (SQLite for now, PostgreSQL for full production).
+    # Do not clobber a fully parsed DATABASE_URL with partial DB_* settings.
+    if os.environ.get("DB_NAME") and not DATABASE_URL:
         DATABASES["default"].update(
             {
                 "ENGINE": "django.db.backends.postgresql",
@@ -587,6 +588,19 @@ else:
 # Logging Configuration
 LOG_LEVEL = os.environ.get("LOG_LEVEL", "INFO")
 LOG_FILE_PATH = os.environ.get("LOG_FILE_PATH", str(BASE_DIR / "logs" / "sims_error.log"))
+FILE_LOGGING_ENABLED = os.environ.get("ENABLE_FILE_LOGGING", "True").lower() in ("true", "1", "yes")
+
+if FILE_LOGGING_ENABLED:
+    log_file = Path(LOG_FILE_PATH)
+    log_file.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        with log_file.open("a", encoding="utf-8"):
+            pass
+    except OSError as exc:
+        FILE_LOGGING_ENABLED = False
+        print(f"[settings] File logging disabled for '{LOG_FILE_PATH}': {exc}")
+
+django_handlers = ["console"] + (["file"] if FILE_LOGGING_ENABLED else [])
 
 LOGGING = {
     "version": 1,
@@ -615,28 +629,34 @@ LOGGING = {
             "class": "logging.StreamHandler",
             "formatter": "verbose",
         },
-        "file": {
-            "level": "ERROR",
-            "class": "logging.handlers.RotatingFileHandler",
-            "filename": LOG_FILE_PATH,
-            "maxBytes": 10485760,  # 10MB
-            "backupCount": 5,
-            "formatter": "verbose",
-        },
+        **(
+            {
+                "file": {
+                    "level": "ERROR",
+                    "class": "logging.handlers.RotatingFileHandler",
+                    "filename": LOG_FILE_PATH,
+                    "maxBytes": 10485760,  # 10MB
+                    "backupCount": 5,
+                    "formatter": "verbose",
+                },
+            }
+            if FILE_LOGGING_ENABLED
+            else {}
+        ),
     },
     "loggers": {
         "django": {
-            "handlers": ["console", "file"],
+            "handlers": django_handlers,
             "level": LOG_LEVEL,
             "propagate": False,
         },
         "django.request": {
-            "handlers": ["console", "file"],
+            "handlers": django_handlers,
             "level": "ERROR",
             "propagate": False,
         },
         "sims": {
-            "handlers": ["console", "file"],
+            "handlers": django_handlers,
             "level": LOG_LEVEL,
             "propagate": False,
         },

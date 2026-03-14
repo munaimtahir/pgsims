@@ -25,13 +25,12 @@ function parseExp(token: string): number {
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 export async function loginAs(context: BrowserContext, page: Page, role: E2ERole) {
-  const appBaseURL = process.env.E2E_BASE_URL ?? 'https://pgsims.alshifalab.pk';
+  const appBaseURL = process.env.E2E_BASE_URL ?? 'http://127.0.0.1:8082';
   const apiCandidates = Array.from(
     new Set(
       [
-        process.env.E2E_API_URL,
+        process.env.E2E_API_URL ?? 'http://127.0.0.1:8014',
         appBaseURL,
-        'http://localhost:8000',
       ].filter((value): value is string => Boolean(value && value.trim()))
     )
   );
