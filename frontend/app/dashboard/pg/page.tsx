@@ -5,7 +5,7 @@ import { useAuthStore } from '@/store/authStore';
 
 export default function PGDashboardPage() {
   const router = useRouter();
-  const { user } = useAuthStore();
+  useAuthStore();
 
   useEffect(() => {
     router.replace('/dashboard/resident');

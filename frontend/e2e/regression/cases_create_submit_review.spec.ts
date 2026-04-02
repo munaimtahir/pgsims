@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { loginAs } from './helpers/auth';
+import { loginAs } from '../helpers/auth';
 
 test('PG creates/submits case and supervisor reviews', async ({ page, context }) => {
   const title = `E2E case ${Date.now()}`;

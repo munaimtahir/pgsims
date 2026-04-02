@@ -46,6 +46,35 @@ def _is_resident(user):
     return getattr(user, "role", None) in {"pg", "resident"}
 
 
+def _get_supervised_resident_ids(user):
+    from sims.users.models import SupervisorResidentLink, User as SIMSUser
+
+    link_ids = SupervisorResidentLink.objects.filter(
+        supervisor_user=user, active=True
+    ).values_list("resident_user_id", flat=True)
+    direct_ids = SIMSUser.objects.filter(
+        supervisor=user,
+        role__in=["pg", "resident"],
+        is_active=True,
+        is_archived=False,
+    ).values_list("id", flat=True)
+    return set(link_ids).union(set(direct_ids))
+
+
+def _get_rotation_scope(user):
+    from sims.users.models import DepartmentMembership, HODAssignment
+
+    supervised_ids = _get_supervised_resident_ids(user)
+    hod_dept_ids = HODAssignment.objects.filter(
+        hod_user=user, active=True
+    ).values_list("department_id", flat=True)
+    member_dept_ids = DepartmentMembership.objects.filter(
+        user=user, active=True
+    ).values_list("department_id", flat=True)
+    dept_ids = set(hod_dept_ids).union(set(member_dept_ids))
+    return supervised_ids, dept_ids
+
+
 # ---------------------------------------------------------------------------
 # Training Program CRUD
 # ---------------------------------------------------------------------------
@@ -137,10 +166,7 @@ class ResidentTrainingRecordViewSet(viewsets.ModelViewSet):
             return qs.all()
         # supervisors see residents they supervise
         if _is_supervisor_or_hod(user):
-            from sims.users.models import SupervisorResidentLink
-            supervised_ids = SupervisorResidentLink.objects.filter(
-                supervisor_user=user, active=True
-            ).values_list("resident_user_id", flat=True)
+            supervised_ids = _get_supervised_resident_ids(user)
             return qs.filter(resident_user_id__in=supervised_ids)
         return qs.none()
 
@@ -205,15 +231,11 @@ class RotationAssignmentViewSet(viewsets.ModelViewSet):
         if _is_admin_or_utrmc_admin(user):
             return qs.all()
         if _is_supervisor_or_hod(user):
-            from sims.users.models import HODAssignment, DepartmentMembership
-            hod_dept_ids = HODAssignment.objects.filter(
-                hod_user=user, active=True
-            ).values_list("department_id", flat=True)
-            member_dept_ids = DepartmentMembership.objects.filter(
-                user=user, active=True
-            ).values_list("department_id", flat=True)
-            dept_ids = set(list(hod_dept_ids) + list(member_dept_ids))
-            return qs.filter(hospital_department__department_id__in=dept_ids)
+            supervised_ids, dept_ids = _get_rotation_scope(user)
+            return qs.filter(
+                Q(resident_training__resident_user_id__in=supervised_ids)
+                | Q(hospital_department__department_id__in=dept_ids)
+            ).distinct()
         return qs.none()
 
     def perform_create(self, serializer):
@@ -263,13 +285,17 @@ class RotationAssignmentViewSet(viewsets.ModelViewSet):
         if not (_is_admin_or_utrmc_admin(request.user) or
                 obj.resident_training.resident_user == request.user):
             return Response({"detail": "Permission denied."}, status=status.HTTP_403_FORBIDDEN)
-        if obj.status != RotationAssignment.STATUS_DRAFT:
+        if obj.status not in {
+            RotationAssignment.STATUS_DRAFT,
+            RotationAssignment.STATUS_RETURNED,
+        }:
             return Response(
                 {"detail": f"Cannot submit from status {obj.status}."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
         obj.status = RotationAssignment.STATUS_SUBMITTED
         obj.submitted_at = timezone.now()
+        obj.return_reason = ""
         obj.save()
         return Response(RotationAssignmentSerializer(obj, context={"request": request}).data)
 
@@ -391,10 +417,7 @@ class LeaveRequestViewSet(viewsets.ModelViewSet):
         if _is_admin_or_utrmc_admin(user):
             return qs.all()
         if _is_supervisor_or_hod(user):
-            from sims.users.models import SupervisorResidentLink
-            supervised_ids = SupervisorResidentLink.objects.filter(
-                supervisor_user=user, active=True
-            ).values_list("resident_user_id", flat=True)
+            supervised_ids = _get_supervised_resident_ids(user)
             return qs.filter(resident_training__resident_user_id__in=supervised_ids)
         return qs.none()
 
@@ -475,10 +498,7 @@ class DeputationPostingViewSet(viewsets.ModelViewSet):
         if _is_admin_or_utrmc_admin(user):
             return qs.all()
         if _is_supervisor_or_hod(user):
-            from sims.users.models import SupervisorResidentLink
-            supervised_ids = SupervisorResidentLink.objects.filter(
-                supervisor_user=user, active=True
-            ).values_list("resident_user_id", flat=True)
+            supervised_ids = _get_supervised_resident_ids(user)
             return qs.filter(resident_training__resident_user_id__in=supervised_ids)
         return qs.none()
 
@@ -557,18 +577,11 @@ class RotationApprovalInboxView(APIView):
                 status__in=[RotationAssignment.STATUS_SUBMITTED, RotationAssignment.STATUS_APPROVED]
             )
         elif _is_supervisor_or_hod(user):
-            from sims.users.models import HODAssignment, DepartmentMembership
-            hod_dept_ids = HODAssignment.objects.filter(
-                hod_user=user, active=True
-            ).values_list("department_id", flat=True)
-            member_dept_ids = DepartmentMembership.objects.filter(
-                user=user, active=True
-            ).values_list("department_id", flat=True)
-            dept_ids = set(list(hod_dept_ids) + list(member_dept_ids))
-            qs = qs.filter(
-                status=RotationAssignment.STATUS_SUBMITTED,
-                hospital_department__department_id__in=dept_ids,
-            )
+            supervised_ids, dept_ids = _get_rotation_scope(user)
+            qs = qs.filter(status=RotationAssignment.STATUS_SUBMITTED).filter(
+                Q(resident_training__resident_user_id__in=supervised_ids)
+                | Q(hospital_department__department_id__in=dept_ids)
+            ).distinct()
         else:
             return Response({"detail": "Permission denied."}, status=status.HTTP_403_FORBIDDEN)
         serializer = RotationAssignmentSerializer(qs, many=True, context={"request": request})
@@ -586,10 +599,7 @@ class LeaveApprovalInboxView(APIView):
         if _is_admin_or_utrmc_admin(user):
             pass  # see all
         elif _is_supervisor_or_hod(user):
-            from sims.users.models import SupervisorResidentLink
-            supervised_ids = SupervisorResidentLink.objects.filter(
-                supervisor_user=user, active=True
-            ).values_list("resident_user_id", flat=True)
+            supervised_ids = _get_supervised_resident_ids(user)
             qs = qs.filter(resident_training__resident_user_id__in=supervised_ids)
         else:
             return Response({"detail": "Permission denied."}, status=status.HTTP_403_FORBIDDEN)
@@ -639,18 +649,13 @@ class SupervisorPendingRotationsView(APIView):
                 status=RotationAssignment.STATUS_SUBMITTED
             )
         else:
-            from sims.users.models import HODAssignment, DepartmentMembership
-            hod_dept_ids = HODAssignment.objects.filter(
-                hod_user=user, active=True
-            ).values_list("department_id", flat=True)
-            member_dept_ids = DepartmentMembership.objects.filter(
-                user=user, active=True
-            ).values_list("department_id", flat=True)
-            dept_ids = set(list(hod_dept_ids) + list(member_dept_ids))
+            supervised_ids, dept_ids = _get_rotation_scope(user)
             qs = RotationAssignment.objects.filter(
                 status=RotationAssignment.STATUS_SUBMITTED,
-                hospital_department__department_id__in=dept_ids,
-            )
+            ).filter(
+                Q(resident_training__resident_user_id__in=supervised_ids)
+                | Q(hospital_department__department_id__in=dept_ids)
+            ).distinct()
         qs = qs.select_related(
             "resident_training__resident_user",
             "hospital_department__hospital",
@@ -1153,6 +1158,7 @@ class ResidentSummaryView(APIView):
 
         # --- Training record ---
         training_data = {
+            "id": rtr.id,
             "program_code": rtr.program.code,
             "program_name": rtr.program.name,
             "degree_type": rtr.program.degree_type,
@@ -1169,6 +1175,8 @@ class ResidentSummaryView(APIView):
                 RotationAssignment.STATUS_SUBMITTED,
                 RotationAssignment.STATUS_DRAFT,
                 RotationAssignment.STATUS_COMPLETED,
+                RotationAssignment.STATUS_RETURNED,
+                RotationAssignment.STATUS_REJECTED,
             },
         ).select_related(
             "hospital_department__hospital",
@@ -1342,17 +1350,16 @@ class SupervisorSummaryView(APIView):
             return Response({"detail": "Supervisor access required."}, status=403)
 
         # ---- Determine scoped resident users ----
-        from sims.users.models import SupervisorResidentLink, User as SIMSUser
+        from sims.users.models import User as SIMSUser
 
         if _is_admin_or_utrmc_admin(user):
             resident_users = list(
                 SIMSUser.objects.filter(role__in=["pg", "resident"], is_active=True)
             )
         else:
-            links = SupervisorResidentLink.objects.filter(
-                supervisor_user=user, active=True
-            ).select_related("resident_user")
-            resident_users = [ln.resident_user for ln in links]
+            resident_users = list(
+                SIMSUser.objects.filter(id__in=_get_supervised_resident_ids(user))
+            )
 
         resident_ids = [u.id for u in resident_users]
 

@@ -58,6 +58,10 @@ async function ensurePendingForSupervisorReview(
   return project;
 }
 
+function toIsoDate(value: Date): string {
+  return value.toISOString().slice(0, 10);
+}
+
 test.describe('Workflow gate — stabilized contract-critical flows', () => {
   test('forgot-password submits via real UI path and returns success response', async ({ page }) => {
     await page.goto('/forgot-password');
@@ -109,5 +113,167 @@ test.describe('Workflow gate — stabilized contract-critical flows', () => {
     await expect(page.getByText('Thesis not yet submitted').first()).toBeVisible({
       timeout: 15_000,
     });
+  });
+
+  test('resident leave draft can be submitted and approved from supervisor dashboard', async ({
+    context,
+    page,
+  }) => {
+    test.setTimeout(60_000);
+    const leaveReason = `Workflow leave ${Date.now()}`;
+
+    await loginAs(context, page, 'pg');
+    await page.goto('/dashboard/resident/schedule');
+
+    await expect(page.getByRole('heading', { name: 'My Schedule' })).toBeVisible({ timeout: 15_000 });
+    await page.getByLabel('Leave Type').selectOption('study');
+    await page.getByLabel('Start Date').fill('2026-04-10');
+    await page.getByLabel('End Date').fill('2026-04-12');
+    await page.getByLabel('Reason').fill(leaveReason);
+    await page.getByRole('button', { name: 'Save Draft' }).click();
+
+    await expect(page.getByText(/Leave request saved as draft\./i)).toBeVisible({ timeout: 15_000 });
+
+    const residentLeaveCard = page.locator('div.border').filter({ hasText: leaveReason }).first();
+    await expect(residentLeaveCard).toBeVisible({ timeout: 15_000 });
+    await residentLeaveCard.getByRole('button', { name: /submit for review/i }).click();
+    await expect(page.getByText(/Leave request submitted for review\./i)).toBeVisible({ timeout: 15_000 });
+
+    await loginAs(context, page, 'supervisor');
+    await page.goto('/dashboard/supervisor');
+
+    const supervisorLeaveCard = page.locator('div.bg-white').filter({ hasText: leaveReason }).first();
+    await expect(supervisorLeaveCard).toBeVisible({ timeout: 15_000 });
+    await supervisorLeaveCard.getByRole('button', { name: 'Approve' }).click();
+    await expect(page.getByText(/Leave request approved\./i)).toBeVisible({ timeout: 15_000 });
+
+    await loginAs(context, page, 'pg');
+    await page.goto('/dashboard/resident/schedule');
+
+    const approvedLeaveCard = page.locator('div.border').filter({ hasText: leaveReason }).first();
+    await expect(approvedLeaveCard).toBeVisible({ timeout: 15_000 });
+    await expect(approvedLeaveCard.getByText('APPROVED')).toBeVisible({ timeout: 15_000 });
+  });
+
+  test('rotation workflow closes across UTRMC overview, resident schedule, and supervisor dashboard', async ({
+    context,
+    page,
+  }) => {
+    test.setTimeout(90_000);
+    const uniqueSuffix = `${Date.now()}`;
+    const startDate = new Date(Date.UTC(2026, 6, 1));
+    startDate.setUTCDate(startDate.getUTCDate() + Number(uniqueSuffix.slice(-2)));
+    const endDate = new Date(startDate);
+    endDate.setUTCDate(endDate.getUTCDate() + 28);
+    const rotationNote = `Workflow rotation ${uniqueSuffix}`;
+
+    await loginAs(context, page, 'utrmc_admin');
+    await page.goto('/dashboard/utrmc');
+
+    await expect(page.getByRole('heading', { name: 'UTRMC Overview' })).toBeVisible({ timeout: 15_000 });
+    const residentSelect = page.getByLabel('Resident');
+    const residentOptionValue = await residentSelect.locator('option').evaluateAll((options) => {
+      const match = options.find((option) => option.textContent?.includes('E2E PG'));
+      return match instanceof HTMLOptionElement ? match.value : '';
+    });
+    expect(residentOptionValue).toBeTruthy();
+    await residentSelect.selectOption(residentOptionValue);
+
+    const placementSelect = page.getByLabel('Placement');
+    const placementOptionValue = await placementSelect.locator('option').nth(1).getAttribute('value');
+    expect(placementOptionValue).toBeTruthy();
+    await placementSelect.selectOption(placementOptionValue!);
+    await page.getByLabel('Start Date').fill(toIsoDate(startDate));
+    await page.getByLabel('End Date').fill(toIsoDate(endDate));
+    await page.getByLabel('Notes').fill(rotationNote);
+    await page.getByRole('button', { name: 'Create Rotation Draft' }).click();
+
+    await expect(page.getByText(/Rotation draft created\./i)).toBeVisible({ timeout: 15_000 });
+
+    await loginAs(context, page, 'pg');
+    await page.goto('/dashboard/resident/schedule');
+
+    const residentRotationCard = page.locator('div.border').filter({ hasText: rotationNote }).first();
+    await expect(residentRotationCard).toBeVisible({ timeout: 15_000 });
+    await expect(residentRotationCard.getByText('DRAFT')).toBeVisible({ timeout: 15_000 });
+    await residentRotationCard.getByRole('button', { name: /submit for review/i }).click();
+    await expect(page.getByText(/Rotation submitted for supervisor review\./i)).toBeVisible({ timeout: 15_000 });
+
+    await loginAs(context, page, 'supervisor');
+    await page.goto('/dashboard/supervisor');
+
+    const supervisorRotationCard = page.locator('div.bg-white').filter({ hasText: rotationNote }).first();
+    await expect(supervisorRotationCard).toBeVisible({ timeout: 15_000 });
+    await supervisorRotationCard.getByRole('button', { name: /approve rotation/i }).click();
+    await expect(page.getByText(/Rotation approved\./i)).toBeVisible({ timeout: 15_000 });
+
+    await loginAs(context, page, 'utrmc_admin');
+    await page.goto('/dashboard/utrmc');
+
+    const approvedRotationCard = page.locator('div.bg-white').filter({ hasText: rotationNote }).first();
+    await expect(approvedRotationCard).toBeVisible({ timeout: 15_000 });
+    await approvedRotationCard.getByRole('button', { name: /activate rotation/i }).click();
+    await expect(page.getByText(/Rotation activated\./i)).toBeVisible({ timeout: 15_000 });
+
+    const activeRotationCard = page.locator('div.bg-white').filter({ hasText: rotationNote }).first();
+    await expect(activeRotationCard.getByText('ACTIVE')).toBeVisible({ timeout: 15_000 });
+    await activeRotationCard.getByRole('button', { name: /mark complete/i }).click();
+    await expect(page.getByText(/Rotation completed\./i)).toBeVisible({ timeout: 15_000 });
+
+    await loginAs(context, page, 'pg');
+    await page.goto('/dashboard/resident/schedule');
+
+    const completedRotationCard = page.locator('div.border').filter({ hasText: rotationNote }).first();
+    await expect(completedRotationCard).toBeVisible({ timeout: 15_000 });
+    await expect(completedRotationCard.getByText('COMPLETED')).toBeVisible({ timeout: 15_000 });
+  });
+
+  test('posting workflow remains truthful from resident submission through UTRMC completion', async ({
+    context,
+    page,
+  }) => {
+    test.setTimeout(90_000);
+    const uniqueSuffix = `${Date.now()}`;
+    const startDate = new Date(Date.UTC(2026, 8, 1));
+    startDate.setUTCDate(startDate.getUTCDate() + Number(uniqueSuffix.slice(-2)));
+    const endDate = new Date(startDate);
+    endDate.setUTCDate(endDate.getUTCDate() + 14);
+    const institutionName = `Workflow Posting ${uniqueSuffix}`;
+    const postingNotes = `Posting objective ${uniqueSuffix}`;
+
+    await loginAs(context, page, 'pg');
+    await page.goto('/dashboard/resident/postings');
+
+    await page.getByRole('button', { name: /\+ request posting/i }).click();
+    await expect(page.getByRole('heading', { name: 'New Posting Request' })).toBeVisible({ timeout: 15_000 });
+    const postingForm = page.locator('form').filter({ hasText: 'New Posting Request' });
+    await postingForm.getByPlaceholder('Name of the hosting institution').fill(institutionName);
+    await postingForm.getByPlaceholder('e.g. Riyadh').fill('Lahore');
+    await postingForm.locator('input[type="date"]').nth(0).fill(toIsoDate(startDate));
+    await postingForm.locator('input[type="date"]').nth(1).fill(toIsoDate(endDate));
+    await postingForm.getByPlaceholder('Optional — reason or clinical objectives for this posting').fill(postingNotes);
+    await postingForm.getByRole('button', { name: 'Create Request' }).click();
+
+    await expect(page.getByText(/Posting request submitted for review\./i)).toBeVisible({ timeout: 15_000 });
+
+    await loginAs(context, page, 'utrmc_admin');
+    await page.goto('/dashboard/utrmc/postings');
+
+    const postingCard = page.locator('div.bg-white').filter({ hasText: institutionName }).first();
+    await expect(postingCard).toBeVisible({ timeout: 15_000 });
+    await postingCard.getByRole('button', { name: 'Approve' }).click();
+    await expect(page.getByText(/Posting approved successfully\./i)).toBeVisible({ timeout: 15_000 });
+
+    const approvedPostingCard = page.locator('div.bg-white').filter({ hasText: institutionName }).first();
+    await expect(approvedPostingCard.getByRole('button', { name: /mark complete/i })).toBeVisible({ timeout: 15_000 });
+    await approvedPostingCard.getByRole('button', { name: /mark complete/i }).click();
+    await expect(page.getByText(/Posting completed successfully\./i)).toBeVisible({ timeout: 15_000 });
+
+    await loginAs(context, page, 'pg');
+    await page.goto('/dashboard/resident/postings');
+
+    const residentPostingCard = page.locator('div.bg-white').filter({ hasText: institutionName }).first();
+    await expect(residentPostingCard).toBeVisible({ timeout: 15_000 });
+    await expect(residentPostingCard.getByText('Completed')).toBeVisible({ timeout: 15_000 });
   });
 });

@@ -248,9 +248,12 @@ def password_reset_request_view(request):
             },
             status=status.HTTP_200_OK,
         )
-    except Exception as e:
+    except Exception:
         return Response(
-            {"error": "Failed to send reset email"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            {
+                "message": "If an account with that email exists, a password reset email has been sent"
+            },
+            status=status.HTTP_200_OK,
         )
 
 

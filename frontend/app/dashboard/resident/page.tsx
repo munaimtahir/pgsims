@@ -176,7 +176,7 @@ export default function ResidentHomePage() {
                 { label: 'View Schedule', href: '/dashboard/resident/schedule' },
                 { label: 'Update Research', href: '/dashboard/resident/research' },
                 { label: 'Upload Workshop', href: '/dashboard/resident/workshops' },
-                { label: 'Apply for Leave', href: '/dashboard/resident/progress' },
+                { label: 'Apply for Leave', href: '/dashboard/resident/schedule' },
               ].map((a) => (
                 <Link
                   key={a.href}

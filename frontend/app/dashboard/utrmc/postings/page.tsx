@@ -1,25 +1,26 @@
 'use client';
 import { useEffect, useState } from 'react';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
+import { useAuthStore } from '@/store/authStore';
 import { trainingApi, DeputationPosting } from '@/lib/api/training';
 
 const STATUS_COLORS: Record<string, string> = {
-  draft: 'bg-gray-100 text-gray-700',
-  submitted: 'bg-yellow-100 text-yellow-800',
-  approved: 'bg-green-100 text-green-800',
-  rejected: 'bg-red-100 text-red-700',
-  completed: 'bg-blue-100 text-blue-800',
+  SUBMITTED: 'bg-yellow-100 text-yellow-800',
+  APPROVED: 'bg-green-100 text-green-800',
+  REJECTED: 'bg-red-100 text-red-700',
+  COMPLETED: 'bg-blue-100 text-blue-800',
 };
 
 const STATUS_LABELS: Record<string, string> = {
-  draft: 'Draft',
-  submitted: 'Pending Approval',
-  approved: 'Approved',
-  rejected: 'Rejected',
-  completed: 'Completed',
+  SUBMITTED: 'Pending Approval',
+  APPROVED: 'Approved',
+  REJECTED: 'Rejected',
+  COMPLETED: 'Completed',
 };
 
 export default function UTRMCPostingsPage() {
+  const { user } = useAuthStore();
+  const canManagePostings = user?.role === 'admin' || user?.role === 'utrmc_admin';
   const [postings, setPostings] = useState<DeputationPosting[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -88,7 +89,7 @@ export default function UTRMCPostingsPage() {
 
         {/* Status filter */}
         <div className="flex gap-2 mb-6 flex-wrap">
-          {['', 'submitted', 'approved', 'rejected', 'completed'].map((s) => (
+          {['', 'SUBMITTED', 'APPROVED', 'REJECTED', 'COMPLETED'].map((s) => (
             <button
               key={s}
               onClick={() => setFilter(s)}
@@ -105,6 +106,11 @@ export default function UTRMCPostingsPage() {
 
         {error && <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">{error}</div>}
         {success && <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg text-sm text-green-700">{success}</div>}
+        {!canManagePostings && (
+          <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-800">
+            Deputation postings are read-only for UTRMC users. Approval and completion actions require an admin or UTRMC admin account.
+          </div>
+        )}
 
         {loading && <p className="text-gray-400 text-sm">Loading…</p>}
 
@@ -151,7 +157,7 @@ export default function UTRMCPostingsPage() {
 
                 {/* Actions */}
                 <div className="flex flex-col gap-2 flex-shrink-0">
-                  {posting.status === 'submitted' && (
+                  {canManagePostings && posting.status === 'SUBMITTED' && (
                     <>
                       <button
                         disabled={acting === posting.id}
@@ -169,7 +175,7 @@ export default function UTRMCPostingsPage() {
                       </button>
                     </>
                   )}
-                  {posting.status === 'approved' && (
+                  {canManagePostings && posting.status === 'APPROVED' && (
                     <button
                       disabled={acting === posting.id}
                       onClick={() => doAction(posting.id, 'complete')}

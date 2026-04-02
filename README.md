@@ -23,29 +23,41 @@ A comprehensive Django web application for managing postgraduate medical residen
 
 ## 🎯 Overview
 
-SIMS (Surgical Information Management System) is a comprehensive web-based management system designed specifically for postgraduate medical training programs. It provides a complete solution for tracking trainee progress, managing rotations, maintaining digital logbooks, and handling clinical case submissions.
+SIMS is the postgraduate training operations system for UTRMC. The current engineering priority is truth alignment and workflow stabilization, not broad feature expansion.
 
-**Current Status**: ✅ **Production-Ready for Pilot Deployment**
+**Current Status**: ⚠️ **Active surface stabilized; legacy workflow boundary still constrained**
+
+Authoritative current-state docs:
+- `docs/_recovery/20260402T122809Z/00-executive-recovery-summary.md`
+- `docs/_recovery/20260402T122809Z/01-active-surface-map.md`
+- `docs/_recovery/20260402T122809Z/04-core-workflow-closure-report.md`
+- `docs/contracts/`
 
 **Deployment**: Production deployment is standardized on Docker Compose (`docker/docker-compose.prod.yml`) + Caddy reverse proxy. See [docs/deploy/CADDY_ROUTINE.md](docs/deploy/CADDY_ROUTINE.md).
 
 ## ✨ Features
 
-### Core Features (Ready to Use)
+### Active Surface
 
 - **👥 User Management**: Role-based access control for admins, supervisors, and postgraduate students
-- **📊 Dashboard System**: Customized dashboards for each user role with analytics
+- **📊 Dashboard System**: Customized dashboards for resident, supervisor, and UTRMC roles
 - **🔄 Rotation Management**: Track and manage training rotations across different departments
+- **🗓️ Leave Workflow**: Resident leave draft/submission and supervisor approval on active resident/supervisor surfaces
 - **📜 Certificate Management**: Manage and track certifications and achievements
-- **📚 Digital Logbook**: Record training activities, procedures, and evaluations
-- **🏥 Clinical Cases**: Submit, review, and manage clinical cases with detailed documentation
-- **📈 Analytics & Reporting**: Comprehensive statistics and data visualization
+- **🎓 Academic Core**: Research, thesis, workshops, eligibility, postings
+- **📈 Analytics & Reporting**: Active for training and eligibility dashboards; legacy analytics modules remain deferred
 - **🔍 Advanced Filtering**: Search and filter capabilities across all modules
 - **📤 Data Export**: Export data to CSV format for all major modules
 - **🔐 Security**: Role-based permissions, secure authentication, and session management
 - **🌐 Global Search**: Cross-module search with suggestions, highlights, and per-user history
 - **🛡️ Audit Trail**: Historical tracking for key models plus Activity Log APIs and CSV export
 - **✅ Business Rules Engine**: Centralised validators, sanitisation and consistent error handling
+
+### Deferred or Legacy Surface
+
+- **📚 Digital Logbook**: Not part of the active frontend or active backend URL include set in the current runtime
+- **🏥 Clinical Cases**: Not part of the active frontend or active backend URL include set in the current runtime
+- **📈 Legacy Analytics Modules**: Historical docs and code remain, but are not the authoritative active surface
 
 ### Additional Features
 
@@ -55,31 +67,17 @@ SIMS (Surgical Information Management System) is a comprehensive web-based manag
 - **Responsive Design**: Mobile-friendly Bootstrap 5 interface
 - **PMC Theme**: Professional medical college branding throughout
 
-For a detailed breakdown of all features by development status, see [FEATURES_STATUS.md](docs/FEATURES_STATUS.md).
+Historical status snapshots such as [FEATURES_STATUS.md](docs/FEATURES_STATUS.md) are not authoritative for current delivery truth. Use `docs/_recovery/20260402T122809Z/` and `docs/contracts/` instead.
 
 ## 📊 Development Status
 
-The SIMS application has completed its initial development phase with the following status:
+Recovery baseline after the 2026-04-02 stabilization pass:
 
-- **✅ Ready to Use**: ~90 features (60%) - Fully functional and production-ready
-- **⚠️ Needs Work**: ~25 features (17%) - Implemented but requires debugging or completion
-- **🔜 Planned**: ~35 features (23%) - Yet to be built
+- **Active and verified**: authentication, userbase administration, resident dashboard, supervisor dashboard, resident leave workflow, active rotation lifecycle, active postings lifecycle, research workflow, thesis/workshops baseline, eligibility monitor
+- **Active but partial**: some resident/supervisor/UTRMC happy paths outside the promoted workflow gate, broader program administration depth beyond the active workflow surface
+- **Deferred**: logbook, cases, legacy analytics
 
-### Module Status Summary
-
-| Module | Completion | Status |
-|--------|------------|--------|
-| Authentication | 100% | ✅ Complete |
-| User Management | 95% | ✅ Nearly Complete |
-| Dashboards | 100% | ✅ Complete |
-| Clinical Cases | 90% | ✅ Functional |
-| Digital Logbook | 95% | ✅ Nearly Complete |
-| Certificates | 95% | ✅ Nearly Complete |
-| Rotations | 90% | ✅ Functional |
-| Admin Interface | 100% | ✅ Complete |
-| UI/UX | 95% | ✅ Nearly Complete |
-
-See [docs/FEATURES_STATUS.md](docs/FEATURES_STATUS.md) for complete feature categorization.
+See `docs/_recovery/20260402T122809Z/STATUS_AFTER_RECOVERY_SCORECARD.md` for the current scored baseline.
 
 ## 🚀 Quick Start
 

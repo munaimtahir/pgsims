@@ -4,6 +4,21 @@ import ProtectedRoute from '@/components/auth/ProtectedRoute';
 
 import { trainingApi, WorkshopCompletion, Workshop } from '@/lib/api/training';
 
+function getErrorMessage(error: unknown, fallback = 'Failed to save.'): string {
+  if (
+    typeof error === 'object' &&
+    error !== null &&
+    'response' in error &&
+    typeof (error as { response?: unknown }).response === 'object' &&
+    (error as { response?: unknown }).response !== null &&
+    'data' in ((error as { response?: { data?: unknown } }).response || {}) &&
+    typeof ((error as { response?: { data?: { detail?: unknown } } }).response?.data?.detail) === 'string'
+  ) {
+    return (error as { response?: { data?: { detail?: string } } }).response?.data?.detail || fallback;
+  }
+  return fallback;
+}
+
 export default function ResidentWorkshopsPage() {
   const [completions, setCompletions] = useState<WorkshopCompletion[]>([]);
   const [workshops, setWorkshops] = useState<Workshop[]>([]);
@@ -39,8 +54,8 @@ export default function ResidentWorkshopsPage() {
       setShowForm(false);
       setForm({ workshop: '', completed_at: '' });
       load();
-    } catch (err: any) {
-      setError(err?.response?.data?.detail || 'Failed to save.');
+    } catch (error: unknown) {
+      setError(getErrorMessage(error));
     } finally {
       setSaving(false);
     }

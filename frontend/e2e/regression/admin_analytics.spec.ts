@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 
-import { loginAs } from './helpers/auth';
+import { loginAs } from '../helpers/auth';
 
 test('admin live feed updates after PG logbook submit workflow', async ({ page, context }) => {
   const caseTitle = `E2E live feed ${Date.now()}`;

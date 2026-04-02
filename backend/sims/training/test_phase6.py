@@ -562,6 +562,7 @@ class ResidentSummaryTests(APITestCase):
     def test_training_record_fields(self):
         resp = self.client.get("/api/residents/me/summary/")
         tr = resp.data["training_record"]
+        self.assertEqual(tr["id"], self.rtr.id)
         self.assertEqual(tr["program_code"], "FCPS-MED")
         self.assertIn("current_month_index", tr)
         self.assertIsInstance(tr["current_month_index"], int)
@@ -634,6 +635,22 @@ class SupervisorSummaryTests(APITestCase):
         ids = [r["id"] for r in resp.data["residents"]]
         self.assertIn(self.resident1.id, ids)
         self.assertNotIn(self.resident2.id, ids)
+
+    def test_scoping_includes_direct_supervisor_assignment(self):
+        resident = _make_user("res_direct_sup", "pg")
+        resident.supervisor = self.supervisor
+        resident.save()
+        ResidentTrainingRecord.objects.create(
+            resident_user=resident,
+            program=self.prog,
+            start_date=date.today() - timedelta(days=15),
+            active=True,
+        )
+
+        resp = self.client.get("/api/supervisors/me/summary/")
+        self.assertEqual(resp.status_code, 200)
+        ids = [r["id"] for r in resp.data["residents"]]
+        self.assertIn(resident.id, ids)
 
     def test_residents_sorted_by_name(self):
         from sims.users.models import SupervisorResidentLink

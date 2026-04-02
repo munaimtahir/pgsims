@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { loginAs } from './helpers/auth';
+import { loginAs } from '../helpers/auth';
 
 test('PG -> Supervisor return -> PG resubmit -> approve workflow', async ({ page, context }) => {
   const caseTitle = `E2E logbook ${Date.now()}`;

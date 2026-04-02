@@ -1,645 +1,1264 @@
-"""Seed presentation-grade demo data for screenshots and walkthroughs."""
+"""Seed realistic multi-department demo data for local walkthroughs."""
 
 from __future__ import annotations
 
-import re
+from dataclasses import dataclass
 from datetime import timedelta
 
-from django.apps import apps
-from django.core.management.base import BaseCommand, CommandError
+from django.core.management.base import BaseCommand
 from django.db import transaction
 from django.utils import timezone
 
 from sims.academics.models import Department
-from sims.logbook.models import Diagnosis, LogbookEntry, Procedure
-from sims.rotations.models import Hospital, HospitalDepartment, Rotation
-from sims.users.models import User
+from sims.notifications.models import Notification, NotificationPreference
+from sims.rotations.models import Hospital, HospitalDepartment
+from sims.training.eligibility import recompute_for_record
+from sims.training.models import (
+    DeputationPosting,
+    LeaveRequest,
+    ProgramMilestone,
+    ProgramMilestoneResearchRequirement,
+    ProgramMilestoneWorkshopRequirement,
+    ProgramPolicy,
+    ProgramRotationTemplate,
+    ResidentResearchProject,
+    ResidentThesis,
+    ResidentTrainingRecord,
+    ResidentWorkshopCompletion,
+    RotationAssignment,
+    TrainingProgram,
+    Workshop,
+    WorkshopBlock,
+    WorkshopRun,
+)
+from sims.users.models import (
+    DepartmentMembership,
+    HODAssignment,
+    HospitalAssignment,
+    ResidentProfile,
+    StaffProfile,
+    SupervisorResidentLink,
+    User,
+)
 
-DEMO_EMAIL_DOMAIN = "@demo.local"
+ADMIN_USERNAME = "admin"
+ADMIN_PASSWORD = "admin123"
+ADMIN_EMAIL = "admin@sims.com"
+
 DEMO_PASSWORD = "DemoPass123!"
-DEMO_HOSPITAL_CODE = "DEMO-UTRMC-URO"
+DEMO_EMAIL_DOMAIN = "demo.local"
+DEMO_CODE_PREFIX = "DEMO-"
 
-FACULTY_NAMES = [
-    "Prof. Dr. Muhammad Tahir Bashir Malik",
-    "Dr. Muhammad Irfan Munir",
-    "Dr. Muhammad Sheraz Javed",
-    "Dr. Aamir Imtiaz Khan",
-    "Dr. Moin Anwar",
-]
-
-RESIDENT_NAMES = [
-    "Dr. Muhammad Usman Ali",
-    "Dr. Ahmed Raza Siddiqui",
-    "Dr. Bilal Ahmad Cheema",
-    "Dr. Hassan Rauf",
-    "Dr. Ali Hamza Qureshi",
-    "Dr. Umair Tariq",
-    "Dr. Zain Ul Abideen",
-    "Dr. Saad Masood",
-    "Dr. Hamza Khalid",
-    "Dr. Talha Mahmood",
-]
-
-DEPARTMENT_SPECS = [
-    ("DEMO-URO", "Department of Urology & Renal Transplant"),
-    ("DEMO-URO-GEN", "General Urology"),
-    ("DEMO-URO-ENDO", "Endourology"),
-    ("DEMO-URO-ONCO", "Uro-Oncology"),
-    ("DEMO-URO-TRAN", "Renal Transplant Unit"),
-]
-
-PROCEDURE_SPECS = [
-    ("URS (Ureterorenoscopy)", "surgical"),
-    ("PCNL", "surgical"),
-    ("TURP", "surgical"),
-    ("Radical Nephrectomy", "surgical"),
-    ("Cystoscopy", "diagnostic"),
-    ("Pyeloplasty", "surgical"),
-    ("Bladder Tumor Resection", "surgical"),
-    ("Urethroplasty", "surgical"),
-]
-
-CASE_TEMPLATES = [
+DEMO_HOSPITALS = [
     {
-        "title": "Proximal Ureteric Stone Managed with URS",
-        "procedure": "URS (Ureterorenoscopy)",
-        "diagnosis": "Ureteric Calculus",
-        "summary": (
-            "45-year-old male presented with right flank pain. CT scan showed 1.5 cm "
-            "proximal ureteric calculus. URS performed successfully."
-        ),
-        "management": (
-            "Endoscopic stone fragmentation completed with DJ stent placement. Analgesia, "
-            "hydration advice, and follow-up imaging planned."
-        ),
-        "topic": "Endourology - Ureteric Calculus",
+        "code": "DEMO-AH",
+        "name": "Allied Hospital Demo",
+        "address": "Jail Road, Faisalabad",
+        "phone": "+92-41-111-0001",
+        "email": "allied.demo@demo.local",
+        "description": "High-volume tertiary site seeded for product demonstrations.",
     },
     {
-        "title": "Staghorn Calculus Managed with PCNL",
-        "procedure": "PCNL",
-        "diagnosis": "Renal Calculus",
-        "summary": (
-            "52-year-old female with recurrent urinary tract infection and left flank pain. "
-            "Imaging showed partial staghorn calculus in left kidney."
-        ),
-        "management": (
-            "PCNL performed under fluoroscopic guidance with near-complete stone clearance. "
-            "Nephrostomy care and metabolic evaluation advised."
-        ),
-        "topic": "Endourology - Renal Stone Disease",
-    },
-    {
-        "title": "LUTS Secondary to BPH Managed with TURP",
-        "procedure": "TURP",
-        "diagnosis": "Benign Prostatic Hyperplasia",
-        "summary": (
-            "66-year-old male reported severe lower urinary tract symptoms with recurrent "
-            "retention episodes despite medical therapy."
-        ),
-        "management": (
-            "TURP completed with good hemostasis. Catheter removed after trial without "
-            "catheter; patient counseled regarding postoperative recovery."
-        ),
-        "topic": "General Urology - BPH",
-    },
-    {
-        "title": "Localized Renal Mass Managed with Radical Nephrectomy",
-        "procedure": "Radical Nephrectomy",
-        "diagnosis": "Renal Cell Carcinoma",
-        "summary": (
-            "58-year-old male evaluated for incidentally detected right renal mass "
-            "suspicious for malignancy on contrast CT."
-        ),
-        "management": (
-            "Radical nephrectomy performed via transperitoneal approach. Histopathology "
-            "discussion and oncology follow-up arranged."
-        ),
-        "topic": "Uro-Oncology - Renal Tumor",
-    },
-    {
-        "title": "Gross Hematuria Workup with Cystoscopy",
-        "procedure": "Cystoscopy",
-        "diagnosis": "Hematuria Evaluation",
-        "summary": (
-            "49-year-old male presented with painless gross hematuria. Initial ultrasound "
-            "was inconclusive."
-        ),
-        "management": (
-            "Diagnostic cystoscopy performed with bladder mapping. Biopsy from suspicious "
-            "area sent for histopathology."
-        ),
-        "topic": "General Urology - Hematuria",
-    },
-    {
-        "title": "PUJ Obstruction Corrected with Pyeloplasty",
-        "procedure": "Pyeloplasty",
-        "diagnosis": "PUJ Obstruction",
-        "summary": (
-            "33-year-old male had intermittent flank pain and worsening hydronephrosis on "
-            "serial imaging suggestive of PUJ obstruction."
-        ),
-        "management": (
-            "Dismembered pyeloplasty performed with internal stenting. Renal scan follow-up "
-            "planned to assess drainage improvement."
-        ),
-        "topic": "Reconstructive Urology - PUJ Obstruction",
-    },
-    {
-        "title": "Non-Muscle Invasive Bladder Tumor Resection",
-        "procedure": "Bladder Tumor Resection",
-        "diagnosis": "Bladder Tumor",
-        "summary": (
-            "61-year-old smoker presented with intermittent painless hematuria. Cystoscopy "
-            "revealed papillary bladder lesion."
-        ),
-        "management": (
-            "Complete transurethral bladder tumor resection performed with detrusor sampling. "
-            "Plan for intravesical therapy discussed."
-        ),
-        "topic": "Uro-Oncology - Bladder Tumor",
-    },
-    {
-        "title": "Bulbar Stricture Managed with Urethroplasty",
-        "procedure": "Urethroplasty",
-        "diagnosis": "Urethral Stricture",
-        "summary": (
-            "38-year-old male with weak stream and recurrent retention had retrograde "
-            "urethrogram showing short-segment bulbar stricture."
-        ),
-        "management": (
-            "Anastomotic urethroplasty completed. Suprapubic diversion maintained with "
-            "planned postoperative pericatheter urethrogram."
-        ),
-        "topic": "Reconstructive Urology - Urethral Stricture",
+        "code": "DEMO-DHQ",
+        "name": "DHQ Hospital Demo",
+        "address": "Susan Road, Faisalabad",
+        "phone": "+92-41-111-0002",
+        "email": "dhq.demo@demo.local",
+        "description": "Secondary teaching site seeded for multi-hospital demonstrations.",
     },
 ]
 
-DIAGNOSIS_SPECS = [
-    ("Ureteric Calculus", "genitourinary"),
-    ("Renal Calculus", "genitourinary"),
-    ("Benign Prostatic Hyperplasia", "genitourinary"),
-    ("Renal Cell Carcinoma", "oncology"),
-    ("Hematuria Evaluation", "genitourinary"),
-    ("PUJ Obstruction", "genitourinary"),
-    ("Bladder Tumor", "oncology"),
-    ("Urethral Stricture", "genitourinary"),
+DEMO_DEPARTMENTS = [
+    {
+        "code": "DEMO-SURG",
+        "name": "General Surgery Demo",
+        "description": "Canonical surgery department used by the demo dataset.",
+        "specialty": "surgery",
+    },
+    {
+        "code": "DEMO-MED",
+        "name": "Internal Medicine Demo",
+        "description": "Canonical medicine department used by the demo dataset.",
+        "specialty": "medicine",
+    },
+]
+
+DEMO_MATRIX = {
+    "DEMO-AH": ["DEMO-SURG", "DEMO-MED"],
+    "DEMO-DHQ": ["DEMO-SURG", "DEMO-MED"],
+}
+
+DEMO_OVERSIGHT_USERS = [
+    {
+        "username": "demo_utrmc_admin",
+        "email": "utrmc.admin@demo.local",
+        "first_name": "Rida",
+        "last_name": "Mansoor",
+        "role": "utrmc_admin",
+    },
+    {
+        "username": "demo_utrmc_user",
+        "email": "utrmc.readonly@demo.local",
+        "first_name": "Hamid",
+        "last_name": "Qureshi",
+        "role": "utrmc_user",
+    },
+]
+
+DEMO_STAFF_USERS = [
+    {
+        "username": "demo_surg_hod",
+        "email": "farooq.ahmed@demo.local",
+        "first_name": "Farooq",
+        "last_name": "Ahmed",
+        "role": "supervisor",
+        "specialty": "surgery",
+        "department_code": "DEMO-SURG",
+        "hospital_code": "DEMO-AH",
+        "designation": "Professor and HOD",
+    },
+    {
+        "username": "demo_surg_faculty",
+        "email": "maria.khan@demo.local",
+        "first_name": "Maria",
+        "last_name": "Khan",
+        "role": "faculty",
+        "specialty": "surgery",
+        "department_code": "DEMO-SURG",
+        "hospital_code": "DEMO-DHQ",
+        "designation": "Associate Professor",
+    },
+    {
+        "username": "demo_med_hod",
+        "email": "ayesha.khalid@demo.local",
+        "first_name": "Ayesha",
+        "last_name": "Khalid",
+        "role": "supervisor",
+        "specialty": "medicine",
+        "department_code": "DEMO-MED",
+        "hospital_code": "DEMO-DHQ",
+        "designation": "Professor and HOD",
+    },
+    {
+        "username": "demo_med_faculty",
+        "email": "salman.javed@demo.local",
+        "first_name": "Salman",
+        "last_name": "Javed",
+        "role": "faculty",
+        "specialty": "medicine",
+        "department_code": "DEMO-MED",
+        "hospital_code": "DEMO-AH",
+        "designation": "Assistant Professor",
+    },
+]
+
+DEMO_RESIDENT_USERS = [
+    {
+        "username": "demo_surg_r1",
+        "email": "ali.hamza@demo.local",
+        "first_name": "Ali",
+        "last_name": "Hamza",
+        "role": "resident",
+        "specialty": "surgery",
+        "year": "1",
+        "department_code": "DEMO-SURG",
+        "hospital_code": "DEMO-AH",
+        "program_code": "DEMO-FCPS-SURG",
+        "supervisor_username": "demo_surg_hod",
+        "training_level": "Year 1",
+        "pgr_id": "PGR-SURG-001",
+        "months_in_program": 10,
+    },
+    {
+        "username": "demo_surg_r2",
+        "email": "bilal.raza@demo.local",
+        "first_name": "Bilal",
+        "last_name": "Raza",
+        "role": "pg",
+        "specialty": "surgery",
+        "year": "2",
+        "department_code": "DEMO-SURG",
+        "hospital_code": "DEMO-DHQ",
+        "program_code": "DEMO-FCPS-SURG",
+        "supervisor_username": "demo_surg_faculty",
+        "training_level": "Year 2",
+        "pgr_id": "PGR-SURG-002",
+        "months_in_program": 22,
+    },
+    {
+        "username": "demo_surg_r3",
+        "email": "hira.aslam@demo.local",
+        "first_name": "Hira",
+        "last_name": "Aslam",
+        "role": "resident",
+        "specialty": "surgery",
+        "year": "3",
+        "department_code": "DEMO-SURG",
+        "hospital_code": "DEMO-AH",
+        "program_code": "DEMO-FCPS-SURG",
+        "supervisor_username": "demo_surg_hod",
+        "training_level": "Year 3",
+        "pgr_id": "PGR-SURG-003",
+        "months_in_program": 34,
+    },
+    {
+        "username": "demo_surg_r4",
+        "email": "umar.farid@demo.local",
+        "first_name": "Umar",
+        "last_name": "Farid",
+        "role": "pg",
+        "specialty": "surgery",
+        "year": "4",
+        "department_code": "DEMO-SURG",
+        "hospital_code": "DEMO-DHQ",
+        "program_code": "DEMO-FCPS-SURG",
+        "supervisor_username": "demo_surg_faculty",
+        "training_level": "Year 4",
+        "pgr_id": "PGR-SURG-004",
+        "months_in_program": 46,
+    },
+    {
+        "username": "demo_med_r1",
+        "email": "areeba.noor@demo.local",
+        "first_name": "Areeba",
+        "last_name": "Noor",
+        "role": "resident",
+        "specialty": "medicine",
+        "year": "1",
+        "department_code": "DEMO-MED",
+        "hospital_code": "DEMO-DHQ",
+        "program_code": "DEMO-FCPS-MED",
+        "supervisor_username": "demo_med_hod",
+        "training_level": "Year 1",
+        "pgr_id": "PGR-MED-001",
+        "months_in_program": 11,
+    },
+    {
+        "username": "demo_med_r2",
+        "email": "saad.malik@demo.local",
+        "first_name": "Saad",
+        "last_name": "Malik",
+        "role": "pg",
+        "specialty": "medicine",
+        "year": "2",
+        "department_code": "DEMO-MED",
+        "hospital_code": "DEMO-AH",
+        "program_code": "DEMO-FCPS-MED",
+        "supervisor_username": "demo_med_faculty",
+        "training_level": "Year 2",
+        "pgr_id": "PGR-MED-002",
+        "months_in_program": 23,
+    },
+    {
+        "username": "demo_med_r3",
+        "email": "fatima.sheikh@demo.local",
+        "first_name": "Fatima",
+        "last_name": "Sheikh",
+        "role": "resident",
+        "specialty": "medicine",
+        "year": "3",
+        "department_code": "DEMO-MED",
+        "hospital_code": "DEMO-DHQ",
+        "program_code": "DEMO-FCPS-MED",
+        "supervisor_username": "demo_med_hod",
+        "training_level": "Year 3",
+        "pgr_id": "PGR-MED-003",
+        "months_in_program": 35,
+    },
+    {
+        "username": "demo_med_r4",
+        "email": "usman.shah@demo.local",
+        "first_name": "Usman",
+        "last_name": "Shah",
+        "role": "pg",
+        "specialty": "medicine",
+        "year": "4",
+        "department_code": "DEMO-MED",
+        "hospital_code": "DEMO-AH",
+        "program_code": "DEMO-FCPS-MED",
+        "supervisor_username": "demo_med_faculty",
+        "training_level": "Year 4",
+        "pgr_id": "PGR-MED-004",
+        "months_in_program": 47,
+    },
+]
+
+DEMO_PROGRAMS = [
+    {
+        "code": "DEMO-FCPS-SURG",
+        "name": "FCPS General Surgery Demo",
+        "department_code": "DEMO-SURG",
+        "degree_type": TrainingProgram.DEGREE_FCPS,
+        "duration_months": 48,
+        "description": "Seeded surgery program for screenshots, workflows, and walkthroughs.",
+        "policy": {
+            "allow_program_change": False,
+            "program_change_requires_restart": True,
+            "min_active_months_before_imm": 18,
+            "imm_allowed_from_month": 24,
+            "final_allowed_from_month": 42,
+            "exception_rules_text": "Demo data only.",
+        },
+    },
+    {
+        "code": "DEMO-FCPS-MED",
+        "name": "FCPS Internal Medicine Demo",
+        "department_code": "DEMO-MED",
+        "degree_type": TrainingProgram.DEGREE_FCPS,
+        "duration_months": 48,
+        "description": "Seeded medicine program for screenshots, workflows, and walkthroughs.",
+        "policy": {
+            "allow_program_change": False,
+            "program_change_requires_restart": True,
+            "min_active_months_before_imm": 18,
+            "imm_allowed_from_month": 24,
+            "final_allowed_from_month": 42,
+            "exception_rules_text": "Demo data only.",
+        },
+    },
+]
+
+DEMO_PROGRAM_TEMPLATES = {
+    "DEMO-FCPS-SURG": [
+        {
+            "name": "General Surgery Ward",
+            "department_code": "DEMO-SURG",
+            "duration_weeks": 12,
+            "sequence_order": 1,
+            "year_index": 1,
+        },
+        {
+            "name": "Emergency Surgery and Trauma",
+            "department_code": "DEMO-SURG",
+            "duration_weeks": 8,
+            "sequence_order": 2,
+            "year_index": 2,
+        },
+        {
+            "name": "Surgical ICU and Peri-Operative Care",
+            "department_code": "DEMO-SURG",
+            "duration_weeks": 8,
+            "sequence_order": 3,
+            "year_index": 3,
+        },
+    ],
+    "DEMO-FCPS-MED": [
+        {
+            "name": "General Medicine Ward",
+            "department_code": "DEMO-MED",
+            "duration_weeks": 12,
+            "sequence_order": 1,
+            "year_index": 1,
+        },
+        {
+            "name": "Cardiology and HDU",
+            "department_code": "DEMO-MED",
+            "duration_weeks": 8,
+            "sequence_order": 2,
+            "year_index": 2,
+        },
+        {
+            "name": "Critical Care Medicine",
+            "department_code": "DEMO-MED",
+            "duration_weeks": 8,
+            "sequence_order": 3,
+            "year_index": 3,
+        },
+    ],
+}
+
+DEMO_WORKSHOPS = [
+    {
+        "code": "DEMO-RESM",
+        "name": "Research Methods and Biostatistics",
+        "description": "Core research workshop for milestone progression.",
+    },
+    {
+        "code": "DEMO-SSAFE",
+        "name": "Surgical Safety Bootcamp",
+        "description": "Final-year surgical readiness workshop.",
+    },
+    {
+        "code": "DEMO-ACLS",
+        "name": "ACLS Refresher",
+        "description": "Final-year medicine readiness workshop.",
+    },
+]
+
+
+@dataclass(frozen=True)
+class RotationStatusPlan:
+    status: str
+    note: str
+
+
+FUTURE_ROTATION_STATUS_PLANS = [
+    RotationStatusPlan(
+        status=RotationAssignment.STATUS_SUBMITTED,
+        note="Awaiting department review for the next block.",
+    ),
+    RotationStatusPlan(
+        status=RotationAssignment.STATUS_APPROVED,
+        note="Approved and ready for the upcoming block.",
+    ),
+    RotationStatusPlan(
+        status=RotationAssignment.STATUS_RETURNED,
+        note="Returned for date clarification before approval.",
+    ),
+    RotationStatusPlan(
+        status=RotationAssignment.STATUS_DRAFT,
+        note="Prepared draft for the next block.",
+    ),
 ]
 
 
 class Command(BaseCommand):
-    help = "Seed realistic demo data for Urology presentations."
+    help = "Seed realistic multi-hospital demo data while preserving admin/admin123."
 
     def add_arguments(self, parser):
         parser.add_argument(
             "--reset",
             action="store_true",
-            help=(
-                "Delete existing @demo.local users and demo-coded departments/hospitals "
-                "before seeding."
-            ),
+            help="Delete existing demo-coded data before reseeding.",
         )
 
     @transaction.atomic
     def handle(self, *args, **options):
-        diagnostics = self._validate_model_contracts()
-        if diagnostics:
-            self.stdout.write(self.style.ERROR("DIAGNOSTIC REPORT"))
-            for line in diagnostics:
-                self.stdout.write(self.style.ERROR(f"- {line}"))
-            raise CommandError("Model structure mismatch detected. Seeding aborted.")
-
         if options["reset"]:
             self._reset_demo_entities()
 
-        LogbookEntry.objects.filter(pg__email__iendswith=DEMO_EMAIL_DOMAIN).delete()
-        Rotation.objects.filter(pg__email__iendswith=DEMO_EMAIL_DOMAIN).delete()
+        today = timezone.now().date()
+        now = timezone.now()
 
-        hospital, _ = self._upsert_hospital()
-        departments, departments_created = self._upsert_departments()
-        self._upsert_hospital_departments(hospital=hospital, departments=departments)
-
-        supervisors, supervisors_created = self._upsert_supervisors(
-            home_hospital=hospital,
-            home_department=departments["DEMO-URO"],
-        )
-        head = supervisors[0]
-        root_department = departments["DEMO-URO"]
-        if root_department.head_id != head.id:
-            root_department.head = head
-            root_department.save(update_fields=["head"])
-
-        residents, residents_created = self._upsert_residents(
-            supervisors=supervisors,
-            home_hospital=hospital,
-            home_department=root_department,
-        )
-
-        rotations_created = self._seed_rotations(
-            residents=residents,
+        admin = self._ensure_admin_user()
+        hospitals = self._upsert_hospitals()
+        departments = self._upsert_departments()
+        hospital_departments = self._upsert_hospital_departments(
+            hospitals=hospitals,
             departments=departments,
-            hospital=hospital,
         )
-        status_counts = self._seed_logbook_entries(
-            residents=residents,
-            rotations_by_pg=self._rotations_by_pg(),
+        users = self._upsert_users(
+            admin=admin,
+            hospitals=hospitals,
+            departments=departments,
         )
-        research_created, research_note = self._seed_research_progress_if_supported(
-            residents=residents
+        self._seed_staff_profiles(users=users)
+        self._seed_department_memberships(
+            admin=admin,
+            users=users,
+            departments=departments,
+        )
+        self._seed_hospital_assignments(
+            admin=admin,
+            users=users,
+            hospital_departments=hospital_departments,
+        )
+        self._seed_hod_assignments(
+            admin=admin,
+            users=users,
+            departments=departments,
+        )
+        self._seed_supervision_links(
+            admin=admin,
+            users=users,
+            departments=departments,
         )
 
+        workshops = self._upsert_workshops(users=users, today=today)
+        programs = self._upsert_programs(departments=departments)
+        templates = self._upsert_program_rotation_templates(
+            programs=programs,
+            departments=departments,
+            hospitals=hospitals,
+        )
+
+        resident_training = self._seed_resident_training_records(
+            admin=admin,
+            users=users,
+            programs=programs,
+            today=today,
+        )
+        self._seed_rotation_assignments(
+            admin=admin,
+            users=users,
+            resident_training=resident_training,
+            hospital_departments=hospital_departments,
+            templates=templates,
+            today=today,
+            now=now,
+        )
+        self._seed_leave_requests(
+            approvers=users,
+            resident_training=resident_training,
+            today=today,
+        )
+        self._seed_deputation_postings(
+            approvers=users,
+            resident_training=resident_training,
+            today=today,
+        )
+        self._seed_research_and_thesis(
+            resident_training=resident_training,
+            users=users,
+            now=now,
+        )
+        self._seed_workshop_completions(
+            resident_training=resident_training,
+            workshops=workshops,
+            today=today,
+        )
+        self._seed_notifications(users=users, admin=admin)
+
+        eligibility_rows = 0
+        for record in resident_training.values():
+            eligibility_rows += len(recompute_for_record(record))
+
+        demo_user_count = User.objects.filter(
+            username__startswith="demo_",
+            is_archived=False,
+        ).count()
         self.stdout.write(self.style.SUCCESS("seed_demo_data completed successfully."))
-        self.stdout.write(f"Department Created: {departments_created}")
-        self.stdout.write(f"Supervisors Created: {supervisors_created}")
-        self.stdout.write(f"Residents Created: {residents_created}")
-        self.stdout.write("Cases per status:")
-        self.stdout.write(f"  Draft: {status_counts['draft']}")
-        self.stdout.write(f"  Submitted: {status_counts['submitted']}")
-        self.stdout.write(f"  Sent Back: {status_counts['sent_back']}")
-        self.stdout.write(f"  Resubmitted: {status_counts['resubmitted']}")
-        self.stdout.write(f"  Verified: {status_counts['verified']}")
-        self.stdout.write(f"Research entries created: {research_created}")
-        self.stdout.write(f"Rotations created: {rotations_created}")
-        if research_note:
-            self.stdout.write(self.style.WARNING(f"Research note: {research_note}"))
-
-    def _validate_model_contracts(self):
-        required_fields = {
-            "users.User": {
-                "email",
-                "username",
-                "role",
-                "specialty",
-                "year",
-                "supervisor",
-                "home_hospital",
-                "home_department",
-            },
-            "academics.Department": {"name", "code", "head", "active"},
-            "rotations.Hospital": {"name", "code", "is_active"},
-            "rotations.HospitalDepartment": {"hospital", "department", "is_active"},
-            "rotations.Rotation": {
-                "pg",
-                "department",
-                "hospital",
-                "supervisor",
-                "start_date",
-                "end_date",
-                "status",
-            },
-            "logbook.LogbookEntry": {
-                "pg",
-                "case_title",
-                "date",
-                "location_of_activity",
-                "patient_history_summary",
-                "management_action",
-                "topic_subtopic",
-                "status",
-                "supervisor_feedback",
-                "verified_by",
-                "verified_at",
-            },
-            "logbook.Procedure": {"name", "category"},
-            "logbook.Diagnosis": {"name", "category"},
-        }
-        diagnostics = []
-        for label, fields in required_fields.items():
-            app_label, model_name = label.split(".")
-            try:
-                model = apps.get_model(app_label, model_name)
-            except LookupError:
-                diagnostics.append(f"Missing model: {label}")
-                continue
-            if model is None:
-                diagnostics.append(f"Missing model: {label}")
-                continue
-            model_fields = {field.name for field in model._meta.get_fields()}
-            missing = sorted(fields - model_fields)
-            if missing:
-                diagnostics.append(f"{label} missing fields: {', '.join(missing)}")
-
-        try:
-            logbook_model = apps.get_model("logbook", "LogbookEntry")
-        except LookupError:
-            diagnostics.append("Missing model: logbook.LogbookEntry")
-            return diagnostics
-        if logbook_model is not None:
-            status_field = logbook_model._meta.get_field("status")
-            available_statuses = {choice[0] for choice in status_field.choices}
-            required_statuses = {"draft", "pending", "returned", "approved"}
-            if not required_statuses.issubset(available_statuses):
-                diagnostics.append(
-                    "logbook.LogbookEntry status choices must include: "
-                    "draft, pending, returned, approved"
-                )
-        return diagnostics
+        self.stdout.write(f"Admin login: {ADMIN_USERNAME} / {ADMIN_PASSWORD}")
+        self.stdout.write(f"Shared demo user password: {DEMO_PASSWORD}")
+        self.stdout.write(f"Demo users seeded: {demo_user_count + 1}")
+        self.stdout.write(
+            f"Demo hospitals seeded: {Hospital.objects.filter(code__startswith=DEMO_CODE_PREFIX).count()}"
+        )
+        self.stdout.write(
+            f"Demo departments seeded: {Department.objects.filter(code__startswith=DEMO_CODE_PREFIX).count()}"
+        )
+        self.stdout.write(
+            "Hospital-department links: "
+            f"{HospitalDepartment.objects.filter(hospital__code__startswith=DEMO_CODE_PREFIX).count()}"
+        )
+        self.stdout.write(
+            f"Resident training records: {ResidentTrainingRecord.objects.filter(program__code__startswith=DEMO_CODE_PREFIX).count()}"
+        )
+        self.stdout.write(
+            f"Rotation assignments: {RotationAssignment.objects.filter(resident_training__program__code__startswith=DEMO_CODE_PREFIX).count()}"
+        )
+        self.stdout.write(
+            f"Workshop completions: {ResidentWorkshopCompletion.objects.filter(resident_training_record__program__code__startswith=DEMO_CODE_PREFIX).count()}"
+        )
+        self.stdout.write(f"Eligibility snapshots recomputed: {eligibility_rows}")
+        self.stdout.write("Sample logins:")
+        self.stdout.write(f"  - demo_utrmc_admin / {DEMO_PASSWORD}")
+        self.stdout.write(f"  - demo_surg_hod / {DEMO_PASSWORD}")
+        self.stdout.write(f"  - demo_med_r4 / {DEMO_PASSWORD}")
 
     def _reset_demo_entities(self):
-        User.objects.filter(email__iendswith=DEMO_EMAIL_DOMAIN).delete()
-        Hospital.objects.filter(code__startswith="DEMO-").delete()
-        Department.objects.filter(code__startswith="DEMO-").delete()
+        Notification.objects.filter(metadata__seed_source="seed_demo_data").delete()
+        ResidentWorkshopCompletion.objects.filter(
+            resident_training_record__program__code__startswith=DEMO_CODE_PREFIX
+        ).delete()
+        WorkshopRun.objects.filter(block__workshop__code__startswith=DEMO_CODE_PREFIX).delete()
+        WorkshopBlock.objects.filter(workshop__code__startswith=DEMO_CODE_PREFIX).delete()
+        Workshop.objects.filter(code__startswith=DEMO_CODE_PREFIX).delete()
+        ProgramRotationTemplate.objects.filter(program__code__startswith=DEMO_CODE_PREFIX).delete()
+        TrainingProgram.objects.filter(code__startswith=DEMO_CODE_PREFIX).delete()
+        Department.objects.filter(code__startswith=DEMO_CODE_PREFIX).delete()
+        Hospital.objects.filter(code__startswith=DEMO_CODE_PREFIX).delete()
+        User.objects.filter(email__iendswith=f"@{DEMO_EMAIL_DOMAIN}").delete()
 
-    def _upsert_hospital(self):
-        hospital, created = Hospital.objects.update_or_create(
-            code=DEMO_HOSPITAL_CODE,
-            defaults={
-                "name": "UTRMC Teaching Hospital",
-                "description": "Demo hospital environment for postgraduate urology training.",
-                "is_active": True,
-            },
-        )
-        return hospital, created
+    def _ensure_admin_user(self):
+        user = User.objects.filter(username=ADMIN_USERNAME).first()
+        if user is None:
+            user = User(username=ADMIN_USERNAME, email=ADMIN_EMAIL)
+        user.email = ADMIN_EMAIL
+        user.first_name = "Admin"
+        user.last_name = "User"
+        user.role = "admin"
+        user.is_active = True
+        user.is_staff = True
+        user.is_superuser = True
+        user.is_archived = False
+        user.set_password(ADMIN_PASSWORD)
+        user.save()
+        NotificationPreference.for_user(user)
+        return user
+
+    def _upsert_hospitals(self):
+        hospitals = {}
+        for spec in DEMO_HOSPITALS:
+            hospital, _ = Hospital.objects.update_or_create(
+                code=spec["code"],
+                defaults={
+                    "name": spec["name"],
+                    "address": spec["address"],
+                    "phone": spec["phone"],
+                    "email": spec["email"],
+                    "description": spec["description"],
+                    "is_active": True,
+                },
+            )
+            hospitals[spec["code"]] = hospital
+        return hospitals
 
     def _upsert_departments(self):
         departments = {}
-        created_count = 0
-        for code, name in DEPARTMENT_SPECS:
-            department, created = Department.objects.update_or_create(
-                code=code,
+        for spec in DEMO_DEPARTMENTS:
+            department, _ = Department.objects.update_or_create(
+                code=spec["code"],
                 defaults={
-                    "name": name,
-                    "description": "Demo department seeded for presentation snapshots.",
+                    "name": spec["name"],
+                    "description": spec["description"],
                     "active": True,
                 },
             )
-            departments[code] = department
-            created_count += int(created)
-        return departments, created_count
+            departments[spec["code"]] = department
+        return departments
 
-    def _upsert_hospital_departments(self, hospital, departments):
-        for department in departments.values():
-            HospitalDepartment.objects.update_or_create(
-                hospital=hospital,
+    def _upsert_hospital_departments(self, hospitals, departments):
+        hospital_departments = {}
+        for hospital_code, department_codes in DEMO_MATRIX.items():
+            for department_code in department_codes:
+                hospital_department, _ = HospitalDepartment.objects.update_or_create(
+                    hospital=hospitals[hospital_code],
+                    department=departments[department_code],
+                    defaults={"is_active": True},
+                )
+                hospital_departments[(hospital_code, department_code)] = hospital_department
+        return hospital_departments
+
+    def _upsert_users(self, admin, hospitals, departments):
+        users = {ADMIN_USERNAME: admin}
+
+        for spec in DEMO_OVERSIGHT_USERS + DEMO_STAFF_USERS + DEMO_RESIDENT_USERS:
+            user = User.objects.filter(username=spec["username"]).first()
+            if user is None:
+                user = User(username=spec["username"])
+            user.email = spec["email"]
+            user.first_name = spec["first_name"]
+            user.last_name = spec["last_name"]
+            user.role = spec["role"]
+            user.specialty = spec.get("specialty")
+            user.year = spec.get("year")
+            user.registration_number = spec.get("pgr_id") or f"STAFF-{spec['username'].upper()}"
+            user.phone_number = "+92-300-0000000"
+            user.created_by = admin
+            user.modified_by = admin
+            user.is_active = True
+            user.is_archived = False
+            user.home_hospital = hospitals.get(spec.get("hospital_code"))
+            user.home_department = departments.get(spec.get("department_code"))
+            supervisor_username = spec.get("supervisor_username")
+            user.supervisor = users.get(supervisor_username) if supervisor_username else None
+            user.set_password(DEMO_PASSWORD)
+            user.save()
+            NotificationPreference.for_user(user)
+            users[user.username] = user
+
+        return users
+
+    def _seed_staff_profiles(self, users):
+        for spec in DEMO_STAFF_USERS:
+            StaffProfile.objects.update_or_create(
+                user=users[spec["username"]],
+                defaults={
+                    "designation": spec["designation"],
+                    "phone": "+92-300-1111111",
+                    "active": True,
+                },
+            )
+
+    def _seed_department_memberships(self, admin, users, departments):
+        for spec in DEMO_STAFF_USERS + DEMO_RESIDENT_USERS:
+            member_type = "resident" if spec["role"] in {"resident", "pg"} else spec["role"]
+            DepartmentMembership.objects.update_or_create(
+                user=users[spec["username"]],
+                department=departments[spec["department_code"]],
+                defaults={
+                    "member_type": member_type,
+                    "is_primary": True,
+                    "active": True,
+                    "start_date": timezone.now().date() - timedelta(days=400),
+                    "end_date": None,
+                    "created_by": admin,
+                    "updated_by": admin,
+                },
+            )
+
+    def _seed_hospital_assignments(self, admin, users, hospital_departments):
+        for spec in DEMO_STAFF_USERS:
+            HospitalAssignment.objects.update_or_create(
+                user=users[spec["username"]],
+                hospital_department=hospital_departments[
+                    (spec["hospital_code"], spec["department_code"])
+                ],
+                defaults={
+                    "assignment_type": HospitalAssignment.ASSIGNMENT_FACULTY_SITE,
+                    "start_date": timezone.now().date() - timedelta(days=365),
+                    "end_date": None,
+                    "active": True,
+                    "created_by": admin,
+                    "updated_by": admin,
+                },
+            )
+
+        for spec in DEMO_RESIDENT_USERS:
+            HospitalAssignment.objects.update_or_create(
+                user=users[spec["username"]],
+                hospital_department=hospital_departments[
+                    (spec["hospital_code"], spec["department_code"])
+                ],
+                defaults={
+                    "assignment_type": HospitalAssignment.ASSIGNMENT_PRIMARY_TRAINING,
+                    "start_date": timezone.now().date() - timedelta(days=spec["months_in_program"] * 30),
+                    "end_date": None,
+                    "active": True,
+                    "created_by": admin,
+                    "updated_by": admin,
+                },
+            )
+
+    def _seed_hod_assignments(self, admin, users, departments):
+        hod_map = {
+            "DEMO-SURG": "demo_surg_hod",
+            "DEMO-MED": "demo_med_hod",
+        }
+        today = timezone.now().date()
+        for department_code, username in hod_map.items():
+            department = departments[department_code]
+            hod_user = users[username]
+            department.head = hod_user
+            department.save(update_fields=["head"])
+            HODAssignment.objects.update_or_create(
                 department=department,
-                defaults={"is_active": True},
+                active=True,
+                defaults={
+                    "hod_user": hod_user,
+                    "start_date": today - timedelta(days=365),
+                    "end_date": None,
+                    "created_by": admin,
+                    "updated_by": admin,
+                },
             )
 
-    def _upsert_supervisors(self, home_hospital, home_department):
-        supervisors = []
-        created_count = 0
-        for raw_name in FACULTY_NAMES:
-            first_name, last_name = self._split_name(raw_name)
-            email_local = self._email_local_from_name(raw_name)
-            email = f"{email_local}{DEMO_EMAIL_DOMAIN}"
-            username = f"faculty.{email_local}"
-            supervisor, created = self._upsert_user(
-                username=username,
-                email=email,
-                first_name=first_name,
-                last_name=last_name,
-                role="supervisor",
-                specialty="urology",
-                year=None,
-                supervisor=None,
-                home_hospital=home_hospital,
-                home_department=home_department,
+    def _seed_supervision_links(self, admin, users, departments):
+        today = timezone.now().date()
+        for spec in DEMO_RESIDENT_USERS:
+            SupervisorResidentLink.objects.update_or_create(
+                supervisor_user=users[spec["supervisor_username"]],
+                resident_user=users[spec["username"]],
+                department=departments[spec["department_code"]],
+                defaults={
+                    "start_date": today - timedelta(days=300),
+                    "end_date": None,
+                    "active": True,
+                    "created_by": admin,
+                    "updated_by": admin,
+                },
             )
-            supervisors.append(supervisor)
-            created_count += int(created)
-        return supervisors, created_count
 
-    def _upsert_residents(self, supervisors, home_hospital, home_department):
-        residents = []
-        created_count = 0
-        year_cycle = ["1", "2", "3", "4", "2", "3", "1", "4", "2", "3"]
-        for index, raw_name in enumerate(RESIDENT_NAMES):
-            core_name = re.sub(r"^(Prof\.\s*)?(Dr\.\s*)+", "", raw_name).strip()
-            first_name, last_name = self._split_name(core_name)
-            email_local = self._email_local_from_name(core_name)
-            resident, created = self._upsert_user(
-                username=f"resident.{email_local}",
-                email=f"{email_local}{DEMO_EMAIL_DOMAIN}",
-                first_name=f"Dr. {first_name}",
-                last_name=last_name,
-                role="pg",
-                specialty="urology",
-                year=year_cycle[index % len(year_cycle)],
-                supervisor=supervisors[index % len(supervisors)],
-                home_hospital=home_hospital,
-                home_department=home_department,
+    def _upsert_programs(self, departments):
+        programs = {}
+        for spec in DEMO_PROGRAMS:
+            program, _ = TrainingProgram.objects.update_or_create(
+                code=spec["code"],
+                defaults={
+                    "name": spec["name"],
+                    "duration_months": spec["duration_months"],
+                    "description": spec["description"],
+                    "degree_type": spec["degree_type"],
+                    "department": departments[spec["department_code"]],
+                    "notes": "Seeded by seed_demo_data.",
+                    "active": True,
+                },
             )
-            residents.append(resident)
-            created_count += int(created)
-        return residents, created_count
+            ProgramPolicy.objects.update_or_create(
+                program=program,
+                defaults=spec["policy"],
+            )
+            programs[spec["code"]] = program
 
-    def _upsert_user(
+        for code, program in programs.items():
+            imm, _ = ProgramMilestone.objects.update_or_create(
+                program=program,
+                code=ProgramMilestone.CODE_IMM,
+                defaults={
+                    "name": "Intermediate Module Milestone",
+                    "recommended_month": 24,
+                    "is_active": True,
+                },
+            )
+            final, _ = ProgramMilestone.objects.update_or_create(
+                program=program,
+                code=ProgramMilestone.CODE_FINAL,
+                defaults={
+                    "name": "Final Examination Readiness",
+                    "recommended_month": 42,
+                    "is_active": True,
+                },
+            )
+            ProgramMilestoneResearchRequirement.objects.update_or_create(
+                milestone=imm,
+                defaults={
+                    "requires_synopsis_approved": True,
+                    "requires_synopsis_submitted_to_university": False,
+                    "requires_thesis_submitted": False,
+                },
+            )
+            ProgramMilestoneResearchRequirement.objects.update_or_create(
+                milestone=final,
+                defaults={
+                    "requires_synopsis_approved": True,
+                    "requires_synopsis_submitted_to_university": False,
+                    "requires_thesis_submitted": True,
+                },
+            )
+            imm.workshop_requirements.all().delete()
+            final.workshop_requirements.all().delete()
+            research_methods = Workshop.objects.filter(code="DEMO-RESM").first()
+            final_workshop_code = "DEMO-SSAFE" if code.endswith("SURG") else "DEMO-ACLS"
+            final_workshop = Workshop.objects.filter(code=final_workshop_code).first()
+            if research_methods is not None:
+                ProgramMilestoneWorkshopRequirement.objects.update_or_create(
+                    milestone=imm,
+                    workshop=research_methods,
+                    defaults={"required_count": 1},
+                )
+            if final_workshop is not None:
+                ProgramMilestoneWorkshopRequirement.objects.update_or_create(
+                    milestone=final,
+                    workshop=final_workshop,
+                    defaults={"required_count": 1},
+                )
+
+        return programs
+
+    def _upsert_program_rotation_templates(self, programs, departments, hospitals):
+        templates = {}
+        for program_code, specs in DEMO_PROGRAM_TEMPLATES.items():
+            program = programs[program_code]
+            for spec in specs:
+                template, _ = ProgramRotationTemplate.objects.update_or_create(
+                    program=program,
+                    name=spec["name"],
+                    defaults={
+                        "department": departments[spec["department_code"]],
+                        "duration_weeks": spec["duration_weeks"],
+                        "required": True,
+                        "sequence_order": spec["sequence_order"],
+                        "active": True,
+                        "year_index": spec["year_index"],
+                        "phase_index": 1,
+                        "block_index": spec["sequence_order"],
+                        "is_mandatory": True,
+                        "min_duration_weeks": spec["duration_weeks"],
+                        "requirements_json": {"seed_source": "seed_demo_data"},
+                    },
+                )
+                template.allowed_hospitals.set(list(hospitals.values()))
+                templates[(program_code, spec["name"])] = template
+        return templates
+
+    def _upsert_workshops(self, users, today):
+        workshops = {}
+        facilitators = {
+            "DEMO-RESM": users["demo_med_faculty"],
+            "DEMO-SSAFE": users["demo_surg_hod"],
+            "DEMO-ACLS": users["demo_med_hod"],
+        }
+        for spec in DEMO_WORKSHOPS:
+            workshop, _ = Workshop.objects.update_or_create(
+                code=spec["code"],
+                defaults={
+                    "name": spec["name"],
+                    "description": spec["description"],
+                    "is_active": True,
+                },
+            )
+            block, _ = WorkshopBlock.objects.update_or_create(
+                workshop=workshop,
+                name="Main Cohort",
+                defaults={"capacity": 40},
+            )
+            WorkshopRun.objects.update_or_create(
+                block=block,
+                run_date=today - timedelta(days=120),
+                defaults={
+                    "facilitator": facilitators[spec["code"]],
+                    "status": WorkshopRun.STATUS_COMPLETED,
+                    "notes": "Seeded demo workshop run.",
+                },
+            )
+            workshops[spec["code"]] = workshop
+        return workshops
+
+    def _seed_resident_training_records(self, admin, users, programs, today):
+        records = {}
+        year_map = {"1": "y1", "2": "y2", "3": "y3", "4": "y4"}
+        for spec in DEMO_RESIDENT_USERS:
+            resident = users[spec["username"]]
+            training_start = today - timedelta(days=spec["months_in_program"] * 30)
+            training_end = training_start + timedelta(days=48 * 30)
+            ResidentProfile.objects.update_or_create(
+                user=resident,
+                defaults={
+                    "pgr_id": spec["pgr_id"],
+                    "training_start": training_start,
+                    "training_end": training_end,
+                    "training_level": spec["training_level"],
+                    "active": True,
+                },
+            )
+            record, _ = ResidentTrainingRecord.objects.update_or_create(
+                resident_user=resident,
+                program=programs[spec["program_code"]],
+                defaults={
+                    "start_date": training_start,
+                    "expected_end_date": training_end,
+                    "current_level": year_map[spec["year"]],
+                    "status": ResidentTrainingRecord.STATUS_ACTIVE,
+                    "locked_program": True,
+                    "restart_from_scratch_on_change": True,
+                    "active": True,
+                    "created_by": admin,
+                },
+            )
+            records[spec["username"]] = record
+        return records
+
+    def _seed_rotation_assignments(
         self,
-        *,
-        username,
-        email,
-        first_name,
-        last_name,
-        role,
-        specialty,
-        year,
-        supervisor,
-        home_hospital,
-        home_department,
+        admin,
+        users,
+        resident_training,
+        hospital_departments,
+        templates,
+        today,
+        now,
     ):
-        user = User.objects.filter(email__iexact=email).first()
-        created = user is None
-        if created:
-            user = User(
-                username=username,
-                email=email,
-            )
-        user.username = username
-        user.email = email
-        user.first_name = first_name
-        user.last_name = last_name
-        user.role = role
-        user.specialty = specialty
-        user.year = year
-        user.supervisor = supervisor
-        user.home_hospital = home_hospital
-        user.home_department = home_department
-        user.is_active = True
-        user.is_archived = False
-        user.set_password(DEMO_PASSWORD)
-        user.save()
-        return user, created
+        alternate_hospital = {
+            "DEMO-AH": "DEMO-DHQ",
+            "DEMO-DHQ": "DEMO-AH",
+        }
+        template_names = {
+            "DEMO-FCPS-SURG": [
+                "General Surgery Ward",
+                "Emergency Surgery and Trauma",
+                "Surgical ICU and Peri-Operative Care",
+            ],
+            "DEMO-FCPS-MED": [
+                "General Medicine Ward",
+                "Cardiology and HDU",
+                "Critical Care Medicine",
+            ],
+        }
 
-    def _seed_rotations(self, residents, departments, hospital):
-        unit_codes = ["DEMO-URO-GEN", "DEMO-URO-ENDO", "DEMO-URO-ONCO", "DEMO-URO-TRAN"]
-        windows = [
-            (170, 126, "completed"),
-            (125, 81, "completed"),
-            (80, 36, "completed"),
-            (35, -15, "ongoing"),
+        for index, spec in enumerate(DEMO_RESIDENT_USERS):
+            record = resident_training[spec["username"]]
+            department_code = spec["department_code"]
+            home_hospital_code = spec["hospital_code"]
+            future_hospital_code = alternate_hospital[home_hospital_code]
+            program_code = spec["program_code"]
+
+            completed_template = templates[(program_code, template_names[program_code][0])]
+            active_template = templates[(program_code, template_names[program_code][1])]
+            future_template = templates[(program_code, template_names[program_code][2])]
+
+            RotationAssignment.objects.update_or_create(
+                resident_training=record,
+                template=completed_template,
+                defaults={
+                    "hospital_department": hospital_departments[(home_hospital_code, department_code)],
+                    "start_date": today - timedelta(days=220),
+                    "end_date": today - timedelta(days=136),
+                    "status": RotationAssignment.STATUS_COMPLETED,
+                    "notes": "Completed block seeded for historical demo context.",
+                    "requested_by": admin,
+                    "approved_by_hod": users[spec["supervisor_username"]],
+                    "approved_by_utrmc": users["demo_utrmc_admin"],
+                    "submitted_at": now - timedelta(days=230),
+                    "approved_at": now - timedelta(days=225),
+                    "completed_at": now - timedelta(days=136),
+                    "return_reason": "",
+                    "reject_reason": "",
+                },
+            )
+
+            RotationAssignment.objects.update_or_create(
+                resident_training=record,
+                template=active_template,
+                defaults={
+                    "hospital_department": hospital_departments[(future_hospital_code, department_code)],
+                    "start_date": today - timedelta(days=21),
+                    "end_date": today + timedelta(days=35),
+                    "status": RotationAssignment.STATUS_ACTIVE,
+                    "notes": "Current active rotation seeded for dashboard schedule.",
+                    "requested_by": admin,
+                    "approved_by_hod": users[spec["supervisor_username"]],
+                    "approved_by_utrmc": users["demo_utrmc_admin"],
+                    "submitted_at": now - timedelta(days=30),
+                    "approved_at": now - timedelta(days=25),
+                    "completed_at": None,
+                    "return_reason": "",
+                    "reject_reason": "",
+                },
+            )
+
+            plan = FUTURE_ROTATION_STATUS_PLANS[index % len(FUTURE_ROTATION_STATUS_PLANS)]
+            future_defaults = {
+                "hospital_department": hospital_departments[(home_hospital_code, department_code)],
+                "start_date": today + timedelta(days=49),
+                "end_date": today + timedelta(days=112),
+                "status": plan.status,
+                "notes": plan.note,
+                "requested_by": admin,
+                "approved_by_hod": None,
+                "approved_by_utrmc": None,
+                "submitted_at": None,
+                "approved_at": None,
+                "completed_at": None,
+                "return_reason": "",
+                "reject_reason": "",
+            }
+            if plan.status in {
+                RotationAssignment.STATUS_SUBMITTED,
+                RotationAssignment.STATUS_APPROVED,
+                RotationAssignment.STATUS_RETURNED,
+            }:
+                future_defaults["submitted_at"] = now - timedelta(days=3)
+            if plan.status == RotationAssignment.STATUS_APPROVED:
+                future_defaults["approved_by_hod"] = users[spec["supervisor_username"]]
+                future_defaults["approved_by_utrmc"] = users["demo_utrmc_admin"]
+                future_defaults["approved_at"] = now - timedelta(days=2)
+            if plan.status == RotationAssignment.STATUS_RETURNED:
+                future_defaults["return_reason"] = (
+                    "Please align the requested dates with the next hospital block."
+                )
+
+            RotationAssignment.objects.update_or_create(
+                resident_training=record,
+                template=future_template,
+                defaults=future_defaults,
+            )
+
+    def _seed_leave_requests(self, approvers, resident_training, today):
+        leave_specs = [
+            ("demo_surg_r1", LeaveRequest.TYPE_ANNUAL, LeaveRequest.STATUS_APPROVED, 18, 22),
+            ("demo_surg_r2", LeaveRequest.TYPE_STUDY, LeaveRequest.STATUS_SUBMITTED, 35, 37),
+            ("demo_med_r1", LeaveRequest.TYPE_CASUAL, LeaveRequest.STATUS_DRAFT, 12, 12),
+            ("demo_med_r2", LeaveRequest.TYPE_SICK, LeaveRequest.STATUS_APPROVED, -18, -14),
         ]
-        today = timezone.now().date()
-        created_count = 0
-        for resident in residents:
-            for offset, unit_code in enumerate(unit_codes):
-                start_days, end_days, status = windows[offset]
-                start_date = today - timedelta(days=start_days)
-                end_date = today - timedelta(days=end_days)
-                rotation = Rotation(
-                    pg=resident,
-                    department=departments[unit_code],
-                    hospital=hospital,
-                    supervisor=resident.supervisor,
-                    start_date=start_date,
-                    end_date=end_date,
-                    status=status,
-                    objectives=f"Competency development in {departments[unit_code].name}.",
-                    learning_outcomes=(
-                        "Demonstrate independent procedural planning and documentation."
-                    ),
-                    notes="Presentation demo rotation data seeded by management command.",
+        for username, leave_type, status_value, start_offset, end_offset in leave_specs:
+            defaults = {
+                "leave_type": leave_type,
+                "start_date": today + timedelta(days=start_offset),
+                "end_date": today + timedelta(days=end_offset),
+                "reason": "Seeded leave request for demo schedule coverage.",
+                "status": status_value,
+                "approved_by": None,
+                "approved_at": None,
+                "reject_reason": "",
+            }
+            if status_value == LeaveRequest.STATUS_APPROVED:
+                defaults["approved_by"] = approvers["demo_utrmc_admin"]
+                defaults["approved_at"] = timezone.now() - timedelta(days=1)
+            LeaveRequest.objects.update_or_create(
+                resident_training=resident_training[username],
+                leave_type=leave_type,
+                start_date=defaults["start_date"],
+                defaults=defaults,
+            )
+
+    def _seed_deputation_postings(self, approvers, resident_training, today):
+        posting_specs = [
+            (
+                "demo_surg_r4",
+                DeputationPosting.TYPE_OFF_SERVICE,
+                DeputationPosting.STATUS_APPROVED,
+                "Punjab Institute of Cardiology",
+                "Lahore",
+                65,
+                118,
+            ),
+            (
+                "demo_med_r3",
+                DeputationPosting.TYPE_DEPUTATION,
+                DeputationPosting.STATUS_SUBMITTED,
+                "Medical ICU Exchange",
+                "Rawalpindi",
+                42,
+                84,
+            ),
+            (
+                "demo_med_r4",
+                DeputationPosting.TYPE_OFF_SERVICE,
+                DeputationPosting.STATUS_COMPLETED,
+                "Hepatology Service",
+                "Lahore",
+                -120,
+                -70,
+            ),
+        ]
+        for username, posting_type, status_value, institution, city, start_offset, end_offset in posting_specs:
+            defaults = {
+                "posting_type": posting_type,
+                "institution_name": institution,
+                "city": city,
+                "start_date": today + timedelta(days=start_offset),
+                "end_date": today + timedelta(days=end_offset),
+                "status": status_value,
+                "notes": "Seeded off-service posting for demo walkthroughs.",
+                "approved_by": None,
+                "approved_at": None,
+                "reject_reason": "",
+            }
+            if status_value in {DeputationPosting.STATUS_APPROVED, DeputationPosting.STATUS_COMPLETED}:
+                defaults["approved_by"] = approvers["demo_utrmc_admin"]
+                defaults["approved_at"] = timezone.now() - timedelta(days=14)
+            DeputationPosting.objects.update_or_create(
+                resident_training=resident_training[username],
+                institution_name=institution,
+                start_date=defaults["start_date"],
+                defaults=defaults,
+            )
+
+    def _seed_research_and_thesis(self, resident_training, users, now):
+        topic_by_department = {
+            "surgery": "Enhanced Recovery After Emergency Laparotomy",
+            "medicine": "Improving Sepsis Bundle Compliance in High-Dependency Units",
+        }
+        for spec in DEMO_RESIDENT_USERS:
+            record = resident_training[spec["username"]]
+            status_value = ResidentResearchProject.STATUS_DRAFT
+            supervisor_feedback = ""
+            submitted_to_supervisor_at = None
+            synopsis_approved_at = None
+            submitted_to_university_at = None
+            accepted_at = None
+            university_submission_ref = ""
+
+            if spec["year"] == "2":
+                status_value = ResidentResearchProject.STATUS_SUBMITTED_SUPERVISOR
+                submitted_to_supervisor_at = now - timedelta(days=14)
+                supervisor_feedback = "Seeded for supervisor review queue."
+            elif spec["year"] == "3":
+                status_value = ResidentResearchProject.STATUS_APPROVED_SUPERVISOR
+                submitted_to_supervisor_at = now - timedelta(days=40)
+                synopsis_approved_at = now - timedelta(days=28)
+                supervisor_feedback = "Approved after minor revisions."
+            elif spec["username"] in {"demo_surg_r4", "demo_med_r4"}:
+                status_value = ResidentResearchProject.STATUS_ACCEPTED_UNIVERSITY
+                submitted_to_supervisor_at = now - timedelta(days=90)
+                synopsis_approved_at = now - timedelta(days=75)
+                submitted_to_university_at = now - timedelta(days=45)
+                accepted_at = now - timedelta(days=20)
+                university_submission_ref = f"UNI-{record.id:04d}"
+                supervisor_feedback = "Accepted for final evaluation."
+
+            ResidentResearchProject.objects.update_or_create(
+                resident_training_record=record,
+                defaults={
+                    "title": topic_by_department[spec["specialty"]],
+                    "topic_area": "Clinical Governance",
+                    "supervisor": users[spec["supervisor_username"]],
+                    "status": status_value,
+                    "supervisor_feedback": supervisor_feedback,
+                    "submitted_to_supervisor_at": submitted_to_supervisor_at,
+                    "synopsis_approved_at": synopsis_approved_at,
+                    "submitted_to_university_at": submitted_to_university_at,
+                    "accepted_at": accepted_at,
+                    "university_submission_ref": university_submission_ref,
+                },
+            )
+
+            thesis_status = ResidentThesis.STATUS_NOT_STARTED
+            submitted_at = None
+            final_submission_ref = ""
+            notes = "Seeded thesis placeholder."
+            if spec["year"] == "3":
+                thesis_status = ResidentThesis.STATUS_IN_PROGRESS
+                notes = "Draft chapters and supervisor comments in progress."
+            elif spec["year"] == "4":
+                thesis_status = ResidentThesis.STATUS_SUBMITTED
+                submitted_at = now - timedelta(days=10)
+                final_submission_ref = f"TH-{record.id:04d}"
+                notes = "Submitted thesis packet seeded for final milestone coverage."
+
+            ResidentThesis.objects.update_or_create(
+                resident_training_record=record,
+                defaults={
+                    "status": thesis_status,
+                    "submitted_at": submitted_at,
+                    "final_submission_ref": final_submission_ref,
+                    "notes": notes,
+                },
+            )
+
+    def _seed_workshop_completions(self, resident_training, workshops, today):
+        for spec in DEMO_RESIDENT_USERS:
+            record = resident_training[spec["username"]]
+            if spec["year"] in {"2", "3", "4"}:
+                ResidentWorkshopCompletion.objects.update_or_create(
+                    resident_training_record=record,
+                    workshop=workshops["DEMO-RESM"],
+                    defaults={
+                        "workshop_run": workshops["DEMO-RESM"].blocks.first().runs.first(),
+                        "completed_at": today - timedelta(days=150),
+                        "source": ResidentWorkshopCompletion.SOURCE_SYSTEM,
+                        "notes": "Seeded core research workshop completion.",
+                    },
                 )
-                rotation.save()
-                created_count += 1
-        return created_count
+            if spec["year"] == "4" and spec["specialty"] == "surgery":
+                ResidentWorkshopCompletion.objects.update_or_create(
+                    resident_training_record=record,
+                    workshop=workshops["DEMO-SSAFE"],
+                    defaults={
+                        "workshop_run": workshops["DEMO-SSAFE"].blocks.first().runs.first(),
+                        "completed_at": today - timedelta(days=45),
+                        "source": ResidentWorkshopCompletion.SOURCE_SYSTEM,
+                        "notes": "Seeded final-year surgery workshop completion.",
+                    },
+                )
+            if spec["year"] == "4" and spec["specialty"] == "medicine":
+                ResidentWorkshopCompletion.objects.update_or_create(
+                    resident_training_record=record,
+                    workshop=workshops["DEMO-ACLS"],
+                    defaults={
+                        "workshop_run": workshops["DEMO-ACLS"].blocks.first().runs.first(),
+                        "completed_at": today - timedelta(days=40),
+                        "source": ResidentWorkshopCompletion.SOURCE_SYSTEM,
+                        "notes": "Seeded final-year medicine workshop completion.",
+                    },
+                )
 
-    def _rotations_by_pg(self):
-        mapping = {}
-        for rotation in Rotation.objects.filter(
-            pg__email__iendswith=DEMO_EMAIL_DOMAIN
-        ).select_related("pg", "department"):
-            mapping.setdefault(rotation.pg_id, []).append(rotation)
-        return mapping
-
-    def _seed_logbook_entries(self, residents, rotations_by_pg):
-        procedures = self._upsert_procedures()
-        diagnoses = self._upsert_diagnoses()
-        today = timezone.now().date()
-        counters = {"draft": 0, "submitted": 0, "sent_back": 0, "resubmitted": 0, "verified": 0}
-
-        for resident_index, resident in enumerate(residents):
-            resident_rotations = rotations_by_pg.get(resident.id, [])
-            if not resident_rotations:
+    def _seed_notifications(self, users, admin):
+        for username in [*users]:
+            user = users[username]
+            NotificationPreference.for_user(user)
+            if user.username == ADMIN_USERNAME:
                 continue
-            for entry_index in range(14):
-                template = CASE_TEMPLATES[(resident_index + entry_index) % len(CASE_TEMPLATES)]
-                day_offset = ((resident_index + 2) * 7 + entry_index * 11) % 175 + 3
-                encounter_date = today - timedelta(days=day_offset)
-                rotation = resident_rotations[entry_index % len(resident_rotations)]
-                entry = LogbookEntry.objects.create(
-                    pg=resident,
-                    supervisor=resident.supervisor,
-                    rotation=rotation,
-                    case_title=f"{template['title']} (Case {entry_index + 1})",
-                    date=encounter_date,
-                    location_of_activity=rotation.department.name,
-                    patient_history_summary=template["summary"],
-                    management_action=template["management"],
-                    topic_subtopic=template["topic"],
-                    clinical_reasoning=(
-                        "Clinical findings were correlated with imaging before selecting "
-                        "definitive procedural management."
-                    ),
-                    learning_points=(
-                        "Improved operative planning, peri-operative counseling, and "
-                        "documentation quality."
-                    ),
-                    status="draft",
-                )
-                entry.procedures.add(procedures[template["procedure"]])
-                entry.primary_diagnosis = diagnoses[template["diagnosis"]]
-                entry.save(update_fields=["primary_diagnosis", "updated_at"])
-
-                if entry_index <= 2:
-                    counters["draft"] += 1
-                    continue
-
-                entry.status = "pending"
-                entry.save()
-
-                if 3 <= entry_index <= 5:
-                    counters["submitted"] += 1
-                    continue
-
-                if 6 <= entry_index <= 7:
-                    entry.status = "returned"
-                    entry.supervisor_feedback = (
-                        "Please expand peri-operative risk documentation and postoperative "
-                        "follow-up details."
-                    )
-                    entry.save()
-                    counters["sent_back"] += 1
-                    continue
-
-                if 8 <= entry_index <= 9:
-                    entry.status = "returned"
-                    entry.supervisor_feedback = (
-                        "Please expand peri-operative risk documentation and postoperative "
-                        "follow-up details."
-                    )
-                    entry.save()
-                    entry.management_action = (
-                        f"{template['management']} Revised after supervisor feedback with clearer "
-                        "documentation."
-                    )
-                    entry.save(update_fields=["management_action", "updated_at"])
-                    entry.status = "pending"
-                    entry.save()
-                    counters["resubmitted"] += 1
-                    continue
-
-                entry.status = "approved"
-                entry.supervisor_feedback = (
-                    "Comprehensive entry. Clinical reasoning and operative details are "
-                    "satisfactory."
-                )
-                entry.save()
-                counters["verified"] += 1
-
-        return counters
-
-    def _upsert_procedures(self):
-        procedures = {}
-        for name, category in PROCEDURE_SPECS:
-            procedure, _ = Procedure.objects.get_or_create(
-                name=name,
+            Notification.objects.update_or_create(
+                recipient=user,
+                verb="demo-seeded",
+                title="Demo workspace ready",
+                channel=Notification.CHANNEL_IN_APP,
                 defaults={
-                    "category": category,
-                    "difficulty_level": 3,
-                    "cme_points": 2,
-                    "description": "Demo procedure entry for urology showcase data.",
-                    "is_active": True,
+                    "actor": admin,
+                    "body": (
+                        "Your account has seeded rotations, research, workshops, and "
+                        "organization links for demonstration use."
+                    ),
+                    "metadata": {
+                        "seed_source": "seed_demo_data",
+                        "username": user.username,
+                    },
                 },
             )
-            procedures[name] = procedure
-        return procedures
 
-    def _upsert_diagnoses(self):
-        diagnoses = {}
-        for name, category in DIAGNOSIS_SPECS:
-            diagnosis, _ = Diagnosis.objects.get_or_create(
-                name=name,
-                category=category,
-                defaults={
-                    "description": "Demo diagnosis entry for presentation scenarios.",
-                    "is_active": True,
+        Notification.objects.update_or_create(
+            recipient=admin,
+            verb="demo-refresh",
+            title="Demo data refreshed",
+            channel=Notification.CHANNEL_IN_APP,
+            defaults={
+                "actor": admin,
+                "body": "Canonical demo data has been refreshed successfully.",
+                "metadata": {
+                    "seed_source": "seed_demo_data",
+                    "dataset": "multi-hospital-demo",
                 },
-            )
-            diagnoses[name] = diagnosis
-        return diagnoses
-
-    def _seed_research_progress_if_supported(self, residents):
-        research_models = [m for m in apps.get_models() if "research" in m.__name__.lower()]
-        if not research_models:
-            return 0, "No dedicated research progress model detected; skipped."
-        model_list = ", ".join(sorted(f"{m._meta.app_label}.{m.__name__}" for m in research_models))
-        raise CommandError(
-            "DIAGNOSTIC REPORT\n"
-            "Research model(s) detected but schema-specific seeding is undefined: "
-            f"{model_list}. Seeding stopped to avoid guessing field mappings."
+            },
         )
-
-    def _split_name(self, full_name):
-        parts = full_name.split()
-        if len(parts) == 1:
-            return parts[0], ""
-        return " ".join(parts[:-1]), parts[-1]
-
-    def _email_local_from_name(self, full_name):
-        stripped = re.sub(r"^(Prof\.\s*)?(Dr\.\s*)+", "", full_name).strip()
-        parts = stripped.split()
-        if len(parts) < 2:
-            local = stripped.lower()
-        else:
-            local = f"{parts[0].lower()}.{parts[-1].lower()}"
-        local = re.sub(r"[^a-z0-9.]+", "", local)
-        return local

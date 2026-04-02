@@ -45,7 +45,7 @@ makemigrations:
 	docker compose -f docker/docker-compose.yml exec backend python manage.py makemigrations
 
 seed:
-	docker compose -f docker/docker-compose.yml exec backend python manage.py sims_seed_demo
+	docker compose -f docker/docker-compose.yml --env-file .env exec backend python manage.py seed_demo_data --reset
 
 collectstatic:
 	docker compose -f docker/docker-compose.yml exec backend python manage.py collectstatic --noinput

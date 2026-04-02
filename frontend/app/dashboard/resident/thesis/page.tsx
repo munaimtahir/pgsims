@@ -4,6 +4,21 @@ import ProtectedRoute from '@/components/auth/ProtectedRoute';
 
 import { trainingApi, ResidentThesis } from '@/lib/api/training';
 
+function getErrorMessage(error: unknown, fallback = 'Submission failed.'): string {
+  if (
+    typeof error === 'object' &&
+    error !== null &&
+    'response' in error &&
+    typeof (error as { response?: unknown }).response === 'object' &&
+    (error as { response?: unknown }).response !== null &&
+    'data' in ((error as { response?: { data?: unknown } }).response || {}) &&
+    typeof ((error as { response?: { data?: { detail?: unknown } } }).response?.data?.detail) === 'string'
+  ) {
+    return (error as { response?: { data?: { detail?: string } } }).response?.data?.detail || fallback;
+  }
+  return fallback;
+}
+
 export default function ResidentThesisPage() {
   const [thesis, setThesis] = useState<ResidentThesis | null>(null);
   const [loading, setLoading] = useState(true);
@@ -39,8 +54,8 @@ export default function ResidentThesisPage() {
       const t = await trainingApi.submitThesis();
       setThesis(t);
       setSuccess('Thesis submitted successfully.');
-    } catch (err: any) {
-      setError(err?.response?.data?.detail || 'Submission failed.');
+    } catch (error: unknown) {
+      setError(getErrorMessage(error));
     } finally {
       setActionLoading(false);
     }

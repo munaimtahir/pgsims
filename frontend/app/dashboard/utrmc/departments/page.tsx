@@ -2,13 +2,26 @@
 import { useEffect, useState } from 'react';
 import { userbaseApi, UserbaseDepartment } from '@/lib/api/userbase';
 
+interface DepartmentForm {
+  name: string;
+  code: string;
+  description: string;
+  active: boolean;
+}
+
+const DEPARTMENT_FIELDS: Array<{ key: keyof Pick<DepartmentForm, 'name' | 'code' | 'description'>; label: string }> = [
+  { key: 'name', label: 'Name' },
+  { key: 'code', label: 'Code' },
+  { key: 'description', label: 'Description' },
+];
+
 export default function DepartmentsPage() {
   const [rows, setRows] = useState<UserbaseDepartment[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState<UserbaseDepartment | null>(null);
-  const [form, setForm] = useState<any>({ name: '', code: '', description: '', active: true });
+  const [form, setForm] = useState<DepartmentForm>({ name: '', code: '', description: '', active: true });
   const [saving, setSaving] = useState(false);
 
   const load = () => userbaseApi.departments.list().then(setRows).catch(() => setError('Failed to load')).finally(() => setLoading(false));
@@ -58,10 +71,14 @@ export default function DepartmentsPage() {
         <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-full max-w-md shadow-xl">
             <h2 className="text-lg font-semibold mb-4">{editing ? 'Edit' : 'Add'} Department</h2>
-            {[{k:'name',l:'Name'},{k:'code',l:'Code'},{k:'description',l:'Description'}].map(({k,l}) => (
-              <div key={k} className="mb-3">
-                <label className="block text-sm font-medium text-gray-700 mb-1">{l}</label>
-                <input className="w-full border border-gray-300 rounded px-3 py-2 text-sm" value={form[k]||''} onChange={e=>setForm({...form,[k]:e.target.value})} />
+            {DEPARTMENT_FIELDS.map(({ key, label }) => (
+              <div key={key} className="mb-3">
+                <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
+                <input
+                  className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+                  value={form[key]}
+                  onChange={(event) => setForm({ ...form, [key]: event.target.value })}
+                />
               </div>
             ))}
             <div className="mb-4 flex items-center gap-2">

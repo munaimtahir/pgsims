@@ -12,6 +12,10 @@
 - `utrmc_admin` (UTRMC super-admin: can configure + approve overrides)
 
 ## LogbookEntry (Phase-1)
+Legacy/deferred note:
+- This section is retained for historical contract reference.
+- Logbook is not part of the current authoritative active runtime surface as of 2026-04-02.
+
 Required fields in PG-facing responses:
 - `id`
 - `status`
@@ -105,6 +109,10 @@ Rotation summary response must include:
 - `GET /api/hospitals/{id}/departments/`
 
 ## Analytics (v1)
+Legacy/deferred note:
+- The training and eligibility dashboards remain active.
+- The broader analytics inventory described below is not the authoritative active product surface for current planning.
+
 Base: `/api/analytics/`
 
 Read endpoints:
@@ -212,34 +220,58 @@ Response shape for `GET /events/live`:
 - `PATCH /api/auth/profile/` — update own profile fields
 - `POST /api/auth/change-password/` — change own password; payload: `{ old_password, new_password }`
 - `POST /api/auth/password-reset/` — request password reset email; payload: `{ email }`
+  - Response is intentionally non-enumerating on unknown-email and delivery-failure paths.
 - `POST /api/auth/password-reset/confirm/` — confirm reset; payload: `{ uid, token, new_password, new_password2 }`
 
 ### Rotation Assignments
 
-- `GET /api/rotations/` — list rotations; query params: `pg`, `department`, `hospital`, `status`
-  - Roles: admin, utrmc_admin, utrmc_user, supervisor (own residents), pg (own only)
+- `GET /api/rotations/` — list rotations; query params: `resident`, `department`, `hospital`, `status`, `start_date_from`, `start_date_to`
+  - Roles: admin, utrmc_admin, supervisor/faculty (scoped supervised residents and department scope), pg/resident (own only)
 - `POST /api/rotations/` — create rotation assignment
-  - Payload: `{ pg: int, department: int, hospital: int, start_date: str, end_date: str, override_reason?: str }`
+  - Payload: `{ resident_training: int, hospital_department: int, start_date: str, end_date: str, notes?: str }`
   - Roles: admin, utrmc_admin
 - `GET /api/rotations/{id}/` — retrieve single rotation
-- `PATCH /api/rotations/{id}/` — update rotation fields (admin/utrmc_admin only)
-- `DELETE /api/rotations/{id}/` — delete rotation (admin only)
-- `POST /api/rotations/{id}/submit/` — resident submits for approval; Roles: pg/resident
+- `PATCH /api/rotations/{id}/` — update rotation fields; allowed only while status is `DRAFT` or `RETURNED`; Roles: admin, utrmc_admin
+- `DELETE /api/rotations/{id}/` — delete rotation (not part of the promoted active workflow)
+- `POST /api/rotations/{id}/submit/` — resident or admin submits a `DRAFT` or `RETURNED` rotation; Roles: pg/resident (own), admin, utrmc_admin
 - `POST /api/rotations/{id}/hod-approve/` — HOD or admin approves; Roles: supervisor (HOD), admin
-- `POST /api/rotations/{id}/utrmc-approve/` — UTRMC admin approves override; Roles: admin, utrmc_admin
-  - Payload (optional): `{ override_reason?: str }`
+- `POST /api/rotations/{id}/utrmc-approve/` — admin/UTRMC admin approval override; Roles: admin, utrmc_admin
 - `POST /api/rotations/{id}/activate/` — admin activates approved rotation; Roles: admin, utrmc_admin
 - `POST /api/rotations/{id}/complete/` — admin marks rotation complete; Roles: admin, utrmc_admin
-- `POST /api/rotations/{id}/returned/` — return to draft for correction; Roles: admin, utrmc_admin, supervisor
-- `POST /api/rotations/{id}/reject/` — reject rotation; Roles: admin, utrmc_admin
+- `POST /api/rotations/{id}/returned/` — return submitted or approved rotation to the resident for correction; payload: `{ reason?: str }`; Roles: admin, utrmc_admin, supervisor, faculty
+- `POST /api/rotations/{id}/reject/` — reject submitted or approved rotation; payload: `{ reason?: str }`; Roles: admin, utrmc_admin, supervisor, faculty
 
 ### My Rotations (Resident)
 
 - `GET /api/my/rotations/` — resident's own rotations; Roles: pg/resident
 
+### Resident Summary
+
+- `GET /api/residents/me/summary/` — resident command-center summary; Roles: pg/resident, admin, utrmc_admin
+  - Response includes:
+    - `training_record`
+      - `id`
+      - `program_code`
+      - `program_name`
+      - `degree_type`
+      - `start_date`
+      - `current_month_index`
+    - `rotation`
+    - `schedule`
+    - `leaves`
+    - `postings`
+    - `research`
+    - `thesis`
+    - `workshops`
+    - `eligibility`
+
+### Supervisor Summary
+
+- `GET /api/supervisors/me/summary/` — supervisor dashboard summary; Roles: supervisor, faculty, admin, utrmc_admin
+
 ### Supervisor Rotations
 
-- `GET /api/supervisor/rotations/pending/` — pending rotations for supervisor's residents; Roles: supervisor
+- `GET /api/supervisor/rotations/pending/` — pending rotations for supervisor/faculty scope; includes direct supervised residents and department/HOD scope; Roles: supervisor, faculty, admin, utrmc_admin
 
 ### UTRMC Approval Inboxes
 
@@ -249,7 +281,7 @@ Response shape for `GET /events/live`:
 ### Leave Requests
 
 - `GET /api/leaves/` — list leave requests
-  - Roles: admin, utrmc_admin, utrmc_user, supervisor (own residents), pg (own only)
+  - Roles: admin, utrmc_admin, supervisor/faculty (own residents), pg/resident (own only)
 - `POST /api/leaves/` — create leave request
   - Payload: `{ leave_type: str, start_date: str, end_date: str, reason?: str }`
   - Roles: pg/resident
@@ -258,6 +290,7 @@ Response shape for `GET /events/live`:
 - `DELETE /api/leaves/{id}/` — delete draft leave; Roles: pg (own, draft only)
 - `POST /api/leaves/{id}/submit/` — submit for approval; Roles: pg/resident
 - `POST /api/leaves/{id}/approve/` — approve leave; Roles: supervisor, admin
+- `POST /api/leaves/{id}/reject/` — reject leave; Roles: supervisor, admin
 - `POST /api/leaves/{id}/reject/` — reject leave; payload: `{ reason?: str }`; Roles: supervisor, admin
 
 ### My Leaves (Resident)
@@ -266,13 +299,13 @@ Response shape for `GET /events/live`:
 
 ### Deputation Postings
 
-- `GET /api/postings/` — list postings; Roles: admin, utrmc_admin, utrmc_user
-- `POST /api/postings/` — create posting; payload: `{ pg: int, institution: str, start_date: str, end_date: str, purpose?: str }`; Roles: admin, utrmc_admin
+- `GET /api/postings/` — list postings; Roles: admin, utrmc_admin, supervisor/faculty (scoped residents), pg/resident (own only)
+- `POST /api/postings/` — create posting; payload: `{ resident_training: int, posting_type: "deputation" | "off_service", institution_name: str, city?: str, start_date: str, end_date: str, notes?: str }`; Roles: pg/resident, admin, utrmc_admin
 - `GET /api/postings/{id}/` — detail
-- `PATCH /api/postings/{id}/` — update; Roles: admin, utrmc_admin
-- `DELETE /api/postings/{id}/` — delete; Roles: admin
-- `POST /api/postings/{id}/approve/` — approve posting; Roles: admin, utrmc_admin
-- `POST /api/postings/{id}/reject/` — reject posting; Roles: admin, utrmc_admin
+- `PATCH /api/postings/{id}/` — update (not part of the promoted active workflow)
+- `DELETE /api/postings/{id}/` — delete (not part of the promoted active workflow)
+- `POST /api/postings/{id}/approve/` — approve submitted posting; Roles: supervisor, faculty, admin, utrmc_admin
+- `POST /api/postings/{id}/reject/` — reject submitted posting; payload: `{ reason?: str }`; Roles: supervisor, faculty, admin, utrmc_admin
 - `POST /api/postings/{id}/complete/` — mark complete; Roles: admin, utrmc_admin
 
 ---

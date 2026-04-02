@@ -48,6 +48,12 @@ export interface UserbaseUser {
   }>;
 }
 
+export type UserbaseUserUpsert = Partial<
+  Pick<UserbaseUser, 'username' | 'email' | 'first_name' | 'last_name' | 'role' | 'is_active'>
+> & {
+  password?: string;
+};
+
 export interface DepartmentRosterResponse {
   department: { id: number; name: string; code: string; active: boolean };
   hod: { id: number; username: string; full_name?: string } | null;
@@ -121,7 +127,7 @@ export const userbaseApi = {
       );
       return Array.isArray(response.data) ? response.data : response.data.results || [];
     },
-    create: async (payload: Record<string, unknown>) => {
+    create: async (payload: UserbaseUserUpsert) => {
       const response = await apiClient.post<UserbaseUser>('/api/users/', payload);
       return response.data;
     },
@@ -129,7 +135,7 @@ export const userbaseApi = {
       const response = await apiClient.get<UserbaseUser>(`/api/users/${id}/`);
       return response.data;
     },
-    update: async (id: number, payload: Record<string, unknown>) => {
+    update: async (id: number, payload: UserbaseUserUpsert) => {
       const response = await apiClient.patch<UserbaseUser>(`/api/users/${id}/`, payload);
       return response.data;
     },

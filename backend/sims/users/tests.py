@@ -2,6 +2,8 @@
 Minimal user model tests for clean-slate PGSIMS build.
 Legacy HTML view tests removed; only model-level and API tests remain.
 """
+from unittest.mock import patch
+
 from django.test import TestCase
 from rest_framework.test import APIClient
 
@@ -47,3 +49,19 @@ class UserAPIAuthTests(TestCase):
     def test_unauthenticated_me_rejected(self):
         r = self.client.get("/api/auth/me/")
         self.assertEqual(r.status_code, 401)
+
+    @patch("sims.users.api_views.send_mail", side_effect=Exception("mail backend unavailable"))
+    def test_password_reset_returns_generic_success_when_email_send_fails(self, mocked_send_mail):
+        user = User.objects.create_user(
+            username="reset_user",
+            password="pass",
+            role="resident",
+            email="reset@example.com",
+        )
+
+        r = self.client.post("/api/auth/password-reset/", {"email": user.email}, format="json")
+
+        self.assertEqual(r.status_code, 200)
+        self.assertIn("message", r.data)
+        self.assertIn("If an account with that email exists", r.data["message"])
+        mocked_send_mail.assert_called_once()

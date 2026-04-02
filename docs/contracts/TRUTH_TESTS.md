@@ -46,6 +46,14 @@ Fail if forbidden patterns appear:
 cd frontend && npm test -- --watch=false
 ```
 
+### Lint and Type Gates
+
+```bash
+cd frontend && npm run lint
+cd frontend && npx tsc --noEmit
+cd frontend && npm run build
+```
+
 ### Smoke E2E Gate
 
 ```bash
@@ -61,8 +69,16 @@ Notes:
 ### Workflow E2E Gate
 
 ```bash
-docker compose -f docker/docker-compose.yml --env-file .env exec -T backend python manage.py seed_e2e
-cd frontend && npm run test:e2e:workflow:local
+cd backend && SECRET_KEY=test-secret python3 manage.py seed_e2e
+cd frontend && npx playwright install chromium
+```
+
+Run the workflow gate against the current checked-out runtime. Verified recovery-pass target:
+
+```bash
+cd backend && SECRET_KEY=test-secret python3 manage.py runserver 127.0.0.1:8000
+cd frontend && PORT=3001 INTERNAL_API_URL=http://127.0.0.1:8000 NEXT_PUBLIC_API_URL=/api npm run start:next
+cd frontend && E2E_BASE_URL=http://127.0.0.1:3001 E2E_API_URL=http://127.0.0.1:8000 npx playwright test --project=workflow-gate
 ```
 
 Workflow scope (promoted deterministic contract-critical browser flows):
@@ -70,6 +86,12 @@ Workflow scope (promoted deterministic contract-critical browser flows):
 - Supervisor approvals page renders canonical `resident_name`.
 - Supervisor return workflow (`supervisor-return`) works and visible success/result state is rendered in browser.
 - Resident dashboard displays canonical eligibility reason strings.
+- Resident leave draft can be submitted from the active schedule page and approved from the active supervisor dashboard.
+- Rotation workflow closes across active UTRMC, resident, and supervisor routes.
+- Postings workflow closes across active resident and UTRMC routes.
 
 Deferred from workflow gate for now:
 - broader regression suites and mutation-heavy org-management flows.
+
+Important:
+- Docker runtime can be used for smoke checks, but do not treat long-running containers as current-tree truth unless they were rebuilt after the code under test changed.

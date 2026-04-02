@@ -4,19 +4,17 @@ import ProtectedRoute from '@/components/auth/ProtectedRoute';
 import { trainingApi, DeputationPosting } from '@/lib/api/training';
 
 const STATUS_COLORS: Record<string, string> = {
-  draft: 'bg-gray-100 text-gray-700',
-  submitted: 'bg-yellow-100 text-yellow-800',
-  approved: 'bg-green-100 text-green-800',
-  rejected: 'bg-red-100 text-red-700',
-  completed: 'bg-blue-100 text-blue-800',
+  SUBMITTED: 'bg-yellow-100 text-yellow-800',
+  APPROVED: 'bg-green-100 text-green-800',
+  REJECTED: 'bg-red-100 text-red-700',
+  COMPLETED: 'bg-blue-100 text-blue-800',
 };
 
 const STATUS_LABELS: Record<string, string> = {
-  draft: 'Draft',
-  submitted: 'Pending Approval',
-  approved: 'Approved',
-  rejected: 'Rejected',
-  completed: 'Completed',
+  SUBMITTED: 'Pending Approval',
+  APPROVED: 'Approved',
+  REJECTED: 'Rejected',
+  COMPLETED: 'Completed',
 };
 
 interface PostingForm {
@@ -38,6 +36,7 @@ const EMPTY_FORM: PostingForm = {
 };
 
 export default function ResidentPostingsPage() {
+  const [trainingRecordId, setTrainingRecordId] = useState<number | null>(null);
   const [postings, setPostings] = useState<DeputationPosting[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -48,8 +47,14 @@ export default function ResidentPostingsPage() {
 
   const load = () => {
     setLoading(true);
-    trainingApi.listPostings()
-      .then(setPostings)
+    Promise.all([
+      trainingApi.listPostings(),
+      trainingApi.getResidentSummary(),
+    ])
+      .then(([nextPostings, summary]) => {
+        setPostings(nextPostings);
+        setTrainingRecordId(summary.training_record.id);
+      })
       .catch(() => setError('Failed to load postings.'))
       .finally(() => setLoading(false));
   };
@@ -64,32 +69,26 @@ export default function ResidentPostingsPage() {
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.institution_name || !form.start_date || !form.end_date) return;
+    if (!trainingRecordId) {
+      flash('Training record is not available for posting requests yet.', true);
+      return;
+    }
     setSaving(true);
     setError('');
     try {
-      await trainingApi.createPosting(form);
+      await trainingApi.createPosting({
+        ...form,
+        resident_training: trainingRecordId,
+      });
       setShowForm(false);
       setForm(EMPTY_FORM);
-      flash('Posting request created. Submit it to send for approval.');
+      flash('Posting request submitted for review.');
       load();
     } catch (e: unknown) {
       const msg = (e as { response?: { data?: { detail?: string } } })?.response?.data?.detail;
       flash(msg || 'Failed to create posting.', true);
     } finally {
       setSaving(false);
-    }
-  };
-
-  const canDelete = (p: DeputationPosting) => p.status === 'draft';
-
-  const handleDelete = async (id: number) => {
-    if (!confirm('Delete this posting request?')) return;
-    try {
-      await trainingApi.deletePosting(id);
-      setPostings((prev) => prev.filter((p) => p.id !== id));
-      flash('Posting deleted.');
-    } catch {
-      flash('Failed to delete.', true);
     }
   };
 
@@ -117,6 +116,9 @@ export default function ResidentPostingsPage() {
         {showForm && (
           <form onSubmit={handleCreate} className="bg-white border border-gray-200 rounded-xl p-5 mb-6 shadow-sm space-y-4">
             <h2 className="font-semibold text-gray-800">New Posting Request</h2>
+            <p className="text-sm text-gray-500">
+              Posting requests are submitted immediately after creation and then reviewed by UTRMC.
+            </p>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
@@ -238,7 +240,7 @@ export default function ResidentPostingsPage() {
                   {posting.notes && (
                     <p className="text-sm text-gray-500 mt-1 italic">{posting.notes}</p>
                   )}
-                  {posting.status === 'rejected' && posting.reject_reason && (
+                  {posting.status === 'REJECTED' && posting.reject_reason && (
                     <p className="text-sm text-red-600 mt-2">
                       <span className="font-medium">Reason:</span> {posting.reject_reason}
                     </p>
@@ -249,15 +251,6 @@ export default function ResidentPostingsPage() {
                     </p>
                   )}
                 </div>
-
-                {canDelete(posting) && (
-                  <button
-                    onClick={() => handleDelete(posting.id)}
-                    className="text-red-400 hover:text-red-600 text-sm flex-shrink-0"
-                  >
-                    Delete
-                  </button>
-                )}
               </div>
             </div>
           ))}

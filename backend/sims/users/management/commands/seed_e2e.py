@@ -13,7 +13,7 @@ from sims.training.models import (
     ResidentTrainingRecord,
     TrainingProgram,
 )
-from sims.users.models import User
+from sims.users.models import SupervisorResidentLink, User
 
 
 class Command(BaseCommand):
@@ -119,6 +119,15 @@ class Command(BaseCommand):
             home_department=departments[0],
             first_name="E2E",
             last_name="PG",
+        )
+
+        SupervisorResidentLink.objects.update_or_create(
+            supervisor_user=supervisor,
+            resident_user=pg,
+            defaults={
+                "active": True,
+                "start_date": today,
+            },
         )
 
         # Deterministic training baseline for workflow E2E

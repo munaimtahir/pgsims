@@ -4,6 +4,37 @@ import { userbaseApi, UserbaseUser } from '@/lib/api/userbase';
 
 const ROLES = ['admin','utrmc_admin','utrmc_user','supervisor','faculty','resident','pg'];
 
+interface UserForm {
+  username: string;
+  email: string;
+  password?: string;
+  first_name: string;
+  last_name: string;
+  role: string;
+  is_active: boolean;
+}
+
+const USER_FIELDS: Array<{ key: keyof Pick<UserForm, 'username' | 'email' | 'first_name' | 'last_name'>; label: string }> = [
+  { key: 'username', label: 'Username' },
+  { key: 'email', label: 'Email' },
+  { key: 'first_name', label: 'First Name' },
+  { key: 'last_name', label: 'Last Name' },
+];
+
+function getErrorMessage(error: unknown, fallback = 'Save failed'): string {
+  if (
+    typeof error === 'object' &&
+    error !== null &&
+    'response' in error &&
+    typeof (error as { response?: unknown }).response === 'object' &&
+    (error as { response?: unknown }).response !== null &&
+    'data' in ((error as { response?: { data?: unknown } }).response || {})
+  ) {
+    return JSON.stringify((error as { response?: { data?: unknown } }).response?.data);
+  }
+  return fallback;
+}
+
 export default function UsersPage() {
   const [rows, setRows] = useState<UserbaseUser[]>([]);
   const [loading, setLoading] = useState(true);
@@ -11,7 +42,7 @@ export default function UsersPage() {
   const [search, setSearch] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState<UserbaseUser | null>(null);
-  const [form, setForm] = useState<any>({ username:'',email:'',password:'',first_name:'',last_name:'',role:'resident',is_active:true });
+  const [form, setForm] = useState<UserForm>({ username:'',email:'',password:'',first_name:'',last_name:'',role:'resident',is_active:true });
   const [saving, setSaving] = useState(false);
 
   const load = () => userbaseApi.users.list().then(setRows).catch(() => setError('Failed to load')).finally(() => setLoading(false));
@@ -29,8 +60,8 @@ export default function UsersPage() {
       else await userbaseApi.users.create(payload);
       setShowModal(false);
       load();
-    } catch (e: any) {
-      setError(e?.response?.data ? JSON.stringify(e.response.data) : 'Save failed');
+    } catch (error: unknown) {
+      setError(getErrorMessage(error));
     }
     finally { setSaving(false); }
   };
@@ -72,10 +103,14 @@ export default function UsersPage() {
         <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-full max-w-md shadow-xl">
             <h2 className="text-lg font-semibold mb-4">{editing?'Edit':'Add'} User</h2>
-            {[{k:'username',l:'Username'},{k:'email',l:'Email'},{k:'first_name',l:'First Name'},{k:'last_name',l:'Last Name'}].map(({k,l})=>(
-              <div key={k} className="mb-3">
-                <label className="block text-sm font-medium text-gray-700 mb-1">{l}</label>
-                <input className="w-full border border-gray-300 rounded px-3 py-2 text-sm" value={form[k]||''} onChange={e=>setForm({...form,[k]:e.target.value})} />
+            {USER_FIELDS.map(({ key, label }) => (
+              <div key={key} className="mb-3">
+                <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
+                <input
+                  className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+                  value={form[key]}
+                  onChange={(event) => setForm({ ...form, [key]: event.target.value })}
+                />
               </div>
             ))}
             {!editing && (

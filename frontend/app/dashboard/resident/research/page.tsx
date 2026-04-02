@@ -32,6 +32,21 @@ const STATUS_LABELS: Record<string, string> = {
   ACCEPTED_BY_UNIVERSITY: 'Accepted ✓',
 };
 
+function getErrorMessage(error: unknown, fallback = 'Failed'): string {
+  if (
+    typeof error === 'object' &&
+    error !== null &&
+    'response' in error &&
+    typeof (error as { response?: unknown }).response === 'object' &&
+    (error as { response?: unknown }).response !== null &&
+    'data' in ((error as { response?: { data?: unknown } }).response || {}) &&
+    typeof ((error as { response?: { data?: { detail?: unknown } } }).response?.data?.detail) === 'string'
+  ) {
+    return (error as { response?: { data?: { detail?: string } } }).response?.data?.detail || fallback;
+  }
+  return fallback;
+}
+
 export default function ResidentResearchPage() {
   const [project, setProject] = useState<ResidentResearchProject | null>(null);
   const [loading, setLoading] = useState(true);
@@ -54,7 +69,17 @@ export default function ResidentResearchPage() {
     usersApi.getSupervisors().then(data => setSupervisors(data)).catch(() => {});
   }, []);
 
-  const msg = (s: string, isErr = false) => { isErr ? setError(s) : setSuccess(s); setTimeout(() => { setError(''); setSuccess(''); }, 4000); };
+  const msg = (s: string, isErr = false) => {
+    if (isErr) {
+      setError(s);
+    } else {
+      setSuccess(s);
+    }
+    setTimeout(() => {
+      setError('');
+      setSuccess('');
+    }, 4000);
+  };
 
   const saveTopicSupervisor = async () => {
     setSaving(true);
@@ -87,7 +112,7 @@ export default function ResidentResearchPage() {
       const p = await trainingApi.researchAction('submit-to-supervisor');
       setProject(p);
       msg('Submitted to supervisor');
-    } catch (e: any) { msg(e?.response?.data?.detail || 'Failed', true); } finally { setSaving(false); }
+    } catch (error: unknown) { msg(getErrorMessage(error), true); } finally { setSaving(false); }
   };
 
   const submitToUniversity = async () => {
@@ -96,7 +121,7 @@ export default function ResidentResearchPage() {
       const p = await trainingApi.researchAction('submit-to-university');
       setProject(p);
       msg('Submitted to university');
-    } catch (e: any) { msg(e?.response?.data?.detail || 'Failed', true); } finally { setSaving(false); }
+    } catch (error: unknown) { msg(getErrorMessage(error), true); } finally { setSaving(false); }
   };
 
   const curStep = stepIndex(project);

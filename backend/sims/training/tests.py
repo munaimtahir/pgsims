@@ -136,6 +136,8 @@ class RotationAssignmentAPITest(APITestCase):
         self.utrmc = make_user("utrmc2", "utrmc_admin")
         self.supervisor = make_user("sup1", "supervisor")
         self.resident_user = make_user("res4", "resident")
+        self.resident_user.supervisor = self.supervisor
+        self.resident_user.save(update_fields=["supervisor"])
 
         prog = TrainingProgram.objects.create(name="Medicine", code="MED2", duration_months=36)
         self.rec = ResidentTrainingRecord.objects.create(
@@ -190,6 +192,39 @@ class RotationAssignmentAPITest(APITestCase):
         self._auth(self.resident_user)
         r = self.client.get("/api/rotations/")
         self.assertEqual(r.status_code, 200)
+
+    def test_supervisor_sees_supervised_resident_rotation_without_department_membership(self):
+        self._create_rotation()
+        self._auth(self.supervisor)
+        r = self.client.get("/api/rotations/")
+        self.assertEqual(r.status_code, 200)
+        rows = r.data if isinstance(r.data, list) else r.data.get("results", [])
+        self.assertEqual(len(rows), 1)
+
+    def test_supervisor_pending_rotations_includes_direct_supervisor_assignment(self):
+        rid = self._create_rotation()
+        self.client.post(f"/api/rotations/{rid}/submit/")
+        self._auth(self.supervisor)
+        r = self.client.get("/api/supervisor/rotations/pending/")
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(r.data["count"], 1)
+
+    def test_returned_rotation_can_be_resubmitted_by_resident(self):
+        rid = self._create_rotation()
+        self.client.post(f"/api/rotations/{rid}/submit/")
+        self._auth(self.supervisor)
+        returned = self.client.post(
+            f"/api/rotations/{rid}/returned/",
+            {"reason": "Please adjust dates."},
+        )
+        self.assertEqual(returned.status_code, 200)
+        self.assertEqual(returned.data["status"], "RETURNED")
+
+        self._auth(self.resident_user)
+        resubmitted = self.client.post(f"/api/rotations/{rid}/submit/")
+        self.assertEqual(resubmitted.status_code, 200)
+        self.assertEqual(resubmitted.data["status"], "SUBMITTED")
+        self.assertEqual(resubmitted.data["return_reason"], "")
 
 
 class LeaveRequestAPITest(APITestCase):

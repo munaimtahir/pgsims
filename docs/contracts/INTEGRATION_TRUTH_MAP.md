@@ -1,5 +1,9 @@
 # INTEGRATION TRUTH-MAP
 
+Authority warning:
+- This file is a historical/generated inventory, not the authoritative active-surface map.
+- For current planning and truth decisions, use `docs/contracts/`, `docs/_recovery/20260402T122809Z/`, and the checked-out runtime code.
+
 ## A) Backend Inventory
 | Method | Path | View | Action | Serializer | Permission |
 |---|---|---|---|---|---|

@@ -10,9 +10,26 @@ interface HodEntry {
   active: boolean;
 }
 
-function getName(u: number | { id?: number; username?: string; full_name?: string; name?: string } | undefined): string {
+interface NamedEntity {
+  id?: number;
+  username?: string;
+  full_name?: string;
+  name?: string;
+}
+
+interface HodForm {
+  department: string;
+  hod: string;
+  start_date: string;
+}
+
+interface PagedResponse<T> {
+  results?: T[];
+}
+
+function getName(u: number | NamedEntity | undefined): string {
   if (!u) return '';
-  if (typeof u === 'object') return (u as any).full_name || (u as any).name || (u as any).username || String((u as any).id||'');
+  if (typeof u === 'object') return u.full_name || u.name || u.username || String(u.id || '');
   return String(u);
 }
 
@@ -23,7 +40,7 @@ export default function HodPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [showModal, setShowModal] = useState(false);
-  const [form, setForm] = useState<any>({ department:'', hod:'', start_date:'' });
+  const [form, setForm] = useState<HodForm>({ department:'', hod:'', start_date:'' });
   const [saving, setSaving] = useState(false);
 
   const load = () => Promise.all([
@@ -31,7 +48,7 @@ export default function HodPage() {
     userbaseApi.departments.list(),
     userbaseApi.users.list(),
   ]).then(([aData, dData, uData]) => {
-    const arr = Array.isArray(aData) ? aData : (aData as any).results || [];
+    const arr = Array.isArray(aData) ? aData : (aData as PagedResponse<HodEntry>).results || [];
     setAssignments(arr);
     setDepartments(dData);
     setUsers(uData);
@@ -64,7 +81,7 @@ export default function HodPage() {
         <table className="w-full text-sm">
           <thead className="bg-gray-50"><tr>{['Department','HOD','Start Date','Active'].map(h=><th key={h} className="text-left px-4 py-2 font-medium text-gray-600">{h}</th>)}</tr></thead>
           <tbody className="divide-y divide-gray-100">
-            {assignments.map((a:any)=>(
+            {assignments.map((a) => (
               <tr key={a.id} className="hover:bg-gray-50">
                 <td className="px-4 py-2">{getName(a.department)}</td>
                 <td className="px-4 py-2">{getName(a.hod)}</td>

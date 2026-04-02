@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { loginAs } from './helpers/auth';
+import { loginAs } from '../helpers/auth';
 
 test('Admin import + reports export + UTRMC KPI dashboard', async ({ page, context }) => {
   const suffix = `${Date.now()}`.slice(-6);

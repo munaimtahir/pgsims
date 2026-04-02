@@ -150,6 +150,48 @@ export interface ProgramRotationTemplate {
   created_at: string;
 }
 
+export interface ResidentTrainingRecordListItem {
+  id: number;
+  resident_user: number;
+  resident_name: string;
+  program: number;
+  program_name: string;
+  program_code: string;
+  start_date: string;
+  expected_end_date: string | null;
+  current_level: string;
+  active: boolean;
+  created_by: number | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface RotationAssignment {
+  id: number;
+  resident_training: number;
+  resident_name: string;
+  program_name: string;
+  hospital_department: number;
+  hospital_name: string;
+  department_name: string;
+  template: number | null;
+  template_name: string | null;
+  start_date: string;
+  end_date: string;
+  status: string;
+  notes: string;
+  return_reason: string;
+  reject_reason: string;
+  requested_by: number | null;
+  approved_by_hod: number | null;
+  approved_by_utrmc: number | null;
+  submitted_at: string | null;
+  approved_at: string | null;
+  completed_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface DeputationPosting {
   id: number;
   resident_training: number;
@@ -162,6 +204,21 @@ export interface DeputationPosting {
   status: string;
   notes: string;
   approved_by: number | null;
+  approved_at: string | null;
+  reject_reason: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface LeaveRequest {
+  id: number;
+  resident_training: number;
+  resident_name: string;
+  leave_type: string;
+  start_date: string;
+  end_date: string;
+  reason: string;
+  status: string;
   approved_at: string | null;
   reject_reason: string;
   created_at: string;
@@ -369,6 +426,100 @@ export const trainingApi = {
     const r = await apiClient.get<ResidentProgressSnapshot>(`/api/supervisors/residents/${residentId}/progress/`);
     return r.data;
   },
+
+  // ------------------------------------------------------------------ Rotation assignments
+
+  async listResidentTrainingRecords(): Promise<ResidentTrainingRecordListItem[]> {
+    const r = await apiClient.get('/api/resident-training/');
+    return toArray<ResidentTrainingRecordListItem>(r.data);
+  },
+
+  async listMyRotations(): Promise<{ count: number; results: RotationAssignment[] }> {
+    const r = await apiClient.get<{ count: number; results: RotationAssignment[] }>('/api/my/rotations/');
+    return r.data;
+  },
+
+  async listRotations(params?: {
+    status?: string;
+    resident_training?: number;
+  }): Promise<RotationAssignment[]> {
+    const r = await apiClient.get('/api/rotations/', {
+      params: {
+        status: params?.status,
+        resident: params?.resident_training,
+      },
+    });
+    return toArray<RotationAssignment>(r.data);
+  },
+
+  async listSupervisorPendingRotations(): Promise<{ count: number; results: RotationAssignment[] }> {
+    const r = await apiClient.get<{ count: number; results: RotationAssignment[] }>('/api/supervisor/rotations/pending/');
+    return r.data;
+  },
+
+  async listRotationApprovals(): Promise<{ count: number; results: RotationAssignment[] }> {
+    const r = await apiClient.get<{ count: number; results: RotationAssignment[] }>('/api/utrmc/approvals/rotations/');
+    return r.data;
+  },
+
+  async createRotation(data: {
+    resident_training: number;
+    hospital_department: number;
+    start_date: string;
+    end_date: string;
+    notes?: string;
+  }): Promise<RotationAssignment> {
+    const r = await apiClient.post<RotationAssignment>('/api/rotations/', data);
+    return r.data;
+  },
+
+  async rotationAction(
+    id: number,
+    action: 'submit' | 'hod-approve' | 'utrmc-approve' | 'activate' | 'complete' | 'returned' | 'reject',
+    data?: object
+  ): Promise<RotationAssignment> {
+    const r = await apiClient.post<RotationAssignment>(`/api/rotations/${id}/${action}/`, data || {});
+    return r.data;
+  },
+
+  // ------------------------------------------------------------------ Leave requests
+
+  async listMyLeaves(): Promise<{ count: number; results: LeaveRequest[] }> {
+    const r = await apiClient.get<{ count: number; results: LeaveRequest[] }>('/api/my/leaves/');
+    return r.data;
+  },
+
+  async createLeave(data: {
+    resident_training: number;
+    leave_type: string;
+    start_date: string;
+    end_date: string;
+    reason?: string;
+  }): Promise<LeaveRequest> {
+    const r = await apiClient.post<LeaveRequest>('/api/leaves/', data);
+    return r.data;
+  },
+
+  async submitLeave(id: number): Promise<LeaveRequest> {
+    const r = await apiClient.post<LeaveRequest>(`/api/leaves/${id}/submit/`);
+    return r.data;
+  },
+
+  async getSupervisorPendingLeaves(): Promise<LeaveRequest[]> {
+    const r = await apiClient.get('/api/utrmc/approvals/leaves/');
+    return toArray<LeaveRequest>(r.data);
+  },
+
+  async approveLeave(id: number): Promise<LeaveRequest> {
+    const r = await apiClient.post<LeaveRequest>(`/api/leaves/${id}/approve/`);
+    return r.data;
+  },
+
+  async rejectLeave(id: number, reason: string): Promise<LeaveRequest> {
+    const r = await apiClient.post<LeaveRequest>(`/api/leaves/${id}/reject/`, { reason });
+    return r.data;
+  },
+
   // System settings
   async getSystemSettings(): Promise<SystemSettings> {
     const r = await apiClient.get<SystemSettings>('/api/system/settings/');
@@ -423,6 +574,7 @@ export const trainingApi = {
 
 export interface ResidentSummary {
   training_record: {
+    id: number;
     program_code: string;
     program_name: string;
     degree_type: string;

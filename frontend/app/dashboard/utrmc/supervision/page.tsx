@@ -10,6 +10,17 @@ interface LinkEntry {
   active: boolean;
 }
 
+interface SupervisionForm {
+  supervisor: string;
+  resident: string;
+  start_date: string;
+  active: boolean;
+}
+
+interface PagedResponse<T> {
+  results?: T[];
+}
+
 function userName(u: number | { id?: number; username?: string; full_name?: string } | undefined): string {
   if (!u) return '';
   if (typeof u === 'object') return u.full_name || u.username || String(u.id || '');
@@ -22,14 +33,14 @@ export default function SupervisionPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [showModal, setShowModal] = useState(false);
-  const [form, setForm] = useState<any>({ supervisor:'', resident:'', start_date:'', active: true });
+  const [form, setForm] = useState<SupervisionForm>({ supervisor:'', resident:'', start_date:'', active: true });
   const [saving, setSaving] = useState(false);
 
   const load = () => Promise.all([
     userbaseApi.supervisionLinks.list(),
     userbaseApi.users.list(),
   ]).then(([lData, uData]) => {
-    const arr = Array.isArray(lData) ? lData : (lData as any).results || [];
+    const arr = Array.isArray(lData) ? lData : (lData as PagedResponse<LinkEntry>).results || [];
     setLinks(arr);
     setUsers(uData);
   }).catch(()=>setError('Failed to load')).finally(()=>setLoading(false));
@@ -62,7 +73,7 @@ export default function SupervisionPage() {
         <table className="w-full text-sm">
           <thead className="bg-gray-50"><tr>{['Supervisor','Resident','Start Date','Active'].map(h=><th key={h} className="text-left px-4 py-2 font-medium text-gray-600">{h}</th>)}</tr></thead>
           <tbody className="divide-y divide-gray-100">
-            {links.map((l:any)=>(
+            {links.map((l) => (
               <tr key={l.id} className="hover:bg-gray-50">
                 <td className="px-4 py-2">{userName(l.supervisor)}</td>
                 <td className="px-4 py-2">{userName(l.resident)}</td>

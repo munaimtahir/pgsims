@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { loginAs } from './helpers/auth';
+import { loginAs } from '../helpers/auth';
 
 test.describe('UTRMC Read-only Dashboard', () => {
   test('utrmc_user can load dashboard and sees no mutation UI', async ({ page, context }) => {
