@@ -22,8 +22,6 @@ Current userbase/org graph screens under frozen area:
 - `/dashboard/utrmc/departments/[id]/roster`
 - `/dashboard/utrmc/matrix`
 - `/dashboard/utrmc/users`
-- `/dashboard/utrmc/users/new`
-- `/dashboard/utrmc/users/[id]`
 - `/dashboard/utrmc/supervision`
 - `/dashboard/utrmc/hod`
 
@@ -47,9 +45,13 @@ Do not rename these paths after pilot begins.
 - `/dashboard/supervisor/research-approvals` — Inbox: approve/review synopses
 
 ### UTRMC Admin
-- `/dashboard/utrmc` — UTRMC overview and active rotation operations surface
+- `/dashboard/utrmc` — UTRMC overview, active rotation operations surface, and admin-only bulk setup/import-export workspace
 - `/dashboard/utrmc/programs` — Programme definitions, policy editor, milestone viewer
 - `/dashboard/utrmc/eligibility-monitoring` — Eligibility monitoring with filters
 - `/dashboard/utrmc/postings` — UTRMC deputation posting approval/completion surface
 
 These routes are frozen after pilot begins.
+
+UX freeze note:
+- 2026-04-02 approved change: added an admin-only bulk setup/import-export workspace inside the existing `/dashboard/utrmc` page.
+- No route or sidebar label change was introduced.

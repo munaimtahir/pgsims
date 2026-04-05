@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 
+import BulkSetupWorkspace from '@/components/utrmc/BulkSetupWorkspace';
 import { useAuthStore } from '@/store/authStore';
 import { trainingApi, ResidentTrainingRecordListItem, RotationAssignment } from '@/lib/api/training';
 import { userbaseApi, UserbaseHospitalDepartment, UserbaseUser } from '@/lib/api/userbase';
@@ -142,6 +143,7 @@ export default function UTRMCOverviewPage() {
     supervisors: 0,
     residents: 0,
   });
+  const [dqIncomplete, setDqIncomplete] = useState<number | null>(null);
   const [trainingRecords, setTrainingRecords] = useState<ResidentTrainingRecordListItem[]>([]);
   const [placements, setPlacements] = useState<UserbaseHospitalDepartment[]>([]);
   const [rotations, setRotations] = useState<RotationAssignment[]>([]);
@@ -204,6 +206,12 @@ export default function UTRMCOverviewPage() {
       setTrainingRecords(records.filter((item) => item.active));
       setPlacements(matrix.filter((item) => item.active));
       setRotations(rotationRows);
+      if (canManageRotations) {
+        userbaseApi.dataQuality
+          .summary()
+          .then((dq) => setDqIncomplete(dq.incomplete_profiles))
+          .catch(() => setDqIncomplete(null));
+      }
     } catch {
       setError('Failed to load UTRMC overview.');
     } finally {
@@ -300,7 +308,25 @@ export default function UTRMCOverviewPage() {
             </div>
           ))}
         </div>
+        {canManageRotations && (
+          <div className="mt-4 bg-white border border-gray-200 rounded-lg p-4 flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600">Data Quality</p>
+              <p className="text-lg font-semibold text-gray-900">
+                {dqIncomplete === null ? 'Unavailable' : `${dqIncomplete} incomplete profiles`}
+              </p>
+            </div>
+            <a
+              href="/dashboard/utrmc/data-quality"
+              className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm hover:bg-indigo-700"
+            >
+              Open Data Quality
+            </a>
+          </div>
+        )}
       </div>
+
+      {canManageRotations && <BulkSetupWorkspace />}
 
       <section className="space-y-6">
         <div>

@@ -34,3 +34,11 @@ export function getRoleLabel(role?: string | null): string {
       return role ?? 'unknown';
   }
 }
+
+export function isUtrmcManagerRole(role?: string | null): boolean {
+  return role === 'admin' || role === 'utrmc_admin';
+}
+
+export function isUtrmcReadonlyRole(role?: string | null): boolean {
+  return role === 'utrmc_user';
+}

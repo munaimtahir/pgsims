@@ -1,0 +1,27 @@
+ 
+ -------------- celery@d96e99462d1c v5.6.3 (recovery)
+--- ***** ----- 
+-- ******* ---- Linux-6.17.0-1010-gcp-x86_64-with-glibc2.41 2026-04-02 06:24:03
+- *** --- * --- 
+- ** ---------- [config]
+- ** ---------- .> app:         sims:0x7bfa0f9b92d0
+- ** ---------- .> transport:   redis://redis:6379/1
+- ** ---------- .> results:     redis://redis:6379/1
+- *** --- * --- .> concurrency: 2 (prefork)
+-- ******* ---- .> task events: OFF (enable -E to monitor tasks in this worker)
+--- ***** ----- 
+ -------------- [queues]
+                .> celery           exchange=celery(direct) key=celery
+                
+
+[tasks]
+  . sims_project.celery.debug_task
+
+[2026-04-02 06:24:04,032: INFO/MainProcess] Connected to redis://redis:6379/1
+[2026-04-02 06:24:04,042: INFO/MainProcess] mingle: searching for neighbors
+[2026-04-02 06:24:05,063: INFO/MainProcess] mingle: all alone
+[2026-04-02 06:24:05,091: INFO/MainProcess] celery@d96e99462d1c ready.
+[2026-04-02 06:24:05,096: INFO/MainProcess] Task celery.backend_cleanup[2515ce10-c8c2-4809-8a76-ef291aa26b70] received
+[2026-04-02 06:24:05,109: INFO/ForkPoolWorker-1] Task celery.backend_cleanup[2515ce10-c8c2-4809-8a76-ef291aa26b70] succeeded in 0.011370162999810418s: None
+[2026-04-03 04:00:00,032: INFO/MainProcess] Task celery.backend_cleanup[7c1f67e6-5ea0-42da-8227-fe998a17022c] received
+[2026-04-03 04:00:00,072: INFO/ForkPoolWorker-1] Task celery.backend_cleanup[7c1f67e6-5ea0-42da-8227-fe998a17022c] succeeded in 0.02216289599891752s: None

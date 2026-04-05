@@ -48,6 +48,38 @@ export interface UserbaseUser {
   }>;
 }
 
+export interface DataQualitySummary {
+  total_users: number;
+  users_with_placeholder_email: number;
+  users_with_missing_dates: number;
+  complete_profiles: number;
+  incomplete_profiles: number;
+}
+
+export interface DataQualityUserRow {
+  id: number;
+  name: string;
+  email: string;
+  year?: string | null;
+  supervisor?: string;
+  issues: string[];
+  is_complete_profile: boolean;
+  has_placeholder_email: boolean;
+  has_missing_dates: boolean;
+}
+
+export interface DataCorrectionAuditRow {
+  id: number;
+  actor: string;
+  entity_type: string;
+  entity_id: string;
+  field_name: string;
+  old_value: string;
+  new_value: string;
+  metadata: Record<string, unknown>;
+  timestamp: string;
+}
+
 export type UserbaseUserUpsert = Partial<
   Pick<UserbaseUser, 'username' | 'email' | 'first_name' | 'last_name' | 'role' | 'is_active'>
 > & {
@@ -137,6 +169,35 @@ export const userbaseApi = {
     },
     update: async (id: number, payload: UserbaseUserUpsert) => {
       const response = await apiClient.patch<UserbaseUser>(`/api/users/${id}/`, payload);
+      return response.data;
+    },
+  },
+  residents: {
+    update: async (
+      userId: number,
+      payload: Partial<{ training_start: string; training_end: string; training_level: string }>
+    ) => {
+      const response = await apiClient.patch(`/api/residents/${userId}/`, payload);
+      return response.data;
+    },
+  },
+  dataQuality: {
+    summary: async () => {
+      const response = await apiClient.get<DataQualitySummary>('/api/admin/data-quality/summary');
+      return response.data;
+    },
+    users: async (filter?: string) => {
+      const response = await apiClient.get<DataQualityUserRow[]>('/api/admin/data-quality/users', {
+        params: filter ? { filter } : undefined,
+      });
+      return response.data;
+    },
+    recompute: async () => {
+      const response = await apiClient.post<DataQualitySummary>('/api/admin/data-quality/recompute');
+      return response.data;
+    },
+    audit: async () => {
+      const response = await apiClient.get<DataCorrectionAuditRow[]>('/api/admin/data-quality/audit');
       return response.data;
     },
   },

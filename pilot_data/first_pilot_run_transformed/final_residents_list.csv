@@ -1,0 +1,19 @@
+email,full_name,phone_number,role,specialty,year,pgr_id,training_start,training_end,training_level,department_code,hospital_code,supervisor_email,username,password,active
+junaidbajwa106@gmail.com,Dr. Muhammad Junaid Shoukat,0304-1848364,resident,urology,5,URO-001,2026-01-01,,Y5,SURG,UTRMC,dr.muhammad.akmal@placeholder.example.com,junaidbajwa106,,true
+aliarshed989@gmail.com,Dr. Syed Ali Arshad,0322-6005411,resident,urology,4,URO-002,2026-01-01,,Y4,SURG,UTRMC,muhammad.irfan.munir@placeholder.example.com,aliarshed989,,true
+padhanasb@gmail.com,Dr. Muhammad Muneeb,0313-2696933,resident,urology,5,URO-003,2026-01-01,,Y5,SURG,UTRMC,muhammad.irfan.munir@placeholder.example.com,padhanasb,,true
+dr.malhi05@gmail.com,Dr. Muhammad Adeel Basharat,0332-7813737,resident,urology,5,URO-004,2026-01-01,,Y5,SURG,UTRMC,muhammad.irfan.munir@placeholder.example.com,dr.malhi05,,true
+uro005@placeholder.example.com,Dr. Muhammad Jawad Tariq,0336-6511292,resident,urology,4,URO-005,2026-01-01,,Y4,SURG,UTRMC,dr.muhammad.akmal@placeholder.example.com,muhammad.tariq,,true
+abdullahshafique99@gmail.com,Dr. Muhammad Abdullah Shafique,0300-0416663,resident,urology,3,URO-006,2026-01-01,,Y3,SURG,UTRMC,muhammad.irfan.munir@placeholder.example.com,abdullahshafique99,,true
+uro007@placeholder.example.com,Dr. Wajahat Raza,0339-8990088,resident,urology,3,URO-007,2026-01-01,,Y3,SURG,UTRMC,dr.muhammad.akmal@placeholder.example.com,wajahat.raza,,true
+uro008@placeholder.example.com,Dr. Shahid Ameer Khan,0314-5573535,resident,urology,2,URO-008,2026-01-01,,Y2,SURG,UTRMC,muhammad.irfan.munir@placeholder.example.com,shahid.khan,,true
+uro009@placeholder.example.com,Dr. Bullawel Arshad,0300-5493568,resident,urology,3,URO-009,2026-01-01,,Y3,SURG,UTRMC,muhammad.irfan.munir@placeholder.example.com,bullawel.arshad,,true
+naumansaleem775@gmail.com,Dr. Muhammad Nauman Saleem,0301-6607467,resident,urology,4,URO-010,2026-01-01,,Y4,SURG,UTRMC,muhammad.irfan.munir@placeholder.example.com,naumansaleem775,,true
+jawadraana@yahoo.com,Dr. Jawad Saifullah,0304-0808312,resident,urology,5,URO-011,2026-01-01,,Y5,SURG,UTRMC,dr.muhammad.akmal@placeholder.example.com,jawadraana,,true
+hafizfaraz123@gmail.com,Dr. Hafiz Muhammad Faraz Hassan,0335-0194747,resident,urology,3,URO-012,2026-01-01,,Y3,SURG,UTRMC,dr.m.tahir.bashir.malik@placeholder.example.com,hafizfaraz123,,true
+uro013@placeholder.example.com,Dr. Salman Rasheed,0321-7862428,resident,urology,1,URO-013,2026-01-01,,Y1,SURG,UTRMC,dr.m.tahir.bashir.malik@placeholder.example.com,salman.rasheed,,true
+drmubashirqamar@gmail.com,Dr. Mubashir Iqbal Qamar,0313-8737361,resident,urology,3,URO-014,2026-01-01,,Y3,SURG,UTRMC,dr.m.tahir.bashir.malik@placeholder.example.com,drmubashirqamar,,true
+uro015@placeholder.example.com,Dr. Hammad Waqar,0313-5031952,resident,urology,1,URO-015,2026-01-01,,Y1,SURG,UTRMC,dr.m.tahir.bashir.malik@placeholder.example.com,hammad.waqar,,true
+frazkhali@gmail.com,Dr. Faraz Khalid,0322-6093420,resident,urology,3,URO-016,2026-01-01,,Y3,SURG,UTRMC,dr.m.tahir.bashir.malik@placeholder.example.com,frazkhali,,true
+abdulrahmanmani9@gmail.com,Dr. Abdul Rehman,0322-2757945,resident,urology,1,URO-017,2026-01-01,,Y1,SURG,UTRMC,sheraz.javed@placeholder.example.com,abdulrahmanmani9,,true
+uro018@placeholder.example.com,Dr. Muzzammil,0332-6080486,resident,urology,1,URO-018,2026-01-01,,Y1,SURG,UTRMC,muhammad.irfan.munir@placeholder.example.com,muzzammil,,true

@@ -53,7 +53,7 @@ test('Phase 6: Resident research draft → supervisor approve → eligibility up
   const suffix = `p6-${Date.now()}`;
 
   // ── Step 1: Admin token from setup session (avoid extra login) ─────────────
-  await page.goto('/dashboard/admin');
+  await page.goto('/dashboard/utrmc');
   const sessionToken = await page.evaluate(() => {
     const raw = localStorage.getItem('auth-storage');
     if (!raw) return null;
@@ -288,7 +288,7 @@ test('Phase 6: UTRMC programs CRUD and policy management', async ({ request, pag
   const suffix = `pol-${Date.now()}`;
 
   // Navigate to populate localStorage with e2e_admin session from setup
-  await page.goto('/dashboard/admin');
+  await page.goto('/dashboard/utrmc');
   const adminToken = await page.evaluate(() => {
     const raw = localStorage.getItem('auth-storage');
     if (!raw) return null;

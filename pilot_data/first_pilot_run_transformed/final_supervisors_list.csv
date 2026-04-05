@@ -1,0 +1,5 @@
+email,full_name,phone_number,role,specialty,department_code,hospital_code,designation,registration_number,username,password,active,start_date
+dr.muhammad.akmal@placeholder.example.com,Prof. Dr. Muhammad Akmal,,supervisor,urology,SURG,UTRMC,Supervisor,,dr..akmal,,True,
+muhammad.irfan.munir@placeholder.example.com,Dr. Muhammad Irfan Munir,,supervisor,urology,SURG,UTRMC,Supervisor,,muhammad.munir,,True,
+dr.m.tahir.bashir.malik@placeholder.example.com,Prof. Dr. M. Tahir Bashir Malik,,supervisor,urology,SURG,UTRMC,Supervisor,,dr..malik,,True,
+sheraz.javed@placeholder.example.com,Dr. Sheraz Javed,,supervisor,urology,SURG,UTRMC,Supervisor,,sheraz.javed,,True,

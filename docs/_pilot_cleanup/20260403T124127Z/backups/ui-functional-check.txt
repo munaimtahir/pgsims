@@ -1,0 +1,6 @@
+{
+  "dashboardUrl": "http://127.0.0.1:8082/dashboard/utrmc",
+  "title": "Users",
+  "rowCount": 1,
+  "hasDemo": false
+}

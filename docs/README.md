@@ -3,8 +3,9 @@
 Canonical contracts live in `docs/contracts/` and are the only authoritative docs for backend/frontend integration.
 
 Current delivery truth baseline:
-- Discovery pack: `docs/_discovery/20260323T200217Z/`
+- Discovery pack: `docs/_discovery/20260402T215202Z-functionality-categorization/`
 - Recovery pack (authoritative for current active/deferred surface): `docs/_recovery/20260402T122809Z/`
+- Bulk setup/import-export contract: `docs/contracts/BULK_SETUP_IMPORT_EXPORT.md`
 
 `docs/TERMINOLOGY.md`, `docs/ROUTES.md`, `docs/DATA_MODEL.md`, `docs/API_CONTRACT.md`, `docs/MIGRATION_PLAN.md`, `docs/TRUTH_TESTS.md`, and `docs/RBAC_MATRIX.md` are links/stubs to the canonical contract files.
 

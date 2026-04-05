@@ -1,0 +1,13 @@
+celery beat v5.6.3 (recovery) is starting.
+__    -    ... __   -        _
+LocalTime -> 2026-04-02 06:24:03
+Configuration ->
+    . broker -> redis://redis:6379/1
+    . loader -> celery.loaders.app.AppLoader
+    . scheduler -> django_celery_beat.schedulers.DatabaseScheduler
+
+    . logfile -> [stderr]@%INFO
+    . maxinterval -> 5.00 seconds (5s)
+[2026-04-02 06:24:03,306: INFO/MainProcess] beat: Starting...
+[2026-04-02 06:24:03,594: INFO/MainProcess] Scheduler: Sending due task celery.backend_cleanup (celery.backend_cleanup)
+[2026-04-03 04:00:00,002: INFO/MainProcess] Scheduler: Sending due task celery.backend_cleanup (celery.backend_cleanup)

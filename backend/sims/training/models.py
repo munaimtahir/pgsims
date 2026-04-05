@@ -154,6 +154,10 @@ class ResidentTrainingRecord(models.Model):
         default=True, help_text="Reset training timeline on program change"
     )
     active = models.BooleanField(default=True)
+    has_default_dates = models.BooleanField(
+        default=False,
+        help_text="Computed flag set when record uses default/synthetic dates.",
+    )
     created_by = models.ForeignKey(
         User, on_delete=models.SET_NULL, null=True, blank=True,
         related_name="training_records_created",

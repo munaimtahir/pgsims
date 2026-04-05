@@ -38,6 +38,10 @@ def _is_admin_or_utrmc_admin(user):
     return getattr(user, "role", None) in {"admin", "utrmc_admin"} or getattr(user, "is_superuser", False)
 
 
+def _is_utrmc_viewer(user):
+    return getattr(user, "role", None) in {"admin", "utrmc_admin", "utrmc_user"} or getattr(user, "is_superuser", False)
+
+
 def _is_supervisor_or_hod(user):
     return getattr(user, "role", None) in {"supervisor", "faculty"}
 
@@ -713,7 +717,7 @@ class ProgramPolicyView(APIView):
         return get_object_or_404(TrainingProgram, pk=program_id)
 
     def get(self, request, program_id):
-        if not _is_admin_or_utrmc_admin(request.user):
+        if not _is_utrmc_viewer(request.user):
             return Response({"detail": "Permission denied."}, status=403)
         program = self._get_program(program_id)
         policy, _ = ProgramPolicy.objects.get_or_create(program=program)
@@ -1074,7 +1078,7 @@ class UTRMCEligibilityView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        if not _is_admin_or_utrmc_admin(request.user):
+        if not _is_utrmc_viewer(request.user):
             return Response({"detail": "Permission denied."}, status=403)
 
         qs = ResidentMilestoneEligibility.objects.select_related(

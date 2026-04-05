@@ -1,0 +1,5 @@
+ id | code  |          name           | is_active 
+----+-------+-------------------------+-----------
+  1 | UTRMC | UTRMC Teaching Hospital | t
+(1 row)
+

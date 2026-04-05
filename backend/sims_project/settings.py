@@ -42,6 +42,11 @@ if not SECRET_KEY:
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get("DEBUG", "False").lower() in ("true", "1", "yes")
+ENABLE_DATA_CORRECTION_LAYER = os.environ.get("ENABLE_DATA_CORRECTION_LAYER", "true").lower() in (
+    "true",
+    "1",
+    "yes",
+)
 
 # Production diagnostics fingerprint for routing/runtime verification.
 ADMIN_RESET_FINGERPRINT = "RESET_2026-02-28_A"

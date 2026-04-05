@@ -1,0 +1,9 @@
+ id | code |          name           | active 
+----+------+-------------------------+--------
+  2 | MED  | Medicine                | t
+  4 | OBG  | Gynecology & Obstetrics | t
+  5 | ORTH | Orthopedics             | t
+  3 | PED  | Pediatrics              | t
+  1 | SURG | Surgery                 | t
+(5 rows)
+

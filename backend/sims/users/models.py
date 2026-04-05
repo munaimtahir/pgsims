@@ -43,6 +43,7 @@ YEAR_CHOICES = (
     ("2", "Year 2"),
     ("3", "Year 3"),
     ("4", "Year 4"),  # For some specialties
+    ("5", "Year 5"),  # For 5-year specialties
 )
 
 
@@ -121,6 +122,19 @@ class User(AbstractUser):
 
     phone_number = models.CharField(
         max_length=15, blank=True, null=True, help_text="Contact phone number"
+    )
+    is_complete_profile = models.BooleanField(
+        default=False,
+        help_text="Computed data quality flag for resident/admin correction workflows.",
+    )
+    has_placeholder_email = models.BooleanField(
+        default=False,
+        help_text="True when email appears to be a placeholder value.",
+    )
+    data_issues = models.JSONField(
+        default=list,
+        blank=True,
+        help_text="Computed list of data quality issue codes for this user.",
     )
 
     # Audit fields
@@ -505,6 +519,10 @@ class SupervisorResidentLink(models.Model):
     start_date = models.DateField()
     end_date = models.DateField(null=True, blank=True)
     active = models.BooleanField(default=True)
+    has_default_dates = models.BooleanField(
+        default=False,
+        help_text="Computed flag set when this link uses default/synthetic dates.",
+    )
     created_by = models.ForeignKey(
         "users.User",
         on_delete=models.SET_NULL,
@@ -567,6 +585,39 @@ class SupervisorResidentLink(models.Model):
     def save(self, *args, **kwargs):
         self.full_clean()
         return super().save(*args, **kwargs)
+
+
+class DataCorrectionAudit(models.Model):
+    """Field-level audit trail for manual and bulk correction actions."""
+
+    actor = models.ForeignKey(
+        "users.User",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="data_corrections_made",
+    )
+    entity_type = models.CharField(max_length=50)
+    entity_id = models.CharField(max_length=64)
+    field_name = models.CharField(max_length=100)
+    old_value = models.TextField(blank=True)
+    new_value = models.TextField(blank=True)
+    metadata = models.JSONField(default=dict, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        indexes = [
+            models.Index(
+                fields=["entity_type", "entity_id", "created_at"],
+                name="users_datac_entity__308bcb_idx",
+            ),
+            models.Index(fields=["actor", "created_at"], name="users_datac_actor_i_b92e94_idx"),
+            models.Index(fields=["field_name", "created_at"], name="users_datac_field_n_611183_idx"),
+        ]
+
+    def __str__(self):
+        return f"{self.entity_type}:{self.entity_id}:{self.field_name}"
 
 
 class HODAssignment(models.Model):

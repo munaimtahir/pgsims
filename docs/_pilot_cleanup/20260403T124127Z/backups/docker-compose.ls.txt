@@ -1,0 +1,6 @@
+NAME                STATUS              CONFIG FILES
+class               running(5)          /home/munaim/srv/apps/class/docker-compose.yml
+docker              running(6)          /home/munaim/srv/apps/pgsims/docker/docker-compose.yml
+fmu-platform        running(4)          /home/munaim/srv/apps/fmu-platform/docker-compose.yml
+phc                 running(1)          /home/munaim/srv/apps/phc/docker-compose.yml
+radreport           running(3)          /home/munaim/srv/apps/radreport/docker-compose.yml

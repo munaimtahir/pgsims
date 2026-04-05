@@ -1,0 +1,4 @@
+resident_email,field_name,new_value
+resident.placeholder@pilot-placeholder.local,email,resident.corrected@example.com
+resident.corrected@example.com,year,5
+resident.corrected@example.com,training_start,2026-02-01

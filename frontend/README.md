@@ -27,11 +27,14 @@ This repository is configured with `output: 'standalone'`.
 Use:
 
 ```bash
+npm run typecheck
+npm run lint
 npm run build
 npm run start
 ```
 
-`npm run start` runs `node .next/standalone/server.js`.
+Both `npm run start` and `npm run start:next` run `node .next/standalone/server.js`.
+`next build` now enforces lint and TypeScript checks; build failures are no longer bypassed in config.
 
 ## Learn More
 

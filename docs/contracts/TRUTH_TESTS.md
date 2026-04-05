@@ -54,6 +54,8 @@ cd frontend && npx tsc --noEmit
 cd frontend && npm run build
 ```
 
+Run these sequentially, not in parallel. Next.js writes `.next/types` during build, so overlapping `tsc` and `next build` processes can create false negatives against the generated route types.
+
 ### Smoke E2E Gate
 
 ```bash
@@ -81,7 +83,12 @@ cd frontend && PORT=3001 INTERNAL_API_URL=http://127.0.0.1:8000 NEXT_PUBLIC_API_
 cd frontend && E2E_BASE_URL=http://127.0.0.1:3001 E2E_API_URL=http://127.0.0.1:8000 npx playwright test --project=workflow-gate
 ```
 
+Notes:
+- `npm run start:next` is a standalone-compatible alias for `node .next/standalone/server.js`.
+- `npm run build` must now fail on lint or TypeScript errors; those checks are no longer bypassed in Next config.
+
 Workflow scope (promoted deterministic contract-critical browser flows):
+- UTRMC bulk setup workspace accepts a canonical hospital CSV dry run from the active overview route.
 - Forgot-password request submits through real UI/API path.
 - Supervisor approvals page renders canonical `resident_name`.
 - Supervisor return workflow (`supervisor-return`) works and visible success/result state is rendered in browser.

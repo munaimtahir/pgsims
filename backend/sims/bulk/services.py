@@ -18,6 +18,12 @@ from openpyxl import Workbook, load_workbook
 from openpyxl.styles import Font
 
 from sims.bulk.models import BulkOperation
+from sims.bulk.userbase_engine import (
+    SUPPORTED_EXPORT_RESOURCES as USERBASE_BULK_EXPORT_RESOURCES,
+    export_rows_for as export_userbase_rows,
+    import_entity as import_userbase_entity,
+    template_rows_for as userbase_template_rows,
+)
 from sims.users.models import SPECIALTY_CHOICES, YEAR_CHOICES, User
 
 try:
@@ -58,6 +64,59 @@ class BulkService:
             or getattr(self.actor, "role", None) in {"admin", "utrmc_admin", "supervisor"}
         ):
             raise PermissionDenied("Bulk operations are restricted to admins, utrmc_admin, and supervisors.")
+
+    def _run_userbase_import(
+        self,
+        entity: str,
+        uploaded_file,
+        *,
+        dry_run: bool = True,
+        allow_partial: bool = False,
+    ) -> BulkOperation:
+        operation = BulkOperation.objects.create(user=self.actor, operation=BulkOperation.OP_IMPORT)
+        details = import_userbase_entity(
+            self.actor,
+            entity,
+            uploaded_file,
+            dry_run=dry_run,
+            allow_partial=allow_partial,
+        )
+        operation.mark_completed(
+            len(details.get("successes", [])),
+            len(details.get("failures", [])),
+            details,
+        )
+        return operation
+
+    def import_userbase_hospitals(self, uploaded_file, *, dry_run: bool = True, allow_partial: bool = False) -> BulkOperation:
+        return self._run_userbase_import("hospitals", uploaded_file, dry_run=dry_run, allow_partial=allow_partial)
+
+    def import_userbase_departments(self, uploaded_file, *, dry_run: bool = True, allow_partial: bool = False) -> BulkOperation:
+        return self._run_userbase_import("departments", uploaded_file, dry_run=dry_run, allow_partial=allow_partial)
+
+    def import_userbase_matrix(self, uploaded_file, *, dry_run: bool = True, allow_partial: bool = False) -> BulkOperation:
+        return self._run_userbase_import("matrix", uploaded_file, dry_run=dry_run, allow_partial=allow_partial)
+
+    def import_userbase_faculty_supervisors(self, uploaded_file, *, dry_run: bool = True, allow_partial: bool = False) -> BulkOperation:
+        return self._run_userbase_import("faculty-supervisors", uploaded_file, dry_run=dry_run, allow_partial=allow_partial)
+
+    def import_userbase_residents(self, uploaded_file, *, dry_run: bool = True, allow_partial: bool = False) -> BulkOperation:
+        return self._run_userbase_import("residents", uploaded_file, dry_run=dry_run, allow_partial=allow_partial)
+
+    def import_userbase_supervision_links(self, uploaded_file, *, dry_run: bool = True, allow_partial: bool = False) -> BulkOperation:
+        return self._run_userbase_import("supervision-links", uploaded_file, dry_run=dry_run, allow_partial=allow_partial)
+
+    def import_userbase_hod_assignments(self, uploaded_file, *, dry_run: bool = True, allow_partial: bool = False) -> BulkOperation:
+        return self._run_userbase_import("hod-assignments", uploaded_file, dry_run=dry_run, allow_partial=allow_partial)
+
+    def export_template(self, resource: str) -> BulkExportFile:
+        rows = userbase_template_rows(resource)
+        rendered = _render_export_rows(rows, f"{resource}_template", "csv")
+        return BulkExportFile(
+            filename=f"{resource}_template.csv",
+            content=rendered.content,
+            content_type=rendered.content_type,
+        )
 
     # ------------------------------------------------------------------
     # Review and assignment operations
@@ -1633,6 +1692,9 @@ class BulkService:
     def export_dataset(self, resource: str, export_format: str = "xlsx") -> BulkExportFile:
         if export_format not in {"xlsx", "csv"}:
             raise ValidationError("Unsupported export format. Use xlsx or csv.")
+
+        if resource in USERBASE_BULK_EXPORT_RESOURCES:
+            return _render_export_rows(export_userbase_rows(resource), resource, export_format)
 
         if resource == "residents":
             queryset = User.objects.filter(role="pg").select_related("supervisor", "home_department")

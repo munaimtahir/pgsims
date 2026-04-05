@@ -15,10 +15,10 @@ export const ROLE_HOME: Record<string, string> = {
 };
 
 export const ROLE_FORBIDDEN: Record<string, string[]> = {
-  pg: ['/dashboard/utrmc', '/dashboard/supervisor', '/dashboard/admin'],
-  supervisor: ['/dashboard/utrmc', '/dashboard/admin', '/dashboard/pg'],
-  utrmc_user: ['/dashboard/supervisor', '/dashboard/admin', '/dashboard/pg'],
-  utrmc_admin: ['/dashboard/supervisor', '/dashboard/admin', '/dashboard/pg'],
+  pg: ['/dashboard/utrmc', '/dashboard/supervisor'],
+  supervisor: ['/dashboard/utrmc', '/dashboard/pg'],
+  utrmc_user: ['/dashboard/supervisor', '/dashboard/pg'],
+  utrmc_admin: ['/dashboard/supervisor', '/dashboard/pg'],
   admin: [], // admin can access all
 };
 

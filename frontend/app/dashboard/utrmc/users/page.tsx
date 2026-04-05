@@ -1,6 +1,9 @@
 'use client';
 import { useEffect, useState } from 'react';
+import ReadonlyNotice from '@/components/ReadonlyNotice';
+import { useAuthStore } from '@/store/authStore';
 import { userbaseApi, UserbaseUser } from '@/lib/api/userbase';
+import { isUtrmcManagerRole, isUtrmcReadonlyRole } from '@/lib/rbac';
 
 const ROLES = ['admin','utrmc_admin','utrmc_user','supervisor','faculty','resident','pg'];
 
@@ -36,6 +39,9 @@ function getErrorMessage(error: unknown, fallback = 'Save failed'): string {
 }
 
 export default function UsersPage() {
+  const { user } = useAuthStore();
+  const canManage = isUtrmcManagerRole(user?.role);
+  const isReadonly = isUtrmcReadonlyRole(user?.role);
   const [rows, setRows] = useState<UserbaseUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -78,8 +84,11 @@ export default function UsersPage() {
     <div>
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-2xl font-bold text-gray-900">Users</h1>
-        <button onClick={openAdd} className="bg-indigo-600 text-white px-4 py-2 rounded text-sm hover:bg-indigo-700">+ Add User</button>
+        {canManage && (
+          <button onClick={openAdd} className="bg-indigo-600 text-white px-4 py-2 rounded text-sm hover:bg-indigo-700">+ Add User</button>
+        )}
       </div>
+      {isReadonly && <ReadonlyNotice />}
       {error && <p className="text-red-600 mb-2 text-sm">{error}</p>}
       <input className="mb-3 border border-gray-300 rounded px-3 py-2 text-sm w-64" placeholder="Search..." value={search} onChange={e=>setSearch(e.target.value)} />
       <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
@@ -93,7 +102,13 @@ export default function UsersPage() {
                 <td className="px-3 py-2 text-gray-500 text-xs">{u.email}</td>
                 <td className="px-3 py-2"><span className="px-2 py-0.5 bg-indigo-50 text-indigo-700 rounded text-xs">{u.role}</span></td>
                 <td className="px-3 py-2">{u.is_active ? <span className="text-green-600 text-xs">Yes</span>:<span className="text-gray-400 text-xs">No</span>}</td>
-                <td className="px-3 py-2"><button onClick={()=>openEdit(u)} className="text-indigo-600 hover:underline text-xs">Edit</button></td>
+                <td className="px-3 py-2">
+                  {canManage ? (
+                    <button onClick={()=>openEdit(u)} className="text-indigo-600 hover:underline text-xs">Edit</button>
+                  ) : (
+                    <span className="text-xs text-gray-400">View only</span>
+                  )}
+                </td>
               </tr>
             ))}
           </tbody>

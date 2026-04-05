@@ -1,8 +1,14 @@
 'use client';
 import { useEffect, useState } from 'react';
+import ReadonlyNotice from '@/components/ReadonlyNotice';
+import { useAuthStore } from '@/store/authStore';
 import { userbaseApi, UserbaseHospital, UserbaseDepartment, UserbaseHospitalDepartment } from '@/lib/api/userbase';
+import { isUtrmcManagerRole, isUtrmcReadonlyRole } from '@/lib/rbac';
 
 export default function MatrixPage() {
+  const { user } = useAuthStore();
+  const canManage = isUtrmcManagerRole(user?.role);
+  const isReadonly = isUtrmcReadonlyRole(user?.role);
   const [hospitals, setHospitals] = useState<UserbaseHospital[]>([]);
   const [departments, setDepartments] = useState<UserbaseDepartment[]>([]);
   const [matrix, setMatrix] = useState<UserbaseHospitalDepartment[]>([]);
@@ -48,6 +54,7 @@ export default function MatrixPage() {
   return (
     <div>
       <h1 className="text-2xl font-bold text-gray-900 mb-4">Hospital–Department Matrix</h1>
+      {isReadonly && <ReadonlyNotice />}
       {error && <p className="text-red-600 mb-2">{error}</p>}
       <div className="overflow-auto">
         <table className="text-xs border-collapse">
@@ -71,9 +78,13 @@ export default function MatrixPage() {
                     <td key={d.id} className="border border-gray-200 px-2 py-1 text-center">
                       <button
                         onClick={() => toggle(h.id, d.id)}
-                        disabled={toggling === key}
+                        disabled={!canManage || toggling === key}
                         className={`w-5 h-5 rounded border-2 text-xs ${active ? 'bg-indigo-600 border-indigo-600 text-white' : 'bg-white border-gray-300'} disabled:opacity-40`}
-                        title={active ? 'Active - click to deactivate' : 'Inactive - click to activate'}
+                        title={
+                          canManage
+                            ? active ? 'Active - click to deactivate' : 'Inactive - click to activate'
+                            : active ? 'Active (read-only)' : 'Inactive (read-only)'
+                        }
                       >
                         {active ? '✓' : ''}
                       </button>

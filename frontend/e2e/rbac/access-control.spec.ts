@@ -25,10 +25,10 @@ test.describe('PG role access control', () => {
     await expect(page).toHaveURL(/\/dashboard\/(resident|pg)/, { timeout: 10000 });
   });
 
-  test('pg cannot access admin area — redirected', async ({ page, context }) => {
+  test('pg cannot access UTRMC admin subroutes — redirected', async ({ page, context }) => {
     await loginAs(context, page, 'pg');
-    await page.goto('/dashboard/admin');
-    await expect(page).not.toHaveURL('/dashboard/admin', { timeout: 8000 });
+    await page.goto('/dashboard/utrmc/programs');
+    await expect(page).toHaveURL(/\/dashboard\/(resident|pg)/, { timeout: 8000 });
   });
 
   test('pg can access own resident dashboard', async ({ page, context }) => {

@@ -9,6 +9,7 @@ from sims.bulk.views import (
     BulkResidentImportView,
     BulkReviewView,
     BulkExportView,
+    BulkTemplateView,
     BulkSupervisorImportView,
     BulkTraineeImportView,
     BulkImportEntityView,
@@ -25,6 +26,7 @@ urlpatterns = [
     path("import-residents/", BulkResidentImportView.as_view(), name="import_residents"),
     path("import-departments/", BulkDepartmentImportView.as_view(), name="import_departments"),
     path("exports/<str:resource>/", BulkExportView.as_view(), name="exports"),
+    path("templates/<str:resource>/", BulkTemplateView.as_view(), name="templates"),
     # New unified import endpoint
     path("import/<str:entity>/<str:action>/", BulkImportEntityView.as_view(), name="import_entity"),
 ]

@@ -1,6 +1,9 @@
 'use client';
 import { useEffect, useState } from 'react';
+import ReadonlyNotice from '@/components/ReadonlyNotice';
+import { useAuthStore } from '@/store/authStore';
 import { userbaseApi, UserbaseHospital } from '@/lib/api/userbase';
+import { isUtrmcManagerRole, isUtrmcReadonlyRole } from '@/lib/rbac';
 
 const EMPTY: Partial<UserbaseHospital & { address?: string; phone?: string; email?: string }> = {
   name: '', code: '', active: true,
@@ -14,6 +17,9 @@ const HOSPITAL_FIELDS: Array<{ key: 'name' | 'code'; label: string }> = [
 ];
 
 export default function HospitalsPage() {
+  const { user } = useAuthStore();
+  const canManage = isUtrmcManagerRole(user?.role);
+  const isReadonly = isUtrmcReadonlyRole(user?.role);
   const [rows, setRows] = useState<UserbaseHospital[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -45,8 +51,11 @@ export default function HospitalsPage() {
     <div>
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-2xl font-bold text-gray-900">Hospitals</h1>
-        <button onClick={openAdd} className="bg-indigo-600 text-white px-4 py-2 rounded text-sm hover:bg-indigo-700">+ Add Hospital</button>
+        {canManage && (
+          <button onClick={openAdd} className="bg-indigo-600 text-white px-4 py-2 rounded text-sm hover:bg-indigo-700">+ Add Hospital</button>
+        )}
       </div>
+      {isReadonly && <ReadonlyNotice />}
       {error && <p className="text-red-600 mb-2">{error}</p>}
       <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
         <table className="w-full text-sm">
@@ -58,7 +67,11 @@ export default function HospitalsPage() {
                 <td className="px-4 py-2 text-gray-500">{h.code}</td>
                 <td className="px-4 py-2">{h.active ? <span className="text-green-600">Yes</span> : <span className="text-gray-400">No</span>}</td>
                 <td className="px-4 py-2">
-                  <button onClick={() => openEdit(h)} className="text-indigo-600 hover:underline text-xs mr-3">Edit</button>
+                  {canManage ? (
+                    <button onClick={() => openEdit(h)} className="text-indigo-600 hover:underline text-xs mr-3">Edit</button>
+                  ) : (
+                    <span className="text-xs text-gray-400">View only</span>
+                  )}
                 </td>
               </tr>
             ))}

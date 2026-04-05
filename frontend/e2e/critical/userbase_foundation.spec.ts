@@ -15,7 +15,7 @@ test('utrmc admin can build userbase graph and resident scope is enforced', asyn
   const supervisorPassword = 'Supervisor123!';
   const residentPassword = 'Resident123!';
 
-  await page.goto('/dashboard/admin');
+  await page.goto('/dashboard/utrmc');
   const adminAccessToken = await page.evaluate(() => {
     const raw = localStorage.getItem('auth-storage');
     if (!raw) return null;

@@ -1,6 +1,7 @@
 """DRF views for userbase/org graph feature pack."""
 
 from datetime import date
+from django.conf import settings
 
 from django.contrib.auth import get_user_model
 from django.db.models import Q
@@ -14,6 +15,7 @@ from sims.academics.models import Department
 from sims.common_permissions import IsTechAdmin
 from sims.rotations.models import Hospital, HospitalDepartment
 from sims.users.models import (
+    DataCorrectionAudit,
     DepartmentMembership,
     HODAssignment,
     HospitalAssignment,
@@ -21,6 +23,7 @@ from sims.users.models import (
     StaffProfile,
     SupervisorResidentLink,
 )
+from sims.users.data_quality import log_data_correction, recompute_all, recompute_flags_for_user
 from sims.users.userbase_serializers import (
     DepartmentMembershipSerializer,
     DepartmentSerializer,
@@ -231,7 +234,7 @@ class UserViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         queryset = super().get_queryset()
         user = self.request.user
-        if not _is_manager(user):
+        if not _is_roster_reader(user):
             return queryset.filter(id=user.id)
 
         role = self.request.query_params.get("role")
@@ -267,7 +270,24 @@ class UserViewSet(viewsets.ModelViewSet):
 
     def partial_update(self, request, *args, **kwargs):
         self._ensure_manage_permission()
-        return super().partial_update(request, *args, **kwargs)
+        instance = self.get_object()
+        before = {"email": instance.email, "year": instance.year}
+        response = super().partial_update(request, *args, **kwargs)
+        instance.refresh_from_db()
+        after = {"email": instance.email, "year": instance.year}
+        for field in ("email", "year"):
+            if str(before[field]) != str(after[field]):
+                log_data_correction(
+                    actor=request.user,
+                    entity_type="user",
+                    entity_id=instance.id,
+                    field_name=field,
+                    old_value=before[field],
+                    new_value=after[field],
+                    metadata={"source": "user_patch"},
+                )
+        recompute_flags_for_user(instance)
+        return response
 
     def destroy(self, request, *args, **kwargs):
         self._ensure_manage_permission()
@@ -275,7 +295,7 @@ class UserViewSet(viewsets.ModelViewSet):
 
     def retrieve(self, request, *args, **kwargs):
         obj = self.get_object()
-        if not _is_manager(request.user) and obj.id != request.user.id:
+        if not _is_roster_reader(request.user) and obj.id != request.user.id:
             raise PermissionDenied("You may only view your own profile.")
         return super().retrieve(request, *args, **kwargs)
 
@@ -328,6 +348,34 @@ class ResidentProfileViewSet(BaseManagedModelViewSet):
         if str(request.user.id) != str(kwargs.get("user_id")):
             raise PermissionDenied("You may only view your own profile.")
         return viewsets.ModelViewSet.retrieve(self, request, *args, **kwargs)
+
+    def partial_update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        before = {
+            "training_start": instance.training_start,
+            "training_end": instance.training_end,
+            "training_level": instance.training_level,
+        }
+        response = super().partial_update(request, *args, **kwargs)
+        instance.refresh_from_db()
+        after = {
+            "training_start": instance.training_start,
+            "training_end": instance.training_end,
+            "training_level": instance.training_level,
+        }
+        for field in ("training_start", "training_end", "training_level"):
+            if str(before[field]) != str(after[field]):
+                log_data_correction(
+                    actor=request.user,
+                    entity_type="resident_profile",
+                    entity_id=instance.id,
+                    field_name=field,
+                    old_value=before[field],
+                    new_value=after[field],
+                    metadata={"source": "resident_profile_patch"},
+                )
+        recompute_flags_for_user(instance.user)
+        return response
 
 
 class StaffProfileViewSet(BaseManagedModelViewSet):
@@ -417,6 +465,16 @@ class SupervisionLinkViewSet(BaseManagedModelViewSet):
     def perform_update(self, serializer):
         serializer.save(updated_by=self.request.user)
 
+    def list(self, request, *args, **kwargs):
+        if not _is_roster_reader(request.user):
+            raise PermissionDenied("Only UTRMC/admin oversight roles may view supervision links.")
+        return viewsets.ModelViewSet.list(self, request, *args, **kwargs)
+
+    def retrieve(self, request, *args, **kwargs):
+        if not _is_roster_reader(request.user):
+            raise PermissionDenied("Only UTRMC/admin oversight roles may view supervision links.")
+        return viewsets.ModelViewSet.retrieve(self, request, *args, **kwargs)
+
 
 class HODAssignmentViewSet(BaseManagedModelViewSet):
     queryset = HODAssignment.objects.select_related("department", "hod_user").order_by(
@@ -437,6 +495,16 @@ class HODAssignmentViewSet(BaseManagedModelViewSet):
     def perform_update(self, serializer):
         serializer.save(updated_by=self.request.user)
 
+    def list(self, request, *args, **kwargs):
+        if not _is_roster_reader(request.user):
+            raise PermissionDenied("Only UTRMC/admin oversight roles may view HOD assignments.")
+        return viewsets.ModelViewSet.list(self, request, *args, **kwargs)
+
+    def retrieve(self, request, *args, **kwargs):
+        if not _is_roster_reader(request.user):
+            raise PermissionDenied("Only UTRMC/admin oversight roles may view HOD assignments.")
+        return viewsets.ModelViewSet.retrieve(self, request, *args, **kwargs)
+
 
 class AuthMeView(APIView):
     permission_classes = [permissions.IsAuthenticated]
@@ -444,3 +512,117 @@ class AuthMeView(APIView):
     def get(self, request):
         serializer = UserManagementSerializer(request.user)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+def _dq_enabled() -> bool:
+    return bool(getattr(settings, "ENABLE_DATA_CORRECTION_LAYER", True))
+
+
+class DataQualitySummaryView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        if not _is_manager(request.user):
+            raise PermissionDenied("Only admin/utrmc_admin can view data quality summary.")
+        if not _dq_enabled():
+            return Response({"detail": "Data correction layer is disabled."}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+
+        residents = User.objects.filter(role__in=["resident", "pg"])
+        total = residents.count()
+        placeholders = residents.filter(has_placeholder_email=True).count()
+        incomplete = residents.filter(is_complete_profile=False).count()
+        complete = residents.filter(is_complete_profile=True).count()
+        missing_dates = residents.filter(
+            Q(training_records__has_default_dates=True) | Q(resident_links__has_default_dates=True)
+        ).distinct().count()
+        return Response(
+            {
+                "total_users": total,
+                "users_with_placeholder_email": placeholders,
+                "users_with_missing_dates": missing_dates,
+                "complete_profiles": complete,
+                "incomplete_profiles": incomplete,
+            }
+        )
+
+
+class DataQualityUsersView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        if not _is_manager(request.user):
+            raise PermissionDenied("Only admin/utrmc_admin can view data quality users.")
+        if not _dq_enabled():
+            return Response({"detail": "Data correction layer is disabled."}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+
+        filter_value = (request.query_params.get("filter") or "").strip().lower()
+        queryset = User.objects.filter(role__in=["resident", "pg"]).select_related("supervisor").order_by(
+            "last_name", "first_name"
+        )
+        if filter_value == "placeholder_email":
+            queryset = queryset.filter(has_placeholder_email=True)
+        elif filter_value == "incomplete_profile":
+            queryset = queryset.filter(is_complete_profile=False)
+        elif filter_value == "missing_dates":
+            queryset = queryset.filter(
+                Q(training_records__has_default_dates=True) | Q(resident_links__has_default_dates=True)
+            ).distinct()
+        elif filter_value == "missing_email":
+            queryset = queryset.filter(Q(email__isnull=True) | Q(email=""))
+
+        payload = []
+        for user in queryset:
+            payload.append(
+                {
+                    "id": user.id,
+                    "name": user.get_full_name() or user.username,
+                    "email": user.email,
+                    "year": user.year,
+                    "supervisor": user.supervisor.get_full_name() if user.supervisor else "",
+                    "issues": user.data_issues or [],
+                    "is_complete_profile": user.is_complete_profile,
+                    "has_placeholder_email": user.has_placeholder_email,
+                    "has_missing_dates": user.training_records.filter(has_default_dates=True).exists()
+                    or user.resident_links.filter(has_default_dates=True).exists(),
+                }
+            )
+        return Response(payload)
+
+
+class DataQualityRecomputeView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        if not _is_manager(request.user):
+            raise PermissionDenied("Only admin/utrmc_admin can recompute data quality.")
+        if not _dq_enabled():
+            return Response({"detail": "Data correction layer is disabled."}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+        summary = recompute_all()
+        return Response(summary, status=status.HTTP_200_OK)
+
+
+class DataCorrectionAuditView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        if not _is_manager(request.user):
+            raise PermissionDenied("Only admin/utrmc_admin can view correction audits.")
+        if not _dq_enabled():
+            return Response({"detail": "Data correction layer is disabled."}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+        rows = DataCorrectionAudit.objects.select_related("actor").order_by("-created_at")[:200]
+        return Response(
+            [
+                {
+                    "id": row.id,
+                    "actor": row.actor.get_full_name() if row.actor else "",
+                    "entity_type": row.entity_type,
+                    "entity_id": row.entity_id,
+                    "field_name": row.field_name,
+                    "old_value": row.old_value,
+                    "new_value": row.new_value,
+                    "metadata": row.metadata,
+                    "timestamp": row.created_at,
+                }
+                for row in rows
+            ]
+        )

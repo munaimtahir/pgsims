@@ -37,3 +37,10 @@ router.register(
 )
 
 urlpatterns = [path("", include(router.urls))]
+
+urlpatterns += [
+    path("admin/data-quality/summary", userbase_views.DataQualitySummaryView.as_view(), name="data-quality-summary"),
+    path("admin/data-quality/users", userbase_views.DataQualityUsersView.as_view(), name="data-quality-users"),
+    path("admin/data-quality/recompute", userbase_views.DataQualityRecomputeView.as_view(), name="data-quality-recompute"),
+    path("admin/data-quality/audit", userbase_views.DataCorrectionAuditView.as_view(), name="data-quality-audit"),
+]

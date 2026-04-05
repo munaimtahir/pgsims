@@ -102,6 +102,7 @@ class TrainingProgramAPITest(APITestCase):
     def setUp(self):
         self.admin = make_user("admin1", "admin")
         self.utrmc = make_user("utrmc1", "utrmc_admin")
+        self.utrmc_user = make_user("utrmcviewer", "utrmc_user")
         self.resident = make_user("res3", "resident")
         self.prog = TrainingProgram.objects.create(
             name="Pediatrics", code="PED", duration_months=36
@@ -129,6 +130,38 @@ class TrainingProgramAPITest(APITestCase):
         self.client.logout()
         r = self.client.get("/api/programs/")
         self.assertEqual(r.status_code, 401)
+
+    def test_utrmc_user_can_read_but_not_update_program_policy(self):
+        self._auth(self.utrmc_user)
+        get_response = self.client.get(f"/api/programs/{self.prog.id}/policy/")
+        self.assertEqual(get_response.status_code, 200)
+
+        put_response = self.client.put(
+            f"/api/programs/{self.prog.id}/policy/",
+            {"allow_program_change": False},
+            format="json",
+        )
+        self.assertEqual(put_response.status_code, 403)
+
+
+class UTRMCEligibilityReadOnlyTests(APITestCase):
+    def setUp(self):
+        self.utrmc_admin = make_user("eligadmin", "utrmc_admin")
+        self.utrmc_user = make_user("eligviewer", "utrmc_user")
+        self.resident = make_user("eligresident", "resident")
+        self.program = TrainingProgram.objects.create(name="Medicine", code="MED-ELI", duration_months=36)
+        self.record = ResidentTrainingRecord.objects.create(
+            resident_user=self.resident,
+            program=self.program,
+            start_date=TODAY,
+            active=True,
+        )
+
+    def test_utrmc_user_can_read_eligibility_monitor(self):
+        self.client.force_authenticate(self.utrmc_user)
+        response = self.client.get("/api/utrmc/eligibility/")
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("results", response.data)
 
 
 class RotationAssignmentAPITest(APITestCase):

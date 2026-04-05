@@ -61,7 +61,6 @@ services:
     command: >
       sh -c "python manage.py migrate --noinput &&
              python manage.py collectstatic --noinput &&
-             python manage.py create_superadmin &&
              gunicorn sims_project.wsgi:application --bind 0.0.0.0:8014 --workers 4 --timeout 60"
     environment:
       - DEBUG=${DEBUG:-False}

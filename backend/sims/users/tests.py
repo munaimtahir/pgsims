@@ -8,6 +8,8 @@ from django.test import TestCase
 from rest_framework.test import APIClient
 
 from django.contrib.auth import get_user_model
+from sims.academics.models import Department
+from sims.users.models import HODAssignment, SupervisorResidentLink
 
 User = get_user_model()
 
@@ -65,3 +67,82 @@ class UserAPIAuthTests(TestCase):
         self.assertIn("message", r.data)
         self.assertIn("If an account with that email exists", r.data["message"])
         mocked_send_mail.assert_called_once()
+
+
+class UserbaseReadOnlyScopeTests(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+        self.admin = User.objects.create_user(username="mgr", password="pass", role="utrmc_admin")
+        self.utrmc_user = User.objects.create_user(username="viewer", password="pass", role="utrmc_user")
+        self.supervisor = User.objects.create_user(username="supviewer", password="pass", role="supervisor")
+        self.resident = User.objects.create_user(
+            username="resviewer",
+            password="pass",
+            role="resident",
+            specialty="medicine",
+            year="1",
+        )
+        self.department = Department.objects.create(name="Medicine", code="MED")
+        SupervisorResidentLink.objects.create(
+            supervisor_user=self.supervisor,
+            resident_user=self.resident,
+            department=self.department,
+            start_date="2026-01-01",
+            created_by=self.admin,
+            updated_by=self.admin,
+        )
+        HODAssignment.objects.create(
+            department=self.department,
+            hod_user=self.supervisor,
+            start_date="2026-01-01",
+            created_by=self.admin,
+            updated_by=self.admin,
+        )
+
+    def test_utrmc_user_can_list_users_for_read_only_oversight(self):
+        self.client.force_authenticate(self.utrmc_user)
+        response = self.client.get("/api/users/")
+        self.assertEqual(response.status_code, 200)
+        rows = response.data if isinstance(response.data, list) else response.data.get("results", [])
+        usernames = {row["username"] for row in rows}
+        self.assertIn("viewer", usernames)
+        self.assertIn("supviewer", usernames)
+        self.assertIn("resviewer", usernames)
+
+    def test_utrmc_user_cannot_create_users(self):
+        self.client.force_authenticate(self.utrmc_user)
+        response = self.client.post(
+            "/api/users/",
+            {
+                "username": "blocked_user",
+                "email": "blocked@example.com",
+                "password": "pass12345",
+                "first_name": "Blocked",
+                "last_name": "User",
+                "role": "resident",
+                "is_active": True,
+            },
+            format="json",
+        )
+        self.assertEqual(response.status_code, 403)
+
+    def test_utrmc_user_can_list_supervision_links_and_hod_assignments(self):
+        self.client.force_authenticate(self.utrmc_user)
+        supervision_response = self.client.get("/api/supervision-links/")
+        hod_response = self.client.get("/api/hod-assignments/")
+
+        self.assertEqual(supervision_response.status_code, 200)
+        self.assertEqual(hod_response.status_code, 200)
+
+        supervision_rows = (
+            supervision_response.data
+            if isinstance(supervision_response.data, list)
+            else supervision_response.data.get("results", [])
+        )
+        hod_rows = (
+            hod_response.data
+            if isinstance(hod_response.data, list)
+            else hod_response.data.get("results", [])
+        )
+        self.assertEqual(len(supervision_rows), 1)
+        self.assertEqual(len(hod_rows), 1)

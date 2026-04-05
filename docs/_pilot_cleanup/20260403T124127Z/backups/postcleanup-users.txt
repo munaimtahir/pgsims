@@ -1,0 +1,5 @@
+ id | username |     email      | role  | is_active | is_superuser | is_staff 
+----+----------+----------------+-------+-----------+--------------+----------
+  1 | admin    | admin@sims.com | admin | t         | t            | t
+(1 row)
+

@@ -10,6 +10,7 @@ import apiClient from '@/lib/api/client';
 import ErrorBanner from '@/components/ui/ErrorBanner';
 import SuccessBanner from '@/components/ui/SuccessBanner';
 import SectionCard from '@/components/ui/SectionCard';
+import { downloadFile } from '@/lib/utils';
 
 interface RowError {
   row: string | number;
@@ -33,17 +34,27 @@ interface ImportExportPanelProps {
   entity: string;
   /** Human-readable label */
   label: string;
-  /** Template CSV download path (relative to /templates/) */
-  templateFile: string;
+  /** Expected template columns shown in the UI */
+  expectedColumns: Array<{
+    name: string;
+    required?: boolean;
+    note?: string;
+  }>;
   /** Export resource key (for /api/bulk/exports/<resource>/) */
-  exportResource?: string;
+  exportResource: string;
+  /** Template resource key (for /api/bulk/templates/<resource>/) */
+  templateResource?: string;
+  /** Optional short workflow note */
+  description?: string;
 }
 
 export default function ImportExportPanel({
   entity,
   label,
-  templateFile,
+  expectedColumns,
   exportResource,
+  templateResource,
+  description,
 }: ImportExportPanelProps) {
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
@@ -51,12 +62,32 @@ export default function ImportExportPanel({
   const [success, setSuccess] = useState<string | null>(null);
   const [result, setResult] = useState<ImportResult | null>(null);
   const [exporting, setExporting] = useState(false);
+  const [downloadingTemplate, setDownloadingTemplate] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const reset = () => {
     setError(null);
     setSuccess(null);
     setResult(null);
+  };
+
+  const handleTemplateDownload = async () => {
+    setDownloadingTemplate(true);
+    setError(null);
+    try {
+      const resource = templateResource ?? entity;
+      const response = await apiClient.get(`/api/bulk/templates/${resource}/`, {
+        responseType: 'blob',
+      });
+      downloadFile(response.data as Blob, `${resource}_template.csv`);
+    } catch (err: unknown) {
+      const msg =
+        (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail ||
+        (err instanceof Error ? err.message : 'Template download failed');
+      setError(msg);
+    } finally {
+      setDownloadingTemplate(false);
+    }
   };
 
   const runImport = async (action: 'dry-run' | 'apply') => {
@@ -123,6 +154,30 @@ export default function ImportExportPanel({
       {/* Import panel */}
       <SectionCard title={`Import ${label}`}>
         <div className="space-y-4">
+          {description && (
+            <p className="text-sm text-gray-600">{description}</p>
+          )}
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-2">
+              Expected Columns
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {expectedColumns.map((column) => (
+                <span
+                  key={column.name}
+                  title={column.note}
+                  className={`rounded-full border px-2.5 py-1 text-xs ${
+                    column.required
+                      ? 'border-indigo-200 bg-indigo-50 text-indigo-700'
+                      : 'border-gray-200 bg-gray-50 text-gray-600'
+                  }`}
+                >
+                  {column.name}
+                  {column.required ? ' *' : ''}
+                </span>
+              ))}
+            </div>
+          </div>
           <div className="flex items-center gap-4">
             <input
               ref={fileRef}
@@ -154,13 +209,14 @@ export default function ImportExportPanel({
             >
               {loading ? 'Importing…' : '✅ Apply Import'}
             </button>
-            <a
-              href={`/templates/${templateFile}`}
-              download
-              className="px-4 py-2 rounded bg-gray-100 text-gray-700 text-sm font-medium hover:bg-gray-200"
+            <button
+              type="button"
+              disabled={downloadingTemplate}
+              onClick={handleTemplateDownload}
+              className="px-4 py-2 rounded bg-gray-100 text-gray-700 text-sm font-medium hover:bg-gray-200 disabled:opacity-50"
             >
-              ⬇ Download Template
-            </a>
+              {downloadingTemplate ? 'Preparing…' : '⬇ Download Template'}
+            </button>
           </div>
         </div>
       </SectionCard>
@@ -203,7 +259,7 @@ export default function ImportExportPanel({
       )}
 
       {/* Export panel */}
-      {exportResource !== undefined && (
+      {exportResource && (
         <SectionCard title={`Export ${label}`}>
           <div className="flex gap-3">
             <button

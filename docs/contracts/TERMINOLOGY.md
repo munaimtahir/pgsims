@@ -13,6 +13,9 @@ These are user-facing terms. Do not change once pilot begins.
 - **Resident**: postgraduate trainee role (legacy `pg` remains accepted)
 - **Faculty**: senior academic role that may supervise residents and hold HOD assignment
 - **HOD**: active head-of-department assignment tracked with effective dates
+- **Bulk Setup**: prerequisite-aware import/export workspace on the UTRMC overview page for canonical hospitals, departments, matrix, users, and assignments
+- **Dry Run**: validates uploaded rows without writing to the database
+- **Template CSV**: the canonical downloadable file showing the exact expected columns for a bulk import type
 
 Notes:
 - UI displays **Submitted** even if backend enum is `pending`.

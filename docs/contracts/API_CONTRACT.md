@@ -82,6 +82,40 @@ Rotation summary response must include:
 - Staff profiles:
   - `GET/PATCH /api/staff/{user_id}/`
 
+### Admin Data Quality Layer (additive, non-breaking)
+- Feature-flagged by backend setting/environment:
+  - `ENABLE_DATA_CORRECTION_LAYER`
+- Endpoints (admin/utrmc_admin only):
+  - `GET /api/admin/data-quality/summary`
+  - `GET /api/admin/data-quality/users?filter=...`
+  - `POST /api/admin/data-quality/recompute`
+  - `GET /api/admin/data-quality/audit`
+- Summary response:
+  - `total_users`
+  - `users_with_placeholder_email`
+  - `users_with_missing_dates`
+  - `complete_profiles`
+  - `incomplete_profiles`
+- Supported user filters:
+  - `placeholder_email`
+  - `incomplete_profile`
+  - `missing_dates`
+  - `missing_email`
+
+### Data correction audit model (internal contract)
+- `DataCorrectionAudit` fields:
+  - `actor`
+  - `entity_type`
+  - `entity_id`
+  - `field_name`
+  - `old_value`
+  - `new_value`
+  - `metadata`
+  - `created_at`
+- Corrections are recorded from:
+  - Admin UI inline edits via `PATCH /api/users/{id}/` and `PATCH /api/residents/{user_id}/`
+  - Bulk correction command `python manage.py import_corrections_csv`
+
 ### Memberships + Assignments
 - Department memberships:
   - `GET/POST /api/department-memberships/`
@@ -97,6 +131,25 @@ Rotation summary response must include:
 - HOD assignments:
   - `GET/POST /api/hod-assignments/`
   - `PATCH /api/hod-assignments/{id}/`
+
+### Bulk Setup Import / Export
+- Authoritative detailed contract: `docs/contracts/BULK_SETUP_IMPORT_EXPORT.md`
+- Templates:
+  - `GET /api/bulk/templates/{resource}/`
+- Dry-run import:
+  - `POST /api/bulk/import/{entity}/dry-run/`
+- Apply import:
+  - `POST /api/bulk/import/{entity}/apply/`
+- Export:
+  - `GET /api/bulk/exports/{resource}/?file_format=csv|xlsx`
+- Active resources/entities:
+  - `hospitals`
+  - `departments`
+  - `matrix`
+  - `faculty-supervisors`
+  - `residents`
+  - `supervision-links`
+  - `hod-assignments`
 
 ### Rosters
 - `GET /api/departments/{id}/roster/`

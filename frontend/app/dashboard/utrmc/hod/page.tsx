@@ -1,6 +1,9 @@
 'use client';
 import { useEffect, useState } from 'react';
+import ReadonlyNotice from '@/components/ReadonlyNotice';
+import { useAuthStore } from '@/store/authStore';
 import { userbaseApi, UserbaseUser, UserbaseDepartment } from '@/lib/api/userbase';
+import { isUtrmcManagerRole, isUtrmcReadonlyRole } from '@/lib/rbac';
 
 interface HodEntry {
   id: number;
@@ -34,6 +37,9 @@ function getName(u: number | NamedEntity | undefined): string {
 }
 
 export default function HodPage() {
+  const { user } = useAuthStore();
+  const canManage = isUtrmcManagerRole(user?.role);
+  const isReadonly = isUtrmcReadonlyRole(user?.role);
   const [assignments, setAssignments] = useState<HodEntry[]>([]);
   const [departments, setDepartments] = useState<UserbaseDepartment[]>([]);
   const [users, setUsers] = useState<UserbaseUser[]>([]);
@@ -74,8 +80,11 @@ export default function HodPage() {
     <div>
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-2xl font-bold text-gray-900">HOD Assignments</h1>
-        <button onClick={()=>{setForm({department:'',hod:'',start_date:''});setShowModal(true);}} className="bg-indigo-600 text-white px-4 py-2 rounded text-sm hover:bg-indigo-700">+ Add HOD</button>
+        {canManage && (
+          <button onClick={()=>{setForm({department:'',hod:'',start_date:''});setShowModal(true);}} className="bg-indigo-600 text-white px-4 py-2 rounded text-sm hover:bg-indigo-700">+ Add HOD</button>
+        )}
       </div>
+      {isReadonly && <ReadonlyNotice />}
       {error && <p className="text-red-600 mb-2">{error}</p>}
       <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
         <table className="w-full text-sm">

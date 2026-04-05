@@ -1,6 +1,9 @@
 'use client';
 import { useEffect, useState } from 'react';
+import ReadonlyNotice from '@/components/ReadonlyNotice';
+import { useAuthStore } from '@/store/authStore';
 import { userbaseApi, UserbaseUser } from '@/lib/api/userbase';
+import { isUtrmcManagerRole, isUtrmcReadonlyRole } from '@/lib/rbac';
 
 interface LinkEntry {
   id: number;
@@ -28,6 +31,9 @@ function userName(u: number | { id?: number; username?: string; full_name?: stri
 }
 
 export default function SupervisionPage() {
+  const { user } = useAuthStore();
+  const canManage = isUtrmcManagerRole(user?.role);
+  const isReadonly = isUtrmcReadonlyRole(user?.role);
   const [links, setLinks] = useState<LinkEntry[]>([]);
   const [users, setUsers] = useState<UserbaseUser[]>([]);
   const [loading, setLoading] = useState(true);
@@ -66,8 +72,11 @@ export default function SupervisionPage() {
     <div>
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-2xl font-bold text-gray-900">Supervision Links</h1>
-        <button onClick={()=>{setForm({supervisor:'',resident:'',start_date:'',active:true});setShowModal(true);}} className="bg-indigo-600 text-white px-4 py-2 rounded text-sm hover:bg-indigo-700">+ Add Link</button>
+        {canManage && (
+          <button onClick={()=>{setForm({supervisor:'',resident:'',start_date:'',active:true});setShowModal(true);}} className="bg-indigo-600 text-white px-4 py-2 rounded text-sm hover:bg-indigo-700">+ Add Link</button>
+        )}
       </div>
+      {isReadonly && <ReadonlyNotice />}
       {error && <p className="text-red-600 mb-2">{error}</p>}
       <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
         <table className="w-full text-sm">

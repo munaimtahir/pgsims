@@ -43,14 +43,11 @@ Authoritative current-state docs:
 - **📊 Dashboard System**: Customized dashboards for resident, supervisor, and UTRMC roles
 - **🔄 Rotation Management**: Track and manage training rotations across different departments
 - **🗓️ Leave Workflow**: Resident leave draft/submission and supervisor approval on active resident/supervisor surfaces
-- **📜 Certificate Management**: Manage and track certifications and achievements
 - **🎓 Academic Core**: Research, thesis, workshops, eligibility, postings
-- **📈 Analytics & Reporting**: Active for training and eligibility dashboards; legacy analytics modules remain deferred
-- **🔍 Advanced Filtering**: Search and filter capabilities across all modules
-- **📤 Data Export**: Export data to CSV format for all major modules
+- **🏥 UTRMC Administration**: Hospitals, departments, H-D matrix, users, supervision links, HOD assignments, programmes
+- **📈 Active Dashboards**: Training and eligibility dashboards on the verified active surface
 - **🔐 Security**: Role-based permissions, secure authentication, and session management
-- **🌐 Global Search**: Cross-module search with suggestions, highlights, and per-user history
-- **🛡️ Audit Trail**: Historical tracking for key models plus Activity Log APIs and CSV export
+- **🛡️ Audit Trail**: Historical tracking for key models plus Activity Log APIs on the active backend surface
 - **✅ Business Rules Engine**: Centralised validators, sanitisation and consistent error handling
 
 ### Deferred or Legacy Surface
@@ -58,6 +55,7 @@ Authoritative current-state docs:
 - **📚 Digital Logbook**: Not part of the active frontend or active backend URL include set in the current runtime
 - **🏥 Clinical Cases**: Not part of the active frontend or active backend URL include set in the current runtime
 - **📈 Legacy Analytics Modules**: Historical docs and code remain, but are not the authoritative active surface
+- **📜 Certificates / Search / Reporting**: Historical code and docs exist, but these are not currently verified active-surface workflows
 
 ### Additional Features
 

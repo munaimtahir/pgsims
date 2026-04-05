@@ -10,14 +10,6 @@ const nextConfig = {
 
   // Don't redirect trailing slashes so Django API routes work correctly
   skipTrailingSlashRedirect: true,
-
-  // Keep production image builds unblockable by lint policy.
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
-  typescript: {
-    ignoreBuildErrors: true,
-  },
   
   // Image domains if using next/image
   images: {

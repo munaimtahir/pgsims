@@ -1,6 +1,9 @@
 'use client';
 import { useEffect, useState } from 'react';
+import ReadonlyNotice from '@/components/ReadonlyNotice';
+import { useAuthStore } from '@/store/authStore';
 import { userbaseApi, UserbaseDepartment } from '@/lib/api/userbase';
+import { isUtrmcManagerRole, isUtrmcReadonlyRole } from '@/lib/rbac';
 
 interface DepartmentForm {
   name: string;
@@ -16,6 +19,9 @@ const DEPARTMENT_FIELDS: Array<{ key: keyof Pick<DepartmentForm, 'name' | 'code'
 ];
 
 export default function DepartmentsPage() {
+  const { user } = useAuthStore();
+  const canManage = isUtrmcManagerRole(user?.role);
+  const isReadonly = isUtrmcReadonlyRole(user?.role);
   const [rows, setRows] = useState<UserbaseDepartment[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -47,8 +53,11 @@ export default function DepartmentsPage() {
     <div>
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-2xl font-bold text-gray-900">Departments</h1>
-        <button onClick={openAdd} className="bg-indigo-600 text-white px-4 py-2 rounded text-sm hover:bg-indigo-700">+ Add Department</button>
+        {canManage && (
+          <button onClick={openAdd} className="bg-indigo-600 text-white px-4 py-2 rounded text-sm hover:bg-indigo-700">+ Add Department</button>
+        )}
       </div>
+      {isReadonly && <ReadonlyNotice />}
       {error && <p className="text-red-600 mb-2">{error}</p>}
       <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
         <table className="w-full text-sm">
@@ -60,7 +69,11 @@ export default function DepartmentsPage() {
                 <td className="px-4 py-2 text-gray-500">{d.code}</td>
                 <td className="px-4 py-2">{d.active ? <span className="text-green-600">Yes</span> : <span className="text-gray-400">No</span>}</td>
                 <td className="px-4 py-2">
-                  <button onClick={() => openEdit(d)} className="text-indigo-600 hover:underline text-xs">Edit</button>
+                  {canManage ? (
+                    <button onClick={() => openEdit(d)} className="text-indigo-600 hover:underline text-xs">Edit</button>
+                  ) : (
+                    <span className="text-xs text-gray-400">View only</span>
+                  )}
                 </td>
               </tr>
             ))}

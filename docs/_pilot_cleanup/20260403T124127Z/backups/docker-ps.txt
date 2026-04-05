@@ -1,0 +1,20 @@
+NAMES                IMAGE                   STATUS                  PORTS
+pgsims_backend       docker-backend          Up 30 hours (healthy)   127.0.0.1:8014->8014/tcp
+pgsims_worker        docker-worker           Up 30 hours             8014/tcp
+pgsims_beat          docker-beat             Up 30 hours             8014/tcp
+phc-accreditation    phc-phc                 Up 39 hours (healthy)   127.0.0.1:8501->8501/tcp
+rims_backend_prod    radreport-backend       Up 39 hours (healthy)   127.0.0.1:8015->8000/tcp
+rims_frontend_prod   radreport-frontend      Up 39 hours (healthy)   127.0.0.1:8081->80/tcp
+rims_db_prod         postgres:16-alpine      Up 39 hours (healthy)   5432/tcp
+class-frontend-1     class-frontend          Up 39 hours             127.0.0.1:9030->3000/tcp
+class-backend-1      class-backend           Up 39 hours             127.0.0.1:9031->8000/tcp
+class-worker-1       class-worker            Up 39 hours             
+class-postgres-1     postgres:16-alpine      Up 39 hours             5432/tcp
+class-redis-1        redis:7-alpine          Up 39 hours             6379/tcp
+pgsims_frontend      docker-frontend         Up 39 hours (healthy)   127.0.0.1:8082->3000/tcp
+pgsims_db            postgres:15-alpine      Up 39 hours (healthy)   5432/tcp
+pgsims_redis         redis:7-alpine          Up 39 hours (healthy)   6379/tcp
+fmu_backend          fmu-platform-backend    Up 39 hours             127.0.0.1:8010->8000/tcp
+fmu_db               postgres:16-alpine      Up 39 hours             127.0.0.1:5432->5432/tcp
+fmu_redis            redis:7-alpine          Up 39 hours (healthy)   6379/tcp
+fmu_frontend         fmu-platform-frontend   Up 39 hours             127.0.0.1:8080->80/tcp

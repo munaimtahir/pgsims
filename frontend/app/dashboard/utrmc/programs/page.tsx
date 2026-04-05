@@ -1,12 +1,18 @@
 'use client';
 import { useEffect, useState } from 'react';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
+import ReadonlyNotice from '@/components/ReadonlyNotice';
+import { useAuthStore } from '@/store/authStore';
 
 import { trainingApi, TrainingProgram, ProgramPolicy, ProgramMilestone, ProgramRotationTemplate } from '@/lib/api/training';
+import { isUtrmcManagerRole, isUtrmcReadonlyRole } from '@/lib/rbac';
 
 type Tab = 'overview' | 'policy' | 'milestones' | 'templates';
 
 export default function UTRMCProgramsPage() {
+  const { user } = useAuthStore();
+  const canManage = isUtrmcManagerRole(user?.role);
+  const isReadonly = isUtrmcReadonlyRole(user?.role);
   const [programs, setPrograms] = useState<TrainingProgram[]>([]);
   const [selected, setSelected] = useState<TrainingProgram | null>(null);
   const [policy, setPolicy] = useState<ProgramPolicy | null>(null);
@@ -131,6 +137,7 @@ export default function UTRMCProgramsPage() {
                 <p className="text-gray-500 text-sm mb-4">
                   {selected.code} · {selected.degree_type_display} · {selected.duration_months} months
                 </p>
+                {isReadonly && <ReadonlyNotice />}
                 {error && <p className="text-red-600 mb-3">{error}</p>}
 
                 {/* Tabs */}
@@ -167,6 +174,7 @@ export default function UTRMCProgramsPage() {
                       <input
                         type="checkbox"
                         checked={policyForm.allow_program_change ?? false}
+                        disabled={!canManage}
                         onChange={(e) => setPolicyForm({ ...policyForm, allow_program_change: e.target.checked })}
                         id="allow_prog"
                       />
@@ -177,6 +185,7 @@ export default function UTRMCProgramsPage() {
                       <input
                         type="number"
                         value={policyForm.imm_allowed_from_month ?? ''}
+                        disabled={!canManage}
                         onChange={(e) => setPolicyForm({ ...policyForm, imm_allowed_from_month: e.target.value ? Number(e.target.value) : null })}
                         className="mt-1 w-32 border border-gray-300 rounded-md px-3 py-1.5 text-sm"
                       />
@@ -186,17 +195,20 @@ export default function UTRMCProgramsPage() {
                       <input
                         type="number"
                         value={policyForm.final_allowed_from_month ?? ''}
+                        disabled={!canManage}
                         onChange={(e) => setPolicyForm({ ...policyForm, final_allowed_from_month: e.target.value ? Number(e.target.value) : null })}
                         className="mt-1 w-32 border border-gray-300 rounded-md px-3 py-1.5 text-sm"
                       />
                     </div>
-                    <button
-                      disabled={savingPolicy}
-                      onClick={savePolicy}
-                      className="px-4 py-2 bg-indigo-600 text-white text-sm rounded-md hover:bg-indigo-700 disabled:opacity-50"
-                    >
-                      {savingPolicy ? 'Saving…' : 'Save Policy'}
-                    </button>
+                    {canManage && (
+                      <button
+                        disabled={savingPolicy}
+                        onClick={savePolicy}
+                        className="px-4 py-2 bg-indigo-600 text-white text-sm rounded-md hover:bg-indigo-700 disabled:opacity-50"
+                      >
+                        {savingPolicy ? 'Saving…' : 'Save Policy'}
+                      </button>
+                    )}
                   </div>
                 )}
 
@@ -235,15 +247,17 @@ export default function UTRMCProgramsPage() {
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
                       <p className="text-sm text-gray-500">Rotation schedule templates define the sequence of rotations for this programme.</p>
-                      <button
-                        onClick={() => { setShowTemplateForm(true); setTemplateForm({ name: '', department: '', duration_weeks: '4', required: true, sequence_order: String(templates.length + 1) }); }}
-                        className="px-3 py-1.5 bg-indigo-600 text-white text-xs font-medium rounded-lg hover:bg-indigo-700"
-                      >
-                        + Add Template
-                      </button>
+                      {canManage && (
+                        <button
+                          onClick={() => { setShowTemplateForm(true); setTemplateForm({ name: '', department: '', duration_weeks: '4', required: true, sequence_order: String(templates.length + 1) }); }}
+                          className="px-3 py-1.5 bg-indigo-600 text-white text-xs font-medium rounded-lg hover:bg-indigo-700"
+                        >
+                          + Add Template
+                        </button>
+                      )}
                     </div>
 
-                    {showTemplateForm && (
+                    {showTemplateForm && canManage && (
                       <form onSubmit={addTemplate} className="bg-indigo-50 border border-indigo-200 rounded-lg p-4 space-y-3">
                         <h3 className="text-sm font-semibold text-indigo-800">New Rotation Template</h3>
                         <div className="grid grid-cols-2 gap-3">
@@ -334,12 +348,14 @@ export default function UTRMCProgramsPage() {
                               {t.allowed_hospital_names.length > 0 && ` · Allowed: ${t.allowed_hospital_names.join(', ')}`}
                             </p>
                           </div>
-                          <button
-                            onClick={() => deleteTemplate(t.id)}
-                            className="text-red-400 hover:text-red-600 text-xs ml-4"
-                          >
-                            Remove
-                          </button>
+                          {canManage && (
+                            <button
+                              onClick={() => deleteTemplate(t.id)}
+                              className="text-red-400 hover:text-red-600 text-xs ml-4"
+                            >
+                              Remove
+                            </button>
+                          )}
                         </div>
                       ))}
                     </div>

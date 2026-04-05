@@ -354,18 +354,38 @@ class BulkExportView(APIView):
         return response
 
 
+class BulkTemplateView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request: Request, resource: str) -> HttpResponse:
+        from django.core.exceptions import ValidationError as DjangoValidationError
+
+        if getattr(request.user, "role", None) not in {"admin", "utrmc_admin"}:
+            return Response({"detail": "Only admins can download bulk templates."}, status=403)
+        service = BulkService(request.user)
+        try:
+            export_file = service.export_template(resource)
+        except DjangoValidationError as exc:
+            return Response({"detail": str(exc)}, status=400)
+        response = HttpResponse(export_file.content, content_type=export_file.content_type)
+        response["Content-Disposition"] = f'attachment; filename="{export_file.filename}"'
+        return response
+
+
 # ---------------------------------------------------------------------------
 # NEW unified import endpoint: /api/bulk/import/<entity>/<action>/
 # action = "dry-run" | "apply"
 # entity = hospitals | matrix | supervision-links | departments | supervisors | residents | trainees
 
 _ENTITY_METHOD_MAP = {
-    "hospitals": "import_hospitals",
-    "matrix": "import_hospital_departments",
-    "supervision-links": "import_supervision_links",
-    "departments": "import_departments",
+    "hospitals": "import_userbase_hospitals",
+    "matrix": "import_userbase_matrix",
+    "supervision-links": "import_userbase_supervision_links",
+    "departments": "import_userbase_departments",
+    "faculty-supervisors": "import_userbase_faculty_supervisors",
+    "residents": "import_userbase_residents",
+    "hod-assignments": "import_userbase_hod_assignments",
     "supervisors": "import_supervisors",
-    "residents": "import_residents",
     "trainees": "import_trainees",
     # Training module
     "training-programs": "import_training_programs",
@@ -436,5 +456,6 @@ __all__ = [
     "BulkResidentImportView",
     "BulkDepartmentImportView",
     "BulkExportView",
+    "BulkTemplateView",
     "BulkImportEntityView",
 ]
