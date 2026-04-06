@@ -128,12 +128,16 @@ export default function DataQualityPage() {
     setError('');
 
     try {
+      // Update user email if changed
       await userbaseApi.users.update(edit.userId, {
         email: edit.email,
-        year: edit.year || undefined,
       });
 
+      // Update resident-specific fields
       const residentPayload: Record<string, string> = {};
+      if (edit.year) {
+        residentPayload.year = edit.year;
+      }
       if (edit.training_start) {
         residentPayload.training_start = edit.training_start;
       }

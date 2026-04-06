@@ -1,7 +1,7 @@
 # Missing Implementations
 
-**Updated:** 2026-03-07 (Truthmap Remediation Phase)  
-**Source:** Direct codebase scan; supersedes auto-generated version
+**Updated:** 2026-04-06 (Contract Remediation Phase)  
+**Source:** Direct codebase scan post-discovery audit
 
 ---
 
@@ -9,33 +9,37 @@
 
 | Category | Count | Notes |
 |----------|-------|-------|
-| Backend only, no frontend page | 3 | Postings, templates, milestone-research-req |
-| Frontend page confirmed existing | 2 | Thesis ✅, Workshops ✅ (previously reported as missing) |
+| Backend only, no frontend page | 2 | Program templates, milestone-research-req (admin config) |
+| Frontend page confirmed existing | 4 | Thesis ✅, Workshops ✅, Postings ✅ (resident + UTRMC pages) |
 | Contract added, no implementation | 0 | All Phase 7–8 endpoints are backend-ready |
-| Raw API calls wrapped | 2 | MISMATCH-003a/b fixed |
+| Raw API calls wrapped | 0 | All pages use proper API module functions |
 
 ---
 
-## Section 1: Features Previously Reported Missing — Actually Exist
+## Section 1: Features Confirmed Existing (Previously Questioned)
 
-These were reported as missing in the initial document but were confirmed to exist on direct inspection:
+All major resident-facing and UTRMC-facing features have been confirmed operational:
 
-| Feature | Backend | API Client | Page | Notes |
+| Feature | Backend | API Client | Pages | Notes |
 |---------|---------|-----------|------|-------|
 | Thesis management | ✅ `sims/training/views.py` | ✅ `training.ts` `createThesis`, `submitThesis` | ✅ `/dashboard/resident/thesis/page.tsx` | Fully implemented |
 | Workshop completions | ✅ `sims/training/views.py` | ✅ `training.ts` `listWorkshops`, `createWorkshopCompletion` | ✅ `/dashboard/resident/workshops/page.tsx` | Fully implemented |
+| Deputation postings (resident) | ✅ `sims/training/views.py` | ✅ `training.ts` `createPosting` | ✅ `/dashboard/resident/postings/page.tsx` | Resident submission page operational |
+| Deputation postings (UTRMC) | ✅ `sims/training/views.py` | ✅ `training.ts` | ✅ `/dashboard/utrmc/postings/page.tsx` | UTRMC approval page operational |
+| Research project | ✅ `sims/training/views.py` | ✅ `training.ts`, `users.ts` | ✅ `/dashboard/resident/research/page.tsx` | Uses proper API modules (no raw apiClient) |
 
 ---
 
-## Section 2: Backend-Only Features (No Frontend Page, Low Priority)
+## Section 2: Intentionally Deferred Features (Admin Configuration Only)
 
-These features have complete backend ViewSets but no frontend pages. They are deferred because they are not in the critical path for the pilot.
+These features have complete backend ViewSets but no dedicated frontend pages. They are intentionally deferred as they are admin-only configuration features, not in the critical operational path.
 
-| Feature | Backend ViewSet | API Client | Page | Priority |
-|---------|----------------|-----------|------|---------|
-| Deputation Postings | ✅ `DeputationPostingViewSet` — `POST /api/postings/`, actions: approve/reject/complete | ✗ None | ✗ None | LOW — Defer to Phase 2 |
-| Program Rotation Templates | ✅ `ProgramRotationTemplateViewSet` — `GET/POST /api/program-templates/` | ✗ None | ✗ None | LOW — Admin config only |
-| Milestone Research Requirements | ✅ `MilestoneResearchRequirement` view | ✗ None | ✗ None | LOW — Part of program config |
+| Feature | Backend ViewSet | API Client | Page | Deferred Reason |
+|---------|----------------|-----------|------|-----------------|
+| Program Rotation Templates | ✅ `ProgramRotationTemplateViewSet` — `GET/POST /api/training/program-templates/` | ⚠️ Partial | ❌ None | Admin-only program configuration; embedded in program detail views; standalone page deferred post-pilot |
+| Milestone Research Requirements | ✅ `MilestoneResearchRequirementViewSet` | ⚠️ Partial | ❌ None | Admin-only milestone configuration; embedded in milestone detail views; standalone page deferred post-pilot |
+
+**Note**: Deputation postings are **no longer deferred** — both resident submission and UTRMC approval pages are operational.
 
 ---
 
@@ -61,6 +65,8 @@ The following were documented in `docs/contracts/API_CONTRACT.md` as Phase 7–8
 
 | Feature | Description | Phase |
 |---------|-------------|-------|
-| Posting page | Frontend page for deputation posting management | Post-pilot |
-| Program template page | Admin UI for rotation schedule templates | Post-pilot |
-| Analytics export | CSV/PDF download of reports | Post-pilot |
+| Program template dedicated UI | Standalone admin page for rotation schedule templates (currently embedded in program detail) | Post-pilot |
+| Milestone research requirements UI | Standalone admin page for milestone research configuration (currently embedded) | Post-pilot |
+| Analytics export | CSV/PDF download of advanced analytics reports | Post-pilot |
+| Notification preferences UI | User-facing notification preferences management page | Post-pilot |
+| Audit log viewer UI | Frontend audit activity log viewer (backend operational, RBAC access via `is_staff`) | Post-pilot |
