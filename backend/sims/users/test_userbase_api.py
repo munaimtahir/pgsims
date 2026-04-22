@@ -12,7 +12,14 @@ from sims.academics.models import Department
 from sims.rotations.models import Hospital, HospitalDepartment
 from sims.training.models import ResidentTrainingRecord, TrainingProgram
 from sims.users.data_quality import recompute_flags_for_user
-from sims.users.models import DataCorrectionAudit, HODAssignment, ResidentProfile, SupervisorResidentLink, User
+from sims.users.models import (
+    DataCorrectionAudit,
+    DepartmentMembership,
+    HODAssignment,
+    ResidentProfile,
+    SupervisorResidentLink,
+    User,
+)
 
 
 class UserbasePermissionAndConstraintTests(TestCase):
@@ -137,6 +144,173 @@ class UserbasePermissionAndConstraintTests(TestCase):
                 created_by=self.admin,
                 updated_by=self.admin,
             )
+
+    def test_utrmc_admin_org_graph_routes_cover_roster_and_matrix_actions(self):
+        DepartmentMembership.objects.create(
+            user=self.faculty,
+            department=self.department,
+            member_type="faculty",
+            is_primary=True,
+            start_date=date.today(),
+            active=True,
+            created_by=self.utrmc_admin,
+            updated_by=self.utrmc_admin,
+        )
+        DepartmentMembership.objects.create(
+            user=self.resident,
+            department=self.department,
+            member_type="resident",
+            is_primary=True,
+            start_date=date.today(),
+            active=True,
+            created_by=self.utrmc_admin,
+            updated_by=self.utrmc_admin,
+        )
+
+        self.client.force_authenticate(self.utrmc_admin)
+        roster = self.client.get(f"/api/departments/{self.department.id}/roster/")
+        self.assertEqual(roster.status_code, 200)
+        self.assertEqual(roster.data["department"]["id"], self.department.id)
+        self.assertEqual(roster.data["faculty"][0]["id"], self.faculty.id)
+        self.assertEqual(roster.data["residents"][0]["id"], self.resident.id)
+
+        hospital_departments = self.client.get(f"/api/hospitals/{self.hospital.id}/departments/")
+        self.assertEqual(hospital_departments.status_code, 200)
+        self.assertEqual(hospital_departments.data[0]["department"]["id"], self.department.id)
+
+        hod = self.client.post(
+            "/api/hod-assignments/",
+            {
+                "department_id": self.department.id,
+                "hod_user_id": self.supervisor.id,
+                "start_date": date.today().isoformat(),
+                "active": True,
+            },
+            format="json",
+        )
+        self.assertEqual(hod.status_code, 201)
+        self.assertEqual(hod.data["department"]["id"], self.department.id)
+        self.assertEqual(hod.data["hod_user"]["id"], self.supervisor.id)
+
+        inactive_matrix = HospitalDepartment.objects.create(
+            hospital=Hospital.objects.create(name="Secondary Userbase", code="HOSP-UB2"),
+            department=self.department,
+            is_active=False,
+        )
+        matrix_update = self.client.patch(
+            f"/api/hospital-departments/{inactive_matrix.id}/",
+            {"active": True},
+            format="json",
+        )
+        self.assertEqual(matrix_update.status_code, 200)
+        self.assertTrue(matrix_update.data["active"])
+
+    def test_utrmc_user_is_read_only_on_org_graph_mutations(self):
+        utrmc_user = User.objects.create_user(
+            username="utrmc_user_readonly",
+            password="pass12345",
+            role="utrmc_user",
+            email="utrmc_user_readonly@example.com",
+        )
+
+        self.client.force_authenticate(utrmc_user)
+        roster = self.client.get(f"/api/departments/{self.department.id}/roster/")
+        self.assertEqual(roster.status_code, 200)
+
+        blocked_hod = self.client.post(
+            "/api/hod-assignments/",
+            {
+                "department_id": self.department.id,
+                "hod_user_id": self.supervisor.id,
+                "start_date": date.today().isoformat(),
+                "active": True,
+            },
+            format="json",
+        )
+        self.assertEqual(blocked_hod.status_code, 403)
+
+        blocked_link = self.client.post(
+            "/api/supervision-links/",
+            {
+                "supervisor_user_id": self.faculty.id,
+                "resident_user_id": self.resident.id,
+                "department_id": self.department.id,
+                "start_date": date.today().isoformat(),
+                "active": True,
+            },
+            format="json",
+        )
+        self.assertEqual(blocked_link.status_code, 403)
+
+        blocked_matrix = self.client.patch(
+            f"/api/hospital-departments/{self.hospital_department.id}/",
+            {"active": False},
+            format="json",
+        )
+        self.assertEqual(blocked_matrix.status_code, 403)
+
+        blocked_user = self.client.post(
+            "/api/users/",
+            {
+                "username": "readonly_created_user",
+                "email": "readonly_created_user@example.com",
+                "password": "Pass123456!",
+                "first_name": "Read",
+                "last_name": "Only",
+                "role": "resident",
+            },
+            format="json",
+        )
+        self.assertEqual(blocked_user.status_code, 403)
+
+
+class UserbaseReadScopeTests(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+        self.admin = User.objects.create_user(
+            username="scope_admin",
+            password="pass12345",
+            role="admin",
+            email="scope_admin@example.com",
+        )
+        self.supervisor = User.objects.create_user(
+            username="scope_supervisor",
+            password="pass12345",
+            role="supervisor",
+            specialty="medicine",
+            email="scope_supervisor@example.com",
+        )
+        self.other_user = User.objects.create_user(
+            username="scope_other",
+            password="pass12345",
+            role="resident",
+            specialty="medicine",
+            year="1",
+            email="scope_other@example.com",
+        )
+
+    def _rows(self, response):
+        return response.data if isinstance(response.data, list) else response.data.get("results", [])
+
+    def test_supervisor_get_users_list_returns_only_self(self):
+        self.client.force_authenticate(self.supervisor)
+        response = self.client.get("/api/users/")
+        self.assertEqual(response.status_code, 200)
+
+        rows = self._rows(response)
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(rows[0]["id"], self.supervisor.id)
+        self.assertEqual(rows[0]["username"], self.supervisor.username)
+
+    def test_supervisor_can_retrieve_self_but_not_other_users(self):
+        self.client.force_authenticate(self.supervisor)
+
+        own_response = self.client.get(f"/api/users/{self.supervisor.id}/")
+        self.assertEqual(own_response.status_code, 200)
+        self.assertEqual(own_response.data["id"], self.supervisor.id)
+
+        blocked_response = self.client.get(f"/api/users/{self.other_user.id}/")
+        self.assertEqual(blocked_response.status_code, 404)
 
 
 @override_settings(ENABLE_DATA_CORRECTION_LAYER=True)

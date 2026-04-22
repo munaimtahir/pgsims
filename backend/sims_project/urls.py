@@ -18,6 +18,7 @@ from django.http import HttpResponse, JsonResponse
 from django.shortcuts import redirect
 from django.template.response import TemplateResponse
 from django.urls import include, path
+from drf_spectacular.views import SpectacularAPIView
 
 # Import health check views
 from sims_project.health import healthz, liveness, readiness
@@ -127,6 +128,7 @@ urlpatterns = [
     path("api/audit/", include("sims.audit.urls")),
     path("api/bulk/", include("sims.bulk.urls")),
     path("api/notifications/", include("sims.notifications.urls")),
+    path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
     path("api/", include("sims.users.userbase_urls")),
     path("api/users/", include("sims.users.api_user_urls")),
     path("api/", include("sims.training.urls")),

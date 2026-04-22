@@ -856,3 +856,630 @@ class ResidentMilestoneEligibility(models.Model):
             f"{self.resident_training_record} – {self.milestone.get_code_display()} "
             f"[{self.status}]"
         )
+
+
+# ---------------------------------------------------------------------------
+# Logbook (feature-layer active runtime)
+# ---------------------------------------------------------------------------
+
+
+class LogbookThresholdConfig(models.Model):
+    MODE_PER_ROTATION = "PER_ROTATION"
+    MODE_PER_PERIOD = "PER_PERIOD"
+    MODE_CHOICES = [
+        (MODE_PER_ROTATION, "Per Rotation"),
+        (MODE_PER_PERIOD, "Per Time Period"),
+    ]
+
+    name = models.CharField(max_length=150)
+    mode = models.CharField(max_length=30, choices=MODE_CHOICES, default=MODE_PER_ROTATION)
+    min_approved_entries = models.PositiveIntegerField(default=1)
+    period_days = models.PositiveIntegerField(
+        null=True, blank=True, help_text="Required when mode=PER_PERIOD"
+    )
+    program = models.ForeignKey(
+        TrainingProgram,
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE,
+        related_name="logbook_threshold_configs",
+    )
+    department = models.ForeignKey(
+        "academics.Department",
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE,
+        related_name="logbook_threshold_configs",
+    )
+    is_active = models.BooleanField(default=True)
+    configured_by = models.ForeignKey(
+        User,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="logbook_thresholds_configured",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    history = HistoricalRecords()
+
+    class Meta:
+        ordering = ["name", "-updated_at"]
+        indexes = [
+            models.Index(fields=["mode", "is_active"]),
+            models.Index(fields=["program", "is_active"]),
+            models.Index(fields=["department", "is_active"]),
+        ]
+
+    def clean(self):
+        if self.mode == self.MODE_PER_PERIOD and not self.period_days:
+            raise ValidationError({"period_days": "period_days is required for PER_PERIOD mode."})
+        if self.mode == self.MODE_PER_ROTATION and self.period_days:
+            raise ValidationError({"period_days": "period_days must be empty for PER_ROTATION mode."})
+
+    def __str__(self):
+        return f"{self.name} ({self.mode})"
+
+
+class LogbookEntry(models.Model):
+    STATUS_DRAFT = "DRAFT"
+    STATUS_SUBMITTED = "SUBMITTED"
+    STATUS_RETURNED = "RETURNED"
+    STATUS_APPROVED = "APPROVED"
+
+    STATUS_CHOICES = [
+        (STATUS_DRAFT, "Draft"),
+        (STATUS_SUBMITTED, "Submitted"),
+        (STATUS_RETURNED, "Returned"),
+        (STATUS_APPROVED, "Approved"),
+    ]
+
+    resident_training_record = models.ForeignKey(
+        ResidentTrainingRecord,
+        on_delete=models.CASCADE,
+        related_name="logbook_entries",
+    )
+    rotation_assignment = models.ForeignKey(
+        RotationAssignment,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="logbook_entries",
+        help_text="Optional link to active/completed rotation for per-rotation threshold checks.",
+    )
+
+    patient_id_number = models.CharField(max_length=120)
+    patient_name = models.CharField(max_length=255, blank=True)
+    age = models.PositiveIntegerField(null=True, blank=True)
+    gender = models.CharField(max_length=50, blank=True)
+    demographics = models.TextField(blank=True)
+
+    disease_area = models.CharField(max_length=255, blank=True)
+    diagnosis = models.TextField(blank=True)
+    clinical_presentation = models.TextField(blank=True)
+    management_plan = models.TextField(blank=True)
+    resident_reflection = models.TextField(blank=True)
+
+    patient_seen_at = models.DateTimeField()
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=STATUS_DRAFT)
+    submitted_at = models.DateTimeField(null=True, blank=True)
+    returned_at = models.DateTimeField(null=True, blank=True)
+    approved_at = models.DateTimeField(null=True, blank=True)
+    supervisor_feedback = models.TextField(blank=True)
+    reviewed_by = models.ForeignKey(
+        User,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="logbook_entries_reviewed",
+    )
+    created_by = models.ForeignKey(
+        User,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="logbook_entries_created",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    history = HistoricalRecords()
+
+    class Meta:
+        ordering = ["-patient_seen_at", "-created_at"]
+        indexes = [
+            models.Index(fields=["resident_training_record", "status"]),
+            models.Index(fields=["rotation_assignment", "status"]),
+            models.Index(fields=["patient_seen_at"]),
+        ]
+
+    def clean(self):
+        if (
+            self.rotation_assignment_id
+            and self.rotation_assignment.resident_training_id != self.resident_training_record_id
+        ):
+            raise ValidationError(
+                {"rotation_assignment": "rotation_assignment must belong to the same resident training record."}
+            )
+
+    def __str__(self):
+        return f"LogbookEntry<{self.resident_training_record_id}:{self.status}>"
+
+
+class LogbookReview(models.Model):
+    ACTION_RETURNED = "RETURNED"
+    ACTION_APPROVED = "APPROVED"
+    ACTION_CHOICES = [
+        (ACTION_RETURNED, "Returned"),
+        (ACTION_APPROVED, "Approved"),
+    ]
+
+    entry = models.ForeignKey(
+        LogbookEntry,
+        on_delete=models.CASCADE,
+        related_name="reviews",
+    )
+    reviewer = models.ForeignKey(
+        User,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="logbook_reviews",
+    )
+    action = models.CharField(max_length=20, choices=ACTION_CHOICES)
+    comments = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    history = HistoricalRecords()
+
+    class Meta:
+        ordering = ["-created_at"]
+        indexes = [
+            models.Index(fields=["entry", "created_at"]),
+            models.Index(fields=["action", "created_at"]),
+        ]
+
+    def __str__(self):
+        return f"LogbookReview<{self.entry_id}:{self.action}>"
+
+
+class LogbookThresholdSnapshot(models.Model):
+    resident_training_record = models.ForeignKey(
+        ResidentTrainingRecord,
+        on_delete=models.CASCADE,
+        related_name="logbook_threshold_snapshots",
+    )
+    threshold_config = models.ForeignKey(
+        LogbookThresholdConfig,
+        on_delete=models.CASCADE,
+        related_name="snapshots",
+    )
+    rotation_assignment = models.ForeignKey(
+        RotationAssignment,
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE,
+        related_name="threshold_snapshots",
+    )
+    window_start = models.DateField(null=True, blank=True)
+    window_end = models.DateField(null=True, blank=True)
+    approved_entries = models.PositiveIntegerField(default=0)
+    required_entries = models.PositiveIntegerField(default=0)
+    is_met = models.BooleanField(default=False)
+    computed_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-computed_at"]
+        indexes = [
+            models.Index(fields=["resident_training_record", "computed_at"]),
+            models.Index(fields=["threshold_config", "computed_at"]),
+        ]
+
+    def __str__(self):
+        return (
+            f"LogbookThresholdSnapshot<{self.resident_training_record_id}:"
+            f"{self.threshold_config_id}:{self.approved_entries}/{self.required_entries}>"
+        )
+
+
+# ---------------------------------------------------------------------------
+# Synopsis / Thesis submission completeness workflow
+# ---------------------------------------------------------------------------
+
+
+class SubmissionRequirementTemplate(models.Model):
+    TYPE_SYNOPSIS = "SYNOPSIS"
+    TYPE_THESIS = "THESIS"
+    TYPE_CHOICES = [
+        (TYPE_SYNOPSIS, "Synopsis"),
+        (TYPE_THESIS, "Thesis"),
+    ]
+
+    submission_type = models.CharField(max_length=20, choices=TYPE_CHOICES)
+    code = models.CharField(max_length=80)
+    title = models.CharField(max_length=255)
+    description = models.TextField(blank=True)
+    is_required = models.BooleanField(default=True)
+    active = models.BooleanField(default=True)
+    sort_order = models.PositiveIntegerField(default=0)
+    program = models.ForeignKey(
+        TrainingProgram,
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE,
+        related_name="submission_requirement_templates",
+    )
+    department = models.ForeignKey(
+        "academics.Department",
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE,
+        related_name="submission_requirement_templates",
+    )
+    created_by = models.ForeignKey(
+        User,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="submission_requirements_created",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    history = HistoricalRecords()
+
+    class Meta:
+        ordering = ["submission_type", "sort_order", "title"]
+        indexes = [
+            models.Index(fields=["submission_type", "active"]),
+            models.Index(fields=["program", "submission_type", "active"]),
+            models.Index(fields=["department", "submission_type", "active"]),
+        ]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["submission_type", "program", "department", "code"],
+                name="uniq_submission_requirement_template_scope",
+            )
+        ]
+
+    def __str__(self):
+        return f"{self.submission_type}:{self.code}"
+
+
+class ResidentSubmission(models.Model):
+    TYPE_SYNOPSIS = SubmissionRequirementTemplate.TYPE_SYNOPSIS
+    TYPE_THESIS = SubmissionRequirementTemplate.TYPE_THESIS
+    TYPE_CHOICES = SubmissionRequirementTemplate.TYPE_CHOICES
+
+    STATUS_DRAFT = "DRAFT"
+    STATUS_SUBMITTED = "SUBMITTED"
+    STATUS_UNDER_REVIEW = "UNDER_REVIEW"
+    STATUS_RETURNED = "RETURNED"
+    STATUS_VERIFIED = "VERIFIED"
+    STATUS_CERTIFICATE_ISSUED = "CERTIFICATE_ISSUED"
+    STATUS_CHOICES = [
+        (STATUS_DRAFT, "Draft"),
+        (STATUS_SUBMITTED, "Submitted"),
+        (STATUS_UNDER_REVIEW, "Under Review"),
+        (STATUS_RETURNED, "Returned"),
+        (STATUS_VERIFIED, "Verified"),
+        (STATUS_CERTIFICATE_ISSUED, "Certificate Issued"),
+    ]
+
+    resident_training_record = models.ForeignKey(
+        ResidentTrainingRecord,
+        on_delete=models.CASCADE,
+        related_name="submissions",
+    )
+    submission_type = models.CharField(max_length=20, choices=TYPE_CHOICES)
+    status = models.CharField(max_length=30, choices=STATUS_CHOICES, default=STATUS_DRAFT)
+    submitted_at = models.DateTimeField(null=True, blank=True)
+    under_review_at = models.DateTimeField(null=True, blank=True)
+    returned_at = models.DateTimeField(null=True, blank=True)
+    verified_at = models.DateTimeField(null=True, blank=True)
+    certificate_issued_at = models.DateTimeField(null=True, blank=True)
+    feedback = models.TextField(blank=True)
+    reviewed_by = models.ForeignKey(
+        User,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="resident_submissions_reviewed",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    history = HistoricalRecords()
+
+    class Meta:
+        ordering = ["-updated_at"]
+        indexes = [
+            models.Index(fields=["resident_training_record", "submission_type"]),
+            models.Index(fields=["submission_type", "status"]),
+        ]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["resident_training_record", "submission_type"],
+                name="uniq_submission_per_resident_type",
+            )
+        ]
+
+    def __str__(self):
+        return f"ResidentSubmission<{self.resident_training_record_id}:{self.submission_type}:{self.status}>"
+
+
+def _submission_document_upload_path(instance, filename):
+    submission_type = getattr(instance.submission, "submission_type", "submission").lower()
+    return f"submissions/{submission_type}/{instance.submission_id}/{filename}"
+
+
+class SubmissionDocument(models.Model):
+    submission = models.ForeignKey(
+        ResidentSubmission,
+        on_delete=models.CASCADE,
+        related_name="documents",
+    )
+    requirement = models.ForeignKey(
+        SubmissionRequirementTemplate,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="documents",
+    )
+    file = models.FileField(upload_to=_submission_document_upload_path)
+    original_filename = models.CharField(max_length=255, blank=True)
+    uploaded_by = models.ForeignKey(
+        User,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="submission_documents_uploaded",
+    )
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+    is_active = models.BooleanField(default=True)
+    history = HistoricalRecords()
+
+    class Meta:
+        ordering = ["-uploaded_at"]
+        indexes = [
+            models.Index(fields=["submission", "uploaded_at"]),
+            models.Index(fields=["requirement"]),
+            models.Index(fields=["is_active"]),
+        ]
+
+    def clean(self):
+        if self.requirement_id and self.requirement.submission_type != self.submission.submission_type:
+            raise ValidationError(
+                {"requirement": "Requirement type must match submission type."}
+            )
+
+    def save(self, *args, **kwargs):
+        if not self.original_filename and getattr(self.file, "name", None):
+            self.original_filename = self.file.name.split("/")[-1]
+        return super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"SubmissionDocument<{self.submission_id}:{self.original_filename}>"
+
+
+class SubmissionReview(models.Model):
+    ACTION_SUBMITTED = ResidentSubmission.STATUS_SUBMITTED
+    ACTION_UNDER_REVIEW = ResidentSubmission.STATUS_UNDER_REVIEW
+    ACTION_RETURNED = ResidentSubmission.STATUS_RETURNED
+    ACTION_VERIFIED = ResidentSubmission.STATUS_VERIFIED
+    ACTION_CERTIFICATE_ISSUED = ResidentSubmission.STATUS_CERTIFICATE_ISSUED
+    ACTION_CHOICES = [
+        (ACTION_SUBMITTED, "Submitted"),
+        (ACTION_UNDER_REVIEW, "Under Review"),
+        (ACTION_RETURNED, "Returned"),
+        (ACTION_VERIFIED, "Verified"),
+        (ACTION_CERTIFICATE_ISSUED, "Certificate Issued"),
+    ]
+
+    submission = models.ForeignKey(
+        ResidentSubmission,
+        on_delete=models.CASCADE,
+        related_name="reviews",
+    )
+    reviewer = models.ForeignKey(
+        User,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="submission_reviews",
+    )
+    action = models.CharField(max_length=30, choices=ACTION_CHOICES)
+    comments = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    history = HistoricalRecords()
+
+    class Meta:
+        ordering = ["-created_at"]
+        indexes = [
+            models.Index(fields=["submission", "created_at"]),
+            models.Index(fields=["action", "created_at"]),
+        ]
+
+    def __str__(self):
+        return f"SubmissionReview<{self.submission_id}:{self.action}>"
+
+
+class SubmissionCertificate(models.Model):
+    STATUS_ISSUED = "ISSUED"
+    STATUS_VERIFIED = "VERIFIED"
+    STATUS_CHOICES = [
+        (STATUS_ISSUED, "Issued"),
+        (STATUS_VERIFIED, "Verified"),
+    ]
+
+    submission = models.OneToOneField(
+        ResidentSubmission,
+        on_delete=models.CASCADE,
+        related_name="certificate",
+    )
+    certificate_number = models.CharField(max_length=80, unique=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=STATUS_ISSUED)
+    issued_by = models.ForeignKey(
+        User,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="submission_certificates_issued",
+    )
+    issued_at = models.DateTimeField(auto_now_add=True)
+    verified_by = models.ForeignKey(
+        User,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="submission_certificates_verified",
+    )
+    verified_at = models.DateTimeField(null=True, blank=True)
+    metadata = models.JSONField(default=dict, blank=True)
+    history = HistoricalRecords()
+
+    class Meta:
+        ordering = ["-issued_at"]
+        indexes = [
+            models.Index(fields=["status", "issued_at"]),
+            models.Index(fields=["certificate_number"]),
+        ]
+
+    def __str__(self):
+        return f"SubmissionCertificate<{self.certificate_number}>"
+
+
+# ---------------------------------------------------------------------------
+# Rotation phase-1 structured requirements + completion verification
+# ---------------------------------------------------------------------------
+
+
+class ProgramRotationRequirement(models.Model):
+    program = models.ForeignKey(
+        TrainingProgram,
+        on_delete=models.CASCADE,
+        related_name="rotation_requirements",
+    )
+    department = models.ForeignKey(
+        "academics.Department",
+        on_delete=models.CASCADE,
+        related_name="program_rotation_requirements",
+    )
+    required_duration_weeks = models.PositiveIntegerField(default=4)
+    sequence_order = models.PositiveIntegerField(default=0)
+    is_mandatory = models.BooleanField(default=True)
+    notes = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    history = HistoricalRecords()
+
+    class Meta:
+        ordering = ["program", "sequence_order", "department__name"]
+        indexes = [
+            models.Index(fields=["program", "is_mandatory"]),
+            models.Index(fields=["department"]),
+        ]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["program", "department", "sequence_order"],
+                name="uniq_program_rotation_requirement",
+            )
+        ]
+
+    def __str__(self):
+        return (
+            f"{self.program.code}:{self.department.code or self.department.name}:"
+            f"{self.required_duration_weeks}w"
+        )
+
+
+class RotationCompletion(models.Model):
+    STATUS_CONFIRMED_BY_DEPARTMENT = "CONFIRMED_BY_DEPARTMENT"
+    STATUS_PENDING_UTRMC_VERIFICATION = "PENDING_UTRMC_VERIFICATION"
+    STATUS_VERIFIED = "VERIFIED"
+    STATUS_CHOICES = [
+        (STATUS_CONFIRMED_BY_DEPARTMENT, "Confirmed by Department"),
+        (STATUS_PENDING_UTRMC_VERIFICATION, "Pending UTRMC Verification"),
+        (STATUS_VERIFIED, "Verified"),
+    ]
+
+    rotation = models.OneToOneField(
+        RotationAssignment,
+        on_delete=models.CASCADE,
+        related_name="completion",
+    )
+    status = models.CharField(
+        max_length=40,
+        choices=STATUS_CHOICES,
+        default=STATUS_CONFIRMED_BY_DEPARTMENT,
+    )
+    confirmed_by = models.ForeignKey(
+        User,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="rotation_completions_confirmed",
+    )
+    confirmed_at = models.DateTimeField(null=True, blank=True)
+    verification_submitted_at = models.DateTimeField(null=True, blank=True)
+    verified_by = models.ForeignKey(
+        User,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="rotation_completions_verified",
+    )
+    verified_at = models.DateTimeField(null=True, blank=True)
+    notes = models.TextField(blank=True)
+    history = HistoricalRecords()
+
+    class Meta:
+        ordering = ["-confirmed_at", "-verified_at"]
+        indexes = [
+            models.Index(fields=["status", "verified_at"]),
+            models.Index(fields=["confirmed_at"]),
+        ]
+
+    def __str__(self):
+        return f"RotationCompletion<{self.rotation_id}:{self.status}>"
+
+
+class RotationCertificate(models.Model):
+    STATUS_ISSUED = "ISSUED"
+    STATUS_VERIFIED = "VERIFIED"
+    STATUS_CHOICES = [
+        (STATUS_ISSUED, "Issued"),
+        (STATUS_VERIFIED, "Verified"),
+    ]
+
+    completion = models.OneToOneField(
+        RotationCompletion,
+        on_delete=models.CASCADE,
+        related_name="certificate",
+    )
+    certificate_number = models.CharField(max_length=80, unique=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=STATUS_ISSUED)
+    issued_by = models.ForeignKey(
+        User,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="rotation_certificates_issued",
+    )
+    issued_at = models.DateTimeField(auto_now_add=True)
+    verified_by = models.ForeignKey(
+        User,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="rotation_certificates_verified",
+    )
+    verified_at = models.DateTimeField(null=True, blank=True)
+    metadata = models.JSONField(default=dict, blank=True)
+    history = HistoricalRecords()
+
+    class Meta:
+        ordering = ["-issued_at"]
+        indexes = [
+            models.Index(fields=["status", "issued_at"]),
+            models.Index(fields=["certificate_number"]),
+        ]
+
+    def __str__(self):
+        return f"RotationCertificate<{self.certificate_number}>"

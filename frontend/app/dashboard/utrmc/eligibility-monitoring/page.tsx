@@ -1,14 +1,10 @@
 'use client';
 import { useEffect, useState } from 'react';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
+import PageHeader from '@/components/ui/PageHeader';
+import WorkflowStatusBadge from '@/components/ui/WorkflowStatusBadge';
 
 import { trainingApi, MilestoneEligibility } from '@/lib/api/training';
-
-const STATUS_COLOR: Record<string, string> = {
-  ELIGIBLE: 'bg-green-100 text-green-800',
-  PARTIALLY_READY: 'bg-yellow-100 text-yellow-800',
-  NOT_READY: 'bg-red-100 text-red-800',
-};
 
 export default function UTRMCEligibilityMonitoringPage() {
   const [records, setRecords] = useState<MilestoneEligibility[]>([]);
@@ -36,17 +32,20 @@ export default function UTRMCEligibilityMonitoringPage() {
 
   return (
     <ProtectedRoute allowedRoles={['admin', 'utrmc_admin', 'utrmc_user']}>
-        <div className="max-w-5xl mx-auto">
-          <h1 className="text-2xl font-bold text-gray-900 mb-6">Eligibility Monitoring</h1>
+        <div className="pg-page max-w-5xl">
+          <PageHeader
+            title="Eligibility Monitoring"
+            description="Track milestone readiness status across programs and departments."
+          />
 
           {/* Filters */}
-          <div className="bg-white border border-gray-200 rounded-lg p-4 mb-6 flex items-center gap-4">
+          <div className="pg-card mb-6 flex items-center gap-4">
             <div>
-              <label className="block text-xs font-medium text-gray-500 mb-1">Status</label>
+              <label className="pg-form-label text-xs">Status</label>
               <select
                 value={filters.status}
                 onChange={(e) => setFilters({ ...filters, status: e.target.value })}
-                className="border border-gray-300 rounded-md px-3 py-1.5 text-sm"
+                className="pg-form-input"
               >
                 <option value="">All</option>
                 <option value="ELIGIBLE">Eligible</option>
@@ -54,12 +53,12 @@ export default function UTRMCEligibilityMonitoringPage() {
                 <option value="NOT_READY">Not Ready</option>
               </select>
             </div>
-            <button
-              onClick={applyFilters}
-              className="mt-4 px-4 py-1.5 bg-indigo-600 text-white text-sm rounded-md hover:bg-indigo-700"
-            >
-              Filter
-            </button>
+              <button
+                onClick={applyFilters}
+                className="mt-4 pg-btn-primary"
+              >
+                Filter
+              </button>
           </div>
 
           {loading && <p className="text-gray-500">Loading…</p>}
@@ -68,20 +67,18 @@ export default function UTRMCEligibilityMonitoringPage() {
           <p className="text-sm text-gray-500 mb-4">Showing {records.length} of {count} records</p>
 
           {records.length === 0 && !loading && (
-            <p className="text-sm text-gray-500">No eligibility records found.</p>
+            <div className="pg-empty-state">No eligibility records found.</div>
           )}
 
           <div className="space-y-3">
             {records.map((e) => (
-              <div key={e.id} className="bg-white border border-gray-200 rounded-lg p-4">
+              <div key={e.id} className="pg-card">
                 <div className="flex items-center justify-between">
                   <h3 className="font-semibold text-gray-900">
                     {e.milestone_name}
                     <span className="ml-2 font-mono text-xs text-gray-400">{e.milestone_code}</span>
                   </h3>
-                  <span className={`text-xs font-medium px-2 py-1 rounded-full ${STATUS_COLOR[e.status] || 'bg-gray-100 text-gray-600'}`}>
-                    {e.status_display}
-                  </span>
+                  <WorkflowStatusBadge status={e.status} label={e.status_display} />
                 </div>
                 {e.reasons.length > 0 && (
                   <ul className="mt-2 space-y-0.5">

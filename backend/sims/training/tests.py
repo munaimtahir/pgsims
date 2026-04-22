@@ -284,6 +284,16 @@ class LeaveRequestAPITest(APITestCase):
         })
         self.assertEqual(r.status_code, 201)
 
+    def test_resident_leave_create_requires_resident_training(self):
+        self._auth(self.resident_user)
+        r = self.client.post("/api/leaves/", {
+            "leave_type": "annual",
+            "start_date": str(TODAY),
+            "end_date": str(TODAY + timedelta(days=5)),
+        })
+        self.assertEqual(r.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("resident_training", r.data)
+
     def test_full_leave_approval_flow(self):
         self._auth(self.resident_user)
         r = self.client.post("/api/leaves/", {
@@ -301,3 +311,31 @@ class LeaveRequestAPITest(APITestCase):
         r = self.client.post(f"/api/leaves/{lid}/approve/")
         self.assertEqual(r.status_code, 200)
         self.assertEqual(r.data["status"], "APPROVED")
+
+
+class ResidentDashboardFallbackTest(APITestCase):
+    def setUp(self):
+        self.resident = make_user("lonely_pg", "resident")
+
+    def _auth(self):
+        self.client.force_authenticate(self.resident)
+
+    def test_resident_summary_returns_empty_state_without_training_record(self):
+        self._auth()
+        response = self.client.get("/api/residents/me/summary/")
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIsNone(response.data["training_record"])
+        self.assertEqual(response.data["schedule"], [])
+        self.assertEqual(response.data["leaves"]["active_count"], 0)
+        self.assertEqual(response.data["eligibility"]["IMM"]["status"], None)
+        self.assertEqual(response.data["thesis"]["status"], "NOT_STARTED")
+
+    def test_resident_dashboard_returns_empty_state_without_training_record(self):
+        self._auth()
+        response = self.client.get("/api/dashboard/resident/")
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIsNone(response.data["training_record_id"])
+        self.assertEqual(response.data["logbook"]["total"], 0)
+        self.assertFalse(response.data["readiness"]["logbook_threshold_met"])

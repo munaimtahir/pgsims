@@ -21,6 +21,12 @@ const customJestConfig = {
     '/.next/',
     '/e2e/',
   ],
+  modulePathIgnorePatterns: [
+    '<rootDir>/.next/',
+  ],
+  watchPathIgnorePatterns: [
+    '<rootDir>/.next/',
+  ],
   collectCoverageFrom: [
     'app/**/*.{js,jsx,ts,tsx}',
     'components/**/*.{js,jsx,ts,tsx}',

@@ -22,9 +22,9 @@ test.describe('UTRMC Admin dashboards', () => {
       timeout: 15_000,
     });
     // Stat card labels live inside <main> — scope avoids matching sidebar nav links
-    await expect(page.getByRole('main').getByText('Hospitals')).toBeVisible();
-    await expect(page.getByRole('main').getByText('Departments')).toBeVisible();
-    await expect(page.getByRole('main').getByText('Total Users')).toBeVisible();
+    await expect(page.getByRole('main').getByText('Hospitals').first()).toBeVisible();
+    await expect(page.getByRole('main').getByText('Departments').first()).toBeVisible();
+    await expect(page.getByRole('main').getByText('Total Users').first()).toBeVisible();
   });
 
   test('users management page loads with Add User button', async ({ page }) => {

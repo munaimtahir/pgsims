@@ -7,14 +7,17 @@ RBAC summary:
   RotationAssignment                         → DRAFT/SUBMITTED by utrmc_admin|admin; state machine actions role-gated
   LeaveRequest / DeputationPosting           → resident creates; approvers approve
 """
+from datetime import timedelta
+
 from django.utils import timezone
 from django.db.models import Q
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.exceptions import ValidationError as DRFValidationError
 
-from sims.common_permissions import IsUTRMCAdmin, IsTechAdmin
+from sims.rotations.services import evaluate_rotation_override_policy
 
 from .models import (
     TrainingProgram,
@@ -346,6 +349,16 @@ class RotationAssignmentViewSet(viewsets.ModelViewSet):
                 {"detail": f"Cannot activate from status {obj.status}."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
+        policy = evaluate_rotation_override_policy(
+            obj.resident_training.resident_user,
+            obj.hospital_department.hospital,
+            obj.hospital_department.department,
+        )
+        if policy.requires_utrmc_approval and not obj.approved_by_utrmc_id:
+            return Response(
+                {"detail": "UTRMC approval is required before activating this rotation."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         obj.status = RotationAssignment.STATUS_ACTIVE
         obj.save()
         return Response(RotationAssignmentSerializer(obj, context={"request": request}).data)
@@ -363,7 +376,148 @@ class RotationAssignmentViewSet(viewsets.ModelViewSet):
         obj.status = RotationAssignment.STATUS_COMPLETED
         obj.completed_at = timezone.now()
         obj.save()
+        completion, _ = RotationCompletion.objects.get_or_create(rotation=obj)
+        completion.status = RotationCompletion.STATUS_PENDING_UTRMC_VERIFICATION
+        completion.confirmed_by = request.user
+        completion.confirmed_at = completion.confirmed_at or timezone.now()
+        completion.verification_submitted_at = timezone.now()
+        completion.save()
         return Response(RotationAssignmentSerializer(obj, context={"request": request}).data)
+
+    @action(detail=True, methods=["post"], url_path="review-application")
+    def review_application(self, request, pk=None):
+        obj = self.get_object()
+        if not (_is_supervisor_or_hod(request.user) or _is_admin_or_utrmc_admin(request.user)):
+            return Response({"detail": "Permission denied."}, status=status.HTTP_403_FORBIDDEN)
+        if obj.status not in {RotationAssignment.STATUS_SUBMITTED, RotationAssignment.STATUS_APPROVED}:
+            return Response(
+                {"detail": f"Cannot review application from status {obj.status}."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        decision = request.data.get("action")
+        reason = (request.data.get("reason") or "").strip()
+        if decision not in {"approve", "redirect", "defer", "reject"}:
+            return Response(
+                {"detail": "action must be one of: approve, redirect, defer, reject."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if decision == "approve":
+            obj.status = RotationAssignment.STATUS_APPROVED
+            obj.approved_by_hod = request.user
+            obj.approved_at = timezone.now()
+            if reason:
+                obj.notes = f"{obj.notes}\nApproval note: {reason}".strip()
+            obj.save()
+        elif decision == "redirect":
+            target_hospital_department = request.data.get("hospital_department")
+            if not target_hospital_department:
+                return Response(
+                    {"detail": "hospital_department is required when action=redirect."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            obj.hospital_department_id = int(target_hospital_department)
+            obj.status = RotationAssignment.STATUS_APPROVED
+            obj.approved_by_hod = request.user
+            obj.approved_at = timezone.now()
+            redirect_note = "Redirected by supervisor/HOD."
+            if reason:
+                redirect_note = f"{redirect_note} {reason}"
+            obj.notes = f"{obj.notes}\n{redirect_note}".strip()
+            obj.save()
+        elif decision == "defer":
+            obj.status = RotationAssignment.STATUS_RETURNED
+            obj.return_reason = reason or "Deferred by supervisor/HOD."
+            obj.save()
+        else:  # reject
+            obj.status = RotationAssignment.STATUS_REJECTED
+            obj.reject_reason = reason or "Rejected by supervisor/HOD."
+            obj.save()
+
+        return Response(RotationAssignmentSerializer(obj, context={"request": request}).data)
+
+    @action(detail=True, methods=["post"], url_path="confirm-completion")
+    def confirm_completion(self, request, pk=None):
+        obj = self.get_object()
+        if not (_is_supervisor_or_hod(request.user) or _is_admin_or_utrmc_admin(request.user)):
+            return Response({"detail": "Permission denied."}, status=status.HTTP_403_FORBIDDEN)
+        if obj.status not in {
+            RotationAssignment.STATUS_ACTIVE,
+            RotationAssignment.STATUS_APPROVED,
+            RotationAssignment.STATUS_COMPLETED,
+        }:
+            return Response(
+                {"detail": f"Cannot confirm completion from status {obj.status}."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        now = timezone.now()
+        if obj.status != RotationAssignment.STATUS_COMPLETED:
+            obj.status = RotationAssignment.STATUS_COMPLETED
+            obj.completed_at = now
+            obj.save(update_fields=["status", "completed_at", "updated_at"])
+
+        completion, _ = RotationCompletion.objects.get_or_create(rotation=obj)
+        completion.status = RotationCompletion.STATUS_PENDING_UTRMC_VERIFICATION
+        completion.confirmed_by = request.user
+        completion.confirmed_at = now
+        completion.verification_submitted_at = now
+        completion.notes = (request.data.get("notes") or completion.notes or "").strip()
+        completion.save()
+
+        certificate, created = RotationCertificate.objects.get_or_create(
+            completion=completion,
+            defaults={
+                "certificate_number": f"ROT-{obj.id}-{now.strftime('%Y%m%d%H%M%S')}",
+                "issued_by": request.user,
+            },
+        )
+        if not created and not certificate.issued_by_id:
+            certificate.issued_by = request.user
+            certificate.save(update_fields=["issued_by"])
+
+        return Response(
+            {
+                "rotation": RotationAssignmentSerializer(obj, context={"request": request}).data,
+                "completion": RotationCompletionSerializer(completion, context={"request": request}).data,
+            }
+        )
+
+    @action(detail=True, methods=["post"], url_path="verify-completion")
+    def verify_completion(self, request, pk=None):
+        obj = self.get_object()
+        if not _is_admin_or_utrmc_admin(request.user):
+            return Response(
+                {"detail": "Only admin/utrmc_admin can verify rotation completion."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+        try:
+            completion = obj.completion
+        except RotationCompletion.DoesNotExist:
+            return Response({"detail": "Rotation completion record not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        now = timezone.now()
+        completion.status = RotationCompletion.STATUS_VERIFIED
+        completion.verified_by = request.user
+        completion.verified_at = now
+        completion.save()
+
+        certificate, _ = RotationCertificate.objects.get_or_create(
+            completion=completion,
+            defaults={
+                "certificate_number": f"ROT-{obj.id}-{now.strftime('%Y%m%d%H%M%S')}",
+                "issued_by": request.user,
+            },
+        )
+        certificate.status = RotationCertificate.STATUS_VERIFIED
+        certificate.verified_by = request.user
+        certificate.verified_at = now
+        if not certificate.issued_by_id:
+            certificate.issued_by = request.user
+        certificate.save()
+
+        return Response(RotationCompletionSerializer(completion, context={"request": request}).data)
 
     @action(detail=True, methods=["post"])
     def returned(self, request, pk=None):
@@ -426,6 +580,18 @@ class LeaveRequestViewSet(viewsets.ModelViewSet):
         return qs.none()
 
     def perform_create(self, serializer):
+        user = self.request.user
+        if _is_resident(user):
+            requested_rtr = serializer.validated_data.get("resident_training")
+            if requested_rtr is None:
+                raise DRFValidationError({"resident_training": "This field is required."})
+            if requested_rtr.resident_user_id != user.id:
+                self.permission_denied(
+                    self.request,
+                    message="Residents can only create leave for their own training record.",
+                )
+            serializer.save()
+            return
         serializer.save()
 
     def create(self, request, *args, **kwargs):
@@ -687,6 +853,18 @@ from .models import (
     WorkshopRun,
     ResidentWorkshopCompletion,
     ResidentMilestoneEligibility,
+    LogbookThresholdConfig,
+    LogbookEntry,
+    LogbookReview,
+    LogbookThresholdSnapshot,
+    SubmissionRequirementTemplate,
+    ResidentSubmission,
+    SubmissionDocument,
+    SubmissionReview,
+    SubmissionCertificate,
+    ProgramRotationRequirement,
+    RotationCompletion,
+    RotationCertificate,
 )
 from .serializers import (
     ProgramPolicySerializer,
@@ -701,6 +879,18 @@ from .serializers import (
     WorkshopRunSerializer,
     ResidentWorkshopCompletionSerializer,
     ResidentMilestoneEligibilitySerializer,
+    LogbookThresholdConfigSerializer,
+    LogbookEntrySerializer,
+    LogbookReviewSerializer,
+    LogbookThresholdSnapshotSerializer,
+    SubmissionRequirementTemplateSerializer,
+    ResidentSubmissionSerializer,
+    SubmissionDocumentSerializer,
+    SubmissionReviewSerializer,
+    SubmissionCertificateSerializer,
+    ProgramRotationRequirementSerializer,
+    RotationCompletionSerializer,
+    RotationCertificateSerializer,
 )
 
 
@@ -809,6 +999,11 @@ def _get_active_rtr(user):
     """Return the user's active ResidentTrainingRecord or raise 404."""
     from django.shortcuts import get_object_or_404
     return get_object_or_404(ResidentTrainingRecord, resident_user=user, active=True)
+
+
+def _get_active_rtr_or_none(user):
+    """Return the user's active ResidentTrainingRecord if one exists."""
+    return ResidentTrainingRecord.objects.filter(resident_user=user, active=True).first()
 
 
 class ResidentResearchProjectView(APIView):
@@ -1157,7 +1352,32 @@ class ResidentSummaryView(APIView):
         if not _is_resident(user) and not _is_admin_or_utrmc_admin(user):
             return Response({"detail": "Resident access required."}, status=403)
 
-        rtr = _get_active_rtr(user)
+        rtr = _get_active_rtr_or_none(user)
+        if rtr is None:
+            return Response({
+                "training_record": None,
+                "rotation": {"current": None, "next": None},
+                "schedule": [],
+                "leaves": {"active_count": 0, "pending_count": 0, "list": []},
+                "postings": {"active_count": 0, "pending_count": 0},
+                "research": {
+                    "status": None,
+                    "supervisor_name": None,
+                    "synopsis_uploaded": False,
+                    "university_submitted": False,
+                },
+                "thesis": {"status": "NOT_STARTED", "submitted_at": None},
+                "workshops": {
+                    "total_completed": 0,
+                    "required_for_imm": 0,
+                    "required_for_final": 0,
+                    "completed_list": [],
+                },
+                "eligibility": {
+                    "IMM": {"status": None, "reasons": []},
+                    "FINAL": {"status": None, "reasons": []},
+                },
+            })
         today = timezone.now().date()
 
         # --- Training record ---
@@ -1549,3 +1769,1244 @@ class SupervisorResidentProgressView(APIView):
             "workshops": {"total_completed": ws_count},
             "eligibility": {"IMM": imm_eli, "FINAL": final_eli},
         })
+
+
+def _is_hod(user):
+    from sims.users.models import HODAssignment
+
+    return HODAssignment.objects.filter(hod_user=user, active=True).exists()
+
+
+def _get_hod_department_ids(user):
+    from sims.users.models import HODAssignment
+
+    return set(
+        HODAssignment.objects.filter(hod_user=user, active=True).values_list("department_id", flat=True)
+    )
+
+
+def _get_department_resident_ids(department_ids):
+    if not department_ids:
+        return set()
+    from sims.users.models import User as SIMSUser
+
+    return set(
+        SIMSUser.objects.filter(
+            role__in=["pg", "resident"],
+            is_active=True,
+            is_archived=False,
+            home_department_id__in=department_ids,
+        ).values_list("id", flat=True)
+    )
+
+
+def _can_access_resident_training(user, resident_training):
+    if _is_admin_or_utrmc_admin(user):
+        return True
+    if _is_resident(user):
+        return resident_training.resident_user_id == user.id
+    if _is_supervisor_or_hod(user):
+        supervised_ids = _get_supervised_resident_ids(user)
+        if resident_training.resident_user_id in supervised_ids:
+            return True
+        dept_ids = _get_hod_department_ids(user)
+        return bool(
+            dept_ids and resident_training.resident_user.home_department_id in dept_ids
+        )
+    return False
+
+
+def _get_submission_requirements(rtr, submission_type):
+    resident = rtr.resident_user
+    return SubmissionRequirementTemplate.objects.filter(
+        submission_type=submission_type,
+        active=True,
+        is_required=True,
+    ).filter(
+        Q(program__isnull=True) | Q(program=rtr.program)
+    ).filter(
+        Q(department__isnull=True) | Q(department=resident.home_department)
+    ).order_by("sort_order", "title")
+
+
+def _evaluate_logbook_thresholds(rtr, persist=True):
+    today = timezone.now().date()
+    resident = rtr.resident_user
+    base_entries = LogbookEntry.objects.filter(
+        resident_training_record=rtr,
+        status=LogbookEntry.STATUS_APPROVED,
+    )
+    configs = LogbookThresholdConfig.objects.filter(
+        is_active=True
+    ).filter(
+        Q(program__isnull=True) | Q(program=rtr.program)
+    ).filter(
+        Q(department__isnull=True) | Q(department=resident.home_department)
+    )
+
+    snapshots_payload = []
+    for config in configs:
+        if config.mode == LogbookThresholdConfig.MODE_PER_ROTATION:
+            rotations = RotationAssignment.objects.filter(
+                resident_training=rtr,
+                status__in=[
+                    RotationAssignment.STATUS_ACTIVE,
+                    RotationAssignment.STATUS_APPROVED,
+                    RotationAssignment.STATUS_COMPLETED,
+                ],
+            )
+            if not rotations.exists():
+                payload = {
+                    "threshold_config_id": config.id,
+                    "rotation_assignment_id": None,
+                    "window_start": None,
+                    "window_end": None,
+                    "approved_entries": 0,
+                    "required_entries": config.min_approved_entries,
+                    "is_met": False,
+                }
+                snapshots_payload.append(payload)
+                if persist:
+                    LogbookThresholdSnapshot.objects.update_or_create(
+                        resident_training_record=rtr,
+                        threshold_config=config,
+                        rotation_assignment=None,
+                        window_start=None,
+                        window_end=None,
+                        defaults={
+                            "approved_entries": payload["approved_entries"],
+                            "required_entries": payload["required_entries"],
+                            "is_met": payload["is_met"],
+                        },
+                    )
+                continue
+
+            for rotation in rotations:
+                approved_entries = base_entries.filter(rotation_assignment=rotation).count()
+                payload = {
+                    "threshold_config_id": config.id,
+                    "rotation_assignment_id": rotation.id,
+                    "window_start": rotation.start_date,
+                    "window_end": rotation.end_date,
+                    "approved_entries": approved_entries,
+                    "required_entries": config.min_approved_entries,
+                    "is_met": approved_entries >= config.min_approved_entries,
+                }
+                snapshots_payload.append(payload)
+                if persist:
+                    LogbookThresholdSnapshot.objects.update_or_create(
+                        resident_training_record=rtr,
+                        threshold_config=config,
+                        rotation_assignment=rotation,
+                        window_start=rotation.start_date,
+                        window_end=rotation.end_date,
+                        defaults={
+                            "approved_entries": payload["approved_entries"],
+                            "required_entries": payload["required_entries"],
+                            "is_met": payload["is_met"],
+                        },
+                    )
+        else:
+            period_days = config.period_days or 30
+            window_start = today - timedelta(days=period_days - 1)
+            approved_entries = base_entries.filter(
+                approved_at__date__gte=window_start,
+                approved_at__date__lte=today,
+            ).count()
+            payload = {
+                "threshold_config_id": config.id,
+                "rotation_assignment_id": None,
+                "window_start": window_start,
+                "window_end": today,
+                "approved_entries": approved_entries,
+                "required_entries": config.min_approved_entries,
+                "is_met": approved_entries >= config.min_approved_entries,
+            }
+            snapshots_payload.append(payload)
+            if persist:
+                LogbookThresholdSnapshot.objects.update_or_create(
+                    resident_training_record=rtr,
+                    threshold_config=config,
+                    rotation_assignment=None,
+                    window_start=window_start,
+                    window_end=today,
+                    defaults={
+                        "approved_entries": payload["approved_entries"],
+                        "required_entries": payload["required_entries"],
+                        "is_met": payload["is_met"],
+                    },
+                )
+
+    overall_met = bool(snapshots_payload) and all(item["is_met"] for item in snapshots_payload)
+    return {
+        "overall_met": overall_met,
+        "count": len(snapshots_payload),
+        "items": snapshots_payload,
+    }
+
+
+class LogbookEntryViewSet(viewsets.ModelViewSet):
+    serializer_class = LogbookEntrySerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        qs = LogbookEntry.objects.select_related(
+            "resident_training_record__resident_user",
+            "rotation_assignment",
+            "reviewed_by",
+        ).prefetch_related("reviews")
+        status_param = self.request.query_params.get("status")
+        if status_param:
+            qs = qs.filter(status=status_param)
+
+        if _is_resident(user):
+            return qs.filter(resident_training_record__resident_user=user)
+        if _is_admin_or_utrmc_admin(user):
+            return qs.all()
+        if _is_supervisor_or_hod(user):
+            supervised_ids = _get_supervised_resident_ids(user)
+            dept_ids = _get_hod_department_ids(user)
+            return qs.filter(
+                Q(resident_training_record__resident_user_id__in=supervised_ids)
+                | Q(resident_training_record__resident_user__home_department_id__in=dept_ids)
+            ).distinct()
+        return qs.none()
+
+    def perform_create(self, serializer):
+        user = self.request.user
+        if _is_resident(user):
+            rtr = _get_active_rtr(user)
+            serializer.save(resident_training_record=rtr, created_by=user)
+            return
+        if _is_admin_or_utrmc_admin(user):
+            serializer.save(created_by=user)
+            return
+        raise DRFValidationError("Only residents/admin can create logbook entries.")
+
+    def update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        if not _can_access_resident_training(request.user, instance.resident_training_record):
+            return Response({"detail": "Permission denied."}, status=status.HTTP_403_FORBIDDEN)
+        if _is_resident(request.user) and instance.status not in {
+            LogbookEntry.STATUS_DRAFT,
+            LogbookEntry.STATUS_RETURNED,
+        }:
+            return Response(
+                {"detail": "Entry can only be edited in draft/returned status."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        return super().update(request, *args, **kwargs)
+
+    def partial_update(self, request, *args, **kwargs):
+        kwargs["partial"] = True
+        return self.update(request, *args, **kwargs)
+
+    @action(detail=True, methods=["post"])
+    def submit(self, request, pk=None):
+        entry = self.get_object()
+        if not (_is_admin_or_utrmc_admin(request.user) or (
+            _is_resident(request.user) and entry.resident_training_record.resident_user_id == request.user.id
+        )):
+            return Response({"detail": "Permission denied."}, status=status.HTTP_403_FORBIDDEN)
+        if entry.status not in {LogbookEntry.STATUS_DRAFT, LogbookEntry.STATUS_RETURNED}:
+            return Response(
+                {"detail": f"Cannot submit from {entry.status}."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        entry.status = LogbookEntry.STATUS_SUBMITTED
+        entry.submitted_at = timezone.now()
+        entry.supervisor_feedback = ""
+        entry.save()
+        return Response(LogbookEntrySerializer(entry, context={"request": request}).data)
+
+    def _review_entry(self, request, entry):
+        if not (_is_supervisor_or_hod(request.user) or _is_admin_or_utrmc_admin(request.user)):
+            return Response({"detail": "Permission denied."}, status=status.HTTP_403_FORBIDDEN)
+        if not _can_access_resident_training(request.user, entry.resident_training_record):
+            return Response({"detail": "Permission denied."}, status=status.HTTP_403_FORBIDDEN)
+        if entry.status != LogbookEntry.STATUS_SUBMITTED:
+            return Response(
+                {"detail": f"Cannot review from {entry.status}."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        action_name = request.data.get("action")
+        feedback = (request.data.get("feedback") or request.data.get("supervisor_feedback") or "").strip()
+        now = timezone.now()
+        if action_name == "approved":
+            entry.status = LogbookEntry.STATUS_APPROVED
+            entry.approved_at = now
+            review_action = LogbookReview.ACTION_APPROVED
+        elif action_name == "returned":
+            entry.status = LogbookEntry.STATUS_RETURNED
+            entry.returned_at = now
+            review_action = LogbookReview.ACTION_RETURNED
+        else:
+            return Response(
+                {"detail": "action must be 'approved' or 'returned'."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        entry.reviewed_by = request.user
+        entry.supervisor_feedback = feedback
+        entry.save()
+        LogbookReview.objects.create(
+            entry=entry,
+            reviewer=request.user,
+            action=review_action,
+            comments=feedback,
+        )
+        return Response(LogbookEntrySerializer(entry, context={"request": request}).data)
+
+    @action(detail=True, methods=["post"])
+    def review(self, request, pk=None):
+        entry = self.get_object()
+        return self._review_entry(request, entry)
+
+    @action(detail=True, methods=["post"])
+    def verify(self, request, pk=None):
+        entry = self.get_object()
+        return self._review_entry(request, entry)
+
+
+class LogbookReviewQueueView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        qs = LogbookEntry.objects.filter(status=LogbookEntry.STATUS_SUBMITTED).select_related(
+            "resident_training_record__resident_user",
+            "rotation_assignment",
+        )
+        if _is_admin_or_utrmc_admin(user):
+            pass
+        elif _is_supervisor_or_hod(user):
+            supervised_ids = _get_supervised_resident_ids(user)
+            dept_ids = _get_hod_department_ids(user)
+            qs = qs.filter(
+                Q(resident_training_record__resident_user_id__in=supervised_ids)
+                | Q(resident_training_record__resident_user__home_department_id__in=dept_ids)
+            ).distinct()
+        else:
+            return Response({"detail": "Permission denied."}, status=status.HTTP_403_FORBIDDEN)
+        data = LogbookEntrySerializer(qs, many=True, context={"request": request}).data
+        return Response({"count": qs.count(), "results": data})
+
+
+class LogbookThresholdConfigViewSet(viewsets.ModelViewSet):
+    serializer_class = LogbookThresholdConfigSerializer
+    permission_classes = [IsAuthenticated]
+    queryset = LogbookThresholdConfig.objects.select_related("program", "department", "configured_by")
+
+    def _check_write(self, request):
+        if _is_admin_or_utrmc_admin(request.user):
+            return
+        if _is_supervisor_or_hod(request.user) and _is_hod(request.user):
+            return
+        self.permission_denied(request, message="Only admin/utrmc_admin/HOD can modify threshold config.")
+
+    def perform_create(self, serializer):
+        serializer.save(configured_by=self.request.user)
+
+    def create(self, request, *args, **kwargs):
+        self._check_write(request)
+        return super().create(request, *args, **kwargs)
+
+    def update(self, request, *args, **kwargs):
+        self._check_write(request)
+        return super().update(request, *args, **kwargs)
+
+    def partial_update(self, request, *args, **kwargs):
+        self._check_write(request)
+        return super().partial_update(request, *args, **kwargs)
+
+    def destroy(self, request, *args, **kwargs):
+        self._check_write(request)
+        return super().destroy(request, *args, **kwargs)
+
+
+class LogbookMyThresholdView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        if not _is_resident(request.user):
+            return Response({"detail": "Residents only."}, status=status.HTTP_403_FORBIDDEN)
+        rtr = _get_active_rtr(request.user)
+        _evaluate_logbook_thresholds(rtr, persist=True)
+        snapshots = LogbookThresholdSnapshot.objects.filter(
+            resident_training_record=rtr
+        ).select_related("threshold_config", "rotation_assignment")
+        serializer = LogbookThresholdSnapshotSerializer(snapshots, many=True, context={"request": request})
+        return Response(
+            {
+                "count": snapshots.count(),
+                "results": serializer.data,
+                "overall_met": bool(serializer.data) and all(item["is_met"] for item in serializer.data),
+            }
+        )
+
+
+class SubmissionRequirementTemplateViewSet(viewsets.ModelViewSet):
+    serializer_class = SubmissionRequirementTemplateSerializer
+    permission_classes = [IsAuthenticated]
+    queryset = SubmissionRequirementTemplate.objects.select_related(
+        "program", "department", "created_by"
+    )
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        qp = self.request.query_params
+        if qp.get("submission_type"):
+            qs = qs.filter(submission_type=qp["submission_type"])
+        if qp.get("program"):
+            qs = qs.filter(program_id=qp["program"])
+        if qp.get("department"):
+            qs = qs.filter(department_id=qp["department"])
+        if qp.get("active") in {"true", "false"}:
+            qs = qs.filter(active=qp["active"] == "true")
+        return qs
+
+    def _check_write(self, request):
+        if _is_admin_or_utrmc_admin(request.user):
+            return
+        if _is_supervisor_or_hod(request.user) and _is_hod(request.user):
+            return
+        self.permission_denied(
+            request,
+            message="Only admin/utrmc_admin/HOD can modify submission requirements.",
+        )
+
+    def perform_create(self, serializer):
+        serializer.save(created_by=self.request.user)
+
+    def create(self, request, *args, **kwargs):
+        self._check_write(request)
+        return super().create(request, *args, **kwargs)
+
+    def update(self, request, *args, **kwargs):
+        self._check_write(request)
+        return super().update(request, *args, **kwargs)
+
+    def partial_update(self, request, *args, **kwargs):
+        self._check_write(request)
+        return super().partial_update(request, *args, **kwargs)
+
+    def destroy(self, request, *args, **kwargs):
+        self._check_write(request)
+        return super().destroy(request, *args, **kwargs)
+
+
+class _ResidentSubmissionBaseView(APIView):
+    permission_classes = [IsAuthenticated]
+    submission_type = None
+
+    def _get_submission(self, rtr):
+        return ResidentSubmission.objects.filter(
+            resident_training_record=rtr,
+            submission_type=self.submission_type,
+        ).first()
+
+    def get(self, request):
+        if not _is_resident(request.user):
+            return Response({"detail": "Residents only."}, status=status.HTTP_403_FORBIDDEN)
+        rtr = _get_active_rtr(request.user)
+        submission = self._get_submission(rtr)
+        if not submission:
+            return Response({"detail": "No submission found."}, status=status.HTTP_404_NOT_FOUND)
+        return Response(ResidentSubmissionSerializer(submission, context={"request": request}).data)
+
+    def post(self, request):
+        if not _is_resident(request.user):
+            return Response({"detail": "Residents only."}, status=status.HTTP_403_FORBIDDEN)
+        rtr = _get_active_rtr(request.user)
+        existing = self._get_submission(rtr)
+        if existing:
+            return Response(
+                {"detail": "Submission already exists. Use PATCH to update."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        submission = ResidentSubmission.objects.create(
+            resident_training_record=rtr,
+            submission_type=self.submission_type,
+            status=ResidentSubmission.STATUS_DRAFT,
+            feedback=(request.data.get("feedback") or "").strip(),
+        )
+        return Response(
+            ResidentSubmissionSerializer(submission, context={"request": request}).data,
+            status=status.HTTP_201_CREATED,
+        )
+
+    def patch(self, request):
+        if not _is_resident(request.user):
+            return Response({"detail": "Residents only."}, status=status.HTTP_403_FORBIDDEN)
+        rtr = _get_active_rtr(request.user)
+        submission = self._get_submission(rtr)
+        if not submission:
+            return Response({"detail": "No submission found."}, status=status.HTTP_404_NOT_FOUND)
+        if submission.status not in {ResidentSubmission.STATUS_DRAFT, ResidentSubmission.STATUS_RETURNED}:
+            return Response(
+                {"detail": "Submission can only be edited in draft/returned status."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        submission.feedback = (request.data.get("feedback") or submission.feedback or "").strip()
+        submission.save(update_fields=["feedback", "updated_at"])
+        return Response(ResidentSubmissionSerializer(submission, context={"request": request}).data)
+
+
+class SynopsisSubmissionView(_ResidentSubmissionBaseView):
+    submission_type = ResidentSubmission.TYPE_SYNOPSIS
+
+
+class ThesisSubmissionView(_ResidentSubmissionBaseView):
+    submission_type = ResidentSubmission.TYPE_THESIS
+
+
+class _SubmissionDocumentsBaseView(APIView):
+    permission_classes = [IsAuthenticated]
+    submission_type = None
+
+    def post(self, request):
+        if not _is_resident(request.user):
+            return Response({"detail": "Residents only."}, status=status.HTTP_403_FORBIDDEN)
+        rtr = _get_active_rtr(request.user)
+        submission, _ = ResidentSubmission.objects.get_or_create(
+            resident_training_record=rtr,
+            submission_type=self.submission_type,
+            defaults={"status": ResidentSubmission.STATUS_DRAFT},
+        )
+        if submission.status not in {ResidentSubmission.STATUS_DRAFT, ResidentSubmission.STATUS_RETURNED}:
+            return Response(
+                {"detail": "Documents can only be uploaded in draft/returned status."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        upload = request.FILES.get("file")
+        if not upload:
+            return Response({"detail": "file is required."}, status=status.HTTP_400_BAD_REQUEST)
+        requirement_id = request.data.get("requirement")
+        requirement = None
+        if requirement_id:
+            requirement = SubmissionRequirementTemplate.objects.filter(
+                pk=requirement_id,
+                submission_type=self.submission_type,
+                active=True,
+            ).first()
+            if not requirement:
+                return Response({"detail": "Invalid requirement."}, status=status.HTTP_400_BAD_REQUEST)
+        document = SubmissionDocument.objects.create(
+            submission=submission,
+            requirement=requirement,
+            file=upload,
+            original_filename=upload.name,
+            uploaded_by=request.user,
+            is_active=True,
+        )
+        return Response(
+            SubmissionDocumentSerializer(document, context={"request": request}).data,
+            status=status.HTTP_201_CREATED,
+        )
+
+
+class SynopsisSubmissionDocumentsView(_SubmissionDocumentsBaseView):
+    submission_type = ResidentSubmission.TYPE_SYNOPSIS
+
+
+class ThesisSubmissionDocumentsView(_SubmissionDocumentsBaseView):
+    submission_type = ResidentSubmission.TYPE_THESIS
+
+
+class _SubmissionSubmitBaseView(APIView):
+    permission_classes = [IsAuthenticated]
+    submission_type = None
+
+    def post(self, request):
+        if not _is_resident(request.user):
+            return Response({"detail": "Residents only."}, status=status.HTTP_403_FORBIDDEN)
+        rtr = _get_active_rtr(request.user)
+        submission = ResidentSubmission.objects.filter(
+            resident_training_record=rtr,
+            submission_type=self.submission_type,
+        ).first()
+        if not submission:
+            return Response({"detail": "Create submission first."}, status=status.HTTP_400_BAD_REQUEST)
+        if submission.status not in {ResidentSubmission.STATUS_DRAFT, ResidentSubmission.STATUS_RETURNED}:
+            return Response(
+                {"detail": f"Cannot submit from status {submission.status}."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        required_requirements = list(_get_submission_requirements(rtr, self.submission_type))
+        required_ids = {item.id for item in required_requirements}
+        uploaded_ids = set(
+            submission.documents.filter(
+                is_active=True,
+                requirement_id__in=required_ids,
+            ).values_list("requirement_id", flat=True)
+        )
+        missing = [item for item in required_requirements if item.id not in uploaded_ids]
+        if missing:
+            return Response(
+                {
+                    "detail": "All required documents must be uploaded before submission.",
+                    "missing_requirements": SubmissionRequirementTemplateSerializer(missing, many=True).data,
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        submission.status = ResidentSubmission.STATUS_SUBMITTED
+        submission.submitted_at = timezone.now()
+        submission.feedback = ""
+        submission.save()
+        SubmissionReview.objects.create(
+            submission=submission,
+            reviewer=request.user,
+            action=SubmissionReview.ACTION_SUBMITTED,
+            comments="Submitted for completeness review.",
+        )
+        return Response(ResidentSubmissionSerializer(submission, context={"request": request}).data)
+
+
+class SynopsisSubmissionSubmitView(_SubmissionSubmitBaseView):
+    submission_type = ResidentSubmission.TYPE_SYNOPSIS
+
+
+class ThesisSubmissionSubmitView(_SubmissionSubmitBaseView):
+    submission_type = ResidentSubmission.TYPE_THESIS
+
+
+class _SubmissionReviewQueueBaseView(APIView):
+    permission_classes = [IsAuthenticated]
+    submission_type = None
+
+    def get(self, request):
+        user = request.user
+        qs = ResidentSubmission.objects.filter(
+            submission_type=self.submission_type,
+            status__in=[ResidentSubmission.STATUS_SUBMITTED, ResidentSubmission.STATUS_UNDER_REVIEW],
+        ).select_related(
+            "resident_training_record__resident_user",
+            "resident_training_record__program",
+        )
+        if _is_admin_or_utrmc_admin(user) or user.role == "utrmc_user":
+            pass
+        elif _is_supervisor_or_hod(user):
+            supervised_ids = _get_supervised_resident_ids(user)
+            dept_ids = _get_hod_department_ids(user)
+            qs = qs.filter(
+                Q(resident_training_record__resident_user_id__in=supervised_ids)
+                | Q(resident_training_record__resident_user__home_department_id__in=dept_ids)
+            ).distinct()
+        else:
+            return Response({"detail": "Permission denied."}, status=status.HTTP_403_FORBIDDEN)
+
+        serializer = ResidentSubmissionSerializer(qs, many=True, context={"request": request})
+        return Response({"count": qs.count(), "results": serializer.data})
+
+
+class SynopsisReviewQueueView(_SubmissionReviewQueueBaseView):
+    submission_type = ResidentSubmission.TYPE_SYNOPSIS
+
+
+class ThesisReviewQueueView(_SubmissionReviewQueueBaseView):
+    submission_type = ResidentSubmission.TYPE_THESIS
+
+
+class _SubmissionReviewActionBaseView(APIView):
+    permission_classes = [IsAuthenticated]
+    submission_type = None
+
+    def post(self, request, submission_id):
+        user = request.user
+        if user.role == "utrmc_user":
+            return Response({"detail": "Read-only role."}, status=status.HTTP_403_FORBIDDEN)
+        if not (_is_supervisor_or_hod(user) or _is_admin_or_utrmc_admin(user)):
+            return Response({"detail": "Permission denied."}, status=status.HTTP_403_FORBIDDEN)
+
+        submission = ResidentSubmission.objects.filter(
+            pk=submission_id,
+            submission_type=self.submission_type,
+        ).select_related("resident_training_record__resident_user", "resident_training_record__program").first()
+        if not submission:
+            return Response({"detail": "Submission not found."}, status=status.HTTP_404_NOT_FOUND)
+        if not _can_access_resident_training(user, submission.resident_training_record):
+            return Response({"detail": "Permission denied."}, status=status.HTTP_403_FORBIDDEN)
+
+        action_name = request.data.get("action")
+        comments = (request.data.get("comments") or request.data.get("feedback") or "").strip()
+        now = timezone.now()
+
+        if action_name == "start-review":
+            if submission.status not in {
+                ResidentSubmission.STATUS_SUBMITTED,
+                ResidentSubmission.STATUS_UNDER_REVIEW,
+            }:
+                return Response(
+                    {"detail": f"Cannot start review from status {submission.status}."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            submission.status = ResidentSubmission.STATUS_UNDER_REVIEW
+            submission.under_review_at = now
+            review_action = SubmissionReview.ACTION_UNDER_REVIEW
+        elif action_name == "return":
+            if submission.status not in {
+                ResidentSubmission.STATUS_SUBMITTED,
+                ResidentSubmission.STATUS_UNDER_REVIEW,
+            }:
+                return Response(
+                    {"detail": f"Cannot return from status {submission.status}."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            submission.status = ResidentSubmission.STATUS_RETURNED
+            submission.returned_at = now
+            review_action = SubmissionReview.ACTION_RETURNED
+        elif action_name == "verify":
+            if submission.status not in {
+                ResidentSubmission.STATUS_SUBMITTED,
+                ResidentSubmission.STATUS_UNDER_REVIEW,
+                ResidentSubmission.STATUS_VERIFIED,
+            }:
+                return Response(
+                    {"detail": f"Cannot verify from status {submission.status}."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            certificate_number = (
+                f"{submission.submission_type[:3]}-{submission.id}-{now.strftime('%Y%m%d%H%M%S')}"
+            )
+            certificate, _ = SubmissionCertificate.objects.get_or_create(
+                submission=submission,
+                defaults={
+                    "certificate_number": certificate_number,
+                    "issued_by": user,
+                    "status": SubmissionCertificate.STATUS_ISSUED,
+                },
+            )
+            if not certificate.issued_by_id:
+                certificate.issued_by = user
+                certificate.save(update_fields=["issued_by"])
+            submission.status = ResidentSubmission.STATUS_CERTIFICATE_ISSUED
+            submission.verified_at = now
+            submission.certificate_issued_at = now
+            review_action = SubmissionReview.ACTION_CERTIFICATE_ISSUED
+            if submission.submission_type == ResidentSubmission.TYPE_THESIS:
+                try:
+                    thesis = submission.resident_training_record.thesis
+                except ResidentThesis.DoesNotExist:
+                    thesis = None
+                if thesis and thesis.status != ResidentThesis.STATUS_SUBMITTED:
+                    thesis.status = ResidentThesis.STATUS_SUBMITTED
+                    thesis.submitted_at = thesis.submitted_at or now
+                    thesis.save()
+        else:
+            return Response(
+                {"detail": "action must be one of: start-review, return, verify."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        submission.reviewed_by = user
+        submission.feedback = comments
+        submission.save()
+        SubmissionReview.objects.create(
+            submission=submission,
+            reviewer=user,
+            action=review_action,
+            comments=comments,
+        )
+        return Response(ResidentSubmissionSerializer(submission, context={"request": request}).data)
+
+
+class SynopsisReviewActionView(_SubmissionReviewActionBaseView):
+    submission_type = ResidentSubmission.TYPE_SYNOPSIS
+
+
+class ThesisReviewActionView(_SubmissionReviewActionBaseView):
+    submission_type = ResidentSubmission.TYPE_THESIS
+
+
+class SubmissionCertificatesView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        qs = SubmissionCertificate.objects.select_related(
+            "submission__resident_training_record__resident_user",
+            "submission",
+            "issued_by",
+            "verified_by",
+        )
+        submission_type = request.query_params.get("submission_type")
+        if submission_type:
+            qs = qs.filter(submission__submission_type=submission_type)
+
+        if _is_resident(user):
+            qs = qs.filter(submission__resident_training_record__resident_user=user)
+        elif _is_admin_or_utrmc_admin(user) or user.role == "utrmc_user":
+            pass
+        elif _is_supervisor_or_hod(user):
+            supervised_ids = _get_supervised_resident_ids(user)
+            dept_ids = _get_hod_department_ids(user)
+            qs = qs.filter(
+                Q(submission__resident_training_record__resident_user_id__in=supervised_ids)
+                | Q(submission__resident_training_record__resident_user__home_department_id__in=dept_ids)
+            ).distinct()
+        else:
+            return Response({"detail": "Permission denied."}, status=status.HTTP_403_FORBIDDEN)
+
+        serializer = SubmissionCertificateSerializer(qs, many=True, context={"request": request})
+        return Response({"count": qs.count(), "results": serializer.data})
+
+
+class ProgramRotationRequirementViewSet(viewsets.ModelViewSet):
+    serializer_class = ProgramRotationRequirementSerializer
+    permission_classes = [IsAuthenticated]
+    queryset = ProgramRotationRequirement.objects.select_related("program", "department")
+
+    def _check_write(self, request):
+        if _is_admin_or_utrmc_admin(request.user):
+            return
+        if _is_supervisor_or_hod(request.user) and _is_hod(request.user):
+            return
+        self.permission_denied(
+            request,
+            message="Only admin/utrmc_admin/HOD can manage rotation requirements.",
+        )
+
+    def create(self, request, *args, **kwargs):
+        self._check_write(request)
+        return super().create(request, *args, **kwargs)
+
+    def update(self, request, *args, **kwargs):
+        self._check_write(request)
+        return super().update(request, *args, **kwargs)
+
+    def partial_update(self, request, *args, **kwargs):
+        self._check_write(request)
+        return super().partial_update(request, *args, **kwargs)
+
+    def destroy(self, request, *args, **kwargs):
+        self._check_write(request)
+        return super().destroy(request, *args, **kwargs)
+
+
+class RotationCompletionsView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        qs = RotationCompletion.objects.select_related(
+            "rotation__resident_training__resident_user",
+            "rotation__hospital_department__hospital",
+            "rotation__hospital_department__department",
+            "confirmed_by",
+            "verified_by",
+            "certificate",
+        )
+        status_param = request.query_params.get("status")
+        if status_param:
+            qs = qs.filter(status=status_param)
+        if _is_resident(user):
+            qs = qs.filter(rotation__resident_training__resident_user=user)
+        elif _is_admin_or_utrmc_admin(user) or user.role == "utrmc_user":
+            pass
+        elif _is_supervisor_or_hod(user):
+            supervised_ids = _get_supervised_resident_ids(user)
+            dept_ids = _get_hod_department_ids(user)
+            qs = qs.filter(
+                Q(rotation__resident_training__resident_user_id__in=supervised_ids)
+                | Q(rotation__resident_training__resident_user__home_department_id__in=dept_ids)
+                | Q(rotation__hospital_department__department_id__in=dept_ids)
+            ).distinct()
+        else:
+            return Response({"detail": "Permission denied."}, status=status.HTTP_403_FORBIDDEN)
+
+        serializer = RotationCompletionSerializer(qs, many=True, context={"request": request})
+        return Response({"count": qs.count(), "results": serializer.data})
+
+
+class RotationCompletionVerifyView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, completion_id):
+        if not _is_admin_or_utrmc_admin(request.user):
+            return Response({"detail": "Only admin/utrmc_admin can verify."}, status=status.HTTP_403_FORBIDDEN)
+        completion = RotationCompletion.objects.select_related("rotation").filter(pk=completion_id).first()
+        if not completion:
+            return Response({"detail": "Completion not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        now = timezone.now()
+        completion.status = RotationCompletion.STATUS_VERIFIED
+        completion.verified_by = request.user
+        completion.verified_at = now
+        completion.save()
+
+        certificate, _ = RotationCertificate.objects.get_or_create(
+            completion=completion,
+            defaults={
+                "certificate_number": f"ROT-{completion.rotation_id}-{now.strftime('%Y%m%d%H%M%S')}",
+                "issued_by": request.user,
+            },
+        )
+        certificate.status = RotationCertificate.STATUS_VERIFIED
+        certificate.verified_by = request.user
+        certificate.verified_at = now
+        if not certificate.issued_by_id:
+            certificate.issued_by = request.user
+        certificate.save()
+
+        return Response(RotationCompletionSerializer(completion, context={"request": request}).data)
+
+
+class ResidentOperationalDashboardView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        if not _is_resident(request.user):
+            return Response({"detail": "Residents only."}, status=status.HTTP_403_FORBIDDEN)
+        rtr = _get_active_rtr_or_none(request.user)
+        if rtr is None:
+            return Response(
+                {
+                    "training_record_id": None,
+                    "logbook": {
+                        "total": 0,
+                        "draft": 0,
+                        "submitted": 0,
+                        "returned": 0,
+                        "approved": 0,
+                        "threshold": {"overall_met": False, "overall_reasons": []},
+                    },
+                    "submissions": {"synopsis": None, "thesis": None},
+                    "certificates": [],
+                    "readiness": {
+                        "logbook_threshold_met": False,
+                        "synopsis_certificate_issued": False,
+                        "thesis_certificate_issued": False,
+                        "required_rotations_verified": False,
+                        "required_rotation_count": 0,
+                        "verified_rotation_count": 0,
+                    },
+                    "pending_actions": [],
+                }
+            )
+
+        logbook_qs = LogbookEntry.objects.filter(resident_training_record=rtr)
+        logbook_counts = {
+            "total": logbook_qs.count(),
+            "draft": logbook_qs.filter(status=LogbookEntry.STATUS_DRAFT).count(),
+            "submitted": logbook_qs.filter(status=LogbookEntry.STATUS_SUBMITTED).count(),
+            "returned": logbook_qs.filter(status=LogbookEntry.STATUS_RETURNED).count(),
+            "approved": logbook_qs.filter(status=LogbookEntry.STATUS_APPROVED).count(),
+        }
+        threshold_summary = _evaluate_logbook_thresholds(rtr, persist=True)
+
+        synopsis_submission = ResidentSubmission.objects.filter(
+            resident_training_record=rtr, submission_type=ResidentSubmission.TYPE_SYNOPSIS
+        ).first()
+        thesis_submission = ResidentSubmission.objects.filter(
+            resident_training_record=rtr, submission_type=ResidentSubmission.TYPE_THESIS
+        ).first()
+
+        certificates = []
+        for cert in SubmissionCertificate.objects.filter(
+            submission__resident_training_record=rtr
+        ).select_related("submission"):
+            certificates.append(
+                {
+                    "type": f"{cert.submission.submission_type.lower()}_submission",
+                    "certificate_number": cert.certificate_number,
+                    "issued_at": cert.issued_at,
+                    "status": cert.status,
+                }
+            )
+        for cert in RotationCertificate.objects.filter(
+            completion__rotation__resident_training=rtr
+        ).select_related("completion__rotation"):
+            certificates.append(
+                {
+                    "type": "rotation_completion",
+                    "certificate_number": cert.certificate_number,
+                    "issued_at": cert.issued_at,
+                    "status": cert.status,
+                    "rotation_id": cert.completion.rotation_id,
+                }
+            )
+
+        required_rotation_count = ProgramRotationRequirement.objects.filter(
+            program=rtr.program, is_mandatory=True
+        ).count()
+        verified_rotation_count = RotationCompletion.objects.filter(
+            rotation__resident_training=rtr,
+            status=RotationCompletion.STATUS_VERIFIED,
+        ).count()
+
+        readiness = {
+            "logbook_threshold_met": threshold_summary["overall_met"],
+            "synopsis_certificate_issued": bool(
+                synopsis_submission and synopsis_submission.status == ResidentSubmission.STATUS_CERTIFICATE_ISSUED
+            ),
+            "thesis_certificate_issued": bool(
+                thesis_submission and thesis_submission.status == ResidentSubmission.STATUS_CERTIFICATE_ISSUED
+            ),
+            "required_rotations_verified": required_rotation_count > 0 and verified_rotation_count >= required_rotation_count,
+            "required_rotation_count": required_rotation_count,
+            "verified_rotation_count": verified_rotation_count,
+        }
+
+        pending_actions = []
+        if logbook_counts["returned"] > 0:
+            pending_actions.append(f"{logbook_counts['returned']} logbook entries returned for revision")
+        if logbook_counts["draft"] > 0:
+            pending_actions.append(f"{logbook_counts['draft']} logbook drafts pending submission")
+        if synopsis_submission and synopsis_submission.status == ResidentSubmission.STATUS_RETURNED:
+            pending_actions.append("Synopsis submission returned for missing/incomplete documents")
+        if thesis_submission and thesis_submission.status == ResidentSubmission.STATUS_RETURNED:
+            pending_actions.append("Thesis submission returned for missing/incomplete documents")
+
+        return Response(
+            {
+                "training_record_id": rtr.id,
+                "logbook": {
+                    **logbook_counts,
+                    "threshold": threshold_summary,
+                },
+                "submissions": {
+                    "synopsis": ResidentSubmissionSerializer(synopsis_submission).data if synopsis_submission else None,
+                    "thesis": ResidentSubmissionSerializer(thesis_submission).data if thesis_submission else None,
+                },
+                "certificates": certificates,
+                "readiness": readiness,
+                "pending_actions": pending_actions,
+            }
+        )
+
+
+class SupervisorOperationalDashboardView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        if not (_is_supervisor_or_hod(user) or _is_admin_or_utrmc_admin(user)):
+            return Response({"detail": "Permission denied."}, status=status.HTTP_403_FORBIDDEN)
+
+        if _is_admin_or_utrmc_admin(user):
+            resident_ids = set(
+                ResidentTrainingRecord.objects.filter(active=True).values_list("resident_user_id", flat=True)
+            )
+        else:
+            resident_ids = _get_supervised_resident_ids(user)
+            dept_ids = _get_hod_department_ids(user)
+            resident_ids |= _get_department_resident_ids(dept_ids)
+
+        rtrs = ResidentTrainingRecord.objects.filter(
+            active=True, resident_user_id__in=resident_ids
+        ).select_related("resident_user", "program")
+        rtr_ids = list(rtrs.values_list("id", flat=True))
+
+        pending_logbook = LogbookEntry.objects.filter(
+            resident_training_record_id__in=rtr_ids,
+            status=LogbookEntry.STATUS_SUBMITTED,
+        ).count()
+        returned_logbook = LogbookEntry.objects.filter(
+            resident_training_record_id__in=rtr_ids,
+            status=LogbookEntry.STATUS_RETURNED,
+        ).count()
+        pending_rotations = RotationAssignment.objects.filter(
+            resident_training_id__in=rtr_ids,
+            status=RotationAssignment.STATUS_SUBMITTED,
+        ).count()
+        pending_synopsis = ResidentSubmission.objects.filter(
+            resident_training_record_id__in=rtr_ids,
+            submission_type=ResidentSubmission.TYPE_SYNOPSIS,
+            status__in=[ResidentSubmission.STATUS_SUBMITTED, ResidentSubmission.STATUS_UNDER_REVIEW],
+        ).count()
+        pending_thesis = ResidentSubmission.objects.filter(
+            resident_training_record_id__in=rtr_ids,
+            submission_type=ResidentSubmission.TYPE_THESIS,
+            status__in=[ResidentSubmission.STATUS_SUBMITTED, ResidentSubmission.STATUS_UNDER_REVIEW],
+        ).count()
+
+        residents = []
+        lagging = []
+        for rtr in rtrs:
+            threshold = _evaluate_logbook_thresholds(rtr, persist=False)
+            resident_row = {
+                "resident_id": rtr.resident_user_id,
+                "resident_name": rtr.resident_user.get_full_name() or rtr.resident_user.username,
+                "program": rtr.program.name,
+                "logbook_approved": LogbookEntry.objects.filter(
+                    resident_training_record=rtr, status=LogbookEntry.STATUS_APPROVED
+                ).count(),
+                "pending_reviews": LogbookEntry.objects.filter(
+                    resident_training_record=rtr, status=LogbookEntry.STATUS_SUBMITTED
+                ).count(),
+                "threshold_met": threshold["overall_met"],
+            }
+            residents.append(resident_row)
+            if not threshold["overall_met"]:
+                lagging.append(resident_row)
+
+        return Response(
+            {
+                "assigned_residents": len(resident_ids),
+                "pending_logbook_reviews": pending_logbook,
+                "returned_logbook_queue": returned_logbook,
+                "pending_rotation_applications": pending_rotations,
+                "pending_synopsis_reviews": pending_synopsis,
+                "pending_thesis_reviews": pending_thesis,
+                "residents": residents,
+                "lagging_residents": lagging,
+                "is_hod": _is_hod(user),
+            }
+        )
+
+
+class HODOperationalDashboardView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        if not (_is_supervisor_or_hod(user) and _is_hod(user)):
+            return Response({"detail": "Active HOD access required."}, status=status.HTTP_403_FORBIDDEN)
+        dept_ids = _get_hod_department_ids(user)
+        resident_ids = _get_department_resident_ids(dept_ids)
+        rtrs = ResidentTrainingRecord.objects.filter(
+            active=True, resident_user_id__in=resident_ids
+        ).select_related("resident_user", "program")
+        rtr_ids = list(rtrs.values_list("id", flat=True))
+
+        supervisor_lag = []
+        resident_by_supervisor = {}
+        for row in rtrs:
+            sup = row.resident_user.supervisor
+            key = sup.id if sup else None
+            if key not in resident_by_supervisor:
+                resident_by_supervisor[key] = {
+                    "supervisor_id": sup.id if sup else None,
+                    "supervisor_name": (sup.get_full_name() or sup.username) if sup else "Unassigned",
+                    "pending_logbook_reviews": 0,
+                }
+            resident_by_supervisor[key]["pending_logbook_reviews"] += LogbookEntry.objects.filter(
+                resident_training_record=row, status=LogbookEntry.STATUS_SUBMITTED
+            ).count()
+        supervisor_lag = sorted(
+            resident_by_supervisor.values(),
+            key=lambda item: item["pending_logbook_reviews"],
+            reverse=True,
+        )
+
+        return Response(
+            {
+                "departments": list(dept_ids),
+                "department_residents": len(resident_ids),
+                "pending_logbook_approvals": LogbookEntry.objects.filter(
+                    resident_training_record_id__in=rtr_ids,
+                    status=LogbookEntry.STATUS_SUBMITTED,
+                ).count(),
+                "rotation_applications": RotationAssignment.objects.filter(
+                    resident_training_id__in=rtr_ids,
+                    status=RotationAssignment.STATUS_SUBMITTED,
+                ).count(),
+                "supervisor_lag": supervisor_lag,
+                "milestone_completion": {
+                    "synopsis_certificates": SubmissionCertificate.objects.filter(
+                        submission__resident_training_record_id__in=rtr_ids,
+                        submission__submission_type=ResidentSubmission.TYPE_SYNOPSIS,
+                    ).count(),
+                    "thesis_certificates": SubmissionCertificate.objects.filter(
+                        submission__resident_training_record_id__in=rtr_ids,
+                        submission__submission_type=ResidentSubmission.TYPE_THESIS,
+                    ).count(),
+                    "rotation_verified": RotationCompletion.objects.filter(
+                        rotation__resident_training_id__in=rtr_ids,
+                        status=RotationCompletion.STATUS_VERIFIED,
+                    ).count(),
+                },
+            }
+        )
+
+
+class UTRMCOperationalDashboardView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        if not _is_utrmc_viewer(user):
+            return Response({"detail": "Permission denied."}, status=status.HTTP_403_FORBIDDEN)
+
+        resident_qs = ResidentTrainingRecord.objects.filter(active=True).select_related(
+            "resident_user", "program"
+        )
+        search = (request.query_params.get("search") or "").strip().lower()
+        if search:
+            resident_qs = resident_qs.filter(
+                Q(resident_user__username__icontains=search)
+                | Q(resident_user__first_name__icontains=search)
+                | Q(resident_user__last_name__icontains=search)
+            )
+        resident_ids = list(resident_qs.values_list("id", flat=True))
+
+        readiness_rows = []
+        for rtr in resident_qs[:200]:
+            threshold = _evaluate_logbook_thresholds(rtr, persist=False)
+            synopsis_ok = ResidentSubmission.objects.filter(
+                resident_training_record=rtr,
+                submission_type=ResidentSubmission.TYPE_SYNOPSIS,
+                status=ResidentSubmission.STATUS_CERTIFICATE_ISSUED,
+            ).exists()
+            thesis_ok = ResidentSubmission.objects.filter(
+                resident_training_record=rtr,
+                submission_type=ResidentSubmission.TYPE_THESIS,
+                status=ResidentSubmission.STATUS_CERTIFICATE_ISSUED,
+            ).exists()
+            required_rotations = ProgramRotationRequirement.objects.filter(
+                program=rtr.program, is_mandatory=True
+            ).count()
+            verified_rotations = RotationCompletion.objects.filter(
+                rotation__resident_training=rtr,
+                status=RotationCompletion.STATUS_VERIFIED,
+            ).count()
+            readiness_rows.append(
+                {
+                    "resident_id": rtr.resident_user_id,
+                    "resident_name": rtr.resident_user.get_full_name() or rtr.resident_user.username,
+                    "program": rtr.program.name,
+                    "logbook_threshold_met": threshold["overall_met"],
+                    "synopsis_certificate_issued": synopsis_ok,
+                    "thesis_certificate_issued": thesis_ok,
+                    "required_rotation_count": required_rotations,
+                    "verified_rotation_count": verified_rotations,
+                    "rotation_requirement_met": required_rotations > 0 and verified_rotations >= required_rotations,
+                }
+            )
+
+        return Response(
+            {
+                "cross_department_overview": {
+                    "active_residents": resident_qs.count(),
+                    "program_count": TrainingProgram.objects.filter(active=True).count(),
+                    "pending_logbook_reviews": LogbookEntry.objects.filter(
+                        status=LogbookEntry.STATUS_SUBMITTED
+                    ).count(),
+                },
+                "pending_synopsis_reviews": ResidentSubmission.objects.filter(
+                    submission_type=ResidentSubmission.TYPE_SYNOPSIS,
+                    status__in=[ResidentSubmission.STATUS_SUBMITTED, ResidentSubmission.STATUS_UNDER_REVIEW],
+                ).count(),
+                "pending_thesis_reviews": ResidentSubmission.objects.filter(
+                    submission_type=ResidentSubmission.TYPE_THESIS,
+                    status__in=[ResidentSubmission.STATUS_SUBMITTED, ResidentSubmission.STATUS_UNDER_REVIEW],
+                ).count(),
+                "pending_rotation_completion_verifications": RotationCompletion.objects.filter(
+                    status=RotationCompletion.STATUS_PENDING_UTRMC_VERIFICATION
+                ).count(),
+                "resident_milestone_readiness": readiness_rows,
+                "readiness_summary": {
+                    "fully_ready_count": sum(
+                        1
+                        for row in readiness_rows
+                        if row["logbook_threshold_met"]
+                        and row["synopsis_certificate_issued"]
+                        and row["thesis_certificate_issued"]
+                        and row["rotation_requirement_met"]
+                    ),
+                    "total_rows": len(readiness_rows),
+                },
+            }
+        )

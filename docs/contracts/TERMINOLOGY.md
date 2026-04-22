@@ -16,7 +16,13 @@ These are user-facing terms. Do not change once pilot begins.
 - **Bulk Setup**: prerequisite-aware import/export workspace on the UTRMC overview page for canonical hospitals, departments, matrix, users, and assignments
 - **Dry Run**: validates uploaded rows without writing to the database
 - **Template CSV**: the canonical downloadable file showing the exact expected columns for a bulk import type
+- **Under Review**: submission completeness review is in progress by supervisor/HOD/UTRMC reviewer
+- **Certificate Issued**: a verified synopsis/thesis/rotation-completion certificate exists with issue timestamp
+- **Rotation Completion Verification**: post-rotation check where department confirms and UTRMC verifies completion
+- **Logbook**: active resident page for logbook draft/submission and threshold state; replaces the previous active navigation label "Academic Progress" as of 2026-04-21
+- **Deferred Workflow**: implemented or partially implemented route/API that is intentionally hidden from active navigation and excluded from the release gate
 
 Notes:
 - UI displays **Submitted** even if backend enum is `pending`.
 - UI reads `feedback` from API (alias of `supervisor_feedback`).
+- 2026-04-21 terminology lock update: synopsis, thesis, postings, and rotations phase-1 are deferred workflows, not active release claims.

@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { userbaseApi, DepartmentRosterResponse } from '@/lib/api/userbase';
+import PageHeader from '@/components/ui/PageHeader';
 
 export default function UTRMCDepartmentRosterPage() {
   const params = useParams();
@@ -23,17 +24,19 @@ export default function UTRMCDepartmentRosterPage() {
   if (!roster) return null;
 
   return (
-    <div>
-      <h1 className="text-2xl font-bold text-gray-900 mb-4">Department Roster</h1>
-      <p className="text-lg text-gray-700 mb-2">{roster.department.name}</p>
+    <div className="pg-page">
+      <PageHeader
+        title="Department Roster"
+        description={`Department: ${roster.department.name}`}
+      />
       {roster.hod && (
-        <div className="mb-4">
+        <div className="pg-card">
           <h2 className="text-lg font-semibold text-gray-800">Head of Department</h2>
           <p className="text-gray-600">{roster.hod.full_name ?? roster.hod.username}</p>
         </div>
       )}
       {roster.supervisors.length > 0 && (
-        <div className="mb-4">
+        <div className="pg-card">
           <h2 className="text-lg font-semibold text-gray-800">Supervisors</h2>
           <ul className="list-disc pl-5">
             {roster.supervisors.map((s) => (
@@ -45,7 +48,7 @@ export default function UTRMCDepartmentRosterPage() {
         </div>
       )}
       {roster.residents.length > 0 && (
-        <div className="mb-4">
+        <div className="pg-card">
           <h2 className="text-lg font-semibold text-gray-800">Residents</h2>
           <ul className="list-disc pl-5">
             {roster.residents.map((r) => (

@@ -80,6 +80,7 @@ INSTALLED_APPS = [
     "rest_framework",  # For API endpoints
     "rest_framework_simplejwt",  # For JWT authentication
     "django_filters",  # For Advanced filtering
+    "drf_spectacular",  # OpenAPI schema generation
     "widget_tweaks",  # For form widget customization
     "simple_history",  # For audit history
     "django_celery_beat",  # For Celery beat periodic task scheduling
@@ -283,6 +284,7 @@ CRISPY_TEMPLATE_PACK = "bootstrap5"
 
 # Django REST Framework Settings
 REST_FRAMEWORK = {
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "rest_framework_simplejwt.authentication.JWTAuthentication",
         "rest_framework.authentication.SessionAuthentication",
@@ -306,6 +308,13 @@ REST_FRAMEWORK = {
         "user": os.environ.get("THROTTLE_USER_RATE", "1000/hour"),
         "search": os.environ.get("THROTTLE_SEARCH_RATE", "30/min"),
     },
+}
+
+SPECTACULAR_SETTINGS = {
+    "TITLE": "PGSIMS API",
+    "DESCRIPTION": "Postgraduate Student Information Management System active API contract.",
+    "VERSION": "1.0.0",
+    "SERVE_INCLUDE_SCHEMA": False,
 }
 
 # Email Configuration

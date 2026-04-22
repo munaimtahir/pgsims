@@ -106,3 +106,8 @@ docs/_archive/_patches/*.patch
 
 # MCP runtime artifacts
 output/playwright/
+output/
+OUT/
+frontend/e2e/output/
+frontend/e2e/screenshots/
+frontend/.next/

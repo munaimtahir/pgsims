@@ -18,10 +18,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const userName = user?.full_name || user?.email || '';
 
   return (
-    <div className="flex h-screen overflow-hidden bg-gray-50">
+    <div className="flex min-h-screen overflow-hidden bg-slate-50">
       <Sidebar role={user?.role ?? ''} userName={userName} onLogout={handleLogout} />
-      <main className="flex-1 overflow-y-auto">
-        <div className="px-6 py-6 max-w-7xl mx-auto">
+      <main className="flex-1 overflow-y-auto bg-gradient-to-b from-slate-50 to-slate-100/50">
+        <div className="mx-auto w-full max-w-7xl px-4 py-5 sm:px-6 lg:px-8">
           {children}
         </div>
       </main>

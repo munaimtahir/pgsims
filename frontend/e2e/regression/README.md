@@ -8,8 +8,8 @@ This folder contains regression specs for features that are **partially or not y
 |------|-----------|--------|
 | `login.spec.ts` | Login page (implemented) | ✅ Promoted to `smoke/auth_flow.spec.ts` — kept here as original |
 | `utrmc_readonly_dashboard.spec.ts` | `data-testid` attributes on UTRMC dashboard | ⏳ Needs `data-testid` hooks added to components |
-| `logbook_submit_return_resubmit_approve.spec.ts` | Logbook submission form UI | ⏳ Needs logbook form `data-testid` hooks |
-| `admin_analytics.spec.ts` | Analytics dashboard page | ⏳ Feature not yet implemented |
+| `logbook_submit_return_resubmit_approve.spec.ts` | Legacy `/dashboard/pg/logbook` route | ⛔ Outside the current active-surface baseline |
+| `admin_analytics.spec.ts` | Legacy analytics live-feed route | ⛔ Outside the current active-surface baseline |
 | `import_reports_dashboard.spec.ts` | Bulk import UI | ⏳ Feature not yet implemented |
 | `cases_create_submit_review.spec.ts` | Cases submission UI | ⏳ Needs verification |
 

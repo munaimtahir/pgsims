@@ -1,6 +1,6 @@
 # PGSIMS Playwright Runbook
 
-## Canonical local E2E baseline (smoke + workflow)
+## Canonical local E2E baseline (smoke + workflow + active-surface)
 
 This repository's canonical local smoke model is:
 
@@ -9,6 +9,7 @@ This repository's canonical local smoke model is:
 - Deterministic users/data: `python manage.py seed_e2e`
 - Smoke command: `npm run test:e2e:smoke:local`
 - Workflow command: `npm run test:e2e:workflow:local`
+- Active-surface command: `npm run test:e2e:active-surface:local`
 
 `frontend/playwright.config.ts` defaults now target this local model.  
 Override with env vars only when intentionally testing a different environment.
@@ -43,6 +44,12 @@ This command is idempotent (`update_or_create`) and provisions canonical smoke u
 - `e2e_admin / Admin123!`
 - `e2e_supervisor / Supervisor123!`
 - `e2e_pg / Pg123456!`
+- `resident_user / ResidentUser123!`
+- `supervisor_user / SupervisorUser123!`
+- `hod_user / HodUser123!`
+- `utrmc_admin_user / UtrmcAdminUser123!`
+- `utrmc_staff_user / UtrmcStaffUser123!`
+- `negative_role_user / NegativeRole123!`
 
 ## 3) Run canonical smoke gate
 
@@ -71,7 +78,35 @@ Workflow responsibility (contract-critical promoted flows):
 - supervisor return flow (`supervisor-return`) with visible success/result state
 - resident eligibility reasons rendered in browser
 
-## 5) Optional: run with explicit env overrides
+## 5) Run active-surface verification suite
+
+```bash
+cd frontend
+npm run test:e2e:active-surface:local
+```
+
+The active-surface npm scripts reseed `resident_user` and related deterministic fixtures before execution.
+If you bypass npm and call raw `npx playwright test --project=active-surface ...`, run `scripts/e2e_seed.sh` first.
+
+Active-surface suite responsibility:
+- logbook end-to-end review loop
+- logbook review-queue permission boundaries
+- auth/session reachability for the promoted resident, supervisor, and UTRMC surfaces
+
+The broader inactive-depth verification suite remains available for inactive-depth checks:
+
+```bash
+cd frontend
+npm run test:e2e:inactive-depth:local
+```
+
+Inactive-depth responsibility:
+- dashboard counters that depend on inactive-depth state
+- synopsis/thesis completeness + certificate issuance visibility
+- rotation phase-1 lifecycle and verification queue
+- regression smoke for the inactive depth routes
+
+## 6) Optional: run with explicit env overrides
 
 ```bash
 cd frontend
@@ -80,7 +115,7 @@ E2E_API_URL=http://127.0.0.1:8014 \
 npm run test:e2e:smoke
 ```
 
-## 6) Other suites (not part of smoke/workflow gates)
+## 7) Other suites (not part of smoke/workflow/active-surface gates)
 
 ```bash
 cd frontend
@@ -92,25 +127,45 @@ npm run test:e2e:workflows
 npm run test:e2e:negative
 ```
 
-## 7) Reports and artifacts
+## 8) Screenshot catalog
+
+```bash
+cd frontend
+npm run test:e2e:screenshots:local
+```
+
+This produces a presentation-oriented screenshot catalog under:
+
+- `output/playwright/screenshots-catalog/`
+
+For a single command that runs the full Playwright suite and retains the screenshot catalog path:
+
+```bash
+cd frontend
+npm run test:e2e:full:local
+```
+
+## 9) Reports and artifacts
 
 | Artifact | Location |
 |----------|----------|
 | HTML report | `output/playwright/report/index.html` |
 | Test results | `output/playwright/results/` |
 | Screenshots/traces/videos | `output/playwright/results/` |
+| Catalog screenshots | `output/playwright/screenshots-catalog/` |
 
 ```bash
 cd frontend
 npm run test:e2e:report
 ```
 
-## 8) Environment variables
+## 10) Environment variables
 
 | Variable | Description | Default |
 |----------|-------------|---------|
 | `E2E_BASE_URL` | Frontend URL for browser navigation | `http://127.0.0.1:8082` |
 | `E2E_API_URL` | Backend URL used by API login helper | `http://127.0.0.1:8014` |
+| `E2E_SCREENSHOTS_DIR` | Output directory for screenshot catalog | `../output/playwright/screenshots-catalog` |
 
 ## Known limitations
 

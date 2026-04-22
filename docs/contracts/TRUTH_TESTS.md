@@ -22,6 +22,37 @@ These enforce:
 - Research action compatibility for supervisor return (`supervisor-return`).
 - Eligibility payload contract with canonical `reasons: string[]` field.
 
+## Active Surface Gate
+
+```bash
+cd frontend && npm run test:e2e:active-surface:local
+```
+
+Enforces end-to-end active-surface runtime behavior for:
+- resident-progress logbook submit/return/resubmit/approve loop
+- resident schedule leave draft and submit path through the supported resident surface
+- logbook review-queue permission boundaries
+- auth/session reachability for the promoted resident, supervisor, and UTRMC surfaces
+- UTRMC read-only mutation controls remaining hidden for `utrmc_user`
+- supervisor self-scoped `/api/users/` truth through backend contract tests
+
+The active surface deliberately excludes the broader inactive-depth checks for:
+- rotations phase-1 activation/completion/verification
+- synopsis/thesis completeness and certificate issuance
+- dashboard counter assertions that depend on the inactive depth surface
+
+Run the broader inactive-depth suite separately when needed:
+
+```bash
+cd frontend && npm run test:e2e:inactive-depth:local
+```
+
+Inactive-depth suite coverage:
+- dashboard counters that depend on inactive-depth state
+- synopsis/thesis completeness and certificate issuance visibility
+- rotation phase-1 lifecycle and verification queue
+- regression-smoke for the inactive depth routes
+
 ## Migration Gate — Canonical Department/Hospital/Rotation
 
 ```bash
@@ -87,18 +118,19 @@ Notes:
 - `npm run start:next` is a standalone-compatible alias for `node .next/standalone/server.js`.
 - `npm run build` must now fail on lint or TypeScript errors; those checks are no longer bypassed in Next config.
 
-Workflow scope (promoted deterministic contract-critical browser flows):
+Workflow scope (legacy broader workflow gate; not the active release verdict):
 - UTRMC bulk setup workspace accepts a canonical hospital CSV dry run from the active overview route.
 - Forgot-password request submits through real UI/API path.
 - Supervisor approvals page renders canonical `resident_name`.
 - Supervisor return workflow (`supervisor-return`) works and visible success/result state is rendered in browser.
 - Resident dashboard displays canonical eligibility reason strings.
 - Resident leave draft can be submitted from the active schedule page and approved from the active supervisor dashboard.
-- Rotation workflow closes across active UTRMC, resident, and supervisor routes.
-- Postings workflow closes across active resident and UTRMC routes.
+- Rotation workflow checks are inactive-depth only as of 2026-04-21.
+- Postings workflow checks are inactive-depth only as of 2026-04-21.
 
 Deferred from workflow gate for now:
 - broader regression suites and mutation-heavy org-management flows.
+- rotations phase-1, synopsis, thesis, and postings active promotion.
 
 Important:
 - Docker runtime can be used for smoke checks, but do not treat long-running containers as current-tree truth unless they were rebuilt after the code under test changed.

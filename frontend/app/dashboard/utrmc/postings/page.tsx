@@ -3,13 +3,8 @@ import { useEffect, useState } from 'react';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
 import { useAuthStore } from '@/store/authStore';
 import { trainingApi, DeputationPosting } from '@/lib/api/training';
-
-const STATUS_COLORS: Record<string, string> = {
-  SUBMITTED: 'bg-yellow-100 text-yellow-800',
-  APPROVED: 'bg-green-100 text-green-800',
-  REJECTED: 'bg-red-100 text-red-700',
-  COMPLETED: 'bg-blue-100 text-blue-800',
-};
+import PageHeader from '@/components/ui/PageHeader';
+import WorkflowStatusBadge from '@/components/ui/WorkflowStatusBadge';
 
 const STATUS_LABELS: Record<string, string> = {
   SUBMITTED: 'Pending Approval',
@@ -78,14 +73,11 @@ export default function UTRMCPostingsPage() {
 
   return (
     <ProtectedRoute allowedRoles={['admin', 'utrmc_admin', 'utrmc_user']}>
-      <div className="max-w-5xl mx-auto">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Deputation Postings</h1>
-            <p className="text-sm text-gray-500 mt-1">Off-service / deputation requests from residents</p>
-          </div>
-        </div>
+      <div className="pg-page max-w-5xl">
+        <PageHeader
+          title="Deputation Postings"
+          description="Review, approve, reject, and complete resident external posting requests."
+        />
 
         {/* Status filter */}
         <div className="flex gap-2 mb-6 flex-wrap">
@@ -115,7 +107,7 @@ export default function UTRMCPostingsPage() {
         {loading && <p className="text-gray-400 text-sm">Loading…</p>}
 
         {!loading && visible.length === 0 && (
-          <div className="text-center py-16 text-gray-400">
+          <div className="pg-empty-state">
             <p className="text-lg font-medium">No postings found</p>
             <p className="text-sm mt-1">Residents submit deputation requests from their portal.</p>
           </div>
@@ -123,13 +115,11 @@ export default function UTRMCPostingsPage() {
 
         <div className="space-y-4">
           {visible.map((posting) => (
-            <div key={posting.id} className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
+            <div key={posting.id} className="pg-card">
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${STATUS_COLORS[posting.status] ?? 'bg-gray-100 text-gray-600'}`}>
-                      {STATUS_LABELS[posting.status] ?? posting.status}
-                    </span>
+                    <WorkflowStatusBadge status={posting.status} label={STATUS_LABELS[posting.status] ?? posting.status} />
                     <span className="text-xs text-gray-400 uppercase tracking-wide">{posting.posting_type || 'Deputation'}</span>
                   </div>
                   <h3 className="font-semibold text-gray-900">{posting.institution_name}</h3>
@@ -159,30 +149,30 @@ export default function UTRMCPostingsPage() {
                 <div className="flex flex-col gap-2 flex-shrink-0">
                   {canManagePostings && posting.status === 'SUBMITTED' && (
                     <>
+                        <button
+                          disabled={acting === posting.id}
+                          onClick={() => doAction(posting.id, 'approve')}
+                          className="pg-btn-success px-3 py-1.5 text-xs"
+                        >
+                          {acting === posting.id ? '…' : 'Approve'}
+                        </button>
                       <button
-                        disabled={acting === posting.id}
-                        onClick={() => doAction(posting.id, 'approve')}
-                        className="px-3 py-1.5 bg-green-600 text-white text-xs font-medium rounded-lg hover:bg-green-700 disabled:opacity-50"
-                      >
-                        {acting === posting.id ? '…' : 'Approve'}
-                      </button>
-                      <button
-                        disabled={acting === posting.id}
-                        onClick={() => { setRejectId(posting.id); setRejectReason(''); }}
-                        className="px-3 py-1.5 bg-red-50 text-red-600 text-xs font-medium rounded-lg hover:bg-red-100 border border-red-200 disabled:opacity-50"
-                      >
-                        Reject
-                      </button>
+                          disabled={acting === posting.id}
+                          onClick={() => { setRejectId(posting.id); setRejectReason(''); }}
+                          className="pg-btn-danger px-3 py-1.5 text-xs"
+                        >
+                          Reject
+                        </button>
                     </>
                   )}
                   {canManagePostings && posting.status === 'APPROVED' && (
-                    <button
-                      disabled={acting === posting.id}
-                      onClick={() => doAction(posting.id, 'complete')}
-                      className="px-3 py-1.5 bg-blue-600 text-white text-xs font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50"
-                    >
-                      {acting === posting.id ? '…' : 'Mark Complete'}
-                    </button>
+                      <button
+                        disabled={acting === posting.id}
+                        onClick={() => doAction(posting.id, 'complete')}
+                        className="pg-btn-primary px-3 py-1.5 text-xs"
+                      >
+                        {acting === posting.id ? '…' : 'Mark Complete'}
+                      </button>
                   )}
                 </div>
               </div>
@@ -196,21 +186,21 @@ export default function UTRMCPostingsPage() {
             <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl">
               <h2 className="text-lg font-bold text-gray-900 mb-4">Reject Posting</h2>
               <label className="block text-sm font-medium text-gray-700 mb-1">Reason (optional)</label>
-              <textarea
+                <textarea
                 rows={3}
                 value={rejectReason}
                 onChange={(e) => setRejectReason(e.target.value)}
                 placeholder="Explain the reason for rejection…"
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-400"
-              />
-              <div className="flex gap-3 mt-4">
-                <button
-                  onClick={doReject}
-                  disabled={acting !== null}
-                  className="flex-1 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 disabled:opacity-50"
-                >
-                  {acting !== null ? 'Rejecting…' : 'Confirm Reject'}
-                </button>
+                  className="pg-form-input"
+                />
+                <div className="flex gap-3 mt-4">
+                  <button
+                    onClick={doReject}
+                    disabled={acting !== null}
+                    className="flex-1 pg-btn-danger"
+                  >
+                    {acting !== null ? 'Rejecting…' : 'Confirm Reject'}
+                  </button>
                 <button
                   onClick={() => setRejectId(null)}
                   className="flex-1 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-200"

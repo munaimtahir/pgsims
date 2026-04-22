@@ -2,6 +2,8 @@
 import { useEffect, useState } from 'react';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
 import ReadonlyNotice from '@/components/ReadonlyNotice';
+import PageHeader from '@/components/ui/PageHeader';
+import WorkflowStatusBadge from '@/components/ui/WorkflowStatusBadge';
 import { useAuthStore } from '@/store/authStore';
 
 import { trainingApi, TrainingProgram, ProgramPolicy, ProgramMilestone, ProgramRotationTemplate } from '@/lib/api/training';
@@ -99,9 +101,14 @@ export default function UTRMCProgramsPage() {
 
   return (
     <ProtectedRoute allowedRoles={['admin', 'utrmc_admin', 'utrmc_user']}>
-        <div className="flex gap-6">
+        <div className="pg-page">
+          <PageHeader
+            title="Programs"
+            description="Review program policy, milestones, and rotation templates."
+          />
+          <div className="flex flex-col gap-6 lg:flex-row">
           {/* Program list */}
-          <div className="w-64 flex-shrink-0">
+          <div className="w-full lg:w-64 flex-shrink-0 rounded-xl border border-gray-200 bg-white p-4">
             <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">Programmes</h2>
             {loading && <p className="text-gray-400 text-sm">Loading…</p>}
             <ul className="space-y-1">
@@ -124,7 +131,7 @@ export default function UTRMCProgramsPage() {
           </div>
 
           {/* Detail pane */}
-          <div className="flex-1">
+          <div className="flex-1 rounded-xl border border-gray-200 bg-white p-5">
             {!selected && (
               <div className="text-center text-gray-400 mt-20">
                 <p>Select a programme to view details.</p>
@@ -169,7 +176,7 @@ export default function UTRMCProgramsPage() {
 
                 {/* Policy Tab */}
                 {tab === 'policy' && policy && (
-                  <div className="bg-white border border-gray-200 rounded-lg p-5 space-y-4">
+                  <div className="pg-card space-y-4">
                     <div className="flex items-center gap-3">
                       <input
                         type="checkbox"
@@ -187,7 +194,7 @@ export default function UTRMCProgramsPage() {
                         value={policyForm.imm_allowed_from_month ?? ''}
                         disabled={!canManage}
                         onChange={(e) => setPolicyForm({ ...policyForm, imm_allowed_from_month: e.target.value ? Number(e.target.value) : null })}
-                        className="mt-1 w-32 border border-gray-300 rounded-md px-3 py-1.5 text-sm"
+                        className="mt-1 w-32 pg-form-input"
                       />
                     </div>
                     <div>
@@ -197,14 +204,14 @@ export default function UTRMCProgramsPage() {
                         value={policyForm.final_allowed_from_month ?? ''}
                         disabled={!canManage}
                         onChange={(e) => setPolicyForm({ ...policyForm, final_allowed_from_month: e.target.value ? Number(e.target.value) : null })}
-                        className="mt-1 w-32 border border-gray-300 rounded-md px-3 py-1.5 text-sm"
+                        className="mt-1 w-32 pg-form-input"
                       />
                     </div>
                     {canManage && (
                       <button
                         disabled={savingPolicy}
                         onClick={savePolicy}
-                        className="px-4 py-2 bg-indigo-600 text-white text-sm rounded-md hover:bg-indigo-700 disabled:opacity-50"
+                        className="pg-btn-primary"
                       >
                         {savingPolicy ? 'Saving…' : 'Save Policy'}
                       </button>
@@ -219,10 +226,10 @@ export default function UTRMCProgramsPage() {
                       <p className="text-sm text-gray-500">No milestones configured.</p>
                     )}
                     {milestones.map((m) => (
-                      <div key={m.id} className="bg-white border border-gray-200 rounded-lg p-4">
+                      <div key={m.id} className="pg-card-muted">
                         <div className="flex items-center justify-between">
                           <h3 className="font-semibold text-gray-900">{m.name}</h3>
-                          <span className="text-xs bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded font-mono">{m.code}</span>
+                          <WorkflowStatusBadge status={m.is_active ? 'ACTIVE' : 'DRAFT'} label={m.code} />
                         </div>
                         {m.recommended_month && (
                           <p className="text-sm text-gray-500 mt-1">Recommended month: {m.recommended_month}</p>
@@ -250,7 +257,7 @@ export default function UTRMCProgramsPage() {
                       {canManage && (
                         <button
                           onClick={() => { setShowTemplateForm(true); setTemplateForm({ name: '', department: '', duration_weeks: '4', required: true, sequence_order: String(templates.length + 1) }); }}
-                          className="px-3 py-1.5 bg-indigo-600 text-white text-xs font-medium rounded-lg hover:bg-indigo-700"
+                           className="pg-btn-primary px-3 py-1.5 text-xs"
                         >
                           + Add Template
                         </button>
@@ -258,50 +265,50 @@ export default function UTRMCProgramsPage() {
                     </div>
 
                     {showTemplateForm && canManage && (
-                      <form onSubmit={addTemplate} className="bg-indigo-50 border border-indigo-200 rounded-lg p-4 space-y-3">
+                      <form onSubmit={addTemplate} className="pg-card-muted space-y-3">
                         <h3 className="text-sm font-semibold text-indigo-800">New Rotation Template</h3>
                         <div className="grid grid-cols-2 gap-3">
                           <div>
-                            <label className="block text-xs font-medium text-gray-700 mb-1">Template Name *</label>
+                            <label className="pg-form-label text-xs">Template Name *</label>
                             <input
                               required
                               type="text"
                               value={templateForm.name}
                               onChange={(e) => setTemplateForm({ ...templateForm, name: e.target.value })}
                               placeholder="e.g. Internal Medicine Block"
-                              className="w-full border border-gray-300 rounded-md px-2.5 py-1.5 text-sm"
+                              className="pg-form-input"
                             />
                           </div>
                           <div>
-                            <label className="block text-xs font-medium text-gray-700 mb-1">Department ID</label>
+                            <label className="pg-form-label text-xs">Department ID</label>
                             <input
                               type="number"
                               value={templateForm.department}
                               onChange={(e) => setTemplateForm({ ...templateForm, department: e.target.value })}
                               placeholder="Department ID"
-                              className="w-full border border-gray-300 rounded-md px-2.5 py-1.5 text-sm"
+                              className="pg-form-input"
                             />
                           </div>
                           <div>
-                            <label className="block text-xs font-medium text-gray-700 mb-1">Duration (weeks) *</label>
+                            <label className="pg-form-label text-xs">Duration (weeks) *</label>
                             <input
                               required
                               type="number"
                               min={1}
                               value={templateForm.duration_weeks}
                               onChange={(e) => setTemplateForm({ ...templateForm, duration_weeks: e.target.value })}
-                              className="w-full border border-gray-300 rounded-md px-2.5 py-1.5 text-sm"
+                              className="pg-form-input"
                             />
                           </div>
                           <div>
-                            <label className="block text-xs font-medium text-gray-700 mb-1">Sequence Order *</label>
+                            <label className="pg-form-label text-xs">Sequence Order *</label>
                             <input
                               required
                               type="number"
                               min={1}
                               value={templateForm.sequence_order}
                               onChange={(e) => setTemplateForm({ ...templateForm, sequence_order: e.target.value })}
-                              className="w-full border border-gray-300 rounded-md px-2.5 py-1.5 text-sm"
+                              className="pg-form-input"
                             />
                           </div>
                         </div>
@@ -315,7 +322,7 @@ export default function UTRMCProgramsPage() {
                           <label htmlFor="tmpl_required" className="text-xs text-gray-700">Required rotation</label>
                         </div>
                         <div className="flex gap-2">
-                          <button type="submit" disabled={savingTemplate} className="px-3 py-1.5 bg-indigo-600 text-white text-xs rounded-md hover:bg-indigo-700 disabled:opacity-50">
+                          <button type="submit" disabled={savingTemplate} className="pg-btn-primary px-3 py-1.5 text-xs">
                             {savingTemplate ? 'Saving…' : 'Add'}
                           </button>
                           <button type="button" onClick={() => setShowTemplateForm(false)} className="text-xs text-gray-500 hover:text-gray-700">Cancel</button>
@@ -329,7 +336,7 @@ export default function UTRMCProgramsPage() {
 
                     <div className="space-y-2">
                       {[...templates].sort((a, b) => a.sequence_order - b.sequence_order).map((t) => (
-                        <div key={t.id} className="bg-white border border-gray-200 rounded-lg px-4 py-3 flex items-center justify-between">
+                        <div key={t.id} className="pg-card-muted px-4 py-3 flex items-center justify-between">
                           <div>
                             <div className="flex items-center gap-2">
                               <span className="w-6 h-6 bg-indigo-100 text-indigo-700 rounded-full text-xs font-bold flex items-center justify-center">
@@ -364,6 +371,7 @@ export default function UTRMCProgramsPage() {
               </>
             )}
           </div>
+        </div>
         </div>
     </ProtectedRoute>
   );

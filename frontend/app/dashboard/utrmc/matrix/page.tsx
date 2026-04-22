@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import ReadonlyNotice from '@/components/ReadonlyNotice';
+import PageHeader from '@/components/ui/PageHeader';
 import { useAuthStore } from '@/store/authStore';
 import { userbaseApi, UserbaseHospital, UserbaseDepartment, UserbaseHospitalDepartment } from '@/lib/api/userbase';
 import { isUtrmcManagerRole, isUtrmcReadonlyRole } from '@/lib/rbac';
@@ -52,11 +53,14 @@ export default function MatrixPage() {
   if (loading) return <p className="text-gray-500">Loading...</p>;
 
   return (
-    <div>
-      <h1 className="text-2xl font-bold text-gray-900 mb-4">Hospital–Department Matrix</h1>
+    <div className="pg-page">
+      <PageHeader
+        title="Hospital–Department Matrix"
+        description="Control active hospital/department relationships used in rotation placement logic."
+      />
       {isReadonly && <ReadonlyNotice />}
       {error && <p className="text-red-600 mb-2">{error}</p>}
-      <div className="overflow-auto">
+      <div className="overflow-auto rounded-xl border border-gray-200 bg-white p-3">
         <table className="text-xs border-collapse">
           <thead>
             <tr>

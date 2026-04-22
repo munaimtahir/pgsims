@@ -2,6 +2,9 @@
 
 from django.contrib.auth import get_user_model
 from django.test import RequestFactory, TestCase
+from django.urls import reverse
+from rest_framework.test import APIClient
+import yaml
 
 from .middleware import PerformanceTimingMiddleware
 
@@ -52,7 +55,24 @@ class PerformanceTimingMiddlewareTests(TestCase):
         """Test middleware with POST request."""
         request = self.factory.post("/test/")
         request.user = self.user
-        
+
         response = self.middleware(request)
-        
+
         self.assertIn("X-Response-Time", response)
+
+
+class OpenAPISchemaGateTests(TestCase):
+    """Schema generation must remain wired for the production gate."""
+
+    def setUp(self):
+        self.client = APIClient()
+
+    def test_schema_endpoint_returns_openapi_document(self):
+        response = self.client.get(reverse("schema"))
+
+        self.assertEqual(response.status_code, 200)
+        payload = yaml.safe_load(response.content)
+        self.assertEqual(payload["info"]["title"], "PGSIMS API")
+        self.assertIn("openapi", payload)
+        self.assertIn("/api/auth/login/", payload["paths"])
+        self.assertIn("/api/dashboard/resident/", payload["paths"])

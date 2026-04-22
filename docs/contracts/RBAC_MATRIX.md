@@ -48,6 +48,38 @@ This contract defines authoritative backend authorization behavior. Frontend rou
   - Read/admin recovery operations per endpoint policy
   - Does not replace `utrmc_admin` for override approval endpoint
 
+### Active Feature Layer — Logbook / Leave / Dashboards
+- `pg` / `resident`
+  - `GET/POST/PATCH /api/logbook/*`: **own records only**
+  - `POST /api/logbook/{id}/submit/`: **own records only**
+  - `GET /api/logbook/my-threshold/`: **allowed**
+  - `GET/POST /api/leaves/`: **own training record only**
+  - `GET /api/dashboard/resident/`: **allowed**
+- `supervisor` / `faculty`
+  - `GET /api/logbook/review-queue/`: **assigned/HOD-scope residents**
+  - `POST /api/logbook/{id}/review/`: **assigned/HOD-scope residents**
+  - `GET /api/utrmc/approvals/leaves/`: **assigned/HOD-scope residents**
+  - `POST /api/leaves/{id}/approve|reject/`: **assigned/HOD-scope residents**
+  - `GET /api/dashboard/supervisor/`: **allowed**
+  - `GET /api/dashboard/hod/`: **allowed only with active HOD assignment**
+- `utrmc_user`
+  - Dashboards and org/userbase reads: **read-only allowed**
+  - Mutations and approval/verification actions: **forbidden**
+  - `GET /api/dashboard/utrmc/`: **allowed**
+- `utrmc_admin`
+  - Full cross-department review visibility
+  - Submission verify and certificate issuance: **allowed**
+  - Rotation completion verification: **allowed**
+  - Dashboard endpoints: **all**
+- `admin`
+  - Same mutation/read capabilities as `utrmc_admin` on feature-layer workflows
+  - Used for technical recovery and controlled administrative operations
+
+### Deferred Feature Layer — Rotations / Synopsis / Thesis
+- Endpoint-level RBAC remains implemented for internal verification.
+- These workflows are not active release-gated UI surfaces as of 2026-04-21.
+- Do not expose navigation, dashboard CTAs, or active-gate expectations for these workflows until their inactive-depth tests are promoted.
+
 ### Analytics (API + Admin Dashboard)
 - Default: `admin` only
 - `supervisor`: allowed only if feature flag `ANALYTICS_SUPERVISOR_ACCESS_ENABLED=true`
@@ -74,8 +106,11 @@ This contract defines authoritative backend authorization behavior. Frontend rou
 - `admin`, `utrmc_admin`
   - list/create/update userbase users: **allowed**
 - `supervisor`, `faculty`, `pg`/`resident`, `utrmc_user`
-  - list/create/update userbase users: **forbidden**
+  - list/read own user row only: **allowed**
+  - create/update userbase users: **forbidden**
   - retrieve own user record only: **allowed**
+  - `GET /api/users/` returns the caller's own user row only when they are not a manager
+  - detail requests for other user IDs are not exposed in the queryset and resolve as `404`
 
 #### Profiles (`/api/residents/*`, `/api/staff/*`)
 - `admin`, `utrmc_admin`: full CRUD scope

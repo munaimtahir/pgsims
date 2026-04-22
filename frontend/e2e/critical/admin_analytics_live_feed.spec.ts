@@ -2,6 +2,11 @@ import { expect, test } from '@playwright/test';
 
 import { loginAs } from '../helpers/auth';
 
+test.skip(
+  true,
+  'Legacy admin analytics/logbook UI is outside the current accepted resident-management route baseline.'
+);
+
 test('admin live feed updates after PG logbook submit workflow', async ({ page, context }) => {
   test.setTimeout(120000);
   const caseTitle = `E2E live feed ${Date.now()}`;

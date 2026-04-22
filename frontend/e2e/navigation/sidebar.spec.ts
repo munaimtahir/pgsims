@@ -91,8 +91,8 @@ test.describe('Supervisor sidebar navigation', () => {
 
     const nav = page.locator('nav').first();
     await expect(nav.getByText('Overview').first()).toBeVisible();
-    await expect(nav.getByText('Research Approvals')).toBeVisible();
     await expect(nav.getByText('My Residents')).toBeVisible();
+    await expect(nav.getByText('Research Approvals')).not.toBeVisible();
   });
 
   test('supervisor does NOT see Program Administration nav', async ({ page, context }) => {
@@ -103,11 +103,10 @@ test.describe('Supervisor sidebar navigation', () => {
     await expect(nav.getByText('Supervision Links')).not.toBeVisible();
   });
 
-  test('Research Approvals link navigates correctly', async ({ page, context }) => {
+  test('Research Approvals is deferred from supervisor navigation', async ({ page, context }) => {
     await loginAs(context, page, 'supervisor');
     await page.goto('/dashboard/supervisor');
-    await page.locator('nav').first().getByText('Research Approvals').click();
-    await expect(page).toHaveURL(/\/dashboard\/supervisor\/research-approvals/);
+    await expect(page.locator('nav').first().getByText('Research Approvals')).not.toBeVisible();
   });
 });
 
@@ -123,10 +122,11 @@ test.describe('Resident sidebar navigation', () => {
     const nav = page.locator('nav').first();
     await expect(nav.getByText('My Dashboard')).toBeVisible();
     await expect(nav.getByText('My Schedule')).toBeVisible();
-    await expect(nav.getByText('Academic Progress')).toBeVisible();
-    await expect(nav.getByText('Research')).toBeVisible();
-    await expect(nav.getByText('Thesis')).toBeVisible();
-    await expect(nav.getByText('Workshops')).toBeVisible();
+    await expect(nav.getByText('Logbook')).toBeVisible();
+    await expect(nav.getByText('Academic Progress')).not.toBeVisible();
+    await expect(nav.getByText('Research')).not.toBeVisible();
+    await expect(nav.getByText('Thesis')).not.toBeVisible();
+    await expect(nav.getByText('Workshops')).not.toBeVisible();
   });
 
   test('resident does NOT see UTRMC admin nav', async ({ page, context }) => {
@@ -144,10 +144,10 @@ test.describe('Resident sidebar navigation', () => {
     await expect(page).toHaveURL(/\/dashboard\/resident\/schedule/);
   });
 
-  test('Research link navigates to research page', async ({ page, context }) => {
+  test('Logbook link navigates to active logbook page', async ({ page, context }) => {
     await loginAs(context, page, 'pg');
     await page.goto('/dashboard/resident');
-    await page.locator('nav').first().getByText('Research').click();
-    await expect(page).toHaveURL(/\/dashboard\/resident\/research/);
+    await page.locator('nav').first().getByText('Logbook').click();
+    await expect(page).toHaveURL(/\/dashboard\/resident\/progress/);
   });
 });

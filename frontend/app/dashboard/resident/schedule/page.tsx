@@ -2,21 +2,8 @@
 import { useEffect, useState } from 'react';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
 import { LeaveRequest, RotationAssignment, trainingApi, ResidentSummary } from '@/lib/api/training';
-
-const STATUS_COLORS: Record<string, string> = {
-  ACTIVE: 'bg-blue-100 text-blue-800',
-  APPROVED: 'bg-green-100 text-green-800',
-  SUBMITTED: 'bg-yellow-100 text-yellow-800',
-  DRAFT: 'bg-gray-100 text-gray-600',
-  COMPLETED: 'bg-slate-100 text-slate-600',
-  RETURNED: 'bg-orange-100 text-orange-700',
-  REJECTED: 'bg-red-100 text-red-700',
-};
-
-function StatusBadge({ status }: { status: string }) {
-  const cls = STATUS_COLORS[status] || 'bg-gray-100 text-gray-600';
-  return <span className={`px-2 py-0.5 rounded text-xs font-medium ${cls}`}>{status}</span>;
-}
+import PageHeader from '@/components/ui/PageHeader';
+import WorkflowStatusBadge from '@/components/ui/WorkflowStatusBadge';
 
 type RotationEvent = RotationAssignment & { kind: 'rotation' };
 type LeaveEvent = LeaveRequest & {
@@ -42,7 +29,6 @@ export default function ResidentSchedulePage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [submittingLeaveId, setSubmittingLeaveId] = useState<number | null>(null);
-  const [submittingRotationId, setSubmittingRotationId] = useState<number | null>(null);
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
   const [leaveForm, setLeaveForm] = useState({
@@ -125,20 +111,6 @@ export default function ResidentSchedulePage() {
     }
   };
 
-  const submitRotation = async (rotationId: number) => {
-    setSubmittingRotationId(rotationId);
-    setError('');
-    try {
-      await trainingApi.rotationAction(rotationId, 'submit');
-      flash('Rotation submitted for supervisor review.');
-      load();
-    } catch {
-      flash('Failed to submit rotation.', true);
-    } finally {
-      setSubmittingRotationId(null);
-    }
-  };
-
   const allEvents: ScheduleEvent[] = summary ? [
     ...rotations.map((rotation) => ({ ...rotation, kind: 'rotation' as const })),
     ...leaves.map(l => ({ ...l, department: `Leave: ${l.leave_type}`, hospital: '', kind: 'leave' as const })),
@@ -146,8 +118,11 @@ export default function ResidentSchedulePage() {
 
   return (
     <ProtectedRoute allowedRoles={['pg', 'resident']}>
-      <div className="max-w-4xl mx-auto">
-        <h1 className="text-2xl font-bold text-gray-900 mb-6">My Schedule</h1>
+      <div className="pg-page">
+        <PageHeader
+          title="My Schedule"
+          description="Track rotation lifecycle and manage leave requests in one place."
+        />
 
         {loading && <div className="flex justify-center py-16"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600" /></div>}
         {error && <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg p-4">{error}</div>}
@@ -172,7 +147,7 @@ export default function ResidentSchedulePage() {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)] gap-6 mb-6">
-              <section className="bg-white border border-gray-200 rounded-xl p-5">
+              <section className="pg-card">
                 <h2 className="text-lg font-semibold text-gray-800 mb-1">Request Leave</h2>
                 <p className="text-sm text-gray-500 mb-4">
                   Save a draft here, then submit it for supervisor review from your leave list.
@@ -180,13 +155,13 @@ export default function ResidentSchedulePage() {
 
                 <div className="space-y-3">
                   <div>
-                    <label htmlFor="leave_type" className="block text-sm font-medium text-gray-700 mb-1">Leave Type</label>
-                    <select
+                      <label htmlFor="leave_type" className="pg-form-label">Leave Type</label>
+                      <select
                       id="leave_type"
                       value={leaveForm.leave_type}
                       onChange={(event) => setLeaveForm((current) => ({ ...current, leave_type: event.target.value }))}
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
-                    >
+                        className="pg-form-input"
+                      >
                       {LEAVE_OPTIONS.map((option) => (
                         <option key={option.value} value={option.value}>
                           {option.label}
@@ -197,35 +172,35 @@ export default function ResidentSchedulePage() {
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                      <label htmlFor="leave_start_date" className="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
+                      <label htmlFor="leave_start_date" className="pg-form-label">Start Date</label>
                       <input
                         id="leave_start_date"
                         type="date"
                         value={leaveForm.start_date}
                         onChange={(event) => setLeaveForm((current) => ({ ...current, start_date: event.target.value }))}
-                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+                        className="pg-form-input"
                       />
                     </div>
                     <div>
-                      <label htmlFor="leave_end_date" className="block text-sm font-medium text-gray-700 mb-1">End Date</label>
+                      <label htmlFor="leave_end_date" className="pg-form-label">End Date</label>
                       <input
                         id="leave_end_date"
                         type="date"
                         value={leaveForm.end_date}
                         onChange={(event) => setLeaveForm((current) => ({ ...current, end_date: event.target.value }))}
-                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+                        className="pg-form-input"
                       />
                     </div>
                   </div>
 
                   <div>
-                    <label htmlFor="leave_reason" className="block text-sm font-medium text-gray-700 mb-1">Reason</label>
+                    <label htmlFor="leave_reason" className="pg-form-label">Reason</label>
                     <textarea
                       id="leave_reason"
                       rows={3}
                       value={leaveForm.reason}
                       onChange={(event) => setLeaveForm((current) => ({ ...current, reason: event.target.value }))}
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+                      className="pg-form-input"
                       placeholder="Reason for leave"
                     />
                   </div>
@@ -233,14 +208,14 @@ export default function ResidentSchedulePage() {
                   <button
                     onClick={createLeaveDraft}
                     disabled={saving || !leaveForm.start_date || !leaveForm.end_date}
-                    className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 disabled:opacity-50"
+                    className="pg-btn-primary"
                   >
                     {saving ? 'Saving…' : 'Save Draft'}
                   </button>
                 </div>
               </section>
 
-              <section className="bg-white border border-gray-200 rounded-xl p-5">
+              <section className="pg-card">
                 <h2 className="text-lg font-semibold text-gray-800 mb-1">My Leave Requests</h2>
                 <p className="text-sm text-gray-500 mb-4">
                   Draft requests stay editable in principle; submitted requests wait for supervisor review.
@@ -253,7 +228,7 @@ export default function ResidentSchedulePage() {
                 ) : (
                   <div className="space-y-3">
                     {leaves.map((leave) => (
-                      <div key={leave.id} className="border border-gray-200 rounded-lg p-4">
+                      <div key={leave.id} className="pg-card-muted">
                         <div className="flex items-start justify-between gap-4 flex-wrap">
                           <div>
                             <p className="font-medium text-gray-900">
@@ -263,7 +238,7 @@ export default function ResidentSchedulePage() {
                               {leave.start_date} → {leave.end_date}
                             </p>
                           </div>
-                          <StatusBadge status={leave.status} />
+                          <WorkflowStatusBadge status={leave.status} />
                         </div>
 
                         {leave.reason && (
@@ -281,7 +256,7 @@ export default function ResidentSchedulePage() {
                             <button
                               onClick={() => submitLeave(leave.id)}
                               disabled={submittingLeaveId === leave.id}
-                              className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 disabled:opacity-50"
+                              className="pg-btn-success"
                             >
                               {submittingLeaveId === leave.id ? 'Submitting…' : 'Submit for Review'}
                             </button>
@@ -335,7 +310,7 @@ export default function ResidentSchedulePage() {
                             </p>
                           </div>
                           <div className="flex flex-col items-end gap-1.5">
-                            <StatusBadge status={ev.status} />
+                            <WorkflowStatusBadge status={ev.status} />
                             <span className={`text-xs px-2 py-0.5 rounded ${
                               ev.kind === 'rotation' ? 'bg-indigo-50 text-indigo-600' : 'bg-yellow-100 text-yellow-700'
                             }`}>
@@ -356,17 +331,6 @@ export default function ResidentSchedulePage() {
                           </div>
                         )}
 
-                        {ev.kind === 'rotation' && (ev.status === 'DRAFT' || ev.status === 'RETURNED') && (
-                          <div className="mt-3">
-                            <button
-                              onClick={() => submitRotation(ev.id)}
-                              disabled={submittingRotationId === ev.id}
-                              className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 disabled:opacity-50"
-                            >
-                              {submittingRotationId === ev.id ? 'Submitting…' : 'Submit for Review'}
-                            </button>
-                          </div>
-                        )}
                       </div>
                     </div>
                   ))}

@@ -24,9 +24,9 @@ from sims.users.models import (
     SupervisorResidentLink,
 )
 from sims.users.data_quality import log_data_correction, recompute_all, recompute_flags_for_user
+from sims.academics.serializers import DepartmentSerializer as CanonicalDepartmentSerializer
 from sims.users.userbase_serializers import (
     DepartmentMembershipSerializer,
-    DepartmentSerializer,
     HODAssignmentSerializer,
     HospitalAssignmentSerializer,
     HospitalDepartmentSerializer,
@@ -111,7 +111,7 @@ class HospitalViewSet(viewsets.ModelViewSet):
 
 class DepartmentViewSet(viewsets.ModelViewSet):
     queryset = Department.objects.all().order_by("name")
-    serializer_class = DepartmentSerializer
+    serializer_class = CanonicalDepartmentSerializer
     permission_classes = [permissions.IsAuthenticated]
     filterset_fields = ["active", "code"]
     search_fields = ["name", "code", "description"]

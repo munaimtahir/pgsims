@@ -7,13 +7,17 @@ from django.utils import timezone
 from sims.academics.models import Department
 from sims.rotations.models import Hospital, HospitalDepartment
 from sims.training.models import (
+    LogbookThresholdConfig,
+    ProgramRotationRequirement,
     ProgramMilestone,
     ProgramMilestoneResearchRequirement,
+    ResidentSubmission,
     ResidentResearchProject,
     ResidentTrainingRecord,
+    SubmissionRequirementTemplate,
     TrainingProgram,
 )
-from sims.users.models import SupervisorResidentLink, User
+from sims.users.models import DepartmentMembership, HODAssignment, SupervisorResidentLink, User
 
 
 class Command(BaseCommand):
@@ -70,7 +74,7 @@ class Command(BaseCommand):
             user.save()
             return user
 
-        upsert_user(
+        e2e_admin = upsert_user(
             username="e2e_admin",
             password="Admin123!",
             email="e2e_admin@pgsims.local",
@@ -88,7 +92,7 @@ class Command(BaseCommand):
             last_name="UTRMC User",
         )
 
-        upsert_user(
+        e2e_utrmc_admin = upsert_user(
             username="e2e_utrmc_admin",
             password="UtrmcAdmin123!",
             email="e2e_utrmc_admin@pgsims.local",
@@ -127,6 +131,113 @@ class Command(BaseCommand):
             defaults={
                 "active": True,
                 "start_date": today,
+                "department": departments[0],
+            },
+        )
+
+        # Feature-layer explicit role fixtures for Playwright verification suite.
+        supervisor_user = upsert_user(
+            username="supervisor_user",
+            password="SupervisorUser123!",
+            email="supervisor_user@pgsims.local",
+            role="supervisor",
+            specialty="surgery",
+            first_name="Feature",
+            last_name="Supervisor",
+            home_hospital=hospital,
+            home_department=departments[0],
+        )
+        hod_user = upsert_user(
+            username="hod_user",
+            password="HodUser123!",
+            email="hod_user@pgsims.local",
+            role="supervisor",
+            specialty="surgery",
+            first_name="Feature",
+            last_name="HOD",
+            home_hospital=hospital,
+            home_department=departments[0],
+        )
+        resident_user = upsert_user(
+            username="resident_user",
+            password="ResidentUser123!",
+            email="resident_user@pgsims.local",
+            role="pg",
+            specialty="surgery",
+            year="1",
+            supervisor=supervisor_user,
+            home_hospital=hospital,
+            home_department=departments[0],
+            first_name="Feature",
+            last_name="Resident",
+        )
+        upsert_user(
+            username="utrmc_admin_user",
+            password="UtrmcAdminUser123!",
+            email="utrmc_admin_user@pgsims.local",
+            role="utrmc_admin",
+            first_name="Feature",
+            last_name="UTRMC Admin",
+        )
+        upsert_user(
+            username="utrmc_staff_user",
+            password="UtrmcStaffUser123!",
+            email="utrmc_staff_user@pgsims.local",
+            role="utrmc_user",
+            first_name="Feature",
+            last_name="UTRMC Staff",
+        )
+        negative_role_user = upsert_user(
+            username="negative_role_user",
+            password="NegativeRole123!",
+            email="negative_role_user@pgsims.local",
+            role="pg",
+            specialty="medicine",
+            year="1",
+            home_hospital=hospital,
+            home_department=departments[1],
+            first_name="Feature",
+            last_name="Negative",
+        )
+
+        DepartmentMembership.objects.update_or_create(
+            user=supervisor_user,
+            department=departments[0],
+            member_type=DepartmentMembership.MEMBER_SUPERVISOR,
+            defaults={
+                "is_primary": False,
+                "active": True,
+                "start_date": today,
+                "created_by": e2e_admin,
+            },
+        )
+        DepartmentMembership.objects.update_or_create(
+            user=hod_user,
+            department=departments[0],
+            member_type=DepartmentMembership.MEMBER_SUPERVISOR,
+            defaults={
+                "is_primary": False,
+                "active": True,
+                "start_date": today,
+                "created_by": e2e_admin,
+            },
+        )
+        HODAssignment.objects.update_or_create(
+            department=departments[0],
+            defaults={
+                "hod_user": hod_user,
+                "start_date": today,
+                "active": True,
+                "created_by": e2e_admin,
+            },
+        )
+        SupervisorResidentLink.objects.update_or_create(
+            supervisor_user=supervisor_user,
+            resident_user=resident_user,
+            defaults={
+                "active": True,
+                "start_date": today,
+                "department": departments[0],
             },
         )
 
@@ -200,6 +311,52 @@ class Command(BaseCommand):
                 "created_by": supervisor,
             },
         )
+        ResidentTrainingRecord.objects.filter(resident_user=resident_user).exclude(program=program).update(
+            active=False
+        )
+        resident_rtr, _ = ResidentTrainingRecord.objects.update_or_create(
+            resident_user=resident_user,
+            program=program,
+            defaults={
+                "start_date": today - timedelta(days=220),
+                "expected_end_date": today + timedelta(days=365 * 3),
+                "current_level": "y1",
+                "status": ResidentTrainingRecord.STATUS_ACTIVE,
+                "locked_program": True,
+                "restart_from_scratch_on_change": True,
+                "active": True,
+                "created_by": supervisor_user,
+            },
+        )
+        ResidentTrainingRecord.objects.filter(resident_user=negative_role_user).exclude(program=program).update(
+            active=False
+        )
+        negative_rtr, _ = ResidentTrainingRecord.objects.update_or_create(
+            resident_user=negative_role_user,
+            program=program,
+            defaults={
+                "start_date": today - timedelta(days=140),
+                "expected_end_date": today + timedelta(days=365 * 3),
+                "current_level": "y1",
+                "status": ResidentTrainingRecord.STATUS_ACTIVE,
+                "locked_program": True,
+                "restart_from_scratch_on_change": True,
+                "active": True,
+                "created_by": supervisor_user,
+            },
+        )
+
+        # Keep feature-layer seeded resident deterministic between runs.
+        resident_rtr.logbook_entries.all().delete()
+        ResidentSubmission.objects.filter(resident_training_record=resident_rtr).delete()
+        resident_rtr.rotation_assignments.all().delete()
+        resident_rtr.logbook_threshold_snapshots.all().delete()
+        ResidentResearchProject.objects.filter(resident_training_record=resident_rtr).delete()
+        negative_rtr.logbook_entries.all().delete()
+        ResidentSubmission.objects.filter(resident_training_record=negative_rtr).delete()
+        negative_rtr.rotation_assignments.all().delete()
+        negative_rtr.logbook_threshold_snapshots.all().delete()
+        ResidentResearchProject.objects.filter(resident_training_record=negative_rtr).delete()
 
         ResidentResearchProject.objects.update_or_create(
             resident_training_record=rtr,
@@ -217,8 +374,102 @@ class Command(BaseCommand):
             },
         )
 
+        ProgramRotationRequirement.objects.update_or_create(
+            program=program,
+            department=departments[1],
+            sequence_order=1,
+            defaults={
+                "required_duration_weeks": 4,
+                "is_mandatory": True,
+                "notes": "E2E phase-1 rotational requirement.",
+            },
+        )
+
+        LogbookThresholdConfig.objects.update_or_create(
+            name="E2E Logbook Threshold Per Rotation",
+            mode=LogbookThresholdConfig.MODE_PER_ROTATION,
+            program=program,
+            department=departments[0],
+            defaults={
+                "min_approved_entries": 1,
+                "period_days": None,
+                "is_active": True,
+                "configured_by": e2e_utrmc_admin,
+            },
+        )
+        LogbookThresholdConfig.objects.update_or_create(
+            name="E2E Logbook Threshold Per 30 Days",
+            mode=LogbookThresholdConfig.MODE_PER_PERIOD,
+            program=program,
+            department=departments[0],
+            defaults={
+                "min_approved_entries": 1,
+                "period_days": 30,
+                "is_active": True,
+                "configured_by": e2e_utrmc_admin,
+            },
+        )
+
+        SubmissionRequirementTemplate.objects.update_or_create(
+            submission_type=SubmissionRequirementTemplate.TYPE_SYNOPSIS,
+            program=program,
+            department=departments[0],
+            code="SYN-PROPOSAL",
+            defaults={
+                "title": "Synopsis Proposal",
+                "description": "Core synopsis proposal document.",
+                "is_required": True,
+                "active": True,
+                "sort_order": 1,
+                "created_by": e2e_admin,
+            },
+        )
+        SubmissionRequirementTemplate.objects.update_or_create(
+            submission_type=SubmissionRequirementTemplate.TYPE_SYNOPSIS,
+            program=program,
+            department=departments[0],
+            code="SYN-ETHICS",
+            defaults={
+                "title": "Synopsis Ethics Sheet",
+                "description": "Ethics and compliance attachment.",
+                "is_required": True,
+                "active": True,
+                "sort_order": 2,
+                "created_by": e2e_admin,
+            },
+        )
+        SubmissionRequirementTemplate.objects.update_or_create(
+            submission_type=SubmissionRequirementTemplate.TYPE_THESIS,
+            program=program,
+            department=departments[0],
+            code="THS-MANUSCRIPT",
+            defaults={
+                "title": "Thesis Manuscript",
+                "description": "Main thesis manuscript for completeness check.",
+                "is_required": True,
+                "active": True,
+                "sort_order": 1,
+                "created_by": e2e_admin,
+            },
+        )
+        SubmissionRequirementTemplate.objects.update_or_create(
+            submission_type=SubmissionRequirementTemplate.TYPE_THESIS,
+            program=program,
+            department=departments[0],
+            code="THS-SIMILARITY",
+            defaults={
+                "title": "Similarity Report",
+                "description": "Similarity/plagiarism report document.",
+                "is_required": True,
+                "active": True,
+                "sort_order": 2,
+                "created_by": e2e_admin,
+            },
+        )
+
         from sims.training.eligibility import recompute_for_record
 
         recompute_for_record(rtr)
+        recompute_for_record(resident_rtr)
 
         self.stdout.write(self.style.SUCCESS("seed_e2e completed successfully."))

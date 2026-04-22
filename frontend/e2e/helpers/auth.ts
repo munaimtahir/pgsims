@@ -1,6 +1,13 @@
 import type { BrowserContext, Page } from '@playwright/test';
 
 export type E2ERole = 'pg' | 'supervisor' | 'admin' | 'utrmc_user' | 'utrmc_admin';
+export type FeatureLayerUserKey =
+  | 'resident_user'
+  | 'supervisor_user'
+  | 'hod_user'
+  | 'utrmc_admin_user'
+  | 'utrmc_staff_user'
+  | 'negative_role_user';
 
 type AuthPayload = {
   user: {
@@ -16,7 +23,9 @@ type AuthPayload = {
   refresh: string;
 };
 
-const CREDENTIALS: Record<E2ERole, { username: string; password: string }> = {
+type Credentials = { username: string; password: string };
+
+const CREDENTIALS: Record<E2ERole, Credentials> = {
   pg: { username: 'e2e_pg', password: 'Pg123456!' },
   supervisor: { username: 'e2e_supervisor', password: 'Supervisor123!' },
   admin: { username: 'e2e_admin', password: 'Admin123!' },
@@ -24,7 +33,16 @@ const CREDENTIALS: Record<E2ERole, { username: string; password: string }> = {
   utrmc_admin: { username: 'e2e_utrmc_admin', password: 'UtrmcAdmin123!' },
 };
 
-const authCache = new Map<E2ERole, AuthPayload>();
+export const FEATURE_LAYER_CREDENTIALS: Record<FeatureLayerUserKey, Credentials> = {
+  resident_user: { username: 'resident_user', password: 'ResidentUser123!' },
+  supervisor_user: { username: 'supervisor_user', password: 'SupervisorUser123!' },
+  hod_user: { username: 'hod_user', password: 'HodUser123!' },
+  utrmc_admin_user: { username: 'utrmc_admin_user', password: 'UtrmcAdminUser123!' },
+  utrmc_staff_user: { username: 'utrmc_staff_user', password: 'UtrmcStaffUser123!' },
+  negative_role_user: { username: 'negative_role_user', password: 'NegativeRole123!' },
+};
+
+const authCache = new Map<string, AuthPayload>();
 
 function parseExp(token: string): number {
   try {
@@ -72,7 +90,12 @@ async function applyAuthPayload(
   }, payload);
 }
 
-export async function loginAs(context: BrowserContext, page: Page, role: E2ERole) {
+async function loginWithCredentials(
+  context: BrowserContext,
+  page: Page,
+  credentials: Credentials,
+  cacheKey: string
+) {
   const appBaseURL = process.env.E2E_BASE_URL ?? 'http://127.0.0.1:8082';
   const apiCandidates = Array.from(
     new Set(
@@ -82,8 +105,7 @@ export async function loginAs(context: BrowserContext, page: Page, role: E2ERole
       ].filter((value): value is string => Boolean(value && value.trim()))
     )
   );
-  const credentials = CREDENTIALS[role];
-  const cachedPayload = authCache.get(role);
+  const cachedPayload = authCache.get(cacheKey);
 
   if (cachedPayload && parseExp(cachedPayload.access) > Math.floor(Date.now() / 1000) + 60) {
     await applyAuthPayload(context, page, appBaseURL, cachedPayload);
@@ -121,9 +143,21 @@ export async function loginAs(context: BrowserContext, page: Page, role: E2ERole
 
   if (!response || !response.ok()) {
     const reason = lastError instanceof Error ? lastError.message : String(lastError ?? 'unknown error');
-    throw new Error(`Login failed for ${role}. Tried: ${apiCandidates.join(', ')}. Last error: ${reason}`);
+    throw new Error(`Login failed for ${cacheKey}. Tried: ${apiCandidates.join(', ')}. Last error: ${reason}`);
   }
   const payload = (await response.json()) as AuthPayload;
-  authCache.set(role, payload);
+  authCache.set(cacheKey, payload);
   await applyAuthPayload(context, page, appBaseURL, payload);
+}
+
+export async function loginAs(context: BrowserContext, page: Page, role: E2ERole) {
+  await loginWithCredentials(context, page, CREDENTIALS[role], role);
+}
+
+export async function loginAsFeatureUser(
+  context: BrowserContext,
+  page: Page,
+  userKey: FeatureLayerUserKey
+) {
+  await loginWithCredentials(context, page, FEATURE_LAYER_CREDENTIALS[userKey], userKey);
 }

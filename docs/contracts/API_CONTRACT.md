@@ -11,29 +11,35 @@
 - `utrmc_user` (read-only oversight dashboards/logs/reports/stats)
 - `utrmc_admin` (UTRMC super-admin: can configure + approve overrides)
 
-## LogbookEntry (Phase-1)
-Legacy/deferred note:
-- This section is retained for historical contract reference.
-- Logbook is not part of the current authoritative active runtime surface as of 2026-04-02.
-
-Required fields in PG-facing responses:
+## LogbookEntry (Feature Layer Active Surface)
+Required fields in resident-facing responses:
 - `id`
 - `status`
-- `supervisor_feedback` (nullable)
-- `feedback` (alias of supervisor_feedback)
-- `submitted_to_supervisor_at` (nullable)
-- `submitted_at` (alias of submitted_to_supervisor_at)
-- `verified_at` (nullable)
+- `feedback` (alias of `supervisor_feedback`)
+- `submitted_to_supervisor_at` (alias of `submitted_at`)
+- `submitted_at`
+- `returned_at`
+- `approved_at`
 
 Status enum (backend):
-- `draft`, `pending`(UI=Submitted), `returned`, `rejected`, `approved`, `archived`
+- `DRAFT`
+- `SUBMITTED`
+- `RETURNED`
+- `APPROVED`
 
 Edit rule:
-- PG can edit only when status in `draft`, `returned`
+- Resident can edit only when status in `DRAFT`, `RETURNED`
 
-Verify:
-- PATCH `/api/logbook/<id>/verify/`
-- Payload: `action` (approved/returned/rejected), `feedback` (preferred), `supervisor_feedback` (alias)
+Review:
+- POST `/api/logbook/{id}/review/`
+- Payload: `{ "action": "approved" | "returned", "feedback": "..." }`
+
+Core logbook endpoints:
+- `GET/POST /api/logbook/`
+- `PATCH /api/logbook/{id}/`
+- `POST /api/logbook/{id}/submit/`
+- `GET /api/logbook/review-queue/`
+- `GET /api/logbook/my-threshold/`
 
 ## Rotation (next phase)
 Rotation summary response must include:
@@ -77,6 +83,9 @@ Rotation summary response must include:
   - `GET/POST /api/users/`
   - `GET/PATCH /api/users/{id}/`
   - Filters: `role`, `department`, `active`, `search`
+  - Managers (`admin`, `utrmc_admin`) may list and update any user.
+  - Non-managers may read only their own user row through `GET /api/users/` and `GET /api/users/{id}/`.
+  - Requests for another user ID resolve as `404` for non-managers because the queryset is self-scoped.
 - Resident profiles:
   - `GET/PATCH /api/residents/{user_id}/`
 - Staff profiles:
@@ -218,7 +227,9 @@ Response shape for `GET /events/live`:
 - `GET /api/programs/{id}/milestones/` — list milestones
 - `POST /api/programs/{id}/milestones/` — create milestone
 
-### Resident Research Project
+### Deferred Resident Research Project
+Status as of 2026-04-21: route/API retained, not part of active release-gated UI.
+
 - `GET /api/my/research/` — get own research project
 - `POST /api/my/research/` — create research project (resident)
 - `PATCH /api/my/research/` — update draft project
@@ -227,16 +238,22 @@ Response shape for `GET /events/live`:
   - `supervisor-return` payload: `{ "project_id": int, "feedback": str }`
   - `return-to-draft` is retained as a backward-compatible alias for supervisor return.
 
-### Supervisor Research Approvals
+### Deferred Supervisor Research Approvals
+Status as of 2026-04-21: route/API retained, removed from active navigation.
+
 - `GET /api/supervisor/research-approvals/` — list residents' projects (supervisor/faculty/hod)
   - Response rows include `resident_name` for display.
 
-### Thesis
+### Deferred Thesis
+Status as of 2026-04-21: route/API retained, not part of active release-gated UI.
+
 - `GET /api/my/thesis/` — get own thesis record
 - `POST /api/my/thesis/` — create thesis record
 - `POST /api/my/thesis/submit/` — submit thesis
 
-### Workshop Completions
+### Deferred Workshop Completions
+Status as of 2026-04-21: route/API retained, not part of active release-gated UI.
+
 - `GET /api/my/workshops/` — list completions (paginated: count, results)
 - `POST /api/my/workshops/` — record manual completion; payload: `{ workshop, completed_at, notes? }`
 - `GET /api/my/workshops/{id}/` — detail
@@ -253,6 +270,61 @@ Response shape for `GET /events/live`:
 
 ### System Settings
 - `GET /api/system/settings/` — returns `{ WORKSHOP_MANAGEMENT_ENABLED: bool, ... }`
+
+### Deferred Surface — Submission Completeness + Certificates
+Status as of 2026-04-21: implemented endpoints exist, but synopsis and thesis are not part of the active release-gated UI surface. Do not treat these routes as pilot-active until the inactive-depth gate is promoted.
+
+- Requirement template management:
+  - `GET/POST /api/submissions/requirements/`
+  - `PATCH/DELETE /api/submissions/requirements/{id}/`
+- Resident synopsis workflow:
+  - `GET/POST/PATCH /api/submissions/synopsis/`
+  - `POST /api/submissions/synopsis/documents/`
+  - `POST /api/submissions/synopsis/submit/`
+- Resident thesis workflow:
+  - `GET/POST/PATCH /api/submissions/thesis/`
+  - `POST /api/submissions/thesis/documents/`
+  - `POST /api/submissions/thesis/submit/`
+- Review queues:
+  - `GET /api/submissions/synopsis/review-queue/`
+  - `GET /api/submissions/thesis/review-queue/`
+  - `POST /api/submissions/synopsis/{submission_id}/review/`
+  - `POST /api/submissions/thesis/{submission_id}/review/`
+  - review payload: `{ "action": "start-review" | "return" | "verify", "comments": "..." }`
+- Certificates:
+  - `GET /api/submissions/certificates/`
+  - Query: `submission_type=SYNOPSIS|THESIS`
+
+Resident submission statuses:
+- `DRAFT`
+- `SUBMITTED`
+- `UNDER_REVIEW`
+- `RETURNED`
+- `VERIFIED`
+- `CERTIFICATE_ISSUED`
+
+### Deferred Surface — Rotation Phase-1 Completion Verification
+Status as of 2026-04-21: implemented endpoints exist, but rotations phase-1 is not part of the active release-gated UI surface. Resident-facing rotation create/submit controls are hidden from the active surface.
+
+- Rotation requirement map:
+  - `GET/POST /api/rotations/requirements/`
+  - `PATCH/DELETE /api/rotations/requirements/{id}/`
+- Application decision/phase actions on existing assignment resource:
+  - `POST /api/rotations/{id}/review-application/`
+    - payload action: `approve | redirect | defer | reject`
+  - `POST /api/rotations/{id}/confirm-completion/`
+  - `POST /api/rotations/{id}/verify-completion/`
+- Completion verification queue:
+  - `GET /api/rotations/completions/`
+  - `POST /api/rotations/completions/{completion_id}/verify/`
+
+### Feature Layer — Role-Aware Operational Dashboards
+- `GET /api/dashboard/resident/`
+- `GET /api/dashboard/supervisor/`
+- `GET /api/dashboard/hod/`
+- `GET /api/dashboard/utrmc/`
+
+Active release-gated dashboard UI exposes resident schedule/leave and logbook, supervisor leave/logbook review, and UTRMC read-only overview checks. Synopsis, thesis, and rotations are deferred from the active UI/gate.
 
 ### Eligibility Status Values
 - `NOT_READY` — all requirements unmet
@@ -336,7 +408,7 @@ Response shape for `GET /events/live`:
 - `GET /api/leaves/` — list leave requests
   - Roles: admin, utrmc_admin, supervisor/faculty (own residents), pg/resident (own only)
 - `POST /api/leaves/` — create leave request
-  - Payload: `{ leave_type: str, start_date: str, end_date: str, reason?: str }`
+  - Payload: `{ resident_training: int, leave_type: str, start_date: str, end_date: str, reason?: str }`
   - Roles: pg/resident
 - `GET /api/leaves/{id}/` — retrieve single leave
 - `PATCH /api/leaves/{id}/` — update draft leave; Roles: pg (own, draft only)
@@ -351,6 +423,7 @@ Response shape for `GET /events/live`:
 - `GET /api/my/leaves/` — resident's own leave requests; Roles: pg/resident
 
 ### Deputation Postings
+Status as of 2026-04-21: route/API retained, hidden from active navigation and not part of active release-gated UI.
 
 - `GET /api/postings/` — list postings; Roles: admin, utrmc_admin, supervisor/faculty (scoped residents), pg/resident (own only)
 - `POST /api/postings/` — create posting; payload: `{ resident_training: int, posting_type: "deputation" | "off_service", institution_name: str, city?: str, start_date: str, end_date: str, notes?: str }`; Roles: pg/resident, admin, utrmc_admin

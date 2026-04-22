@@ -11,6 +11,8 @@ import { defineConfig, devices } from '@playwright/test';
  * Run commands (see package.json for scripts):
  *   npm run test:e2e:smoke    — smoke suite only (fast, good for CI)
  *   npm run test:e2e:workflow — promoted workflow gate
+ *   npm run test:e2e:active-surface — promoted resident-management gate
+ *   npm run test:e2e:feature-layer — active-surface + inactive-depth verification
  *   npm run test:e2e          — smoke + critical suites
  *   npm run test:e2e:headed   — run with visible browser
  *   npm run test:e2e:ui       — interactive Playwright UI
@@ -69,6 +71,20 @@ export default defineConfig({
       name: 'workflow-gate',
       use: { ...devices['Desktop Chrome'] },
       testMatch: /workflow-gate\/.*\.spec\.ts/,
+    },
+
+    // Active surface gate — promoted resident-management and logbook checks
+    {
+      name: 'active-surface',
+      use: { ...devices['Desktop Chrome'] },
+      testMatch: /feature-layer\/(auth-and-smoke|logbook|permissions)\.spec\.ts/,
+    },
+
+    // Inactive depth — broader resident-management verification kept outside the release gate
+    {
+      name: 'inactive-depth',
+      use: { ...devices['Desktop Chrome'] },
+      testMatch: /feature-layer\/(dashboards|regression-smoke|rotations-phase1|synopsis|thesis)\.spec\.ts/,
     },
 
     // Auth/session suite
@@ -130,6 +146,18 @@ export default defineConfig({
         screenshot: 'on',
       },
       testMatch: /screenshots\/.*\.spec\.ts/,
+    },
+
+    // Presentation capture — resilient screenshot-only flow for approved demo routes
+    {
+      name: 'presentation',
+      use: {
+        ...devices['Desktop Chrome'],
+        viewport: { width: 1440, height: 1024 },
+        screenshot: 'off',
+        trace: 'retain-on-failure',
+      },
+      testMatch: /presentation\/.*\.spec\.ts/,
     },
   ],
 });

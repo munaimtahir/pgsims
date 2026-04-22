@@ -9,6 +9,7 @@ from rest_framework.test import APIClient
 
 from django.contrib.auth import get_user_model
 from sims.academics.models import Department
+from sims.training.models import ResidentTrainingRecord
 from sims.users.models import HODAssignment, SupervisorResidentLink
 
 User = get_user_model()
@@ -30,6 +31,19 @@ class UserModelBasicTests(TestCase):
 
     def test_is_admin_property(self):
         self.assertTrue(self.admin.role in ("admin", "utrmc_admin"))
+
+    def test_pilot_pg_bootstrap_creates_active_training_record(self):
+        pilot = User.objects.create_user(
+            username="pilot_pg",
+            password="pass",
+            role="pg",
+        )
+
+        records = ResidentTrainingRecord.objects.filter(resident_user=pilot, active=True)
+
+        self.assertEqual(records.count(), 1)
+        self.assertEqual(records.first().program.code, "PILOT-BASELINE")
+        self.assertEqual(records.first().status, ResidentTrainingRecord.STATUS_ACTIVE)
 
 
 class UserAPIAuthTests(TestCase):

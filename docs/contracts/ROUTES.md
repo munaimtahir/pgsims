@@ -29,29 +29,32 @@ Do not rename these paths after pilot begins.
 
 ---
 
-## Phase 6 — Academic Core Routes (2026-03-01)
+## Active Surface Routes (truth-hardened 2026-04-21)
 
 ### Resident / PG
 - `/dashboard/resident` — resident command-center dashboard
-- `/dashboard/resident/schedule` — schedule timeline, leave workflow, and resident rotation review/submission
-- `/dashboard/resident/progress` — Academic progress + eligibility snapshot
-- `/dashboard/resident/research` — Synopsis workflow (create, submit, track)
-- `/dashboard/resident/thesis` — Thesis submission
-- `/dashboard/resident/workshops` — Workshop completion recording
-- `/dashboard/resident/postings` — Resident deputation posting request workflow
+- `/dashboard/resident/schedule` — schedule timeline and leave workflow
+- `/dashboard/resident/progress` — logbook draft/submit and threshold snapshot
 
 ### Supervisor
-- `/dashboard/supervisor` — supervisor dashboard with leave and rotation approval inboxes
-- `/dashboard/supervisor/research-approvals` — Inbox: approve/review synopses
+- `/dashboard/supervisor` — supervisor dashboard with leave approvals and logbook review queue
 
 ### UTRMC Admin
-- `/dashboard/utrmc` — UTRMC overview, active rotation operations surface, and admin-only bulk setup/import-export workspace
+- `/dashboard/utrmc` — UTRMC overview and read-only oversight surface for `utrmc_user`
 - `/dashboard/utrmc/programs` — Programme definitions, policy editor, milestone viewer
 - `/dashboard/utrmc/eligibility-monitoring` — Eligibility monitoring with filters
-- `/dashboard/utrmc/postings` — UTRMC deputation posting approval/completion surface
 
 These routes are frozen after pilot begins.
 
 UX freeze note:
 - 2026-04-02 approved change: added an admin-only bulk setup/import-export workspace inside the existing `/dashboard/utrmc` page.
 - No route or sidebar label change was introduced.
+- 2026-04-21 approved truth-hardening change: resident sidebar label `/dashboard/resident/progress` changed from "Academic Progress" to "Logbook"; inactive resident research/thesis/workshops/postings and supervisor research approvals were removed from active navigation. Routes still exist but are not active release-gated surfaces.
+
+## Deferred Routes (not active release truth)
+- `/dashboard/resident/research`
+- `/dashboard/resident/thesis`
+- `/dashboard/resident/workshops`
+- `/dashboard/resident/postings`
+- `/dashboard/supervisor/research-approvals`
+- `/dashboard/utrmc/postings`

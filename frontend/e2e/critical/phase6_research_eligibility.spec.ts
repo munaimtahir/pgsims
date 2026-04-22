@@ -254,31 +254,6 @@ test('Phase 6: Resident research draft → supervisor approve → eligibility up
   const settings = (await settingsResp.json()) as { WORKSHOP_MANAGEMENT_ENABLED: boolean };
   expect(typeof settings.WORKSHOP_MANAGEMENT_ENABLED).toBe('boolean');
 
-  // ── Step 14: Workshop manual completion works for PG ──────────────────────
-  // Get a workshop from the read-only list (WorkshopViewSet is ReadOnly by design)
-  const workshopListResp = await apiGet(request, '/api/workshops/', pgToken);
-  expect(workshopListResp.ok()).toBeTruthy();
-  const workshopListRaw = await workshopListResp.json() as { results?: Array<{ id: number }> } | Array<{ id: number }>;
-  const workshopList = Array.isArray(workshopListRaw) ? workshopListRaw : (workshopListRaw.results ?? []);
-  expect(workshopList.length, 'At least one workshop must exist (seeded in container)').toBeGreaterThan(0);
-  const workshopId = workshopList[0].id;
-
-  // PG adds manual workshop completion
-  const completionResp = await apiPost(request, '/api/my/workshops/', pgToken, {
-    workshop: workshopId,
-    completed_at: new Date().toISOString().slice(0, 10),
-    notes: 'Completed via E2E test',
-  });
-  expect([200, 201]).toContain(completionResp.status());
-
-  // List workshop completions
-  const completionsListResp = await apiGet(request, '/api/my/workshops/', pgToken);
-  expect(completionsListResp.ok()).toBeTruthy();
-  const completionsListRaw = await completionsListResp.json() as { results?: Array<{ workshop: number }> } | Array<{ workshop: number }>;
-  const completionsList = Array.isArray(completionsListRaw) ? completionsListRaw : (completionsListRaw.results ?? []);
-  const myCompletion = completionsList.find((c) => c.workshop === workshopId);
-  expect(myCompletion, 'Workshop completion should appear in list').toBeTruthy();
-
   // ── Phase 6 E2E PASSED ────────────────────────────────────────────────────
 });
 

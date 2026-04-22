@@ -3,6 +3,8 @@
 import { useEffect, useMemo, useState } from 'react';
 
 import ReadonlyNotice from '@/components/ReadonlyNotice';
+import MetricCard from '@/components/ui/MetricCard';
+import PageHeader from '@/components/ui/PageHeader';
 import {
   DataCorrectionAuditRow,
   DataQualitySummary,
@@ -187,30 +189,33 @@ export default function DataQualityPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900">Data Quality Dashboard</h1>
-        {canManage && (
-          <button
-            onClick={async () => {
-              setSaving(true);
-              try {
-                await userbaseApi.dataQuality.recompute();
-                flash('Data quality flags recomputed.');
-                await load(activeFilter);
-              } catch {
-                flash('Recompute failed.', true);
-              } finally {
-                setSaving(false);
-              }
-            }}
-            disabled={saving}
-            className="px-4 py-2 bg-indigo-600 text-white rounded text-sm disabled:opacity-50"
-          >
-            {saving ? 'Working...' : 'Recompute Flags'}
-          </button>
-        )}
-      </div>
+    <div className="pg-page">
+      <PageHeader
+        title="Data Quality Dashboard"
+        description="Review and correct resident profile data quality issues affecting operational readiness."
+        actions={
+          canManage ? (
+            <button
+              onClick={async () => {
+                setSaving(true);
+                try {
+                  await userbaseApi.dataQuality.recompute();
+                  flash('Data quality flags recomputed.');
+                  await load(activeFilter);
+                } catch {
+                  flash('Recompute failed.', true);
+                } finally {
+                  setSaving(false);
+                }
+              }}
+              disabled={saving}
+              className="pg-btn-primary"
+            >
+              {saving ? 'Working...' : 'Recompute Flags'}
+            </button>
+          ) : undefined
+        }
+      />
 
       {isReadonly && <ReadonlyNotice />}
       {error && <p className="text-sm text-red-600">{error}</p>}
@@ -218,10 +223,7 @@ export default function DataQualityPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
         {summaryCards.map((card) => (
-          <div key={card.title} className="rounded-lg border border-gray-200 bg-white p-4">
-            <p className="text-sm text-gray-500">{card.title}</p>
-            <p className="text-2xl font-semibold text-gray-900">{card.value}</p>
-          </div>
+          <MetricCard key={card.title} label={card.title} value={card.value} />
         ))}
       </div>
 
@@ -233,12 +235,12 @@ export default function DataQualityPage() {
               setActiveFilter(filterOption.key);
               await load(filterOption.key);
             }}
-            className={`px-3 py-1.5 text-sm rounded border ${
-              activeFilter === filterOption.key
-                ? 'bg-indigo-600 text-white border-indigo-600'
-                : 'bg-white text-gray-700 border-gray-300'
-            }`}
-          >
+              className={`px-3 py-1.5 text-sm rounded border ${
+                activeFilter === filterOption.key
+                  ? 'bg-indigo-600 text-white border-indigo-600'
+                  : 'bg-white text-gray-700 border-gray-300'
+              }`}
+            >
             {filterOption.label}
           </button>
         ))}
@@ -299,7 +301,7 @@ export default function DataQualityPage() {
         </table>
       </div>
 
-      <div className="rounded-lg border border-gray-200 bg-white p-4">
+      <div className="pg-card">
         <h2 className="text-lg font-semibold text-gray-800 mb-3">Recent Correction Audit</h2>
         <div className="space-y-2 max-h-72 overflow-auto">
           {audit.length === 0 && <p className="text-sm text-gray-400">No correction events yet.</p>}
@@ -319,22 +321,22 @@ export default function DataQualityPage() {
       </div>
 
       {edit && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-          <div className="w-full max-w-lg rounded-lg bg-white p-6 shadow-xl">
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 px-4">
+          <div className="w-full max-w-lg rounded-lg bg-white p-6 shadow-xl max-h-[90vh] overflow-y-auto">
             <h2 className="text-lg font-semibold text-gray-900 mb-4">Edit {edit.name}</h2>
             <div className="space-y-3">
               <div>
-                <label className="block text-sm text-gray-700 mb-1">Email</label>
+                <label className="pg-form-label">Email</label>
                 <input
-                  className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+                  className="pg-form-input"
                   value={edit.email}
                   onChange={(event) => setEdit({ ...edit, email: event.target.value })}
                 />
               </div>
               <div>
-                <label className="block text-sm text-gray-700 mb-1">Training Year</label>
+                <label className="pg-form-label">Training Year</label>
                 <select
-                  className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+                  className="pg-form-input"
                   value={edit.year}
                   onChange={(event) => setEdit({ ...edit, year: event.target.value })}
                 >
@@ -348,28 +350,28 @@ export default function DataQualityPage() {
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-sm text-gray-700 mb-1">Training Start (ISO)</label>
+                  <label className="pg-form-label">Training Start (ISO)</label>
                   <input
                     type="date"
-                    className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+                    className="pg-form-input"
                     value={edit.training_start}
                     onChange={(event) => setEdit({ ...edit, training_start: event.target.value })}
                   />
                 </div>
                 <div>
-                  <label className="block text-sm text-gray-700 mb-1">Training End (ISO)</label>
+                  <label className="pg-form-label">Training End (ISO)</label>
                   <input
                     type="date"
-                    className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+                    className="pg-form-input"
                     value={edit.training_end}
                     onChange={(event) => setEdit({ ...edit, training_end: event.target.value })}
                   />
                 </div>
               </div>
               <div>
-                <label className="block text-sm text-gray-700 mb-1">Training Level</label>
+                <label className="pg-form-label">Training Level</label>
                 <input
-                  className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+                  className="pg-form-input"
                   value={edit.training_level}
                   onChange={(event) => setEdit({ ...edit, training_level: event.target.value })}
                 />
@@ -385,7 +387,7 @@ export default function DataQualityPage() {
               <button
                 onClick={saveEdit}
                 disabled={saving}
-                className="px-4 py-2 text-sm bg-indigo-600 text-white rounded disabled:opacity-50"
+                className="pg-btn-primary"
               >
                 {saving ? 'Saving...' : 'Save'}
               </button>

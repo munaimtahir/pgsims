@@ -4,6 +4,7 @@ from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
 from sims.academics.models import Department
+from sims.academics.serializers import DepartmentSerializer as CanonicalDepartmentSerializer
 from sims.rotations.models import Hospital, HospitalDepartment
 from sims.users.models import (
     DepartmentMembership,
@@ -40,16 +41,9 @@ class HospitalSerializer(serializers.ModelSerializer):
         read_only_fields = ["created_at", "updated_at"]
 
 
-class DepartmentSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Department
-        fields = ["id", "name", "code", "description", "active", "created_at", "updated_at"]
-        read_only_fields = ["created_at", "updated_at"]
-
-
 class HospitalDepartmentSerializer(serializers.ModelSerializer):
     hospital = HospitalSerializer(read_only=True)
-    department = DepartmentSerializer(read_only=True)
+    department = CanonicalDepartmentSerializer(read_only=True)
     hospital_id = serializers.IntegerField(write_only=True)
     department_id = serializers.IntegerField(write_only=True)
     active = serializers.BooleanField(source="is_active", required=False)

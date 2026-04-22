@@ -24,8 +24,6 @@ class UsersConfig(AppConfig):
         Import any signal handlers or perform app initialization.
         """
         try:
-            # Import signals if you have any (e.g., for notifications)
-            # import sims.users.signals
-            pass
+            import sims.users.signals  # noqa: F401
         except ImportError:
             pass

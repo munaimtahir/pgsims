@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import ReadonlyNotice from '@/components/ReadonlyNotice';
+import PageHeader from '@/components/ui/PageHeader';
 import { useAuthStore } from '@/store/authStore';
 import { userbaseApi, UserbaseUser, UserbaseDepartment } from '@/lib/api/userbase';
 import { isUtrmcManagerRole, isUtrmcReadonlyRole } from '@/lib/rbac';
@@ -77,16 +78,19 @@ export default function HodPage() {
   if (loading) return <p className="text-gray-500">Loading...</p>;
 
   return (
-    <div>
-      <div className="flex justify-between items-center mb-4">
-        <h1 className="text-2xl font-bold text-gray-900">HOD Assignments</h1>
-        {canManage && (
-          <button onClick={()=>{setForm({department:'',hod:'',start_date:''});setShowModal(true);}} className="bg-indigo-600 text-white px-4 py-2 rounded text-sm hover:bg-indigo-700">+ Add HOD</button>
-        )}
-      </div>
+    <div className="pg-page">
+      <PageHeader
+        title="HOD Assignments"
+        description="Assign and review departmental head oversight relationships."
+        actions={
+          canManage ? (
+            <button onClick={()=>{setForm({department:'',hod:'',start_date:''});setShowModal(true);}} className="pg-btn-primary">+ Add HOD</button>
+          ) : undefined
+        }
+      />
       {isReadonly && <ReadonlyNotice />}
       {error && <p className="text-red-600 mb-2">{error}</p>}
-      <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+      <div className="bg-white border border-gray-200 rounded-lg overflow-x-auto">
         <table className="w-full text-sm">
           <thead className="bg-gray-50"><tr>{['Department','HOD','Start Date','Active'].map(h=><th key={h} className="text-left px-4 py-2 font-medium text-gray-600">{h}</th>)}</tr></thead>
           <tbody className="divide-y divide-gray-100">
@@ -102,30 +106,30 @@ export default function HodPage() {
         </table>
       </div>
       {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md shadow-xl">
+        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 px-4">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md shadow-xl max-h-[90vh] overflow-y-auto">
             <h2 className="text-lg font-semibold mb-4">Add HOD Assignment</h2>
             <div className="mb-3">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Department</label>
-              <select className="w-full border border-gray-300 rounded px-3 py-2 text-sm" value={form.department} onChange={e=>setForm({...form,department:e.target.value})}>
+              <label className="pg-form-label">Department</label>
+              <select className="pg-form-input" value={form.department} onChange={e=>setForm({...form,department:e.target.value})}>
                 <option value="">Select department</option>
                 {departments.map(d=><option key={d.id} value={d.id}>{d.name}</option>)}
               </select>
             </div>
             <div className="mb-3">
-              <label className="block text-sm font-medium text-gray-700 mb-1">HOD User</label>
-              <select className="w-full border border-gray-300 rounded px-3 py-2 text-sm" value={form.hod} onChange={e=>setForm({...form,hod:e.target.value})}>
+              <label className="pg-form-label">HOD User</label>
+              <select className="pg-form-input" value={form.hod} onChange={e=>setForm({...form,hod:e.target.value})}>
                 <option value="">Select HOD</option>
                 {faculty.map(u=><option key={u.id} value={u.id}>{u.full_name||u.username}</option>)}
               </select>
             </div>
             <div className="mb-3">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
-              <input type="date" className="w-full border border-gray-300 rounded px-3 py-2 text-sm" value={form.start_date} onChange={e=>setForm({...form,start_date:e.target.value})} />
+              <label className="pg-form-label">Start Date</label>
+              <input type="date" className="pg-form-input" value={form.start_date} onChange={e=>setForm({...form,start_date:e.target.value})} />
             </div>
             <div className="flex gap-2 justify-end">
               <button onClick={()=>setShowModal(false)} className="px-4 py-2 text-sm border rounded">Cancel</button>
-              <button onClick={save} disabled={saving} className="px-4 py-2 text-sm bg-indigo-600 text-white rounded disabled:opacity-50">{saving?'Saving...':'Save'}</button>
+              <button onClick={save} disabled={saving} className="pg-btn-primary">{saving?'Saving...':'Save'}</button>
             </div>
           </div>
         </div>

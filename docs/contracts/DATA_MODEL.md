@@ -47,3 +47,48 @@ If `hospital != home_hospital`:
 
 If `department == home_department` AND `hospital != home_hospital`:
 - Always requires override_reason + `utrmc_admin` approval (rare exception).
+
+## Feature Layer Runtime Entities
+
+### Logbook Domain
+- `training.LogbookEntry`
+  - Resident-owned open-form clinical entry
+  - Statuses: `DRAFT -> SUBMITTED -> RETURNED -> APPROVED`
+  - Supports `rotation_assignment` link for per-rotation threshold checks
+- `training.LogbookReview`
+  - Reviewer action history (`RETURNED`, `APPROVED`) with comments
+- `training.LogbookThresholdConfig`
+  - Configurable threshold mode: `PER_ROTATION` or `PER_PERIOD`
+  - Scoped by optional `program` and `department`
+- `training.LogbookThresholdSnapshot`
+  - Computed progress snapshots used by resident/supervisor/UTRMC readiness views
+
+### Synopsis/Thesis Completeness Domain
+- `training.SubmissionRequirementTemplate`
+  - Admin/HOD/UTRMC-managed required-document checklist
+  - Scoped by `submission_type` + optional `program`/`department`
+- `training.ResidentSubmission`
+  - Resident workflow entity for `SYNOPSIS` and `THESIS`
+  - Statuses: `DRAFT`, `SUBMITTED`, `UNDER_REVIEW`, `RETURNED`, `VERIFIED`, `CERTIFICATE_ISSUED`
+- `training.SubmissionDocument`
+  - Uploaded resident files, optionally linked to checklist item
+- `training.SubmissionReview`
+  - Explicit review history rows for each state transition
+- `training.SubmissionCertificate`
+  - One certificate per verified submission, with issue/verify metadata
+
+### Rotation Phase-1 Structured Domain
+- `training.ProgramRotationRequirement`
+  - Program-level required rotation department map with duration + sequence
+- `training.RotationCompletion`
+  - One completion record per `RotationAssignment`
+  - Statuses: `CONFIRMED_BY_DEPARTMENT`, `PENDING_UTRMC_VERIFICATION`, `VERIFIED`
+- `training.RotationCertificate`
+  - One certificate per verified completion with issuance traceability
+
+### Readiness Hooks
+- Eligibility/readiness now includes verifiable hooks for:
+  - logbook threshold progress,
+  - synopsis certificate issuance,
+  - thesis certificate issuance,
+  - rotation completion verification counts.

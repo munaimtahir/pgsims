@@ -2,19 +2,19 @@
 import { useEffect, useState } from 'react';
 
 import BulkSetupWorkspace from '@/components/utrmc/BulkSetupWorkspace';
+import PageHeader from '@/components/ui/PageHeader';
+import MetricCard from '@/components/ui/MetricCard';
+import WorkflowStatusBadge from '@/components/ui/WorkflowStatusBadge';
 import { useAuthStore } from '@/store/authStore';
-import { trainingApi, ResidentTrainingRecordListItem, RotationAssignment } from '@/lib/api/training';
+import {
+  trainingApi,
+  ResidentTrainingRecordListItem,
+  RotationAssignment,
+  UTRMCOperationalDashboard,
+  ResidentSubmissionRecord,
+  RotationCompletionRecord,
+} from '@/lib/api/training';
 import { userbaseApi, UserbaseHospitalDepartment, UserbaseUser } from '@/lib/api/userbase';
-
-const STATUS_COLORS: Record<string, string> = {
-  DRAFT: 'bg-gray-100 text-gray-700',
-  SUBMITTED: 'bg-yellow-100 text-yellow-800',
-  APPROVED: 'bg-green-100 text-green-800',
-  ACTIVE: 'bg-blue-100 text-blue-800',
-  COMPLETED: 'bg-slate-100 text-slate-700',
-  RETURNED: 'bg-orange-100 text-orange-700',
-  REJECTED: 'bg-red-100 text-red-700',
-};
 
 type RotationFormState = {
   resident_training: string;
@@ -32,11 +32,6 @@ const EMPTY_ROTATION_FORM: RotationFormState = {
   notes: '',
 };
 
-function RotationStatusBadge({ status }: { status: string }) {
-  const cls = STATUS_COLORS[status] || 'bg-gray-100 text-gray-600';
-  return <span className={`px-2 py-0.5 rounded text-xs font-medium ${cls}`}>{status}</span>;
-}
-
 function RotationCard({
   rotation,
   actionLabel,
@@ -53,11 +48,11 @@ function RotationCard({
   helperText?: string;
 }) {
   const actionClassName = actionTone === 'success'
-    ? 'bg-green-600 hover:bg-green-700'
-    : 'bg-indigo-600 hover:bg-indigo-700';
+    ? 'pg-btn-success'
+    : 'pg-btn-primary';
 
   return (
-    <div className="bg-white border border-gray-200 rounded-xl p-5">
+    <div className="pg-card">
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
           <p className="font-semibold text-gray-900">{rotation.resident_name}</p>
@@ -69,7 +64,7 @@ function RotationCard({
           </p>
           <p className="text-xs text-gray-400 mt-1">{rotation.program_name}</p>
         </div>
-        <RotationStatusBadge status={rotation.status} />
+        <WorkflowStatusBadge status={rotation.status} />
       </div>
 
       {rotation.notes && (
@@ -97,7 +92,7 @@ function RotationCard({
           <button
             onClick={onAction}
             disabled={actionBusy}
-            className={`px-4 py-2 text-white rounded-lg text-sm font-medium disabled:opacity-50 ${actionClassName}`}
+            className={`disabled:opacity-50 ${actionClassName}`}
           >
             {actionBusy ? 'Processing…' : actionLabel}
           </button>
@@ -147,9 +142,15 @@ export default function UTRMCOverviewPage() {
   const [trainingRecords, setTrainingRecords] = useState<ResidentTrainingRecordListItem[]>([]);
   const [placements, setPlacements] = useState<UserbaseHospitalDepartment[]>([]);
   const [rotations, setRotations] = useState<RotationAssignment[]>([]);
+  const [opsDashboard, setOpsDashboard] = useState<UTRMCOperationalDashboard | null>(null);
+  const [pendingSynopsis, setPendingSynopsis] = useState<ResidentSubmissionRecord[]>([]);
+  const [pendingThesis, setPendingThesis] = useState<ResidentSubmissionRecord[]>([]);
+  const [pendingCompletions, setPendingCompletions] = useState<RotationCompletionRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [savingRotation, setSavingRotation] = useState(false);
   const [actingRotationId, setActingRotationId] = useState<number | null>(null);
+  const [processingSubmissionId, setProcessingSubmissionId] = useState<number | null>(null);
+  const [processingCompletionId, setProcessingCompletionId] = useState<number | null>(null);
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
   const [rotationForm, setRotationForm] = useState<RotationFormState>(EMPTY_ROTATION_FORM);
@@ -180,14 +181,37 @@ export default function UTRMCOverviewPage() {
           trainingApi.listResidentTrainingRecords(),
           userbaseApi.matrix.list(),
           trainingApi.listRotations(),
+          trainingApi.getUTRMCOperationalDashboard().catch(() => null),
+          trainingApi.getSynopsisReviewQueue().catch(() => ({ count: 0, results: [] })),
+          trainingApi.getThesisReviewQueue().catch(() => ({ count: 0, results: [] })),
+          trainingApi.listRotationCompletions({ status: 'PENDING_UTRMC_VERIFICATION' }).catch(() => ({ count: 0, results: [] })),
         ])
-        : Promise.resolve<[ResidentTrainingRecordListItem[], UserbaseHospitalDepartment[], RotationAssignment[]]>([
+        : Promise.resolve<
+            [
+              ResidentTrainingRecordListItem[],
+              UserbaseHospitalDepartment[],
+              RotationAssignment[],
+              UTRMCOperationalDashboard | null,
+              { count: number; results: ResidentSubmissionRecord[] },
+              { count: number; results: ResidentSubmissionRecord[] },
+              { count: number; results: RotationCompletionRecord[] },
+            ]
+          >([
           [],
           [],
           [],
+          null,
+          { count: 0, results: [] },
+          { count: 0, results: [] },
+          { count: 0, results: [] },
         ]);
 
-      const [hospitals, departments, users, [records, matrix, rotationRows]] = await Promise.all([
+      const [
+        hospitals,
+        departments,
+        users,
+        [records, matrix, rotationRows, nextOpsDashboard, nextSynopsis, nextThesis, nextCompletions],
+      ] = await Promise.all([
         hospitalsPromise,
         departmentsPromise,
         usersPromise,
@@ -206,6 +230,10 @@ export default function UTRMCOverviewPage() {
       setTrainingRecords(records.filter((item) => item.active));
       setPlacements(matrix.filter((item) => item.active));
       setRotations(rotationRows);
+      setOpsDashboard(nextOpsDashboard);
+      setPendingSynopsis(nextSynopsis.results || []);
+      setPendingThesis(nextThesis.results || []);
+      setPendingCompletions(nextCompletions.results || []);
       if (canManageRotations) {
         userbaseApi.dataQuality
           .summary()
@@ -274,6 +302,39 @@ export default function UTRMCOverviewPage() {
     }
   };
 
+  const verifySubmission = async (
+    submissionType: 'SYNOPSIS' | 'THESIS',
+    submissionId: number
+  ) => {
+    setProcessingSubmissionId(submissionId);
+    try {
+      if (submissionType === 'SYNOPSIS') {
+        await trainingApi.reviewSynopsisSubmission(submissionId, 'verify');
+      } else {
+        await trainingApi.reviewThesisSubmission(submissionId, 'verify');
+      }
+      flash(`${submissionType.toLowerCase()} submission verified.`);
+      await load();
+    } catch {
+      flash(`Failed to verify ${submissionType.toLowerCase()} submission.`, true);
+    } finally {
+      setProcessingSubmissionId(null);
+    }
+  };
+
+  const verifyCompletion = async (completionId: number) => {
+    setProcessingCompletionId(completionId);
+    try {
+      await trainingApi.verifyRotationCompletion(completionId);
+      flash('Rotation completion verified.');
+      await load();
+    } catch {
+      flash('Failed to verify rotation completion.', true);
+    } finally {
+      setProcessingCompletionId(null);
+    }
+  };
+
   const draftRotations = rotations.filter((item) => item.status === 'DRAFT');
   const submittedRotations = rotations.filter((item) => item.status === 'SUBMITTED');
   const approvedRotations = rotations.filter((item) => item.status === 'APPROVED');
@@ -295,36 +356,116 @@ export default function UTRMCOverviewPage() {
   }
 
   return (
-    <div className="space-y-8">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900 mb-6">UTRMC Overview</h1>
-        {error && <div className="mb-4 bg-red-50 border border-red-200 text-red-700 rounded-lg p-4">{error}</div>}
-        {message && <div className="mb-4 bg-green-50 border border-green-200 text-green-700 rounded-lg p-4">{message}</div>}
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+    <div className="pg-page">
+      <PageHeader
+        title="UTRMC Overview"
+        description="Cross-department monitoring for verification queues, rotation operations, and readiness signals."
+        badges={[
+          {
+            label: canManageRotations ? 'Administrative scope enabled' : 'Read-only oversight mode',
+            tone: canManageRotations ? 'info' : 'default',
+          },
+        ]}
+      />
+      {error && <div className="mb-4 bg-red-50 border border-red-200 text-red-700 rounded-lg p-4">{error}</div>}
+      {message && <div className="mb-4 bg-green-50 border border-green-200 text-green-700 rounded-lg p-4">{message}</div>}
+      <section className="space-y-4">
+        <div className="pg-kpi-grid md:grid-cols-5">
           {cards.map((card) => (
-            <div key={card.label} className="bg-white border border-gray-200 rounded-lg p-4">
-              <p className="text-3xl font-bold text-indigo-600">{card.value}</p>
-              <p className="text-sm text-gray-600 mt-1">{card.label}</p>
-            </div>
+            <MetricCard key={card.label} label={card.label} value={card.value} />
           ))}
         </div>
         {canManageRotations && (
-          <div className="mt-4 bg-white border border-gray-200 rounded-lg p-4 flex items-center justify-between">
+          <div className="pg-card flex flex-wrap items-center justify-between gap-3">
             <div>
               <p className="text-sm text-gray-600">Data Quality</p>
               <p className="text-lg font-semibold text-gray-900">
                 {dqIncomplete === null ? 'Unavailable' : `${dqIncomplete} incomplete profiles`}
               </p>
             </div>
-            <a
-              href="/dashboard/utrmc/data-quality"
-              className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm hover:bg-indigo-700"
-            >
+            <a href="/dashboard/utrmc/data-quality" className="pg-btn-primary">
               Open Data Quality
             </a>
           </div>
         )}
-      </div>
+      </section>
+
+      {opsDashboard && (
+        <section className="space-y-4">
+          <h2 className="text-xl font-semibold text-gray-900">Cross-Department Readiness</h2>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <MetricCard label="Active Residents" value={opsDashboard.cross_department_overview.active_residents} />
+            <MetricCard label="Pending Synopsis Reviews" value={opsDashboard.pending_synopsis_reviews} tone="warning" />
+            <MetricCard label="Pending Thesis Reviews" value={opsDashboard.pending_thesis_reviews} tone="warning" />
+            <MetricCard
+              label="Pending Rotation Verifications"
+              value={opsDashboard.pending_rotation_completion_verifications}
+              tone="info"
+            />
+          </div>
+        </section>
+      )}
+
+      {canManageRotations && (
+        <section className="space-y-4">
+          <h2 className="text-xl font-semibold text-gray-900">Certificate Verification Queues</h2>
+          {pendingSynopsis.length + pendingThesis.length === 0 ? (
+            <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 text-sm text-gray-500">
+              No synopsis/thesis submissions are awaiting UTRMC verification.
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {[...pendingSynopsis, ...pendingThesis].map((submission) => (
+                <div key={`${submission.submission_type}-${submission.id}`} className="pg-card">
+                  <div className="flex items-start justify-between gap-4 flex-wrap">
+                    <div>
+                      <p className="font-semibold text-gray-900">{submission.resident_name}</p>
+                      <p className="text-sm text-gray-500">
+                        {submission.submission_type} · Required {submission.uploaded_required_count}/{submission.required_documents_count}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => verifySubmission(submission.submission_type, submission.id)}
+                      disabled={processingSubmissionId === submission.id}
+                      className="pg-btn-success px-3 py-1.5"
+                    >
+                      {processingSubmissionId === submission.id ? 'Processing…' : 'Verify & Issue'}
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {pendingCompletions.length === 0 ? (
+            <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 text-sm text-gray-500">
+              No rotation completion verifications pending.
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {pendingCompletions.map((completion) => (
+                <div key={completion.id} className="pg-card">
+                  <div className="flex items-start justify-between gap-4 flex-wrap">
+                    <div>
+                      <p className="font-semibold text-gray-900">{completion.resident_name}</p>
+                      <p className="text-sm text-gray-500">
+                        <WorkflowStatusBadge status={completion.status} />
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => verifyCompletion(completion.id)}
+                      disabled={processingCompletionId === completion.id}
+                      className="pg-btn-success px-3 py-1.5"
+                    >
+                      {processingCompletionId === completion.id ? 'Processing…' : 'Verify Completion'}
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+      )}
 
       {canManageRotations && <BulkSetupWorkspace />}
 
@@ -362,7 +503,7 @@ export default function UTRMCOverviewPage() {
                       ...current,
                       resident_training: event.target.value,
                     }))}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+                    className="pg-form-input"
                     required
                   >
                     <option value="">Select resident training record</option>
@@ -385,7 +526,7 @@ export default function UTRMCOverviewPage() {
                       ...current,
                       hospital_department: event.target.value,
                     }))}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+                    className="pg-form-input"
                     required
                   >
                     <option value="">Select hospital and department</option>
@@ -411,7 +552,7 @@ export default function UTRMCOverviewPage() {
                       ...current,
                       start_date: event.target.value,
                     }))}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+                    className="pg-form-input"
                     required
                   />
                 </div>
@@ -428,16 +569,16 @@ export default function UTRMCOverviewPage() {
                       ...current,
                       end_date: event.target.value,
                     }))}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+                    className="pg-form-input"
                     required
                   />
                 </div>
               </div>
 
               <div>
-                <label htmlFor="rotation_notes" className="block text-sm font-medium text-gray-700 mb-1">
-                  Notes
-                </label>
+                  <label htmlFor="rotation_notes" className="block text-sm font-medium text-gray-700 mb-1">
+                    Notes
+                  </label>
                 <textarea
                   id="rotation_notes"
                   rows={3}
@@ -446,7 +587,7 @@ export default function UTRMCOverviewPage() {
                     ...current,
                     notes: event.target.value,
                   }))}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+                  className="pg-form-input"
                   placeholder="Optional scheduling notes or handoff context"
                 />
               </div>
@@ -454,7 +595,7 @@ export default function UTRMCOverviewPage() {
               <button
                 type="submit"
                 disabled={savingRotation}
-                className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 disabled:opacity-50"
+                className="pg-btn-primary"
               >
                 {savingRotation ? 'Saving…' : 'Create Rotation Draft'}
               </button>
