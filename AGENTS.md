@@ -59,3 +59,36 @@ A task is complete only when:
 - MCP dependency manifests and lockfiles MUST be committed for reproducibility (for example: `package.json` + `package-lock.json` in tooling folders).
 - Do NOT rely on floating versions (for example: `@latest`) in committed launcher scripts.
 - Runtime artifacts/output folders from MCP tools MUST remain untracked.
+
+## 11) Production Gate Closure Sprint (CRITICAL)
+
+Before executing ANY task that affects the gate or coverage:
+
+**MANDATORY**: Read `docs/PROD_GATE_CLOSURE/` documentation package
+- Start with: `docs/PROD_GATE_CLOSURE/00_README.md`
+- Quick reference: `docs/PROD_GATE_CLOSURE/QUICK_REFERENCE.md`
+- Full index: `docs/PROD_GATE_CLOSURE/INDEX.md`
+
+This package documents:
+- All 11 remaining production gate blockers
+- Root causes and fix strategies
+- Step-by-step procedures for each blocker
+- Testing and validation procedures
+- Troubleshooting guides
+
+**Current Status**: NO-GO with 11 identified blockers (see docs/PROD_GATE_CLOSURE/01_blocker_analysis.md)
+
+**Mandatory Gates** (ALL must pass for GO):
+- Strict schema gate
+- E2E fully passes (7/7 tests)
+- Backend coverage ≥95% / ≥90% branch
+- Frontend coverage ≥90% / ≥85% branch
+- Active routes/APIs/CTAs/roles/workflows 100%
+
+**Do NOT**:
+- Skip reading the documentation package
+- Break the existing wins (see docs/PROD_GATE_CLOSURE/SESSION_3_FINDINGS.md)
+- Modify tests without updating coverage targets
+- Change payloads without updating contracts
+
+**Reference**: See `docs/PROD_GATE_CLOSURE/` for complete context before starting work.

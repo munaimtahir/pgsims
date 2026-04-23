@@ -27,11 +27,23 @@ SIMS is the postgraduate training operations system for UTRMC. The current engin
 
 **Current Status**: ⚠️ **Active surface stabilized; legacy workflow boundary still constrained**
 
+### 🚨 CRITICAL: Production Gate Closure Sprint
+
+**BEFORE EXECUTING ANY TASK**, read the production gate closure documentation:
+- **Start here**: `docs/PROD_GATE_CLOSURE/00_README.md`
+- **Quick reference**: `docs/PROD_GATE_CLOSURE/QUICK_REFERENCE.md`
+- **Full index**: `docs/PROD_GATE_CLOSURE/INDEX.md`
+
+**Current verdict**: NO-GO (11 blockers identified, documented, and ready for closure)
+
+**Do not skip this** - all tasks affecting tests, coverage, schemas, or E2E must follow the documented gate procedures.
+
 Authoritative current-state docs:
 - `docs/_recovery/20260402T122809Z/00-executive-recovery-summary.md`
 - `docs/_recovery/20260402T122809Z/01-active-surface-map.md`
 - `docs/_recovery/20260402T122809Z/04-core-workflow-closure-report.md`
 - `docs/contracts/`
+- **`docs/PROD_GATE_CLOSURE/`** ← Production gate closure sprint documentation
 
 **Deployment**: Production deployment is standardized on Docker Compose (`docker/docker-compose.prod.yml`) + Caddy reverse proxy. See [docs/deploy/CADDY_ROUTINE.md](docs/deploy/CADDY_ROUTINE.md).
 

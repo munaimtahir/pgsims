@@ -1,5 +1,27 @@
 # PGSIMS Production Gate Handoff - 2026-04-22
 
+## 🚨 CRITICAL: Production Gate Closure Sprint Documentation
+
+**BEFORE CONTINUING**, read the comprehensive closure sprint documentation:
+
+📁 **Location**: `docs/PROD_GATE_CLOSURE/`
+- **Start here**: `docs/PROD_GATE_CLOSURE/00_README.md` (15 minutes)
+- **Quick reference**: `docs/PROD_GATE_CLOSURE/QUICK_REFERENCE.md` (5 minutes)
+- **Full index**: `docs/PROD_GATE_CLOSURE/INDEX.md` (navigation)
+
+This package contains:
+- ✅ Analysis of all 11 remaining blockers
+- ✅ Root causes and fix strategies
+- ✅ Step-by-step procedures for each blocker
+- ✅ Testing and validation procedures
+- ✅ Troubleshooting guides and decision trees
+- ✅ Realistic effort estimates (40-80 hours)
+- ✅ Parallelization strategies for team work
+
+**This completely supersedes the old handoff format and provides everything needed to continue independently.**
+
+---
+
 ## Current Verdict
 NO-GO.
 
@@ -13,6 +35,7 @@ The latest fixing sprint improved the harness and added targeted active-scope te
 - `OUT/prod_gate_scope_coverage.json`
 - `OUT/prod_gate_role_matrix.json`
 - `OUT/prod_gate_artifacts/20260422T211654Z/`
+- **`docs/PROD_GATE_CLOSURE/` ← COMPLETE CLOSURE SPRINT DOCUMENTATION**
 
 Prior baseline evidence remains useful for comparison:
 - `docs/_prod_gate/20260421T233708Z/`
@@ -38,6 +61,14 @@ Prior baseline evidence remains useful for comparison:
 - Added frontend mounted-surface tests:
   - UTRMC HOD page CTA and read-only state
   - UTRMC hospital-department matrix toggle and read-only state
+- **Created comprehensive PROD_GATE_CLOSURE documentation (Session 3)**:
+  - 12 complete guides (150KB, 5,500+ lines)
+  - All 11 blockers documented with root causes
+  - Step-by-step fix procedures
+  - Troubleshooting guides and decision trees
+  - Code examples and templates
+  - Realistic effort estimates
+  - Parallelization strategies
 
 ## Key Files Changed In The Last Pass
 Backend:
