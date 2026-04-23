@@ -112,6 +112,15 @@ apiClient.interceptors.response.use(
       }
     }
 
+    // Log unexpected errors
+    if (error.response) {
+      console.error(`API Error ${error.response.status}: ${error.config?.url}`, error.response.data);
+    } else if (error.request) {
+      console.error(`API Network Error: ${error.config?.url}`, error.message);
+    } else {
+      console.error(`API Error: ${error.message}`);
+    }
+
     return Promise.reject(error);
   }
 );

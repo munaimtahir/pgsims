@@ -41,16 +41,40 @@ export default function ResidentHomePage() {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    Promise.all([
-      trainingApi.getResidentSummary(),
-      trainingApi.getResidentOperationalDashboard().catch(() => null),
-    ])
-      .then(([nextSummary, nextOps]) => {
-        setSummary(nextSummary);
-        setOps(nextOps);
-      })
-      .catch(() => setError('Failed to load dashboard. Please refresh.'))
-      .finally(() => setLoading(false));
+    let mounted = true;
+
+    const loadData = async () => {
+      try {
+        // Small delay to ensure localStorage from addInitScript is available
+        await new Promise(resolve => setTimeout(resolve, 100));
+
+        const [nextSummary, nextOps] = await Promise.all([
+          trainingApi.getResidentSummary(),
+          trainingApi.getResidentOperationalDashboard().catch(() => null),
+        ]);
+
+        if (mounted) {
+          setSummary(nextSummary);
+          setOps(nextOps);
+        }
+      } catch (err) {
+        const errorMsg = err instanceof Error ? err.message : String(err);
+        console.error('Failed to load resident dashboard:', err);
+        if (mounted) {
+          setError(`Failed to load dashboard: ${errorMsg}. Please refresh.`);
+        }
+      } finally {
+        if (mounted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    loadData();
+
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   return (
