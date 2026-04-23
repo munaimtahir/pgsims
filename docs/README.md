@@ -1,22 +1,41 @@
 # Documentation
 
-## 🚨 CRITICAL: Production Gate Closure Sprint
+## 🚨 CRITICAL: Production Gate Closure Sprint + Anti-Drift Guardrails
 
-**BEFORE READING ANYTHING ELSE**, go to: `docs/PROD_GATE_CLOSURE/`
+**BEFORE READING ANYTHING ELSE**, read these in order:
 
-This package contains complete documentation for closing all 11 remaining production gate blockers:
-- **Start here**: `docs/PROD_GATE_CLOSURE/00_README.md` (15 min)
-- **Quick reference**: `docs/PROD_GATE_CLOSURE/QUICK_REFERENCE.md` (5 min)
-- **Full index**: `docs/PROD_GATE_CLOSURE/INDEX.md` (navigation guide)
+1. **Documentation Package**: `docs/PROD_GATE_CLOSURE/`
+   - **Start**: `docs/PROD_GATE_CLOSURE/00_README.md` (15 min)
+   - **Quick ref**: `docs/PROD_GATE_CLOSURE/QUICK_REFERENCE.md` (5 min)
+   - **Navigation**: `docs/PROD_GATE_CLOSURE/INDEX.md`
 
-All agents/developers must read this before executing any task that affects:
+2. **Anti-Drift Guardrails**: `docs/ANTI_DRIFT_GUARDRAILS.md` (MANDATORY)
+   - Session window enforcement
+   - 20 core guardrails (G1-G20)
+   - Drift detection checklist
+   - Scope creep prevention
+   - Pre-session setup
+
+All agents/developers must read BOTH packages before executing any task that affects:
 - Tests or test coverage
 - Schema generation or OpenAPI
 - E2E testing
 - Backend/frontend integration
+- Configuration or deployments
 
-Current status: **NO-GO** with 11 identified blockers (ready for closure)
+**Why both files?**
+- `docs/PROD_GATE_CLOSURE/` = WHAT needs to be done (11 blockers)
+- `docs/ANTI_DRIFT_GUARDRAILS.md` = HOW to stay focused (guardrails enforcement)
+
+Current status: **NO-GO** (11 blockers identified, all documented, ready for closure)
 Mandatory gates: Schema, E2E, coverage, routes, CTAs, roles, workflows
+
+**Before Every Session:**
+- [ ] Read AGENTS.md / GEMINI.md (sections 11-24)
+- [ ] Read docs/PROD_GATE_CLOSURE/00_README.md
+- [ ] Read docs/ANTI_DRIFT_GUARDRAILS.md
+- [ ] Fill out session window (template in guardrails)
+- [ ] Confirm guardrails ACTIVE
 
 ---
 

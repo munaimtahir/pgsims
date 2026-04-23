@@ -27,16 +27,37 @@ SIMS is the postgraduate training operations system for UTRMC. The current engin
 
 **Current Status**: ⚠️ **Active surface stabilized; legacy workflow boundary still constrained**
 
-### 🚨 CRITICAL: Production Gate Closure Sprint
+### 🚨 CRITICAL: Production Gate Closure Sprint + Anti-Drift Guardrails
 
-**BEFORE EXECUTING ANY TASK**, read the production gate closure documentation:
-- **Start here**: `docs/PROD_GATE_CLOSURE/00_README.md`
-- **Quick reference**: `docs/PROD_GATE_CLOSURE/QUICK_REFERENCE.md`
-- **Full index**: `docs/PROD_GATE_CLOSURE/INDEX.md`
+**BEFORE EXECUTING ANY TASK**, read these in order:
 
-**Current verdict**: NO-GO (11 blockers identified, documented, and ready for closure)
+1. **Documentation**: `docs/PROD_GATE_CLOSURE/00_README.md`
+   - Overview of 11 blockers and current status
+   - Quick-start scenarios for different tasks
 
-**Do not skip this** - all tasks affecting tests, coverage, schemas, or E2E must follow the documented gate procedures.
+2. **Anti-Drift Guardrails**: `docs/ANTI_DRIFT_GUARDRAILS.md`
+   - Ensures you stay focused on your specific window
+   - 20 core guardrails (G1-G20) to prevent scope creep
+   - Drift detection checklist (before every commit)
+   - Session window template
+
+3. **Quick Reference**: `docs/PROD_GATE_CLOSURE/QUICK_REFERENCE.md`
+   - One-page cheat sheet for quick lookups
+   - Copy-paste ready commands
+
+4. **Full Index**: `docs/PROD_GATE_CLOSURE/INDEX.md`
+   - Complete navigation guide
+
+**Current Verdict**: NO-GO (11 blockers identified, all documented, ready for closure)
+
+**Mandatory Before Starting Any Session:**
+- [ ] Read AGENTS.md / GEMINI.md sections 11-24
+- [ ] Read docs/PROD_GATE_CLOSURE/00_README.md
+- [ ] Read docs/ANTI_DRIFT_GUARDRAILS.md (guardrails enforcement)
+- [ ] Fill out session window template
+- [ ] Confirm guardrails are ACTIVE
+
+**Do not skip these** - all tasks affecting tests, coverage, schemas, or E2E must follow the documented gate procedures and anti-drift guardrails.
 
 Authoritative current-state docs:
 - `docs/_recovery/20260402T122809Z/00-executive-recovery-summary.md`
@@ -44,6 +65,7 @@ Authoritative current-state docs:
 - `docs/_recovery/20260402T122809Z/04-core-workflow-closure-report.md`
 - `docs/contracts/`
 - **`docs/PROD_GATE_CLOSURE/`** ← Production gate closure sprint documentation
+- **`docs/ANTI_DRIFT_GUARDRAILS.md`** ← Session focus guardrails
 
 **Deployment**: Production deployment is standardized on Docker Compose (`docker/docker-compose.prod.yml`) + Caddy reverse proxy. See [docs/deploy/CADDY_ROUTINE.md](docs/deploy/CADDY_ROUTINE.md).
 

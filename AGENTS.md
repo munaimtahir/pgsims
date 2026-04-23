@@ -92,3 +92,95 @@ This package documents:
 - Change payloads without updating contracts
 
 **Reference**: See `docs/PROD_GATE_CLOSURE/` for complete context before starting work.
+
+## 12) Anti-Drift Guardrails (MANDATORY)
+
+Every agent session must stay focused on its specific window and prevent scope creep.
+
+**MANDATORY**: Read `docs/ANTI_DRIFT_GUARDRAILS.md` BEFORE every session
+
+### Core Principle: One Blocker Per Session
+- ✅ DO fix exactly one assigned blocker per session
+- ❌ DO NOT expand scope mid-session
+- ❌ DO NOT "quickly fix" adjacent blockers
+- ❌ DO NOT refactor unrelated code
+
+### 20 Core Guardrails (G1-G20)
+
+**G1-G4: Scope Guardrails**
+- G1: No refactoring unless required (for blocker)
+- G2: No new features beyond blocker scope
+- G3: No architecture changes
+- G4: No configuration tweaks
+
+**G5-G8: Focus Guardrails**
+- G5: No scope expansion mid-task
+- G6: No adjacent blockers without assignment
+- G7: No cleanup tasks
+- G8: No premature optimization
+
+**G9-G12: Testing Guardrails**
+- G9: No test exclusions
+- G10: No trivial tests (only status codes)
+- G11: No coverage gaming
+- G12: No silent mocking of critical logic
+
+**G13-G16: Contract Guardrails**
+- G13: No payload changes without contract update
+- G14: No route/nav changes without frozen rule check
+- G15: No migration without data validation
+- G16: No breaking changes without changelog
+
+**G17-G20: Evidence Guardrails**
+- G17: No claims without proof (cite tests, outputs)
+- G18: No estimates presented as facts
+- G19: No incomplete runbooks
+- G20: No handoff without next-steps guide
+
+### Session Window Template
+Every session MUST start with:
+```
+PRIMARY PURPOSE: Fix blocker #[N]
+IN-SCOPE: [List of allowed changes]
+OUT-OF-SCOPE: [List of forbidden work]
+SUCCESS CRITERIA: [How we know it's done]
+FALLBACK PLAN: [If stuck >2 hours]
+GUARDRAILS ACTIVE: G1-20 enforced
+```
+
+### Drift Detection Checklist (Before Every Commit)
+1. **Scope**: Does commit fix exactly ONE blocker?
+2. **Focus**: Did I follow decision tree and skip no steps?
+3. **Testing**: Did I run FULL gate (not partial)?
+4. **Contract**: Did I update contracts if payload changed?
+5. **Evidence**: Can I cite specific test names/outputs?
+6. **Handoff**: Can next person pick up from here?
+
+**If ANY answer is NO → DO NOT COMMIT**
+
+### Drift Detection Alerts (Stop Immediately)
+❌ Commits to 3+ unrelated files → DRIFT ALERT
+❌ Claim "fixed" but gate still RED → DRIFT ALERT
+❌ Starting new blocker mid-session → DRIFT ALERT
+❌ Skipping decision tree steps → DRIFT ALERT
+❌ Excluding tests from validation → DRIFT ALERT
+
+**Action**: Stop, read guardrails, refocus, ask for help.
+
+### Code Reviewer Anti-Drift Checklist
+- [ ] Commit references single blocker
+- [ ] All changes related to that blocker
+- [ ] No refactoring of unrelated code
+- [ ] Tests test behavior (not just status)
+- [ ] Coverage maintained/improved
+- [ ] Contracts updated if payload changed
+- [ ] Full gate shown to pass
+- [ ] Checkpoint with NEXT_STEPS created
+
+**If ANY fail → Request changes; do not merge**
+
+### References
+- Full guardrails: `docs/ANTI_DRIFT_GUARDRAILS.md`
+- Blocker analysis: `docs/PROD_GATE_CLOSURE/01_blocker_analysis.md`
+- Decision tree: `docs/PROD_GATE_CLOSURE/08_decision_tree.md`
+- Known issues: `docs/PROD_GATE_CLOSURE/07_known_issues.md`
