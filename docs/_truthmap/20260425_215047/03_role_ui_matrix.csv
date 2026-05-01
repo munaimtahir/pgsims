@@ -1,0 +1,5 @@
+role,landing_page,sidebar_items,visible_pages,broken_pages,errors
+"resident","http://localhost:8082/dashboard/resident",3,0,3,1
+"supervisor","http://localhost:8082/dashboard/supervisor",1,0,1,1
+"utrmc_admin","http://localhost:8082/dashboard/utrmc",9,0,9,1
+"admin","http://localhost:8082/dashboard/utrmc",9,0,9,1

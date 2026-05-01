@@ -1,0 +1,27 @@
+{
+  "programsPage": {
+    "title": "FMU - PGR SIMS",
+    "heading": "Programs",
+    "hasAddProgramButton": 0,
+    "hasEditProgramButton": 0,
+    "hasSavePolicyButton": 0,
+    "hasAddTemplateButton": 0
+  },
+  "supervisionPage": {
+    "heading": "Supervision Links",
+    "modalVisible": 1
+  },
+  "supervisionSave": {
+    "saveFailedCount": 1,
+    "modalStillVisible": 1
+  },
+  "bulkUi": {
+    "workspaceVisible": 1,
+    "templateDownload": "hospitals_template.csv",
+    "exportDownload": "hospitals_export.csv"
+  },
+  "dataQualityPage": {
+    "heading": "Data Quality Dashboard",
+    "failedTextVisible": 1
+  }
+}

@@ -1,0 +1,141 @@
+╔════════════════════════════════════════════════════════════════════════════╗
+║                                                                            ║
+║          STAGE 3 PGSIMS PLAYWRIGHT RUNTIME TRUTHMAP AUDIT                 ║
+║                                                                            ║
+║                      ✅ AUDIT COMPLETE                                    ║
+║                                                                            ║
+╚════════════════════════════════════════════════════════════════════════════╝
+
+📍 YOU ARE HERE: /home/munaim/srv/apps/pgsims/docs/_truthmap/20260425_215047/
+
+📚 READING ORDER
+════════════════════════════════════════════════════════════════════════════
+
+1️⃣  README.md
+    ├─ Quick overview of audit
+    ├─ Index of all files
+    └─ Answers to 8 key questions
+
+2️⃣  AUDIT_SUMMARY.md
+    ├─ Detailed findings by role
+    ├─ Critical issue analysis
+    ├─ Root cause assessment
+    └─ Recommendations
+
+3️⃣  03_comprehensive_runtime_audit.md
+    ├─ Technical deep dive
+    ├─ All pages tested with status
+    ├─ CTAs discovered and categorized
+    └─ Missing pages analysis
+
+4️⃣  DATA FILES (for analysis)
+    ├─ 03_role_ui_matrix.csv → Role/page inventory
+    └─ 03_runtime_cta_inventory.csv → All CTAs with API endpoints
+
+5️⃣  SCREENSHOTS (visual evidence)
+    └─ screenshots/ → 35 PNG images
+
+6️⃣  NETWORK TRACES (for debugging)
+    └─ traces/ → 4 Playwright trace files (.zip)
+
+
+🎯 QUICK ANSWERS
+════════════════════════════════════════════════════════════════════════════
+
+Q1: Does Resident see Logbook?
+A:  ✅ YES
+
+Q2: Does Resident see Workshops?
+A:  ❌ NO
+
+Q3: Does UTRMC Admin see Programs?
+A:  ✅ YES
+
+Q4: Does UTRMC Admin see Training Programs?
+A:  ❌ NO
+
+Q5: Does Supervisor see Logbook Review?
+A:  ❌ NO
+
+Q6: Can any role create entities?
+A:  ⚠️  UNTESTABLE (pages 404)
+
+Q7: What pages 404?
+A:  🚨 ALL 13 dashboard pages
+
+Q8: What API calls fail?
+A:  ✅ NONE
+
+
+🚨 CRITICAL FINDING
+════════════════════════════════════════════════════════════════════════════
+
+All 13 dashboard pages return 404 errors.
+
+Root Cause: Docker container running stale code.
+  - Source code is up-to-date ✅
+  - Next.js build succeeds ✅
+  - Container image is out of date ❌
+
+Fix: Rebuild Docker container
+  docker compose build --no-cache frontend
+  docker compose restart frontend
+
+
+📊 AUDIT BY NUMBERS
+════════════════════════════════════════════════════════════════════════════
+
+Roles Tested:        4/4
+Pages Tested:        13
+Pages 404:           13 (100%)
+CTAs Enumerated:     40+
+Screenshots:         35
+Traces:              4
+Data Modified:       0
+Backend Errors:      0
+
+
+🗂️ DIRECTORY STRUCTURE
+════════════════════════════════════════════════════════════════════════════
+
+docs/_truthmap/20260425_215047/
+├── 00_START_HERE.txt                ← You are here
+├── README.md                        ← Start here for full summary
+├── AUDIT_SUMMARY.md                 ← Detailed findings
+├── 03_comprehensive_runtime_audit.md ← Technical analysis
+├── 03_role_ui_matrix.csv            ← Role inventory
+├── 03_runtime_cta_inventory.csv     ← CTA inventory
+├── 03_playwright_runtime_discovery.md ← Initial findings
+├── STATUS.md                        ← Phase status
+├── 00_baseline.md                   ← Baseline context
+├── screenshots/                     ← 35 PNG images
+└── traces/                          ← 4 trace files
+
+
+🎯 NEXT ACTION
+════════════════════════════════════════════════════════════════════════════
+
+1. Read README.md (5 min overview)
+2. If needed, read AUDIT_SUMMARY.md (detailed findings)
+3. Check screenshots/ for visual evidence
+4. Fix Docker container
+5. Re-run audit
+
+
+📞 SUPPORT
+════════════════════════════════════════════════════════════════════════════
+
+For questions, see:
+  • README.md - Overview & index
+  • AUDIT_SUMMARY.md - Detailed findings
+  • 03_comprehensive_runtime_audit.md - Technical details
+
+
+✅ AUDIT STATUS: COMPLETE
+
+This audit collected comprehensive evidence about PGSIMS UI
+without making any changes to data or database.
+
+All evidence is preserved and ready for review.
+
+════════════════════════════════════════════════════════════════════════════

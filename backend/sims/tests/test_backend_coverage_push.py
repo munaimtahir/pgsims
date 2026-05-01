@@ -1,0 +1,132 @@
+from django.test import TestCase, Client
+from django.urls import reverse
+from django.contrib.auth import get_user_model
+from sims.training.models import (
+    LogbookEntry, TrainingProgram, ResidentTrainingRecord,
+    RotationAssignment, LeaveRequest, ResidentSubmission,
+    ResidentWorkshopCompletion, Workshop
+)
+from sims.rotations.models import Hospital, HospitalDepartment
+from sims.academics.models import Department
+from django.utils import timezone
+from datetime import date, timedelta
+import json
+
+User = get_user_model()
+
+class BackendCoveragePushTests(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.admin = User.objects.create_superuser(username="admin_push", password="password123", role="admin")
+        self.admin.role = "admin"
+        self.admin.save()
+        
+        self.supervisor = User.objects.create_user(username="sup_push", password="password123", role="supervisor")
+        self.pg = User.objects.create_user(username="pg_push", password="password123", role="pg")
+        
+        self.program = TrainingProgram.objects.create(name="Push Program", code="PUSH", duration_months=48)
+        self.rtr = ResidentTrainingRecord.objects.create(
+            resident_user=self.pg, program=self.program, 
+            start_date=date.today() - timedelta(days=100), 
+            expected_end_date=date.today() + timedelta(days=365)
+        )
+        self.hospital = Hospital.objects.create(name="Push Hospital", code="PH", is_active=True)
+        self.dept = Department.objects.create(name="Push Dept", code="PDEP")
+        self.hdept = HospitalDepartment.objects.create(hospital=self.hospital, department=self.dept)
+
+    def test_logbook_entry_crud_actions(self):
+        self.client.login(username="pg_push", password="password123")
+        
+        # Create
+        response = self.client.post("/api/logbook/", {
+            "resident_training_record": self.rtr.id,
+            "patient_id_number": "P-101",
+            "patient_seen_at": timezone.now(),
+            "diagnosis": "Test Diagnosis",
+            "management_plan": "Test Plan"
+        })
+        self.assertEqual(response.status_code, 201)
+        entry_id = response.data["id"]
+        
+        # Partial update
+        response = self.client.patch(f"/api/logbook/{entry_id}/", 
+                                   data=json.dumps({"diagnosis": "Updated"}),
+                                   content_type="application/json")
+        self.assertEqual(response.status_code, 200)
+        
+        # Submit
+        response = self.client.post(f"/api/logbook/{entry_id}/submit/")
+        self.assertEqual(response.status_code, 200)
+
+    def test_rotation_assignment_full_cycle(self):
+        self.client.login(username="admin_push", password="password123")
+        assignment = RotationAssignment.objects.create(
+            resident_training=self.rtr,
+            hospital_department=self.hdept,
+            start_date=date.today() + timedelta(days=1),
+            end_date=date.today() + timedelta(days=31),
+            status="DRAFT"
+        )
+        
+        # Submit
+        self.client.post(f"/api/rotations/{assignment.id}/submit/")
+        
+        # Review (Redirect action)
+        hdept2 = HospitalDepartment.objects.create(
+            hospital=self.hospital, 
+            department=Department.objects.create(name="D2", code="D2")
+        )
+        response = self.client.post(f"/api/rotations/{assignment.id}/review-application/", 
+                                   data=json.dumps({
+                                       "action": "redirect", 
+                                       "hospital_department": hdept2.id,
+                                       "reason": "Changed"
+                                   }),
+                                   content_type="application/json")
+        self.assertEqual(response.status_code, 200)
+        assignment.refresh_from_db()
+        self.assertEqual(assignment.hospital_department, hdept2)
+
+    def test_leave_request_denials_and_actions(self):
+        self.client.login(username="pg_push", password="password123")
+        leave = LeaveRequest.objects.create(
+            resident_training=self.rtr,
+            leave_type="annual",
+            start_date=date.today() + timedelta(days=5),
+            end_date=date.today() + timedelta(days=10),
+            status="DRAFT"
+        )
+        
+        # Submit
+        self.client.post(f"/api/leaves/{leave.id}/submit/")
+        
+        # Approve (as supervisor)
+        self.client.login(username="sup_push", password="password123")
+        # Link supervisor
+        from sims.users.models import SupervisorResidentLink
+        SupervisorResidentLink.objects.create(
+            supervisor_user=self.supervisor, resident_user=self.pg, start_date=date.today()
+        )
+        
+        response = self.client.post(f"/api/leaves/{leave.id}/approve/")
+        self.assertEqual(response.status_code, 200)
+
+    def test_dashboard_hod_as_hod(self):
+        # Create HOD assignment
+        from sims.users.models import HODAssignment
+        HODAssignment.objects.create(hod_user=self.supervisor, department=self.dept, start_date=date.today())
+        
+        self.client.login(username="sup_push", password="password123")
+        response = self.client.get("/api/dashboard/hod/")
+        self.assertEqual(response.status_code, 200)
+        
+    def test_dashboard_supervisor_stats(self):
+        self.client.login(username="sup_push", password="password123")
+        response = self.client.get("/api/dashboard/supervisor/")
+        self.assertEqual(response.status_code, 200)
+
+    def test_resident_summary_structure(self):
+        self.client.login(username="pg_push", password="password123")
+        response = self.client.get("/api/residents/me/summary/")
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("training_record", response.data)
