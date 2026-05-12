@@ -1,0 +1,315 @@
+# Frontend ↔ Backend wiring evidence
+Tue May  5 09:16:01 UTC 2026
+
+## frontend/app/api/[...path]
+total 12
+drwxrwxr-x 3 munaim munaim 4096 Mar  5 22:36 .
+drwxrwxr-x 9 munaim munaim 4096 Mar  5 22:36 ..
+drwxrwxr-x 2 munaim munaim 4096 Mar  5 22:36 [...path]
+frontend/app/api/[...path]/route.ts
+
+### frontend/app/api/[...path]/route.ts
+import { NextRequest, NextResponse } from 'next/server';
+
+const BACKEND_URL = process.env.INTERNAL_API_URL || 'http://backend:8014';
+
+async function proxyRequest(request: NextRequest, params: { path: string[] }) {
+  const pathSegments = params.path;
+  // Always include trailing slash for Django APPEND_SLASH compatibility
+  const backendPath = `/api/${pathSegments.join('/')}/`;
+  const searchParams = request.nextUrl.searchParams.toString();
+  const targetUrl = `${BACKEND_URL}${backendPath}${searchParams ? `?${searchParams}` : ''}`;
+
+  const headers = new Headers();
+  request.headers.forEach((value, key) => {
+    // Skip headers that shouldn't be forwarded
+    if (!['host', 'connection', 'transfer-encoding'].includes(key.toLowerCase())) {
+      headers.set(key, value);
+    }
+  });
+
+  let body: BodyInit | null = null;
+  const method = request.method;
+  if (!['GET', 'HEAD'].includes(method)) {
+    body = await request.text();
+  }
+
+  const response = await fetch(targetUrl, {
+    method,
+    headers,
+    body,
+    redirect: 'manual', // Don't follow redirects; let client handle them
+  });
+
+  const responseHeaders = new Headers();
+  response.headers.forEach((value, key) => {
+    if (!['transfer-encoding', 'connection'].includes(key.toLowerCase())) {
+      responseHeaders.set(key, value);
+    }
+  });
+
+  const responseBody = await response.arrayBuffer();
+  return new NextResponse(responseBody, {
+    status: response.status,
+    headers: responseHeaders,
+  });
+}
+
+export async function GET(request: NextRequest, { params }: { params: { path: string[] } }) {
+  return proxyRequest(request, params);
+}
+
+export async function POST(request: NextRequest, { params }: { params: { path: string[] } }) {
+  return proxyRequest(request, params);
+}
+
+export async function PUT(request: NextRequest, { params }: { params: { path: string[] } }) {
+  return proxyRequest(request, params);
+}
+
+export async function PATCH(request: NextRequest, { params }: { params: { path: string[] } }) {
+  return proxyRequest(request, params);
+}
+
+export async function DELETE(request: NextRequest, { params }: { params: { path: string[] } }) {
+  return proxyRequest(request, params);
+}
+
+export async function OPTIONS(request: NextRequest, { params }: { params: { path: string[] } }) {
+  return proxyRequest(request, params);
+}
+
+## frontend/lib/api
+frontend/lib/api/audit.ts
+frontend/lib/api/auth.test.ts
+frontend/lib/api/auth.ts
+frontend/lib/api/bulk.test.ts
+frontend/lib/api/bulk.ts
+frontend/lib/api/client.ts
+frontend/lib/api/departments.ts
+frontend/lib/api/hospitals.ts
+frontend/lib/api/index.ts
+frontend/lib/api/notifications.ts
+frontend/lib/api/training.test.ts
+frontend/lib/api/training.ts
+frontend/lib/api/userbase.test.ts
+frontend/lib/api/userbase.ts
+frontend/lib/api/users.ts
+
+## API base URL usage
+frontend/app/forgot-password/page.test.tsx:5:import authApi from '@/lib/api/auth';
+frontend/app/forgot-password/page.test.tsx:7:jest.mock('@/lib/api/auth', () => ({
+frontend/app/forgot-password/page.tsx:7:import authApi from '@/lib/api/auth';
+frontend/app/login/page.test.tsx:5:import { authApi } from '@/lib/api/auth';
+frontend/app/login/page.test.tsx:16:jest.mock('@/lib/api/auth', () => ({
+frontend/lib/api/userbase.test.ts:20:    expect(apiClient.get).toHaveBeenCalledWith('/api/hospitals/');
+frontend/lib/api/userbase.test.ts:26:    expect(apiClient.get).toHaveBeenCalledWith('/api/users/', { params: { role: 'resident' } });
+frontend/app/api/[...path]/route.ts:3:const BACKEND_URL = process.env.INTERNAL_API_URL || 'http://backend:8014';
+frontend/app/api/[...path]/route.ts:8:  const backendPath = `/api/${pathSegments.join('/')}/`;
+frontend/app/api/[...path]/route.ts:26:  const response = await fetch(targetUrl, {
+frontend/lib/api/training.test.ts:22:  it('normalizes /api/my/eligibility/ envelope with reasons_json to reasons', async () => {
+frontend/lib/api/training.test.ts:43:    expect(mockedGet).toHaveBeenCalledWith('/api/my/eligibility/');
+frontend/lib/api/training.test.ts:48:  it('normalizes /api/utrmc/eligibility/ results with reasons_json to reasons', async () => {
+frontend/lib/api/training.test.ts:69:    expect(mockedGet).toHaveBeenCalledWith('/api/utrmc/eligibility/', { params: undefined });
+frontend/lib/api/auth.test.ts:21:    expect(apiClient.post).toHaveBeenCalledWith('/api/auth/login/', { username: 'user', password: 'pass' });
+frontend/lib/api/auth.test.ts:28:    expect(apiClient.post).toHaveBeenCalledWith('/api/auth/logout/', { refresh: 'ref-tok' });
+frontend/lib/api/audit.ts:31:    const response = await apiClient.get<{ results: ActivityLog[]; count: number }>('/api/audit/activity/', { params });
+frontend/lib/api/audit.ts:39:    const response = await apiClient.get<{ results: AuditReport[]; count: number }>('/api/audit/reports/', { params });
+frontend/lib/api/audit.ts:47:    const response = await apiClient.post<AuditReport>('/api/audit/reports/', data);
+frontend/lib/api/hospitals.ts:4:export const getHospitals = () => apiClient.get('/api/hospitals/');
+frontend/lib/api/hospitals.ts:5:export const createHospital = (data: Partial<UserbaseHospital>) => apiClient.post('/api/hospitals/', data);
+frontend/lib/api/hospitals.ts:6:export const updateHospital = (id: number, data: Partial<UserbaseHospital>) => apiClient.patch(`/api/hospitals/${id}/`, data);
+frontend/lib/api/hospitals.ts:7:export const deleteHospital = (id: number) => apiClient.delete(`/api/hospitals/${id}/`);
+frontend/lib/api/notifications.ts:30:    const response = await apiClient.get<{ results: Notification[]; count: number }>('/api/notifications/', { params });
+frontend/lib/api/notifications.ts:39:    const response = await apiClient.get<{ results: Notification[]; count: number }>('/api/notifications/', {
+frontend/lib/api/notifications.ts:50:    const response = await apiClient.get<{ unread: number }>('/api/notifications/unread-count/');
+frontend/lib/api/notifications.ts:59:    const response = await apiClient.post<{ marked: number }>(`/api/notifications/mark-read/`, {
+frontend/lib/api/notifications.ts:69:    const response = await apiClient.get<NotificationPreferences>('/api/notifications/preferences/');
+frontend/lib/api/notifications.ts:77:    const response = await apiClient.patch<NotificationPreferences>('/api/notifications/preferences/', preferences);
+frontend/app/dashboard/utrmc/departments/page.tsx:6:import { userbaseApi, UserbaseDepartment } from '@/lib/api/userbase';
+frontend/app/login/page.tsx:6:import { authApi } from '@/lib/api/auth';
+frontend/app/dashboard/utrmc/page.tsx:16:} from '@/lib/api/training';
+frontend/app/dashboard/utrmc/page.tsx:17:import { userbaseApi, UserbaseHospitalDepartment, UserbaseUser } from '@/lib/api/userbase';
+frontend/app/dashboard/utrmc/matrix/page.test.tsx:5:import { userbaseApi } from '@/lib/api/userbase';
+frontend/app/dashboard/utrmc/matrix/page.test.tsx:12:jest.mock('@/lib/api/userbase', () => ({
+frontend/app/dashboard/utrmc/matrix/page.tsx:6:import { userbaseApi, UserbaseHospital, UserbaseDepartment, UserbaseHospitalDepartment } from '@/lib/api/userbase';
+frontend/app/dashboard/utrmc/postings/page.tsx:5:import { trainingApi, DeputationPosting } from '@/lib/api/training';
+frontend/app/dashboard/utrmc/supervision/page.tsx:6:import { userbaseApi, UserbaseUser } from '@/lib/api/userbase';
+frontend/app/dashboard/resident/page.test.tsx:5:import { trainingApi } from '@/lib/api/training';
+frontend/app/dashboard/resident/page.test.tsx:21:jest.mock('@/lib/api/training', () => ({
+frontend/app/dashboard/utrmc/departments/[id]/roster/page.tsx:4:import { userbaseApi, DepartmentRosterResponse } from '@/lib/api/userbase';
+frontend/app/dashboard/resident/progress/page.test.tsx:4:import { trainingApi } from '@/lib/api/training';
+frontend/app/dashboard/resident/progress/page.test.tsx:12:jest.mock('@/lib/api/training', () => ({
+frontend/app/dashboard/resident/progress/page.tsx:14:} from '@/lib/api/training';
+frontend/app/dashboard/resident/page.tsx:6:import { trainingApi, ResidentSummary, ResidentOperationalDashboard } from '@/lib/api/training';
+frontend/app/dashboard/resident/schedule/page.test.tsx:4:import { trainingApi } from '@/lib/api/training';
+frontend/app/dashboard/resident/schedule/page.test.tsx:11:jest.mock('@/lib/api/training', () => ({
+frontend/app/dashboard/resident/schedule/page.tsx:4:import { LeaveRequest, RotationAssignment, trainingApi, ResidentSummary } from '@/lib/api/training';
+frontend/lib/api/bulk.test.ts:22:      '/api/bulk/import/residents/apply/',
+frontend/lib/api/departments.ts:18:export const getDepartments = () => apiClient.get('/api/departments/');
+frontend/lib/api/departments.ts:19:export const createDepartment = (data: Partial<UserbaseDepartment>) => apiClient.post('/api/departments/', data);
+frontend/lib/api/departments.ts:20:export const updateDepartment = (id: number, data: Partial<UserbaseDepartment>) => apiClient.patch(`/api/departments/${id}/`, data);
+frontend/lib/api/departments.ts:21:export const deleteDepartment = (id: number) => apiClient.delete(`/api/departments/${id}/`);
+frontend/lib/api/departments.ts:22:export const getHospitalDepartments = () => apiClient.get('/api/hospital-departments/');
+frontend/lib/api/departments.ts:23:export const createHospitalDepartment = (data: Partial<UserbaseHospitalDepartment>) => apiClient.post('/api/hospital-departments/', data);
+frontend/lib/api/departments.ts:24:export const deleteHospitalDepartment = (id: number) => apiClient.delete(`/api/hospital-departments/${id}/`);
+frontend/lib/api/departments.ts:25:// Canonical URL is /api/supervision-links/ (fixed from /api/supervisor-resident-links/)
+frontend/lib/api/departments.ts:26:export const getSupervisorResidentLinks = () => apiClient.get('/api/supervision-links/');
+frontend/lib/api/departments.ts:27:export const createSupervisorResidentLink = (data: SupervisionLinkPayload) => apiClient.post('/api/supervision-links/', data);
+frontend/lib/api/departments.ts:28:export const deleteSupervisorResidentLink = (id: number) => apiClient.delete(`/api/supervision-links/${id}/`);
+frontend/lib/api/departments.ts:29:export const getHodAssignments = () => apiClient.get('/api/hod-assignments/');
+frontend/lib/api/departments.ts:30:export const createHodAssignment = (data: HodAssignmentPayload) => apiClient.post('/api/hod-assignments/', data);
+frontend/lib/api/client.ts:3: * Uses NEXT_PUBLIC_API_URL for browser and SERVER_API_URL for server-side execution
+frontend/lib/api/client.ts:21:  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+frontend/lib/api/client.ts:24:      console.warn('NEXT_PUBLIC_API_URL not set, defaulting to same-origin API paths');
+frontend/lib/api/client.ts:26:    // Endpoints already include /api/... so keep base empty to avoid /api/api/* duplication.
+frontend/lib/api/client.ts:81:            // Use allowed endpoint: POST /api/auth/refresh/
+frontend/lib/api/client.ts:82:            const response = await axios.post(`${API_URL}/api/auth/refresh/`, {
+frontend/lib/api/users.ts:22:    const response = await apiClient.get<AssignedPG[]>('/api/users/assigned-pgs/');
+frontend/lib/api/users.ts:27:    const response = await apiClient.get<SupervisorUser[] | { results: SupervisorUser[] }>('/api/users/?role=supervisor');
+frontend/lib/api/auth.ts:59:    const response = await apiClient.post<LoginResponse>('/api/auth/login/', credentials);
+frontend/lib/api/auth.ts:67:    const response = await apiClient.post<RegisterResponse>('/api/auth/register/', data);
+frontend/lib/api/auth.ts:78:        await apiClient.post('/api/auth/logout/', { refresh: refreshToken });
+frontend/lib/api/auth.ts:94:   * Uses allowed endpoint: GET /api/auth/profile/
+frontend/lib/api/auth.ts:97:    const response = await apiClient.get<User>('/api/auth/profile/');
+frontend/lib/api/auth.ts:103:   * Uses allowed endpoint: POST /api/auth/refresh/
+frontend/lib/api/auth.ts:106:    const response = await apiClient.post<{ access: string }>('/api/auth/refresh/', {
+frontend/lib/api/auth.ts:114:   * Uses allowed endpoint: PUT/PATCH /api/auth/profile/update/
+frontend/lib/api/auth.ts:117:    const response = await apiClient.patch<User>('/api/auth/profile/update/', data);
+frontend/lib/api/auth.ts:123:   * Uses allowed endpoint: POST /api/auth/password-reset/
+frontend/lib/api/auth.ts:126:    const response = await apiClient.post<{ message: string }>('/api/auth/password-reset/', { email });
+frontend/lib/api/auth.ts:132:   * Uses allowed endpoint: POST /api/auth/password-reset/confirm/
+frontend/lib/api/auth.ts:140:    const response = await apiClient.post<{ message: string }>('/api/auth/password-reset/confirm/', data);
+frontend/lib/api/auth.ts:146:   * Uses allowed endpoint: POST /api/auth/change-password/
+frontend/lib/api/auth.ts:153:    const response = await apiClient.post<{ message: string }>('/api/auth/change-password/', data);
+frontend/app/dashboard/supervisor/page.tsx:13:} from '@/lib/api/training';
+frontend/app/dashboard/pg/departments/[id]/roster/page.tsx:4:import { userbaseApi, DepartmentRosterResponse } from '@/lib/api/userbase';
+frontend/app/dashboard/utrmc/users/page.tsx:6:import { userbaseApi, UserbaseUser } from '@/lib/api/userbase';
+frontend/app/dashboard/utrmc/page.test.tsx:4:import { trainingApi } from '@/lib/api/training';
+frontend/app/dashboard/utrmc/page.test.tsx:5:import { userbaseApi } from '@/lib/api/userbase';
+frontend/app/dashboard/utrmc/page.test.tsx:18:jest.mock('@/lib/api/training', () => ({
+frontend/app/dashboard/utrmc/page.test.tsx:29:jest.mock('@/lib/api/userbase', () => ({
+frontend/app/dashboard/utrmc/programs/page.tsx:9:import { trainingApi, TrainingProgram, ProgramPolicy, ProgramMilestone, ProgramRotationTemplate } from '@/lib/api/training';
+frontend/app/dashboard/utrmc/hod/page.test.tsx:5:import { userbaseApi } from '@/lib/api/userbase';
+frontend/app/dashboard/utrmc/hod/page.test.tsx:12:jest.mock('@/lib/api/userbase', () => ({
+frontend/app/dashboard/utrmc/hod/page.tsx:6:import { userbaseApi, UserbaseUser, UserbaseDepartment } from '@/lib/api/userbase';
+frontend/app/dashboard/utrmc/hospitals/page.tsx:6:import { userbaseApi, UserbaseHospital } from '@/lib/api/userbase';
+frontend/app/dashboard/utrmc/eligibility-monitoring/page.tsx:7:import { trainingApi, MilestoneEligibility } from '@/lib/api/training';
+frontend/lib/api/training.ts:466:    const r = await apiClient.get('/api/programs/');
+frontend/lib/api/training.ts:471:    const r = await apiClient.get<TrainingProgram>(`/api/programs/${id}/`);
+frontend/lib/api/training.ts:476:    const r = await apiClient.post<TrainingProgram>('/api/programs/', data);
+frontend/lib/api/training.ts:481:    const r = await apiClient.put<TrainingProgram>(`/api/programs/${id}/`, data);
+frontend/lib/api/training.ts:487:    const r = await apiClient.get<ProgramPolicy>(`/api/programs/${programId}/policy/`);
+frontend/lib/api/training.ts:492:    const r = await apiClient.put<ProgramPolicy>(`/api/programs/${programId}/policy/`, data);
+frontend/lib/api/training.ts:498:    const r = await apiClient.get(`/api/programs/${programId}/milestones/`);
+frontend/lib/api/training.ts:503:    const r = await apiClient.post<ProgramMilestone>(`/api/programs/${programId}/milestones/`, data);
+frontend/lib/api/training.ts:509:    const r = await apiClient.get<ResidentResearchProject>('/api/my/research/');
+frontend/lib/api/training.ts:514:    const r = await apiClient.post<ResidentResearchProject>('/api/my/research/', data);
+frontend/lib/api/training.ts:519:    const r = await apiClient.patch<ResidentResearchProject>('/api/my/research/', data);
+frontend/lib/api/training.ts:526:    const r = await apiClient.patch<ResidentResearchProject>('/api/my/research/', fd, {
+frontend/lib/api/training.ts:533:    const r = await apiClient.post<ResidentResearchProject>(`/api/my/research/action/${action}/`, data || {});
+frontend/lib/api/training.ts:539:    const r = await apiClient.get('/api/supervisor/research-approvals/');
+frontend/lib/api/training.ts:544:    const r = await apiClient.post<ResidentResearchProject>('/api/my/research/action/supervisor-approve/', {
+frontend/lib/api/training.ts:552:    const r = await apiClient.post<ResidentResearchProject>('/api/my/research/action/supervisor-return/', {
+frontend/lib/api/training.ts:561:    const r = await apiClient.get<ResidentThesis>('/api/my/thesis/');
+frontend/lib/api/training.ts:566:    const r = await apiClient.post<ResidentThesis>('/api/my/thesis/', data || {});
+frontend/lib/api/training.ts:571:    const r = await apiClient.post<ResidentThesis>('/api/my/thesis/submit/', data || {});
+frontend/lib/api/training.ts:577:    const r = await apiClient.get('/api/workshops/');
+frontend/lib/api/training.ts:582:    const r = await apiClient.get<{ count: number; results: WorkshopCompletion[] }>('/api/my/workshops/');
+frontend/lib/api/training.ts:591:    const r = await apiClient.post<WorkshopCompletion>('/api/my/workshops/', data);
+frontend/lib/api/training.ts:596:    await apiClient.delete(`/api/my/workshops/${id}/`);
+frontend/lib/api/training.ts:601:    const r = await apiClient.get('/api/my/eligibility/');
+frontend/lib/api/training.ts:618:      '/api/utrmc/eligibility/',
+frontend/lib/api/training.ts:630:    const r = await apiClient.get<ResidentSummary>('/api/residents/me/summary/');
+frontend/lib/api/training.ts:635:    const r = await apiClient.get<SupervisorSummary>('/api/supervisors/me/summary/');
+frontend/lib/api/training.ts:640:    const r = await apiClient.get<ResidentProgressSnapshot>(`/api/supervisors/residents/${residentId}/progress/`);
+frontend/lib/api/training.ts:647:    const r = await apiClient.get('/api/resident-training/');
+frontend/lib/api/training.ts:652:    const r = await apiClient.get<{ count: number; results: RotationAssignment[] }>('/api/my/rotations/');
+frontend/lib/api/training.ts:660:    const r = await apiClient.get('/api/rotations/', {
+frontend/lib/api/training.ts:670:    const r = await apiClient.get<{ count: number; results: RotationAssignment[] }>('/api/supervisor/rotations/pending/');
+frontend/lib/api/training.ts:675:    const r = await apiClient.get<{ count: number; results: RotationAssignment[] }>('/api/utrmc/approvals/rotations/');
+frontend/lib/api/training.ts:686:    const r = await apiClient.post<RotationAssignment>('/api/rotations/', data);
+frontend/lib/api/training.ts:705:    const r = await apiClient.post<RotationAssignment>(`/api/rotations/${id}/${action}/`, data || {});
+frontend/lib/api/training.ts:712:    const r = await apiClient.get('/api/logbook/', { params });
+frontend/lib/api/training.ts:720:    const r = await apiClient.post<LogbookEntry>('/api/logbook/', data);
+frontend/lib/api/training.ts:725:    const r = await apiClient.patch<LogbookEntry>(`/api/logbook/${id}/`, data);
+frontend/lib/api/training.ts:730:    const r = await apiClient.post<LogbookEntry>(`/api/logbook/${id}/submit/`);
+frontend/lib/api/training.ts:739:    const r = await apiClient.post<LogbookEntry>(`/api/logbook/${id}/review/`, {
+frontend/lib/api/training.ts:747:    const r = await apiClient.get<{ count: number; results: LogbookEntry[] }>('/api/logbook/review-queue/');
+frontend/lib/api/training.ts:756:    const r = await apiClient.get('/api/logbook/my-threshold/');
+frontend/lib/api/training.ts:769:    const r = await apiClient.get('/api/submissions/requirements/', {
+frontend/lib/api/training.ts:776:    const r = await apiClient.get<ResidentSubmissionRecord>('/api/submissions/synopsis/');
+frontend/lib/api/training.ts:781:    const r = await apiClient.post<ResidentSubmissionRecord>('/api/submissions/synopsis/', data || {});
+frontend/lib/api/training.ts:786:    const r = await apiClient.patch<ResidentSubmissionRecord>('/api/submissions/synopsis/', data);
+frontend/lib/api/training.ts:795:      '/api/submissions/synopsis/documents/',
+frontend/lib/api/training.ts:803:    const r = await apiClient.post<ResidentSubmissionRecord>('/api/submissions/synopsis/submit/');
+frontend/lib/api/training.ts:808:    const r = await apiClient.get<ResidentSubmissionRecord>('/api/submissions/thesis/');
+frontend/lib/api/training.ts:813:    const r = await apiClient.post<ResidentSubmissionRecord>('/api/submissions/thesis/', data || {});
+frontend/lib/api/training.ts:818:    const r = await apiClient.patch<ResidentSubmissionRecord>('/api/submissions/thesis/', data);
+frontend/lib/api/training.ts:827:      '/api/submissions/thesis/documents/',
+frontend/lib/api/training.ts:835:    const r = await apiClient.post<ResidentSubmissionRecord>('/api/submissions/thesis/submit/');
+frontend/lib/api/training.ts:840:    const r = await apiClient.get('/api/submissions/synopsis/review-queue/');
+frontend/lib/api/training.ts:845:    const r = await apiClient.get('/api/submissions/thesis/review-queue/');
+frontend/lib/api/training.ts:855:      `/api/submissions/synopsis/${submissionId}/review/`,
+frontend/lib/api/training.ts:867:      `/api/submissions/thesis/${submissionId}/review/`,
+frontend/lib/api/training.ts:876:    const r = await apiClient.get('/api/submissions/certificates/', { params });
+frontend/lib/api/training.ts:885:    const r = await apiClient.get('/api/rotations/completions/', { params });
+frontend/lib/api/training.ts:894:      `/api/rotations/completions/${completionId}/verify/`
+frontend/lib/api/training.ts:902:    const r = await apiClient.get<ResidentOperationalDashboard>('/api/dashboard/resident/');
+frontend/lib/api/training.ts:907:    const r = await apiClient.get<SupervisorOperationalDashboard>('/api/dashboard/supervisor/');
+frontend/lib/api/training.ts:912:    const r = await apiClient.get<HODOperationalDashboard>('/api/dashboard/hod/');
+frontend/lib/api/training.ts:917:    const r = await apiClient.get<UTRMCOperationalDashboard>('/api/dashboard/utrmc/', { params });
+frontend/lib/api/training.ts:924:    const r = await apiClient.get<{ count: number; results: LeaveRequest[] }>('/api/my/leaves/');
+frontend/lib/api/training.ts:935:    const r = await apiClient.post<LeaveRequest>('/api/leaves/', data);
+frontend/lib/api/training.ts:940:    const r = await apiClient.post<LeaveRequest>(`/api/leaves/${id}/submit/`);
+frontend/lib/api/training.ts:945:    const r = await apiClient.get('/api/utrmc/approvals/leaves/');
+frontend/lib/api/training.ts:950:    const r = await apiClient.post<LeaveRequest>(`/api/leaves/${id}/approve/`);
+frontend/lib/api/training.ts:955:    const r = await apiClient.post<LeaveRequest>(`/api/leaves/${id}/reject/`, { reason });
+frontend/lib/api/training.ts:961:    const r = await apiClient.get<SystemSettings>('/api/system/settings/');
+frontend/lib/api/training.ts:968:    const r = await apiClient.get(`/api/program-templates/?program=${programId}`);
+frontend/lib/api/training.ts:973:    const r = await apiClient.post<ProgramRotationTemplate>('/api/program-templates/', data);
+frontend/lib/api/training.ts:978:    const r = await apiClient.patch<ProgramRotationTemplate>(`/api/program-templates/${id}/`, data);
+frontend/lib/api/training.ts:983:    await apiClient.delete(`/api/program-templates/${id}/`);
+frontend/lib/api/training.ts:990:    const r = await apiClient.get(`/api/postings/${qs}`);
+frontend/lib/api/training.ts:995:    const r = await apiClient.post<DeputationPosting>('/api/postings/', data);
+frontend/lib/api/training.ts:1000:    const r = await apiClient.post<DeputationPosting>(`/api/postings/${id}/${action}/`, data || {});
+frontend/lib/api/training.ts:1005:    await apiClient.delete(`/api/postings/${id}/`);
+frontend/lib/api/userbase.ts:101:        '/api/hospitals/'
+frontend/lib/api/userbase.ts:106:      const response = await apiClient.post<UserbaseHospital>('/api/hospitals/', payload);
+frontend/lib/api/userbase.ts:110:      const response = await apiClient.patch<UserbaseHospital>(`/api/hospitals/${id}/`, payload);
+frontend/lib/api/userbase.ts:114:      const response = await apiClient.get(`/api/hospitals/${id}/departments/`);
+frontend/lib/api/userbase.ts:121:        '/api/departments/'
+frontend/lib/api/userbase.ts:126:      const response = await apiClient.post<UserbaseDepartment>('/api/departments/', payload);
+frontend/lib/api/userbase.ts:130:      const response = await apiClient.patch<UserbaseDepartment>(`/api/departments/${id}/`, payload);
+frontend/lib/api/userbase.ts:134:      const response = await apiClient.get<DepartmentRosterResponse>(`/api/departments/${id}/roster/`);
+frontend/lib/api/userbase.ts:142:      >('/api/hospital-departments/');
+frontend/lib/api/userbase.ts:146:      const response = await apiClient.post<UserbaseHospitalDepartment>('/api/hospital-departments/', payload);
+frontend/lib/api/userbase.ts:150:      const response = await apiClient.patch<UserbaseHospitalDepartment>(`/api/hospital-departments/${id}/`, payload);
+frontend/lib/api/userbase.ts:157:        '/api/users/',
+frontend/lib/api/userbase.ts:163:      const response = await apiClient.post<UserbaseUser>('/api/users/', payload);
+frontend/lib/api/userbase.ts:167:      const response = await apiClient.get<UserbaseUser>(`/api/users/${id}/`);
+frontend/lib/api/userbase.ts:171:      const response = await apiClient.patch<UserbaseUser>(`/api/users/${id}/`, payload);
+frontend/lib/api/userbase.ts:180:      const response = await apiClient.patch(`/api/residents/${userId}/`, payload);
+frontend/lib/api/userbase.ts:186:      const response = await apiClient.get<DataQualitySummary>('/api/admin/data-quality/summary');
+frontend/lib/api/userbase.ts:190:      const response = await apiClient.get<DataQualityUserRow[]>('/api/admin/data-quality/users', {
+frontend/lib/api/userbase.ts:196:      const response = await apiClient.post<DataQualitySummary>('/api/admin/data-quality/recompute');
+frontend/lib/api/userbase.ts:200:      const response = await apiClient.get<DataCorrectionAuditRow[]>('/api/admin/data-quality/audit');
+frontend/lib/api/userbase.ts:206:      const response = await apiClient.post('/api/department-memberships/', payload);
+frontend/lib/api/userbase.ts:210:      const response = await apiClient.patch(`/api/department-memberships/${id}/`, payload);
+frontend/lib/api/userbase.ts:214:      await apiClient.delete(`/api/department-memberships/${id}/`);
+frontend/lib/api/userbase.ts:219:      const response = await apiClient.post('/api/hospital-assignments/', payload);
+frontend/lib/api/userbase.ts:223:      const response = await apiClient.patch(`/api/hospital-assignments/${id}/`, payload);
+frontend/lib/api/userbase.ts:227:      await apiClient.delete(`/api/hospital-assignments/${id}/`);
+frontend/lib/api/userbase.ts:232:      const response = await apiClient.get('/api/supervision-links/', { params });
+frontend/lib/api/userbase.ts:236:      const response = await apiClient.post('/api/supervision-links/', payload);
+frontend/lib/api/userbase.ts:240:      const response = await apiClient.patch(`/api/supervision-links/${id}/`, payload);
+frontend/lib/api/userbase.ts:246:      const response = await apiClient.get('/api/hod-assignments/', { params });
+frontend/lib/api/userbase.ts:250:      const response = await apiClient.post('/api/hod-assignments/', payload);
+frontend/lib/api/userbase.ts:254:      const response = await apiClient.patch(`/api/hod-assignments/${id}/`, payload);
+frontend/lib/api/bulk.ts:44:      `/api/bulk/import/${entity}/${action}/`,
+frontend/lib/api/bulk.ts:56:    const response = await apiClient.get(`/api/bulk/templates/${resource}/`, {
+frontend/lib/api/bulk.ts:66:    const response = await apiClient.get(`/api/bulk/exports/${resource}/`, {
+frontend/app/dashboard/supervisor/residents/[id]/progress/page.tsx:9:import { trainingApi, ResidentProgressSnapshot } from '@/lib/api/training';
+frontend/app/dashboard/utrmc/data-quality/page.tsx:13:} from '@/lib/api/userbase';
+frontend/app/dashboard/supervisor/page.test.tsx:4:import { trainingApi } from '@/lib/api/training';
+frontend/app/dashboard/supervisor/page.test.tsx:11:jest.mock('@/lib/api/training', () => ({

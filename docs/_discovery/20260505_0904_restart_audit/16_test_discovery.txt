@@ -1,0 +1,521 @@
+# Test discovery (no execution)
+Tue May  5 09:10:58 UTC 2026
+
+## backend test files
+backend/sims/_devtools/tests/test_drift_guards.py
+backend/sims/_legacy/cases/test_api.py
+backend/sims/_legacy/logbook/test_api.py
+backend/sims/rotations/test_canonical_migration_gate.py
+backend/sims/test_schema_gate.py
+backend/sims/tests/test_audit_utils.py
+backend/sims/tests/test_backend_coverage_push.py
+backend/sims/tests/test_backend_mega_coverage.py
+backend/sims/tests/test_bulk_services.py
+backend/sims/tests/test_bulk_services_extended.py
+backend/sims/tests/test_bulk_userbase_engine.py
+backend/sims/tests/test_bulk_views.py
+backend/sims/tests/test_common_permissions.py
+backend/sims/tests/test_decorators.py
+backend/sims/tests/test_eligibility.py
+backend/sims/tests/test_long_tail_coverage.py
+backend/sims/tests/test_notification_services.py
+backend/sims/tests/test_role_workflows.py
+backend/sims/tests/test_training_models.py
+backend/sims/tests/test_training_views.py
+backend/sims/tests/test_training_views_extended.py
+backend/sims/tests/test_training_views_heavy.py
+backend/sims/tests/test_users_models.py
+backend/sims/tests/test_users_views.py
+backend/sims/tests/test_users_views_extended.py
+backend/sims/tests/test_users_views_final_push.py
+backend/sims/training/test_feature_layer_ops.py
+backend/sims/training/test_phase6.py
+backend/sims/users/test_registration_api.py
+backend/sims/users/test_seed_demo_data.py
+backend/sims/users/test_userbase_api.py
+backend/sims_project/settings_test.py
+
+## frontend test files
+frontend/app/dashboard/resident/page.test.tsx
+frontend/app/dashboard/resident/progress/page.test.tsx
+frontend/app/dashboard/resident/schedule/page.test.tsx
+frontend/app/dashboard/supervisor/page.test.tsx
+frontend/app/dashboard/utrmc/hod/page.test.tsx
+frontend/app/dashboard/utrmc/matrix/page.test.tsx
+frontend/app/dashboard/utrmc/page.test.tsx
+frontend/app/forgot-password/page.test.tsx
+frontend/app/login/page.test.tsx
+frontend/components/auth/ProtectedRoute.test.tsx
+frontend/components/layout/DashboardLayout.test.tsx
+frontend/components/layout/Sidebar.test.tsx
+frontend/components/ui/Banners.test.tsx
+frontend/components/ui/DataTable.test.tsx
+frontend/components/ui/EmptyState.test.tsx
+frontend/components/ui/ImportExportPanel.test.tsx
+frontend/components/ui/LoadingSkeleton.test.tsx
+frontend/components/ui/MetricCard.test.tsx
+frontend/components/ui/SectionCard.test.tsx
+frontend/components/ui/WorkflowStatusBadge.test.tsx
+frontend/e2e/auth/session.spec.ts
+frontend/e2e/critical/admin_analytics_live_feed.spec.ts
+frontend/e2e/critical/admin_critical.spec.ts
+frontend/e2e/critical/phase6_research_eligibility.spec.ts
+frontend/e2e/critical/secondary_role_optional.spec.ts
+frontend/e2e/critical/userbase_foundation.spec.ts
+frontend/e2e/dashboard/pages.spec.ts
+frontend/e2e/feature-layer/auth-and-smoke.spec.ts
+frontend/e2e/feature-layer/dashboards.spec.ts
+frontend/e2e/feature-layer/logbook.spec.ts
+frontend/e2e/feature-layer/permissions.spec.ts
+frontend/e2e/feature-layer/regression-smoke.spec.ts
+frontend/e2e/feature-layer/rotations-phase1.spec.ts
+frontend/e2e/feature-layer/synopsis.spec.ts
+frontend/e2e/feature-layer/thesis.spec.ts
+frontend/e2e/navigation/sidebar.spec.ts
+frontend/e2e/negative/validation.spec.ts
+frontend/e2e/rbac/access-control.spec.ts
+frontend/e2e/rbac/utrmc_readonly_dashboard.spec.ts
+frontend/e2e/regression/admin_analytics.spec.ts
+frontend/e2e/regression/cases_create_submit_review.spec.ts
+frontend/e2e/regression/import_reports_dashboard.spec.ts
+frontend/e2e/regression/logbook_submit_return_resubmit_approve.spec.ts
+frontend/e2e/regression/login.spec.ts
+frontend/e2e/screenshots/screenshot-tour.spec.ts
+frontend/e2e/smoke/auth_flow.spec.ts
+frontend/e2e/smoke/dashboards.spec.ts
+frontend/e2e/smoke/public.spec.ts
+frontend/e2e/workflow-gate/bulk-setup.spec.ts
+frontend/e2e/workflow-gate/stabilized-workflows.spec.ts
+frontend/e2e/workflows/resident-training.spec.ts
+frontend/e2e/workflows/supervisor-review.spec.ts
+frontend/e2e/workflows/utrmc-management.spec.ts
+frontend/lib/api/auth.test.ts
+frontend/lib/api/bulk.test.ts
+frontend/lib/api/training.test.ts
+frontend/lib/api/userbase.test.ts
+frontend/lib/auth/cookies.test.ts
+frontend/lib/rbac.test.ts
+frontend/lib/ui/status.test.ts
+frontend/lib/utils.test.ts
+frontend/node_modules/@bcoe/v8-coverage/src/test/merge.spec.ts
+frontend/node_modules/@jest/pattern/src/__tests__/TestPathPatterns.test.ts
+frontend/node_modules/@jest/snapshot-utils/src/__tests__/utils.test.ts
+frontend/node_modules/@reduxjs/toolkit/src/dynamicMiddleware/tests/index.test.ts
+frontend/node_modules/@reduxjs/toolkit/src/dynamicMiddleware/tests/react.test.tsx
+frontend/node_modules/@reduxjs/toolkit/src/entities/tests/entity_slice_enhancer.test.ts
+frontend/node_modules/@reduxjs/toolkit/src/entities/tests/entity_state.test.ts
+frontend/node_modules/@reduxjs/toolkit/src/entities/tests/sorted_state_adapter.test.ts
+frontend/node_modules/@reduxjs/toolkit/src/entities/tests/state_adapter.test.ts
+frontend/node_modules/@reduxjs/toolkit/src/entities/tests/state_selectors.test.ts
+frontend/node_modules/@reduxjs/toolkit/src/entities/tests/unsorted_state_adapter.test.ts
+frontend/node_modules/@reduxjs/toolkit/src/entities/tests/utils.spec.ts
+frontend/node_modules/@reduxjs/toolkit/src/listenerMiddleware/tests/effectScenarios.test.ts
+frontend/node_modules/@reduxjs/toolkit/src/listenerMiddleware/tests/fork.test.ts
+frontend/node_modules/@reduxjs/toolkit/src/listenerMiddleware/tests/listenerMiddleware.test.ts
+frontend/node_modules/@reduxjs/toolkit/src/listenerMiddleware/tests/listenerMiddleware.withTypes.test.ts
+frontend/node_modules/@reduxjs/toolkit/src/listenerMiddleware/tests/useCases.test.ts
+frontend/node_modules/@reduxjs/toolkit/src/query/tests/apiProvider.test.tsx
+frontend/node_modules/@reduxjs/toolkit/src/query/tests/buildCreateApi.test.tsx
+frontend/node_modules/@reduxjs/toolkit/src/query/tests/buildHooks.test.tsx
+frontend/node_modules/@reduxjs/toolkit/src/query/tests/buildInitiate.test.tsx
+frontend/node_modules/@reduxjs/toolkit/src/query/tests/buildMiddleware.test.tsx
+frontend/node_modules/@reduxjs/toolkit/src/query/tests/buildSlice.test.ts
+frontend/node_modules/@reduxjs/toolkit/src/query/tests/buildThunks.test.tsx
+frontend/node_modules/@reduxjs/toolkit/src/query/tests/cacheCollection.test.ts
+frontend/node_modules/@reduxjs/toolkit/src/query/tests/cacheLifecycle.test.ts
+frontend/node_modules/@reduxjs/toolkit/src/query/tests/cleanup.test.tsx
+frontend/node_modules/@reduxjs/toolkit/src/query/tests/copyWithStructuralSharing.test.ts
+frontend/node_modules/@reduxjs/toolkit/src/query/tests/createApi.test.ts
+frontend/node_modules/@reduxjs/toolkit/src/query/tests/defaultSerializeQueryArgs.test.ts
+frontend/node_modules/@reduxjs/toolkit/src/query/tests/devWarnings.test.tsx
+frontend/node_modules/@reduxjs/toolkit/src/query/tests/errorHandling.test.tsx
+frontend/node_modules/@reduxjs/toolkit/src/query/tests/fakeBaseQuery.test.tsx
+frontend/node_modules/@reduxjs/toolkit/src/query/tests/fetchBaseQuery.test.tsx
+frontend/node_modules/@reduxjs/toolkit/src/query/tests/infiniteQueries.test.ts
+frontend/node_modules/@reduxjs/toolkit/src/query/tests/injectEndpoints.test.tsx
+frontend/node_modules/@reduxjs/toolkit/src/query/tests/invalidation.test.tsx
+frontend/node_modules/@reduxjs/toolkit/src/query/tests/matchers.test.tsx
+frontend/node_modules/@reduxjs/toolkit/src/query/tests/optimisticUpdates.test.tsx
+frontend/node_modules/@reduxjs/toolkit/src/query/tests/optimisticUpserts.test.tsx
+frontend/node_modules/@reduxjs/toolkit/src/query/tests/polling.test.tsx
+frontend/node_modules/@reduxjs/toolkit/src/query/tests/queryFn.test.tsx
+frontend/node_modules/@reduxjs/toolkit/src/query/tests/queryLifecycle.test.tsx
+frontend/node_modules/@reduxjs/toolkit/src/query/tests/raceConditions.test.ts
+frontend/node_modules/@reduxjs/toolkit/src/query/tests/refetchingBehaviors.test.tsx
+frontend/node_modules/@reduxjs/toolkit/src/query/tests/retry.test.ts
+frontend/node_modules/@reduxjs/toolkit/src/query/tests/useMutation-fixedCacheKey.test.tsx
+frontend/node_modules/@reduxjs/toolkit/src/query/tests/utils.test.ts
+frontend/node_modules/@reduxjs/toolkit/src/tests/actionCreatorInvariantMiddleware.test.ts
+frontend/node_modules/@reduxjs/toolkit/src/tests/autoBatchEnhancer.test.ts
+frontend/node_modules/@reduxjs/toolkit/src/tests/combineSlices.test.ts
+frontend/node_modules/@reduxjs/toolkit/src/tests/combinedTest.test.ts
+frontend/node_modules/@reduxjs/toolkit/src/tests/configureStore.test.ts
+frontend/node_modules/@reduxjs/toolkit/src/tests/createAction.test.ts
+frontend/node_modules/@reduxjs/toolkit/src/tests/createAsyncThunk.test.ts
+frontend/node_modules/@reduxjs/toolkit/src/tests/createDraftSafeSelector.test.ts
+frontend/node_modules/@reduxjs/toolkit/src/tests/createDraftSafeSelector.withTypes.test.ts
+frontend/node_modules/@reduxjs/toolkit/src/tests/createReducer.test.ts
+frontend/node_modules/@reduxjs/toolkit/src/tests/createSlice.test.ts
+frontend/node_modules/@reduxjs/toolkit/src/tests/getDefaultMiddleware.test.ts
+frontend/node_modules/@reduxjs/toolkit/src/tests/immutableStateInvariantMiddleware.test.ts
+frontend/node_modules/@reduxjs/toolkit/src/tests/matchers.test.ts
+frontend/node_modules/@reduxjs/toolkit/src/tests/serializableStateInvariantMiddleware.test.ts
+frontend/node_modules/@sinonjs/commons/lib/called-in-order.test.js
+frontend/node_modules/@sinonjs/commons/lib/class-name.test.js
+frontend/node_modules/@sinonjs/commons/lib/deprecated.test.js
+frontend/node_modules/@sinonjs/commons/lib/every.test.js
+frontend/node_modules/@sinonjs/commons/lib/function-name.test.js
+frontend/node_modules/@sinonjs/commons/lib/global.test.js
+frontend/node_modules/@sinonjs/commons/lib/index.test.js
+frontend/node_modules/@sinonjs/commons/lib/order-by-first-call.test.js
+frontend/node_modules/@sinonjs/commons/lib/prototypes/copy-prototype-methods.test.js
+frontend/node_modules/@sinonjs/commons/lib/prototypes/index.test.js
+frontend/node_modules/@sinonjs/commons/lib/type-of.test.js
+frontend/node_modules/@sinonjs/commons/lib/value-to-string.test.js
+frontend/node_modules/@testing-library/jest-dom/types/__tests__/bun/bun-custom-expect-types.test.ts
+frontend/node_modules/@testing-library/jest-dom/types/__tests__/bun/bun-types.test.ts
+frontend/node_modules/@testing-library/jest-dom/types/__tests__/jest-globals/jest-globals-custom-expect-types.test.ts
+frontend/node_modules/@testing-library/jest-dom/types/__tests__/jest-globals/jest-globals-types.test.ts
+frontend/node_modules/@testing-library/jest-dom/types/__tests__/jest/jest-custom-expect-types.test.ts
+frontend/node_modules/@testing-library/jest-dom/types/__tests__/jest/jest-types.test.ts
+frontend/node_modules/@testing-library/jest-dom/types/__tests__/vitest/vitest-custom-expect-types.test.ts
+frontend/node_modules/@testing-library/jest-dom/types/__tests__/vitest/vitest-types.test.ts
+frontend/node_modules/entities/src/decode.spec.ts
+frontend/node_modules/entities/src/encode.spec.ts
+frontend/node_modules/entities/src/escape.spec.ts
+frontend/node_modules/entities/src/index.spec.ts
+frontend/node_modules/gensync/test/index.test.js
+frontend/node_modules/json-schema-traverse/spec/index.spec.js
+frontend/node_modules/next/dist/compiled/@next/font/dist/google/find-font-files-in-css.test.js
+frontend/node_modules/next/dist/compiled/@next/font/dist/google/get-font-axes.test.js
+frontend/node_modules/next/dist/compiled/@next/font/dist/google/loader.test.js
+frontend/node_modules/next/dist/compiled/@next/font/dist/google/sort-fonts-variant-values.test.js
+frontend/node_modules/next/dist/compiled/@next/font/dist/google/validate-google-font-function-call.test.js
+frontend/node_modules/next/dist/compiled/@next/font/dist/local/loader.test.js
+frontend/node_modules/next/dist/compiled/@next/font/dist/local/pick-font-file-for-fallback-generation.test.js
+frontend/node_modules/next/dist/compiled/@next/font/dist/local/validate-local-font-function-call.test.js
+frontend/node_modules/next/dist/trace/report/index.test.js
+frontend/node_modules/next/dist/trace/trace.test.js
+frontend/node_modules/tsconfig-paths/lib/__tests__/config-loader.test.js
+frontend/node_modules/tsconfig-paths/lib/__tests__/filesystem.test.js
+frontend/node_modules/tsconfig-paths/lib/__tests__/mapping-entry.test.js
+frontend/node_modules/tsconfig-paths/lib/__tests__/match-path-async.test.js
+frontend/node_modules/tsconfig-paths/lib/__tests__/match-path-sync.test.js
+frontend/node_modules/tsconfig-paths/lib/__tests__/try-path.test.js
+frontend/node_modules/tsconfig-paths/lib/__tests__/tsconfig-loader.test.js
+frontend/node_modules/tsconfig-paths/src/__tests__/config-loader.test.ts
+frontend/node_modules/tsconfig-paths/src/__tests__/filesystem.test.ts
+frontend/node_modules/tsconfig-paths/src/__tests__/mapping-entry.test.ts
+frontend/node_modules/tsconfig-paths/src/__tests__/match-path-async.test.ts
+frontend/node_modules/tsconfig-paths/src/__tests__/match-path-sync.test.ts
+frontend/node_modules/tsconfig-paths/src/__tests__/try-path.test.ts
+frontend/node_modules/tsconfig-paths/src/__tests__/tsconfig-loader.test.ts
+frontend/store/authStore.test.ts
+
+## e2e tooling
+frontend/e2e/negative/validation.spec.ts:11:import { expect, test } from '@playwright/test';
+backend/sims/users/management/commands/seed_e2e.py:138:        # Feature-layer explicit role fixtures for Playwright verification suite.
+backend/sims/users/management/commands/seed_e2e.py:250:                "description": "Deterministic training baseline for Playwright workflow gate",
+docs/_discovery/20260402T215202Z-functionality-categorization/00-executive-summary.md:16:Confidence is high for the promoted active workflows that passed current-tree browser gates. Confidence is lower for secondary active pages that are only backed by route inspection, page inspection, backend presence, and lighter Playwright coverage.
+docs/_discovery/20260402T215202Z-functionality-categorization/02-categorized-functionality.md:137:  - Playwright coverage confirms page load plus basic create/modal flows for hospitals/departments and page load for users
+docs/_discovery/20260402T215202Z-functionality-categorization/02-categorized-functionality.md:282:  - current run passed in Playwright
+docs/_discovery/20260402T215202Z-functionality-categorization/03-evidence-log.md:64:cd frontend && npx playwright install chromium
+docs/_discovery/20260402T215202Z-functionality-categorization/03-evidence-log.md:67:cd frontend && E2E_BASE_URL=http://127.0.0.1:3101 E2E_API_URL=http://127.0.0.1:8100 npx playwright test --project=workflow-gate
+docs/_discovery/20260505_0904_restart_audit/01_repo_inventory.txt:111:540K	./output/playwright
+docs/_discovery/20260505_0904_restart_audit/01_repo_inventory.txt:120:8.9M	./frontend/playwright-report
+docs/_discovery/20260505_0904_restart_audit/02_tree_and_manifests.txt:138:./frontend/playwright-report
+docs/_discovery/20260505_0904_restart_audit/02_tree_and_manifests.txt:139:./frontend/playwright-report/data
+docs/_discovery/20260505_0904_restart_audit/02_tree_and_manifests.txt:140:./frontend/playwright-report/trace
+docs/_discovery/20260505_0904_restart_audit/02_tree_and_manifests.txt:233:./output/playwright
+docs/_discovery/20260505_0904_restart_audit/02_tree_and_manifests.txt:234:./output/playwright/mcp
+docs/_discovery/20260505_0904_restart_audit/02_tree_and_manifests.txt:235:./output/playwright/report
+docs/_discovery/20260505_0904_restart_audit/02_tree_and_manifests.txt:236:./output/playwright/results
+docs/_discovery/20260505_0904_restart_audit/02_tree_and_manifests.txt:310:./docs/MCP_PLAYWRIGHT_AGENT.md
+docs/_discovery/20260505_0904_restart_audit/02_tree_and_manifests.txt:324:./docs/_audit/20260313_REVIEW_TRUTHMAP_PLAYWRIGHT.md
+docs/_discovery/20260505_0904_restart_audit/02_tree_and_manifests.txt:386:./docs/testing/playwright-coverage-matrix.md
+docs/_discovery/20260505_0904_restart_audit/02_tree_and_manifests.txt:387:./docs/testing/playwright-runbook.md
+docs/_discovery/20260505_0904_restart_audit/02_tree_and_manifests.txt:388:./docs/testing/playwright-suite.md
+docs/_discovery/20260505_0904_restart_audit/14_contracts_docs_excerpt.txt:565:cd frontend && npx playwright install chromium
+docs/_discovery/20260505_0904_restart_audit/14_contracts_docs_excerpt.txt:573:cd frontend && E2E_BASE_URL=http://127.0.0.1:3001 E2E_API_URL=http://127.0.0.1:8000 npx playwright test --project=workflow-gate
+docs/_discovery/20260505_0904_restart_audit/13_frontend_code_snapshot.txt:29:drwxr-xr-x   4 root   root     4096 Mar  6 22:42 playwright-report
+docs/_discovery/20260505_0904_restart_audit/13_frontend_code_snapshot.txt:30:-rw-rw-r--   1 munaim munaim   4974 Apr 21 07:45 playwright.config.ts
+docs/_discovery/20260505_0904_restart_audit/13_frontend_code_snapshot.txt:447:frontend/node_modules/playwright-core/package.json
+docs/_discovery/20260505_0904_restart_audit/13_frontend_code_snapshot.txt:448:frontend/node_modules/playwright/package.json
+docs/_discovery/20260505_0904_restart_audit/13_frontend_code_snapshot.txt:634:    "test:e2e": "playwright test --project=smoke --project=workflow-gate --project=active-surface --project=setup --project=critical --project=auth --project=rbac --project=navigation --project=dashboard --project=workflows --project=negative",
+docs/_discovery/20260505_0904_restart_audit/13_frontend_code_snapshot.txt:635:    "test:e2e:smoke": "playwright test --project=smoke",
+docs/_discovery/20260505_0904_restart_audit/13_frontend_code_snapshot.txt:636:    "test:e2e:smoke:local": "E2E_BASE_URL=http://127.0.0.1:8082 E2E_API_URL=http://127.0.0.1:8014 playwright test --project=smoke",
+docs/_discovery/20260505_0904_restart_audit/13_frontend_code_snapshot.txt:637:    "test:e2e:workflow": "playwright test --project=workflow-gate",
+docs/_discovery/20260505_0904_restart_audit/13_frontend_code_snapshot.txt:638:    "test:e2e:workflow:local": "E2E_BASE_URL=http://127.0.0.1:8082 E2E_API_URL=http://127.0.0.1:8014 playwright test --project=workflow-gate",
+docs/_discovery/20260505_0904_restart_audit/13_frontend_code_snapshot.txt:640:    "test:e2e:active-surface": "npm run test:e2e:feature-layer:seed && playwright test --project=active-surface",
+docs/_discovery/20260505_0904_restart_audit/13_frontend_code_snapshot.txt:641:    "test:e2e:active-surface:local": "npm run test:e2e:feature-layer:seed && E2E_BASE_URL=http://127.0.0.1:8082 E2E_API_URL=http://127.0.0.1:8014 playwright test --project=active-surface",
+docs/_discovery/20260505_0904_restart_audit/13_frontend_code_snapshot.txt:642:    "test:e2e:feature-layer": "npm run test:e2e:feature-layer:seed && playwright test --project=active-surface",
+docs/_discovery/20260505_0904_restart_audit/13_frontend_code_snapshot.txt:643:    "test:e2e:feature-layer:local": "npm run test:e2e:feature-layer:seed && E2E_BASE_URL=http://127.0.0.1:8082 E2E_API_URL=http://127.0.0.1:8014 playwright test --project=active-surface",
+docs/_discovery/20260505_0904_restart_audit/13_frontend_code_snapshot.txt:644:    "test:e2e:inactive-depth": "npm run test:e2e:feature-layer:seed && playwright test --project=inactive-depth",
+docs/_discovery/20260505_0904_restart_audit/13_frontend_code_snapshot.txt:645:    "test:e2e:inactive-depth:local": "npm run test:e2e:feature-layer:seed && E2E_BASE_URL=http://127.0.0.1:8082 E2E_API_URL=http://127.0.0.1:8014 playwright test --project=inactive-depth",
+docs/_discovery/20260505_0904_restart_audit/13_frontend_code_snapshot.txt:646:    "test:e2e:critical": "playwright test --project=setup --project=critical",
+docs/_discovery/20260505_0904_restart_audit/13_frontend_code_snapshot.txt:647:    "test:e2e:headed": "playwright test --headed",
+docs/_discovery/20260505_0904_restart_audit/13_frontend_code_snapshot.txt:648:    "test:e2e:ui": "playwright test --ui",
+docs/_discovery/20260505_0904_restart_audit/13_frontend_code_snapshot.txt:649:    "test:e2e:debug": "playwright test --debug",
+docs/_discovery/20260505_0904_restart_audit/13_frontend_code_snapshot.txt:650:    "test:e2e:report": "playwright show-report ../output/playwright/report",
+docs/_discovery/20260505_0904_restart_audit/13_frontend_code_snapshot.txt:651:    "test:e2e:codegen": "playwright codegen",
+docs/_discovery/20260505_0904_restart_audit/13_frontend_code_snapshot.txt:652:    "test:e2e:install": "playwright install chromium",
+docs/_discovery/20260505_0904_restart_audit/13_frontend_code_snapshot.txt:653:    "test:e2e:auth": "playwright test --project=auth",
+docs/_discovery/20260505_0904_restart_audit/13_frontend_code_snapshot.txt:654:    "test:e2e:rbac": "playwright test --project=rbac",
+docs/_discovery/20260505_0904_restart_audit/13_frontend_code_snapshot.txt:655:    "test:e2e:navigation": "playwright test --project=navigation",
+docs/_discovery/20260505_0904_restart_audit/13_frontend_code_snapshot.txt:656:    "test:e2e:dashboard": "playwright test --project=dashboard",
+docs/_discovery/20260505_0904_restart_audit/13_frontend_code_snapshot.txt:657:    "test:e2e:workflows": "playwright test --project=workflows",
+docs/_discovery/20260505_0904_restart_audit/13_frontend_code_snapshot.txt:658:    "test:e2e:negative": "playwright test --project=negative",
+docs/_discovery/20260505_0904_restart_audit/13_frontend_code_snapshot.txt:659:    "test:e2e:regression": "playwright test --project=setup --project=critical --project=workflows --project=negative --project=rbac",
+docs/_discovery/20260505_0904_restart_audit/13_frontend_code_snapshot.txt:660:    "test:e2e:screenshots": "playwright test --project=screenshots",
+docs/_discovery/20260505_0904_restart_audit/13_frontend_code_snapshot.txt:661:    "test:e2e:screenshots:local": "npm run test:e2e:feature-layer:seed && E2E_BASE_URL=http://127.0.0.1:8082 E2E_API_URL=http://127.0.0.1:8014 E2E_SCREENSHOTS_DIR=../output/playwright/screenshots-catalog playwright test --project=screenshots",
+docs/_discovery/20260505_0904_restart_audit/13_frontend_code_snapshot.txt:662:    "test:e2e:presentation": "playwright test --project=presentation",
+docs/_discovery/20260505_0904_restart_audit/13_frontend_code_snapshot.txt:663:    "test:e2e:presentation:local": "E2E_BASE_URL=http://127.0.0.1:8082 E2E_API_URL=http://127.0.0.1:8014 playwright test --project=presentation",
+docs/_discovery/20260505_0904_restart_audit/13_frontend_code_snapshot.txt:664:    "test:e2e:full": "playwright test",
+docs/_discovery/20260505_0904_restart_audit/13_frontend_code_snapshot.txt:665:    "test:e2e:full:local": "npm run test:e2e:feature-layer:seed && E2E_BASE_URL=http://127.0.0.1:8082 E2E_API_URL=http://127.0.0.1:8014 E2E_SCREENSHOTS_DIR=../output/playwright/screenshots-catalog playwright test"
+docs/_discovery/20260505_0904_restart_audit/13_frontend_code_snapshot.txt:680:    "@playwright/test",
+docs/_discovery/20260505_0904_restart_audit/16_test_discovery.txt:216:frontend/e2e/negative/validation.spec.ts:11:import { expect, test } from '@playwright/test';
+docs/_discovery/20260505_0904_restart_audit/16_test_discovery.txt:217:backend/sims/users/management/commands/seed_e2e.py:138:        # Feature-layer explicit role fixtures for Playwright verification suite.
+docs/_discovery/20260505_0904_restart_audit/16_test_discovery.txt:218:backend/sims/users/management/commands/seed_e2e.py:250:                "description": "Deterministic training baseline for Playwright workflow gate",
+docs/_discovery/20260505_0904_restart_audit/16_test_discovery.txt:219:docs/_discovery/20260402T215202Z-functionality-categorization/00-executive-summary.md:16:Confidence is high for the promoted active workflows that passed current-tree browser gates. Confidence is lower for secondary active pages that are only backed by route inspection, page inspection, backend presence, and lighter Playwright coverage.
+docs/_discovery/20260505_0904_restart_audit/16_test_discovery.txt:220:docs/_discovery/20260402T215202Z-functionality-categorization/02-categorized-functionality.md:137:  - Playwright coverage confirms page load plus basic create/modal flows for hospitals/departments and page load for users
+docs/_discovery/20260505_0904_restart_audit/16_test_discovery.txt:221:docs/_discovery/20260402T215202Z-functionality-categorization/02-categorized-functionality.md:282:  - current run passed in Playwright
+docs/_discovery/20260505_0904_restart_audit/16_test_discovery.txt:222:docs/_discovery/20260402T215202Z-functionality-categorization/03-evidence-log.md:64:cd frontend && npx playwright install chromium
+docs/_discovery/20260505_0904_restart_audit/16_test_discovery.txt:223:docs/_discovery/20260402T215202Z-functionality-categorization/03-evidence-log.md:67:cd frontend && E2E_BASE_URL=http://127.0.0.1:3101 E2E_API_URL=http://127.0.0.1:8100 npx playwright test --project=workflow-gate
+docs/_discovery/20260505_0904_restart_audit/16_test_discovery.txt:224:docs/_discovery/20260505_0904_restart_audit/01_repo_inventory.txt:111:540K	./output/playwright
+docs/_discovery/20260505_0904_restart_audit/16_test_discovery.txt:225:docs/_discovery/20260505_0904_restart_audit/01_repo_inventory.txt:120:8.9M	./frontend/playwright-report
+docs/_discovery/20260505_0904_restart_audit/16_test_discovery.txt:226:docs/_discovery/20260505_0904_restart_audit/02_tree_and_manifests.txt:138:./frontend/playwright-report
+docs/_discovery/20260505_0904_restart_audit/16_test_discovery.txt:227:docs/_discovery/20260505_0904_restart_audit/02_tree_and_manifests.txt:139:./frontend/playwright-report/data
+docs/_discovery/20260505_0904_restart_audit/16_test_discovery.txt:228:docs/_discovery/20260505_0904_restart_audit/02_tree_and_manifests.txt:140:./frontend/playwright-report/trace
+docs/_discovery/20260505_0904_restart_audit/16_test_discovery.txt:229:docs/_discovery/20260505_0904_restart_audit/02_tree_and_manifests.txt:233:./output/playwright
+docs/_discovery/20260505_0904_restart_audit/16_test_discovery.txt:230:docs/_discovery/20260505_0904_restart_audit/02_tree_and_manifests.txt:234:./output/playwright/mcp
+docs/_discovery/20260505_0904_restart_audit/16_test_discovery.txt:231:docs/_discovery/20260505_0904_restart_audit/02_tree_and_manifests.txt:235:./output/playwright/report
+docs/_discovery/20260505_0904_restart_audit/16_test_discovery.txt:232:docs/_discovery/20260505_0904_restart_audit/02_tree_and_manifests.txt:236:./output/playwright/results
+docs/_discovery/20260505_0904_restart_audit/16_test_discovery.txt:233:docs/_discovery/20260505_0904_restart_audit/02_tree_and_manifests.txt:310:./docs/MCP_PLAYWRIGHT_AGENT.md
+docs/_discovery/20260505_0904_restart_audit/16_test_discovery.txt:234:docs/_discovery/20260505_0904_restart_audit/02_tree_and_manifests.txt:324:./docs/_audit/20260313_REVIEW_TRUTHMAP_PLAYWRIGHT.md
+docs/_discovery/20260505_0904_restart_audit/16_test_discovery.txt:235:docs/_discovery/20260505_0904_restart_audit/02_tree_and_manifests.txt:386:./docs/testing/playwright-coverage-matrix.md
+docs/_discovery/20260505_0904_restart_audit/16_test_discovery.txt:236:docs/_discovery/20260505_0904_restart_audit/02_tree_and_manifests.txt:387:./docs/testing/playwright-runbook.md
+docs/_discovery/20260505_0904_restart_audit/16_test_discovery.txt:237:docs/_discovery/20260505_0904_restart_audit/02_tree_and_manifests.txt:388:./docs/testing/playwright-suite.md
+docs/_discovery/20260505_0904_restart_audit/16_test_discovery.txt:238:docs/_discovery/20260505_0904_restart_audit/14_contracts_docs_excerpt.txt:565:cd frontend && npx playwright install chromium
+docs/_discovery/20260505_0904_restart_audit/16_test_discovery.txt:239:docs/_discovery/20260505_0904_restart_audit/14_contracts_docs_excerpt.txt:573:cd frontend && E2E_BASE_URL=http://127.0.0.1:3001 E2E_API_URL=http://127.0.0.1:8000 npx playwright test --project=workflow-gate
+docs/_discovery/20260505_0904_restart_audit/16_test_discovery.txt:240:docs/_discovery/20260505_0904_restart_audit/13_frontend_code_snapshot.txt:29:drwxr-xr-x   4 root   root     4096 Mar  6 22:42 playwright-report
+docs/_discovery/20260505_0904_restart_audit/16_test_discovery.txt:241:docs/_discovery/20260505_0904_restart_audit/13_frontend_code_snapshot.txt:30:-rw-rw-r--   1 munaim munaim   4974 Apr 21 07:45 playwright.config.ts
+docs/_discovery/20260505_0904_restart_audit/16_test_discovery.txt:242:docs/_discovery/20260505_0904_restart_audit/13_frontend_code_snapshot.txt:447:frontend/node_modules/playwright-core/package.json
+docs/_discovery/20260505_0904_restart_audit/16_test_discovery.txt:243:docs/_discovery/20260505_0904_restart_audit/13_frontend_code_snapshot.txt:448:frontend/node_modules/playwright/package.json
+docs/_discovery/20260505_0904_restart_audit/16_test_discovery.txt:244:docs/_discovery/20260505_0904_restart_audit/13_frontend_code_snapshot.txt:634:    "test:e2e": "playwright test --project=smoke --project=workflow-gate --project=active-surface --project=setup --project=critical --project=auth --project=rbac --project=navigation --project=dashboard --project=workflows --project=negative",
+docs/_discovery/20260505_0904_restart_audit/16_test_discovery.txt:245:docs/_discovery/20260505_0904_restart_audit/13_frontend_code_snapshot.txt:635:    "test:e2e:smoke": "playwright test --project=smoke",
+docs/_discovery/20260505_0904_restart_audit/16_test_discovery.txt:246:docs/_discovery/20260505_0904_restart_audit/13_frontend_code_snapshot.txt:636:    "test:e2e:smoke:local": "E2E_BASE_URL=http://127.0.0.1:8082 E2E_API_URL=http://127.0.0.1:8014 playwright test --project=smoke",
+docs/_discovery/20260505_0904_restart_audit/16_test_discovery.txt:247:docs/_discovery/20260505_0904_restart_audit/13_frontend_code_snapshot.txt:637:    "test:e2e:workflow": "playwright test --project=workflow-gate",
+docs/_discovery/20260505_0904_restart_audit/16_test_discovery.txt:248:docs/_discovery/20260505_0904_restart_audit/13_frontend_code_snapshot.txt:638:    "test:e2e:workflow:local": "E2E_BASE_URL=http://127.0.0.1:8082 E2E_API_URL=http://127.0.0.1:8014 playwright test --project=workflow-gate",
+docs/_discovery/20260505_0904_restart_audit/16_test_discovery.txt:249:docs/_discovery/20260505_0904_restart_audit/13_frontend_code_snapshot.txt:640:    "test:e2e:active-surface": "npm run test:e2e:feature-layer:seed && playwright test --project=active-surface",
+docs/_discovery/20260505_0904_restart_audit/16_test_discovery.txt:250:docs/_discovery/20260505_0904_restart_audit/13_frontend_code_snapshot.txt:641:    "test:e2e:active-surface:local": "npm run test:e2e:feature-layer:seed && E2E_BASE_URL=http://127.0.0.1:8082 E2E_API_URL=http://127.0.0.1:8014 playwright test --project=active-surface",
+docs/_discovery/20260505_0904_restart_audit/16_test_discovery.txt:251:docs/_discovery/20260505_0904_restart_audit/13_frontend_code_snapshot.txt:642:    "test:e2e:feature-layer": "npm run test:e2e:feature-layer:seed && playwright test --project=active-surface",
+docs/_discovery/20260505_0904_restart_audit/16_test_discovery.txt:252:docs/_discovery/20260505_0904_restart_audit/13_frontend_code_snapshot.txt:643:    "test:e2e:feature-layer:local": "npm run test:e2e:feature-layer:seed && E2E_BASE_URL=http://127.0.0.1:8082 E2E_API_URL=http://127.0.0.1:8014 playwright test --project=active-surface",
+docs/_discovery/20260505_0904_restart_audit/16_test_discovery.txt:253:docs/_discovery/20260505_0904_restart_audit/13_frontend_code_snapshot.txt:644:    "test:e2e:inactive-depth": "npm run test:e2e:feature-layer:seed && playwright test --project=inactive-depth",
+docs/_discovery/20260505_0904_restart_audit/16_test_discovery.txt:254:docs/_discovery/20260505_0904_restart_audit/13_frontend_code_snapshot.txt:645:    "test:e2e:inactive-depth:local": "npm run test:e2e:feature-layer:seed && E2E_BASE_URL=http://127.0.0.1:8082 E2E_API_URL=http://127.0.0.1:8014 playwright test --project=inactive-depth",
+docs/_discovery/20260505_0904_restart_audit/16_test_discovery.txt:255:docs/_discovery/20260505_0904_restart_audit/13_frontend_code_snapshot.txt:646:    "test:e2e:critical": "playwright test --project=setup --project=critical",
+docs/_discovery/20260505_0904_restart_audit/16_test_discovery.txt:256:docs/_discovery/20260505_0904_restart_audit/13_frontend_code_snapshot.txt:647:    "test:e2e:headed": "playwright test --headed",
+docs/_discovery/20260505_0904_restart_audit/16_test_discovery.txt:257:docs/_discovery/20260505_0904_restart_audit/13_frontend_code_snapshot.txt:648:    "test:e2e:ui": "playwright test --ui",
+docs/_discovery/20260505_0904_restart_audit/16_test_discovery.txt:258:docs/_discovery/20260505_0904_restart_audit/13_frontend_code_snapshot.txt:649:    "test:e2e:debug": "playwright test --debug",
+docs/_discovery/20260505_0904_restart_audit/16_test_discovery.txt:259:docs/_discovery/20260505_0904_restart_audit/13_frontend_code_snapshot.txt:650:    "test:e2e:report": "playwright show-report ../output/playwright/report",
+docs/_discovery/20260505_0904_restart_audit/16_test_discovery.txt:260:docs/_discovery/20260505_0904_restart_audit/13_frontend_code_snapshot.txt:651:    "test:e2e:codegen": "playwright codegen",
+docs/_discovery/20260505_0904_restart_audit/16_test_discovery.txt:261:docs/_discovery/20260505_0904_restart_audit/13_frontend_code_snapshot.txt:652:    "test:e2e:install": "playwright install chromium",
+docs/_discovery/20260505_0904_restart_audit/16_test_discovery.txt:262:docs/_discovery/20260505_0904_restart_audit/13_frontend_code_snapshot.txt:653:    "test:e2e:auth": "playwright test --project=auth",
+docs/_discovery/20260505_0904_restart_audit/16_test_discovery.txt:263:docs/_discovery/20260505_0904_restart_audit/13_frontend_code_snapshot.txt:654:    "test:e2e:rbac": "playwright test --project=rbac",
+docs/_discovery/20260505_0904_restart_audit/16_test_discovery.txt:264:docs/_discovery/20260505_0904_restart_audit/13_frontend_code_snapshot.txt:655:    "test:e2e:navigation": "playwright test --project=navigation",
+docs/_discovery/20260505_0904_restart_audit/16_test_discovery.txt:265:docs/_discovery/20260505_0904_restart_audit/13_frontend_code_snapshot.txt:656:    "test:e2e:dashboard": "playwright test --project=dashboard",
+docs/_discovery/20260505_0904_restart_audit/16_test_discovery.txt:266:docs/_discovery/20260505_0904_restart_audit/13_frontend_code_snapshot.txt:657:    "test:e2e:workflows": "playwright test --project=workflows",
+docs/_discovery/20260505_0904_restart_audit/16_test_discovery.txt:267:docs/_discovery/20260505_0904_restart_audit/13_frontend_code_snapshot.txt:658:    "test:e2e:negative": "playwright test --project=negative",
+docs/_discovery/20260505_0904_restart_audit/16_test_discovery.txt:268:docs/_discovery/20260505_0904_restart_audit/13_frontend_code_snapshot.txt:659:    "test:e2e:regression": "playwright test --project=setup --project=critical --project=workflows --project=negative --project=rbac",
+docs/FINAL_RELEASE_FREEZE.md:43:npx playwright test
+docs/FINAL_RELEASE_FREEZE.md:57:- Serial verification only (no parallel build + Playwright)
+frontend/e2e/screenshots/screenshot-tour.spec.ts:24:import { expect, test } from '@playwright/test';
+frontend/e2e/auth.setup.ts:3:import { expect, test as setup } from '@playwright/test';
+frontend/e2e/smoke/auth_flow.spec.ts:9:import { expect, test } from '@playwright/test';
+frontend/e2e/smoke/public.spec.ts:6:import { expect, test } from '@playwright/test';
+frontend/e2e/smoke/dashboards.spec.ts:8:import { expect, test } from '@playwright/test';
+frontend/e2e/regression/import_reports_dashboard.spec.ts:1:import { expect, test } from '@playwright/test';
+frontend/e2e/regression/admin_analytics.spec.ts:1:import { expect, test } from '@playwright/test';
+frontend/e2e/regression/README.md:3:This folder contains regression specs for features that are **partially or not yet implemented** in the current codebase. These tests are intentionally excluded from the default `playwright.config.ts` test runs (`testMatch` only picks up `smoke/` and `critical/`).
+frontend/e2e/regression/README.md:23:npx playwright test e2e/regression/
+frontend/e2e/regression/README.md:26:npx playwright test e2e/regression/login.spec.ts
+frontend/e2e/regression/README.md:33:3. Run the spec standalone: `npx playwright test e2e/regression/<name>.spec.ts`
+frontend/e2e/regression/README.md:34:4. Once passing, move it to `e2e/critical/` and update `playwright.config.ts` if needed.
+frontend/e2e/regression/logbook_submit_return_resubmit_approve.spec.ts:1:import { expect, test } from '@playwright/test';
+frontend/e2e/regression/login.spec.ts:1:import { expect, test } from '@playwright/test';
+frontend/e2e/regression/cases_create_submit_review.spec.ts:1:import { expect, test } from '@playwright/test';
+frontend/e2e/critical/admin_analytics_live_feed.spec.ts:1:import { expect, test } from '@playwright/test';
+frontend/e2e/critical/userbase_foundation.spec.ts:1:import { expect, test } from '@playwright/test';
+frontend/e2e/critical/phase6_research_eligibility.spec.ts:8:import { expect, test } from '@playwright/test';
+frontend/e2e/critical/phase6_research_eligibility.spec.ts:14:  request: import('@playwright/test').APIRequestContext,
+frontend/e2e/critical/phase6_research_eligibility.spec.ts:26:  request: import('@playwright/test').APIRequestContext,
+frontend/e2e/critical/phase6_research_eligibility.spec.ts:36:  request: import('@playwright/test').APIRequestContext,
+frontend/e2e/critical/secondary_role_optional.spec.ts:1:import { expect, test } from '@playwright/test';
+frontend/e2e/critical/admin_critical.spec.ts:1:import { expect, test } from '@playwright/test';
+frontend/e2e/navigation/sidebar.spec.ts:7:import { expect, test } from '@playwright/test';
+frontend/e2e/feature-layer/regression-smoke.spec.ts:1:import { expect, test } from '@playwright/test';
+frontend/e2e/feature-layer/rotations-phase1.spec.ts:1:import { expect, type Locator, test } from '@playwright/test';
+frontend/e2e/feature-layer/thesis.spec.ts:1:import { expect, test } from '@playwright/test';
+frontend/e2e/feature-layer/helpers/assertions.ts:1:import { expect, type Page } from '@playwright/test';
+frontend/e2e/feature-layer/helpers/ui.ts:1:import type { Page } from '@playwright/test';
+frontend/e2e/feature-layer/helpers/session.ts:1:import type { BrowserContext, Page } from '@playwright/test';
+frontend/e2e/feature-layer/dashboards.spec.ts:1:import { expect, type Locator, test } from '@playwright/test';
+frontend/e2e/feature-layer/synopsis.spec.ts:1:import { expect, test } from '@playwright/test';
+frontend/e2e/feature-layer/permissions.spec.ts:1:import { expect, test } from '@playwright/test';
+frontend/e2e/feature-layer/logbook.spec.ts:1:import { expect, test } from '@playwright/test';
+frontend/e2e/feature-layer/auth-and-smoke.spec.ts:1:import { expect, test } from '@playwright/test';
+frontend/e2e/helpers/navigation.ts:4:import type { Page } from '@playwright/test';
+frontend/e2e/helpers/navigation.ts:5:import { expect } from '@playwright/test';
+frontend/e2e/helpers/auth.ts:1:import type { BrowserContext, Page } from '@playwright/test';
+frontend/e2e/dashboard/pages.spec.ts:9:import { expect, test } from '@playwright/test';
+frontend/e2e/auth/session.spec.ts:11:import { expect, test } from '@playwright/test';
+frontend/e2e/rbac/utrmc_readonly_dashboard.spec.ts:1:import { expect, test } from '@playwright/test';
+frontend/e2e/rbac/access-control.spec.ts:7:import { expect, test } from '@playwright/test';
+frontend/e2e/workflow-gate/stabilized-workflows.spec.ts:1:import { expect, test } from '@playwright/test';
+frontend/e2e/workflow-gate/bulk-setup.spec.ts:1:import { expect, test } from '@playwright/test';
+frontend/e2e/workflows/resident-training.spec.ts:12:import { expect, test } from '@playwright/test';
+frontend/e2e/workflows/supervisor-review.spec.ts:11: * documented in OUT/playwright_blockers.md.
+frontend/e2e/workflows/supervisor-review.spec.ts:13:import { expect, test } from '@playwright/test';
+frontend/e2e/workflows/utrmc-management.spec.ts:10:import { expect, test } from '@playwright/test';
+frontend/playwright.config.ts:1:import { defineConfig, devices } from '@playwright/test';
+frontend/playwright.config.ts:4: * PGSIMS Playwright Configuration
+frontend/playwright.config.ts:18: *   npm run test:e2e:ui       — interactive Playwright UI
+frontend/playwright.config.ts:40:    ['html', { outputFolder: '../output/playwright/report', open: 'never' }],
+frontend/playwright.config.ts:53:  outputDir: '../output/playwright/results',
+frontend/package-lock.json:23:        "@playwright/test": "^1.56.1",
+frontend/package-lock.json:1788:    "node_modules/@playwright/test": {
+frontend/package-lock.json:1790:      "resolved": "https://registry.npmjs.org/@playwright/test/-/test-1.56.1.tgz",
+frontend/package-lock.json:1795:        "playwright": "1.56.1"
+frontend/package-lock.json:1798:        "playwright": "cli.js"
+frontend/package-lock.json:7854:        "@playwright/test": "^1.41.2",
+frontend/package-lock.json:7863:        "@playwright/test": {
+frontend/package-lock.json:8387:    "node_modules/playwright": {
+frontend/package-lock.json:8389:      "resolved": "https://registry.npmjs.org/playwright/-/playwright-1.56.1.tgz",
+frontend/package-lock.json:8394:        "playwright-core": "1.56.1"
+frontend/package-lock.json:8397:        "playwright": "cli.js"
+frontend/package-lock.json:8406:    "node_modules/playwright-core": {
+frontend/package-lock.json:8408:      "resolved": "https://registry.npmjs.org/playwright-core/-/playwright-core-1.56.1.tgz",
+frontend/package-lock.json:8413:        "playwright-core": "cli.js"
+frontend/package-lock.json:8419:    "node_modules/playwright/node_modules/fsevents": {
+frontend/package.json:15:    "test:e2e": "playwright test --project=smoke --project=workflow-gate --project=active-surface --project=setup --project=critical --project=auth --project=rbac --project=navigation --project=dashboard --project=workflows --project=negative",
+frontend/package.json:16:    "test:e2e:smoke": "playwright test --project=smoke",
+frontend/package.json:17:    "test:e2e:smoke:local": "E2E_BASE_URL=http://127.0.0.1:8082 E2E_API_URL=http://127.0.0.1:8014 playwright test --project=smoke",
+frontend/package.json:18:    "test:e2e:workflow": "playwright test --project=workflow-gate",
+frontend/package.json:19:    "test:e2e:workflow:local": "E2E_BASE_URL=http://127.0.0.1:8082 E2E_API_URL=http://127.0.0.1:8014 playwright test --project=workflow-gate",
+frontend/package.json:21:    "test:e2e:active-surface": "npm run test:e2e:feature-layer:seed && playwright test --project=active-surface",
+frontend/package.json:22:    "test:e2e:active-surface:local": "npm run test:e2e:feature-layer:seed && E2E_BASE_URL=http://127.0.0.1:8082 E2E_API_URL=http://127.0.0.1:8014 playwright test --project=active-surface",
+frontend/package.json:23:    "test:e2e:feature-layer": "npm run test:e2e:feature-layer:seed && playwright test --project=active-surface",
+frontend/package.json:24:    "test:e2e:feature-layer:local": "npm run test:e2e:feature-layer:seed && E2E_BASE_URL=http://127.0.0.1:8082 E2E_API_URL=http://127.0.0.1:8014 playwright test --project=active-surface",
+frontend/package.json:25:    "test:e2e:inactive-depth": "npm run test:e2e:feature-layer:seed && playwright test --project=inactive-depth",
+frontend/package.json:26:    "test:e2e:inactive-depth:local": "npm run test:e2e:feature-layer:seed && E2E_BASE_URL=http://127.0.0.1:8082 E2E_API_URL=http://127.0.0.1:8014 playwright test --project=inactive-depth",
+frontend/package.json:27:    "test:e2e:critical": "playwright test --project=setup --project=critical",
+frontend/package.json:28:    "test:e2e:headed": "playwright test --headed",
+frontend/package.json:29:    "test:e2e:ui": "playwright test --ui",
+frontend/package.json:30:    "test:e2e:debug": "playwright test --debug",
+frontend/package.json:31:    "test:e2e:report": "playwright show-report ../output/playwright/report",
+frontend/package.json:32:    "test:e2e:codegen": "playwright codegen",
+
+## package.json test scripts
+{
+  dev: 'next dev',
+  build: 'next build',
+  start: 'node .next/standalone/server.js',
+  'start:next': 'node .next/standalone/server.js',
+  lint: 'next lint',
+  typecheck: 'tsc --noEmit',
+  test: 'jest',
+  'test:watch': 'jest --watch',
+  'test:coverage': 'jest --coverage',
+  'test:e2e': 'playwright test --project=smoke --project=workflow-gate --project=active-surface --project=setup --project=critical --project=auth --project=rbac --project=navigation --project=dashboard --project=workflows --project=negative',
+  'test:e2e:smoke': 'playwright test --project=smoke',
+  'test:e2e:smoke:local': 'E2E_BASE_URL=http://127.0.0.1:8082 E2E_API_URL=http://127.0.0.1:8014 playwright test --project=smoke',
+  'test:e2e:workflow': 'playwright test --project=workflow-gate',
+  'test:e2e:workflow:local': 'E2E_BASE_URL=http://127.0.0.1:8082 E2E_API_URL=http://127.0.0.1:8014 playwright test --project=workflow-gate',
+  'test:e2e:feature-layer:seed': '../scripts/e2e_seed.sh',
+  'test:e2e:active-surface': 'npm run test:e2e:feature-layer:seed && playwright test --project=active-surface',
+  'test:e2e:active-surface:local': 'npm run test:e2e:feature-layer:seed && E2E_BASE_URL=http://127.0.0.1:8082 E2E_API_URL=http://127.0.0.1:8014 playwright test --project=active-surface',
+  'test:e2e:feature-layer': 'npm run test:e2e:feature-layer:seed && playwright test --project=active-surface',
+  'test:e2e:feature-layer:local': 'npm run test:e2e:feature-layer:seed && E2E_BASE_URL=http://127.0.0.1:8082 E2E_API_URL=http://127.0.0.1:8014 playwright test --project=active-surface',
+  'test:e2e:inactive-depth': 'npm run test:e2e:feature-layer:seed && playwright test --project=inactive-depth',
+  'test:e2e:inactive-depth:local': 'npm run test:e2e:feature-layer:seed && E2E_BASE_URL=http://127.0.0.1:8082 E2E_API_URL=http://127.0.0.1:8014 playwright test --project=inactive-depth',
+  'test:e2e:critical': 'playwright test --project=setup --project=critical',
+  'test:e2e:headed': 'playwright test --headed',
+  'test:e2e:ui': 'playwright test --ui',
+  'test:e2e:debug': 'playwright test --debug',
+  'test:e2e:report': 'playwright show-report ../output/playwright/report',
+  'test:e2e:codegen': 'playwright codegen',
+  'test:e2e:install': 'playwright install chromium',
+  'test:e2e:auth': 'playwright test --project=auth',
+  'test:e2e:rbac': 'playwright test --project=rbac',
+  'test:e2e:navigation': 'playwright test --project=navigation',
+  'test:e2e:dashboard': 'playwright test --project=dashboard',
+  'test:e2e:workflows': 'playwright test --project=workflows',
+  'test:e2e:negative': 'playwright test --project=negative',
+  'test:e2e:regression': 'playwright test --project=setup --project=critical --project=workflows --project=negative --project=rbac',
+  'test:e2e:screenshots': 'playwright test --project=screenshots',
+  'test:e2e:screenshots:local': 'npm run test:e2e:feature-layer:seed && E2E_BASE_URL=http://127.0.0.1:8082 E2E_API_URL=http://127.0.0.1:8014 E2E_SCREENSHOTS_DIR=../output/playwright/screenshots-catalog playwright test --project=screenshots',
+  'test:e2e:presentation': 'playwright test --project=presentation',
+  'test:e2e:presentation:local': 'E2E_BASE_URL=http://127.0.0.1:8082 E2E_API_URL=http://127.0.0.1:8014 playwright test --project=presentation',
+  'test:e2e:full': 'playwright test',
+  'test:e2e:full:local': 'npm run test:e2e:feature-layer:seed && E2E_BASE_URL=http://127.0.0.1:8082 E2E_API_URL=http://127.0.0.1:8014 E2E_SCREENSHOTS_DIR=../output/playwright/screenshots-catalog playwright test'
+}
+
+[tool.black]
+line-length = 100
+target-version = ['py311', 'py312']
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+    \.git
+  | \.venv
+  | venv
+  | env
+  | \.mypy_cache
+  | \.pytest_cache
+  | \.tox
+  | build
+  | dist
+  | migrations
+  | staticfiles
+)/
+'''
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "sims_project.settings"
+python_files = ["tests.py", "test_*.py", "*_test.py"]
+python_classes = ["Test*", "*Tests", "*TestCase"]
+python_functions = ["test_*"]
+testpaths = ["sims", "tests"]
+addopts = [
+    "--reuse-db",
+    "--nomigrations",
+    "--cov=sims",
+    "--cov-report=html",
+    "--cov-report=term-missing:skip-covered",
+    "--cov-fail-under=80",
+    "-v",
+]
+
+[tool.coverage.run]
+source = ["sims"]
+omit = [
+    "*/migrations/*",
+    "*/tests/*",
+    "*/test_*.py",
+    "*/__pycache__/*",
+    "*/venv/*",
+    "*/env/*",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "def __str__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+    "class .*\\bProtocol\\):",
+    "@(abc\\.)?abstractmethod",
+]
+precision = 2

@@ -1,0 +1,76 @@
+# Module surface area summary
+Tue May  5 09:10:32 UTC 2026
+
+## OpenAPI tags (unique)
+academics
+active
+admin
+admitted
+api
+cookieAuth: []
+create
+delete
+enrolled
+expelled
+export
+faculty
+faculty_site
+graduated
+in: path
+in: query
+jwtAuth: []
+login
+logout
+name: ordering
+name: page
+name: page_size
+name: search
+on_leave
+pg
+posting
+primary_training
+resident
+supervisor
+suspended
+update
+utrmc_admin
+utrmc_user
+view
+withdrawn
+{}
+
+## OpenAPI paths prefix counts
+    138 /api/
+      8 /academics/
+
+## Backend sims apps
+__pycache__
+_devtools
+_legacy
+academics
+audit
+bulk
+domain
+notifications
+rotations
+sims
+static
+tests
+training
+users
+
+## Frontend route folders (heuristic)
+frontend/app:
+frontend/app
+frontend/app/register
+frontend/app/login
+frontend/app/dashboard
+frontend/app/dashboard/pg
+frontend/app/dashboard/supervisor
+frontend/app/dashboard/resident
+frontend/app/dashboard/utrmc
+frontend/app/unauthorized
+frontend/app/api
+frontend/app/api/[...path]
+frontend/app/forgot-password
+frontend/app/fonts

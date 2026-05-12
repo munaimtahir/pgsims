@@ -1,0 +1,22 @@
+# Playwright readonly smoke run (audit-local config + NODE_PATH)
+Tue May  5 09:17:17 UTC 2026
+
+Error: EACCES: permission denied, unlink '/home/munaim/srv/apps/pgsims/frontend/test-results/.last-run.json'
+
+Error in reporter Error: EACCES: permission denied, open '/home/munaim/srv/apps/pgsims/frontend/test-results/.last-run.json'
+    at open (node:internal/fs/promises:636:25)
+    at Object.writeFile (node:internal/fs/promises:1243:14)
+    at LastRunReporter.onEnd (/home/munaim/srv/apps/pgsims/frontend/node_modules/playwright/lib/runner/lastRun.js:71:5)
+    at wrapAsync (/home/munaim/srv/apps/pgsims/frontend/node_modules/playwright/lib/reporters/multiplexer.js:89:12)
+    at Multiplexer.onEnd (/home/munaim/srv/apps/pgsims/frontend/node_modules/playwright/lib/reporters/multiplexer.js:57:25)
+    at InternalReporter.onEnd (/home/munaim/srv/apps/pgsims/frontend/node_modules/playwright/lib/reporters/internalReporter.js:76:12)
+    at finishTaskRun (/home/munaim/srv/apps/pgsims/frontend/node_modules/playwright/lib/runner/tasks.js:94:26)
+    at runTasks (/home/munaim/srv/apps/pgsims/frontend/node_modules/playwright/lib/runner/tasks.js:81:10)
+    at runAllTestsWithConfig (/home/munaim/srv/apps/pgsims/frontend/node_modules/playwright/lib/runner/testRunner.js:380:18)
+    at runTests (/home/munaim/srv/apps/pgsims/frontend/node_modules/playwright/lib/program.js:251:18)
+    at i.<anonymous> (/home/munaim/srv/apps/pgsims/frontend/node_modules/playwright/lib/program.js:71:7) {
+  errno: -13,
+  code: 'EACCES',
+  syscall: 'open',
+  path: '/home/munaim/srv/apps/pgsims/frontend/test-results/.last-run.json'
+}

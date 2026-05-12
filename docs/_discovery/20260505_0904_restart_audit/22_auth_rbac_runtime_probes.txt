@@ -1,0 +1,22 @@
+# Auth/RBAC runtime probes (no credentials)
+Tue May  5 09:16:15 UTC 2026
+
+## POST /api/auth/login/ (empty payload, expect 400)
+HTTP/1.1 400 Bad Request
+Server: gunicorn
+Date: Tue, 05 May 2026 09:16:15 GMT
+Connection: close
+Content-Type: application/json
+Vary: Accept, origin
+Allow: POST, OPTIONS
+X-Response-Time: 53ms
+X-Frame-Options: DENY
+X-Request-ID: fc813a08ba334c36bdac53753e27aa82
+Content-Length: 79
+X-Content-Type-Options: nosniff
+Referrer-Policy: same-origin
+Cross-Origin-Opener-Policy: same-origin
+
+{"username":["This field is required."],"password":["This field is required."]}
+## GET protected endpoint without auth (expect 401/403)
+/academics/api/batches/ -> 401

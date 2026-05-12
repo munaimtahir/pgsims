@@ -1,0 +1,140 @@
+# Database snapshot (non-destructive queries)
+Tue May  5 09:08:39 UTC 2026
+
+## Postgres version
+                                         version                                          
+------------------------------------------------------------------------------------------
+ PostgreSQL 15.17 on x86_64-pc-linux-musl, compiled by gcc (Alpine 15.2.0) 15.2.0, 64-bit
+(1 row)
+
+
+## Migration table counts
+ django_migrations_count 
+-------------------------
+                      59
+(1 row)
+
+
+## Latest migrations (last 15)
+        app         |                          name                           |            applied            
+--------------------+---------------------------------------------------------+-------------------------------
+ users              | 0005_historicaluser_data_quality_and_index_names        | 2026-04-23 21:26:39.481585+00
+ users              | 0004_data_correction_flags                              | 2026-04-23 21:26:38.657595+00
+ users              | 0003_alter_historicaluser_year_alter_user_year          | 2026-04-23 21:26:36.951975+00
+ users              | 0002_alter_historicaluser_role_and_more                 | 2026-04-23 21:26:36.742099+00
+ training           | 0005_logbookentry_logbookthresholdconfig_and_more       | 2026-04-23 21:26:32.908662+00
+ training           | 0004_historicalresidenttrainingrecord_has_default_dates | 2026-04-23 21:26:26.094249+00
+ training           | 0003_residenttrainingrecord_has_default_dates           | 2026-04-23 21:26:26.000675+00
+ training           | 0002_phase6_academic_core                               | 2026-04-23 21:26:25.908954+00
+ training           | 0001_initial                                            | 2026-04-23 21:26:21.653089+00
+ sessions           | 0001_initial                                            | 2026-04-23 21:26:19.862969+00
+ notifications      | 0002_initial                                            | 2026-04-23 21:26:19.821782+00
+ notifications      | 0001_initial                                            | 2026-04-23 21:26:19.56823+00
+ django_celery_beat | 0019_alter_periodictasks_options                        | 2026-04-23 21:26:19.529343+00
+ django_celery_beat | 0018_improve_crontab_helptext                           | 2026-04-23 21:26:19.518577+00
+ django_celery_beat | 0017_alter_crontabschedule_month_of_year                | 2026-04-23 21:26:19.492292+00
+(15 rows)
+
+
+## Key table existence checks
+                                  List of relations
+ Schema |                          Name                          | Type  |   Owner   
+--------+--------------------------------------------------------+-------+-----------
+ public | academics_batch                                        | table | sims_user
+ public | academics_department                                   | table | sims_user
+ public | academics_studentprofile                               | table | sims_user
+ public | audit_activitylog                                      | table | sims_user
+ public | audit_auditreport                                      | table | sims_user
+ public | audit_historicalauditreport                            | table | sims_user
+ public | auth_group                                             | table | sims_user
+ public | auth_group_permissions                                 | table | sims_user
+ public | auth_permission                                        | table | sims_user
+ public | bulk_bulkoperation                                     | table | sims_user
+ public | django_admin_log                                       | table | sims_user
+ public | django_celery_beat_clockedschedule                     | table | sims_user
+ public | django_celery_beat_crontabschedule                     | table | sims_user
+ public | django_celery_beat_intervalschedule                    | table | sims_user
+ public | django_celery_beat_periodictask                        | table | sims_user
+ public | django_celery_beat_periodictasks                       | table | sims_user
+ public | django_celery_beat_solarschedule                       | table | sims_user
+ public | django_content_type                                    | table | sims_user
+ public | django_migrations                                      | table | sims_user
+ public | django_session                                         | table | sims_user
+ public | notifications_notification                             | table | sims_user
+ public | notifications_notificationpreference                   | table | sims_user
+ public | rotations_hospital                                     | table | sims_user
+ public | rotations_hospitaldepartment                           | table | sims_user
+ public | training_deputationposting                             | table | sims_user
+ public | training_historicaldeputationposting                   | table | sims_user
+ public | training_historicalleaverequest                        | table | sims_user
+ public | training_historicallogbookentry                        | table | sims_user
+ public | training_historicallogbookreview                       | table | sims_user
+ public | training_historicallogbookthresholdconfig              | table | sims_user
+ public | training_historicalprogrammilestone                    | table | sims_user
+ public | training_historicalprogrammilestonelogbookrequirement  | table | sims_user
+ public | training_historicalprogrammilestoneresearchrequirement | table | sims_user
+ public | training_historicalprogrammilestoneworkshoprequirement | table | sims_user
+ public | training_historicalprogrampolicy                       | table | sims_user
+ public | training_historicalprogramrotationrequirement          | table | sims_user
+ public | training_historicalprogramrotationtemplate             | table | sims_user
+ public | training_historicalresidentresearchproject             | table | sims_user
+ public | training_historicalresidentsubmission                  | table | sims_user
+ public | training_historicalresidentthesis                      | table | sims_user
+ public | training_historicalresidenttrainingrecord              | table | sims_user
+ public | training_historicalresidentworkshopcompletion          | table | sims_user
+ public | training_historicalrotationassignment                  | table | sims_user
+ public | training_historicalrotationcertificate                 | table | sims_user
+ public | training_historicalrotationcompletion                  | table | sims_user
+ public | training_historicalsubmissioncertificate               | table | sims_user
+ public | training_historicalsubmissiondocument                  | table | sims_user
+ public | training_historicalsubmissionrequirementtemplate       | table | sims_user
+ public | training_historicalsubmissionreview                    | table | sims_user
+ public | training_historicaltrainingprogram                     | table | sims_user
+ public | training_historicalworkshop                            | table | sims_user
+ public | training_historicalworkshopblock                       | table | sims_user
+ public | training_historicalworkshoprun                         | table | sims_user
+ public | training_leaverequest                                  | table | sims_user
+ public | training_logbookentry                                  | table | sims_user
+ public | training_logbookreview                                 | table | sims_user
+ public | training_logbookthresholdconfig                        | table | sims_user
+ public | training_logbookthresholdsnapshot                      | table | sims_user
+ public | training_programmilestone                              | table | sims_user
+ public | training_programmilestonelogbookrequirement            | table | sims_user
+ public | training_programmilestoneresearchrequirement           | table | sims_user
+ public | training_programmilestoneworkshoprequirement           | table | sims_user
+ public | training_programpolicy                                 | table | sims_user
+ public | training_programrotationrequirement                    | table | sims_user
+ public | training_programrotationtemplate                       | table | sims_user
+ public | training_programrotationtemplate_allowed_hospitals     | table | sims_user
+ public | training_residentmilestoneeligibility                  | table | sims_user
+ public | training_residentresearchproject                       | table | sims_user
+ public | training_residentsubmission                            | table | sims_user
+ public | training_residentthesis                                | table | sims_user
+ public | training_residenttrainingrecord                        | table | sims_user
+ public | training_residentworkshopcompletion                    | table | sims_user
+ public | training_rotationassignment                            | table | sims_user
+ public | training_rotationcertificate                           | table | sims_user
+ public | training_rotationcompletion                            | table | sims_user
+ public | training_submissioncertificate                         | table | sims_user
+ public | training_submissiondocument                            | table | sims_user
+ public | training_submissionrequirementtemplate                 | table | sims_user
+ public | training_submissionreview                              | table | sims_user
+ public | training_trainingprogram                               | table | sims_user
+ public | training_workshop                                      | table | sims_user
+ public | training_workshopblock                                 | table | sims_user
+ public | training_workshoprun                                   | table | sims_user
+ public | users_datacorrectionaudit                              | table | sims_user
+ public | users_departmentmembership                             | table | sims_user
+ public | users_historicaluser                                   | table | sims_user
+ public | users_hodassignment                                    | table | sims_user
+ public | users_hospitalassignment                               | table | sims_user
+ public | users_residentprofile                                  | table | sims_user
+ public | users_staffprofile                                     | table | sims_user
+ public | users_supervisorresidentlink                           | table | sims_user
+ public | users_user                                             | table | sims_user
+ public | users_user_groups                                      | table | sims_user
+ public | users_user_user_permissions                            | table | sims_user
+(94 rows)
+
+
+## User/role counts (no PII)

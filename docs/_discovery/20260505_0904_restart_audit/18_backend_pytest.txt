@@ -1,0 +1,43 @@
+# Backend pytest run (NOTE: may create temporary test DB on same Postgres)
+Tue May  5 09:12:27 UTC 2026
+
+## pytest version
+pytest 9.0.3
+
+## running: pytest -q
+============================= test session starts ==============================
+platform linux -- Python 3.11.15, pytest-9.0.3, pluggy-1.6.0
+django: version: 4.2.30, settings: sims_project.settings_test (from env)
+rootdir: /app
+configfile: pytest.ini (WARNING: ignoring pytest config in pyproject.toml!)
+testpaths: sims
+plugins: django-4.12.0, Faker-40.15.0
+collected 294 items
+
+sims/_devtools/tests/test_drift_guards.py ..                             [  0%]
+sims/bulk/tests.py .........                                             [  3%]
+sims/notifications/tests.py ...                                          [  4%]
+sims/rotations/test_canonical_migration_gate.py ..                       [  5%]
+sims/rotations/tests.py .                                                [  5%]
+sims/test_schema_gate.py .                                               [  6%]
+sims/tests/test_bulk_services.py ......                                  [  8%]
+sims/tests/test_bulk_userbase_engine.py ...                              [  9%]
+sims/tests/test_common_permissions.py ...........                        [ 12%]
+sims/tests/test_decorators.py ....                                       [ 14%]
+sims/tests/test_eligibility.py ..                                        [ 14%]
+sims/tests/test_role_workflows.py ...................................... [ 27%]
+.................................................................        [ 50%]
+sims/tests/test_training_models.py ....                                  [ 51%]
+sims/tests/test_training_views.py .............                          [ 55%]
+sims/tests/test_users_models.py ......                                   [ 57%]
+sims/tests/test_users_views.py ...................                       [ 64%]
+sims/training/test_feature_layer_ops.py .........                        [ 67%]
+sims/training/test_phase6.py ........................................... [ 81%]
+.                                                                        [ 82%]
+sims/training/tests.py ......................                            [ 89%]
+sims/users/test_registration_api.py ...                                  [ 90%]
+sims/users/test_seed_demo_data.py ..                                     [ 91%]
+sims/users/test_userbase_api.py ..............                           [ 96%]
+sims/users/tests.py ...........                                          [100%]
+
+================= 294 passed, 6 warnings in 118.57s (0:01:58) ==================

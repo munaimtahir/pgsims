@@ -1,0 +1,64 @@
+# Frontend jest run (CI=1)
+Tue May  5 09:14:47 UTC 2026
+
+v25.8.0
+11.12.1
+
+
+> frontend@0.1.0 test
+> jest --runInBand
+
+PASS app/dashboard/utrmc/page.test.tsx (5.87 s)
+PASS app/dashboard/utrmc/hod/page.test.tsx
+PASS app/dashboard/resident/schedule/page.test.tsx
+PASS app/dashboard/resident/page.test.tsx
+PASS app/login/page.test.tsx
+PASS app/dashboard/utrmc/matrix/page.test.tsx
+PASS components/ui/ImportExportPanel.test.tsx
+  ● Console
+
+    console.error
+      Error: Not implemented: navigation (except hash changes)
+          at module.exports (/home/munaim/srv/apps/pgsims/frontend/node_modules/jsdom/lib/jsdom/browser/not-implemented.js:9:17)
+          at navigateFetch (/home/munaim/srv/apps/pgsims/frontend/node_modules/jsdom/lib/jsdom/living/window/navigation.js:77:3)
+          at exports.navigate (/home/munaim/srv/apps/pgsims/frontend/node_modules/jsdom/lib/jsdom/living/window/navigation.js:55:3)
+          at Timeout._onTimeout (/home/munaim/srv/apps/pgsims/frontend/node_modules/jsdom/lib/jsdom/living/nodes/HTMLHyperlinkElementUtils-impl.js:80:7)
+          at listOnTimeout (node:internal/timers:605:17)
+          at processTimers (node:internal/timers:541:7) {
+        type: 'not implemented'
+      }
+
+      at VirtualConsole.<anonymous> (node_modules/@jest/environment-jsdom-abstract/build/index.js:87:23)
+      at module.exports (node_modules/jsdom/lib/jsdom/browser/not-implemented.js:12:26)
+      at navigateFetch (node_modules/jsdom/lib/jsdom/living/window/navigation.js:77:3)
+      at exports.navigate (node_modules/jsdom/lib/jsdom/living/window/navigation.js:55:3)
+      at Timeout._onTimeout (node_modules/jsdom/lib/jsdom/living/nodes/HTMLHyperlinkElementUtils-impl.js:80:7)
+
+PASS lib/rbac.test.ts
+PASS components/auth/ProtectedRoute.test.tsx
+PASS app/dashboard/resident/progress/page.test.tsx
+PASS lib/api/training.test.ts
+PASS components/layout/DashboardLayout.test.tsx
+PASS app/dashboard/supervisor/page.test.tsx
+PASS app/forgot-password/page.test.tsx
+PASS components/layout/Sidebar.test.tsx
+PASS components/ui/DataTable.test.tsx
+PASS lib/auth/cookies.test.ts
+PASS lib/utils.test.ts
+PASS lib/ui/status.test.ts
+PASS components/ui/Banners.test.tsx
+PASS components/ui/WorkflowStatusBadge.test.tsx
+PASS store/authStore.test.ts
+PASS lib/api/auth.test.ts
+PASS components/ui/LoadingSkeleton.test.tsx
+PASS lib/api/userbase.test.ts
+PASS components/ui/EmptyState.test.tsx
+PASS components/ui/MetricCard.test.tsx
+PASS components/ui/SectionCard.test.tsx
+PASS lib/api/bulk.test.ts
+
+Test Suites: 29 passed, 29 total
+Tests:       81 passed, 81 total
+Snapshots:   0 total
+Time:        28.993 s
+Ran all test suites.

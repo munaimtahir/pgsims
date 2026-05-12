@@ -1,0 +1,722 @@
+# Frontend codebase snapshot
+Tue May  5 09:10:08 UTC 2026
+
+total 732
+drwxrwxr-x  17 munaim munaim   4096 Apr 25 22:06 .
+drwxrwxr-x  17 munaim munaim   4096 Apr 25 22:06 ..
+-rw-rw-r--   1 munaim munaim     25 Mar  5 23:04 .env.local
+-rw-rw-r--   1 munaim munaim    295 Mar  5 21:35 .env.local.example
+-rw-rw-r--   1 munaim munaim     61 Mar  5 21:35 .eslintrc.json
+-rw-rw-r--   1 munaim munaim    470 Mar  6 21:36 .gitignore
+drwxrwxr-x   7 munaim munaim   4096 Apr 25 21:58 .next
+drwxrwxr-x   3 munaim munaim   4096 Mar 14 01:10 .swc
+-rw-rw-r--   1 munaim munaim   1420 Mar  5 21:35 Dockerfile
+-rw-rw-r--   1 munaim munaim   1811 Apr  3 10:54 README.md
+drwxrwxr-x   9 munaim munaim   4096 Mar  5 22:36 app
+drwxrwxr-x   6 munaim munaim   4096 Apr  2 23:23 components
+drwxrwxr-x   3 munaim munaim   4096 Apr 23 22:48 coverage
+drwxrwxr-x  17 munaim munaim   4096 Apr 21 05:44 e2e
+-rw-rw-r--   1 munaim munaim   9352 Mar  5 21:35 frontend_endpoints.txt
+-rw-rw-r--   1 munaim munaim   1114 Apr 22 21:24 jest.config.js
+-rw-rw-r--   1 munaim munaim    273 Mar  5 21:35 jest.setup.js
+drwxrwxr-x   5 munaim munaim   4096 Apr 23 22:49 lib
+-rw-rw-r--   1 munaim munaim   3203 Mar  5 23:34 middleware.ts
+-rw-rw-r--   1 munaim munaim    228 Mar  7 09:38 next-env.d.ts
+-rw-rw-r--   1 munaim munaim    561 Apr  3 10:54 next.config.mjs
+drwxrwxr-x 528 munaim munaim  20480 Apr 21 23:37 node_modules
+-rw-rw-r--   1 munaim munaim 384844 Mar  5 21:35 package-lock.json
+-rw-rw-r--   1 munaim munaim   4460 Apr 21 07:49 package.json
+drwxr-xr-x   4 root   root     4096 Mar  6 22:42 playwright-report
+-rw-rw-r--   1 munaim munaim   4974 Apr 21 07:45 playwright.config.ts
+-rw-rw-r--   1 munaim munaim    135 Mar  5 21:35 postcss.config.mjs
+drwxrwxr-x   3 munaim munaim   4096 Mar  5 21:35 public
+drwxr-xr-x  16 root   root     4096 Mar  7 02:13 pw-screenshots
+drwxr-xr-x  69 root   root    12288 Mar  7 02:14 pw-test-results
+drwxrwxr-x   2 munaim munaim   4096 Apr 24 05:57 store
+-rw-rw-r--   1 munaim munaim    395 Mar  5 21:35 tailwind.config.ts
+-rw-rw-r--   1 munaim munaim    532 Apr  2 12:13 test-globals.d.ts
+drwxr-xr-x   3 root   root     4096 Mar  6 21:20 test-results
+-rw-rw-r--   1 munaim munaim    574 Mar  5 21:35 tsconfig.json
+-rw-rw-r--   1 munaim munaim 179216 Apr 22 21:31 tsconfig.tsbuildinfo
+drwxrwxr-x   2 munaim munaim   4096 Mar  5 21:35 types
+
+## frontend key files
+frontend/.env.local
+frontend/.env.local.example
+frontend/.next/package.json
+frontend/.next/standalone/package.json
+frontend/.next/types/package.json
+frontend/Dockerfile
+frontend/next.config.mjs
+frontend/node_modules/acorn-jsx/package.json
+frontend/node_modules/acorn/package.json
+frontend/node_modules/agent-base/package.json
+frontend/node_modules/ajv/package.json
+frontend/node_modules/ansi-escapes/package.json
+frontend/node_modules/ansi-regex/package.json
+frontend/node_modules/ansi-styles/package.json
+frontend/node_modules/any-promise/package.json
+frontend/node_modules/anymatch/package.json
+frontend/node_modules/arg/package.json
+frontend/node_modules/argparse/package.json
+frontend/node_modules/aria-query/package.json
+frontend/node_modules/array-buffer-byte-length/package.json
+frontend/node_modules/array-buffer-byte-length/tsconfig.json
+frontend/node_modules/array-includes/package.json
+frontend/node_modules/array.prototype.findlast/package.json
+frontend/node_modules/array.prototype.findlastindex/package.json
+frontend/node_modules/array.prototype.flat/package.json
+frontend/node_modules/array.prototype.flatmap/package.json
+frontend/node_modules/array.prototype.tosorted/package.json
+frontend/node_modules/arraybuffer.prototype.slice/package.json
+frontend/node_modules/ast-types-flow/package.json
+frontend/node_modules/async-function/package.json
+frontend/node_modules/async-function/tsconfig.json
+frontend/node_modules/asynckit/package.json
+frontend/node_modules/available-typed-arrays/package.json
+frontend/node_modules/available-typed-arrays/tsconfig.json
+frontend/node_modules/axe-core/package.json
+frontend/node_modules/axios/package.json
+frontend/node_modules/axobject-query/package.json
+frontend/node_modules/babel-jest/package.json
+frontend/node_modules/babel-plugin-istanbul/package.json
+frontend/node_modules/babel-plugin-jest-hoist/package.json
+frontend/node_modules/babel-preset-current-node-syntax/package.json
+frontend/node_modules/babel-preset-jest/package.json
+frontend/node_modules/balanced-match/package.json
+frontend/node_modules/baseline-browser-mapping/package.json
+frontend/node_modules/binary-extensions/package.json
+frontend/node_modules/brace-expansion/package.json
+frontend/node_modules/braces/package.json
+frontend/node_modules/browserslist/package.json
+frontend/node_modules/bser/package.json
+frontend/node_modules/buffer-from/package.json
+frontend/node_modules/busboy/package.json
+frontend/node_modules/call-bind-apply-helpers/package.json
+frontend/node_modules/call-bind-apply-helpers/tsconfig.json
+frontend/node_modules/call-bind/package.json
+frontend/node_modules/call-bound/package.json
+frontend/node_modules/call-bound/tsconfig.json
+frontend/node_modules/callsites/package.json
+frontend/node_modules/camelcase-css/package.json
+frontend/node_modules/camelcase/package.json
+frontend/node_modules/caniuse-lite/package.json
+frontend/node_modules/chalk/package.json
+frontend/node_modules/char-regex/package.json
+frontend/node_modules/chokidar/package.json
+frontend/node_modules/ci-info/package.json
+frontend/node_modules/cjs-module-lexer/package.json
+frontend/node_modules/client-only/package.json
+frontend/node_modules/cliui/package.json
+frontend/node_modules/clsx/package.json
+frontend/node_modules/co/package.json
+frontend/node_modules/collect-v8-coverage/package.json
+frontend/node_modules/color-convert/package.json
+frontend/node_modules/color-name/package.json
+frontend/node_modules/combined-stream/package.json
+frontend/node_modules/combined-stream/yarn.lock
+frontend/node_modules/commander/package.json
+frontend/node_modules/concat-map/package.json
+frontend/node_modules/convert-source-map/package.json
+frontend/node_modules/cross-spawn/package.json
+frontend/node_modules/css.escape/package.json
+frontend/node_modules/cssesc/package.json
+frontend/node_modules/cssstyle/package.json
+frontend/node_modules/csstype/package.json
+frontend/node_modules/d3-array/package.json
+frontend/node_modules/d3-color/package.json
+frontend/node_modules/d3-ease/package.json
+frontend/node_modules/d3-format/package.json
+frontend/node_modules/d3-interpolate/package.json
+frontend/node_modules/d3-path/package.json
+frontend/node_modules/d3-scale/package.json
+frontend/node_modules/d3-shape/package.json
+frontend/node_modules/d3-time-format/package.json
+frontend/node_modules/d3-time/package.json
+frontend/node_modules/d3-timer/package.json
+frontend/node_modules/damerau-levenshtein/package.json
+frontend/node_modules/data-urls/package.json
+frontend/node_modules/data-view-buffer/package.json
+frontend/node_modules/data-view-buffer/tsconfig.json
+frontend/node_modules/data-view-byte-length/package.json
+frontend/node_modules/data-view-byte-length/tsconfig.json
+frontend/node_modules/data-view-byte-offset/package.json
+frontend/node_modules/data-view-byte-offset/tsconfig.json
+frontend/node_modules/date-fns/package.json
+frontend/node_modules/debug/package.json
+frontend/node_modules/decimal.js-light/package.json
+frontend/node_modules/decimal.js/package.json
+frontend/node_modules/dedent/package.json
+frontend/node_modules/deep-is/package.json
+frontend/node_modules/deepmerge/package.json
+frontend/node_modules/define-data-property/package.json
+frontend/node_modules/define-data-property/tsconfig.json
+frontend/node_modules/define-properties/package.json
+frontend/node_modules/delayed-stream/package.json
+frontend/node_modules/dequal/package.json
+frontend/node_modules/detect-newline/package.json
+frontend/node_modules/didyoumean/package.json
+frontend/node_modules/dlv/package.json
+frontend/node_modules/doctrine/package.json
+frontend/node_modules/dom-accessibility-api/package.json
+frontend/node_modules/dunder-proto/package.json
+frontend/node_modules/dunder-proto/tsconfig.json
+frontend/node_modules/eastasianwidth/package.json
+frontend/node_modules/electron-to-chromium/package.json
+frontend/node_modules/emittery/package.json
+frontend/node_modules/emoji-regex/package.json
+frontend/node_modules/entities/package.json
+frontend/node_modules/error-ex/package.json
+frontend/node_modules/es-abstract/package.json
+frontend/node_modules/es-define-property/package.json
+frontend/node_modules/es-define-property/tsconfig.json
+frontend/node_modules/es-errors/package.json
+frontend/node_modules/es-errors/tsconfig.json
+frontend/node_modules/es-iterator-helpers/package.json
+frontend/node_modules/es-object-atoms/package.json
+frontend/node_modules/es-object-atoms/tsconfig.json
+frontend/node_modules/es-set-tostringtag/package.json
+frontend/node_modules/es-set-tostringtag/tsconfig.json
+frontend/node_modules/es-shim-unscopables/package.json
+frontend/node_modules/es-shim-unscopables/tsconfig.json
+frontend/node_modules/es-to-primitive/package.json
+frontend/node_modules/es-to-primitive/tsconfig.json
+frontend/node_modules/es-toolkit/package.json
+frontend/node_modules/escalade/package.json
+frontend/node_modules/escape-string-regexp/package.json
+frontend/node_modules/eslint-config-next/package.json
+frontend/node_modules/eslint-import-resolver-node/package.json
+frontend/node_modules/eslint-import-resolver-typescript/package.json
+frontend/node_modules/eslint-module-utils/package.json
+frontend/node_modules/eslint-module-utils/tsconfig.json
+frontend/node_modules/eslint-plugin-import/package.json
+frontend/node_modules/eslint-plugin-jsx-a11y/package.json
+frontend/node_modules/eslint-plugin-react-hooks/package.json
+frontend/node_modules/eslint-plugin-react/package.json
+frontend/node_modules/eslint-scope/package.json
+frontend/node_modules/eslint-visitor-keys/package.json
+frontend/node_modules/eslint/package.json
+frontend/node_modules/espree/package.json
+frontend/node_modules/esprima/package.json
+frontend/node_modules/esquery/package.json
+frontend/node_modules/esrecurse/package.json
+frontend/node_modules/estraverse/package.json
+frontend/node_modules/esutils/package.json
+frontend/node_modules/eventemitter3/package.json
+frontend/node_modules/execa/package.json
+frontend/node_modules/exit-x/package.json
+frontend/node_modules/expect/package.json
+frontend/node_modules/fast-deep-equal/package.json
+frontend/node_modules/fast-glob/package.json
+frontend/node_modules/fast-json-stable-stringify/package.json
+frontend/node_modules/fast-levenshtein/package.json
+frontend/node_modules/fastq/package.json
+frontend/node_modules/fb-watchman/package.json
+frontend/node_modules/file-entry-cache/package.json
+frontend/node_modules/fill-range/package.json
+frontend/node_modules/find-up/package.json
+frontend/node_modules/flat-cache/package.json
+frontend/node_modules/flatted/package.json
+frontend/node_modules/follow-redirects/package.json
+frontend/node_modules/for-each/package.json
+frontend/node_modules/for-each/tsconfig.json
+frontend/node_modules/foreground-child/package.json
+frontend/node_modules/form-data/package.json
+frontend/node_modules/framer-motion/package.json
+frontend/node_modules/fs.realpath/package.json
+frontend/node_modules/function-bind/package.json
+frontend/node_modules/function.prototype.name/package.json
+frontend/node_modules/functions-have-names/package.json
+frontend/node_modules/generator-function/package.json
+frontend/node_modules/generator-function/tsconfig.json
+frontend/node_modules/gensync/package.json
+frontend/node_modules/get-caller-file/package.json
+frontend/node_modules/get-intrinsic/package.json
+frontend/node_modules/get-package-type/package.json
+frontend/node_modules/get-proto/package.json
+frontend/node_modules/get-proto/tsconfig.json
+frontend/node_modules/get-stream/package.json
+frontend/node_modules/get-symbol-description/package.json
+frontend/node_modules/get-symbol-description/tsconfig.json
+frontend/node_modules/get-tsconfig/package.json
+frontend/node_modules/glob-parent/package.json
+frontend/node_modules/glob/package.json
+frontend/node_modules/globals/package.json
+frontend/node_modules/globalthis/package.json
+frontend/node_modules/gopd/package.json
+frontend/node_modules/gopd/tsconfig.json
+frontend/node_modules/graceful-fs/package.json
+frontend/node_modules/graphemer/package.json
+frontend/node_modules/has-bigints/package.json
+frontend/node_modules/has-bigints/tsconfig.json
+frontend/node_modules/has-flag/package.json
+frontend/node_modules/has-property-descriptors/package.json
+frontend/node_modules/has-proto/package.json
+frontend/node_modules/has-proto/tsconfig.json
+frontend/node_modules/has-symbols/package.json
+frontend/node_modules/has-symbols/tsconfig.json
+frontend/node_modules/has-tostringtag/package.json
+frontend/node_modules/has-tostringtag/tsconfig.json
+frontend/node_modules/hasown/package.json
+frontend/node_modules/hasown/tsconfig.json
+frontend/node_modules/html-encoding-sniffer/package.json
+frontend/node_modules/html-escaper/package.json
+frontend/node_modules/http-proxy-agent/package.json
+frontend/node_modules/https-proxy-agent/package.json
+frontend/node_modules/human-signals/package.json
+frontend/node_modules/iconv-lite/package.json
+frontend/node_modules/ignore/package.json
+frontend/node_modules/immer/package.json
+frontend/node_modules/import-fresh/package.json
+frontend/node_modules/import-local/package.json
+frontend/node_modules/imurmurhash/package.json
+frontend/node_modules/indent-string/package.json
+frontend/node_modules/inflight/package.json
+frontend/node_modules/inherits/package.json
+frontend/node_modules/internal-slot/package.json
+frontend/node_modules/internal-slot/tsconfig.json
+frontend/node_modules/internmap/package.json
+frontend/node_modules/is-array-buffer/package.json
+frontend/node_modules/is-array-buffer/tsconfig.json
+frontend/node_modules/is-arrayish/package.json
+frontend/node_modules/is-async-function/package.json
+frontend/node_modules/is-async-function/tsconfig.json
+frontend/node_modules/is-bigint/package.json
+frontend/node_modules/is-bigint/tsconfig.json
+frontend/node_modules/is-binary-path/package.json
+frontend/node_modules/is-boolean-object/package.json
+frontend/node_modules/is-boolean-object/tsconfig.json
+frontend/node_modules/is-bun-module/package.json
+frontend/node_modules/is-callable/package.json
+frontend/node_modules/is-core-module/package.json
+frontend/node_modules/is-data-view/package.json
+frontend/node_modules/is-data-view/tsconfig.json
+frontend/node_modules/is-date-object/package.json
+frontend/node_modules/is-date-object/tsconfig.json
+frontend/node_modules/is-extglob/package.json
+frontend/node_modules/is-finalizationregistry/package.json
+frontend/node_modules/is-finalizationregistry/tsconfig.json
+frontend/node_modules/is-fullwidth-code-point/package.json
+frontend/node_modules/is-generator-fn/package.json
+frontend/node_modules/is-generator-function/package.json
+frontend/node_modules/is-generator-function/tsconfig.json
+frontend/node_modules/is-glob/package.json
+frontend/node_modules/is-map/package.json
+frontend/node_modules/is-map/tsconfig.json
+frontend/node_modules/is-negative-zero/package.json
+frontend/node_modules/is-negative-zero/tsconfig.json
+frontend/node_modules/is-number-object/package.json
+frontend/node_modules/is-number-object/tsconfig.json
+frontend/node_modules/is-number/package.json
+frontend/node_modules/is-path-inside/package.json
+frontend/node_modules/is-potential-custom-element-name/package.json
+frontend/node_modules/is-regex/package.json
+frontend/node_modules/is-regex/tsconfig.json
+frontend/node_modules/is-set/package.json
+frontend/node_modules/is-set/tsconfig.json
+frontend/node_modules/is-shared-array-buffer/package.json
+frontend/node_modules/is-shared-array-buffer/tsconfig.json
+frontend/node_modules/is-stream/package.json
+frontend/node_modules/is-string/package.json
+frontend/node_modules/is-string/tsconfig.json
+frontend/node_modules/is-symbol/package.json
+frontend/node_modules/is-symbol/tsconfig.json
+frontend/node_modules/is-typed-array/package.json
+frontend/node_modules/is-typed-array/tsconfig.json
+frontend/node_modules/is-weakmap/package.json
+frontend/node_modules/is-weakmap/tsconfig.json
+frontend/node_modules/is-weakref/package.json
+frontend/node_modules/is-weakref/tsconfig.json
+frontend/node_modules/is-weakset/package.json
+frontend/node_modules/is-weakset/tsconfig.json
+frontend/node_modules/isarray/package.json
+frontend/node_modules/isexe/package.json
+frontend/node_modules/istanbul-lib-coverage/package.json
+frontend/node_modules/istanbul-lib-instrument/package.json
+frontend/node_modules/istanbul-lib-report/package.json
+frontend/node_modules/istanbul-lib-source-maps/package.json
+frontend/node_modules/istanbul-reports/package.json
+frontend/node_modules/iterator.prototype/package.json
+frontend/node_modules/jackspeak/package.json
+frontend/node_modules/jest-changed-files/package.json
+frontend/node_modules/jest-circus/package.json
+frontend/node_modules/jest-cli/package.json
+frontend/node_modules/jest-diff/package.json
+frontend/node_modules/jest-docblock/package.json
+frontend/node_modules/jest-each/package.json
+frontend/node_modules/jest-environment-jsdom/package.json
+frontend/node_modules/jest-environment-node/package.json
+frontend/node_modules/jest-haste-map/package.json
+frontend/node_modules/jest-leak-detector/package.json
+frontend/node_modules/jest-matcher-utils/package.json
+frontend/node_modules/jest-message-util/package.json
+frontend/node_modules/jest-mock/package.json
+frontend/node_modules/jest-pnp-resolver/package.json
+frontend/node_modules/jest-regex-util/package.json
+frontend/node_modules/jest-resolve-dependencies/package.json
+frontend/node_modules/jest-resolve/package.json
+frontend/node_modules/jest-runner/package.json
+frontend/node_modules/jest-runtime/package.json
+frontend/node_modules/jest-snapshot/package.json
+frontend/node_modules/jest-util/package.json
+frontend/node_modules/jest-validate/package.json
+frontend/node_modules/jest-watcher/package.json
+frontend/node_modules/jest-worker/package.json
+frontend/node_modules/jest/package.json
+frontend/node_modules/jiti/package.json
+frontend/node_modules/js-tokens/package.json
+frontend/node_modules/js-yaml/package.json
+frontend/node_modules/jsdom/package.json
+frontend/node_modules/jsesc/package.json
+frontend/node_modules/json-buffer/package.json
+frontend/node_modules/json-parse-even-better-errors/package.json
+frontend/node_modules/json-schema-traverse/package.json
+frontend/node_modules/json-stable-stringify-without-jsonify/package.json
+frontend/node_modules/json5/package.json
+frontend/node_modules/jsx-ast-utils/package.json
+frontend/node_modules/keyv/package.json
+frontend/node_modules/language-subtag-registry/package.json
+frontend/node_modules/language-tags/package.json
+frontend/node_modules/leven/package.json
+frontend/node_modules/levn/package.json
+frontend/node_modules/lilconfig/package.json
+frontend/node_modules/lines-and-columns/package.json
+frontend/node_modules/locate-path/package.json
+frontend/node_modules/lodash.merge/package.json
+frontend/node_modules/loose-envify/package.json
+frontend/node_modules/lru-cache/package.json
+frontend/node_modules/lucide-react/package.json
+frontend/node_modules/lz-string/package.json
+frontend/node_modules/make-dir/package.json
+frontend/node_modules/makeerror/package.json
+frontend/node_modules/math-intrinsics/package.json
+frontend/node_modules/math-intrinsics/tsconfig.json
+frontend/node_modules/merge-stream/package.json
+frontend/node_modules/merge2/package.json
+frontend/node_modules/micromatch/package.json
+frontend/node_modules/mime-db/package.json
+frontend/node_modules/mime-types/package.json
+frontend/node_modules/mimic-fn/package.json
+frontend/node_modules/min-indent/package.json
+frontend/node_modules/minimatch/package.json
+frontend/node_modules/minimist/package.json
+frontend/node_modules/minipass/package.json
+frontend/node_modules/motion-dom/package.json
+frontend/node_modules/motion-utils/package.json
+frontend/node_modules/ms/package.json
+frontend/node_modules/mz/package.json
+frontend/node_modules/nanoid/package.json
+frontend/node_modules/napi-postinstall/package.json
+frontend/node_modules/natural-compare/package.json
+frontend/node_modules/next/package.json
+frontend/node_modules/node-int64/package.json
+frontend/node_modules/node-releases/package.json
+frontend/node_modules/normalize-path/package.json
+frontend/node_modules/npm-run-path/package.json
+frontend/node_modules/nwsapi/package.json
+frontend/node_modules/object-assign/package.json
+frontend/node_modules/object-hash/package.json
+frontend/node_modules/object-inspect/package.json
+frontend/node_modules/object-keys/package.json
+frontend/node_modules/object.assign/package.json
+frontend/node_modules/object.entries/package.json
+frontend/node_modules/object.fromentries/package.json
+frontend/node_modules/object.groupby/package.json
+frontend/node_modules/object.values/package.json
+frontend/node_modules/once/package.json
+frontend/node_modules/onetime/package.json
+frontend/node_modules/optionator/package.json
+frontend/node_modules/own-keys/package.json
+frontend/node_modules/own-keys/tsconfig.json
+frontend/node_modules/p-limit/package.json
+frontend/node_modules/p-locate/package.json
+frontend/node_modules/p-try/package.json
+frontend/node_modules/parent-module/package.json
+frontend/node_modules/parse-json/package.json
+frontend/node_modules/parse5/package.json
+frontend/node_modules/path-exists/package.json
+frontend/node_modules/path-is-absolute/package.json
+frontend/node_modules/path-key/package.json
+frontend/node_modules/path-parse/package.json
+frontend/node_modules/path-scurry/package.json
+frontend/node_modules/picocolors/package.json
+frontend/node_modules/picomatch/package.json
+frontend/node_modules/pify/package.json
+frontend/node_modules/pirates/package.json
+frontend/node_modules/pkg-dir/package.json
+frontend/node_modules/playwright-core/package.json
+frontend/node_modules/playwright/package.json
+frontend/node_modules/possible-typed-array-names/package.json
+frontend/node_modules/possible-typed-array-names/tsconfig.json
+frontend/node_modules/postcss-import/package.json
+frontend/node_modules/postcss-js/package.json
+frontend/node_modules/postcss-load-config/package.json
+frontend/node_modules/postcss-nested/package.json
+frontend/node_modules/postcss-selector-parser/package.json
+frontend/node_modules/postcss-value-parser/package.json
+frontend/node_modules/postcss/package.json
+frontend/node_modules/prelude-ls/package.json
+frontend/node_modules/pretty-format/package.json
+frontend/node_modules/prop-types/package.json
+frontend/node_modules/proxy-from-env/package.json
+frontend/node_modules/punycode/package.json
+frontend/node_modules/pure-rand/package.json
+frontend/node_modules/queue-microtask/package.json
+frontend/node_modules/react-dom/package.json
+frontend/node_modules/react-is/package.json
+frontend/node_modules/react-redux/package.json
+frontend/node_modules/react/package.json
+frontend/node_modules/read-cache/package.json
+frontend/node_modules/readdirp/package.json
+frontend/node_modules/recharts/package.json
+frontend/node_modules/redent/package.json
+frontend/node_modules/redux-thunk/package.json
+frontend/node_modules/redux/package.json
+frontend/node_modules/reflect.getprototypeof/package.json
+frontend/node_modules/regexp.prototype.flags/package.json
+frontend/node_modules/require-directory/package.json
+frontend/node_modules/reselect/package.json
+frontend/node_modules/resolve-cwd/package.json
+frontend/node_modules/resolve-from/package.json
+frontend/node_modules/resolve-pkg-maps/package.json
+frontend/node_modules/resolve/package.json
+frontend/node_modules/reusify/package.json
+frontend/node_modules/reusify/tsconfig.json
+frontend/node_modules/rimraf/package.json
+frontend/node_modules/rrweb-cssom/package.json
+frontend/node_modules/run-parallel/package.json
+frontend/node_modules/safe-array-concat/package.json
+frontend/node_modules/safe-array-concat/tsconfig.json
+frontend/node_modules/safe-push-apply/package.json
+frontend/node_modules/safe-push-apply/tsconfig.json
+frontend/node_modules/safe-regex-test/package.json
+frontend/node_modules/safe-regex-test/tsconfig.json
+frontend/node_modules/safer-buffer/package.json
+frontend/node_modules/saxes/package.json
+frontend/node_modules/scheduler/package.json
+frontend/node_modules/semver/package.json
+frontend/node_modules/set-function-length/package.json
+frontend/node_modules/set-function-length/tsconfig.json
+frontend/node_modules/set-function-name/package.json
+frontend/node_modules/set-function-name/tsconfig.json
+frontend/node_modules/set-proto/package.json
+frontend/node_modules/set-proto/tsconfig.json
+frontend/node_modules/shebang-command/package.json
+frontend/node_modules/shebang-regex/package.json
+frontend/node_modules/side-channel-list/package.json
+frontend/node_modules/side-channel-list/tsconfig.json
+frontend/node_modules/side-channel-map/package.json
+frontend/node_modules/side-channel-map/tsconfig.json
+frontend/node_modules/side-channel-weakmap/package.json
+frontend/node_modules/side-channel-weakmap/tsconfig.json
+frontend/node_modules/side-channel/package.json
+frontend/node_modules/side-channel/tsconfig.json
+frontend/node_modules/signal-exit/package.json
+frontend/node_modules/slash/package.json
+frontend/node_modules/source-map-js/package.json
+frontend/node_modules/source-map-support/package.json
+frontend/node_modules/source-map/package.json
+frontend/node_modules/sprintf-js/package.json
+frontend/node_modules/stable-hash/package.json
+frontend/node_modules/stack-utils/package.json
+frontend/node_modules/stop-iteration-iterator/package.json
+frontend/node_modules/stop-iteration-iterator/tsconfig.json
+frontend/node_modules/streamsearch/package.json
+frontend/node_modules/string-length/package.json
+frontend/node_modules/string-width-cjs/package.json
+frontend/node_modules/string-width/package.json
+frontend/node_modules/string.prototype.includes/package.json
+frontend/node_modules/string.prototype.matchall/package.json
+frontend/node_modules/string.prototype.repeat/package.json
+frontend/node_modules/string.prototype.trim/package.json
+frontend/node_modules/string.prototype.trimend/package.json
+frontend/node_modules/string.prototype.trimstart/package.json
+frontend/node_modules/strip-ansi-cjs/package.json
+frontend/node_modules/strip-ansi/package.json
+frontend/node_modules/strip-bom/package.json
+frontend/node_modules/strip-final-newline/package.json
+frontend/node_modules/strip-indent/package.json
+frontend/node_modules/strip-json-comments/package.json
+frontend/node_modules/styled-jsx/package.json
+frontend/node_modules/sucrase/package.json
+frontend/node_modules/supports-color/package.json
+frontend/node_modules/supports-preserve-symlinks-flag/package.json
+frontend/node_modules/symbol-tree/package.json
+frontend/node_modules/synckit/package.json
+frontend/node_modules/tailwindcss/package.json
+frontend/node_modules/test-exclude/package.json
+frontend/node_modules/text-table/package.json
+frontend/node_modules/thenify-all/package.json
+frontend/node_modules/thenify/package.json
+frontend/node_modules/tiny-invariant/package.json
+frontend/node_modules/tinyglobby/package.json
+frontend/node_modules/tldts-core/package.json
+frontend/node_modules/tldts/package.json
+frontend/node_modules/tmpl/package.json
+frontend/node_modules/to-regex-range/package.json
+frontend/node_modules/tough-cookie/package.json
+frontend/node_modules/tr46/package.json
+frontend/node_modules/ts-api-utils/package.json
+frontend/node_modules/ts-interface-checker/package.json
+frontend/node_modules/tsconfig-paths/package.json
+frontend/node_modules/tslib/package.json
+frontend/node_modules/type-check/package.json
+frontend/node_modules/type-detect/package.json
+frontend/node_modules/type-fest/package.json
+frontend/node_modules/typed-array-buffer/package.json
+frontend/node_modules/typed-array-buffer/tsconfig.json
+frontend/node_modules/typed-array-byte-length/package.json
+frontend/node_modules/typed-array-byte-length/tsconfig.json
+frontend/node_modules/typed-array-byte-offset/package.json
+frontend/node_modules/typed-array-byte-offset/tsconfig.json
+frontend/node_modules/typed-array-length/package.json
+frontend/node_modules/typed-array-length/tsconfig.json
+frontend/node_modules/typescript/package.json
+frontend/node_modules/unbox-primitive/package.json
+frontend/node_modules/unbox-primitive/tsconfig.json
+frontend/node_modules/undici-types/package.json
+frontend/node_modules/unrs-resolver/package.json
+frontend/node_modules/update-browserslist-db/package.json
+frontend/node_modules/uri-js/package.json
+frontend/node_modules/uri-js/yarn.lock
+frontend/node_modules/use-sync-external-store/package.json
+frontend/node_modules/util-deprecate/package.json
+frontend/node_modules/v8-to-istanbul/package.json
+frontend/node_modules/victory-vendor/package.json
+frontend/node_modules/w3c-xmlserializer/package.json
+frontend/node_modules/walker/package.json
+frontend/node_modules/webidl-conversions/package.json
+frontend/node_modules/whatwg-encoding/package.json
+frontend/node_modules/whatwg-mimetype/package.json
+frontend/node_modules/whatwg-url/package.json
+frontend/node_modules/which-boxed-primitive/package.json
+frontend/node_modules/which-boxed-primitive/tsconfig.json
+frontend/node_modules/which-builtin-type/package.json
+frontend/node_modules/which-builtin-type/tsconfig.json
+frontend/node_modules/which-collection/package.json
+frontend/node_modules/which-collection/tsconfig.json
+frontend/node_modules/which-typed-array/package.json
+frontend/node_modules/which-typed-array/tsconfig.json
+frontend/node_modules/which/package.json
+frontend/node_modules/word-wrap/package.json
+frontend/node_modules/wrap-ansi-cjs/package.json
+frontend/node_modules/wrap-ansi/package.json
+frontend/node_modules/wrappy/package.json
+frontend/node_modules/write-file-atomic/package.json
+frontend/node_modules/ws/package.json
+frontend/node_modules/xml-name-validator/package.json
+frontend/node_modules/xmlchars/package.json
+frontend/node_modules/y18n/package.json
+frontend/node_modules/yallist/package.json
+frontend/node_modules/yargs-parser/package.json
+frontend/node_modules/yargs/package.json
+frontend/node_modules/yocto-queue/package.json
+frontend/node_modules/zustand/package.json
+frontend/package-lock.json
+frontend/package.json
+frontend/tsconfig.json
+
+## frontend/package.json (scripts + deps excerpt)
+{
+  "name": "frontend",
+  "private": true,
+  "version": "0.1.0",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "node .next/standalone/server.js",
+    "start:next": "node .next/standalone/server.js",
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "test:e2e": "playwright test --project=smoke --project=workflow-gate --project=active-surface --project=setup --project=critical --project=auth --project=rbac --project=navigation --project=dashboard --project=workflows --project=negative",
+    "test:e2e:smoke": "playwright test --project=smoke",
+    "test:e2e:smoke:local": "E2E_BASE_URL=http://127.0.0.1:8082 E2E_API_URL=http://127.0.0.1:8014 playwright test --project=smoke",
+    "test:e2e:workflow": "playwright test --project=workflow-gate",
+    "test:e2e:workflow:local": "E2E_BASE_URL=http://127.0.0.1:8082 E2E_API_URL=http://127.0.0.1:8014 playwright test --project=workflow-gate",
+    "test:e2e:feature-layer:seed": "../scripts/e2e_seed.sh",
+    "test:e2e:active-surface": "npm run test:e2e:feature-layer:seed && playwright test --project=active-surface",
+    "test:e2e:active-surface:local": "npm run test:e2e:feature-layer:seed && E2E_BASE_URL=http://127.0.0.1:8082 E2E_API_URL=http://127.0.0.1:8014 playwright test --project=active-surface",
+    "test:e2e:feature-layer": "npm run test:e2e:feature-layer:seed && playwright test --project=active-surface",
+    "test:e2e:feature-layer:local": "npm run test:e2e:feature-layer:seed && E2E_BASE_URL=http://127.0.0.1:8082 E2E_API_URL=http://127.0.0.1:8014 playwright test --project=active-surface",
+    "test:e2e:inactive-depth": "npm run test:e2e:feature-layer:seed && playwright test --project=inactive-depth",
+    "test:e2e:inactive-depth:local": "npm run test:e2e:feature-layer:seed && E2E_BASE_URL=http://127.0.0.1:8082 E2E_API_URL=http://127.0.0.1:8014 playwright test --project=inactive-depth",
+    "test:e2e:critical": "playwright test --project=setup --project=critical",
+    "test:e2e:headed": "playwright test --headed",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:debug": "playwright test --debug",
+    "test:e2e:report": "playwright show-report ../output/playwright/report",
+    "test:e2e:codegen": "playwright codegen",
+    "test:e2e:install": "playwright install chromium",
+    "test:e2e:auth": "playwright test --project=auth",
+    "test:e2e:rbac": "playwright test --project=rbac",
+    "test:e2e:navigation": "playwright test --project=navigation",
+    "test:e2e:dashboard": "playwright test --project=dashboard",
+    "test:e2e:workflows": "playwright test --project=workflows",
+    "test:e2e:negative": "playwright test --project=negative",
+    "test:e2e:regression": "playwright test --project=setup --project=critical --project=workflows --project=negative --project=rbac",
+    "test:e2e:screenshots": "playwright test --project=screenshots",
+    "test:e2e:screenshots:local": "npm run test:e2e:feature-layer:seed && E2E_BASE_URL=http://127.0.0.1:8082 E2E_API_URL=http://127.0.0.1:8014 E2E_SCREENSHOTS_DIR=../output/playwright/screenshots-catalog playwright test --project=screenshots",
+    "test:e2e:presentation": "playwright test --project=presentation",
+    "test:e2e:presentation:local": "E2E_BASE_URL=http://127.0.0.1:8082 E2E_API_URL=http://127.0.0.1:8014 playwright test --project=presentation",
+    "test:e2e:full": "playwright test",
+    "test:e2e:full:local": "npm run test:e2e:feature-layer:seed && E2E_BASE_URL=http://127.0.0.1:8082 E2E_API_URL=http://127.0.0.1:8014 E2E_SCREENSHOTS_DIR=../output/playwright/screenshots-catalog playwright test"
+  },
+  "dependencies": [
+    "@tanstack/react-query",
+    "axios",
+    "date-fns",
+    "framer-motion",
+    "lucide-react",
+    "next",
+    "react",
+    "react-dom",
+    "recharts",
+    "zustand"
+  ],
+  "devDependencies": [
+    "@playwright/test",
+    "@testing-library/jest-dom",
+    "@testing-library/react",
+    "@testing-library/user-event",
+    "@types/node",
+    "@types/react",
+    "@types/react-dom",
+    "eslint",
+    "eslint-config-next",
+    "jest",
+    "jest-environment-jsdom",
+    "postcss",
+    "tailwindcss",
+    "typescript"
+  ]
+}
+
+## next config / rewrites search
+frontend/Dockerfile:22:ARG NEXT_PUBLIC_API_URL=/api
+frontend/Dockerfile:23:ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+frontend/next.config.mjs:5:    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || '/api',
+frontend/next.config.mjs:19:  // INTERNAL_API_URL is used by app/api/[...path]/route.ts at runtime (not needed in rewrites)
+frontend/app/api/[...path]/route.ts:3:const BACKEND_URL = process.env.INTERNAL_API_URL || 'http://backend:8014';
+frontend/app/api/[...path]/route.ts:5:async function proxyRequest(request: NextRequest, params: { path: string[] }) {
+frontend/app/api/[...path]/route.ts:48:  return proxyRequest(request, params);
+frontend/app/api/[...path]/route.ts:52:  return proxyRequest(request, params);
+frontend/app/api/[...path]/route.ts:56:  return proxyRequest(request, params);
+frontend/app/api/[...path]/route.ts:60:  return proxyRequest(request, params);
+frontend/app/api/[...path]/route.ts:64:  return proxyRequest(request, params);
+frontend/app/api/[...path]/route.ts:68:  return proxyRequest(request, params);
+frontend/lib/api/client.ts:3: * Uses NEXT_PUBLIC_API_URL for browser and SERVER_API_URL for server-side execution
+frontend/lib/api/client.ts:21:  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+frontend/lib/api/client.ts:24:      console.warn('NEXT_PUBLIC_API_URL not set, defaulting to same-origin API paths');
+frontend/e2e/smoke/auth_flow.spec.ts:7: * to verify the complete login stack (form → Next.js API proxy → Django backend → redirect).
+frontend/package-lock.json:3188:        "proxy-from-env": "^1.1.0"
+frontend/package-lock.json:5623:    "node_modules/http-proxy-agent": {
+frontend/package-lock.json:5625:      "resolved": "https://registry.npmjs.org/http-proxy-agent/-/http-proxy-agent-7.0.2.tgz",
+frontend/package-lock.json:5637:    "node_modules/https-proxy-agent": {
+frontend/package-lock.json:5639:      "resolved": "https://registry.npmjs.org/https-proxy-agent/-/https-proxy-agent-7.0.6.tgz",
+frontend/package-lock.json:7371:        "http-proxy-agent": "^7.0.2",
+frontend/package-lock.json:7372:        "https-proxy-agent": "^7.0.6",
+frontend/package-lock.json:8667:    "node_modules/proxy-from-env": {
+frontend/package-lock.json:8669:      "resolved": "https://registry.npmjs.org/proxy-from-env/-/proxy-from-env-1.1.0.tgz",

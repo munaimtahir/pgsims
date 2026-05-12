@@ -1,0 +1,21 @@
+# PGSIMS container health snapshot
+Tue May  5 09:07:14 UTC 2026
+
+## pgsims_backend
+Image=docker-backend\nStatus=running\nHealth=healthy\nStartedAt=2026-05-01T08:14:49.552603624Z\nFinishedAt=2026-05-01T08:12:56.698055974Z\nRestartCount=0\nPorts={"8014/tcp":[{"HostIp":"127.0.0.1","HostPort":"8014"}]}\nMounts=bind:/home/munaim/srv/apps/pgsims/backend/logs->/app/logs;volume:/var/lib/docker/volumes/docker_media_volume/_data->/app/media;volume:/var/lib/docker/volumes/docker_static_volume/_data->/app/staticfiles;\n
+
+## pgsims_frontend
+Image=docker-frontend\nStatus=running\nHealth=healthy\nStartedAt=2026-05-01T08:14:49.592968452Z\nFinishedAt=2026-05-01T08:12:46.727490187Z\nRestartCount=0\nPorts={"3000/tcp":[{"HostIp":"127.0.0.1","HostPort":"8082"}]}\nMounts=\n
+
+## pgsims_db
+Image=postgres:15-alpine\nStatus=running\nHealth=healthy\nStartedAt=2026-05-01T08:14:49.584511194Z\nFinishedAt=2026-05-01T08:12:47.040827503Z\nRestartCount=0\nPorts={"5432/tcp":null}\nMounts=volume:/var/lib/docker/volumes/docker_postgres_data/_data->/var/lib/postgresql/data;\n
+
+## pgsims_redis
+Image=redis:7-alpine\nStatus=running\nHealth=healthy\nStartedAt=2026-05-01T08:14:47.614918022Z\nFinishedAt=2026-05-01T08:12:46.756639135Z\nRestartCount=0\nPorts={"6379/tcp":null}\nMounts=volume:/var/lib/docker/volumes/docker_redis_data/_data->/data;\n
+
+## pgsims_worker
+Image=docker-worker\nStatus=running\nHealth=(none)\nStartedAt=2026-05-01T08:14:49.536192584Z\nFinishedAt=2026-05-01T08:12:48.975280066Z\nRestartCount=0\nPorts={"8014/tcp":null}\nMounts=bind:/home/munaim/srv/apps/pgsims/backend/logs->/app/logs;volume:/var/lib/docker/volumes/docker_media_volume/_data->/app/media;\n
+
+## pgsims_beat
+Image=docker-beat\nStatus=running\nHealth=(none)\nStartedAt=2026-05-04T13:03:20.569383105Z\nFinishedAt=2026-05-04T13:01:59.24127117Z\nRestartCount=1\nPorts={"8014/tcp":null}\nMounts=bind:/home/munaim/srv/apps/pgsims/backend/logs->/app/logs;\n
+

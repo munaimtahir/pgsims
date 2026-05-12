@@ -1,0 +1,166 @@
+# Repo inventory (UTC)
+Tue May  5 09:05:25 UTC 2026
+
+## Top-level
+total 592
+drwxrwxr-x 17 munaim munaim   4096 Apr 25 22:06 .
+drwxrwxr-x 18 munaim munaim   4096 May  1 22:12 ..
+-rw-rw-r--  1 munaim munaim    469 Mar  5 21:35 .dockerignore
+-rw-rwxr--  1 munaim munaim      1 Apr 23 21:00 .env
+drwxrwxr-x  8 munaim munaim   4096 May  5 09:04 .git
+drwxrwxr-x  3 munaim munaim   4096 Mar  5 21:35 .github
+-rw-rw-r--  1 munaim munaim   1269 Apr 21 05:44 .gitignore
+-rw-rw-r--  1 munaim munaim    226 Mar  5 21:35 .mcp.json
+-rw-rw-r--  1 munaim munaim    751 Mar  5 21:35 .pre-commit-config.yaml
+drwxrwxr-x  3 munaim munaim   4096 Apr 24 12:42 .pytest_cache
+-rw-rw-r--  1 munaim munaim   7262 Apr 23 20:03 AGENTS.md
+-rw-rw-r--  1 munaim munaim   5845 Apr 23 20:07 ANTI_DRIFT_QUICK_START.md
+-rw-rw-r--  1 munaim munaim   2490 Mar  5 21:35 CHANGELOG.md
+-rw-rw-r--  1 munaim munaim  22963 Apr 25 21:50 GEMINI.md
+-rw-rw-r--  1 munaim munaim   9110 Apr 23 20:00 HANDOFF_PROD_GATE_20260422.md
+-rw-rw-r--  1 munaim munaim   9543 Apr 22 22:30 HANDOFF_PROD_GATE_20260422T221254Z.md
+-rw-rw-r--  1 munaim munaim   1078 Mar  5 21:35 LICENSE
+-rw-rw-r--  1 munaim munaim   2693 Apr  2 06:18 Makefile
+drwxrwxr-x  3 munaim munaim   4096 Apr 22 21:52 OUT
+-rw-rw-r--  1 munaim munaim 324227 Mar  5 21:35 PGSIMS_Demo_CaseSeed_3Months.csv
+-rw-rw-r--  1 munaim munaim  77627 Mar  5 21:35 PGSIMS_Demo_CaseSeed_3Months.xlsx
+-rw-rw-r--  1 munaim munaim  17741 Apr 23 20:04 README.md
+drwxrwxr-x  2 munaim munaim   4096 Mar 14 02:30 audit
+drwxrwxr-x 11 munaim munaim   4096 Apr 25 21:00 backend
+-rwxrwxr-x  1 munaim munaim     48 Mar  5 21:35 backend.sh
+-rwxrwxr-x  1 munaim munaim     45 Mar  5 21:35 both.sh
+drwxrwxr-x  2 munaim munaim   4096 Mar  5 21:35 deploy
+drwxrwxr-x  2 munaim munaim   4096 Mar  5 21:35 docker
+drwxrwxr-x 19 munaim munaim   4096 Apr 25 22:40 docs
+drwxrwxr-x 17 munaim munaim   4096 Apr 25 22:06 frontend
+-rwxrwxr-x  1 munaim munaim     49 Mar  5 21:35 frontend.sh
+drwxrwxr-x  2 munaim munaim   4096 Mar  7 09:26 governance
+drwxrwxr-x  2 munaim munaim   4096 Mar  5 21:35 ops
+drwxrwxr-x  3 munaim munaim   4096 Apr 21 07:40 output
+drwxrwxr-x  4 munaim munaim   4096 Apr  3 20:27 pilot_data
+drwxrwxr-x  6 munaim munaim   4096 Apr 25 21:50 scripts
+
+## Top-level dirs
+.
+./.git
+./.github
+./.pytest_cache
+./OUT
+./audit
+./backend
+./deploy
+./docker
+./docs
+./frontend
+./governance
+./ops
+./output
+./pilot_data
+./scripts
+
+## Disk usage (maxdepth=2)
+4.0K	./.git/branches
+8.0K	./.git/info
+8.0K	./deploy
+8.0K	./docs/ARCHITECTURE
+8.0K	./docs/deploy
+8.0K	./frontend/types
+8.0K	./ops
+8.0K	./scripts/__pycache__
+12K	./.github/workflows
+12K	./.pytest_cache/v
+12K	./backend/__pycache__
+12K	./frontend/.swc
+12K	./frontend/store
+28K	./.pytest_cache
+28K	./docs/testing
+32K	./.github
+32K	./backend/.venv
+32K	./backend/OUT
+36K	./.git/refs
+36K	./backend/logs
+36K	./frontend/test-results
+44K	./scripts/local_dev
+48K	./.git/logs
+48K	./docs/_cleanup
+48K	./docs/_milestones
+48K	./pilot_data/first_pilot_run_transformed
+52K	./docker
+52K	./pilot_data/first_pilot_run
+64K	./frontend/public
+68K	./.git/hooks
+68K	./backend/.pytest_cache
+68K	./governance
+68K	./scripts/sandbox
+100K	./audit
+100K	./docs/_recovery
+104K	./pilot_data
+116K	./docs/_discovery
+120K	./backend/static
+140K	./backend/sims_project
+152K	./docs/_audit
+152K	./frontend/lib
+156K	./frontend/components
+164K	./docs/contracts
+188K	./docs/PROD_GATE_CLOSURE
+276K	./docs/integration
+332K	./docs/_pilot_import
+352K	./frontend/e2e
+364K	./docs/_prod_gate
+472K	./docs/_pilot_cleanup
+540K	./output/playwright
+544K	./output
+624K	./frontend/app
+1.4M	./backend/templates
+2.7M	./frontend/coverage
+5.7M	./backend/sims
+6.2M	./frontend/pw-screenshots
+6.3M	./frontend/pw-test-results
+7.4M	./docs/_truthmap_docker_fix
+8.9M	./frontend/playwright-report
+9.6M	./docs/_truthmap
+11M	./backend
+15M	./scripts
+15M	./scripts/mcp
+84M	./docs/_archive
+103M	./docs
+159M	./frontend/.next
+176M	./.git
+176M	./.git/objects
+217M	./OUT
+217M	./OUT/prod_gate_artifacts
+695M	./frontend/node_modules
+879M	./frontend
+1.4G	.
+
+## Key manifests
+-rw-rwxr-- 1 munaim munaim 1 Apr 23 21:00 .env
+
+## contracts folder
+total 168
+drwxrwxr-x  2 munaim munaim  4096 Apr  2 23:25 .
+drwxrwxr-x 19 munaim munaim  4096 Apr 25 22:40 ..
+-rw-rw-r--  1 munaim munaim 19132 Apr 21 08:02 API_CONTRACT.md
+-rw-rw-r--  1 munaim munaim  4638 Apr  2 23:25 BULK_SETUP_IMPORT_EXPORT.md
+-rw-rw-r--  1 munaim munaim  3669 Apr  6 21:41 DATA_MODEL.md
+-rw-rw-r--  1 munaim munaim  9850 Mar  5 21:35 FINAL_RELEASE_FREEZE.md
+-rw-rw-r--  1 munaim munaim 78397 Apr  2 12:38 INTEGRATION_TRUTH_MAP.md
+-rw-rw-r--  1 munaim munaim  1709 Mar  5 21:35 MIGRATION_PLAN.md
+-rw-rw-r--  1 munaim munaim  5627 Apr 21 08:01 RBAC_MATRIX.md
+-rw-rw-r--  1 munaim munaim  8177 Mar  5 21:35 RELEASE_NOTES_20260226.md
+-rw-rw-r--  1 munaim munaim  2319 Apr 21 08:01 ROUTES.md
+-rw-rw-r--  1 munaim munaim  2106 Apr 21 08:01 TERMINOLOGY.md
+-rw-rw-r--  1 munaim munaim  5235 Apr 21 08:02 TRUTH_TESTS.md
+
+## contracts last modified
+2026-03-05 21:35:41.2424003950 ./FINAL_RELEASE_FREEZE.md
+2026-03-05 21:35:41.2424003950 ./MIGRATION_PLAN.md
+2026-03-05 21:35:41.2424003950 ./RELEASE_NOTES_20260226.md
+2026-04-02 12:38:13.1182595570 ./INTEGRATION_TRUTH_MAP.md
+2026-04-02 23:25:00.4191105700 ./BULK_SETUP_IMPORT_EXPORT.md
+2026-04-06 21:41:54.3267506810 ./DATA_MODEL.md
+2026-04-21 08:01:11.9589546550 ./RBAC_MATRIX.md
+2026-04-21 08:01:11.9589546550 ./ROUTES.md
+2026-04-21 08:01:11.9599547380 ./TERMINOLOGY.md
+2026-04-21 08:02:13.9731004610 ./API_CONTRACT.md
+2026-04-21 08:02:13.9731004610 ./TRUTH_TESTS.md

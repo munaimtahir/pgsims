@@ -1,0 +1,50 @@
+# Playwright readonly smoke run (audit-local config v2)
+Tue May  5 09:17:44 UTC 2026
+
+
+Running 4 tests using 1 worker
+
+(node:3007806) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:3007806) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 ../docs/_discovery/20260505_0904_restart_audit/playwright_readonly_smoke.spec.ts:7:7 › PGSIMS readonly smoke (discovery audit) › frontend landing page responds (5.3s)
+  ✘  2 ../docs/_discovery/20260505_0904_restart_audit/playwright_readonly_smoke.spec.ts:13:7 › PGSIMS readonly smoke (discovery audit) › frontend login page responds (5.6s)
+(node:3008843) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:3008843) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  3 ../docs/_discovery/20260505_0904_restart_audit/playwright_readonly_smoke.spec.ts:19:7 › PGSIMS readonly smoke (discovery audit) › backend healthz responds (1.2s)
+  ✓  4 ../docs/_discovery/20260505_0904_restart_audit/playwright_readonly_smoke.spec.ts:26:7 › PGSIMS readonly smoke (discovery audit) › backend OpenAPI schema responds (1.9s)
+
+
+  1) ../docs/_discovery/20260505_0904_restart_audit/playwright_readonly_smoke.spec.ts:13:7 › PGSIMS readonly smoke (discovery audit) › frontend login page responds 
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoContainText[2m([22m[32mexpected[39m[2m)[22m failed
+
+    Locator: locator('body')
+    Expected pattern: [32m/login/i[39m
+    Received string:  [31m"Sign in to SIMSPostgraduate Student Information Management SystemUsernamePasswordRemember meForgot password?Sign inRegistration is disabled. Contact your administrator for account creation."[39m
+    Timeout: 5000ms
+
+    Call log:
+    [2m  - Expect "toContainText" with timeout 5000ms[22m
+    [2m  - waiting for locator('body')[22m
+    [2m    8 × locator resolved to <body class="__variable_1e4310 __variable_c3aa02 antialiased">…</body>[22m
+    [2m      - unexpected value "Sign in to SIMSPostgraduate Student Information Management SystemUsernamePasswordRemember meForgot password?Sign inRegistration is disabled. Contact your administrator for account creation."[22m
+
+
+      14 |     const res = await page.goto(`${FRONTEND_BASE}/login`, { waitUntil: 'domcontentloaded' });
+      15 |     expect(res?.status(), 'frontend /login status').toBe(200);
+    > 16 |     await expect(page.locator('body')).toContainText(/login/i);
+         |                                        ^
+      17 |   });
+      18 |
+      19 |   test('backend healthz responds', async ({ request }) => {
+        at /home/munaim/srv/apps/pgsims/docs/_discovery/20260505_0904_restart_audit/playwright_readonly_smoke.spec.ts:16:40
+
+    Error Context: ../docs/_discovery/20260505_0904_restart_audit/playwright_output/playwright_readonly_smoke--0d6f8-rontend-login-page-responds/error-context.md
+
+  1 failed
+    ../docs/_discovery/20260505_0904_restart_audit/playwright_readonly_smoke.spec.ts:13:7 › PGSIMS readonly smoke (discovery audit) › frontend login page responds 
+  3 passed (27.0s)

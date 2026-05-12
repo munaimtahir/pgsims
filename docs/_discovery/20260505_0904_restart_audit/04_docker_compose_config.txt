@@ -1,0 +1,4 @@
+# docker compose config (no-interpolate)
+Tue May  5 09:06:49 UTC 2026
+
+docker compose config --no-interpolate not available or failed

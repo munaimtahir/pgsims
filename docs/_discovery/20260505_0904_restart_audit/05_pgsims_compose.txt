@@ -1,3 +1,17 @@
+# PGSIMS compose details
+Tue May  5 09:07:02 UTC 2026
+
+total 56
+drwxrwxr-x  2 munaim munaim 4096 Mar  5 21:35 .
+drwxrwxr-x 17 munaim munaim 4096 Apr 25 22:06 ..
+-rw-rw-r--  1 munaim munaim 6346 Mar  5 21:35 docker-compose.coolify.yml
+-rw-rw-r--  1 munaim munaim 6280 Mar  5 21:35 docker-compose.dev.yml
+-rw-rw-r--  1 munaim munaim 7110 Mar  5 21:35 docker-compose.local.yml
+-rw-rw-r--  1 munaim munaim 5313 Mar  5 21:35 docker-compose.phc.yml
+-rw-rw-r--  1 munaim munaim 6467 Mar  5 21:35 docker-compose.prod.yml
+-rw-rw-r--  1 munaim munaim 6276 Apr  3 12:45 docker-compose.yml
+
+## docker/docker-compose.yml
 # Docker Compose configuration for PGSIMS
 # Production-ready setup for pgsims.alshifalab.pk with Caddy reverse proxy
 #
@@ -65,7 +79,7 @@ services:
     environment:
       - DEBUG=${DEBUG:-False}
       - SECRET_KEY=${SECRET_KEY}
-      - ALLOWED_HOSTS=${ALLOWED_HOSTS:-pgsims.alshifalab.pk,34.10.178.210,localhost,127.0.0.1}
+      - ALLOWED_HOSTS=${ALLOWED_HOSTS:-pgsims.alshifalab.pk,34.29.33.138,localhost,127.0.0.1}
       - DATABASE_URL=postgresql://${DB_USER:-sims_user}:${DB_PASSWORD}@db:5432/${DB_NAME:-sims_db}
       - REDIS_URL=redis://redis:6379/0
       - CELERY_BROKER_URL=redis://redis:6379/1
@@ -194,3 +208,20 @@ volumes:
 networks:
   sims_network:
     driver: bridge
+
+## docker compose ps (pgsims)
+NAME              IMAGE                COMMAND                  SERVICE    CREATED       STATUS                PORTS
+pgsims_backend    docker-backend       "sh -c 'python manag…"   backend    9 days ago    Up 4 days (healthy)   127.0.0.1:8014->8014/tcp
+pgsims_beat       docker-beat          "celery -A sims_proj…"   beat       11 days ago   Up 20 hours           8014/tcp
+pgsims_db         postgres:15-alpine   "docker-entrypoint.s…"   db         9 days ago    Up 4 days (healthy)   5432/tcp
+pgsims_frontend   docker-frontend      "docker-entrypoint.s…"   frontend   9 days ago    Up 4 days (healthy)   127.0.0.1:8082->3000/tcp
+pgsims_redis      redis:7-alpine       "docker-entrypoint.s…"   redis      11 days ago   Up 4 days (healthy)   6379/tcp
+pgsims_worker     docker-worker        "celery -A sims_proj…"   worker     11 days ago   Up 4 days             8014/tcp
+
+## docker compose services
+db
+redis
+beat
+backend
+frontend
+worker

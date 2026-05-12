@@ -1,0 +1,916 @@
+# Contracts and docs freshness
+Tue May  5 09:10:18 UTC 2026
+
+## docs/contracts/API_CONTRACT.md
+-rw-rw-r-- 1 munaim munaim 19132 Apr 21 08:02 docs/contracts/API_CONTRACT.md
+# API Contract (v1) — PGSIMS (Simplified Names)
+
+## Auth
+- JWT Bearer token
+- Client sends: `Authorization: Bearer <token>`
+
+## Roles (locked)
+- `pg`
+- `supervisor`
+- `admin` (technical)
+- `utrmc_user` (read-only oversight dashboards/logs/reports/stats)
+- `utrmc_admin` (UTRMC super-admin: can configure + approve overrides)
+
+## LogbookEntry (Feature Layer Active Surface)
+Required fields in resident-facing responses:
+- `id`
+- `status`
+- `feedback` (alias of `supervisor_feedback`)
+- `submitted_to_supervisor_at` (alias of `submitted_at`)
+- `submitted_at`
+- `returned_at`
+- `approved_at`
+
+Status enum (backend):
+- `DRAFT`
+- `SUBMITTED`
+- `RETURNED`
+- `APPROVED`
+
+Edit rule:
+- Resident can edit only when status in `DRAFT`, `RETURNED`
+
+Review:
+- POST `/api/logbook/{id}/review/`
+- Payload: `{ "action": "approved" | "returned", "feedback": "..." }`
+
+Core logbook endpoints:
+- `GET/POST /api/logbook/`
+- `PATCH /api/logbook/{id}/`
+- `POST /api/logbook/{id}/submit/`
+- `GET /api/logbook/review-queue/`
+- `GET /api/logbook/my-threshold/`
+
+## Rotation (next phase)
+Rotation summary response must include:
+- `id`
+- `start_date`, `end_date`
+- `status`
+- `department`: { id, name, code }
+- `hospital`: { id, name, code }
+- Optional: `source_department`, `source_hospital`
+- `requires_utrmc_approval` (bool)
+- `override_reason` (nullable)
+- `approved_by`, `approved_at` (nullable)
+
+## Userbase + Org Graph (v1)
+
+### Roles
+- Canonical role semantics supported by API:
+  - `admin`, `utrmc_admin`, `utrmc_user`, `supervisor`, `faculty`, `resident`
+- Backward compatibility:
+  - `pg` remains accepted as resident-equivalent for legacy flows.
+
+### Auth
+- `GET /api/auth/me/` returns current authenticated user payload.
+
+### Master Data
+- Hospitals:
+  - `GET/POST /api/hospitals/`
+  - `GET/PATCH /api/hospitals/{id}/`
+  - Fields: `id, name, code, active, created_at, updated_at`
+- Departments:
+  - `GET/POST /api/departments/`
+  - `GET/PATCH /api/departments/{id}/`
+  - Fields: `id, name, code, description, active, created_at, updated_at`
+- HospitalDepartment matrix:
+  - `GET/POST /api/hospital-departments/`
+  - `GET/PATCH /api/hospital-departments/{id}/`
+  - Fields: `id, hospital, department, active, created_at, updated_at`
+
+### Users + Profiles
+- Users:
+  - `GET/POST /api/users/`
+  - `GET/PATCH /api/users/{id}/`
+  - Filters: `role`, `department`, `active`, `search`
+  - Managers (`admin`, `utrmc_admin`) may list and update any user.
+  - Non-managers may read only their own user row through `GET /api/users/` and `GET /api/users/{id}/`.
+  - Requests for another user ID resolve as `404` for non-managers because the queryset is self-scoped.
+- Resident profiles:
+  - `GET/PATCH /api/residents/{user_id}/`
+- Staff profiles:
+  - `GET/PATCH /api/staff/{user_id}/`
+
+### Admin Data Quality Layer (additive, non-breaking)
+- Feature-flagged by backend setting/environment:
+  - `ENABLE_DATA_CORRECTION_LAYER`
+- Endpoints (admin/utrmc_admin only):
+  - `GET /api/admin/data-quality/summary`
+  - `GET /api/admin/data-quality/users?filter=...`
+  - `POST /api/admin/data-quality/recompute`
+  - `GET /api/admin/data-quality/audit`
+- Summary response:
+  - `total_users`
+  - `users_with_placeholder_email`
+  - `users_with_missing_dates`
+  - `complete_profiles`
+  - `incomplete_profiles`
+- Supported user filters:
+  - `placeholder_email`
+  - `incomplete_profile`
+  - `missing_dates`
+  - `missing_email`
+
+### Data correction audit model (internal contract)
+- `DataCorrectionAudit` fields:
+  - `actor`
+  - `entity_type`
+  - `entity_id`
+  - `field_name`
+  - `old_value`
+  - `new_value`
+  - `metadata`
+  - `created_at`
+- Corrections are recorded from:
+  - Admin UI inline edits via `PATCH /api/users/{id}/` and `PATCH /api/residents/{user_id}/`
+  - Bulk correction command `python manage.py import_corrections_csv`
+
+### Memberships + Assignments
+- Department memberships:
+  - `GET/POST /api/department-memberships/`
+  - `PATCH/DELETE /api/department-memberships/{id}/` (`DELETE` = soft deactivate)
+- Hospital assignments:
+  - `GET/POST /api/hospital-assignments/`
+  - `PATCH/DELETE /api/hospital-assignments/{id}/` (`DELETE` = soft deactivate)
+
+### Linking
+- Supervisor links:
+  - `GET/POST /api/supervision-links/`
+  - `PATCH /api/supervision-links/{id}/`
+- HOD assignments:
+  - `GET/POST /api/hod-assignments/`
+  - `PATCH /api/hod-assignments/{id}/`
+
+### Bulk Setup Import / Export
+- Authoritative detailed contract: `docs/contracts/BULK_SETUP_IMPORT_EXPORT.md`
+- Templates:
+  - `GET /api/bulk/templates/{resource}/`
+- Dry-run import:
+  - `POST /api/bulk/import/{entity}/dry-run/`
+- Apply import:
+  - `POST /api/bulk/import/{entity}/apply/`
+- Export:
+  - `GET /api/bulk/exports/{resource}/?file_format=csv|xlsx`
+- Active resources/entities:
+  - `hospitals`
+  - `departments`
+  - `matrix`
+  - `faculty-supervisors`
+  - `residents`
+  - `supervision-links`
+  - `hod-assignments`
+
+### Rosters
+- `GET /api/departments/{id}/roster/`
+  - Response includes:
+    - `department`
+    - `hod` (nullable)
+    - `faculty[]`
+    - `supervisors[]`
+    - `residents[]`
+- `GET /api/hospitals/{id}/departments/`
+
+## Analytics (v1)
+Legacy/deferred note:
+- The training and eligibility dashboards remain active.
+- The broader analytics inventory described below is not the authoritative active product surface for current planning.
+
+Base: `/api/analytics/`
+
+Read endpoints:
+- `GET /v1/filters/`
+- `GET /v1/tabs/{tab}/` where tab in:
+  - `overview`, `adoption`, `logbook`, `review-sla`, `departments`,
+    `rotations`, `research`, `data-ops`, `system`, `security`, `live`
+- `GET /v1/tabs/{tab}/export/` (CSV)
+- `GET /v1/live/`
+- `GET /events/live`
+- `GET /v1/quality/`
+
+Ingest:
+- `POST /events/` for UI events (flag-gated)
+  - accepted inbound: `page.view`, `feature.used`, `ui.page.view`, `ui.feature.used`
+  - normalized storage: `ui.page.view`, `ui.feature.used`
+
+Query params (where applicable):
+- `start_date` (YYYY-MM-DD; default last 14 days)
+- `end_date` (YYYY-MM-DD)
+- `department_id` (optional)
+- `hospital_id` (optional)
+- `role` (optional)
+- `limit` (live endpoint, max 200)
+- `cursor` (`occurred_at|id`, live endpoint)
+- `event_type_prefix` (live endpoint)
+- `entity_type` (live endpoint)
+
+Response shape for tab endpoints:
+- `title`
+- `date_range` { `start_date`, `end_date` }
+- `cards` [ { `key`, `title`, `value` } ]
+- `table` { `columns`, `rows` }
+- `series` [object]
+
+Response shape for `GET /events/live`:
+- `date_range` { `start_date`, `end_date` }
+- `cursor` (nullable)
+- `events` [ { `id`, `occurred_at`, `event_type`, `actor_role`, `department_id`, `hospital_id`, `entity_type`, `entity_id`, `drilldown_url`, `metadata` } ]
+
+---
+
+## Phase 6 — Academic Core (2026-03-01)
+
+## docs/contracts/ROUTES.md
+-rw-rw-r-- 1 munaim munaim 2319 Apr 21 08:01 docs/contracts/ROUTES.md
+# Route Freeze (Next.js App Router)
+
+Router: Next.js App Router (`app/`).
+
+Stable role areas:
+- `/login`
+- `/dashboard/pg/*` (legacy compatibility area; canonical resident area is `/dashboard/resident/*`)
+- `/dashboard/resident/*`
+- `/dashboard/supervisor/*`
+- `/dashboard/utrmc/*`
+
+Admin users are routed to `/dashboard/utrmc/*` in the current implementation.
+
+Compatibility route:
+- `/dashboard/pg`
+  - Redirect shim only
+  - Canonical resident area is `/dashboard/resident/*`
+
+Current userbase/org graph screens under frozen area:
+- `/dashboard/utrmc/hospitals`
+- `/dashboard/utrmc/departments`
+- `/dashboard/utrmc/departments/[id]/roster`
+- `/dashboard/utrmc/matrix`
+- `/dashboard/utrmc/users`
+- `/dashboard/utrmc/supervision`
+- `/dashboard/utrmc/hod`
+
+Do not rename these paths after pilot begins.
+
+---
+
+## Active Surface Routes (truth-hardened 2026-04-21)
+
+### Resident / PG
+- `/dashboard/resident` — resident command-center dashboard
+- `/dashboard/resident/schedule` — schedule timeline and leave workflow
+- `/dashboard/resident/progress` — logbook draft/submit and threshold snapshot
+
+### Supervisor
+- `/dashboard/supervisor` — supervisor dashboard with leave approvals and logbook review queue
+
+### UTRMC Admin
+- `/dashboard/utrmc` — UTRMC overview and read-only oversight surface for `utrmc_user`
+- `/dashboard/utrmc/programs` — Programme definitions, policy editor, milestone viewer
+- `/dashboard/utrmc/eligibility-monitoring` — Eligibility monitoring with filters
+
+These routes are frozen after pilot begins.
+
+UX freeze note:
+- 2026-04-02 approved change: added an admin-only bulk setup/import-export workspace inside the existing `/dashboard/utrmc` page.
+- No route or sidebar label change was introduced.
+- 2026-04-21 approved truth-hardening change: resident sidebar label `/dashboard/resident/progress` changed from "Academic Progress" to "Logbook"; inactive resident research/thesis/workshops/postings and supervisor research approvals were removed from active navigation. Routes still exist but are not active release-gated surfaces.
+
+## Deferred Routes (not active release truth)
+- `/dashboard/resident/research`
+- `/dashboard/resident/thesis`
+- `/dashboard/resident/workshops`
+- `/dashboard/resident/postings`
+- `/dashboard/supervisor/research-approvals`
+- `/dashboard/utrmc/postings`
+
+## docs/contracts/TERMINOLOGY.md
+-rw-rw-r-- 1 munaim munaim 2106 Apr 21 08:01 docs/contracts/TERMINOLOGY.md
+# Terminology Lock (UI Dictionary)
+
+These are user-facing terms. Do not change once pilot begins.
+
+- **Submitted**: entry sent to supervisor for review (backend status may be `pending`)
+- **Returned**: supervisor requests edits
+- **Rejected**: supervisor declines entry (must include feedback/reason)
+- **Approved**: supervisor verifies entry
+- **Feedback**: supervisor message shown to PG
+- **Home Hospital**: trainee’s primary hospital until graduation
+- **Home Department**: trainee’s primary department until graduation
+- **Rotation**: time-bounded posting in a (Hospital, Department) pair
+- **Resident**: postgraduate trainee role (legacy `pg` remains accepted)
+- **Faculty**: senior academic role that may supervise residents and hold HOD assignment
+- **HOD**: active head-of-department assignment tracked with effective dates
+- **Bulk Setup**: prerequisite-aware import/export workspace on the UTRMC overview page for canonical hospitals, departments, matrix, users, and assignments
+- **Dry Run**: validates uploaded rows without writing to the database
+- **Template CSV**: the canonical downloadable file showing the exact expected columns for a bulk import type
+- **Under Review**: submission completeness review is in progress by supervisor/HOD/UTRMC reviewer
+- **Certificate Issued**: a verified synopsis/thesis/rotation-completion certificate exists with issue timestamp
+- **Rotation Completion Verification**: post-rotation check where department confirms and UTRMC verifies completion
+- **Logbook**: active resident page for logbook draft/submission and threshold state; replaces the previous active navigation label "Academic Progress" as of 2026-04-21
+- **Deferred Workflow**: implemented or partially implemented route/API that is intentionally hidden from active navigation and excluded from the release gate
+
+Notes:
+- UI displays **Submitted** even if backend enum is `pending`.
+- UI reads `feedback` from API (alias of `supervisor_feedback`).
+- 2026-04-21 terminology lock update: synopsis, thesis, postings, and rotations phase-1 are deferred workflows, not active release claims.
+
+## docs/contracts/RBAC_MATRIX.md
+-rw-rw-r-- 1 munaim munaim 5627 Apr 21 08:01 docs/contracts/RBAC_MATRIX.md
+# RBAC Matrix (Locked Policy)
+
+This contract defines authoritative backend authorization behavior. Frontend route guards are convenience only.
+
+## Roles (locked)
+- `pg`
+- `supervisor`
+- `admin` (technical recovery/admin ops)
+- `utrmc_user` (read-only oversight)
+- `utrmc_admin` (UTRMC governance + override approval)
+
+## Scope Rule (locked)
+- Supervisor scope is **Option A: supervisees-only**.
+- Supervisors may only read/review records for PGs assigned to them.
+
+## Resource Matrix
+
+### Logbook (API)
+- `pg`
+  - List/detail/create/update/submit: **own entries only**
+  - Edit allowed only when status in `draft`, `returned`
+- `supervisor`
+  - Pending queue: **assigned supervisees only**
+  - Verify (`approved`/`returned`/`rejected`): **assigned supervisees only**
+- `utrmc_user`
+  - Pending queue read: **allowed (read-only)**
+  - Verify/mutate: **forbidden**
+- `utrmc_admin`
+  - Pending queue read: **allowed (read-only governance view)**
+  - Verify/mutate: **forbidden**
+- `admin`
+  - Pending queue read: **all**
+  - Verify/mutate: **allowed (recovery/admin operations)**
+
+### Rotations (API)
+- `pg`
+  - List/detail/create/update: **own rotations only** (where endpoints exist)
+- `supervisor`
+  - Read: supervisees-only (where endpoints exist)
+  - Cannot approve UTRMC overrides
+- `utrmc_user`
+  - Read oversight endpoints only (where provided)
+  - Cannot approve UTRMC overrides
+- `utrmc_admin`
+  - May approve inter-hospital overrides via `PATCH /api/rotations/<id>/utrmc-approve/`
+  - Approval requires override policy validation
+- `admin`
+  - Read/admin recovery operations per endpoint policy
+  - Does not replace `utrmc_admin` for override approval endpoint
+
+### Active Feature Layer — Logbook / Leave / Dashboards
+- `pg` / `resident`
+  - `GET/POST/PATCH /api/logbook/*`: **own records only**
+  - `POST /api/logbook/{id}/submit/`: **own records only**
+  - `GET /api/logbook/my-threshold/`: **allowed**
+  - `GET/POST /api/leaves/`: **own training record only**
+  - `GET /api/dashboard/resident/`: **allowed**
+- `supervisor` / `faculty`
+  - `GET /api/logbook/review-queue/`: **assigned/HOD-scope residents**
+  - `POST /api/logbook/{id}/review/`: **assigned/HOD-scope residents**
+  - `GET /api/utrmc/approvals/leaves/`: **assigned/HOD-scope residents**
+  - `POST /api/leaves/{id}/approve|reject/`: **assigned/HOD-scope residents**
+  - `GET /api/dashboard/supervisor/`: **allowed**
+  - `GET /api/dashboard/hod/`: **allowed only with active HOD assignment**
+- `utrmc_user`
+  - Dashboards and org/userbase reads: **read-only allowed**
+  - Mutations and approval/verification actions: **forbidden**
+  - `GET /api/dashboard/utrmc/`: **allowed**
+- `utrmc_admin`
+  - Full cross-department review visibility
+  - Submission verify and certificate issuance: **allowed**
+  - Rotation completion verification: **allowed**
+  - Dashboard endpoints: **all**
+- `admin`
+  - Same mutation/read capabilities as `utrmc_admin` on feature-layer workflows
+  - Used for technical recovery and controlled administrative operations
+
+### Deferred Feature Layer — Rotations / Synopsis / Thesis
+- Endpoint-level RBAC remains implemented for internal verification.
+- These workflows are not active release-gated UI surfaces as of 2026-04-21.
+- Do not expose navigation, dashboard CTAs, or active-gate expectations for these workflows until their inactive-depth tests are promoted.
+
+### Analytics (API + Admin Dashboard)
+- Default: `admin` only
+- `supervisor`: allowed only if feature flag `ANALYTICS_SUPERVISOR_ACCESS_ENABLED=true`
+- Legacy alias accepted: `ANALYTICS_ALLOW_SUPERVISOR_ACCESS=true`
+- `pg`, `utrmc_user`, `utrmc_admin`: forbidden
+- `POST /api/analytics/events/` follows same role rule and is additionally gated by
+  `ANALYTICS_UI_INGEST_ENABLED`
+
+### Reference Data (API)
+#### Department (`academics.Department`)
+- Read (`list`, `retrieve`): any authenticated role
+- Write (`create`, `update`, `delete`): `admin` only (`utrmc_admin` read-only)
+
+#### Hospital (`rotations.Hospital`)
+- Read (`list`, `retrieve`): any authenticated role
+- Write (`create`, `update`, `delete`): `admin` only (`utrmc_admin` read-only)
+
+#### HospitalDepartment (`rotations.HospitalDepartment`)
+- Read (`list`, `retrieve`): any authenticated role
+- Write (`create`, `update`, `delete`): `utrmc_admin` primary; `admin` allowed for incident recovery
+
+### Userbase + Org Graph (API)
+#### User management (`/api/users/*`)
+- `admin`, `utrmc_admin`
+  - list/create/update userbase users: **allowed**
+- `supervisor`, `faculty`, `pg`/`resident`, `utrmc_user`
+  - list/read own user row only: **allowed**
+  - create/update userbase users: **forbidden**
+  - retrieve own user record only: **allowed**
+  - `GET /api/users/` returns the caller's own user row only when they are not a manager
+  - detail requests for other user IDs are not exposed in the queryset and resolve as `404`
+
+#### Profiles (`/api/residents/*`, `/api/staff/*`)
+- `admin`, `utrmc_admin`: full CRUD scope
+- non-manager users: retrieve own profile only
+
+#### Membership/assignment/linking
+- `/api/department-memberships/*`
+- `/api/hospital-assignments/*`
+- `/api/supervision-links/*`
+- `/api/hod-assignments/*`
+  - `admin`, `utrmc_admin`: **allowed**
+  - other roles: **forbidden**
+
+#### Roster reads (`/api/departments/{id}/roster/`)
+- `admin`, `utrmc_admin`, `utrmc_user`: **allowed**
+- `supervisor`, `faculty`: **allowed** for own active department memberships
+- `pg`/`resident`: **allowed** for own active resident membership departments
+
+## Notes
+- Backend queryset scoping + object-level checks are the source of truth.
+- Frontend middleware redirects improve UX but do not grant access.
+
+## docs/contracts/TRUTH_TESTS.md
+-rw-rw-r-- 1 munaim munaim 5235 Apr 21 08:02 docs/contracts/TRUTH_TESTS.md
+# Truth Tests (Must Always Pass)
+
+## Canonical Backend Gate
+
+```bash
+cd backend && pytest sims -q
+```
+
+Notes:
+- `_legacy` test tree is intentionally excluded from pytest discovery.
+- Active app test failures must never be masked.
+
+## Contract Drift Gates (Training)
+
+```bash
+cd backend && pytest sims/training/test_phase6.py::ResearchProjectAPITests::test_supervisor_return_transitions_project_to_draft -v
+cd backend && pytest sims/training/test_phase6.py::EligibilityAPITests::test_my_eligibility_items_use_reasons_field -v
+cd backend && pytest sims/training/test_phase6.py::EligibilityAPITests::test_utrmc_eligibility_items_use_reasons_field -v
+```
+
+These enforce:
+- Research action compatibility for supervisor return (`supervisor-return`).
+- Eligibility payload contract with canonical `reasons: string[]` field.
+
+## Active Surface Gate
+
+```bash
+cd frontend && npm run test:e2e:active-surface:local
+```
+
+Enforces end-to-end active-surface runtime behavior for:
+- resident-progress logbook submit/return/resubmit/approve loop
+- resident schedule leave draft and submit path through the supported resident surface
+- logbook review-queue permission boundaries
+- auth/session reachability for the promoted resident, supervisor, and UTRMC surfaces
+- UTRMC read-only mutation controls remaining hidden for `utrmc_user`
+- supervisor self-scoped `/api/users/` truth through backend contract tests
+
+The active surface deliberately excludes the broader inactive-depth checks for:
+- rotations phase-1 activation/completion/verification
+- synopsis/thesis completeness and certificate issuance
+- dashboard counter assertions that depend on the inactive depth surface
+
+Run the broader inactive-depth suite separately when needed:
+
+```bash
+cd frontend && npm run test:e2e:inactive-depth:local
+```
+
+Inactive-depth suite coverage:
+- dashboard counters that depend on inactive-depth state
+- synopsis/thesis completeness and certificate issuance visibility
+- rotation phase-1 lifecycle and verification queue
+- regression-smoke for the inactive depth routes
+
+## Migration Gate — Canonical Department/Hospital/Rotation
+
+```bash
+cd backend && pytest sims/rotations/test_canonical_migration_gate.py -v
+```
+
+## Drift Gate (Static)
+
+```bash
+cd backend && pytest sims/_devtools/tests/test_drift_guards.py -v
+```
+
+Fail if forbidden patterns appear:
+- legacy Notification create keys (`user=`, `message=`, `type=`, `related_object_id=`)
+- reintroduction of duplicate Department models
+
+## Frontend Gates
+
+### Unit/Integration Gate
+
+```bash
+cd frontend && npm test -- --watch=false
+```
+
+### Lint and Type Gates
+
+```bash
+cd frontend && npm run lint
+cd frontend && npx tsc --noEmit
+cd frontend && npm run build
+```
+
+Run these sequentially, not in parallel. Next.js writes `.next/types` during build, so overlapping `tsc` and `next build` processes can create false negatives against the generated route types.
+
+### Smoke E2E Gate
+
+```bash
+docker compose -f docker/docker-compose.yml --env-file .env exec -T backend python manage.py seed_e2e
+cd frontend && npm run test:e2e:smoke:local
+```
+
+Notes:
+- Canonical local smoke target is `http://127.0.0.1:8082` (frontend) with API at `http://127.0.0.1:8014`.
+- For non-canonical targets, set `E2E_BASE_URL` and `E2E_API_URL` explicitly.
+- Smoke scope: auth reachability, protected-route redirects, dashboard entry checks.
+
+### Workflow E2E Gate
+
+```bash
+cd backend && SECRET_KEY=test-secret python3 manage.py seed_e2e
+cd frontend && npx playwright install chromium
+```
+
+Run the workflow gate against the current checked-out runtime. Verified recovery-pass target:
+
+```bash
+cd backend && SECRET_KEY=test-secret python3 manage.py runserver 127.0.0.1:8000
+cd frontend && PORT=3001 INTERNAL_API_URL=http://127.0.0.1:8000 NEXT_PUBLIC_API_URL=/api npm run start:next
+cd frontend && E2E_BASE_URL=http://127.0.0.1:3001 E2E_API_URL=http://127.0.0.1:8000 npx playwright test --project=workflow-gate
+```
+
+Notes:
+- `npm run start:next` is a standalone-compatible alias for `node .next/standalone/server.js`.
+- `npm run build` must now fail on lint or TypeScript errors; those checks are no longer bypassed in Next config.
+
+Workflow scope (legacy broader workflow gate; not the active release verdict):
+- UTRMC bulk setup workspace accepts a canonical hospital CSV dry run from the active overview route.
+- Forgot-password request submits through real UI/API path.
+- Supervisor approvals page renders canonical `resident_name`.
+- Supervisor return workflow (`supervisor-return`) works and visible success/result state is rendered in browser.
+- Resident dashboard displays canonical eligibility reason strings.
+- Resident leave draft can be submitted from the active schedule page and approved from the active supervisor dashboard.
+- Rotation workflow checks are inactive-depth only as of 2026-04-21.
+- Postings workflow checks are inactive-depth only as of 2026-04-21.
+
+Deferred from workflow gate for now:
+- broader regression suites and mutation-heavy org-management flows.
+- rotations phase-1, synopsis, thesis, and postings active promotion.
+
+Important:
+- Docker runtime can be used for smoke checks, but do not treat long-running containers as current-tree truth unless they were rebuilt after the code under test changed.
+
+## docs/contracts/DATA_MODEL.md
+-rw-rw-r-- 1 munaim munaim 3669 Apr  6 21:41 docs/contracts/DATA_MODEL.md
+# Canonical Data Model (Locked, Simplified Names)
+
+## Canonical entities
+
+### Department (single canonical list)
+- One university-wide list: Department A/B/C/D...
+- Unique key: `code` (preferred) or normalized `name`.
+- This is the ONLY Department model.
+- Canonical table: `academics.Department`.
+
+### Hospital (university sites)
+- Multiple hospitals exist under the same university.
+- Unique key: `code`.
+- Canonical table stays as the existing `rotations.Hospital` model (class name: `Hospital`).
+
+### HospitalDepartment (matrix)
+- Represents which departments are hosted in which hospitals.
+- (hospital, department) unique.
+
+## Trainee home affiliation (stable until graduation)
+For `User` with role=pg:
+- `home_department` (FK Department)
+- `home_hospital` (FK Hospital)
+
+Home affiliation does not change during rotations.
+
+## Rotation (posting)
+A rotation is a time-bounded placement in a (Hospital, Department) pair.
+
+Fields (simple names):
+- `pg`
+- `department` (FK Department)          # destination department
+- `hospital` (FK Hospital)              # destination hospital
+- Optional snapshots (audit isolation):
+  - `source_department` (FK Department)
+  - `source_hospital` (FK Hospital)
+- `start_date`, `end_date`
+- `status` (planned/ongoing/completed/cancelled/pending_approval)
+- `approved_by`, `approved_at`
+
+### Inter-hospital policy rule
+If `hospital != home_hospital`:
+- Allowed if the destination department is NOT available in the home hospital (missing HospitalDepartment row), OR
+- Requires:
+  - `override_reason`
+  - approval by `utrmc_admin`
+
+If `department == home_department` AND `hospital != home_hospital`:
+- Always requires override_reason + `utrmc_admin` approval (rare exception).
+
+## Feature Layer Runtime Entities
+
+### Logbook Domain
+- `training.LogbookEntry`
+  - Resident-owned open-form clinical entry
+  - Statuses: `DRAFT -> SUBMITTED -> RETURNED -> APPROVED`
+  - Supports `rotation_assignment` link for per-rotation threshold checks
+- `training.LogbookReview`
+  - Reviewer action history (`RETURNED`, `APPROVED`) with comments
+- `training.LogbookThresholdConfig`
+  - Configurable threshold mode: `PER_ROTATION` or `PER_PERIOD`
+  - Scoped by optional `program` and `department`
+- `training.LogbookThresholdSnapshot`
+  - Computed progress snapshots used by resident/supervisor/UTRMC readiness views
+
+### Synopsis/Thesis Completeness Domain
+- `training.SubmissionRequirementTemplate`
+  - Admin/HOD/UTRMC-managed required-document checklist
+  - Scoped by `submission_type` + optional `program`/`department`
+- `training.ResidentSubmission`
+  - Resident workflow entity for `SYNOPSIS` and `THESIS`
+  - Statuses: `DRAFT`, `SUBMITTED`, `UNDER_REVIEW`, `RETURNED`, `VERIFIED`, `CERTIFICATE_ISSUED`
+- `training.SubmissionDocument`
+  - Uploaded resident files, optionally linked to checklist item
+- `training.SubmissionReview`
+  - Explicit review history rows for each state transition
+- `training.SubmissionCertificate`
+  - One certificate per verified submission, with issue/verify metadata
+
+### Rotation Phase-1 Structured Domain
+- `training.ProgramRotationRequirement`
+  - Program-level required rotation department map with duration + sequence
+- `training.RotationCompletion`
+  - One completion record per `RotationAssignment`
+  - Statuses: `CONFIRMED_BY_DEPARTMENT`, `PENDING_UTRMC_VERIFICATION`, `VERIFIED`
+- `training.RotationCertificate`
+  - One certificate per verified completion with issuance traceability
+
+### Readiness Hooks
+- Eligibility/readiness now includes verifiable hooks for:
+  - logbook threshold progress,
+  - synopsis certificate issuance,
+  - thesis certificate issuance,
+  - rotation completion verification counts.
+
+## docs/contracts/INTEGRATION_TRUTH_MAP.md
+-rw-rw-r-- 1 munaim munaim 78397 Apr  2 12:38 docs/contracts/INTEGRATION_TRUTH_MAP.md
+# INTEGRATION TRUTH-MAP
+
+Authority warning:
+- This file is a historical/generated inventory, not the authoritative active-surface map.
+- For current planning and truth decisions, use `docs/contracts/`, `docs/_recovery/20260402T122809Z/`, and the checked-out runtime code.
+
+## A) Backend Inventory
+| Method | Path | View | Action | Serializer | Permission |
+|---|---|---|---|---|---|
+| ANY | `admin/auth/group/` | changelist_view | func | None | None |
+| ANY | `admin/auth/group/add/` | add_view | func | None | None |
+| ANY | `admin/auth/group/<path:object_id>/history/` | history_view | func | None | None |
+| ANY | `admin/auth/group/<path:object_id>/delete/` | delete_view | func | None | None |
+| ANY | `admin/auth/group/<path:object_id>/change/` | change_view | func | None | None |
+| GET | `admin/auth/group/<path:object_id>/` | RedirectView | custom/standard | None | None |
+| POST | `admin/auth/group/<path:object_id>/` | RedirectView | custom/standard | None | None |
+| PUT | `admin/auth/group/<path:object_id>/` | RedirectView | custom/standard | None | None |
+| PATCH | `admin/auth/group/<path:object_id>/` | RedirectView | custom/standard | None | None |
+| DELETE | `admin/auth/group/<path:object_id>/` | RedirectView | custom/standard | None | None |
+| TRACE | `admin/auth/group/<path:object_id>/` | RedirectView | custom/standard | None | None |
+| GET | `users/api/users/search/` | UserSearchAPIView | custom/standard | None | None |
+| POST | `users/api/users/search/` | UserSearchAPIView | custom/standard | None | None |
+| PUT | `users/api/users/search/` | UserSearchAPIView | custom/standard | None | None |
+| PATCH | `users/api/users/search/` | UserSearchAPIView | custom/standard | None | None |
+| DELETE | `users/api/users/search/` | UserSearchAPIView | custom/standard | None | None |
+| TRACE | `users/api/users/search/` | UserSearchAPIView | custom/standard | None | None |
+| GET | `users/api/supervisors/specialty/<str:specialty>/` | SupervisorsBySpecialtyAPIView | custom/standard | None | None |
+| POST | `users/api/supervisors/specialty/<str:specialty>/` | SupervisorsBySpecialtyAPIView | custom/standard | None | None |
+| PUT | `users/api/supervisors/specialty/<str:specialty>/` | SupervisorsBySpecialtyAPIView | custom/standard | None | None |
+| PATCH | `users/api/supervisors/specialty/<str:specialty>/` | SupervisorsBySpecialtyAPIView | custom/standard | None | None |
+| DELETE | `users/api/supervisors/specialty/<str:specialty>/` | SupervisorsBySpecialtyAPIView | custom/standard | None | None |
+| TRACE | `users/api/supervisors/specialty/<str:specialty>/` | SupervisorsBySpecialtyAPIView | custom/standard | None | None |
+| GET | `users/api/user/<int:pk>/stats/` | UserStatsAPIView | custom/standard | None | None |
+| POST | `users/api/user/<int:pk>/stats/` | UserStatsAPIView | custom/standard | None | None |
+| PUT | `users/api/user/<int:pk>/stats/` | UserStatsAPIView | custom/standard | None | None |
+| PATCH | `users/api/user/<int:pk>/stats/` | UserStatsAPIView | custom/standard | None | None |
+| DELETE | `users/api/user/<int:pk>/stats/` | UserStatsAPIView | custom/standard | None | None |
+| TRACE | `users/api/user/<int:pk>/stats/` | UserStatsAPIView | custom/standard | None | None |
+| GET | `users/api/stats/` | UserListStatsAPIView | custom/standard | None | None |
+| POST | `users/api/stats/` | UserListStatsAPIView | custom/standard | None | None |
+| PUT | `users/api/stats/` | UserListStatsAPIView | custom/standard | None | None |
+| PATCH | `users/api/stats/` | UserListStatsAPIView | custom/standard | None | None |
+| DELETE | `users/api/stats/` | UserListStatsAPIView | custom/standard | None | None |
+| TRACE | `users/api/stats/` | UserListStatsAPIView | custom/standard | None | None |
+| ANY | `users/api/admin/stats/` | admin_stats_api | func | None | None |
+| GET | `users/api/user-statistics/` | UserStatisticsAPIView | custom/standard | None | None |
+| POST | `users/api/user-statistics/` | UserStatisticsAPIView | custom/standard | None | None |
+| PUT | `users/api/user-statistics/` | UserStatisticsAPIView | custom/standard | None | None |
+| PATCH | `users/api/user-statistics/` | UserStatisticsAPIView | custom/standard | None | None |
+| DELETE | `users/api/user-statistics/` | UserStatisticsAPIView | custom/standard | None | None |
+| TRACE | `users/api/user-statistics/` | UserStatisticsAPIView | custom/standard | None | None |
+| GET | `users/api/user-performance/` | UserPerformanceAPIView | custom/standard | None | None |
+| POST | `users/api/user-performance/` | UserPerformanceAPIView | custom/standard | None | None |
+| PUT | `users/api/user-performance/` | UserPerformanceAPIView | custom/standard | None | None |
+| PATCH | `users/api/user-performance/` | UserPerformanceAPIView | custom/standard | None | None |
+| DELETE | `users/api/user-performance/` | UserPerformanceAPIView | custom/standard | None | None |
+| TRACE | `users/api/user-performance/` | UserPerformanceAPIView | custom/standard | None | None |
+| ANY | `rotations/api/calendar/` | rotation_calendar_api | func | None | None |
+| ANY | `rotations/api/stats/` | rotation_stats_api | func | None | None |
+| ANY | `rotations/api/quick-stats/` | rotation_quick_stats | func | None | None |
+| ANY | `rotations/api/departments/<int:hospital_id>/` | department_by_hospital_api | func | None | None |
+| ANY | `certificates/api/stats/` | certificate_stats_api | func | None | None |
+| ANY | `certificates/api/quick-stats/` | certificate_quick_stats | func | None | None |
+| ANY | `certificates/api/<int:pk>/verify/` | certificate_verification_api | func | None | None |
+| ANY | `certificates/api/update-statistics/` | update_certificate_statistics | func | None | None |
+| ANY | `logbook/api/stats/` | logbook_stats_api | func | None | None |
+| ANY | `logbook/api/template/<int:template_id>/preview/` | template_preview_api | func | None | None |
+| ANY | `logbook/api/entry/<int:entry_id>/complexity/` | entry_complexity_api | func | None | None |
+| ANY | `logbook/api/update-statistics/` | update_logbook_statistics | func | None | None |
+| ANY | `cases/api/diagnoses/` | get_diagnoses_json | func | None | None |
+| ANY | `cases/api/procedures/` | get_procedures_json | func | None | None |
+| ANY | `api/audit/^activity/$` | ActivityLogViewSet | func | None | None |
+| ANY | `api/audit/^activity/export/$` | ActivityLogViewSet | func | None | None |
+| ANY | `api/audit/^activity/(?P<pk>[^/.]+)/$` | ActivityLogViewSet | func | None | None |
+| ANY | `api/audit/^reports/$` | AuditReportViewSet | func | None | None |
+| ANY | `api/audit/^reports/latest/$` | AuditReportViewSet | func | None | None |
+| GET | `api/audit/` | APIRootView | custom/standard | None | IsAuthenticated |
+| POST | `api/audit/` | APIRootView | custom/standard | None | IsAuthenticated |
+| PUT | `api/audit/` | APIRootView | custom/standard | None | IsAuthenticated |
+| PATCH | `api/audit/` | APIRootView | custom/standard | None | IsAuthenticated |
+| DELETE | `api/audit/` | APIRootView | custom/standard | None | IsAuthenticated |
+| TRACE | `api/audit/` | APIRootView | custom/standard | None | IsAuthenticated |
+| GET | `api/search/` | GlobalSearchView | custom/standard | None | IsAuthenticated |
+| POST | `api/search/` | GlobalSearchView | custom/standard | None | IsAuthenticated |
+| PUT | `api/search/` | GlobalSearchView | custom/standard | None | IsAuthenticated |
+| PATCH | `api/search/` | GlobalSearchView | custom/standard | None | IsAuthenticated |
+| DELETE | `api/search/` | GlobalSearchView | custom/standard | None | IsAuthenticated |
+| TRACE | `api/search/` | GlobalSearchView | custom/standard | None | IsAuthenticated |
+| GET | `api/search/history/` | SearchHistoryView | custom/standard | None | IsAuthenticated |
+| POST | `api/search/history/` | SearchHistoryView | custom/standard | None | IsAuthenticated |
+| PUT | `api/search/history/` | SearchHistoryView | custom/standard | None | IsAuthenticated |
+| PATCH | `api/search/history/` | SearchHistoryView | custom/standard | None | IsAuthenticated |
+| DELETE | `api/search/history/` | SearchHistoryView | custom/standard | None | IsAuthenticated |
+| TRACE | `api/search/history/` | SearchHistoryView | custom/standard | None | IsAuthenticated |
+| GET | `api/search/suggestions/` | SearchSuggestionsView | custom/standard | None | IsAuthenticated |
+| POST | `api/search/suggestions/` | SearchSuggestionsView | custom/standard | None | IsAuthenticated |
+| PUT | `api/search/suggestions/` | SearchSuggestionsView | custom/standard | None | IsAuthenticated |
+| PATCH | `api/search/suggestions/` | SearchSuggestionsView | custom/standard | None | IsAuthenticated |
+| DELETE | `api/search/suggestions/` | SearchSuggestionsView | custom/standard | None | IsAuthenticated |
+| TRACE | `api/search/suggestions/` | SearchSuggestionsView | custom/standard | None | IsAuthenticated |
+| GET | `api/analytics/trends/` | TrendAnalyticsView | custom/standard | None | IsAuthenticated |
+| POST | `api/analytics/trends/` | TrendAnalyticsView | custom/standard | None | IsAuthenticated |
+| PUT | `api/analytics/trends/` | TrendAnalyticsView | custom/standard | None | IsAuthenticated |
+| PATCH | `api/analytics/trends/` | TrendAnalyticsView | custom/standard | None | IsAuthenticated |
+| DELETE | `api/analytics/trends/` | TrendAnalyticsView | custom/standard | None | IsAuthenticated |
+| TRACE | `api/analytics/trends/` | TrendAnalyticsView | custom/standard | None | IsAuthenticated |
+| GET | `api/analytics/comparative/` | ComparativeAnalyticsView | custom/standard | None | IsAuthenticated |
+| POST | `api/analytics/comparative/` | ComparativeAnalyticsView | custom/standard | None | IsAuthenticated |
+| PUT | `api/analytics/comparative/` | ComparativeAnalyticsView | custom/standard | None | IsAuthenticated |
+| PATCH | `api/analytics/comparative/` | ComparativeAnalyticsView | custom/standard | None | IsAuthenticated |
+| DELETE | `api/analytics/comparative/` | ComparativeAnalyticsView | custom/standard | None | IsAuthenticated |
+| TRACE | `api/analytics/comparative/` | ComparativeAnalyticsView | custom/standard | None | IsAuthenticated |
+| GET | `api/analytics/performance/` | PerformanceMetricsView | custom/standard | None | IsAuthenticated |
+| POST | `api/analytics/performance/` | PerformanceMetricsView | custom/standard | None | IsAuthenticated |
+| PUT | `api/analytics/performance/` | PerformanceMetricsView | custom/standard | None | IsAuthenticated |
+| PATCH | `api/analytics/performance/` | PerformanceMetricsView | custom/standard | None | IsAuthenticated |
+| DELETE | `api/analytics/performance/` | PerformanceMetricsView | custom/standard | None | IsAuthenticated |
+| TRACE | `api/analytics/performance/` | PerformanceMetricsView | custom/standard | None | IsAuthenticated |
+| GET | `api/analytics/dashboard/overview/` | DashboardOverviewView | custom/standard | None | IsAuthenticated |
+| POST | `api/analytics/dashboard/overview/` | DashboardOverviewView | custom/standard | None | IsAuthenticated |
+| PUT | `api/analytics/dashboard/overview/` | DashboardOverviewView | custom/standard | None | IsAuthenticated |
+| PATCH | `api/analytics/dashboard/overview/` | DashboardOverviewView | custom/standard | None | IsAuthenticated |
+| DELETE | `api/analytics/dashboard/overview/` | DashboardOverviewView | custom/standard | None | IsAuthenticated |
+| TRACE | `api/analytics/dashboard/overview/` | DashboardOverviewView | custom/standard | None | IsAuthenticated |
+| GET | `api/analytics/dashboard/trends/` | DashboardTrendsView | custom/standard | None | IsAuthenticated |
+| POST | `api/analytics/dashboard/trends/` | DashboardTrendsView | custom/standard | None | IsAuthenticated |
+| PUT | `api/analytics/dashboard/trends/` | DashboardTrendsView | custom/standard | None | IsAuthenticated |
+| PATCH | `api/analytics/dashboard/trends/` | DashboardTrendsView | custom/standard | None | IsAuthenticated |
+| DELETE | `api/analytics/dashboard/trends/` | DashboardTrendsView | custom/standard | None | IsAuthenticated |
+| TRACE | `api/analytics/dashboard/trends/` | DashboardTrendsView | custom/standard | None | IsAuthenticated |
+| GET | `api/analytics/dashboard/compliance/` | DashboardComplianceView | custom/standard | None | IsAuthenticated |
+| POST | `api/analytics/dashboard/compliance/` | DashboardComplianceView | custom/standard | None | IsAuthenticated |
+| PUT | `api/analytics/dashboard/compliance/` | DashboardComplianceView | custom/standard | None | IsAuthenticated |
+| PATCH | `api/analytics/dashboard/compliance/` | DashboardComplianceView | custom/standard | None | IsAuthenticated |
+| DELETE | `api/analytics/dashboard/compliance/` | DashboardComplianceView | custom/standard | None | IsAuthenticated |
+| TRACE | `api/analytics/dashboard/compliance/` | DashboardComplianceView | custom/standard | None | IsAuthenticated |
+| GET | `api/bulk/review/` | BulkReviewView | custom/standard | None | IsAuthenticated |
+| POST | `api/bulk/review/` | BulkReviewView | custom/standard | None | IsAuthenticated |
+| PUT | `api/bulk/review/` | BulkReviewView | custom/standard | None | IsAuthenticated |
+| PATCH | `api/bulk/review/` | BulkReviewView | custom/standard | None | IsAuthenticated |
+| DELETE | `api/bulk/review/` | BulkReviewView | custom/standard | None | IsAuthenticated |
+| TRACE | `api/bulk/review/` | BulkReviewView | custom/standard | None | IsAuthenticated |
+| GET | `api/bulk/assignment/` | BulkAssignmentView | custom/standard | None | IsAuthenticated |
+| POST | `api/bulk/assignment/` | BulkAssignmentView | custom/standard | None | IsAuthenticated |
+| PUT | `api/bulk/assignment/` | BulkAssignmentView | custom/standard | None | IsAuthenticated |
+| PATCH | `api/bulk/assignment/` | BulkAssignmentView | custom/standard | None | IsAuthenticated |
+| DELETE | `api/bulk/assignment/` | BulkAssignmentView | custom/standard | None | IsAuthenticated |
+| TRACE | `api/bulk/assignment/` | BulkAssignmentView | custom/standard | None | IsAuthenticated |
+| GET | `api/bulk/import/` | BulkImportView | custom/standard | None | IsAuthenticated |
+| POST | `api/bulk/import/` | BulkImportView | custom/standard | None | IsAuthenticated |
+| PUT | `api/bulk/import/` | BulkImportView | custom/standard | None | IsAuthenticated |
+| PATCH | `api/bulk/import/` | BulkImportView | custom/standard | None | IsAuthenticated |
+| DELETE | `api/bulk/import/` | BulkImportView | custom/standard | None | IsAuthenticated |
+| TRACE | `api/bulk/import/` | BulkImportView | custom/standard | None | IsAuthenticated |
+| GET | `api/bulk/import-trainees/` | BulkTraineeImportView | custom/standard | None | IsAuthenticated |
+| POST | `api/bulk/import-trainees/` | BulkTraineeImportView | custom/standard | None | IsAuthenticated |
+| PUT | `api/bulk/import-trainees/` | BulkTraineeImportView | custom/standard | None | IsAuthenticated |
+| PATCH | `api/bulk/import-trainees/` | BulkTraineeImportView | custom/standard | None | IsAuthenticated |
+| DELETE | `api/bulk/import-trainees/` | BulkTraineeImportView | custom/standard | None | IsAuthenticated |
+| TRACE | `api/bulk/import-trainees/` | BulkTraineeImportView | custom/standard | None | IsAuthenticated |
+| GET | `api/bulk/import-supervisors/` | BulkSupervisorImportView | custom/standard | None | IsAuthenticated |
+| POST | `api/bulk/import-supervisors/` | BulkSupervisorImportView | custom/standard | None | IsAuthenticated |
+| PUT | `api/bulk/import-supervisors/` | BulkSupervisorImportView | custom/standard | None | IsAuthenticated |
+| PATCH | `api/bulk/import-supervisors/` | BulkSupervisorImportView | custom/standard | None | IsAuthenticated |
+| DELETE | `api/bulk/import-supervisors/` | BulkSupervisorImportView | custom/standard | None | IsAuthenticated |
+| TRACE | `api/bulk/import-supervisors/` | BulkSupervisorImportView | custom/standard | None | IsAuthenticated |
+| GET | `api/bulk/import-residents/` | BulkResidentImportView | custom/standard | None | IsAuthenticated |
+| POST | `api/bulk/import-residents/` | BulkResidentImportView | custom/standard | None | IsAuthenticated |
+| PUT | `api/bulk/import-residents/` | BulkResidentImportView | custom/standard | None | IsAuthenticated |
+| PATCH | `api/bulk/import-residents/` | BulkResidentImportView | custom/standard | None | IsAuthenticated |
+| DELETE | `api/bulk/import-residents/` | BulkResidentImportView | custom/standard | None | IsAuthenticated |
+| TRACE | `api/bulk/import-residents/` | BulkResidentImportView | custom/standard | None | IsAuthenticated |
+| GET | `api/notifications/` | NotificationListView | custom/standard | NotificationSerializer | IsAuthenticated |
+| POST | `api/notifications/` | NotificationListView | custom/standard | NotificationSerializer | IsAuthenticated |
+| PUT | `api/notifications/` | NotificationListView | custom/standard | NotificationSerializer | IsAuthenticated |
+| PATCH | `api/notifications/` | NotificationListView | custom/standard | NotificationSerializer | IsAuthenticated |
+| DELETE | `api/notifications/` | NotificationListView | custom/standard | NotificationSerializer | IsAuthenticated |
+| TRACE | `api/notifications/` | NotificationListView | custom/standard | NotificationSerializer | IsAuthenticated |
+| GET | `api/notifications/mark-read/` | NotificationMarkReadView | custom/standard | None | IsAuthenticated |
+| POST | `api/notifications/mark-read/` | NotificationMarkReadView | custom/standard | None | IsAuthenticated |
+| PUT | `api/notifications/mark-read/` | NotificationMarkReadView | custom/standard | None | IsAuthenticated |
+| PATCH | `api/notifications/mark-read/` | NotificationMarkReadView | custom/standard | None | IsAuthenticated |
+| DELETE | `api/notifications/mark-read/` | NotificationMarkReadView | custom/standard | None | IsAuthenticated |
+| TRACE | `api/notifications/mark-read/` | NotificationMarkReadView | custom/standard | None | IsAuthenticated |
+| GET | `api/notifications/preferences/` | NotificationPreferenceView | custom/standard | None | IsAuthenticated |
+| POST | `api/notifications/preferences/` | NotificationPreferenceView | custom/standard | None | IsAuthenticated |
+| PUT | `api/notifications/preferences/` | NotificationPreferenceView | custom/standard | None | IsAuthenticated |
+| PATCH | `api/notifications/preferences/` | NotificationPreferenceView | custom/standard | None | IsAuthenticated |
+| DELETE | `api/notifications/preferences/` | NotificationPreferenceView | custom/standard | None | IsAuthenticated |
+| TRACE | `api/notifications/preferences/` | NotificationPreferenceView | custom/standard | None | IsAuthenticated |
+| GET | `api/notifications/unread-count/` | NotificationUnreadCountView | custom/standard | None | IsAuthenticated |
+| POST | `api/notifications/unread-count/` | NotificationUnreadCountView | custom/standard | None | IsAuthenticated |
+| PUT | `api/notifications/unread-count/` | NotificationUnreadCountView | custom/standard | None | IsAuthenticated |
+| PATCH | `api/notifications/unread-count/` | NotificationUnreadCountView | custom/standard | None | IsAuthenticated |
+| DELETE | `api/notifications/unread-count/` | NotificationUnreadCountView | custom/standard | None | IsAuthenticated |
+| TRACE | `api/notifications/unread-count/` | NotificationUnreadCountView | custom/standard | None | IsAuthenticated |
+| GET | `api/reports/templates/` | ReportTemplateListView | custom/standard | ReportTemplateSerializer | IsAuthenticated |
+| POST | `api/reports/templates/` | ReportTemplateListView | custom/standard | ReportTemplateSerializer | IsAuthenticated |
+| PUT | `api/reports/templates/` | ReportTemplateListView | custom/standard | ReportTemplateSerializer | IsAuthenticated |
+| PATCH | `api/reports/templates/` | ReportTemplateListView | custom/standard | ReportTemplateSerializer | IsAuthenticated |
+| DELETE | `api/reports/templates/` | ReportTemplateListView | custom/standard | ReportTemplateSerializer | IsAuthenticated |
+| TRACE | `api/reports/templates/` | ReportTemplateListView | custom/standard | ReportTemplateSerializer | IsAuthenticated |
+| GET | `api/reports/generate/` | ReportGenerateView | custom/standard | None | IsAuthenticated |
+| POST | `api/reports/generate/` | ReportGenerateView | custom/standard | None | IsAuthenticated |
+| PUT | `api/reports/generate/` | ReportGenerateView | custom/standard | None | IsAuthenticated |
+| PATCH | `api/reports/generate/` | ReportGenerateView | custom/standard | None | IsAuthenticated |
+| DELETE | `api/reports/generate/` | ReportGenerateView | custom/standard | None | IsAuthenticated |
+| TRACE | `api/reports/generate/` | ReportGenerateView | custom/standard | None | IsAuthenticated |
+| GET | `api/reports/scheduled/` | ScheduledReportListCreateView | custom/standard | ScheduledReportSerializer | IsAuthenticated |
+| POST | `api/reports/scheduled/` | ScheduledReportListCreateView | custom/standard | ScheduledReportSerializer | IsAuthenticated |
+| PUT | `api/reports/scheduled/` | ScheduledReportListCreateView | custom/standard | ScheduledReportSerializer | IsAuthenticated |
+| PATCH | `api/reports/scheduled/` | ScheduledReportListCreateView | custom/standard | ScheduledReportSerializer | IsAuthenticated |
+| DELETE | `api/reports/scheduled/` | ScheduledReportListCreateView | custom/standard | ScheduledReportSerializer | IsAuthenticated |
+| TRACE | `api/reports/scheduled/` | ScheduledReportListCreateView | custom/standard | ScheduledReportSerializer | IsAuthenticated |
+| GET | `api/reports/scheduled/<int:pk>/` | ScheduledReportDetailView | custom/standard | ScheduledReportSerializer | IsAuthenticated |
+| POST | `api/reports/scheduled/<int:pk>/` | ScheduledReportDetailView | custom/standard | ScheduledReportSerializer | IsAuthenticated |
+| PUT | `api/reports/scheduled/<int:pk>/` | ScheduledReportDetailView | custom/standard | ScheduledReportSerializer | IsAuthenticated |
+| PATCH | `api/reports/scheduled/<int:pk>/` | ScheduledReportDetailView | custom/standard | ScheduledReportSerializer | IsAuthenticated |
+| DELETE | `api/reports/scheduled/<int:pk>/` | ScheduledReportDetailView | custom/standard | ScheduledReportSerializer | IsAuthenticated |
+| TRACE | `api/reports/scheduled/<int:pk>/` | ScheduledReportDetailView | custom/standard | ScheduledReportSerializer | IsAuthenticated |
+

@@ -1,0 +1,58 @@
+# Backend codebase snapshot
+Tue May  5 09:10:07 UTC 2026
+
+total 2824
+drwxrwxr-x 11 munaim munaim    4096 Apr 25 21:00 .
+drwxrwxr-x 17 munaim munaim    4096 Apr 25 22:06 ..
+-rw-r--r--  1 munaim munaim  573440 Apr 25 21:00 .coverage
+-rw-rw-r--  1 munaim munaim     537 Mar  5 21:35 .coveragerc
+-rw-rw-r--  1 munaim munaim    4009 Mar  5 21:35 .env.coolify.example
+-rw-rw-r--  1 munaim munaim    5661 Mar  5 21:35 .env.example
+-rw-rw-r--  1 munaim munaim     322 Mar  5 21:35 .flake8
+drwxrwxr-x  3 munaim munaim    4096 Apr 21 05:54 .pytest_cache
+drwxrwxr-x  5 munaim munaim    4096 Mar 13 20:45 .venv
+-rw-rw-r--  1 munaim munaim    1828 Mar  5 21:35 Dockerfile
+drwxrwxr-x  3 munaim munaim    4096 Apr 22 21:27 OUT
+drwxrwxr-x  2 munaim munaim    4096 Apr 21 23:41 __pycache__
+-rw-rw-r--  1 munaim munaim    2523 Mar  5 21:35 conftest.py
+-rw-r--r--  1 munaim munaim 2224128 Apr 22 21:21 db.sqlite3
+drwxrwxrwx  2 munaim munaim    4096 Apr 21 05:40 logs
+-rw-rw-r--  1 munaim munaim     917 Mar  5 21:35 manage.py
+-rw-rw-r--  1 munaim munaim    1138 Mar  5 21:35 pyproject.toml
+-rw-rw-r--  1 munaim munaim     394 Mar 14 01:07 pytest.ini
+-rw-rw-r--  1 munaim munaim     102 Mar  5 21:35 requirements-dev.txt
+-rw-rw-r--  1 munaim munaim     596 Mar  5 21:35 requirements.txt
+drwxrwxr-x 15 munaim munaim    4096 Apr 22 21:19 sims
+drwxrwxr-x  3 munaim munaim    4096 Apr 25 21:50 sims_project
+drwxrwxr-x  5 munaim munaim    4096 Mar  5 21:35 static
+drwxrwxr-x 12 munaim munaim    4096 Mar  5 21:35 templates
+
+## backend key files
+backend/.env.coolify.example
+backend/.env.example
+backend/Dockerfile
+backend/manage.py
+backend/pyproject.toml
+backend/pytest.ini
+backend/requirements-dev.txt
+backend/requirements.txt
+
+## backend apps
+backend/sims
+backend/sims/users
+backend/sims_project
+backend/templates/users
+
+## backend settings locations
+backend/manage.py:8:    if "test" in sys.argv and "DJANGO_SETTINGS_MODULE" not in os.environ:
+backend/manage.py:12:    os.environ.setdefault("DJANGO_SETTINGS_MODULE", default_settings)
+backend/pyproject.toml:22:DJANGO_SETTINGS_MODULE = "sims_project.settings"
+backend/sims_project/wsgi.py:28:os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'sims_project.settings')
+backend/sims_project/settings.py:286:REST_FRAMEWORK = {
+backend/sims_project/settings.py:313:SPECTACULAR_SETTINGS = {
+backend/sims_project/celery.py:12:os.environ.setdefault("DJANGO_SETTINGS_MODULE", "sims_project.settings")
+backend/sims_project/settings_test.py:50:REST_FRAMEWORK = {
+backend/sims_project/settings_test.py:51:    **globals().get("REST_FRAMEWORK", {}),
+backend/sims_project/asgi.py:18:os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'sims_project.settings')
+backend/pytest.ini:2:DJANGO_SETTINGS_MODULE = sims_project.settings_test
+backend/sims/_devtools/truthmap_extract.py:7:os.environ.setdefault("DJANGO_SETTINGS_MODULE", "sims_project.settings")

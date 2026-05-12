@@ -1,0 +1,326 @@
+# OpenAPI quick grep
+Tue May  5 09:08:57 UTC 2026
+
+## Paths containing auth/token/login
+63:      - jwtAuth: []
+90:      - jwtAuth: []
+113:      - jwtAuth: []
+147:      - jwtAuth: []
+180:      - jwtAuth: []
+202:      - jwtAuth: []
+221:      - jwtAuth: []
+264:      - jwtAuth: []
+291:      - jwtAuth: []
+314:      - jwtAuth: []
+348:      - jwtAuth: []
+381:      - jwtAuth: []
+403:      - jwtAuth: []
+466:      - jwtAuth: []
+493:      - jwtAuth: []
+516:      - jwtAuth: []
+550:      - jwtAuth: []
+583:      - jwtAuth: []
+605:      - jwtAuth: []
+636:      - jwtAuth: []
+651:      - jwtAuth: []
+668:      - jwtAuth: []
+679:      - jwtAuth: []
+694:      - jwtAuth: []
+717:          - login
+718:          - logout
+727:          * `login` - Login
+728:          * `logout` - Logout
+758:      - jwtAuth: []
+780:      - jwtAuth: []
+795:      - jwtAuth: []
+829:      - jwtAuth: []
+855:      - jwtAuth: []
+870:      - jwtAuth: []
+879:  /api/auth/change-password/:
+885:        POST /api/auth/change-password/
+906:      - jwtAuth: []
+913:  /api/auth/login/:
+915:      operationId: api_auth_login_create
+916:      description: Custom token obtain view with extended user data and rate limiting.
+938:  /api/auth/logout/:
+940:      operationId: api_auth_logout_create
+942:        Logout (blacklist refresh token if implemented).
+944:        POST /api/auth/logout/
+946:            "refresh": "refresh_token_string"
+963:      - jwtAuth: []
+969:          description: Invalid token
+970:  /api/auth/me/:
+976:      - jwtAuth: []
+985:  /api/auth/password-reset/:
+991:        POST /api/auth/password-reset/
+1010:      - jwtAuth: []
+1016:  /api/auth/password-reset/confirm/:
+1020:        Confirm password reset with token.
+1022:        POST /api/auth/password-reset/confirm/
+1025:            "token": "reset_token",
+1044:      - jwtAuth: []
+1051:          description: Invalid request or token
+1052:  /api/auth/profile/:
+1058:        GET /api/auth/profile/
+1062:      - jwtAuth: []
+1071:  /api/auth/profile/update/:
+1077:        PUT/PATCH /api/auth/profile/
+1093:      - jwtAuth: []
+1107:        PUT/PATCH /api/auth/profile/
+1122:      - jwtAuth: []
+1131:  /api/auth/refresh/:
+1135:        Takes a refresh type JSON web token and returns an access type JSON web
+1136:        token if the refresh token is valid.
+1158:  /api/auth/register/:
+1164:        POST /api/auth/register/
+1189:      - jwtAuth: []
+1217:      - jwtAuth: []
+1238:      - jwtAuth: []
+1261:      - jwtAuth: []
+1290:      - jwtAuth: []
+1325:      - jwtAuth: []
+1359:      - jwtAuth: []
+1388:      - jwtAuth: []
+1421:      - jwtAuth: []
+1450:      - jwtAuth: []
+1471:      - jwtAuth: []
+1482:      - jwtAuth: []
+1493:      - jwtAuth: []
+1508:      - jwtAuth: []
+1519:      - jwtAuth: []
+1577:      - jwtAuth: []
+1603:      - jwtAuth: []
+1625:      - jwtAuth: []
+1658:      - jwtAuth: []
+1690:      - jwtAuth: []
+1711:      - jwtAuth: []
+1749:      - jwtAuth: []
+1775:      - jwtAuth: []
+1797:      - jwtAuth: []
+1830:      - jwtAuth: []
+1862:      - jwtAuth: []
+1883:      - jwtAuth: []
+1901:      - jwtAuth: []
+1943:      - jwtAuth: []
+1969:      - jwtAuth: []
+1991:      - jwtAuth: []
+2024:      - jwtAuth: []
+2056:      - jwtAuth: []
+2077:      - jwtAuth: []
+2131:      - jwtAuth: []
+2157:      - jwtAuth: []
+2179:      - jwtAuth: []
+2212:      - jwtAuth: []
+2244:      - jwtAuth: []
+2265:      - jwtAuth: []
+2307:      - jwtAuth: []
+2333:      - jwtAuth: []
+2355:      - jwtAuth: []
+2388:      - jwtAuth: []
+2420:      - jwtAuth: []
+2441:      - jwtAuth: []
+2475:      - jwtAuth: []
+2501:      - jwtAuth: []
+2523:      - jwtAuth: []
+2556:      - jwtAuth: []
+2588:      - jwtAuth: []
+2609:      - jwtAuth: []
+2627:      - jwtAuth: []
+2661:      - jwtAuth: []
+2687:      - jwtAuth: []
+2709:      - jwtAuth: []
+2742:      - jwtAuth: []
+2774:      - jwtAuth: []
+2795:      - jwtAuth: []
+2825:      - jwtAuth: []
+2859:      - jwtAuth: []
+2893:      - jwtAuth: []
+2927:      - jwtAuth: []
+2953:      - jwtAuth: []
+2975:      - jwtAuth: []
+3008:      - jwtAuth: []
+3040:      - jwtAuth: []
+3061:      - jwtAuth: []
+3091:      - jwtAuth: []
+3125:      - jwtAuth: []
+3159:      - jwtAuth: []
+3193:      - jwtAuth: []
+3219:      - jwtAuth: []
+3241:      - jwtAuth: []
+3274:      - jwtAuth: []
+3306:      - jwtAuth: []
+3327:      - jwtAuth: []
+3338:      - jwtAuth: []
+3349:      - jwtAuth: []
+3373:      - jwtAuth: []
+3406:      - jwtAuth: []
+3422:      - jwtAuth: []
+3433:      - jwtAuth: []
+3453:      - jwtAuth: []
+3482:      - jwtAuth: []
+3510:      - jwtAuth: []
+3544:      - jwtAuth: []
+3559:      - jwtAuth: []
+3571:      - jwtAuth: []
+3594:      - jwtAuth: []
+3620:      - jwtAuth: []
+3648:      - jwtAuth: []
+3664:      - jwtAuth: []
+3687:      - jwtAuth: []
+3709:      - jwtAuth: []
+3730:      - jwtAuth: []
+3766:      - jwtAuth: []
+3793:      - jwtAuth: []
+3804:      - jwtAuth: []
+3829:      - jwtAuth: []
+3844:      - jwtAuth: []
+3874:      - jwtAuth: []
+3900:      - jwtAuth: []
+3923:      - jwtAuth: []
+3957:      - jwtAuth: []
+3990:      - jwtAuth: []
+4012:      - jwtAuth: []
+4043:      - jwtAuth: []
+4078:      - jwtAuth: []
+4113:      - jwtAuth: []
+4159:      - jwtAuth: []
+4185:      - jwtAuth: []
+4207:      - jwtAuth: []
+4240:      - jwtAuth: []
+4272:      - jwtAuth: []
+4293:      - jwtAuth: []
+4323:      - jwtAuth: []
+4349:      - jwtAuth: []
+4371:      - jwtAuth: []
+4404:      - jwtAuth: []
+4436:      - jwtAuth: []
+4457:      - jwtAuth: []
+4498:      - jwtAuth: []
+4536:      - jwtAuth: []
+4563:      - jwtAuth: []
+4601:      - jwtAuth: []
+4638:      - jwtAuth: []
+4664:      - jwtAuth: []
+4683:      - jwtAuth: []
+
+## Tags summary
+37:          - diploma
+38:          - dm
+39:          - fellowship
+40:          - mbbs
+41:          - mch
+42:          - md
+43:          - ms
+61:      - academics
+76:      - academics
+111:      - academics
+133:      - academics
+167:      - academics
+200:      - academics
+219:      - academics
+262:      - academics
+277:      - academics
+312:      - academics
+334:      - academics
+368:      - academics
+401:      - academics
+444:          - active
+445:          - admitted
+446:          - enrolled
+447:          - expelled
+448:          - graduated
+449:          - on_leave
+450:          - suspended
+451:          - withdrawn
+464:      - academics
+479:      - academics
+514:      - academics
+536:      - academics
+570:      - academics
+603:      - academics
+622:      - academics
+649:      - api
+666:      - api
+677:      - api
+692:      - api
+714:          - create
+715:          - delete
+716:          - export
+717:          - login
+718:          - logout
+719:          - update
+720:          - view
+756:      - api
+778:      - api
+793:      - api
+827:      - api
+841:      - api
+868:      - api
+892:      - api
+918:      - api
+949:      - api
+974:      - api
+996:      - api
+1030:      - api
+1060:      - api
+1079:      - api
+1109:      - api
+1138:      - api
+1175:      - api
+1203:      - api
+1236:      - api
+1247:      - api
+1276:      - api
+1311:      - api
+1345:      - api
+1374:      - api
+1419:      - api
+1436:      - api
+1469:      - api
+1480:      - api
+1491:      - api
+1506:      - api
+1517:      - api
+1545:          - faculty
+1546:          - resident
+1547:          - supervisor
+1575:      - api
+1589:      - api
+1623:      - api
+1644:      - api
+1677:      - api
+1709:      - api
+1747:      - api
+1761:      - api
+1795:      - api
+1816:      - api
+1849:      - api
+1881:      - api
+1899:      - api
+1941:      - api
+1955:      - api
+1989:      - api
+2010:      - api
+2043:      - api
+2075:      - api
+2095:          - faculty_site
+2096:          - posting
+2097:          - primary_training
+2129:      - api
+2143:      - api
+2177:      - api
+2198:      - api
+2231:      - api
+2263:      - api
+2305:      - api
+2319:      - api
+2353:      - api
+2374:      - api
+2407:      - api
+2439:      - api
+2473:      - api
+2487:      - api
+2521:      - api
+2542:      - api
+2575:      - api
+2607:      - api
