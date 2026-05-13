@@ -1,3 +1,4 @@
+/// <reference types="jest" />
 import { authApi } from './auth';
 import apiClient from './client';
 

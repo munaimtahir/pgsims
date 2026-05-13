@@ -99,7 +99,7 @@ test.describe('Resident academic progress', () => {
 // ------------------------------------------------------------------
 
 test.describe('Resident research workflow', () => {
-  test('research page loads and shows wizard steps', async ({ page, context }) => {
+  test('research page loads and shows deferred notice', async ({ page, context }) => {
     await loginAs(context, page, 'pg');
     await page.goto('/dashboard/resident/research');
 
@@ -107,11 +107,8 @@ test.describe('Resident research workflow', () => {
     await page.waitForLoadState('networkidle');
     await expect(page.locator('main').first()).toBeVisible();
 
-    // Wizard steps should be visible
-    const stepLabels = ['Topic & Supervisor', 'Upload Synopsis', 'Submit to Supervisor'];
-    for (const label of stepLabels) {
-      await expect(page.getByText(label).first()).toBeVisible({ timeout: 10000 });
-    }
+    // Research workflow is deferred - page shows deferred notice instead of wizard
+    await expect(page.getByText(/deferred|not yet available/i)).toBeVisible({ timeout: 10000 });
   });
 
   test('research API returns project for e2e_pg (or 404 if none created)', async ({ page, context }) => {

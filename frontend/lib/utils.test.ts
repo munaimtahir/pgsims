@@ -1,3 +1,4 @@
+/// <reference types="jest" />
 import { downloadFile } from './utils';
 
 describe('utils', () => {

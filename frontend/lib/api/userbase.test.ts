@@ -1,3 +1,4 @@
+/// <reference types="jest" />
 import { userbaseApi } from './userbase';
 import apiClient from './client';
 

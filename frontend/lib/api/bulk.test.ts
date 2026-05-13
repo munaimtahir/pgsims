@@ -1,3 +1,4 @@
+/// <reference types="jest" />
 import { bulkApi } from './bulk';
 import apiClient from './client';
 

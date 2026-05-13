@@ -7,6 +7,14 @@ const createJestConfig = nextJest({
 
 // Add any custom config to be passed to Jest
 const customJestConfig = {
+  globals: {
+    'ts-jest': {
+      tsconfig: {
+        jsx: 'react',
+        types: ['jest', '@testing-library/jest-dom'],
+      },
+    },
+  },
   setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
   testEnvironment: 'jest-environment-jsdom',
   moduleNameMapper: {
