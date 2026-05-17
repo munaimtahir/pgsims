@@ -1,4 +1,5 @@
-/// <reference types="jest" />
+import { afterEach, describe, expect, it, jest } from '@jest/globals';
+import '@testing-library/jest-dom';
 import { bulkApi } from './bulk';
 import apiClient from './client';
 
@@ -11,12 +12,14 @@ jest.mock('./client', () => ({
 }));
 
 describe('bulkApi', () => {
+  const mockedPost = apiClient.post as jest.MockedFunction<(...args: unknown[]) => Promise<{ data: unknown }>>;
+
   afterEach(() => {
     jest.clearAllMocks();
   });
 
   it('importEntity calls correct endpoint', async () => {
-    (apiClient.post as jest.Mock).mockResolvedValue({ data: {} });
+    mockedPost.mockResolvedValue({ data: {} });
     const file = new File([''], 'test.csv');
     await bulkApi.importEntity('residents', file, 'apply');
     expect(apiClient.post).toHaveBeenCalledWith(

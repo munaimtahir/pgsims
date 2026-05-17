@@ -1,7 +1,7 @@
 'use client';
+import Link from 'next/link';
 import { useEffect, useState } from 'react';
 
-import BulkSetupWorkspace from '@/components/utrmc/BulkSetupWorkspace';
 import PageHeader from '@/components/ui/PageHeader';
 import MetricCard from '@/components/ui/MetricCard';
 import WorkflowStatusBadge from '@/components/ui/WorkflowStatusBadge';
@@ -344,12 +344,26 @@ export default function UTRMCOverviewPage() {
   const completedRotations = rotations.filter((item) => item.status === 'COMPLETED').slice(0, 5);
 
   const cards = [
-    { label: 'Hospitals', value: stats.hospitals },
-    { label: 'Departments', value: stats.departments },
-    { label: 'Total Users', value: stats.users },
+    { label: 'Residents', value: stats.residents },
     { label: 'Supervisors', value: stats.supervisors },
-    { label: 'Residents / PGs', value: stats.residents },
+    { label: 'Departments', value: stats.departments },
+    { label: 'Programs', value: opsDashboard?.cross_department_overview.program_count ?? 0 },
+    {
+      label: 'Pending setup issues',
+      value: dqIncomplete ?? 0,
+      tone: dqIncomplete === null ? 'default' : dqIncomplete > 0 ? 'warning' : 'success',
+    },
   ];
+
+  const dashboardStatus = (() => {
+    if (stats.hospitals === 0 && stats.departments === 0 && stats.users === 0) {
+      return { label: 'Clean baseline', tone: 'success' as const };
+    }
+    if ((dqIncomplete ?? 0) > 0 || pendingSynopsis.length + pendingThesis.length + pendingCompletions.length > 0) {
+      return { label: 'Needs attention', tone: 'warning' as const };
+    }
+    return { label: 'Active setup', tone: 'info' as const };
+  })();
 
   if (loading) {
     return <p className="text-gray-500">Loading...</p>;
@@ -358,41 +372,90 @@ export default function UTRMCOverviewPage() {
   return (
     <div className="pg-page">
       <PageHeader
-        title="UTRMC Overview"
-        description="Cross-department monitoring for verification queues, rotation operations, and readiness signals."
+        title="UTRMC Dashboard"
+        description="Simple overview of postgraduate training system setup and activity."
         badges={[
           {
-            label: canManageRotations ? 'Administrative scope enabled' : 'Read-only oversight mode',
-            tone: canManageRotations ? 'info' : 'default',
+            label: dashboardStatus.label,
+            tone: dashboardStatus.tone,
           },
         ]}
+        actions={(
+          <Link href="/dashboard/utrmc/onboarding" className="pg-btn-primary inline-flex items-center">
+            Open onboarding tools
+          </Link>
+        )}
       />
-      {error && <div className="mb-4 bg-red-50 border border-red-200 text-red-700 rounded-lg p-4">{error}</div>}
+      {error && <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">{error}</div>}
       {message && <div className="mb-4 bg-green-50 border border-green-200 text-green-700 rounded-lg p-4">{message}</div>}
-      <section className="space-y-4">
+      <section className="space-y-6">
         <div className="pg-kpi-grid md:grid-cols-5">
           {cards.map((card) => (
-            <MetricCard key={card.label} label={card.label} value={card.value} />
+            <MetricCard
+              key={card.label}
+              label={card.label}
+              value={card.value}
+              tone={card.tone as 'default' | 'warning' | 'success' | 'info' | undefined}
+            />
           ))}
         </div>
-        {canManageRotations && (
-          <div className="pg-card flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <p className="text-sm text-gray-600">Data Quality</p>
-              <p className="text-lg font-semibold text-gray-900">
-                {dqIncomplete === null ? 'Unavailable' : `${dqIncomplete} incomplete profiles`}
-              </p>
+        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)] gap-4">
+          <div className="pg-card">
+            <h2 className="pg-section-title">Today’s attention</h2>
+            <p className="pg-section-note">What needs review right now.</p>
+            <div className="mt-4 grid grid-cols-2 gap-3">
+              <MetricCard
+                label="Logbook reviews"
+                value={opsDashboard?.cross_department_overview.pending_logbook_reviews ?? 0}
+                tone="info"
+              />
+              <MetricCard label="Thesis reviews" value={opsDashboard?.pending_thesis_reviews ?? 0} tone="warning" />
+              <MetricCard label="Synopsis reviews" value={opsDashboard?.pending_synopsis_reviews ?? 0} tone="warning" />
+              <MetricCard
+                label="Rotation verifications"
+                value={opsDashboard?.pending_rotation_completion_verifications ?? 0}
+                tone="info"
+              />
             </div>
-            <a href="/dashboard/utrmc/data-quality" className="pg-btn-primary">
-              Open Data Quality
-            </a>
           </div>
-        )}
+
+          <div className="pg-card">
+            <h2 className="pg-section-title">Setup completeness</h2>
+            <p className="pg-section-note">Status of the core university data needed for pilot use.</p>
+            <div className="mt-4 space-y-3 text-sm text-slate-700">
+              <p>Hospitals: <span className="font-medium text-slate-900">{stats.hospitals}</span></p>
+              <p>Departments: <span className="font-medium text-slate-900">{stats.departments}</span></p>
+              <p>Hospital-department links: <span className="font-medium text-slate-900">{placements.length}</span></p>
+              <p>Data quality issues: <span className="font-medium text-slate-900">{dqIncomplete ?? 0}</span></p>
+            </div>
+            <div className="mt-4 flex flex-wrap gap-2">
+              <Link href="/dashboard/utrmc/hospitals" className="rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700">
+                Hospitals
+              </Link>
+              <Link href="/dashboard/utrmc/departments" className="rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700">
+                Departments
+              </Link>
+              <Link href="/dashboard/utrmc/matrix" className="rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700">
+                Matrix
+              </Link>
+            </div>
+          </div>
+        </div>
+
+        <div className="pg-card flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h2 className="pg-section-title">Onboarding & import tools</h2>
+              <p className="pg-section-note">Upload residents, supervisors, departments, and program data.</p>
+            </div>
+            <Link href="/dashboard/utrmc/onboarding" className="pg-btn-primary">
+              Open onboarding tools
+            </Link>
+        </div>
       </section>
 
       {opsDashboard && (
-        <section className="space-y-4">
-          <h2 className="text-xl font-semibold text-gray-900">Cross-Department Readiness</h2>
+        <section className="space-y-4 mt-8">
+          <h2 className="text-xl font-semibold text-gray-900">Recent activity</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             <MetricCard label="Active Residents" value={opsDashboard.cross_department_overview.active_residents} />
             <MetricCard label="Pending Synopsis Reviews" value={opsDashboard.pending_synopsis_reviews} tone="warning" />
@@ -406,8 +469,22 @@ export default function UTRMCOverviewPage() {
         </section>
       )}
 
+      <section className="mt-8 space-y-4">
+        <div className="pg-card flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <p className="text-sm text-gray-600">Data quality</p>
+            <p className="text-lg font-semibold text-gray-900">
+              {dqIncomplete === null ? 'No onboarding data yet' : `${dqIncomplete} incomplete profile(s)`}
+            </p>
+          </div>
+          <Link href="/dashboard/utrmc/data-quality" className="pg-btn-primary">
+            Open data quality
+          </Link>
+        </div>
+      </section>
+
       {canManageRotations && (
-        <section className="space-y-4">
+        <section className="space-y-4 mt-8">
           <h2 className="text-xl font-semibold text-gray-900">Certificate Verification Queues</h2>
           {pendingSynopsis.length + pendingThesis.length === 0 ? (
             <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 text-sm text-gray-500">
@@ -467,9 +544,7 @@ export default function UTRMCOverviewPage() {
         </section>
       )}
 
-      {canManageRotations && <BulkSetupWorkspace />}
-
-      <section className="space-y-6">
+      <section className="space-y-6 mt-8">
         <div>
           <h2 className="text-xl font-semibold text-gray-900">Rotation Operations</h2>
           <p className="text-sm text-gray-500 mt-1">
@@ -478,7 +553,7 @@ export default function UTRMCOverviewPage() {
         </div>
 
         {!canManageRotations ? (
-          <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 text-sm text-blue-800">
+          <div className="rounded-xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-800">
             Rotation operations are read-only for UTRMC users. Use an admin or UTRMC admin account to create or transition rotations.
           </div>
         ) : (

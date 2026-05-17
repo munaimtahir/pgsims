@@ -86,7 +86,7 @@ test.describe('Feature-layer role-aware dashboards', () => {
 
     await loginAsRole(context, page, 'utrmc_admin_user');
     await page.goto('/dashboard/utrmc');
-    await expect(page.getByRole('heading', { name: /UTRMC Overview/i })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /UTRMC (Dashboard|Overview)/i })).toBeVisible();
     await expect(page.getByRole('heading', { name: /Cross-Department Readiness/i })).toBeVisible();
     await expect(page.getByText(/Pending Synopsis Reviews/i)).toBeVisible();
     await expect(page.getByText(/Pending Thesis Reviews/i)).toBeVisible();

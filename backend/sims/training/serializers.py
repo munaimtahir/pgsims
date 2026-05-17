@@ -63,7 +63,7 @@ class ProgramRotationTemplateSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ["id", "created_at"]
 
-    def get_allowed_hospital_names(self, obj):
+    def get_allowed_hospital_names(self, obj) -> list[str]:
         return [h.name for h in obj.allowed_hospitals.all()]
 
 
@@ -81,7 +81,7 @@ class ResidentTrainingRecordSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ["id", "created_by", "created_at", "updated_at"]
 
-    def get_resident_name(self, obj):
+    def get_resident_name(self, obj) -> str:
         return obj.resident_user.get_full_name() or obj.resident_user.username
 
     def create(self, validated_data):
@@ -120,11 +120,11 @@ class RotationAssignmentSerializer(serializers.ModelSerializer):
             "created_at", "updated_at",
         ]
 
-    def get_resident_name(self, obj):
+    def get_resident_name(self, obj) -> str:
         user = obj.resident_training.resident_user
         return user.get_full_name() or user.username
 
-    def get_program_name(self, obj):
+    def get_program_name(self, obj) -> str:
         return obj.resident_training.program.name
 
     def validate(self, attrs):
@@ -153,7 +153,7 @@ class LeaveRequestSerializer(serializers.ModelSerializer):
         ]
         extra_kwargs = {"resident_training": {"required": True}}
 
-    def get_resident_name(self, obj):
+    def get_resident_name(self, obj) -> str:
         user = obj.resident_training.resident_user
         return user.get_full_name() or user.username
 
@@ -175,7 +175,7 @@ class DeputationPostingSerializer(serializers.ModelSerializer):
             "created_at", "updated_at",
         ]
 
-    def get_resident_name(self, obj):
+    def get_resident_name(self, obj) -> str:
         user = obj.resident_training.resident_user
         return user.get_full_name() or user.username
 
@@ -275,12 +275,12 @@ class ResidentResearchProjectSerializer(serializers.ModelSerializer):
             "accepted_at", "created_at", "updated_at",
         ]
 
-    def get_supervisor_name(self, obj):
+    def get_supervisor_name(self, obj) -> str | None:
         if obj.supervisor:
             return obj.supervisor.get_full_name() or obj.supervisor.username
         return None
 
-    def get_resident_name(self, obj):
+    def get_resident_name(self, obj) -> str:
         user = obj.resident_training_record.resident_user
         return user.get_full_name() or user.username
 
@@ -406,7 +406,7 @@ class LogbookThresholdConfigSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ["id", "configured_by", "created_at", "updated_at"]
 
-    def get_configured_by_name(self, obj):
+    def get_configured_by_name(self, obj) -> str | None:
         if obj.configured_by:
             return obj.configured_by.get_full_name() or obj.configured_by.username
         return None
@@ -420,7 +420,7 @@ class LogbookReviewSerializer(serializers.ModelSerializer):
         fields = ["id", "entry", "reviewer", "reviewer_name", "action", "comments", "created_at"]
         read_only_fields = ["id", "reviewer", "created_at"]
 
-    def get_reviewer_name(self, obj):
+    def get_reviewer_name(self, obj) -> str | None:
         if obj.reviewer:
             return obj.reviewer.get_full_name() or obj.reviewer.username
         return None
@@ -483,11 +483,11 @@ class LogbookEntrySerializer(serializers.ModelSerializer):
             "reviews",
         ]
 
-    def get_resident_name(self, obj):
+    def get_resident_name(self, obj) -> str:
         user = obj.resident_training_record.resident_user
         return user.get_full_name() or user.username
 
-    def get_reviewed_by_name(self, obj):
+    def get_reviewed_by_name(self, obj) -> str | None:
         if obj.reviewed_by:
             return obj.reviewed_by.get_full_name() or obj.reviewed_by.username
         return None
@@ -541,7 +541,7 @@ class SubmissionRequirementTemplateSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ["id", "created_by", "created_at", "updated_at"]
 
-    def get_created_by_name(self, obj):
+    def get_created_by_name(self, obj) -> str | None:
         if obj.created_by:
             return obj.created_by.get_full_name() or obj.created_by.username
         return None
@@ -567,7 +567,7 @@ class SubmissionDocumentSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ["id", "uploaded_by", "uploaded_by_name", "uploaded_at"]
 
-    def get_uploaded_by_name(self, obj):
+    def get_uploaded_by_name(self, obj) -> str | None:
         if obj.uploaded_by:
             return obj.uploaded_by.get_full_name() or obj.uploaded_by.username
         return None
@@ -581,7 +581,7 @@ class SubmissionReviewSerializer(serializers.ModelSerializer):
         fields = ["id", "submission", "reviewer", "reviewer_name", "action", "comments", "created_at"]
         read_only_fields = ["id", "reviewer", "reviewer_name", "created_at"]
 
-    def get_reviewer_name(self, obj):
+    def get_reviewer_name(self, obj) -> str | None:
         if obj.reviewer:
             return obj.reviewer.get_full_name() or obj.reviewer.username
         return None
@@ -620,12 +620,12 @@ class SubmissionCertificateSerializer(serializers.ModelSerializer):
             "metadata",
         ]
 
-    def get_issued_by_name(self, obj):
+    def get_issued_by_name(self, obj) -> str | None:
         if obj.issued_by:
             return obj.issued_by.get_full_name() or obj.issued_by.username
         return None
 
-    def get_verified_by_name(self, obj):
+    def get_verified_by_name(self, obj) -> str | None:
         if obj.verified_by:
             return obj.verified_by.get_full_name() or obj.verified_by.username
         return None
@@ -687,11 +687,11 @@ class ResidentSubmissionSerializer(serializers.ModelSerializer):
             "updated_at",
         ]
 
-    def get_resident_name(self, obj):
+    def get_resident_name(self, obj) -> str:
         user = obj.resident_training_record.resident_user
         return user.get_full_name() or user.username
 
-    def get_reviewed_by_name(self, obj):
+    def get_reviewed_by_name(self, obj) -> str | None:
         if obj.reviewed_by:
             return obj.reviewed_by.get_full_name() or obj.reviewed_by.username
         return None
@@ -708,10 +708,10 @@ class ResidentSubmissionSerializer(serializers.ModelSerializer):
             Q(department__isnull=True) | Q(department=user.home_department)
         )
 
-    def get_required_documents_count(self, obj):
+    def get_required_documents_count(self, obj) -> int:
         return self._required_requirements_queryset(obj).count()
 
-    def get_uploaded_required_count(self, obj):
+    def get_uploaded_required_count(self, obj) -> int:
         required_ids = list(self._required_requirements_queryset(obj).values_list("id", flat=True))
         if not required_ids:
             return 0
@@ -719,7 +719,7 @@ class ResidentSubmissionSerializer(serializers.ModelSerializer):
             "requirement_id"
         ).distinct().count()
 
-    def get_all_required_uploaded(self, obj):
+    def get_all_required_uploaded(self, obj) -> bool:
         total = self.get_required_documents_count(obj)
         if total == 0:
             return True
@@ -769,12 +769,12 @@ class RotationCertificateSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = fields
 
-    def get_issued_by_name(self, obj):
+    def get_issued_by_name(self, obj) -> str | None:
         if obj.issued_by:
             return obj.issued_by.get_full_name() or obj.issued_by.username
         return None
 
-    def get_verified_by_name(self, obj):
+    def get_verified_by_name(self, obj) -> str | None:
         if obj.verified_by:
             return obj.verified_by.get_full_name() or obj.verified_by.username
         return None
@@ -805,16 +805,16 @@ class RotationCompletionSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = fields
 
-    def get_resident_name(self, obj):
+    def get_resident_name(self, obj) -> str:
         user = obj.rotation.resident_training.resident_user
         return user.get_full_name() or user.username
 
-    def get_confirmed_by_name(self, obj):
+    def get_confirmed_by_name(self, obj) -> str | None:
         if obj.confirmed_by:
             return obj.confirmed_by.get_full_name() or obj.confirmed_by.username
         return None
 
-    def get_verified_by_name(self, obj):
+    def get_verified_by_name(self, obj) -> str | None:
         if obj.verified_by:
             return obj.verified_by.get_full_name() or obj.verified_by.username
         return None

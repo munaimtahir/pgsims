@@ -10,8 +10,8 @@ const ROLE_EXPECTATIONS: Array<{
   { role: 'resident_user', heading: /My Training Dashboard/i },
   { role: 'supervisor_user', heading: /Supervisor Dashboard/i },
   { role: 'hod_user', heading: /Supervisor Dashboard/i },
-  { role: 'utrmc_admin_user', heading: /UTRMC Overview/i },
-  { role: 'utrmc_staff_user', heading: /UTRMC Overview/i },
+  { role: 'utrmc_admin_user', heading: /UTRMC (Dashboard|Overview)/i },
+  { role: 'utrmc_staff_user', heading: /UTRMC (Dashboard|Overview)/i },
 ];
 
 test.describe('Feature-layer auth and smoke', () => {
@@ -43,7 +43,7 @@ test.describe('Feature-layer auth and smoke', () => {
 
     await loginAsRole(context, page, 'utrmc_admin_user');
     await page.goto('/dashboard/utrmc');
-    await expect(page.getByRole('heading', { name: /UTRMC Overview/i })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /UTRMC (Dashboard|Overview)/i })).toBeVisible();
 
     await page.goto('/dashboard/utrmc/eligibility-monitoring');
     await expect(page.getByRole('heading', { name: /Eligibility/i })).toBeVisible();

@@ -5,11 +5,12 @@ from django.conf import settings
 
 from django.contrib.auth import get_user_model
 from django.db.models import Q
-from rest_framework import permissions, status, viewsets
+from rest_framework import permissions, serializers, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from drf_spectacular.utils import extend_schema
 
 from sims.academics.models import Department
 from sims.common_permissions import IsTechAdmin
@@ -38,6 +39,10 @@ from sims.users.userbase_serializers import (
 )
 
 User = get_user_model()
+
+
+class UserbaseEmptySchemaSerializer(serializers.Serializer):
+    pass
 
 
 def _is_manager(user) -> bool:
@@ -506,7 +511,9 @@ class HODAssignmentViewSet(BaseManagedModelViewSet):
         return viewsets.ModelViewSet.retrieve(self, request, *args, **kwargs)
 
 
+@extend_schema(responses={200: None})
 class AuthMeView(APIView):
+    serializer_class = UserManagementSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
@@ -518,7 +525,9 @@ def _dq_enabled() -> bool:
     return bool(getattr(settings, "ENABLE_DATA_CORRECTION_LAYER", True))
 
 
+@extend_schema(responses={200: None})
 class DataQualitySummaryView(APIView):
+    serializer_class = UserbaseEmptySchemaSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
@@ -546,7 +555,9 @@ class DataQualitySummaryView(APIView):
         )
 
 
+@extend_schema(responses={200: None})
 class DataQualityUsersView(APIView):
+    serializer_class = UserbaseEmptySchemaSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
@@ -589,7 +600,9 @@ class DataQualityUsersView(APIView):
         return Response(payload)
 
 
+@extend_schema(responses={200: None})
 class DataQualityRecomputeView(APIView):
+    serializer_class = UserbaseEmptySchemaSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request):
@@ -601,7 +614,9 @@ class DataQualityRecomputeView(APIView):
         return Response(summary, status=status.HTTP_200_OK)
 
 
+@extend_schema(responses={200: None})
 class DataCorrectionAuditView(APIView):
+    serializer_class = UserbaseEmptySchemaSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):

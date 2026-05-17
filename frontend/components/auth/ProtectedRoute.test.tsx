@@ -1,6 +1,6 @@
-/// <reference types="jest" />
 import React from 'react';
 import { render, screen } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
 import ProtectedRoute from './ProtectedRoute';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/authStore';
@@ -32,7 +32,7 @@ describe('ProtectedRoute', () => {
     });
 
     render(<ProtectedRoute>Content</ProtectedRoute>);
-    expect(screen.getByText('Loading...')).toBeInTheDocument();
+    expect(screen.getByText('Loading...')).toBeTruthy();
   });
 
   it('redirects to /login when not authenticated', () => {
@@ -54,7 +54,7 @@ describe('ProtectedRoute', () => {
     });
 
     render(<ProtectedRoute allowedRoles={['resident']}>Content</ProtectedRoute>);
-    expect(screen.getByText('Content')).toBeInTheDocument();
+    expect(screen.getByText('Content')).toBeTruthy();
   });
 
   it('redirects to role dashboard when role is not allowed', () => {
@@ -76,6 +76,6 @@ describe('ProtectedRoute', () => {
     });
 
     render(<ProtectedRoute allowedRoles={['resident']}>Content</ProtectedRoute>);
-    expect(screen.getByText('Content')).toBeInTheDocument();
+    expect(screen.getByText('Content')).toBeTruthy();
   });
 });

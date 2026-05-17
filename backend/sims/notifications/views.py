@@ -3,11 +3,12 @@
 from __future__ import annotations
 
 from django.utils import timezone
-from rest_framework import generics, permissions, status
+from rest_framework import generics, permissions, serializers, status
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from drf_spectacular.utils import extend_schema
 
 from sims.notifications.models import Notification, NotificationPreference
 from sims.notifications.serializers import (
@@ -15,6 +16,10 @@ from sims.notifications.serializers import (
     NotificationPreferenceSerializer,
     NotificationSerializer,
 )
+
+
+class NotificationEmptySchemaSerializer(serializers.Serializer):
+    pass
 
 
 class NotificationPagination(PageNumberPagination):
@@ -29,6 +34,8 @@ class NotificationListView(generics.ListAPIView):
     pagination_class = NotificationPagination
 
     def get_queryset(self):
+        if getattr(self, "swagger_fake_view", False):
+            return Notification.objects.none()
         user = self.request.user
         queryset = Notification.objects.filter(recipient=user).select_related("actor")
         
@@ -51,7 +58,9 @@ class NotificationListView(generics.ListAPIView):
         return queryset
 
 
+@extend_schema(responses={200: None})
 class NotificationMarkReadView(APIView):
+    serializer_class = NotificationEmptySchemaSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request: Request) -> Response:
@@ -63,7 +72,9 @@ class NotificationMarkReadView(APIView):
         return Response({"marked": updated}, status=status.HTTP_200_OK)
 
 
+@extend_schema(responses={200: None})
 class NotificationPreferenceView(APIView):
+    serializer_class = NotificationPreferenceSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request: Request) -> Response:
@@ -79,7 +90,9 @@ class NotificationPreferenceView(APIView):
         return Response(serializer.data)
 
 
+@extend_schema(responses={200: None})
 class NotificationUnreadCountView(APIView):
+    serializer_class = NotificationEmptySchemaSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request: Request) -> Response:

@@ -110,7 +110,7 @@ class UserManagementSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ["date_joined"]
 
-    def get_departments(self, obj):
+    def get_departments(self, obj) -> list[dict]:
         memberships = (
             obj.department_memberships.filter(active=True)
             .select_related("department")

@@ -1,4 +1,5 @@
-/// <reference types="jest" />
+import { afterEach, describe, expect, it, jest } from '@jest/globals';
+import '@testing-library/jest-dom';
 import { userbaseApi } from './userbase';
 import apiClient from './client';
 
@@ -11,18 +12,20 @@ jest.mock('./client', () => ({
 }));
 
 describe('userbaseApi', () => {
+  const mockedGet = apiClient.get as jest.MockedFunction<(...args: unknown[]) => Promise<{ data: unknown }>>;
+
   afterEach(() => {
     jest.clearAllMocks();
   });
 
   it('hospitals.list calls correct endpoint', async () => {
-    (apiClient.get as jest.Mock).mockResolvedValue({ data: [] });
+    mockedGet.mockResolvedValue({ data: [] });
     await userbaseApi.hospitals.list();
     expect(apiClient.get).toHaveBeenCalledWith('/api/hospitals/');
   });
 
   it('users.list calls correct endpoint with params', async () => {
-    (apiClient.get as jest.Mock).mockResolvedValue({ data: [] });
+    mockedGet.mockResolvedValue({ data: [] });
     await userbaseApi.users.list({ role: 'resident' });
     expect(apiClient.get).toHaveBeenCalledWith('/api/users/', { params: { role: 'resident' } });
   });

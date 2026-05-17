@@ -11,7 +11,7 @@ from datetime import timedelta
 
 from django.utils import timezone
 from django.db.models import Q
-from rest_framework import viewsets, status
+from rest_framework import serializers, viewsets, status
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -51,6 +51,10 @@ def _is_supervisor_or_hod(user):
 
 def _is_resident(user):
     return getattr(user, "role", None) in {"pg", "resident"}
+
+
+class TrainingEmptySchemaSerializer(serializers.Serializer):
+    pass
 
 
 def _get_supervised_resident_ids(user):
@@ -729,11 +733,16 @@ class DeputationPostingViewSet(viewsets.ModelViewSet):
 # ---------------------------------------------------------------------------
 
 from rest_framework.views import APIView
+from drf_spectacular.utils import extend_schema
 
 
+@extend_schema(responses={200: None})
 class RotationApprovalInboxView(APIView):
+    serializer_class = RotationAssignmentSerializer
     permission_classes = [IsAuthenticated]
 
+    @extend_schema(responses={200: None})
+    @extend_schema(operation_id="api_my_workshop_completions_list")
     def get(self, request):
         user = request.user
         qs = RotationAssignment.objects.select_related(
@@ -758,9 +767,12 @@ class RotationApprovalInboxView(APIView):
         return Response({"count": qs.count(), "results": serializer.data})
 
 
+@extend_schema(responses={200: None})
 class LeaveApprovalInboxView(APIView):
+    serializer_class = LeaveRequestSerializer
     permission_classes = [IsAuthenticated]
 
+    @extend_schema(responses={200: None})
     def get(self, request):
         user = request.user
         qs = LeaveRequest.objects.select_related(
@@ -777,7 +789,9 @@ class LeaveApprovalInboxView(APIView):
         return Response({"count": qs.count(), "results": serializer.data})
 
 
+@extend_schema(responses={200: None})
 class MyRotationsView(APIView):
+    serializer_class = RotationAssignmentSerializer
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
@@ -794,7 +808,9 @@ class MyRotationsView(APIView):
         return Response({"count": qs.count(), "results": serializer.data})
 
 
+@extend_schema(responses={200: None})
 class MyLeavesView(APIView):
+    serializer_class = LeaveRequestSerializer
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
@@ -807,7 +823,9 @@ class MyLeavesView(APIView):
         return Response({"count": qs.count(), "results": serializer.data})
 
 
+@extend_schema(responses={200: None})
 class SupervisorPendingRotationsView(APIView):
+    serializer_class = RotationAssignmentSerializer
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
@@ -898,8 +916,10 @@ from .serializers import (
 # Program Policy
 # ------------------------------------------------------------------
 
+@extend_schema(responses={200: None})
 class ProgramPolicyView(APIView):
     """GET + PUT/PATCH the policy for a specific program. Admin/UTRMC-admin only."""
+    serializer_class = ProgramPolicySerializer
     permission_classes = [IsAuthenticated]
 
     def _get_program(self, program_id):
@@ -934,6 +954,8 @@ class ProgramMilestoneViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
+        if getattr(self, "swagger_fake_view", False):
+            return ProgramMilestone.objects.none()
         return ProgramMilestone.objects.filter(
             program_id=self.kwargs["program_id"]
         ).prefetch_related(
@@ -967,8 +989,10 @@ class ProgramMilestoneViewSet(viewsets.ModelViewSet):
         return super().destroy(request, *args, **kwargs)
 
 
+@extend_schema(responses={200: None})
 class MilestoneResearchRequirementView(APIView):
     """GET + PUT research requirements for a milestone."""
+    serializer_class = ProgramMilestoneResearchRequirementSerializer
     permission_classes = [IsAuthenticated]
 
     def _get_milestone(self, milestone_id):
@@ -1006,11 +1030,13 @@ def _get_active_rtr_or_none(user):
     return ResidentTrainingRecord.objects.filter(resident_user=user, active=True).first()
 
 
+@extend_schema(responses={200: None})
 class ResidentResearchProjectView(APIView):
     """
     GET / POST / PATCH own research project.
     Residents manage their own project; supervisors can view their assigned residents'.
     """
+    serializer_class = ResidentResearchProjectSerializer
     permission_classes = [IsAuthenticated]
 
     def _get_project_or_none(self, rtr):
@@ -1029,6 +1055,7 @@ class ResidentResearchProjectView(APIView):
             return Response({"detail": "No research project found."}, status=404)
         return Response(ResidentResearchProjectSerializer(project, context={"request": request}).data)
 
+    @extend_schema(operation_id="api_my_workshop_completions_create")
     def post(self, request):
         rtr = _get_active_rtr(request.user)
         if hasattr(rtr, "research_project"):
@@ -1055,8 +1082,10 @@ class ResidentResearchProjectView(APIView):
         return Response(serializer.data)
 
 
+@extend_schema(responses={200: None})
 class ResearchProjectActionView(APIView):
     """State machine transition endpoints for research project."""
+    serializer_class = TrainingEmptySchemaSerializer
     permission_classes = [IsAuthenticated]
 
     VALID_ACTIONS = {
@@ -1123,8 +1152,10 @@ class ResearchProjectActionView(APIView):
 # Thesis
 # ------------------------------------------------------------------
 
+@extend_schema(responses={200: None})
 class ResidentThesisView(APIView):
     """GET / POST / PATCH own thesis record."""
+    serializer_class = ResidentThesisSerializer
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
@@ -1161,8 +1192,10 @@ class ResidentThesisView(APIView):
         return Response(serializer.data)
 
 
+@extend_schema(responses={200: None})
 class ThesisSubmitView(APIView):
     """POST to submit thesis (transitions status to SUBMITTED)."""
+    serializer_class = TrainingEmptySchemaSerializer
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
@@ -1189,8 +1222,10 @@ class ThesisSubmitView(APIView):
 # Workshop Completions (always available — manual upload)
 # ------------------------------------------------------------------
 
+@extend_schema(responses={200: None})
 class MyWorkshopCompletionsView(APIView):
     """Resident's own workshop completion records."""
+    serializer_class = ResidentWorkshopCompletionSerializer
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
@@ -1209,8 +1244,10 @@ class MyWorkshopCompletionsView(APIView):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
+@extend_schema(responses={200: None})
 class MyWorkshopCompletionDetailView(APIView):
     """GET / DELETE a single workshop completion record."""
+    serializer_class = ResidentWorkshopCompletionSerializer
     permission_classes = [IsAuthenticated]
 
     def _get_completion(self, request, pk):
@@ -1218,10 +1255,12 @@ class MyWorkshopCompletionDetailView(APIView):
         rtr = _get_active_rtr(request.user)
         return get_object_or_404(ResidentWorkshopCompletion, pk=pk, resident_training_record=rtr)
 
+    @extend_schema(operation_id="api_my_workshop_completion_retrieve")
     def get(self, request, pk):
         obj = self._get_completion(request, pk)
         return Response(ResidentWorkshopCompletionSerializer(obj, context={"request": request}).data)
 
+    @extend_schema(operation_id="api_my_workshop_completion_destroy")
     def delete(self, request, pk):
         obj = self._get_completion(request, pk)
         obj.delete()
@@ -1243,8 +1282,10 @@ class WorkshopViewSet(viewsets.ReadOnlyModelViewSet):
 # Eligibility
 # ------------------------------------------------------------------
 
+@extend_schema(responses={200: None})
 class MyEligibilityView(APIView):
     """Resident's own eligibility snapshot (IMM + FINAL)."""
+    serializer_class = TrainingEmptySchemaSerializer
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
@@ -1268,8 +1309,10 @@ class MyEligibilityView(APIView):
         })
 
 
+@extend_schema(responses={200: None})
 class UTRMCEligibilityView(APIView):
     """UTRMC/admin view: list eligibility with optional filters."""
+    serializer_class = ResidentMilestoneEligibilitySerializer
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
@@ -1298,6 +1341,7 @@ class UTRMCEligibilityView(APIView):
         return Response({"count": qs.count(), "results": serializer.data})
 
 
+@extend_schema(responses={200: None})
 class SupervisorResearchApprovalsView(APIView):
     """Supervisor inbox: pending research projects awaiting approval."""
     permission_classes = [IsAuthenticated]
@@ -1326,6 +1370,7 @@ class SupervisorResearchApprovalsView(APIView):
         return Response({"count": qs.count(), "results": serializer.data})
 
 
+@extend_schema(responses={200: None})
 class SystemSettingsView(APIView):
     """Read-only system settings for the frontend (toggles, labels, etc.)."""
     permission_classes = [IsAuthenticated]
@@ -1342,6 +1387,7 @@ class SystemSettingsView(APIView):
 # Phase 6B/6C — Resident & Supervisor Summary Endpoints
 # =============================================================================
 
+@extend_schema(responses={200: None})
 class ResidentSummaryView(APIView):
     """Single-call summary for the resident command-center dashboard."""
     permission_classes = [IsAuthenticated]
@@ -1563,6 +1609,7 @@ class ResidentSummaryView(APIView):
         })
 
 
+@extend_schema(responses={200: None})
 class SupervisorSummaryView(APIView):
     """Single-call summary for the supervisor dashboard."""
     permission_classes = [IsAuthenticated]
@@ -1677,6 +1724,7 @@ class SupervisorSummaryView(APIView):
         })
 
 
+@extend_schema(responses={200: None})
 class SupervisorResidentProgressView(APIView):
     """Read-only progress snapshot for a specific resident (supervisor/admin view)."""
     permission_classes = [IsAuthenticated]
@@ -2068,7 +2116,9 @@ class LogbookEntryViewSet(viewsets.ModelViewSet):
         return self._review_entry(request, entry)
 
 
+@extend_schema(responses={200: None})
 class LogbookReviewQueueView(APIView):
+    serializer_class = LogbookEntrySerializer
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
@@ -2124,7 +2174,9 @@ class LogbookThresholdConfigViewSet(viewsets.ModelViewSet):
         return super().destroy(request, *args, **kwargs)
 
 
+@extend_schema(responses={200: None})
 class LogbookMyThresholdView(APIView):
+    serializer_class = TrainingEmptySchemaSerializer
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
@@ -2195,7 +2247,9 @@ class SubmissionRequirementTemplateViewSet(viewsets.ModelViewSet):
         return super().destroy(request, *args, **kwargs)
 
 
+@extend_schema(responses={200: None})
 class _ResidentSubmissionBaseView(APIView):
+    serializer_class = ResidentSubmissionSerializer
     permission_classes = [IsAuthenticated]
     submission_type = None
 
@@ -2260,7 +2314,9 @@ class ThesisSubmissionView(_ResidentSubmissionBaseView):
     submission_type = ResidentSubmission.TYPE_THESIS
 
 
+@extend_schema(responses={200: None})
 class _SubmissionDocumentsBaseView(APIView):
+    serializer_class = SubmissionDocumentSerializer
     permission_classes = [IsAuthenticated]
     submission_type = None
 
@@ -2313,7 +2369,9 @@ class ThesisSubmissionDocumentsView(_SubmissionDocumentsBaseView):
     submission_type = ResidentSubmission.TYPE_THESIS
 
 
+@extend_schema(responses={200: None})
 class _SubmissionSubmitBaseView(APIView):
+    serializer_class = ResidentSubmissionSerializer
     permission_classes = [IsAuthenticated]
     submission_type = None
 
@@ -2372,7 +2430,9 @@ class ThesisSubmissionSubmitView(_SubmissionSubmitBaseView):
     submission_type = ResidentSubmission.TYPE_THESIS
 
 
+@extend_schema(responses={200: None})
 class _SubmissionReviewQueueBaseView(APIView):
+    serializer_class = ResidentSubmissionSerializer
     permission_classes = [IsAuthenticated]
     submission_type = None
 
@@ -2409,7 +2469,9 @@ class ThesisReviewQueueView(_SubmissionReviewQueueBaseView):
     submission_type = ResidentSubmission.TYPE_THESIS
 
 
+@extend_schema(responses={200: None})
 class _SubmissionReviewActionBaseView(APIView):
+    serializer_class = ResidentSubmissionSerializer
     permission_classes = [IsAuthenticated]
     submission_type = None
 
@@ -2520,7 +2582,9 @@ class ThesisReviewActionView(_SubmissionReviewActionBaseView):
     submission_type = ResidentSubmission.TYPE_THESIS
 
 
+@extend_schema(responses={200: None})
 class SubmissionCertificatesView(APIView):
+    serializer_class = SubmissionCertificateSerializer
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
@@ -2585,7 +2649,9 @@ class ProgramRotationRequirementViewSet(viewsets.ModelViewSet):
         return super().destroy(request, *args, **kwargs)
 
 
+@extend_schema(responses={200: None})
 class RotationCompletionsView(APIView):
+    serializer_class = RotationCompletionSerializer
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
@@ -2620,7 +2686,9 @@ class RotationCompletionsView(APIView):
         return Response({"count": qs.count(), "results": serializer.data})
 
 
+@extend_schema(responses={200: None})
 class RotationCompletionVerifyView(APIView):
+    serializer_class = RotationCompletionSerializer
     permission_classes = [IsAuthenticated]
 
     def post(self, request, completion_id):
@@ -2653,6 +2721,7 @@ class RotationCompletionVerifyView(APIView):
         return Response(RotationCompletionSerializer(completion, context={"request": request}).data)
 
 
+@extend_schema(responses={200: None})
 class ResidentOperationalDashboardView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -2777,6 +2846,7 @@ class ResidentOperationalDashboardView(APIView):
         )
 
 
+@extend_schema(responses={200: None})
 class SupervisorOperationalDashboardView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -2857,6 +2927,7 @@ class SupervisorOperationalDashboardView(APIView):
         )
 
 
+@extend_schema(responses={200: None})
 class HODOperationalDashboardView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -2922,6 +2993,7 @@ class HODOperationalDashboardView(APIView):
         )
 
 
+@extend_schema(responses={200: None})
 class UTRMCOperationalDashboardView(APIView):
     permission_classes = [IsAuthenticated]
 

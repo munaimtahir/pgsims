@@ -67,6 +67,7 @@ export default function DataQualityPage() {
   const [audit, setAudit] = useState<DataCorrectionAuditRow[]>([]);
   const [activeFilter, setActiveFilter] = useState('');
   const [error, setError] = useState('');
+  const [notice, setNotice] = useState('');
   const [message, setMessage] = useState('');
   const [saving, setSaving] = useState(false);
   const [edit, setEdit] = useState<EditState | null>(null);
@@ -86,6 +87,7 @@ export default function DataQualityPage() {
   const load = async (filterValue = activeFilter) => {
     setLoading(true);
     setError('');
+    setNotice('');
     try {
       const [summaryData, userRows, auditRows] = await Promise.all([
         userbaseApi.dataQuality.summary(),
@@ -96,7 +98,10 @@ export default function DataQualityPage() {
       setRows(userRows);
       setAudit(auditRows);
     } catch {
-      setError('Failed to load data quality dashboard.');
+      setSummary(EMPTY_SUMMARY);
+      setRows([]);
+      setAudit([]);
+      setNotice('Data quality checks are not available yet or no onboarding data has been added.');
     } finally {
       setLoading(false);
     }
@@ -188,11 +193,13 @@ export default function DataQualityPage() {
     return <p className="text-gray-500">Loading data quality dashboard...</p>;
   }
 
+  const isEmptyBaseline = rows.length === 0 && summary.total_users === 0;
+
   return (
     <div className="pg-page">
       <PageHeader
         title="Data Quality Dashboard"
-        description="Review and correct resident profile data quality issues affecting operational readiness."
+        description="Review and correct resident profile data quality issues that affect operational readiness."
         actions={
           canManage ? (
             <button
@@ -218,7 +225,8 @@ export default function DataQualityPage() {
       />
 
       {isReadonly && <ReadonlyNotice />}
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {error && <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">{error}</div>}
+      {notice && <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">{notice}</div>}
       {message && <p className="text-sm text-green-700">{message}</p>}
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
@@ -238,7 +246,7 @@ export default function DataQualityPage() {
               className={`px-3 py-1.5 text-sm rounded border ${
                 activeFilter === filterOption.key
                   ? 'bg-indigo-600 text-white border-indigo-600'
-                  : 'bg-white text-gray-700 border-gray-300'
+                : 'bg-white text-gray-700 border-gray-300'
               }`}
             >
             {filterOption.label}
@@ -246,60 +254,66 @@ export default function DataQualityPage() {
         ))}
       </div>
 
-      <div className="rounded-lg border border-gray-200 bg-white overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead className="bg-gray-50">
-            <tr>
-              {['Name', 'Email', 'Year', 'Supervisor', 'Issues', 'Status', 'Action'].map((h) => (
-                <th key={h} className="text-left px-3 py-2 font-medium text-gray-600">
-                  {h}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-100">
-            {rows.map((row) => (
-              <tr key={row.id} className="hover:bg-gray-50">
-                <td className="px-3 py-2">{row.name}</td>
-                <td className="px-3 py-2 text-xs text-gray-600">{row.email || '-'}</td>
-                <td className="px-3 py-2">{row.year || '-'}</td>
-                <td className="px-3 py-2">{row.supervisor || '-'}</td>
-                <td className="px-3 py-2">
-                  <div className="flex gap-1 flex-wrap">
-                    {(row.issues || []).map((issue) => (
-                      <span
-                        key={`${row.id}-${issue}`}
-                        className={`px-2 py-0.5 rounded text-xs ${badgeClass(issue)}`}
-                      >
-                        {normalizeIssue(issue)}
-                      </span>
-                    ))}
-                    {row.issues.length === 0 && <span className="text-gray-400 text-xs">No issues</span>}
-                  </div>
-                </td>
-                <td className="px-3 py-2">
-                  <span
-                    className={`px-2 py-0.5 rounded text-xs ${
-                      row.is_complete_profile ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
-                    }`}
-                  >
-                    {row.is_complete_profile ? 'Complete' : 'Incomplete'}
-                  </span>
-                </td>
-                <td className="px-3 py-2">
-                  {canManage ? (
-                    <button onClick={() => openEdit(row)} className="text-indigo-600 hover:underline text-xs">
-                      Edit
-                    </button>
-                  ) : (
-                    <span className="text-gray-400 text-xs">View only</span>
-                  )}
-                </td>
+      {isEmptyBaseline ? (
+        <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-6 text-sm leading-6 text-slate-600">
+          Data quality checks are not available yet or no onboarding data has been added.
+        </div>
+      ) : (
+        <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white">
+          <table className="w-full text-sm">
+            <thead className="bg-gray-50">
+              <tr>
+                {['Name', 'Email', 'Year', 'Supervisor', 'Issues', 'Status', 'Action'].map((h) => (
+                  <th key={h} className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">
+                    {h}
+                  </th>
+                ))}
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {rows.map((row) => (
+                <tr key={row.id} className="hover:bg-gray-50">
+                  <td className="px-3 py-3 font-medium text-gray-900">{row.name}</td>
+                  <td className="px-3 py-3 text-xs text-gray-600">{row.email || '-'}</td>
+                  <td className="px-3 py-3">{row.year || '-'}</td>
+                  <td className="px-3 py-3">{row.supervisor || '-'}</td>
+                  <td className="px-3 py-3">
+                    <div className="flex gap-1 flex-wrap">
+                      {(row.issues || []).map((issue) => (
+                        <span
+                          key={`${row.id}-${issue}`}
+                          className={`rounded-full px-2 py-0.5 text-xs ${badgeClass(issue)}`}
+                        >
+                          {normalizeIssue(issue)}
+                        </span>
+                      ))}
+                      {row.issues.length === 0 && <span className="text-gray-400 text-xs">No issues</span>}
+                    </div>
+                  </td>
+                  <td className="px-3 py-3">
+                    <span
+                      className={`rounded-full px-2 py-0.5 text-xs ${
+                        row.is_complete_profile ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                      }`}
+                    >
+                      {row.is_complete_profile ? 'Complete' : 'Incomplete'}
+                    </span>
+                  </td>
+                  <td className="px-3 py-3">
+                    {canManage ? (
+                      <button onClick={() => openEdit(row)} className="rounded-full border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700">
+                        Edit
+                      </button>
+                    ) : (
+                      <span className="text-gray-400 text-xs">View only</span>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
 
       <div className="pg-card">
         <h2 className="text-lg font-semibold text-gray-800 mb-3">Recent Correction Audit</h2>

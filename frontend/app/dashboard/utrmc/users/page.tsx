@@ -78,6 +78,7 @@ export default function UsersPage() {
     u.email.toLowerCase().includes(search.toLowerCase()) ||
     (u.full_name||'').toLowerCase().includes(search.toLowerCase())
   );
+  const isEmpty = filtered.length === 0;
 
   if (loading) return <p className="text-gray-500">Loading...</p>;
 
@@ -93,31 +94,56 @@ export default function UsersPage() {
         }
       />
       {isReadonly && <ReadonlyNotice />}
-      {error && <p className="text-red-600 mb-2 text-sm">{error}</p>}
-      <input className="mb-3 pg-form-input w-full sm:w-80" placeholder="Search..." value={search} onChange={e=>setSearch(e.target.value)} />
-      <div className="bg-white border border-gray-200 rounded-lg overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead className="bg-gray-50"><tr>{['Username','Name','Email','Role','Active','Actions'].map(h=><th key={h} className="text-left px-3 py-2 font-medium text-gray-600">{h}</th>)}</tr></thead>
-          <tbody className="divide-y divide-gray-100">
-            {filtered.map(u=>(
-              <tr key={u.id} className="hover:bg-gray-50">
-                <td className="px-3 py-2">{u.username}</td>
-                <td className="px-3 py-2">{u.full_name||`${u.first_name} ${u.last_name}`.trim()}</td>
-                <td className="px-3 py-2 text-gray-500 text-xs">{u.email}</td>
-                <td className="px-3 py-2"><span className="px-2 py-0.5 bg-indigo-50 text-indigo-700 rounded text-xs">{u.role}</span></td>
-                <td className="px-3 py-2">{u.is_active ? <span className="text-green-600 text-xs">Yes</span>:<span className="text-gray-400 text-xs">No</span>}</td>
-                <td className="px-3 py-2">
-                  {canManage ? (
-                    <button onClick={()=>openEdit(u)} className="text-indigo-600 hover:underline text-xs">Edit</button>
-                  ) : (
-                    <span className="text-xs text-gray-400">View only</span>
-                  )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      {error && <div className="mb-3 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">{error}</div>}
+      <div className="mb-4">
+        <label className="pg-form-label" htmlFor="user-search">Search users</label>
+        <input
+          id="user-search"
+          className="pg-form-input w-full sm:w-96"
+          placeholder="Search by username, name, or email"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
       </div>
+      {isEmpty ? (
+        <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-6 text-sm leading-6 text-slate-600">
+          No users match this search, or no user accounts are loaded yet.
+        </div>
+      ) : (
+        <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white">
+          <table className="w-full text-sm">
+            <thead className="bg-gray-50">
+              <tr>
+                {['Username', 'Name', 'Email', 'Role', 'Active', 'Actions'].map((h) => (
+                  <th key={h} className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">
+                    {h}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {filtered.map((u) => (
+                <tr key={u.id} className="hover:bg-gray-50">
+                  <td className="px-3 py-3 font-medium text-gray-900">{u.username}</td>
+                  <td className="px-3 py-3">{u.full_name || `${u.first_name} ${u.last_name}`.trim()}</td>
+                  <td className="px-3 py-3 text-gray-500 text-xs">{u.email}</td>
+                  <td className="px-3 py-3"><span className="rounded-full bg-indigo-50 px-2 py-0.5 text-xs font-semibold text-indigo-700">{u.role}</span></td>
+                  <td className="px-3 py-3">{u.is_active ? <span className="text-green-600 text-xs">Yes</span> : <span className="text-gray-400 text-xs">No</span>}</td>
+                  <td className="px-3 py-3">
+                    {canManage ? (
+                      <button onClick={() => openEdit(u)} className="rounded-full border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700">
+                        Edit
+                      </button>
+                    ) : (
+                      <span className="text-xs text-gray-400">View only</span>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
       {showModal && (
         <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 px-4">
           <div className="bg-white rounded-lg p-6 w-full max-w-md shadow-xl max-h-[90vh] overflow-y-auto">

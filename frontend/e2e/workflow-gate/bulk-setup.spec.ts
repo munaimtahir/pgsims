@@ -10,7 +10,7 @@ test.describe('Workflow gate — bulk setup workspace', () => {
     await loginAs(context, page, 'utrmc_admin');
     await page.goto('/dashboard/utrmc');
 
-    await expect(page.getByRole('heading', { name: 'UTRMC Overview' })).toBeVisible({
+    await expect(page.getByRole('heading', { name: /UTRMC (Dashboard|Overview)/ })).toBeVisible({
       timeout: 15_000,
     });
     await expect(page.getByRole('heading', { name: 'Bulk Setup & Import/Export' })).toBeVisible({

@@ -46,7 +46,7 @@ describe('SupervisorHomePage', () => {
     // Wait for header to be visible
     await waitFor(() => expect(screen.getByText('Supervisor Dashboard')).toBeInTheDocument());
     
-    // Wait for "Pending Actions" to appear after loading
-    await waitFor(() => expect(screen.getByText('Pending Actions')).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByRole('heading', { name: /today’s attention/i })).toBeInTheDocument());
+    expect(screen.getByRole('heading', { name: /my residents/i })).toBeInTheDocument();
   });
 });

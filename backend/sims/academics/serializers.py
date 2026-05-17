@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from rest_framework import serializers
 from .models import Department, Batch, StudentProfile
 
@@ -63,6 +65,14 @@ class StudentProfileSerializer(serializers.ModelSerializer):
     department_name = serializers.CharField(source="batch.department.name", read_only=True)
     is_active = serializers.BooleanField(read_only=True)
     duration = serializers.IntegerField(source="duration_in_program", read_only=True)
+    cgpa = serializers.DecimalField(
+        max_digits=4,
+        decimal_places=2,
+        min_value=Decimal("0.0"),
+        max_value=Decimal("10.0"),
+        required=False,
+        allow_null=True,
+    )
 
     class Meta:
         model = StudentProfile

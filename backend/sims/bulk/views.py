@@ -5,10 +5,11 @@ from __future__ import annotations
 from django.contrib.auth import get_user_model
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
-from rest_framework import permissions, status
+from rest_framework import permissions, serializers, status
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from drf_spectacular.utils import extend_schema
 
 from sims.bulk.models import BulkOperation
 from sims.bulk.serializers import (
@@ -23,6 +24,10 @@ from sims.bulk.serializers import (
 from sims.bulk.services import BulkService
 
 User = get_user_model()
+
+
+class BulkEmptySchemaSerializer(serializers.Serializer):
+    pass
 
 
 def _operation_payload(operation: BulkOperation) -> dict:
@@ -41,7 +46,9 @@ def _track_bulk_event(request, *, event_type, resource, operation=None, error_co
     pass  # analytics module removed
 
 
+@extend_schema(responses={200: None})
 class BulkReviewView(APIView):
+    serializer_class = BulkEmptySchemaSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request: Request) -> Response:
@@ -52,7 +59,9 @@ class BulkReviewView(APIView):
         return Response(_operation_payload(operation), status=status.HTTP_200_OK)
 
 
+@extend_schema(responses={200: None})
 class BulkAssignmentView(APIView):
+    serializer_class = BulkEmptySchemaSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request: Request) -> Response:
@@ -69,9 +78,12 @@ class BulkAssignmentView(APIView):
         return Response(_operation_payload(operation), status=status.HTTP_200_OK)
 
 
+@extend_schema(responses={200: None})
 class BulkImportView(APIView):
+    serializer_class = BulkEmptySchemaSerializer
     permission_classes = [permissions.IsAuthenticated]
 
+    @extend_schema(operation_id="api_bulk_logbook_import_create")
     def post(self, request: Request) -> Response:
         from django.core.exceptions import ValidationError as DjangoValidationError
 
@@ -120,7 +132,9 @@ class BulkImportView(APIView):
         return Response(_operation_payload(operation), status=status_code)
 
 
+@extend_schema(responses={200: None})
 class BulkTraineeImportView(APIView):
+    serializer_class = BulkEmptySchemaSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request: Request) -> Response:
@@ -171,6 +185,7 @@ class BulkTraineeImportView(APIView):
         return Response(_operation_payload(operation), status=status_code)
 
 
+@extend_schema(responses={200: None})
 class BulkSupervisorImportView(APIView):
     """
     Bulk import view for supervisors/faculty.
@@ -178,6 +193,7 @@ class BulkSupervisorImportView(APIView):
     Accepts CSV or Excel files with supervisor data.
     Creates accounts with role 'supervisor' and generates passwords.
     """
+    serializer_class = BulkEmptySchemaSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request: Request) -> Response:
@@ -229,6 +245,7 @@ class BulkSupervisorImportView(APIView):
         return Response(_operation_payload(operation), status=status_code)
 
 
+@extend_schema(responses={200: None})
 class BulkResidentImportView(APIView):
     """
     Bulk import view for residents/postgraduates.
@@ -237,6 +254,7 @@ class BulkResidentImportView(APIView):
     Creates accounts with role 'pg' and links to supervisors.
     Handles cases where supervisors don't exist (based on allow_partial setting).
     """
+    serializer_class = BulkEmptySchemaSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request: Request) -> Response:
@@ -288,7 +306,9 @@ class BulkResidentImportView(APIView):
         return Response(_operation_payload(operation), status=status_code)
 
 
+@extend_schema(responses={200: None})
 class BulkDepartmentImportView(APIView):
+    serializer_class = BulkEmptySchemaSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request: Request) -> Response:
@@ -327,7 +347,9 @@ class BulkDepartmentImportView(APIView):
         return Response(_operation_payload(operation), status=status_code)
 
 
+@extend_schema(responses={200: None})
 class BulkExportView(APIView):
+    serializer_class = BulkEmptySchemaSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request: Request, resource: str) -> HttpResponse:
@@ -354,7 +376,9 @@ class BulkExportView(APIView):
         return response
 
 
+@extend_schema(responses={200: None})
 class BulkTemplateView(APIView):
+    serializer_class = BulkEmptySchemaSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request: Request, resource: str) -> HttpResponse:
@@ -396,6 +420,7 @@ _ENTITY_METHOD_MAP = {
 _ALLOWED_ROLES = {"admin", "utrmc_admin"}
 
 
+@extend_schema(responses={200: None})
 class BulkImportEntityView(APIView):
     """Unified import endpoint.
 
@@ -403,8 +428,10 @@ class BulkImportEntityView(APIView):
     POST /api/bulk/import/<entity>/apply/     — write to DB
     """
 
+    serializer_class = BulkEmptySchemaSerializer
     permission_classes = [permissions.IsAuthenticated]
 
+    @extend_schema(operation_id="api_bulk_entity_import_action_create")
     def post(self, request: Request, entity: str, action: str) -> Response:
         from django.core.exceptions import ValidationError as DjangoValidationError
 

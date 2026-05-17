@@ -30,6 +30,7 @@ export default function DepartmentsPage() {
   const [editing, setEditing] = useState<UserbaseDepartment | null>(null);
   const [form, setForm] = useState<DepartmentForm>({ name: '', code: '', description: '', active: true });
   const [saving, setSaving] = useState(false);
+  const isEmpty = rows.length === 0;
 
   const load = () => userbaseApi.departments.list().then(setRows).catch(() => setError('Failed to load')).finally(() => setLoading(false));
   useEffect(() => { load(); }, []);
@@ -62,28 +63,44 @@ export default function DepartmentsPage() {
         }
       />
       {isReadonly && <ReadonlyNotice />}
-      {error && <p className="text-red-600 mb-2">{error}</p>}
-      <div className="bg-white border border-gray-200 rounded-lg overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead className="bg-gray-50"><tr>{['Name','Code','Active','Actions'].map(h => <th key={h} className="text-left px-4 py-2 font-medium text-gray-600">{h}</th>)}</tr></thead>
-          <tbody className="divide-y divide-gray-100">
-            {rows.map(d => (
-              <tr key={d.id} className="hover:bg-gray-50">
-                <td className="px-4 py-2">{d.name}</td>
-                <td className="px-4 py-2 text-gray-500">{d.code}</td>
-                <td className="px-4 py-2">{d.active ? <span className="text-green-600">Yes</span> : <span className="text-gray-400">No</span>}</td>
-                <td className="px-4 py-2">
-                  {canManage ? (
-                    <button onClick={() => openEdit(d)} className="text-indigo-600 hover:underline text-xs">Edit</button>
-                  ) : (
-                    <span className="text-xs text-gray-400">View only</span>
-                  )}
-                </td>
+      {error && <div className="mb-3 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">{error}</div>}
+      {isEmpty ? (
+        <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-6 text-sm leading-6 text-slate-600">
+          No departments are loaded yet. Add the first canonical department to begin onboarding.
+        </div>
+      ) : (
+        <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white">
+          <table className="w-full text-sm">
+            <thead className="bg-gray-50">
+              <tr>
+                {['Name', 'Code', 'Active', 'Actions'].map((h) => (
+                  <th key={h} className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">
+                    {h}
+                  </th>
+                ))}
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {rows.map((d) => (
+                <tr key={d.id} className="hover:bg-gray-50">
+                  <td className="px-4 py-3 font-medium text-gray-900">{d.name}</td>
+                  <td className="px-4 py-3 text-gray-500">{d.code}</td>
+                  <td className="px-4 py-3">{d.active ? <span className="text-green-600">Yes</span> : <span className="text-gray-400">No</span>}</td>
+                  <td className="px-4 py-3">
+                    {canManage ? (
+                      <button onClick={() => openEdit(d)} className="rounded-full border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700">
+                        Edit
+                      </button>
+                    ) : (
+                      <span className="text-xs text-gray-400">View only</span>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
       {showModal && (
         <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 px-4">
           <div className="bg-white rounded-lg p-6 w-full max-w-md shadow-xl max-h-[90vh] overflow-y-auto">

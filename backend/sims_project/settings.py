@@ -315,6 +315,9 @@ SPECTACULAR_SETTINGS = {
     "DESCRIPTION": "Postgraduate Student Information Management System active API contract.",
     "VERSION": "1.0.0",
     "SERVE_INCLUDE_SCHEMA": False,
+    "ENUM_NAME_OVERRIDES": {
+        "CertificateStatusEnum": [("ISSUED", "Issued"), ("VERIFIED", "Verified")],
+    },
 }
 
 # Email Configuration

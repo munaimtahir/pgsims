@@ -37,7 +37,7 @@ test.describe('Feature-layer rotations phase-1 workflow', () => {
 
     await loginAsRole(context, page, 'utrmc_admin_user');
     await page.goto('/dashboard/utrmc');
-    await expect(page.getByRole('heading', { name: /UTRMC Overview/i })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /UTRMC (Dashboard|Overview)/i })).toBeVisible();
 
     const residentSelect = page.getByLabel('Resident');
     const placementSelect = page.getByLabel('Placement');

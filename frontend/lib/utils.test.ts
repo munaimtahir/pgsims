@@ -1,10 +1,11 @@
-/// <reference types="jest" />
+import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
+import '@testing-library/jest-dom';
 import { downloadFile } from './utils';
 
 describe('utils', () => {
   describe('downloadFile', () => {
-    let appendChildSpy: jest.SpyInstance;
-    let removeChildSpy: jest.SpyInstance;
+    let appendChildSpy: ReturnType<typeof jest.spyOn>;
+    let removeChildSpy: ReturnType<typeof jest.spyOn>;
 
     beforeEach(() => {
       // Mock URL methods
