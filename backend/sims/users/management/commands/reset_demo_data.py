@@ -273,7 +273,9 @@ class Command(BaseCommand):
                 count = len(ids)
                 if not count:
                     continue
-                target.queryset.model.objects.filter(pk__in=ids).delete()
+                # Chunk deletion to avoid database parameter limits
+                for i in range(0, count, 1000):
+                    target.queryset.model.objects.filter(pk__in=ids[i:i+1000]).delete()
                 self.stdout.write(self.style.SUCCESS(f"Deleted {count} from {target.label}"))
 
         self.stdout.write("")
