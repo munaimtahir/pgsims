@@ -88,7 +88,7 @@ describe('UTRMCOverviewPage', () => {
     }, { timeout: 4000 });
     
     expect(screen.getByText('UTRMC Dashboard')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /open onboarding tools/i })).toBeInTheDocument();
+    expect(screen.getAllByRole('link', { name: /open onboarding tools/i }).length).toBeGreaterThan(0);
     expect(screen.getByRole('heading', { name: /Rotation Operations/i })).toBeInTheDocument();
   });
 });

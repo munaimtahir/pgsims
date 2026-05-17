@@ -71,12 +71,14 @@ describe('ResidentHomePage', () => {
     render(<ResidentHomePage />);
 
     await waitFor(() => expect(screen.getByText('My Training Dashboard')).toBeInTheDocument());
+    const scheduleLink = await screen.findByRole('link', { name: 'View Schedule' });
+    const readinessLink = await screen.findByRole('link', { name: 'Logbook & Readiness' });
 
-    expect(screen.getByRole('link', { name: 'View Schedule' })).toHaveAttribute(
+    expect(scheduleLink).toHaveAttribute(
       'href',
       '/dashboard/resident/schedule'
     );
-    expect(screen.getByRole('link', { name: 'Logbook & Readiness' })).toHaveAttribute(
+    expect(readinessLink).toHaveAttribute(
       'href',
       '/dashboard/resident/progress'
     );

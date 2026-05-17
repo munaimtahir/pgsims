@@ -1,23 +1,27 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
-import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
 import ProtectedRoute from './ProtectedRoute';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/authStore';
 
 jest.mock('next/navigation', () => ({
+  __esModule: true,
   useRouter: jest.fn(),
 }));
 
 jest.mock('@/store/authStore', () => ({
+  __esModule: true,
   useAuthStore: jest.fn(),
 }));
 
 describe('ProtectedRoute', () => {
   const mockPush = jest.fn();
+  const mockUseRouter = useRouter as jest.Mock;
+  const mockUseAuthStore = useAuthStore as unknown as jest.Mock;
 
   beforeEach(() => {
-    (useRouter as jest.Mock).mockReturnValue({ push: mockPush });
+    mockPush.mockReset();
+    mockUseRouter.mockReturnValue({ push: mockPush });
   });
 
   afterEach(() => {
@@ -25,7 +29,7 @@ describe('ProtectedRoute', () => {
   });
 
   it('renders loading state when not hydrated', () => {
-    (useAuthStore as unknown as jest.Mock).mockReturnValue({
+    mockUseAuthStore.mockReturnValue({
       isAuthenticated: false,
       user: null,
       hasHydrated: false,
@@ -36,7 +40,7 @@ describe('ProtectedRoute', () => {
   });
 
   it('redirects to /login when not authenticated', () => {
-    (useAuthStore as unknown as jest.Mock).mockReturnValue({
+    mockUseAuthStore.mockReturnValue({
       isAuthenticated: false,
       user: null,
       hasHydrated: true,
@@ -47,7 +51,7 @@ describe('ProtectedRoute', () => {
   });
 
   it('renders children when authenticated and role is allowed', () => {
-    (useAuthStore as unknown as jest.Mock).mockReturnValue({
+    mockUseAuthStore.mockReturnValue({
       isAuthenticated: true,
       user: { role: 'resident' },
       hasHydrated: true,
@@ -58,7 +62,7 @@ describe('ProtectedRoute', () => {
   });
 
   it('redirects to role dashboard when role is not allowed', () => {
-    (useAuthStore as unknown as jest.Mock).mockReturnValue({
+    mockUseAuthStore.mockReturnValue({
       isAuthenticated: true,
       user: { role: 'supervisor' },
       hasHydrated: true,
@@ -69,7 +73,7 @@ describe('ProtectedRoute', () => {
   });
 
   it('allows admin role even if not in allowedRoles', () => {
-    (useAuthStore as unknown as jest.Mock).mockReturnValue({
+    mockUseAuthStore.mockReturnValue({
       isAuthenticated: true,
       user: { role: 'admin' },
       hasHydrated: true,
