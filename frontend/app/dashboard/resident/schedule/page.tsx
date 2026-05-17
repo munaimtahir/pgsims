@@ -5,6 +5,18 @@ import { LeaveRequest, RotationAssignment, trainingApi, ResidentSummary } from '
 import PageHeader from '@/components/ui/PageHeader';
 import WorkflowStatusBadge from '@/components/ui/WorkflowStatusBadge';
 
+function EmptyStateCard({ lines }: { lines: string[] }) {
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-6 text-slate-700">
+      <div className="space-y-2 text-sm leading-6 text-slate-600">
+        {lines.map((line) => (
+          <p key={line}>{line}</p>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 type RotationEvent = RotationAssignment & { kind: 'rotation' };
 type LeaveEvent = LeaveRequest & {
   department: string;
@@ -29,7 +41,7 @@ export default function ResidentSchedulePage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [submittingLeaveId, setSubmittingLeaveId] = useState<number | null>(null);
-  const [error, setError] = useState('');
+  const [notice, setNotice] = useState('');
   const [message, setMessage] = useState('');
   const [leaveForm, setLeaveForm] = useState({
     leave_type: 'annual',
@@ -40,19 +52,20 @@ export default function ResidentSchedulePage() {
 
   const flash = (nextMessage: string, isError = false) => {
     if (isError) {
-      setError(nextMessage);
+      setNotice(nextMessage);
     } else {
       setMessage(nextMessage);
     }
 
     window.setTimeout(() => {
-      setError('');
+      setNotice('');
       setMessage('');
     }, 4000);
   };
 
   const load = () => {
     setLoading(true);
+    setNotice('');
     Promise.all([
       trainingApi.getResidentSummary(),
       trainingApi.listMyLeaves(),
@@ -63,7 +76,12 @@ export default function ResidentSchedulePage() {
         setLeaves(leaveResponse.results || []);
         setRotations(rotationResponse.results || []);
       })
-      .catch(() => setError('Failed to load schedule'))
+      .catch(() => {
+        setSummary(null);
+        setLeaves([]);
+        setRotations([]);
+        setNotice('No active resident training record is linked yet.');
+      })
       .finally(() => setLoading(false));
   };
 
@@ -72,13 +90,13 @@ export default function ResidentSchedulePage() {
   }, []);
 
   const createLeaveDraft = async () => {
-    if (!summary?.training_record.id) {
+    if (!summary?.training_record?.id) {
       flash('Training record is not available for leave requests yet.', true);
       return;
     }
 
     setSaving(true);
-    setError('');
+    setNotice('');
     try {
       await trainingApi.createLeave({
         resident_training: summary.training_record.id,
@@ -99,7 +117,7 @@ export default function ResidentSchedulePage() {
 
   const submitLeave = async (leaveId: number) => {
     setSubmittingLeaveId(leaveId);
-    setError('');
+    setNotice('');
     try {
       await trainingApi.submitLeave(leaveId);
       flash('Leave request submitted for review.');
@@ -115,6 +133,7 @@ export default function ResidentSchedulePage() {
     ...rotations.map((rotation) => ({ ...rotation, kind: 'rotation' as const })),
     ...leaves.map(l => ({ ...l, department: `Leave: ${l.leave_type}`, hospital: '', kind: 'leave' as const })),
   ].sort((a, b) => a.start_date.localeCompare(b.start_date)) : [];
+  const hasTrainingRecord = Boolean(summary?.training_record);
 
   return (
     <ProtectedRoute allowedRoles={['pg', 'resident']}>
@@ -125,10 +144,39 @@ export default function ResidentSchedulePage() {
         />
 
         {loading && <div className="flex justify-center py-16"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600" /></div>}
-        {error && <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg p-4">{error}</div>}
+        {!loading && notice && <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">{notice}</div>}
         {message && <div className="mb-4 bg-green-50 border border-green-200 text-green-700 rounded-lg p-4">{message}</div>}
 
-        {summary && (
+        {!loading && !hasTrainingRecord && (
+          <div className="space-y-4">
+            <EmptyStateCard
+              lines={[
+                'No active resident training record is linked yet.',
+                'This page will show your training progress once UTRMC/admin completes your setup.',
+                'Please contact the UTRMC office if this is unexpected.',
+              ]}
+            />
+            <div className="pg-card">
+              <h2 className="text-lg font-semibold text-gray-800 mb-1">What you can do now</h2>
+              <p className="text-sm text-gray-500 mb-4">
+                Your schedule, leave requests, and rotation timeline will appear here once onboarding is complete.
+              </p>
+              <div className="flex flex-wrap gap-3">
+                <a href="/dashboard/resident/progress" className="pg-btn-primary">
+                  Open Logbook & Readiness
+                </a>
+                <a
+                  href="/dashboard/resident"
+                  className="rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                >
+                  Back to Dashboard
+                </a>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {!loading && hasTrainingRecord && summary && (
           <>
             {/* Program info bar */}
             <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-4 mb-6 flex items-center gap-6 flex-wrap">
@@ -155,12 +203,12 @@ export default function ResidentSchedulePage() {
 
                 <div className="space-y-3">
                   <div>
-                      <label htmlFor="leave_type" className="pg-form-label">Leave Type</label>
-                      <select
+                    <label htmlFor="leave_type" className="pg-form-label">Leave Type</label>
+                    <select
                       id="leave_type"
                       value={leaveForm.leave_type}
                       onChange={(event) => setLeaveForm((current) => ({ ...current, leave_type: event.target.value }))}
-                        className="pg-form-input"
+                      className="pg-form-input"
                       >
                       {LEAVE_OPTIONS.map((option) => (
                         <option key={option.value} value={option.value}>

@@ -18,7 +18,7 @@ test.describe('UTRMC Admin dashboards', () => {
 
   test('UTRMC overview loads with stat cards', async ({ page }) => {
     await page.goto('/dashboard/utrmc');
-    await expect(page.getByRole('heading', { name: 'UTRMC Overview' })).toBeVisible({
+    await expect(page.getByRole('heading', { name: /UTRMC (Dashboard|Overview)/ })).toBeVisible({
       timeout: 15_000,
     });
     // Stat card labels live inside <main> — scope avoids matching sidebar nav links
@@ -88,9 +88,9 @@ test.describe('Resident (PG) dashboard', () => {
     await expect(page.getByRole('heading', { name: /sign in to sims/i })).not.toBeVisible({
       timeout: 5_000,
     });
-    // Note: "My Training Dashboard" heading is rendered only when a training record
-    // exists for this user. A fresh e2e_pg user without a training record will see
-    // a loading/error state instead. This is expected behaviour; deeper assertions
-    // belong in the data-seeded critical suite, not the smoke suite.
+    // The page should now render a friendly empty state when no resident record exists.
+    await expect(page.getByText(/No active resident training record is linked yet/i)).toBeVisible({
+      timeout: 15_000,
+    });
   });
 });

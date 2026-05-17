@@ -12,6 +12,18 @@ import {
   LogbookEntry,
 } from '@/lib/api/training';
 
+function EmptyStateCard({ lines }: { lines: string[] }) {
+  return (
+    <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-5 text-sm leading-6 text-slate-600">
+      <div className="space-y-2">
+        {lines.map((line) => (
+          <p key={line}>{line}</p>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function SupervisorHomePage() {
   const [summary, setSummary] = useState<SupervisorSummary | null>(null);
   const [opsSummary, setOpsSummary] = useState<SupervisorOperationalDashboard | null>(null);
@@ -76,6 +88,8 @@ export default function SupervisorHomePage() {
     }
   };
 
+  const laggingResidents = opsSummary?.lagging_residents || [];
+
   const rejectLeave = async (leaveId: number) => {
     const reason = window.prompt('Reason for rejection:');
     if (reason === null) {
@@ -119,7 +133,7 @@ export default function SupervisorHomePage() {
       <div className="pg-page">
         <PageHeader
           title="Supervisor Dashboard"
-          description="Review assigned residents, clear approval queues, and monitor departmental lag."
+          description="Focus on assigned residents, pending reviews, and approvals that need attention now."
         />
 
         {loading && <div className="flex justify-center py-16"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600" /></div>}
@@ -128,44 +142,68 @@ export default function SupervisorHomePage() {
 
         {summary && (
           <div className="space-y-8">
-            {/* Pending Inbox */}
-            <section>
-              <h2 className="text-lg font-semibold text-gray-800 mb-3">Pending Actions</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <MetricCard
-                  label="Logbook Reviews"
-                  value={opsSummary?.pending_logbook_reviews || 0}
-                  tone="info"
-                />
-                <MetricCard
-                  label="Leave Approvals"
-                  value={summary.pending.leave_approvals}
-                  tone="warning"
-                />
+            <section className="pg-card space-y-4">
+              <div>
+                <h2 className="pg-section-title">Today’s attention</h2>
+                <p className="pg-section-note">A quick summary of items that need your review.</p>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                <MetricCard label="Assigned Residents" value={opsSummary?.assigned_residents || summary.residents.length} />
+                <MetricCard label="Pending Logbook Reviews" value={opsSummary?.pending_logbook_reviews || 0} tone="info" />
+                <MetricCard label="Leave Approvals" value={summary.pending.leave_approvals} tone="warning" />
+                <MetricCard label="Rotation Requests" value={opsSummary?.pending_rotation_applications || 0} tone="warning" />
               </div>
             </section>
 
-            {opsSummary && (
-              <section>
-                <h2 className="text-lg font-semibold text-gray-800 mb-3">
-                  Operational Snapshot {opsSummary.is_hod ? '(HOD Scope)' : ''}
-                </h2>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                  {[
-                    { label: 'Assigned Residents', value: opsSummary.assigned_residents },
-                    { label: 'Pending Logbook', value: opsSummary.pending_logbook_reviews },
-                    { label: 'Returned Logbook', value: opsSummary.returned_logbook_queue },
-                  ].map((item) => (
-                    <MetricCard key={item.label} label={item.label} value={item.value} />
-                  ))}
-                </div>
-              </section>
+            {summary.residents.length === 0 && (
+              <EmptyStateCard
+                lines={[
+                  'No residents are assigned to you yet.',
+                  'Once UTRMC assigns residents, pending reviews and submissions will appear here.',
+                ]}
+              />
             )}
 
+            <section className="space-y-3">
+              <h2 className="text-lg font-semibold text-gray-800">My Residents</h2>
+              {summary.residents.length === 0 ? (
+                <div className="rounded-xl border border-dashed border-slate-200 bg-white px-4 py-6 text-sm text-slate-500">
+                  No resident roster is available yet.
+                </div>
+              ) : (
+                <div className="bg-white border border-gray-200 rounded-xl overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead className="bg-gray-50 text-gray-600 text-xs uppercase tracking-wider">
+                      <tr>
+                        <th className="px-4 py-3 text-left">Resident</th>
+                        <th className="px-4 py-3 text-left">Program</th>
+                        <th className="px-4 py-3 text-left">Rotation</th>
+                        <th className="px-4 py-3 text-left">IMM</th>
+                        <th className="px-4 py-3 text-left">Final</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100">
+                      {summary.residents.map((r) => (
+                        <tr key={r.id} className="hover:bg-gray-50 transition">
+                          <td className="px-4 py-3 font-medium text-gray-900">{r.name}</td>
+                          <td className="px-4 py-3 text-gray-600">{r.program}</td>
+                          <td className="px-4 py-3 text-gray-600 text-xs">
+                            {r.current_rotation || <span className="text-gray-400">None</span>}
+                          </td>
+                          <td className="px-4 py-3"><WorkflowStatusBadge status={r.imm_status} /></td>
+                          <td className="px-4 py-3"><WorkflowStatusBadge status={r.final_status} /></td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </section>
+
             <section>
-              <h2 className="text-lg font-semibold text-gray-800 mb-3">Pending Logbook Reviews</h2>
+              <h2 className="text-lg font-semibold text-gray-800 mb-3">Pending logbook reviews</h2>
               {pendingLogbook.length === 0 ? (
-                <div className="text-center py-10 text-gray-400 bg-gray-50 rounded-xl border border-gray-200">
+                <div className="rounded-xl border border-dashed border-slate-200 bg-white px-4 py-6 text-sm text-slate-500">
                   No submitted logbook entries in your queue.
                 </div>
               ) : (
@@ -205,9 +243,9 @@ export default function SupervisorHomePage() {
             </section>
 
             <section>
-              <h2 className="text-lg font-semibold text-gray-800 mb-3">Pending Leave Requests</h2>
+              <h2 className="text-lg font-semibold text-gray-800 mb-3">Pending approvals</h2>
               {pendingLeaves.length === 0 ? (
-                <div className="text-center py-10 text-gray-400 bg-gray-50 rounded-xl border border-gray-200">
+                <div className="rounded-xl border border-dashed border-slate-200 bg-white px-4 py-6 text-sm text-slate-500">
                   No leave requests awaiting review.
                 </div>
               ) : (
@@ -249,40 +287,52 @@ export default function SupervisorHomePage() {
               )}
             </section>
 
-            {/* Residents Table */}
             <section>
-              <h2 className="text-lg font-semibold text-gray-800 mb-3">My Residents</h2>
-              {summary.residents.length === 0 ? (
-                <div className="text-center py-10 text-gray-400 bg-gray-50 rounded-xl border border-gray-200">
-                  No residents assigned to you yet.
+              <h2 className="text-lg font-semibold text-gray-800 mb-3">Recent submissions</h2>
+              {pendingLogbook.length === 0 ? (
+                <div className="rounded-xl border border-dashed border-slate-200 bg-white px-4 py-6 text-sm text-slate-500">
+                  No new submissions are waiting in the queue.
                 </div>
               ) : (
-                <div className="bg-white border border-gray-200 rounded-xl overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead className="bg-gray-50 text-gray-600 text-xs uppercase tracking-wider">
-                      <tr>
-                        <th className="px-4 py-3 text-left">Resident</th>
-                        <th className="px-4 py-3 text-left">Program</th>
-                        <th className="px-4 py-3 text-left">Rotation</th>
-                        <th className="px-4 py-3 text-left">IMM</th>
-                        <th className="px-4 py-3 text-left">Final</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-100">
-                      {summary.residents.map(r => (
-                        <tr key={r.id} className="hover:bg-gray-50 transition">
-                          <td className="px-4 py-3 font-medium text-gray-900">{r.name}</td>
-                          <td className="px-4 py-3 text-gray-600">{r.program}</td>
-                          <td className="px-4 py-3 text-gray-600 text-xs">{r.current_rotation || <span className="text-gray-400">None</span>}</td>
-                          <td className="px-4 py-3"><WorkflowStatusBadge status={r.imm_status} /></td>
-                          <td className="px-4 py-3"><WorkflowStatusBadge status={r.final_status} /></td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                <div className="space-y-3">
+                  {pendingLogbook.slice(0, 3).map((entry) => (
+                    <div key={`recent-${entry.id}`} className="rounded-xl border border-slate-200 bg-white p-4 text-sm text-slate-700">
+                      <div className="flex items-center justify-between gap-3">
+                        <div>
+                          <p className="font-medium text-slate-900">{entry.resident_name}</p>
+                          <p className="text-slate-500">
+                            {entry.patient_id_number} · {entry.patient_seen_at.slice(0, 10)}
+                          </p>
+                        </div>
+                        <WorkflowStatusBadge status={entry.status} />
+                      </div>
+                    </div>
+                  ))}
                 </div>
               )}
             </section>
+
+            {opsSummary && (
+              <section>
+                <h2 className="text-lg font-semibold text-gray-800 mb-3">Alerts / needs attention</h2>
+                {laggingResidents.length === 0 ? (
+                  <div className="rounded-xl border border-dashed border-slate-200 bg-white px-4 py-6 text-sm text-slate-500">
+                    No lagging residents were flagged.
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {laggingResidents.slice(0, 5).map((resident) => (
+                      <div key={resident.resident_id} className="rounded-xl border border-amber-200 bg-amber-50 p-4">
+                        <p className="font-medium text-amber-900">{resident.resident_name}</p>
+                        <p className="text-sm text-amber-800">
+                          {resident.pending_reviews} pending review(s) · {resident.logbook_approved} approved entries
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </section>
+            )}
           </div>
         )}
       </div>

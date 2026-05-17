@@ -71,12 +71,14 @@ describe('ResidentHomePage', () => {
     render(<ResidentHomePage />);
 
     await waitFor(() => expect(screen.getByText('My Training Dashboard')).toBeInTheDocument());
+    const scheduleLink = await screen.findByRole('link', { name: 'View Schedule' });
+    const readinessLink = await screen.findByRole('link', { name: 'Logbook & Readiness' });
 
-    expect(screen.getByRole('link', { name: 'View Schedule' })).toHaveAttribute(
+    expect(scheduleLink).toHaveAttribute(
       'href',
       '/dashboard/resident/schedule'
     );
-    expect(screen.getByRole('link', { name: 'Logbook & Readiness' })).toHaveAttribute(
+    expect(readinessLink).toHaveAttribute(
       'href',
       '/dashboard/resident/progress'
     );
@@ -85,5 +87,31 @@ describe('ResidentHomePage', () => {
     expect(screen.queryByRole('link', { name: /Upload Workshop/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: /Apply for Leave/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: /Manage/i })).not.toBeInTheDocument();
+  });
+
+  it('shows a calm empty state when no resident training record is linked', async () => {
+    mockedTrainingApi.getResidentSummary.mockResolvedValueOnce({
+      training_record: null,
+      rotation: { current: null, next: null },
+      research: { status: null, supervisor_name: null, synopsis_uploaded: false, university_submitted: false },
+      thesis: { status: 'DRAFT', submitted_at: null },
+      workshops: { total_completed: 0, required_for_imm: 0, required_for_final: 0, completed_list: [] },
+      eligibility: {
+        IMM: { status: null, reasons: [] },
+        FINAL: { status: null, reasons: [] },
+      },
+      leaves: { active_count: 0, pending_count: 0, list: [] },
+      postings: { active_count: 0, pending_count: 0 },
+    } as never);
+
+    render(<ResidentHomePage />);
+
+    await waitFor(() => {
+      expect(screen.getByText('No active resident training record is linked yet.')).toBeInTheDocument();
+    });
+    expect(screen.getByRole('link', { name: 'View Schedule' })).toHaveAttribute(
+      'href',
+      '/dashboard/resident/schedule'
+    );
   });
 });

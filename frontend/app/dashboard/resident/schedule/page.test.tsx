@@ -81,4 +81,19 @@ describe('ResidentSchedulePage', () => {
       expect(mockedTrainingApi.submitLeave).toHaveBeenCalledWith(10);
     });
   });
+
+  it('shows the setup pending empty state when no training record is linked', async () => {
+    mockedTrainingApi.getResidentSummary.mockResolvedValueOnce({
+      training_record: null,
+    } as never);
+    mockedTrainingApi.listMyLeaves.mockResolvedValueOnce({ results: [] });
+    mockedTrainingApi.listMyRotations.mockResolvedValueOnce({ results: [] });
+
+    render(<ResidentSchedulePage />);
+
+    await waitFor(() => {
+      expect(screen.getByText('No active resident training record is linked yet.')).toBeInTheDocument();
+    });
+    expect(screen.getByText(/this page will show your training progress/i)).toBeInTheDocument();
+  });
 });

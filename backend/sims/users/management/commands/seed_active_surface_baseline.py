@@ -115,7 +115,7 @@ class Command(BaseCommand):
                 "duration_months": 48,
                 "degree_type": TrainingProgram.DEGREE_FCPS,
                 "department": department,
-                "description": "Minimal programme used by release-gated active-surface verification.",
+                "description": "Minimal program used by release-gated active-surface verification.",
                 "active": True,
             },
         )

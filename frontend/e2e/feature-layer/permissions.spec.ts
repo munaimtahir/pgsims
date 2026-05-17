@@ -74,7 +74,7 @@ test.describe('Feature-layer permission boundaries', () => {
   }) => {
     await loginAsRole(context, page, 'utrmc_staff_user');
     await page.goto('/dashboard/utrmc');
-    await expect(page.getByRole('heading', { name: /UTRMC Overview/i })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /UTRMC (Dashboard|Overview)/i })).toBeVisible();
     await expect(page.getByText(/read-only for UTRMC users/i)).toBeVisible();
     await expect(page.getByRole('button', { name: /Create Rotation Draft/i })).toHaveCount(0);
     await expect(page.getByRole('button', { name: /Verify & Issue/i })).toHaveCount(0);

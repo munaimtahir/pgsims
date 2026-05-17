@@ -17,7 +17,7 @@ test.describe('Login form', () => {
 
     // Router.push('/dashboard/utrmc') — wait for navigation
     await expect(page).toHaveURL(/\/dashboard\/utrmc/, { timeout: 15_000 });
-    await expect(page.getByRole('heading', { name: 'UTRMC Overview' })).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByRole('heading', { name: /UTRMC (Dashboard|Overview)/ })).toBeVisible({ timeout: 15_000 });
   });
 
   test('valid supervisor credentials redirect to supervisor dashboard', async ({ page }) => {

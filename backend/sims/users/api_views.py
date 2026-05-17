@@ -9,13 +9,14 @@ Provides:
 - Password reset flow
 """
 
-from rest_framework import permissions, status
+from rest_framework import permissions, serializers, status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.exceptions import AuthenticationFailed, ValidationError
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.throttling import AnonRateThrottle
 from rest_framework.views import APIView
+from drf_spectacular.utils import extend_schema
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
@@ -27,6 +28,10 @@ from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from .models import User
 from .serializers import AssignedPGSerializer, UserSerializer, UserRegistrationSerializer
 from .permissions import IsSupervisor
+
+
+class AuthEmptySchemaSerializer(serializers.Serializer):
+    pass
 
 
 class LoginRateThrottle(AnonRateThrottle):
@@ -78,6 +83,7 @@ class CustomTokenObtainPairView(TokenObtainPairView):
         return response
 
 
+@extend_schema(request=UserRegistrationSerializer, responses={201: UserSerializer})
 @api_view(["POST"])
 @permission_classes([AllowAny])
 def register_view(request):
@@ -133,6 +139,7 @@ def register_view(request):
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+@extend_schema(request=None, responses={200: AuthEmptySchemaSerializer})
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def logout_view(request):
@@ -157,6 +164,7 @@ def logout_view(request):
         return Response({"error": "Invalid token"}, status=status.HTTP_400_BAD_REQUEST)
 
 
+@extend_schema(responses={200: UserSerializer})
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def user_profile_view(request):
@@ -169,6 +177,7 @@ def user_profile_view(request):
     return Response(serializer.data)
 
 
+@extend_schema(request=UserSerializer, responses={200: UserSerializer})
 @api_view(["PUT", "PATCH"])
 @permission_classes([IsAuthenticated])
 def update_profile_view(request):
@@ -186,6 +195,7 @@ def update_profile_view(request):
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+@extend_schema(request=AuthEmptySchemaSerializer, responses={200: AuthEmptySchemaSerializer})
 @api_view(["POST"])
 @permission_classes([AllowAny])
 def password_reset_request_view(request):
@@ -257,6 +267,7 @@ def password_reset_request_view(request):
         )
 
 
+@extend_schema(request=AuthEmptySchemaSerializer, responses={200: AuthEmptySchemaSerializer})
 @api_view(["POST"])
 @permission_classes([AllowAny])
 def password_reset_confirm_view(request):
@@ -303,6 +314,7 @@ def password_reset_confirm_view(request):
         return Response({"error": "Invalid reset link"}, status=status.HTTP_400_BAD_REQUEST)
 
 
+@extend_schema(request=AuthEmptySchemaSerializer, responses={200: AuthEmptySchemaSerializer})
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def change_password_view(request):
@@ -338,6 +350,7 @@ def change_password_view(request):
     return Response({"message": "Password changed successfully"}, status=status.HTTP_200_OK)
 
 
+@extend_schema(responses={200: None})
 class SupervisorAssignedPGsView(APIView):
     """
     Get list of PGs assigned to the authenticated supervisor.
@@ -359,6 +372,7 @@ class SupervisorAssignedPGsView(APIView):
     ]
     """
 
+    serializer_class = AssignedPGSerializer
     permission_classes = [permissions.IsAuthenticated, IsSupervisor]
 
     def get(self, request):

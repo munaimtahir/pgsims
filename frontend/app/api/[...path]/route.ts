@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const BACKEND_URL = process.env.INTERNAL_API_URL || 'http://backend:8014';
+const BACKEND_URL = process.env.INTERNAL_API_URL
+  || (process.env.NODE_ENV === 'development' ? 'http://127.0.0.1:8014' : 'http://backend:8014');
 
 async function proxyRequest(request: NextRequest, params: { path: string[] }) {
   const pathSegments = params.path;

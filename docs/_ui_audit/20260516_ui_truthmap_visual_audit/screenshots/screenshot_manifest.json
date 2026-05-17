@@ -1,0 +1,194 @@
+[
+  {
+    "name": "utrmc_overview",
+    "route": "/dashboard/utrmc",
+    "status": 200,
+    "title": "FMU - PGR SIMS",
+    "heading": "UTRMC Overview",
+    "pageError": null
+  },
+  {
+    "name": "utrmc_hospitals",
+    "route": "/dashboard/utrmc/hospitals",
+    "status": 200,
+    "title": "FMU - PGR SIMS",
+    "heading": "Hospitals",
+    "pageError": null
+  },
+  {
+    "name": "utrmc_departments",
+    "route": "/dashboard/utrmc/departments",
+    "status": 200,
+    "title": "FMU - PGR SIMS",
+    "heading": "Departments",
+    "pageError": null
+  },
+  {
+    "name": "utrmc_users",
+    "route": "/dashboard/utrmc/users",
+    "status": 200,
+    "title": "FMU - PGR SIMS",
+    "heading": "Users",
+    "pageError": null
+  },
+  {
+    "name": "utrmc_matrix",
+    "route": "/dashboard/utrmc/matrix",
+    "status": 200,
+    "title": "FMU - PGR SIMS",
+    "heading": "Hospital–Department Matrix",
+    "pageError": null
+  },
+  {
+    "name": "utrmc_supervision",
+    "route": "/dashboard/utrmc/supervision",
+    "status": 200,
+    "title": "FMU - PGR SIMS",
+    "heading": "Supervision Links",
+    "pageError": null
+  },
+  {
+    "name": "utrmc_hod",
+    "route": "/dashboard/utrmc/hod",
+    "status": 200,
+    "title": "FMU - PGR SIMS",
+    "heading": "HOD Assignments",
+    "pageError": null
+  },
+  {
+    "name": "utrmc_programs",
+    "route": "/dashboard/utrmc/programs",
+    "status": 200,
+    "title": "FMU - PGR SIMS",
+    "heading": "Programs",
+    "pageError": null
+  },
+  {
+    "name": "utrmc_eligibility",
+    "route": "/dashboard/utrmc/eligibility-monitoring",
+    "status": 200,
+    "title": "FMU - PGR SIMS",
+    "heading": "Eligibility Monitoring",
+    "pageError": null
+  },
+  {
+    "name": "utrmc_data_quality",
+    "route": "/dashboard/utrmc/data-quality",
+    "status": 200,
+    "title": "FMU - PGR SIMS",
+    "heading": "Data Quality Dashboard",
+    "pageError": null
+  },
+  {
+    "name": "utrmc_postings",
+    "route": "/dashboard/utrmc/postings",
+    "status": 200,
+    "title": "FMU - PGR SIMS",
+    "heading": "Deputation Postings",
+    "pageError": null
+  },
+  {
+    "name": "supervisor_dashboard",
+    "route": "/dashboard/supervisor",
+    "status": 200,
+    "title": "FMU - PGR SIMS",
+    "heading": "Supervisor Dashboard",
+    "pageError": null
+  },
+  {
+    "name": "supervisor_research_approvals",
+    "route": "/dashboard/supervisor/research-approvals",
+    "status": 200,
+    "title": "FMU - PGR SIMS",
+    "heading": "Research Approvals",
+    "pageError": null
+  },
+  {
+    "name": "supervisor_resident_progress",
+    "route": "/dashboard/supervisor/residents/1/progress",
+    "status": 200,
+    "title": "FMU - PGR SIMS",
+    "heading": "Resident Progress",
+    "pageError": null
+  },
+  {
+    "name": "resident_dashboard",
+    "route": "/dashboard/resident",
+    "status": 200,
+    "title": "",
+    "heading": null,
+    "pageError": null
+  },
+  {
+    "name": "resident_schedule",
+    "route": "/dashboard/resident/schedule",
+    "status": 200,
+    "title": "FMU - PGR SIMS",
+    "heading": "My Schedule",
+    "pageError": null
+  },
+  {
+    "name": "resident_progress",
+    "route": "/dashboard/resident/progress",
+    "status": 200,
+    "title": "FMU - PGR SIMS",
+    "heading": "Logbook",
+    "pageError": null
+  },
+  {
+    "name": "resident_workshops",
+    "route": "/dashboard/resident/workshops",
+    "status": 200,
+    "title": "FMU - PGR SIMS",
+    "heading": "Workshops",
+    "pageError": null
+  },
+  {
+    "name": "resident_research",
+    "route": "/dashboard/resident/research",
+    "status": 200,
+    "title": "FMU - PGR SIMS",
+    "heading": "Research",
+    "pageError": null
+  },
+  {
+    "name": "resident_thesis",
+    "route": "/dashboard/resident/thesis",
+    "status": 200,
+    "title": "FMU - PGR SIMS",
+    "heading": "Thesis",
+    "pageError": null
+  },
+  {
+    "name": "resident_postings",
+    "route": "/dashboard/resident/postings",
+    "status": 200,
+    "title": "FMU - PGR SIMS",
+    "heading": "Postings",
+    "pageError": null
+  },
+  {
+    "name": "pg_dashboard",
+    "route": "/dashboard/pg",
+    "status": 200,
+    "title": "",
+    "heading": null,
+    "pageError": null
+  },
+  {
+    "name": "utrmc_department_roster",
+    "route": "/dashboard/utrmc/departments/1/roster",
+    "status": 200,
+    "title": "FMU - PGR SIMS",
+    "heading": "Department Roster",
+    "pageError": null
+  },
+  {
+    "name": "pg_department_roster",
+    "route": "/dashboard/pg/departments/1/roster",
+    "status": 200,
+    "title": "FMU - PGR SIMS",
+    "heading": "Department Roster",
+    "pageError": null
+  }
+]

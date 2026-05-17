@@ -15,18 +15,31 @@ jobs:
   e2e-smoke:
     name: Playwright Smoke Suite
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: frontend
-
-    env:
-      # Points at the live production instance — tests validate the deployed app.
-      # Override with a staging URL if available.
-      E2E_BASE_URL: https://pgsims.alshifalab.pk
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+          cache-dependency-path: |
+            backend/requirements.txt
+            backend/requirements-dev.txt
+
+      - name: Install backend dependencies
+        working-directory: backend
+        env:
+          SECRET_KEY: test-secret-key-for-ci
+          DJANGO_SETTINGS_MODULE: sims_project.settings_test
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt -r requirements-dev.txt
+          python manage.py migrate --noinput
+          python manage.py create_superadmin --reset-password
+          python manage.py seed_e2e
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -36,13 +49,46 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
 
       - name: Install dependencies
+        working-directory: frontend
         run: npm ci
 
       - name: Install Playwright browsers
+        working-directory: frontend
         run: npx playwright install chromium --with-deps
 
       - name: Run smoke tests
-        run: npm run test:e2e:smoke
+        env:
+          SECRET_KEY: test-secret-key-for-ci
+          DJANGO_SETTINGS_MODULE: sims_project.settings_test
+          E2E_BASE_URL: http://127.0.0.1:8082
+          E2E_API_URL: http://127.0.0.1:8014
+        run: |
+          python backend/manage.py runserver 127.0.0.1:8014 >/tmp/pgsims-backend.log 2>&1 &
+          BACKEND_PID=$!
+          cd frontend
+          npm run dev -- --port 8082 >/tmp/pgsims-frontend.log 2>&1 &
+          FRONTEND_PID=$!
+
+          cleanup() {
+            kill "$FRONTEND_PID" "$BACKEND_PID" || true
+          }
+          trap cleanup EXIT
+
+          for i in {1..60}; do
+            if curl -sf http://127.0.0.1:8014/healthz/ >/dev/null; then
+              break
+            fi
+            sleep 2
+          done
+
+          for i in {1..90}; do
+            if curl -sf http://127.0.0.1:8082 >/dev/null; then
+              break
+            fi
+            sleep 2
+          done
+
+          npm run test:e2e:smoke
 
       - name: Upload Playwright report
         uses: actions/upload-artifact@v4

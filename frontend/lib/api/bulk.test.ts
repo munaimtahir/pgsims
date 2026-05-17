@@ -1,22 +1,21 @@
-/// <reference types="jest" />
+import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
+import '@testing-library/jest-dom';
 import { bulkApi } from './bulk';
 import apiClient from './client';
 
-jest.mock('./client', () => ({
-  get: jest.fn(),
-  post: jest.fn(),
-  put: jest.fn(),
-  patch: jest.fn(),
-  delete: jest.fn(),
-}));
-
 describe('bulkApi', () => {
+  let postSpy: jest.SpiedFunction<typeof apiClient.post>;
+
+  beforeEach(() => {
+    postSpy = jest.spyOn(apiClient, 'post');
+  });
+
   afterEach(() => {
-    jest.clearAllMocks();
+    jest.restoreAllMocks();
   });
 
   it('importEntity calls correct endpoint', async () => {
-    (apiClient.post as jest.Mock).mockResolvedValue({ data: {} });
+    postSpy.mockResolvedValue({ data: {} } as never);
     const file = new File([''], 'test.csv');
     await bulkApi.importEntity('residents', file, 'apply');
     expect(apiClient.post).toHaveBeenCalledWith(
