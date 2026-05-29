@@ -390,6 +390,8 @@ class DepartmentMembership(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
+        verbose_name = "User Department Membership"
+        verbose_name_plural = "User Department Memberships"
         ordering = ["department__name", "user__last_name", "user__first_name"]
         constraints = [
             models.UniqueConstraint(
@@ -470,6 +472,8 @@ class HospitalAssignment(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
+        verbose_name = "User Hospital-Department Assignment"
+        verbose_name_plural = "User Hospital-Department Assignments"
         ordering = ["hospital_department__hospital__name", "user__last_name"]
         constraints = [
             models.CheckConstraint(

@@ -268,8 +268,8 @@ class RotationAssignment(models.Model):
 
     class Meta:
         ordering = ["-start_date"]
-        verbose_name = "Rotation Assignment"
-        verbose_name_plural = "Rotation Assignments"
+        verbose_name = "Resident Rotation Assignment"
+        verbose_name_plural = "Resident Rotation Assignments"
         indexes = [
             models.Index(fields=["resident_training", "status"]),
             models.Index(fields=["status"]),

@@ -12,7 +12,7 @@ class RotationsConfig(AppConfig):
 
     default_auto_field = "django.db.models.BigAutoField"
     name = "sims.rotations"
-    verbose_name = "SIMS Rotations & Training"
+    verbose_name = "Hospital-Department Matrix"
 
     def ready(self):
         try:

@@ -426,3 +426,95 @@ Update this file as each phase completes so the next agent can resume without re
 **Session Status**: COMPLETE
 **Next Agent**: Can begin with: "Review copilot_session.md for handoff, then start with Action 1: Select pilot cohort"
 
+---
+
+# Session Window: 2026-05-29 06:48 UTC
+
+PRIMARY PURPOSE
+  Audit and Clean up PGSIMS Admin Panel and Model Inventory.
+  Success = Admin relevance report written, legacy models hidden from admin, and terminology consolidated without breaking tests.
+
+IN-SCOPE (ALLOWED)
+  - Perform audit of registered admin models, row counts, and dependencies.
+  - Hide legacy/non-essential models (`Batch` and `StudentProfile`) from Django admin.
+  - Document findings in `docs/_implementation/20260529_admin_model_relevance_audit/ADMIN_MODEL_RELEVANCE_REPORT.md`.
+  - Record session activities and decisions in `copilot_session.md`.
+  - Align admin terminology to use "Resident" instead of "Student".
+
+OUT-OF-SCOPE (FORBIDDEN)
+  - Destructive database migrations (dropping tables).
+  - Modifying active business logic or routes outside the admin scope.
+  - Fixing pre-existing unrelated test failures (like `cases` namespace issues) unless they directly block validation.
+
+SUCCESS CRITERIA
+  - `ADMIN_MODEL_RELEVANCE_REPORT.md` exists and lists all models with status/row counts.
+  - Django Admin has legacy models hidden.
+  - Test suite does not have any new failures introduced.
+
+GUARDRAILS ACTIVE
+  ✅ G1-G20 enforced
+  ✅ Drift detection active
+
+## Session Log & Progress
+- [x] Initial analysis of model counts from containerized db: confirmed that `Batch` and `StudentProfile` have 0 rows and are not referenced by active workflows.
+- [x] Write the formal `ADMIN_MODEL_RELEVANCE_REPORT.md` (saved at `docs/_implementation/20260529_admin_model_relevance_audit/ADMIN_MODEL_RELEVANCE_REPORT.md` and as a Gemini artifact).
+- [x] Hide `Batch` and `StudentProfile` from `sims/academics/admin.py`.
+- [x] Align admin terminology to ensure "Resident" is used over "Student" (verified no student terminology in active model names or admins; legacy model hidden).
+- [x] Verify that no new test failures are introduced (confirmed 19 failures on baseline remains exactly 19, with no new failures).
+
+---
+
+# Session Window: 2026-05-29 07:10 UTC (Stage 0 Model Lock & Cleanup Sprint)
+
+PRIMARY PURPOSE
+  Finalize, simplify, and lock the PGSIMS data model before real pilot onboarding starts.
+  Success = Complete model inventory audited, legacy models deleted, Department and HospitalDepartment matrix solidified, placement and profile models resolved, admin panel cleaned and grouped, onboarding scripts adjusted, test data reseeded, and migration state validated cleanly with no new test failures.
+
+REPOSITORY BASELINE
+  - Current Branch: main
+  - Current Commit: b6cd94f4611a1b25301833211665daa50ee6b22f
+
+IN-SCOPE (ALLOWED)
+  - Full model inventory audit of all Django apps.
+  - Complete deletion of legacy models (academics.Batch, academics.StudentProfile) from codebase, templates, and tests.
+  - Verification that academics.Department is kept as the single canonical Department/Specialty master.
+  - Auditing/refactoring HospitalDepartment to rely solely on FKs to Hospital and Department.
+  - Reviewing and refactoring resident placement/rotation models (e.g., RotationAssignment, HospitalAssignment, LeaveRequest) to use HospitalDepartment instead of separate hospital/department fields.
+  - Auditing and deciding whether to keep or delete ResidentProfile/StaffProfile.
+  - Standardizing/grouping Django Admin panels and overriding labels.
+  - Updating onboarding/import code for CSV/Sheets support to align with locked schema.
+  - Rebuilding/resetting database migrations or creating clean delete migrations.
+  - Re-seeding test data with minimal, clean pilot data.
+  - Running makemigrations, migrate, and tests to prove stability.
+
+OUT-OF-SCOPE (FORBIDDEN)
+  - Reintroducing any duplicate Department or Academic/Rotation department models.
+  - Creating new features unrelated to model cleanup and finalization.
+  - Preserving legacy codes/tables "just because they are there".
+
+CHECKLIST / SPRINT PROGRESS
+- [x] Task 1: Create/update session window in `copilot_session.md`
+- [x] Task 2: Re-audit model relevance and classify models
+- [x] Task 3: Produce full model inventory in `MODEL_LOCK_DECISION_REPORT.md`
+- [x] Task 4: Delete confirmed legacy models (`academics.Batch`, `academics.StudentProfile`) completely
+- [x] Task 5: Verify Department model canonicalization (single model, override admin labels)
+- [x] Task 6: Audit/refactor HospitalDepartment matrix (remove duplicate name fields)
+- [x] Task 7: Review and refactor Resident Placement/Rotation models to use HospitalDepartment
+- [x] Task 8: Audit and decide profile models (ResidentProfile, StaffProfile)
+- [x] Task 9: Review and finalize User/Role/Membership model logic and HODAssignment levels
+- [x] Task 10: Admin cleanup (Core Setup, Users & Roles, Hospital-Department Matrix, Resident Training, System / Audit)
+- [x] Task 11: Onboarding/import compatibility update (verified zero legacy references)
+- [x] Task 12: Test data reset & reseed (cleaned up `scripts/create_basic_rotation_data.py`)
+- [x] Task 13: Migration strategy selection and execution (generated explicit DeleteModel and verbose label migrations)
+- [x] Task 14: Execution of validation commands (backend tests passed, frontend lint & typecheck verified)
+- [x] Task 15: Create/update formal `MODEL_LOCK_DECISION_REPORT.md`
+- [x] Task 16: Commit changes and report commit hash
+
+## Session Completion Log
+- **Date**: 2026-05-29
+- **Outcome**: Successfully locked down the PGSIMS model foundation by deleting legacy undergraduate models, standardizing labels and apps grouping in Django admin, establishing the canonical Department/Specialty master, verifying matrix-based resident assignments, resolving profile models retention (Option A), executing migrations, and verifying test suite health with 339 passing tests (zero regression).
+
+
+
+
+

@@ -77,8 +77,8 @@ class HospitalDepartment(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        verbose_name = "Hospital Department"
-        verbose_name_plural = "Hospital Departments"
+        verbose_name = "Hospital-Department Matrix"
+        verbose_name_plural = "Hospital-Department Matrix"
         ordering = ["hospital__name", "department__name"]
         constraints = [
             models.UniqueConstraint(

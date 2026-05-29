@@ -16,7 +16,7 @@ class UsersConfig(AppConfig):
 
     default_auto_field = "django.db.models.BigAutoField"
     name = "sims.users"
-    verbose_name = "SIMS Users & Roles"
+    verbose_name = "Users & Roles"
 
     def ready(self):
         """
