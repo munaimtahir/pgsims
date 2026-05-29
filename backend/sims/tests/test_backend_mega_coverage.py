@@ -43,7 +43,7 @@ class BackendMegaCoverageTests(TestCase):
         url = "/api/logbook/config/"
         data = {
             "name": "General Medicine Config",
-            "mode": "total",
+            "mode": "PER_PERIOD",
             "min_approved_entries": 50,
             "period_days": 30,
             "program": self.program.id,

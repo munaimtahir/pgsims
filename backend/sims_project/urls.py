@@ -124,6 +124,9 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     # SIMS App URLs — active
     path("users/", include("sims.users.urls")),
+    path("cases/", include("sims.users.cases_dummy_urls")),
+    path("logbook/", include("sims.users.logbook_dummy_urls")),
+    path("certificates/", include("sims.users.certificates_dummy_urls")),
     path("rotations/", include("sims.rotations.urls")),
     path("api/audit/", include("sims.audit.urls")),
     path("api/bulk/", include("sims.bulk.urls")),

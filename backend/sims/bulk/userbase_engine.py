@@ -619,7 +619,7 @@ def _import_supervision_links(actor: User, rows: List[dict], *, dry_run: bool, a
             supervisor = _required_user_by_email(row, "supervisor_email", {"supervisor", "faculty"})
             resident = _required_user_by_email(row, "resident_email", {"resident", "pg"})
             department = _department_or_none(row.get("department_code"))
-            start_date = _parse_required_date(row, "start_date")
+            start_date = _parse_required_date(row, "start_date") if row.get("start_date") else date.today()
             end_date = _parse_date_value(row.get("end_date"))
             active = _parse_bool(row.get("active"), default=True)
             if not dry_run:
@@ -656,9 +656,11 @@ def _import_hod_assignments(actor: User, rows: List[dict], *, dry_run: bool, all
     for row in rows:
         row_number = row["_row_number"]
         try:
+            if "hod_email" not in row and "email" in row:
+                row["hod_email"] = row["email"]
             department = _required_department(row)
             hod_user = _required_user_by_email(row, "hod_email", {"supervisor", "faculty"})
-            start_date = _parse_required_date(row, "start_date")
+            start_date = _parse_required_date(row, "start_date") if row.get("start_date") else date.today()
             end_date = _parse_date_value(row.get("end_date"))
             active = _parse_bool(row.get("active"), default=True)
             if not dry_run:

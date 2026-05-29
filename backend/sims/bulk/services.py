@@ -25,6 +25,7 @@ from sims.bulk.userbase_engine import (
     template_rows_for as userbase_template_rows,
 )
 from sims.users.models import SPECIALTY_CHOICES, YEAR_CHOICES, User
+from sims.training.models import LogbookEntry
 
 try:
     from sims.academics.models import Department
@@ -160,8 +161,8 @@ class BulkService:
                     for missing_id in missing:
                         failures.append({"id": missing_id, "error": "not-found"})
                     for entry in entries:
-                        entry.supervisor = supervisor
-                        entry.save(update_fields=["supervisor"])
+                        entry.reviewed_by = supervisor
+                        entry.save(update_fields=["reviewed_by"])
                         successes.append({"id": entry.pk, "supervisor": supervisor.pk})
             except ValidationError as exc:
                 failures.append({"ids": list(chunk), "error": str(exc)})
@@ -182,6 +183,9 @@ class BulkService:
         dry_run: bool = True,
         allow_partial: bool = False,
     ) -> BulkOperation:
+        from sims.training.models import ResidentTrainingRecord
+        import secrets
+
         operation = BulkOperation.objects.create(user=self.actor, operation=BulkOperation.OP_IMPORT)
         rows = list(_parse_rows(uploaded_file))
         successes: List[dict] = []
@@ -202,16 +206,26 @@ class BulkService:
                 failures.append({"row": row, "error": "invalid-date"})
                 errors_triggered = True
                 return
+            
+            rtr = ResidentTrainingRecord.objects.filter(resident_user=pg).first()
+            if not rtr:
+                failures.append({"row": row, "error": "no-training-record"})
+                errors_triggered = True
+                return
+
             status = row.get("status", "draft")
+            status_val = status.upper()
+            if status_val not in ["DRAFT", "SUBMITTED", "RETURNED", "APPROVED"]:
+                status_val = "DRAFT"
+
             payload = {
-                "pg": pg,
-                "case_title": row.get("case_title") or "Untitled",
-                "date": entry_date,
-                "status": status,
-                "location_of_activity": row.get("location") or "Not specified",
-                "patient_history_summary": row.get("patient_history") or "Pending summary",
-                "management_action": row.get("management_action") or "Pending action",
-                "topic_subtopic": row.get("topic_subtopic") or "General",
+                "resident_training_record": rtr,
+                "patient_id_number": row.get("patient_id_number") or f"IMPORT-{secrets.token_hex(4).upper()}",
+                "patient_name": row.get("patient_name") or "Imported Patient",
+                "patient_seen_at": datetime.combine(entry_date, datetime.min.time()),
+                "status": status_val,
+                "diagnosis": row.get("case_title") or "Untitled Case",
+                "management_plan": row.get("management_action") or "Pending action",
             }
             try:
                 if dry_run:
@@ -222,7 +236,7 @@ class BulkService:
                 successes.append(
                     {
                         "pg": pg.username,
-                        "case_title": payload["case_title"],
+                        "case_title": payload["diagnosis"],
                         "status": status,
                     }
                 )

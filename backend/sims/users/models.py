@@ -279,6 +279,75 @@ class User(AbstractUser):
         }
         return role_classes.get(self.role, "badge-secondary")
 
+    def get_documents_pending_count(self):
+        """
+        Get count of pending documents requiring action by this user/supervisor.
+        """
+        try:
+            if self.role in {"supervisor", "faculty"}:
+                assigned_pgs = self.get_assigned_pgs()
+                if not assigned_pgs.exists():
+                    return 0
+                
+                total = 0
+                
+                # Pending logbook entry reviews
+                try:
+                    from sims.training.models import LogbookEntry
+                    total += LogbookEntry.objects.filter(
+                        resident_training_record__resident_user__in=assigned_pgs,
+                        status="SUBMITTED"
+                    ).count()
+                except Exception:
+                    pass
+
+                # Pending rotation completion verifications or assignments
+                try:
+                    from sims.training.models import RotationAssignment
+                    total += RotationAssignment.objects.filter(
+                        resident_training__resident_user__in=assigned_pgs,
+                        status="SUBMITTED"
+                    ).count()
+                except Exception:
+                    pass
+
+                # Pending leave requests
+                try:
+                    from sims.training.models import LeaveRequest
+                    total += LeaveRequest.objects.filter(
+                        resident_training__resident_user__in=assigned_pgs,
+                        status="SUBMITTED"
+                    ).count()
+                except Exception:
+                    pass
+
+                # Pending synopses/theses
+                try:
+                    from sims.training.models import ResidentSubmission
+                    total += ResidentSubmission.objects.filter(
+                        resident_training_record__resident_user__in=assigned_pgs,
+                        status="SUBMITTED"
+                    ).count()
+                except Exception:
+                    pass
+                
+                return total
+            
+            elif self.role in {"pg", "resident"}:
+                total = 0
+                try:
+                    from sims.training.models import LogbookEntry
+                    total += LogbookEntry.objects.filter(
+                        resident_training_record__resident_user=self,
+                        status="SUBMITTED"
+                    ).count()
+                except Exception:
+                    pass
+                return total
+        except Exception:
+            return 0
+        return 0
+
 class StaffProfile(models.Model):
     """Profile metadata for faculty and supervisors."""
 

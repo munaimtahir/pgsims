@@ -65,8 +65,8 @@ router.register(r"rotations", RotationAssignmentViewSet, basename="rotation-assi
 router.register(r"leaves", LeaveRequestViewSet, basename="leave-request")
 router.register(r"postings", DeputationPostingViewSet, basename="deputation-posting")
 router.register(r"workshops", WorkshopViewSet, basename="workshop")
-router.register(r"logbook", LogbookEntryViewSet, basename="logbook-entry")
 router.register(r"logbook/config", LogbookThresholdConfigViewSet, basename="logbook-threshold-config")
+router.register(r"logbook", LogbookEntryViewSet, basename="logbook-entry")
 router.register(
     r"submissions/requirements",
     SubmissionRequirementTemplateViewSet,
