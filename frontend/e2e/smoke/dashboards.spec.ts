@@ -24,7 +24,7 @@ test.describe('UTRMC Admin dashboards', () => {
     // Stat card labels live inside <main> — scope avoids matching sidebar nav links
     await expect(page.getByRole('main').getByText('Hospitals').first()).toBeVisible();
     await expect(page.getByRole('main').getByText('Departments').first()).toBeVisible();
-    await expect(page.getByRole('main').getByText('Total Users').first()).toBeVisible();
+    await expect(page.getByRole('main').getByText('Residents').first()).toBeVisible();
   });
 
   test('users management page loads with Add User button', async ({ page }) => {
@@ -88,8 +88,11 @@ test.describe('Resident (PG) dashboard', () => {
     await expect(page.getByRole('heading', { name: /sign in to sims/i })).not.toBeVisible({
       timeout: 5_000,
     });
-    // The page should now render a friendly empty state when no resident record exists.
-    await expect(page.getByText(/No active resident training record is linked yet/i)).toBeVisible({
+    // The page should render the training dashboard as the user has a seeded record.
+    await expect(page.getByRole('heading', { name: 'My Training Dashboard' })).toBeVisible({
+      timeout: 15_000,
+    });
+    await expect(page.getByText('E2E Baseline FCPS Program').first()).toBeVisible({
       timeout: 15_000,
     });
   });

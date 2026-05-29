@@ -1,1 +1,0 @@
-contracts/INTEGRATION_TRUTH_MAP.md
