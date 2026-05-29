@@ -514,7 +514,35 @@ CHECKLIST / SPRINT PROGRESS
 - **Date**: 2026-05-29
 - **Outcome**: Successfully locked down the PGSIMS model foundation by deleting legacy undergraduate models, standardizing labels and apps grouping in Django admin, establishing the canonical Department/Specialty master, verifying matrix-based resident assignments, resolving profile models retention (Option A), executing migrations, and verifying test suite health with 339 passing tests (zero regression).
 
+---
 
+# Session Window: 2026-05-29 08:25 UTC (PGSIMS Baseline Failure Repair Sprint)
 
+PRIMARY PURPOSE
+  Fix the 19 pre-existing baseline test failures in the backend test suite while keeping the Stage 0 model lock unchanged.
+  Success = All 358 backend tests passing (0 failed), frontend checks green, with no changes to the Stage 0 database schema or model lock.
 
+REPOSITORY BASELINE
+  - Current Branch: main
+  - Current Commit: 663080853b18689bf8c25a976ffa295b43967b19
 
+IN-SCOPE (ALLOWED)
+  - Fixing the 19 failing tests related to the `cases` namespace routing, user dashboard views, bulk services, logbook configuration, and missing `User` dashboard helper properties.
+  - Adding or modifying views, models, properties, serializers, or test settings to resolve these specific 19 failures.
+  - Updating the test suite or test configurations to match corrected logic.
+
+OUT-OF-SCOPE (FORBIDDEN)
+  - Reintroducing `Batch` or `StudentProfile`.
+  - Creating duplicate or separate department/specialty models.
+  - Changing the locked `Hospital` + `Department` + `HospitalDepartment` matrix structure.
+  - Changing the foreign key relations of `RotationAssignment` or `HospitalAssignment`.
+
+CHECKLIST / SPRINT PROGRESS
+- [x] Task 1: Initialize session window in `copilot_session.md`
+- [ ] Task 2: Fix missing dashboard/profile helper properties on the User model
+- [ ] Task 3: Address `cases` namespace routing error on dashboard redirects
+- [ ] Task 4: Resolve `LogbookEntry` NameError and related bulk services/import tests
+- [ ] Task 5: Investigate and fix HOD assignments and supervision links test failures
+- [ ] Task 6: Validate backend test suite (358 passed, 0 failed)
+- [ ] Task 7: Run frontend typechecks and linting
+- [ ] Task 8: Commit baseline repair fixes and update documentation
