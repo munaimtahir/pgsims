@@ -1,19 +1,14 @@
 import React from 'react';
 import { format } from 'date-fns';
-import { ArrowDownTrayIcon, ClockIcon } from '@heroicons/react/24/outline';
+import { ArrowDownTrayIcon, ClockIcon, TrashIcon } from '@heroicons/react/24/outline';
 import { toast } from 'react-hot-toast';
+import { fetchAuth } from '@/lib/auth/fetch';
 
-export default function BackupList({ backups }: { backups: Record<string, unknown>[] }) {
+export default function BackupList({ backups, onRefresh }: { backups: any[], onRefresh: () => void }) {
   const handleDownload = async (backupId: number, filename: string) => {
     try {
-      const response = await fetch(`/api/backup_center/jobs/${backupId}/download/`, {
+      const response = await fetchAuth(`/api/backup_center/backups/${backupId}/download/`, {
         method: 'GET',
-        // In a real app with JWT auth we might need to handle this differently if it's protected
-        // For simplicity, assuming the endpoint handles standard session auth or we use fetchAuth approach
-        // if using next-auth or custom fetchAuth that adds headers, we need a Blob.
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}` // simple example
-        }
       });
       
       if (!response.ok) {
@@ -33,6 +28,26 @@ export default function BackupList({ backups }: { backups: Record<string, unknow
     } catch (error) {
       console.error(error);
       toast.error('An error occurred during download');
+    }
+  };
+
+  const handleDelete = async (backupId: number) => {
+    if (!confirm('Are you sure you want to delete this backup? This cannot be undone.')) return;
+    
+    try {
+      const response = await fetchAuth(`/api/backup_center/backups/${backupId}/delete/`, {
+        method: 'DELETE',
+      });
+      
+      if (response.ok) {
+        toast.success('Backup deleted');
+        onRefresh();
+      } else {
+        toast.error('Failed to delete backup');
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error('An error occurred while deleting');
     }
   };
 
@@ -58,10 +73,15 @@ export default function BackupList({ backups }: { backups: Record<string, unknow
     <ul role="list" className="divide-y divide-gray-100">
       {backups.map((backup) => (
         <li key={backup.id} className="flex items-center justify-between gap-x-6 py-5 px-6 hover:bg-gray-50">
-          <div className="min-w-0">
-            <div className="flex items-start gap-x-3">
-              <p className="text-sm font-semibold leading-6 text-gray-900">{backup.file_name || 'In Progress...'}</p>
-              <p className={`rounded-md whitespace-nowrap mt-0.5 px-1.5 py-0.5 text-xs font-medium ring-1 ring-inset ${
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-x-3">
+              <p className="text-sm font-semibold leading-6 text-gray-900">{backup.file_name || 'Processing...'}</p>
+              <span className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset ${
+                backup.backup_kind === 'disaster_recovery' ? 'bg-purple-50 text-purple-700 ring-purple-700/10' : 'bg-blue-50 text-blue-700 ring-blue-700/10'
+              }`}>
+                {backup.backup_kind === 'disaster_recovery' ? 'Disaster' : 'Routine'}
+              </span>
+              <p className={`rounded-md whitespace-nowrap px-1.5 py-0.5 text-xs font-medium ring-1 ring-inset ${
                 backup.status === 'completed' ? 'bg-green-50 text-green-700 ring-green-600/20' : 
                 backup.status === 'failed' ? 'bg-red-50 text-red-700 ring-red-600/20' : 
                 'bg-yellow-50 text-yellow-800 ring-yellow-600/20'
@@ -71,38 +91,46 @@ export default function BackupList({ backups }: { backups: Record<string, unknow
             </div>
             <div className="mt-1 flex items-center gap-x-2 text-xs leading-5 text-gray-500">
               <p className="whitespace-nowrap">
-                Created {format(new Date(backup.created_at), 'PPP p')}
+                {format(new Date(backup.created_at), 'PPP p')}
               </p>
               <svg viewBox="0 0 2 2" className="h-0.5 w-0.5 fill-current">
                 <circle cx={1} cy={1} r={1} />
               </svg>
               <p className="truncate">{formatSize(backup.file_size)}</p>
-              {backup.manifest_json && typeof backup.manifest_json === 'object' && 'notes' in backup.manifest_json && (
+              <svg viewBox="0 0 2 2" className="h-0.5 w-0.5 fill-current">
+                <circle cx={1} cy={1} r={1} />
+              </svg>
+              <p className="truncate">{backup.database_engine}</p>
+              {backup.created_by_username && (
                 <>
                   <svg viewBox="0 0 2 2" className="h-0.5 w-0.5 fill-current">
                     <circle cx={1} cy={1} r={1} />
                   </svg>
-                  <p className="truncate text-gray-700">{String(backup.manifest_json.notes)}</p>
+                  <p className="truncate">by {backup.created_by_username}</p>
                 </>
               )}
             </div>
+            {backup.notes && (
+               <p className="mt-1 text-xs text-gray-400 italic truncate max-w-md">{backup.notes}</p>
+            )}
           </div>
-          <div className="flex flex-none items-center gap-x-4">
+          <div className="flex flex-none items-center gap-x-2">
             {backup.status === 'completed' && backup.file_name && (
               <button
                 onClick={() => handleDownload(backup.id, backup.file_name)}
-                className="hidden rounded-md bg-white px-2.5 py-1.5 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:block"
+                className="rounded-md bg-white px-2.5 py-1.5 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
               >
+                <ArrowDownTrayIcon className="h-4 w-4 inline-block mr-1" />
                 Download
               </button>
             )}
-            {backup.status === 'completed' && backup.file_name && (
-                <button
-                onClick={() => handleDownload(backup.id, backup.file_name)}
-                className="rounded-md bg-white p-1 text-gray-400 hover:text-gray-500 sm:hidden"
-              >
-                <ArrowDownTrayIcon className="h-5 w-5" aria-hidden="true" />
-              </button>
+            {backup.status !== 'running' && (
+               <button
+               onClick={() => handleDelete(backup.id)}
+               className="rounded-md bg-white px-2.5 py-1.5 text-sm font-semibold text-red-600 shadow-sm ring-1 ring-inset ring-red-300 hover:bg-red-50"
+             >
+               <TrashIcon className="h-4 w-4" />
+             </button>
             )}
           </div>
         </li>
@@ -110,3 +138,4 @@ export default function BackupList({ backups }: { backups: Record<string, unknow
     </ul>
   );
 }
+

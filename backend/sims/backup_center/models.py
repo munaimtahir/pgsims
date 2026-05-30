@@ -2,28 +2,48 @@ from django.db import models
 from django.conf import settings
 
 class BackupJob(models.Model):
+    KIND_CHOICES = (
+        ('routine_application_data', 'Routine Application Data'),
+        ('disaster_recovery', 'Disaster Recovery'),
+    )
+    TYPE_CHOICES = (
+        ('manual', 'Manual'),
+        ('automatic', 'Automatic'),
+        ('safety_pre_restore', 'Safety Pre-Restore'),
+    )
     STATUS_CHOICES = (
         ('pending', 'Pending'),
         ('running', 'Running'),
         ('completed', 'Completed'),
         ('failed', 'Failed'),
         ('cancelled', 'Cancelled'),
+        ('deleted', 'Deleted'),
     )
 
-    backup_type = models.CharField(max_length=50, default='full')
+    backup_kind = models.CharField(max_length=50, choices=KIND_CHOICES, default='routine_application_data')
+    backup_type = models.CharField(max_length=50, choices=TYPE_CHOICES, default='manual')
     status = models.CharField(max_length=50, choices=STATUS_CHOICES, default='pending')
+    
     file_path = models.CharField(max_length=1024, blank=True, null=True)
     file_name = models.CharField(max_length=255, blank=True, null=True)
     file_size = models.BigIntegerField(blank=True, null=True)
     checksum = models.CharField(max_length=255, blank=True, null=True)
     manifest_json = models.JSONField(blank=True, null=True)
+    
     database_engine = models.CharField(max_length=255, blank=True, null=True)
     media_included = models.BooleanField(default=False)
+    table_counts_json = models.JSONField(blank=True, null=True)
+    media_summary_json = models.JSONField(blank=True, null=True)
+    
+    app_version = models.CharField(max_length=50, blank=True, null=True)
+    branch = models.CharField(max_length=255, blank=True, null=True)
+    commit_hash = models.CharField(max_length=255, blank=True, null=True)
     
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='created_backups')
     created_at = models.DateTimeField(auto_now_add=True)
     completed_at = models.DateTimeField(blank=True, null=True)
     error_message = models.TextField(blank=True, null=True)
+    notes = models.TextField(blank=True, null=True)
 
     class Meta:
         ordering = ['-created_at']
@@ -32,10 +52,14 @@ class BackupJob(models.Model):
         app_label = 'backup_center'
 
     def __str__(self):
-        return f"BackupJob {self.id} - {self.status}"
+        return f"BackupJob {self.id} ({self.backup_kind}) - {self.status}"
 
 
 class RestoreJob(models.Model):
+    KIND_CHOICES = (
+        ('routine_application_data_restore', 'Routine Application Data Restore'),
+        ('disaster_recovery_restore', 'Disaster Recovery Restore'),
+    )
     STATUS_CHOICES = (
         ('pending', 'Pending'),
         ('validation_failed', 'Validation Failed'),
@@ -43,8 +67,10 @@ class RestoreJob(models.Model):
         ('restoring', 'Restoring'),
         ('restored', 'Restored'),
         ('failed', 'Failed'),
+        ('cancelled', 'Cancelled'),
     )
 
+    restore_kind = models.CharField(max_length=50, choices=KIND_CHOICES, default='routine_application_data_restore')
     backup_job = models.ForeignKey(BackupJob, on_delete=models.SET_NULL, null=True, blank=True, related_name='restores')
     uploaded_file = models.FileField(upload_to='restore_uploads/', blank=True, null=True)
     uploaded_file_name = models.CharField(max_length=255, blank=True, null=True)
@@ -57,6 +83,8 @@ class RestoreJob(models.Model):
     started_at = models.DateTimeField(auto_now_add=True)
     completed_at = models.DateTimeField(blank=True, null=True)
     error_message = models.TextField(blank=True, null=True)
+    post_restore_check_json = models.JSONField(blank=True, null=True)
+    notes = models.TextField(blank=True, null=True)
 
     class Meta:
         ordering = ['-started_at']
@@ -65,22 +93,28 @@ class RestoreJob(models.Model):
         app_label = 'backup_center'
 
     def __str__(self):
-        return f"RestoreJob {self.id} - {self.status}"
+        return f"RestoreJob {self.id} ({self.restore_kind}) - {self.status}"
 
 
 class BackupAuditLog(models.Model):
     ACTION_CHOICES = (
-        ('backup_created', 'Backup Created'),
-        ('backup_failed', 'Backup Failed'),
+        ('routine_backup_started', 'Routine Backup Started'),
+        ('routine_backup_completed', 'Routine Backup Completed'),
+        ('routine_backup_failed', 'Routine Backup Failed'),
+        ('disaster_backup_started', 'Disaster Backup Started'),
+        ('disaster_backup_completed', 'Disaster Backup Completed'),
+        ('disaster_backup_failed', 'Disaster Backup Failed'),
         ('backup_downloaded', 'Backup Downloaded'),
         ('backup_deleted', 'Backup Deleted'),
         ('backup_validated', 'Backup Validated'),
         ('restore_uploaded', 'Restore Uploaded'),
+        ('restore_validation_passed', 'Restore Validation Passed'),
         ('restore_validation_failed', 'Restore Validation Failed'),
         ('restore_started', 'Restore Started'),
         ('safety_backup_created', 'Safety Backup Created'),
         ('restore_completed', 'Restore Completed'),
         ('restore_failed', 'Restore Failed'),
+        ('restore_dry_run_completed', 'Restore Dry Run Completed'),
     )
 
     action = models.CharField(max_length=50, choices=ACTION_CHOICES)
@@ -102,3 +136,4 @@ class BackupAuditLog(models.Model):
 
     def __str__(self):
         return f"{self.action} by {self.actor} at {self.created_at}"
+

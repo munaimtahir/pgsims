@@ -17,7 +17,7 @@ export default function BackupCenterPage() {
   const loadBackups = async () => {
     setIsLoading(true);
     try {
-      const response = await fetchAuth("/api/backup_center/jobs/");
+      const response = await fetchAuth("/api/backup_center/backups/");
       if (response.ok) {
         const data = await response.json();
         setBackups(data);
