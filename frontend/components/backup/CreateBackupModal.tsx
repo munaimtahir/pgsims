@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { ShieldCheck } from 'lucide-react';
 import { fetchAuth } from '@/lib/auth/fetch';
 import Modal from '@/components/ui/Modal';
+import useAuthStore from '@/store/authStore';
 
 type BackupKind = 'routine_application_data' | 'disaster_recovery';
 
@@ -16,6 +17,8 @@ export default function CreateBackupModal({
   onSuccess: () => void;
   defaultKind?: BackupKind;
 }) {
+  const user = useAuthStore((s) => s.user);
+  const isSuperAdmin = user?.role === 'admin';
   const [notes, setNotes] = useState('');
   const [kind, setKind] = useState<BackupKind>('routine_application_data');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -23,8 +26,14 @@ export default function CreateBackupModal({
 
   useEffect(() => {
     if (!isOpen) return;
-    if (defaultKind) setKind(defaultKind);
-  }, [defaultKind, isOpen]);
+    if (defaultKind) {
+      if (defaultKind === 'disaster_recovery' && !isSuperAdmin) {
+        setKind('routine_application_data');
+      } else {
+        setKind(defaultKind);
+      }
+    }
+  }, [defaultKind, isOpen, isSuperAdmin]);
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -93,19 +102,21 @@ export default function CreateBackupModal({
                         Regular System Backup
                       </label>
                     </div>
-                    <div className="flex items-center">
-                      <input
-                        id="disaster"
-                        name="backup-kind"
-                        type="radio"
-                        checked={kind === 'disaster_recovery'}
-                        onChange={() => setKind('disaster_recovery')}
-                        className="h-4 w-4 border-gray-300 text-indigo-600 focus:ring-indigo-600"
-                      />
-                      <label htmlFor="disaster" className="ml-3 block text-sm font-medium leading-6 text-gray-900">
-                        Full Server Recovery Backup
-                      </label>
-                    </div>
+                    {isSuperAdmin && (
+                      <div className="flex items-center">
+                        <input
+                          id="disaster"
+                          name="backup-kind"
+                          type="radio"
+                          checked={kind === 'disaster_recovery'}
+                          onChange={() => setKind('disaster_recovery')}
+                          className="h-4 w-4 border-gray-300 text-indigo-600 focus:ring-indigo-600"
+                        />
+                        <label htmlFor="disaster" className="ml-3 block text-sm font-medium leading-6 text-gray-900">
+                          Full Server Recovery Backup
+                        </label>
+                      </div>
+                    )}
                   </div>
                 </fieldset>
               </div>
@@ -113,8 +124,8 @@ export default function CreateBackupModal({
               <div className="bg-blue-50 p-3 rounded-md">
                 <p className="text-xs text-blue-700">
                   {kind === 'routine_application_data' 
-                    ? "Use this before importing data, making bulk changes, or as a daily backup. It saves users (including password hashes), records, and uploaded documents."
-                    : "Use this after major milestones or before server migration. It includes system data plus recovery notes for setting up PGSIMS on a new server."}
+                    ? "Use this before importing data, making bulk changes, or as a daily backup. It saves users, passwords, profiles, records, logbooks, approvals, and uploaded files."
+                    : "Use this after major milestones or before server migration. It includes system data plus recovery instructions for setting up PGSIMS on a new server."}
                 </p>
               </div>
 

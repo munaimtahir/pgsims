@@ -47,6 +47,7 @@ export const NAV_SECTIONS: NavSection[] = [
       { label: 'HOD Assignments', href: '/dashboard/utrmc/hod', icon: 'badge-check' },
       { label: 'Programmes', href: '/dashboard/utrmc/programs', icon: 'book-open' },
       { label: 'Eligibility Monitor', href: '/dashboard/utrmc/eligibility-monitoring', icon: 'chart-bar' },
+      { label: 'Backup Center', href: '/dashboard/utrmc/backup', icon: 'download', allowedRoles: ['admin', 'utrmc_admin'] },
     ],
   },
 

@@ -3,10 +3,13 @@ import React, { useMemo, useState } from 'react';
 import { format } from 'date-fns';
 import { Download, Clock, Trash2, ShieldCheck, FileSearch } from 'lucide-react';
 import { fetchAuth } from '@/lib/auth/fetch';
+import useAuthStore from '@/store/authStore';
 
 export default function BackupList({ backups, onRefresh }: { backups: any[], onRefresh: () => void }) {
   const [expandedId, setExpandedId] = useState<number | null>(null);
   const [lastValidationById, setLastValidationById] = useState<Record<number, any>>({});
+  const user = useAuthStore((s) => s.user);
+  const canRestore = user?.role === 'admin';
 
   const sortedBackups = useMemo(() => {
     const arr = Array.isArray(backups) ? [...backups] : [];
@@ -70,12 +73,28 @@ export default function BackupList({ backups, onRefresh }: { backups: any[], onR
       if (data.valid) {
         alert('Backup file checked successfully. It is ready for restore.');
       } else {
-        alert('This does not look like a valid PGSIMS backup file. Please use another backup file.');
+        const hasIntegrityError = data.errors && data.errors.some((e: string) => 
+          e.toLowerCase().includes('checksum') || e.toLowerCase().includes('integrity') || e.toLowerCase().includes('damage')
+        );
+        if (hasIntegrityError) {
+          alert('This backup file may be damaged or changed after creation. Please use another backup file.');
+        } else {
+          alert('This does not look like a valid PGSIMS backup file.');
+        }
       }
     } catch (error) {
       console.error(error);
       alert('An error occurred while checking the backup file.');
     }
+  };
+
+  const handleRestoreClick = (fileName: string) => {
+    alert(
+      `To restore this backup:\n\n` +
+      `1. Click the 'Download' button next to "${fileName}" to save the backup file to your computer.\n` +
+      `2. Click the 'Start Restore Wizard' button below the table.\n` +
+      `3. Upload the downloaded backup file in Step 1 of the wizard.`
+    );
   };
 
   if (!sortedBackups || sortedBackups.length === 0) {
@@ -152,6 +171,14 @@ export default function BackupList({ backups, onRefresh }: { backups: any[], onR
                           <FileSearch className="h-3.5 w-3.5 inline-block mr-1" />
                           Check File
                         </button>
+                        {canRestore && (
+                          <button
+                            onClick={() => handleRestoreClick(backup.file_name)}
+                            className="rounded-md bg-white px-2.5 py-1.5 text-xs font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
+                          >
+                            Restore
+                          </button>
+                        )}
                       </>
                     ) : null}
                     <button
@@ -174,21 +201,56 @@ export default function BackupList({ backups, onRefresh }: { backups: any[], onR
                 {isExpanded ? (
                   <tr>
                     <td colSpan={6} className="px-4 pb-4">
-                      <div className="mt-2 rounded-md border border-gray-200 bg-gray-50 p-3 text-xs text-gray-700 space-y-2">
-                        <div className="flex flex-wrap gap-x-6 gap-y-1">
-                          <span><strong>Backup Record:</strong> #{backup.id}</span>
-                          <span><strong>File:</strong> {backup.file_name || '—'}</span>
-                          <span><strong>Includes uploads:</strong> {backup.media_included ? 'Yes' : 'No'}</span>
+                      <div className="mt-2 rounded-md border border-gray-200 bg-gray-50 p-4 text-xs text-gray-700 space-y-3">
+                        <div className="flex flex-wrap gap-x-6 gap-y-1 font-semibold text-gray-900 border-b border-gray-200 pb-2">
+                          <span>Backup Record: #{backup.id}</span>
+                          <span>Type: {backup.backup_kind === 'disaster_recovery' ? 'Full Server Recovery Backup' : 'Regular System Backup'}</span>
                         </div>
-                        <details>
-                          <summary className="cursor-pointer select-none font-semibold text-gray-800">Technical Details</summary>
-                          <div className="mt-2 space-y-1 text-gray-700">
-                            <div><strong>Database:</strong> {backup.database_engine || '—'}</div>
-                            <div><strong>App version:</strong> {backup.app_version || '—'}</div>
-                            <div><strong>Commit:</strong> {backup.commit_hash || '—'}</div>
-                          </div>
-                        </details>
-                        {backup.notes ? <div className="text-gray-600 italic"><strong>Notes:</strong> {backup.notes}</div> : null}
+                        
+                        <div className="space-y-2">
+                          <details className="group border border-gray-200 rounded-md bg-white p-2">
+                            <summary className="cursor-pointer select-none font-semibold text-gray-800 focus:outline-none">
+                              Backup Contents
+                            </summary>
+                            <div className="mt-2 pl-2 space-y-1 text-gray-600 border-t border-gray-100 pt-2">
+                              <div><strong>Uploaded Documents:</strong> {backup.media_included ? 'Included' : 'Not Included'}</div>
+                              <div><strong>Data Scope:</strong> Users, passwords, profiles, training records, logbooks, approvals, and verification history.</div>
+                            </div>
+                          </details>
+
+                          <details className="group border border-gray-200 rounded-md bg-white p-2">
+                            <summary className="cursor-pointer select-none font-semibold text-gray-800 focus:outline-none">
+                              File Integrity Details
+                            </summary>
+                            <div className="mt-2 pl-2 space-y-1 text-gray-600 border-t border-gray-100 pt-2">
+                              <div><strong>File Name:</strong> {backup.file_name || '—'}</div>
+                              <div><strong>File Integrity Check:</strong> {validation?.valid ? 'Checked (SHA-256 Verified)' : 'Not Checked / Pending'}</div>
+                            </div>
+                          </details>
+
+                          {backup.backup_kind === 'disaster_recovery' && (
+                            <details className="group border border-gray-200 rounded-md bg-white p-2">
+                              <summary className="cursor-pointer select-none font-semibold text-gray-800 focus:outline-none">
+                                Server Recovery Notes
+                              </summary>
+                              <div className="mt-2 pl-2 space-y-1 text-gray-600 border-t border-gray-100 pt-2">
+                                <div>Includes full application settings, database dump, and recovery scripts for setting up PGSIMS on a new server. Does not restore DNS or external dashboard provider configurations.</div>
+                              </div>
+                            </details>
+                          )}
+
+                          <details className="group border border-gray-200 rounded-md bg-white p-2">
+                            <summary className="cursor-pointer select-none font-semibold text-gray-800 focus:outline-none">
+                              Technical Details
+                            </summary>
+                            <div className="mt-2 pl-2 space-y-1 text-gray-600 border-t border-gray-100 pt-2">
+                              <div><strong>Database Engine:</strong> {backup.database_engine || '—'}</div>
+                              <div><strong>Application Version:</strong> {backup.app_version || '—'}</div>
+                              <div><strong>Git Commit Hash:</strong> {backup.commit_hash || '—'}</div>
+                            </div>
+                          </details>
+                        </div>
+                        {backup.notes ? <div className="text-gray-600 italic mt-2"><strong>Notes:</strong> {backup.notes}</div> : null}
                       </div>
                     </td>
                   </tr>

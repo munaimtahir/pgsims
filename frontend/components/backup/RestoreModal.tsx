@@ -6,7 +6,7 @@ import { fetchAuth } from '@/lib/auth/fetch';
 import Modal from '@/components/ui/Modal';
 
 export default function RestoreModal({ isOpen, onClose, onSuccess }: { isOpen: boolean, onClose: () => void, onSuccess: () => void }) {
-  const [step, setStep] = useState<1 | 2 | 3 | 4>(1); // 1: upload, 2: validate/details, 3: dry-run, 4: confirm
+  const [step, setStep] = useState<1 | 2 | 3 | 4 | 5>(1); // 1: upload, 2: check, 3: details, 4: confirm, 5: result
   const [file, setFile] = useState<File | null>(null);
   const [restoreJobId, setRestoreJobId] = useState<number | null>(null);
   const [validationResult, setValidationResult] = useState<any | null>(null);
@@ -59,12 +59,19 @@ export default function RestoreModal({ isOpen, onClose, onSuccess }: { isOpen: b
         await validateBackup(data.id);
       } else {
         const errData = await response.json();
-        setError(`Upload failed: ${errData.error || 'Unknown error'}`);
+        const rawErr = errData.error || '';
+        let uploadError = 'This does not look like a valid PGSIMS backup file.';
+        if (rawErr.toLowerCase().includes('extension') || rawErr.toLowerCase().includes('invalid')) {
+          uploadError = 'This does not look like a valid PGSIMS backup file.';
+        }
+        setError(uploadError);
+        setStep(2);
         setIsProcessing(false);
       }
     } catch (err) {
       console.error(err);
-      setError('An error occurred during upload');
+      setError('This does not look like a valid PGSIMS backup file.');
+      setStep(2);
       setIsProcessing(false);
     }
   };
@@ -78,14 +85,30 @@ export default function RestoreModal({ isOpen, onClose, onSuccess }: { isOpen: b
       const data = await response.json();
       setValidationResult(data);
       if (data.valid) {
+        setError(null);
         setStep(2);
       } else {
-        setError('Validation failed');
-        setStep(2); // show errors
+        const errors = data.errors || [];
+        const isChecksumError = errors.some((e: string) => 
+          e.toLowerCase().includes('checksum') || e.toLowerCase().includes('integrity') || e.toLowerCase().includes('damage')
+        );
+        const isManifestError = errors.some((e: string) => 
+          e.toLowerCase().includes('manifest') || e.toLowerCase().includes('zip')
+        );
+        
+        if (isChecksumError) {
+          setError('This backup file may be damaged or changed after creation. Please use another backup file.');
+        } else if (isManifestError) {
+          setError('This does not look like a valid PGSIMS backup file.');
+        } else {
+          setError(errors[0] || 'This does not look like a valid PGSIMS backup file.');
+        }
+        setStep(2);
       }
     } catch (err) {
       console.error(err);
-      setError('An error occurred during validation');
+      setError('This does not look like a valid PGSIMS backup file.');
+      setStep(2);
     } finally {
       setIsProcessing(false);
     }
@@ -141,18 +164,32 @@ export default function RestoreModal({ isOpen, onClose, onSuccess }: { isOpen: b
       });
       
       if (response.ok) {
-        resetState();
-        onSuccess();
+        setStep(5);
       } else {
         const errData = await response.json();
-        setError(`Restore failed: ${errData.error || 'Unknown error'}`);
+        const rawErr = errData.error || '';
+        if (rawErr.toLowerCase().includes('password')) {
+          setError('Invalid admin password.');
+        } else {
+          setError('Restore could not be completed. Your current data has not been replaced. Please contact the technical administrator and keep the automatic protection backup.');
+        }
+        setStep(5);
       }
     } catch (err) {
       console.error(err);
-      setError('An error occurred during restore');
+      setError('Restore could not be completed. Your current data has not been replaced. Please contact the technical administrator and keep the automatic protection backup.');
+      setStep(5);
     } finally {
       setIsProcessing(false);
     }
+  };
+
+  const handleFinish = () => {
+    if (!error) {
+      onSuccess();
+    }
+    resetState();
+    onClose();
   };
 
   return (
@@ -162,7 +199,7 @@ export default function RestoreModal({ isOpen, onClose, onSuccess }: { isOpen: b
       title="Restore Application Data"
       maxWidth="max-w-lg"
     >
-      {error && (
+      {error && step !== 2 && step !== 5 && (
         <div className="mb-4 bg-red-50 p-2 rounded text-xs text-red-600">
           {error}
         </div>
@@ -174,9 +211,12 @@ export default function RestoreModal({ isOpen, onClose, onSuccess }: { isOpen: b
             <TriangleAlert className="h-6 w-6 text-red-600" aria-hidden="true" />
           </div>
           <div className="mt-3 text-center sm:mt-5">
-            <div className="mt-2 text-left">
-              <p className="text-sm text-gray-500">
-                <strong>Warning:</strong> Restore will replace current PGSIMS application data. External services like DNS/SSL are not affected.
+            <h3 className="text-base font-semibold leading-6 text-gray-900">
+              Step 1: Upload Backup File
+            </h3>
+            <div className="mt-2 text-left space-y-4">
+              <p className="text-sm text-gray-600">
+                Restore will replace current PGSIMS application data. A safety backup will be created first.
               </p>
               <div className="mt-4 flex justify-center rounded-lg border border-dashed border-gray-900/25 px-6 py-10">
                 <div className="text-center">
@@ -208,7 +248,7 @@ export default function RestoreModal({ isOpen, onClose, onSuccess }: { isOpen: b
               className="inline-flex w-full justify-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 sm:col-start-2 disabled:opacity-50"
               onClick={handleUpload}
             >
-              {isProcessing ? 'Uploading...' : 'Upload & Validate'}
+              {isProcessing ? 'Uploading & Checking...' : 'Upload & Validate'}
             </button>
             <button
               type="button"
@@ -221,63 +261,53 @@ export default function RestoreModal({ isOpen, onClose, onSuccess }: { isOpen: b
         </div>
       )}
 
-      {step === 2 && validationResult && (
+      {step === 2 && (
         <div>
-          <div className={`mx-auto flex h-12 w-12 items-center justify-center rounded-full ${validationResult.valid ? 'bg-green-100' : 'bg-red-100'}`}>
-            {validationResult.valid ? <CheckCircle className="h-6 w-6 text-green-600" aria-hidden="true" /> : <XCircle className="h-6 w-6 text-red-600" aria-hidden="true" />}
+          <div className={`mx-auto flex h-12 w-12 items-center justify-center rounded-full ${!error ? 'bg-green-100' : 'bg-red-100'}`}>
+            {!error ? <CheckCircle className="h-6 w-6 text-green-600" aria-hidden="true" /> : <XCircle className="h-6 w-6 text-red-600" aria-hidden="true" />}
           </div>
           <div className="mt-3 text-center sm:mt-5">
             <h3 className="text-base font-semibold leading-6 text-gray-900">
-              {validationResult.valid ? 'Backup Validated' : 'Validation Failed'}
+              Step 2: Check Backup File
             </h3>
             
-            {validationResult.valid ? (
+            {!error ? (
               <div className="mt-4 text-left space-y-4">
-                <div className="bg-gray-50 p-4 rounded-md">
-                  <h4 className="text-sm font-medium text-gray-900">Details from Manifest:</h4>
-                  <ul className="mt-2 text-xs text-gray-600 space-y-1">
-                      <li><strong>Kind:</strong> {validationResult.backup_kind}</li>
-                      <li><strong>App Version:</strong> {validationResult.manifest.app_version}</li>
-                      <li><strong>Database:</strong> {validationResult.manifest.database_engine}</li>
-                      <li><strong>Created:</strong> {format(new Date(validationResult.manifest.created_at), 'PPP p')}</li>
-                      <li><strong>Tables:</strong> {Object.keys(validationResult.table_counts).length}</li>
-                      <li><strong>Media:</strong> {validationResult.media_summary.file_count} files</li>
-                  </ul>
+                <div className="rounded-md bg-green-50 p-4 border border-green-200">
+                  <p className="text-sm font-semibold text-green-800">
+                    Backup file checked successfully. It is ready for restore.
+                  </p>
                 </div>
-                <p className="text-xs text-gray-500">
-                  The backup is compatible and ready for a dry-run test.
-                </p>
               </div>
             ) : (
-              <div className="mt-2 text-left">
-                <ul className="list-disc pl-5 text-sm text-red-600">
-                  {(validationResult.errors as string[]).map((err: string, i: number) => (
-                    <li key={i}>{err}</li>
-                  ))}
-                </ul>
+              <div className="mt-4 text-left space-y-4">
+                <div className="rounded-md bg-red-50 p-4 border border-red-200">
+                  <p className="text-sm font-semibold text-red-800">
+                    {error}
+                  </p>
+                </div>
               </div>
             )}
           </div>
           <div className="mt-5 sm:mt-6 sm:grid sm:grid-flow-row-dense sm:grid-cols-2 sm:gap-3">
-            {validationResult.valid ? (
+            {!error ? (
               <button
                 type="button"
-                disabled={isProcessing}
-                className="inline-flex w-full justify-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 sm:col-start-2 disabled:opacity-50"
-                onClick={handleDryRun}
+                className="inline-flex w-full justify-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 sm:col-start-2"
+                onClick={() => { setError(null); setStep(3); }}
               >
-                {isProcessing ? 'Running Dry-Run...' : 'Dry-Run Test'}
+                Review Backup Details
               </button>
             ) : (
               <button
                 type="button"
                 className="inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:col-span-2"
-                onClick={() => setStep(1)}
+                onClick={() => { resetState(); setStep(1); }}
               >
                 Try another file
               </button>
             )}
-            {validationResult.valid && (
+            {!error && (
               <button
                 type="button"
                 className="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:col-start-1 sm:mt-0"
@@ -290,6 +320,89 @@ export default function RestoreModal({ isOpen, onClose, onSuccess }: { isOpen: b
         </div>
       )}
 
+      {step === 3 && validationResult && (
+        <div>
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-indigo-100">
+            <CheckCircle className="h-6 w-6 text-indigo-600" aria-hidden="true" />
+          </div>
+          <div className="mt-3 text-center sm:mt-5">
+            <h3 className="text-base font-semibold leading-6 text-gray-900">
+              Step 3: Review Backup Details
+            </h3>
+            
+            <div className="mt-4 text-left space-y-3">
+              <div className="flex flex-wrap gap-x-6 gap-y-1 font-semibold text-gray-900 border-b border-gray-200 pb-2 text-xs">
+                <span>Backup Record: #{restoreJobId}</span>
+                <span>Type: {validationResult.backup_kind === 'disaster_recovery' ? 'Full Server Recovery Backup' : 'Regular System Backup'}</span>
+              </div>
+
+              <div className="space-y-2 text-xs">
+                <details className="group border border-gray-200 rounded-md bg-white p-2">
+                  <summary className="cursor-pointer select-none font-semibold text-gray-800 focus:outline-none">
+                    Backup Contents
+                  </summary>
+                  <div className="mt-2 pl-2 space-y-1 text-gray-600 border-t border-gray-100 pt-2">
+                    <div><strong>Created At:</strong> {validationResult.manifest?.created_at ? format(new Date(validationResult.manifest.created_at), 'PPP p') : '—'}</div>
+                    <div><strong>Uploaded Documents:</strong> {validationResult.media_summary?.file_count ?? 0} files ({validationResult.manifest?.media_included ? 'Included' : 'Not Included'})</div>
+                    <div><strong>Data Scope:</strong> Users, passwords, profiles, training records, logbooks, approvals, and verification history.</div>
+                  </div>
+                </details>
+
+                <details className="group border border-gray-200 rounded-md bg-white p-2">
+                  <summary className="cursor-pointer select-none font-semibold text-gray-800 focus:outline-none">
+                    File Integrity Details
+                  </summary>
+                  <div className="mt-2 pl-2 space-y-1 text-gray-600 border-t border-gray-100 pt-2">
+                    <div><strong>File Name:</strong> {validationResult.manifest?.file_name || file?.name || '—'}</div>
+                    <div><strong>File Integrity Check:</strong> SHA-256 Verified</div>
+                  </div>
+                </details>
+
+                {validationResult.backup_kind === 'disaster_recovery' && (
+                  <details className="group border border-gray-200 rounded-md bg-white p-2">
+                    <summary className="cursor-pointer select-none font-semibold text-gray-800 focus:outline-none">
+                      Server Recovery Notes
+                    </summary>
+                    <div className="mt-2 pl-2 space-y-1 text-gray-600 border-t border-gray-100 pt-2">
+                      <div>Includes full application settings, database dump, and recovery scripts for setting up PGSIMS on a new server. Does not restore DNS or external dashboard provider configurations.</div>
+                    </div>
+                  </details>
+                )}
+
+                <details className="group border border-gray-200 rounded-md bg-white p-2">
+                  <summary className="cursor-pointer select-none font-semibold text-gray-800 focus:outline-none">
+                    Technical Details
+                  </summary>
+                  <div className="mt-2 pl-2 space-y-1 text-gray-600 border-t border-gray-100 pt-2">
+                    <div><strong>Database Engine:</strong> {validationResult.manifest?.database_engine || '—'}</div>
+                    <div><strong>Application Version:</strong> {validationResult.manifest?.app_version || '—'}</div>
+                    <div><strong>Git Commit Hash:</strong> {validationResult.manifest?.commit_hash || '—'}</div>
+                  </div>
+                </details>
+              </div>
+            </div>
+          </div>
+          <div className="mt-5 sm:mt-6 sm:grid sm:grid-flow-row-dense sm:grid-cols-2 sm:gap-3">
+            <button
+              type="button"
+              disabled={isProcessing}
+              className="inline-flex w-full justify-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 sm:col-start-2 disabled:opacity-50"
+              onClick={handleDryRun}
+            >
+              {isProcessing ? 'Running Dry-Run...' : 'Dry-Run Test'}
+            </button>
+            <button
+              type="button"
+              disabled={isProcessing}
+              className="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:col-start-1 sm:mt-0"
+              onClick={handleClose}
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
       {step === 4 && isDryRunSuccess && (
         <div>
           <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-yellow-100">
@@ -297,20 +410,16 @@ export default function RestoreModal({ isOpen, onClose, onSuccess }: { isOpen: b
           </div>
           <div className="mt-3 text-center sm:mt-5">
             <h3 className="text-base font-semibold leading-6 text-gray-900">
-              Final Restore Confirmation
+              Step 4: Confirm Restore
             </h3>
             <div className="mt-2 text-left space-y-4">
-              <div className="bg-red-50 border-l-4 border-red-400 p-4">
-                <div className="flex">
-                  <div className="ml-3">
-                    <p className="text-sm text-red-700 font-bold">
-                      DESTRUCTIVE ACTION
-                    </p>
-                    <p className="text-xs text-red-600 mt-1">
-                      This will replace all current data. A safety backup will be created automatically.
-                    </p>
-                  </div>
-                </div>
+              <div className="bg-red-50 border border-red-200 rounded-md p-4">
+                <p className="text-xs text-red-800 font-semibold uppercase">
+                  Safety Warning
+                </p>
+                <p className="text-xs text-red-700 mt-1">
+                  Restoring a backup will replace the current PGSIMS data. Before restore, the system will automatically create a protection backup of the current data. Continue only if you are sure this is the correct backup file.
+                </p>
               </div>
               
               <div>
@@ -344,17 +453,21 @@ export default function RestoreModal({ isOpen, onClose, onSuccess }: { isOpen: b
                 </div>
               </div>
               
-              <div className="flex items-center">
+              <div className="flex items-start">
+                <div className="flex h-6 items-center">
                   <input
-                      id="check"
-                      type="checkbox"
-                      className="h-4 w-4 rounded border-gray-300 text-red-600 focus:ring-red-600"
-                      checked={confirmChecked}
-                      onChange={(e) => setConfirmChecked(e.target.checked)}
+                    id="check"
+                    type="checkbox"
+                    className="h-4 w-4 rounded border-gray-300 text-red-600 focus:ring-red-600"
+                    checked={confirmChecked}
+                    onChange={(e) => setConfirmChecked(e.target.checked)}
                   />
-                  <label htmlFor="check" className="ml-2 block text-xs text-gray-900">
-                      I understand this will replace current application data.
+                </div>
+                <div className="ml-3 text-xs leading-6">
+                  <label htmlFor="check" className="font-medium text-gray-900">
+                    I understand this will replace current application data.
                   </label>
+                </div>
               </div>
             </div>
           </div>
@@ -370,10 +483,45 @@ export default function RestoreModal({ isOpen, onClose, onSuccess }: { isOpen: b
             <button
               type="button"
               disabled={isProcessing}
-              className="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:col-start-1 sm:mt-0 disabled:opacity-50"
+              className="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:col-start-1 sm:mt-0"
               onClick={handleClose}
             >
               Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
+      {step === 5 && (
+        <div>
+          <div className={`mx-auto flex h-12 w-12 items-center justify-center rounded-full ${!error ? 'bg-green-100' : 'bg-red-100'}`}>
+            {!error ? <CheckCircle className="h-6 w-6 text-green-600" aria-hidden="true" /> : <XCircle className="h-6 w-6 text-red-600" aria-hidden="true" />}
+          </div>
+          <div className="mt-3 text-center sm:mt-5">
+            <h3 className="text-base font-semibold leading-6 text-gray-900">
+              Step 5: Restore Result
+            </h3>
+            <div className="mt-4 text-left space-y-4">
+              {!error ? (
+                <div className="rounded-md bg-green-50 p-4 border border-green-200 text-sm text-green-800">
+                  <p className="font-semibold">Restore completed successfully.</p>
+                  <p className="mt-1">PGSIMS has been returned to the selected backup state.</p>
+                </div>
+              ) : (
+                <div className="rounded-md bg-red-50 p-4 border border-red-200 text-sm text-red-800">
+                  <p className="font-semibold">Restore Failed</p>
+                  <p className="mt-1">{error}</p>
+                </div>
+              )}
+            </div>
+          </div>
+          <div className="mt-5 sm:mt-6">
+            <button
+              type="button"
+              className="inline-flex w-full justify-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500"
+              onClick={handleFinish}
+            >
+              {!error ? 'Finish' : 'Close'}
             </button>
           </div>
         </div>

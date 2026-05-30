@@ -45,6 +45,12 @@ describe('RestoreModal', () => {
     fireEvent.click(screen.getByText('Upload & Validate'));
 
     await waitFor(() => {
+      expect(screen.getByText('Backup file checked successfully. It is ready for restore.')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByText('Review Backup Details'));
+
+    await waitFor(() => {
       expect(screen.getByText('Dry-Run Test')).toBeInTheDocument();
     });
 

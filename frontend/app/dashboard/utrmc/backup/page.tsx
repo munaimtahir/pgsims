@@ -15,6 +15,7 @@ import useAuthStore from "@/store/authStore";
 
 export default function BackupCenterPage() {
   const user = useAuthStore((s) => s.user);
+  const isAllowedAdmin = user?.role === "admin" || user?.role === "utrmc_admin";
   const canRestore = user?.role === "admin";
   const [backups, setBackups] = useState<any[]>([]);
   const [auditLogs, setAuditLogs] = useState<any[]>([]);
@@ -84,6 +85,21 @@ export default function BackupCenterPage() {
   const lastRestore = restores[0];
   const totalBackups = backups.length;
 
+  if (!user) {
+    return <div className="py-10 text-center text-gray-500">Loading user profile...</div>;
+  }
+
+  if (!isAllowedAdmin) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" data-testid="access-denied">
+        <div className="rounded-md border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+          <p className="font-semibold">Access Denied</p>
+          <p className="mt-1">You do not have permission to access the Backup Center. Only administrative staff may view this page.</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {error && <ErrorBanner message={error} onDismiss={() => setError(null)} />}
@@ -92,7 +108,7 @@ export default function BackupCenterPage() {
       <div>
         <div className="flex items-start justify-between gap-3 flex-wrap">
           <div>
-            <h2 className="text-2xl font-bold leading-7 text-gray-900 sm:text-3xl sm:tracking-tight">Backup & Restore Center</h2>
+            <h2 className="text-2xl font-bold leading-7 text-gray-900 sm:text-3xl sm:tracking-tight">Backup Center</h2>
             <p className="mt-2 text-sm text-gray-500">Regular backups protect user accounts, records, and uploaded documents.</p>
           </div>
           <button
@@ -138,32 +154,36 @@ export default function BackupCenterPage() {
             >
               Create Regular System Backup
             </button>
-            <button
-              type="button"
-              onClick={() => {
-                setCreateDefaultKind("disaster_recovery");
-                setIsCreateModalOpen(true);
-              }}
-              className="rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
-            >
-              Create Full Server Recovery Backup
-            </button>
+            {canRestore && (
+              <button
+                type="button"
+                onClick={() => {
+                  setCreateDefaultKind("disaster_recovery");
+                  setIsCreateModalOpen(true);
+                }}
+                className="rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
+              >
+                Create Full Server Recovery Backup
+              </button>
+            )}
           </div>
         }
       >
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-700">
+        <div className={`grid grid-cols-1 ${canRestore ? 'md:grid-cols-2' : ''} gap-4 text-sm text-gray-700`}>
           <div className="rounded-md border border-gray-200 bg-gray-50 p-4">
             <p className="font-semibold text-gray-900">Regular System Backup</p>
             <p className="mt-1 text-gray-600">
-              Use this before importing data, making bulk changes, or as a daily backup. It saves users, password hashes, roles, records, and uploaded files.
+              Use this before importing data, making bulk changes, or as a daily backup. It saves users, passwords, profiles, records, logbooks, approvals, and uploaded files.
             </p>
           </div>
-          <div className="rounded-md border border-gray-200 bg-gray-50 p-4">
-            <p className="font-semibold text-gray-900">Full Server Recovery Backup</p>
-            <p className="mt-1 text-gray-600">
-              Use this after major milestones or before server migration. It includes system data plus recovery notes for setting up PGSIMS on a new server.
-            </p>
-          </div>
+          {canRestore && (
+            <div className="rounded-md border border-gray-200 bg-gray-50 p-4">
+              <p className="font-semibold text-gray-900">Full Server Recovery Backup</p>
+              <p className="mt-1 text-gray-600">
+                Use this after major milestones or before server migration. It includes system data plus recovery instructions for setting up PGSIMS on a new server.
+              </p>
+            </div>
+          )}
         </div>
       </SectionCard>
 
@@ -175,8 +195,8 @@ export default function BackupCenterPage() {
         )}
       </SectionCard>
 
-      <SectionCard title="Restore Wizard" actions={
-        canRestore ? (
+      {canRestore && (
+        <SectionCard title="Restore Wizard" actions={
           <button
             type="button"
             onClick={() => setIsRestoreModalOpen(true)}
@@ -184,21 +204,16 @@ export default function BackupCenterPage() {
           >
             Start Restore Wizard
           </button>
-        ) : null
-      }>
-        <div className="rounded-md border border-red-200 bg-red-50 p-4 text-sm text-red-800">
-          <p className="font-semibold">Warning</p>
-          <p className="mt-1">
-            Restoring a backup will replace the current PGSIMS data. Before restore, the system will automatically create a protection backup of the current data.
-            Continue only if you are sure this is the correct backup file.
-          </p>
-          {!canRestore ? (
-            <p className="mt-2 font-semibold">
-              Restore is Super Admin only.
+        }>
+          <div className="rounded-md border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+            <p className="font-semibold">Warning</p>
+            <p className="mt-1">
+              Restoring a backup will replace the current PGSIMS data. Before restore, the system will automatically create a protection backup of the current data.
+              Continue only if you are sure this is the correct backup file.
             </p>
-          ) : null}
-        </div>
-      </SectionCard>
+          </div>
+        </SectionCard>
+      )}
 
       <SectionCard title="Audit Log">
         {auditLogs.length === 0 ? (

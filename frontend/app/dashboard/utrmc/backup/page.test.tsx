@@ -73,7 +73,7 @@ describe('BackupCenterPage', () => {
   it('renders key sections and actions', async () => {
     render(<BackupCenterPage />);
 
-    expect(screen.getByText('Backup & Restore Center')).toBeInTheDocument();
+    expect(screen.getByText('Backup Center')).toBeInTheDocument();
 
     await waitFor(() => {
       expect(screen.getByText('Backup History')).toBeInTheDocument();
@@ -94,15 +94,28 @@ describe('BackupCenterPage', () => {
     expect(screen.getByRole('table', { name: 'Audit Log' })).toBeInTheDocument();
   });
 
-  it('does not show restore button to restricted roles', async () => {
+  it('shows access denied to restricted roles', async () => {
     useAuthStore.setState({ user: { id: 2, username: 'pg1', role: 'pg' } as any });
     render(<BackupCenterPage />);
 
     await waitFor(() => {
-      expect(screen.getByText('Restore Wizard')).toBeInTheDocument();
+      expect(screen.getByTestId('access-denied')).toBeInTheDocument();
     });
 
-    expect(screen.queryByText('Start Restore Wizard')).not.toBeInTheDocument();
-    expect(screen.getByText('Restore is Super Admin only.')).toBeInTheDocument();
+    expect(screen.queryByText('Backup Center')).not.toBeInTheDocument();
+    expect(screen.queryByText('Restore Wizard')).not.toBeInTheDocument();
+  });
+
+  it('allows other admins to view page and create routine backup, but hides restore/disaster controls', async () => {
+    useAuthStore.setState({ user: { id: 3, username: 'utrmc_admin1', role: 'utrmc_admin' } as any });
+    render(<BackupCenterPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Backup Center')).toBeInTheDocument();
+    });
+
+    expect(screen.getByText('Create Regular System Backup')).toBeInTheDocument();
+    expect(screen.queryByText('Create Full Server Recovery Backup')).not.toBeInTheDocument();
+    expect(screen.queryByText('Restore Wizard')).not.toBeInTheDocument();
   });
 });
