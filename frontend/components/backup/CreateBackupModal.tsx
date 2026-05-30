@@ -1,13 +1,30 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { ShieldCheck } from 'lucide-react';
 import { fetchAuth } from '@/lib/auth/fetch';
 import Modal from '@/components/ui/Modal';
 
-export default function CreateBackupModal({ isOpen, onClose, onSuccess }: { isOpen: boolean, onClose: () => void, onSuccess: () => void }) {
+type BackupKind = 'routine_application_data' | 'disaster_recovery';
+
+export default function CreateBackupModal({
+  isOpen,
+  onClose,
+  onSuccess,
+  defaultKind,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  onSuccess: () => void;
+  defaultKind?: BackupKind;
+}) {
   const [notes, setNotes] = useState('');
-  const [kind, setKind] = useState<'routine_application_data' | 'disaster_recovery'>('routine_application_data');
+  const [kind, setKind] = useState<BackupKind>('routine_application_data');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    if (defaultKind) setKind(defaultKind);
+  }, [defaultKind, isOpen]);
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -60,7 +77,7 @@ export default function CreateBackupModal({ isOpen, onClose, onSuccess }: { isOp
             
             <div className="mt-4 text-left space-y-4">
               <div>
-                <label className="text-sm font-medium text-gray-900">Backup Pathway</label>
+                <label className="text-sm font-medium text-gray-900">Backup Type</label>
                 <fieldset className="mt-2">
                   <div className="space-y-4 sm:flex sm:items-center sm:space-x-10 sm:space-y-0">
                     <div className="flex items-center">
@@ -73,7 +90,7 @@ export default function CreateBackupModal({ isOpen, onClose, onSuccess }: { isOp
                         className="h-4 w-4 border-gray-300 text-indigo-600 focus:ring-indigo-600"
                       />
                       <label htmlFor="routine" className="ml-3 block text-sm font-medium leading-6 text-gray-900">
-                        Routine Data
+                        Regular System Backup
                       </label>
                     </div>
                     <div className="flex items-center">
@@ -86,7 +103,7 @@ export default function CreateBackupModal({ isOpen, onClose, onSuccess }: { isOp
                         className="h-4 w-4 border-gray-300 text-indigo-600 focus:ring-indigo-600"
                       />
                       <label htmlFor="disaster" className="ml-3 block text-sm font-medium leading-6 text-gray-900">
-                        Disaster Recovery
+                        Full Server Recovery Backup
                       </label>
                     </div>
                   </div>
@@ -96,8 +113,8 @@ export default function CreateBackupModal({ isOpen, onClose, onSuccess }: { isOp
               <div className="bg-blue-50 p-3 rounded-md">
                 <p className="text-xs text-blue-700">
                   {kind === 'routine_application_data' 
-                    ? "Includes full database + media. Best for routine updates and data safety."
-                    : "Includes routine backup + deployment metadata + env templates. Best for full server recovery."}
+                    ? "Use this before importing data, making bulk changes, or as a daily backup. It saves users (including password hashes), records, and uploaded documents."
+                    : "Use this after major milestones or before server migration. It includes system data plus recovery notes for setting up PGSIMS on a new server."}
                 </p>
               </div>
 

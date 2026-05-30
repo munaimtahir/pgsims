@@ -6,19 +6,77 @@ import tempfile
 import subprocess
 import shutil
 import logging
-from datetime import datetime
 from pathlib import Path
-from typing import Optional, Dict, Any, List
+from typing import Optional, Dict, Any, List, Tuple
 
 from django.conf import settings
 from django.utils import timezone
 from django.apps import apps
-from django.db import connection, transaction
+from django.db import connection
 from django.core.management import call_command
+from django.core.management.color import no_style
 
 from .models import BackupJob, BackupAuditLog, RestoreJob
 
 logger = logging.getLogger('sims.backup_center')
+
+SUPPORTED_BACKUP_FORMAT_VERSIONS = {"1.2"}
+
+def _sha256_file(path: Path) -> str:
+    hasher = hashlib.sha256()
+    with open(path, "rb") as f:
+        for chunk in iter(lambda: f.read(1024 * 1024), b""):
+            hasher.update(chunk)
+    return hasher.hexdigest()
+
+def _sha256_zip_member(zipf: zipfile.ZipFile, member: str) -> str:
+    hasher = hashlib.sha256()
+    with zipf.open(member, "r") as f:
+        for chunk in iter(lambda: f.read(1024 * 1024), b""):
+            hasher.update(chunk)
+    return hasher.hexdigest()
+
+def _compute_tree_sha256(root: Path) -> Tuple[str, int]:
+    """
+    Deterministic hash over a directory tree.
+    Includes relative path + size + bytes for each file in sorted order.
+    Returns (digest, file_count).
+    """
+    hasher = hashlib.sha256()
+    file_paths: List[Path] = []
+    for dirpath, _, filenames in os.walk(root):
+        for name in filenames:
+            file_paths.append(Path(dirpath) / name)
+    file_paths.sort(key=lambda p: str(p.relative_to(root)))
+
+    for path in file_paths:
+        rel = str(path.relative_to(root)).replace(os.sep, "/")
+        size = path.stat().st_size
+        hasher.update(rel.encode("utf-8"))
+        hasher.update(b"\0")
+        hasher.update(str(size).encode("utf-8"))
+        hasher.update(b"\0")
+        with open(path, "rb") as f:
+            for chunk in iter(lambda: f.read(1024 * 1024), b""):
+                hasher.update(chunk)
+        hasher.update(b"\0")
+    return hasher.hexdigest(), len(file_paths)
+
+def _reset_sequences_all_models() -> None:
+    """
+    Reset autoincrement sequences after a loaddata-based restore.
+    Safe no-op on backends that don't support sequence resets.
+    """
+    try:
+        all_models = list(apps.get_models(include_auto_created=True))
+        sql_list = connection.ops.sequence_reset_sql(no_style(), all_models)
+        if not sql_list:
+            return
+        with connection.cursor() as cursor:
+            for sql in sql_list:
+                cursor.execute(sql)
+    except Exception as e:
+        logger.warning(f"Sequence reset skipped/failed: {e}")
 
 def detect_database_engine() -> str:
     """Detect the current database engine."""
@@ -107,7 +165,8 @@ def create_routine_application_data_backup(user=None, notes=None, backup_type='m
         job.commit_hash = app_meta["commit_hash"]
         job.save()
         
-        timestamp = timezone.now().strftime('%Y-%m-%d_%H%M%S')
+        # Include microseconds to avoid collisions (e.g., safety backup created in same second).
+        timestamp = timezone.now().strftime('%Y-%m-%d_%H%M%S_%f')
         backup_dir = Path(settings.SIMS_SETTINGS.get('BACKUP_LOCATION', settings.BASE_DIR / 'backups'))
         backup_dir.mkdir(parents=True, exist_ok=True)
         
@@ -127,8 +186,10 @@ def create_routine_application_data_backup(user=None, notes=None, backup_type='m
                 if db_config.get('PASSWORD'):
                     env['PGPASSWORD'] = db_config.get('PASSWORD')
                 
+                pg_dump_cmd = os.environ.get('PG_DUMP_CMD', 'pg_dump')
+                
                 cmd = [
-                    'pg_dump',
+                    pg_dump_cmd,
                     '-h', db_config.get('HOST', 'localhost'),
                     '-p', str(db_config.get('PORT', '5432')),
                     '-U', db_config.get('USER', ''),
@@ -137,16 +198,35 @@ def create_routine_application_data_backup(user=None, notes=None, backup_type='m
                     db_config.get('NAME', '')
                 ]
                 
-                result = subprocess.run(cmd, env=env, capture_output=True, text=True)
+                # If using docker exec, the command structure might be different
+                if 'docker exec' in pg_dump_cmd:
+                    # Special handling for docker exec override
+                    cmd = pg_dump_cmd.split() + [
+                        '-U', db_config.get('USER', ''),
+                        '-F', 'c',
+                        db_config.get('NAME', '')
+                    ]
+                    result = subprocess.run(cmd, env=env, capture_output=True)
+                    if result.returncode == 0:
+                        with open(db_dump_path, 'wb') as f:
+                            f.write(result.stdout)
+                else:
+                    result = subprocess.run(cmd, env=env, capture_output=True, text=True)
+                
                 if result.returncode != 0:
                     # Fallback to plain if custom fails or pg_dump doesn't support -F c (rare)
                     logger.error(f"pg_dump custom failed: {result.stderr}")
                     raise Exception(f"pg_dump failed: {result.stderr}")
             elif 'sqlite' in db_engine:
-                from django.core.management import call_command
                 db_dump_path = tmpdir / 'database_dump.json'
                 with open(db_dump_path, 'w') as f:
-                    call_command('dumpdata', '--exclude', 'contenttypes', '--exclude', 'auth.Permission', '--exclude', 'admin.logentry', '--exclude', 'sessions.session', stdout=f)
+                    # Sessions are allowed to expire after restore; keep other system tables for PK stability.
+                    call_command(
+                        'dumpdata',
+                        '--exclude', 'sessions.session',
+                        '--exclude', 'admin.logentry',
+                        stdout=f,
+                    )
             else:
                 raise Exception(f"Unsupported database engine for backup: {db_engine}")
             
@@ -165,6 +245,16 @@ def create_routine_application_data_backup(user=None, notes=None, backup_type='m
             media_summary = get_media_summary()
             job.table_counts_json = table_counts
             job.media_summary_json = media_summary
+            media_tree_sha256 = None
+            if media_included:
+                try:
+                    media_tree_sha256, media_file_count = _compute_tree_sha256(media_tmp)
+                    media_summary = dict(media_summary)
+                    media_summary["tree_sha256"] = media_tree_sha256
+                    media_summary["file_count"] = media_file_count
+                    job.media_summary_json = media_summary
+                except Exception as e:
+                    logger.warning(f"Media tree hash skipped: {e}")
             
             # 4. Manifest
             manifest = {
@@ -179,7 +269,7 @@ def create_routine_application_data_backup(user=None, notes=None, backup_type='m
                 "database_engine": db_engine,
                 "media_included": media_included,
                 "table_counts": table_counts,
-                "media_summary": media_summary,
+                "media_summary": job.media_summary_json,
                 "notes": notes
             }
             
@@ -192,16 +282,18 @@ def create_routine_application_data_backup(user=None, notes=None, backup_type='m
             with open(report_path, 'w') as f:
                 json.dump(manifest, f, indent=2)
             
-            # 6. Checksum (Initial for components)
-            hasher = hashlib.sha256()
-            for p in [db_dump_path, manifest_path]:
-                with open(p, 'rb') as f:
-                    hasher.update(f.read())
-            
-            checksum_val = hasher.hexdigest()
+            # 6. Checksums (component-level integrity)
+            component_checksums = {
+                "database_dump": _sha256_file(db_dump_path),
+                "manifest.json": _sha256_file(manifest_path),
+                "backup_report.json": _sha256_file(report_path),
+            }
+            if media_tree_sha256:
+                component_checksums["media_tree_sha256"] = media_tree_sha256
             checksum_path = tmpdir / 'checksum.sha256'
             with open(checksum_path, 'w') as f:
-                f.write(checksum_val)
+                for key, val in component_checksums.items():
+                    f.write(f"{val}  {key}\n")
             
             # 7. Compress into .pgsimsbak
             with zipfile.ZipFile(file_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
@@ -221,14 +313,8 @@ def create_routine_application_data_backup(user=None, notes=None, backup_type='m
                             rel_path = abs_path.relative_to(media_tmp)
                             zipf.write(abs_path, arcname=Path('media') / rel_path)
             
-            # 8. Final Checksum of the whole file
-            file_hasher = hashlib.sha256()
-            with open(file_path, 'rb') as f:
-                for chunk in iter(lambda: f.read(4096), b""):
-                    file_hasher.update(chunk)
-            
-            final_checksum = file_hasher.hexdigest()
-            job.checksum = final_checksum
+            # 8. Final archive checksum (stored in DB metadata for operator reference)
+            job.checksum = _sha256_file(file_path)
             job.file_path = str(file_path)
             job.file_name = file_name
             job.file_size = os.path.getsize(file_path)
@@ -292,7 +378,8 @@ def create_disaster_recovery_backup(user=None, notes=None) -> BackupJob:
         # 1. Create Internal Routine Backup
         routine_job = create_routine_application_data_backup(user=user, notes=f"Internal routine backup for Disaster Recovery: {job.id}", backup_type='automatic')
         
-        timestamp = timezone.now().strftime('%Y-%m-%d_%H%M%S')
+        # Include microseconds to avoid collisions.
+        timestamp = timezone.now().strftime('%Y-%m-%d_%H%M%S_%f')
         backup_dir = Path(settings.SIMS_SETTINGS.get('BACKUP_LOCATION', settings.BASE_DIR / 'backups'))
         file_name = f"PGSIMS_DISASTER_BACKUP_{timestamp}.pgsimsdr"
         file_path = backup_dir / file_name
@@ -417,15 +504,84 @@ def validate_backup_file(file_path: str) -> Dict[str, Any]:
                     
                     if manifest.get("app_name") != "PGSIMS":
                         result["errors"].append("Not a PGSIMS backup file.")
+                    fmt = str(manifest.get("backup_format_version", "")).strip()
+                    if fmt not in SUPPORTED_BACKUP_FORMAT_VERSIONS:
+                        result["errors"].append(f"Unsupported backup format version: {fmt or 'missing'}.")
+                    if manifest.get("backup_kind") != "routine_application_data":
+                        result["errors"].append("backup_kind mismatch for .pgsimsbak.")
+                    if not manifest.get("database_engine"):
+                        result["errors"].append("database_engine is missing from manifest.")
                 
                 if 'database_dump.sql' not in namelist and 'database_dump.json' not in namelist:
                     result["errors"].append("database_dump.sql or database_dump.json is missing.")
                     
                 if 'checksum.sha256' not in namelist:
                     result["errors"].append("checksum.sha256 is missing.")
+                if 'backup_report.json' not in namelist:
+                    result["errors"].append("backup_report.json is missing.")
+
+                if result["manifest"].get("media_included"):
+                    has_media_entries = any(n.startswith("media/") for n in namelist)
+                    if not has_media_entries:
+                        result["errors"].append("media folder is missing but manifest indicates media_included=true.")
                 
-                # Internal Checksum Verify
-                # (Skipping for brevity in this validation, but we can add it)
+                # Integrity check: verify component hashes listed in checksum.sha256
+                if 'checksum.sha256' in namelist:
+                    try:
+                        checksum_text = zipf.read('checksum.sha256').decode('utf-8', errors='replace')
+                        checks: Dict[str, str] = {}
+                        for line in checksum_text.splitlines():
+                            line = line.strip()
+                            if not line or line.startswith("#"):
+                                continue
+                            parts = line.split()
+                            if len(parts) < 2:
+                                continue
+                            digest = parts[0].strip()
+                            key = parts[-1].strip()
+                            checks[key] = digest
+
+                        # Map logical keys to zip members
+                        member_map = {
+                            "manifest.json": "manifest.json",
+                            "backup_report.json": "backup_report.json",
+                        }
+                        if 'database_dump.sql' in namelist:
+                            member_map["database_dump"] = "database_dump.sql"
+                        elif 'database_dump.json' in namelist:
+                            member_map["database_dump"] = "database_dump.json"
+
+                        for key, member in member_map.items():
+                            expected = checks.get(key)
+                            if not expected:
+                                result["errors"].append(f"checksum.sha256 missing entry for {key}.")
+                                continue
+                            actual = _sha256_zip_member(zipf, member)
+                            if actual != expected:
+                                result["errors"].append(f"File integrity check failed for {member}.")
+
+                        # Optional media tree hash
+                        expected_media_tree = checks.get("media_tree_sha256")
+                        if expected_media_tree and result["manifest"].get("media_included"):
+                            # Recompute deterministically from the zip members (no extract)
+                            media_members = sorted([n for n in namelist if n.startswith("media/") and not n.endswith("/")])
+                            media_hasher = hashlib.sha256()
+                            for member in media_members:
+                                rel = member[len("media/"):]
+                                media_hasher.update(rel.encode("utf-8"))
+                                media_hasher.update(b"\0")
+                                info = zipf.getinfo(member)
+                                media_hasher.update(str(info.file_size).encode("utf-8"))
+                                media_hasher.update(b"\0")
+                                with zipf.open(member, "r") as f:
+                                    for chunk in iter(lambda: f.read(1024 * 1024), b""):
+                                        media_hasher.update(chunk)
+                                media_hasher.update(b"\0")
+                            actual_media_tree = media_hasher.hexdigest()
+                            if actual_media_tree != expected_media_tree:
+                                result["errors"].append("File integrity check failed for media contents.")
+                    except Exception as e:
+                        result["errors"].append(f"Checksum verification error: {e}")
                 
             elif path.suffix == '.pgsimsdr':
                 result["backup_kind"] = "disaster_recovery"
@@ -438,6 +594,23 @@ def validate_backup_file(file_path: str) -> Dict[str, Any]:
                 internal_bak = [n for n in namelist if n.endswith('.pgsimsbak')]
                 if not internal_bak:
                     result["errors"].append("Internal .pgsimsbak file missing from disaster bundle.")
+                else:
+                    # Validate the internal routine backup as well
+                    try:
+                        with tempfile.TemporaryDirectory() as td:
+                            inner_path = Path(td) / Path(internal_bak[0]).name
+                            with open(inner_path, "wb") as f:
+                                f.write(zipf.read(internal_bak[0]))
+                            inner = validate_backup_file(str(inner_path))
+                            if not inner.get("valid"):
+                                result["errors"].append("Internal routine backup validation failed.")
+                                result["warnings"].extend([f"internal: {e}" for e in inner.get("errors", [])])
+                            else:
+                                result["manifest"] = inner.get("manifest", {})
+                                result["table_counts"] = inner.get("table_counts", {})
+                                result["media_summary"] = inner.get("media_summary", {})
+                    except Exception as e:
+                        result["errors"].append(f"Failed to validate internal routine backup: {e}")
             else:
                 result["errors"].append(f"Unsupported file extension: {path.suffix}")
                 
@@ -450,7 +623,14 @@ def validate_backup_file(file_path: str) -> Dict[str, Any]:
         
     return result
 
-def restore_routine_application_data_backup(file_path: str, restored_by, password_confirmed=False, typed_confirmation="", dry_run=False) -> RestoreJob:
+def restore_routine_application_data_backup(
+    file_path: str,
+    restored_by,
+    password_confirmed: bool = False,
+    typed_confirmation: str = "",
+    dry_run: bool = False,
+    restore_job: Optional[RestoreJob] = None,
+) -> RestoreJob:
     """
     Restore a routine backup.
     Only Super Admin, requires password and typed confirmation.
@@ -464,12 +644,46 @@ def restore_routine_application_data_backup(file_path: str, restored_by, passwor
         if typed_confirmation != "RESTORE":
             raise Exception("Typed confirmation 'RESTORE' required.")
             
-    restore_job = RestoreJob.objects.create(
-        restore_kind='routine_application_data_restore',
-        status='pending',
-        uploaded_file_name=os.path.basename(file_path),
-        restored_by=restored_by
-    )
+    # Resolve disaster bundle (.pgsimsdr) to its internal routine backup
+    original_file_path = file_path
+    if str(file_path).endswith(".pgsimsdr"):
+        with tempfile.TemporaryDirectory() as td:
+            td_path = Path(td)
+            with zipfile.ZipFile(file_path, "r") as zipf:
+                inner_bak = [n for n in zipf.namelist() if n.endswith(".pgsimsbak")]
+                if not inner_bak:
+                    raise Exception("Disaster backup bundle missing internal .pgsimsbak.")
+                inner_path = td_path / Path(inner_bak[0]).name
+                with open(inner_path, "wb") as f:
+                    f.write(zipf.read(inner_bak[0]))
+            # Continue restore from the extracted routine file
+            file_path = str(inner_path)
+
+            # For dry-run, we can exit early after validation below; for destructive restore,
+            # we must keep the extracted file available for the duration of this function.
+            # So we re-enter the main logic via a nested helper.
+            return restore_routine_application_data_backup(
+                file_path=file_path,
+                restored_by=restored_by,
+                password_confirmed=password_confirmed,
+                typed_confirmation=typed_confirmation,
+                dry_run=dry_run,
+                restore_job=restore_job,
+            )
+
+    if restore_job is None:
+        restore_job = RestoreJob.objects.create(
+            restore_kind='routine_application_data_restore',
+            status='pending',
+            uploaded_file_name=os.path.basename(original_file_path),
+            restored_by=restored_by
+        )
+    else:
+        restore_job.restore_kind = 'routine_application_data_restore'
+        restore_job.uploaded_file_name = restore_job.uploaded_file_name or os.path.basename(original_file_path)
+        restore_job.restored_by = restored_by
+        restore_job.status = 'pending'
+        restore_job.save(update_fields=["restore_kind", "uploaded_file_name", "restored_by", "status"])
     
     BackupAuditLog.objects.create(
         action='restore_started',
@@ -544,9 +758,11 @@ def restore_routine_application_data_backup(file_path: str, restored_by, passwor
                 if db_config.get('PASSWORD'):
                     env['PGPASSWORD'] = db_config.get('PASSWORD')
                 
+                pg_restore_cmd = os.environ.get('PG_RESTORE_CMD', 'pg_restore')
+
                 # Destructive restore
                 cmd = [
-                    'pg_restore',
+                    pg_restore_cmd,
                     '-h', db_config.get('HOST', 'localhost'),
                     '-p', str(db_config.get('PORT', '5432')),
                     '-U', db_config.get('USER', ''),
@@ -557,6 +773,22 @@ def restore_routine_application_data_backup(file_path: str, restored_by, passwor
                     '--no-privileges',
                     str(db_dump_path)
                 ]
+                
+                if 'docker exec' in pg_restore_cmd:
+                     # For docker exec, we might need to cat the file into it or copy it first.
+                     # Simpler approach: docker cp db_dump_path into container, then run pg_restore.
+                     container_id = pg_restore_cmd.split()[2]
+                     dest_path = f"/tmp/restore_{restore_job.id}.sql"
+                     subprocess.run(['docker', 'cp', str(db_dump_path), f"{container_id}:{dest_path}"], check=True)
+                     cmd = pg_restore_cmd.split() + [
+                        '-U', db_config.get('USER', ''),
+                        '-d', db_config.get('NAME', ''),
+                        '--clean',
+                        '--if-exists',
+                        '--no-owner',
+                        '--no-privileges',
+                        dest_path
+                     ]
                 
                 result = subprocess.run(cmd, env=env, capture_output=True, text=True)
                 # pg_restore often exits with code 0 but has warnings on stderr.
@@ -576,14 +808,17 @@ def restore_routine_application_data_backup(file_path: str, restored_by, passwor
                     from django.db import connection
                     with connection.cursor() as cursor:
                         cursor.execute("PRAGMA foreign_keys = OFF;")
-                        # Wipe all non-system tables
+                        # Wipe all model tables (including auth/contenttypes) except django_migrations.
                         from django.apps import apps
-                        for model in apps.get_models():
-                            if model._meta.app_label not in ['contenttypes', 'auth', 'sessions', 'admin', 'migrations']:
-                                cursor.execute(f"DELETE FROM {model._meta.db_table};")
+                        for model in apps.get_models(include_auto_created=True):
+                            table = model._meta.db_table
+                            if table == "django_migrations":
+                                continue
+                            cursor.execute(f"DELETE FROM {table};")
                         cursor.execute("PRAGMA foreign_keys = ON;")
                         
                     call_command('loaddata', str(db_dump_json_path))
+                    _reset_sequences_all_models()
                 elif db_dump_sql_path.exists():
                     # Legacy support for sqlite file backup
                     db_path = str(Path(settings.DATABASES['default']['NAME']))
@@ -619,25 +854,25 @@ def restore_routine_application_data_backup(file_path: str, restored_by, passwor
         }
         # In a real scenario, we'd verify counts here.
         
-        # Re-create safety_backup in the new database if needed, or just clear the fk to avoid constraint errors
-        if restore_job.safety_backup_id:
-            restore_job.safety_backup = None
-
-        # Force an insert if the object was wiped during restore, or update if it survived
-        restore_job.id = None # Forces a new insert so we don't hit the update-0-rows fallback which might try to insert with old ID
-        
-        restore_job.status = 'restored'
-        restore_job.post_restore_check_json = checks
-        restore_job.completed_at = timezone.now()
-        restore_job.save()
+        # The database was replaced; persist a restore record into the restored DB state.
+        restored_record = RestoreJob.objects.create(
+            restore_kind='routine_application_data_restore',
+            status='restored',
+            uploaded_file_name=os.path.basename(original_file_path),
+            validation_result_json=validation,
+            post_restore_check_json=checks,
+            restored_by_id=getattr(restored_by, "id", None),
+            completed_at=timezone.now(),
+            notes="This restore record was created post-restore in the restored database state."
+        )
         
         BackupAuditLog.objects.create(
             action='restore_completed',
             actor=restored_by,
-            restore_job=restore_job
+            restore_job=restored_record
         )
         
-        return restore_job
+        return restored_record
         
     except Exception as e:
         logger.exception(f"Restore failed: {e}")

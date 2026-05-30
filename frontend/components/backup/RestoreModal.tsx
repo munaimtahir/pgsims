@@ -12,6 +12,7 @@ export default function RestoreModal({ isOpen, onClose, onSuccess }: { isOpen: b
   const [validationResult, setValidationResult] = useState<any | null>(null);
   const [password, setPassword] = useState('');
   const [typedConfirmation, setTypedConfirmation] = useState('');
+  const [confirmChecked, setConfirmChecked] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isDryRunSuccess, setIsDryRunSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -23,6 +24,7 @@ export default function RestoreModal({ isOpen, onClose, onSuccess }: { isOpen: b
     setValidationResult(null);
     setPassword('');
     setTypedConfirmation('');
+    setConfirmChecked(false);
     setIsProcessing(false);
     setIsDryRunSuccess(false);
     setError(null);
@@ -120,6 +122,10 @@ export default function RestoreModal({ isOpen, onClose, onSuccess }: { isOpen: b
     }
     if (!password) {
       setError('Admin password required');
+      return;
+    }
+    if (!confirmChecked) {
+      setError('You must confirm you understand this will replace current data.');
       return;
     }
     
@@ -343,7 +349,8 @@ export default function RestoreModal({ isOpen, onClose, onSuccess }: { isOpen: b
                       id="check"
                       type="checkbox"
                       className="h-4 w-4 rounded border-gray-300 text-red-600 focus:ring-red-600"
-                      required
+                      checked={confirmChecked}
+                      onChange={(e) => setConfirmChecked(e.target.checked)}
                   />
                   <label htmlFor="check" className="ml-2 block text-xs text-gray-900">
                       I understand this will replace current application data.
@@ -354,7 +361,7 @@ export default function RestoreModal({ isOpen, onClose, onSuccess }: { isOpen: b
           <div className="mt-5 sm:mt-6 sm:grid sm:grid-flow-row-dense sm:grid-cols-2 sm:gap-3">
             <button
               type="button"
-              disabled={typedConfirmation !== 'RESTORE' || !password || isProcessing}
+              disabled={typedConfirmation !== 'RESTORE' || !password || !confirmChecked || isProcessing}
               className="inline-flex w-full justify-center rounded-md bg-red-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600 sm:col-start-2 disabled:opacity-50"
               onClick={handleRestore}
             >

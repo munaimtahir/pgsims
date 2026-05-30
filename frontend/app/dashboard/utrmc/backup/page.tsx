@@ -1,31 +1,45 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { fetchAuth } from "@/lib/auth/fetch";
 import BackupList from "@/components/backup/BackupList";
 import CreateBackupModal from "@/components/backup/CreateBackupModal";
 import RestoreModal from "@/components/backup/RestoreModal";
-import { Plus, RefreshCw } from "lucide-react";
+import { RefreshCw } from "lucide-react";
 import ErrorBanner from "@/components/ui/ErrorBanner";
 import SuccessBanner from "@/components/ui/SuccessBanner";
+import MetricCard from "@/components/ui/MetricCard";
+import SectionCard from "@/components/ui/SectionCard";
+import useAuthStore from "@/store/authStore";
 
 export default function BackupCenterPage() {
+  const user = useAuthStore((s) => s.user);
+  const canRestore = user?.role === "admin";
   const [backups, setBackups] = useState<any[]>([]);
+  const [auditLogs, setAuditLogs] = useState<any[]>([]);
+  const [restores, setRestores] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [createDefaultKind, setCreateDefaultKind] = useState<"routine_application_data" | "disaster_recovery">("routine_application_data");
   const [isRestoreModalOpen, setIsRestoreModalOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
-  const loadBackups = async () => {
+  const normalizeList = useCallback((data: any) => {
+    if (Array.isArray(data)) return data;
+    if (data && Array.isArray(data.results)) return data.results;
+    return [];
+  }, []);
+
+  const loadBackups = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     try {
       const response = await fetchAuth("/api/backup_center/backups/");
       if (response.ok) {
         const data = await response.json();
-        setBackups(data);
+        setBackups(normalizeList(data));
       } else {
         setError("Failed to load backups");
       }
@@ -35,71 +49,194 @@ export default function BackupCenterPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [normalizeList]);
+
+  const loadAuditLogs = useCallback(async () => {
+    try {
+      const response = await fetchAuth("/api/backup_center/audit-logs/");
+      if (!response.ok) return;
+      const data = await response.json();
+      setAuditLogs(normalizeList(data));
+    } catch (error) {
+      console.error(error);
+    }
+  }, [normalizeList]);
+
+  const loadRestores = useCallback(async () => {
+    try {
+      const response = await fetchAuth("/api/backup_center/restores/");
+      if (!response.ok) return;
+      const data = await response.json();
+      setRestores(normalizeList(data));
+    } catch (error) {
+      console.error(error);
+    }
+  }, [normalizeList]);
 
   useEffect(() => {
     loadBackups();
-  }, []);
+    loadAuditLogs();
+    loadRestores();
+  }, [loadAuditLogs, loadBackups, loadRestores]);
+
+  const lastRoutine = backups.find((b) => b.backup_kind === "routine_application_data" && b.status === "completed");
+  const lastDisaster = backups.find((b) => b.backup_kind === "disaster_recovery" && b.status === "completed");
+  const lastRestore = restores[0];
+  const totalBackups = backups.length;
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {error && <ErrorBanner message={error} onDismiss={() => setError(null)} />}
       {success && <SuccessBanner message={success} onDismiss={() => setSuccess(null)} />}
 
-      <div className="md:flex md:items-center md:justify-between">
-        <div className="min-w-0 flex-1">
-          <h2 className="text-2xl font-bold leading-7 text-gray-900 sm:truncate sm:text-3xl sm:tracking-tight">
-            Backup & Restore Center
-          </h2>
-          <p className="mt-2 text-sm text-gray-500">
-            Manage system backups and critical restore operations.
-          </p>
-        </div>
-        <div className="mt-4 flex md:ml-4 md:mt-0 space-x-3">
+      <div>
+        <div className="flex items-start justify-between gap-3 flex-wrap">
+          <div>
+            <h2 className="text-2xl font-bold leading-7 text-gray-900 sm:text-3xl sm:tracking-tight">Backup & Restore Center</h2>
+            <p className="mt-2 text-sm text-gray-500">Regular backups protect user accounts, records, and uploaded documents.</p>
+          </div>
           <button
             type="button"
-            onClick={loadBackups}
+            onClick={() => {
+              loadBackups();
+              loadAuditLogs();
+              loadRestores();
+            }}
             className="inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
           >
             <RefreshCw className="-ml-0.5 mr-1.5 h-4 w-4 text-gray-400" />
             Refresh
           </button>
-          <button
-            type="button"
-            onClick={() => setIsRestoreModalOpen(true)}
-            className="inline-flex items-center rounded-md bg-red-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600"
-          >
-            Upload & Restore
-          </button>
-          <button
-            type="button"
-            onClick={() => setIsCreateModalOpen(true)}
-            className="inline-flex items-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
-          >
-            <Plus className="-ml-0.5 mr-1.5 h-4 w-4" />
-            Create Backup
-          </button>
+        </div>
+
+        <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+          <MetricCard
+            label="Last Regular System Backup"
+            value={lastRoutine?.created_at ? new Date(lastRoutine.created_at).toLocaleString() : "None yet"}
+          />
+          <MetricCard
+            label="Last Full Server Recovery Backup"
+            value={lastDisaster?.created_at ? new Date(lastDisaster.created_at).toLocaleString() : "None yet"}
+          />
+          <MetricCard label="Backup Health" value={lastRoutine ? "OK" : "Needs first backup"} tone={lastRoutine ? "success" : "warning"} />
+          <MetricCard label="Last Restore" value={lastRestore?.started_at ? new Date(lastRestore.started_at).toLocaleString() : "None"} />
+          <MetricCard label="Total Backups" value={totalBackups} />
         </div>
       </div>
 
-      <div className="bg-white shadow sm:rounded-lg overflow-hidden">
-        <div className="px-4 py-5 sm:px-6 border-b border-gray-200">
-          <h3 className="text-base font-semibold leading-6 text-gray-900">System Backups</h3>
+      <SectionCard
+        title="Create Backup"
+        actions={
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                setCreateDefaultKind("routine_application_data");
+                setIsCreateModalOpen(true);
+              }}
+              className="pg-btn-primary"
+            >
+              Create Regular System Backup
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setCreateDefaultKind("disaster_recovery");
+                setIsCreateModalOpen(true);
+              }}
+              className="rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
+            >
+              Create Full Server Recovery Backup
+            </button>
+          </div>
+        }
+      >
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-700">
+          <div className="rounded-md border border-gray-200 bg-gray-50 p-4">
+            <p className="font-semibold text-gray-900">Regular System Backup</p>
+            <p className="mt-1 text-gray-600">
+              Use this before importing data, making bulk changes, or as a daily backup. It saves users, password hashes, roles, records, and uploaded files.
+            </p>
+          </div>
+          <div className="rounded-md border border-gray-200 bg-gray-50 p-4">
+            <p className="font-semibold text-gray-900">Full Server Recovery Backup</p>
+            <p className="mt-1 text-gray-600">
+              Use this after major milestones or before server migration. It includes system data plus recovery notes for setting up PGSIMS on a new server.
+            </p>
+          </div>
         </div>
+      </SectionCard>
+
+      <SectionCard title="Backup History">
         {isLoading ? (
-          <div className="p-10 text-center text-gray-500">Loading backups...</div>
+          <div className="py-10 text-center text-gray-500">Loading backups...</div>
         ) : (
-          <BackupList backups={backups} onRefresh={loadBackups} />
+          <BackupList backups={backups} onRefresh={() => { loadBackups(); loadAuditLogs(); }} />
         )}
-      </div>
+      </SectionCard>
+
+      <SectionCard title="Restore Wizard" actions={
+        canRestore ? (
+          <button
+            type="button"
+            onClick={() => setIsRestoreModalOpen(true)}
+            className="rounded-md bg-red-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-500"
+          >
+            Start Restore Wizard
+          </button>
+        ) : null
+      }>
+        <div className="rounded-md border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+          <p className="font-semibold">Warning</p>
+          <p className="mt-1">
+            Restoring a backup will replace the current PGSIMS data. Before restore, the system will automatically create a protection backup of the current data.
+            Continue only if you are sure this is the correct backup file.
+          </p>
+          {!canRestore ? (
+            <p className="mt-2 font-semibold">
+              Restore is Super Admin only.
+            </p>
+          ) : null}
+        </div>
+      </SectionCard>
+
+      <SectionCard title="Audit Log">
+        {auditLogs.length === 0 ? (
+          <div className="text-sm text-gray-500">No backup/restore actions recorded yet.</div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200" aria-label="Audit Log">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600">Date</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600">Action</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600">Actor</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-100">
+                {auditLogs.slice(0, 20).map((log) => (
+                  <tr key={log.id}>
+                    <td className="px-4 py-3 text-sm text-gray-700 whitespace-nowrap">{new Date(log.created_at).toLocaleString()}</td>
+                    <td className="px-4 py-3 text-sm text-gray-900">{log.action}</td>
+                    <td className="px-4 py-3 text-sm text-gray-700">{log.actor_username || 'System'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </SectionCard>
 
       <CreateBackupModal
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
         onSuccess={() => {
           setIsCreateModalOpen(false);
+          setSuccess("Backup started. When complete, download and store the file safely.");
           loadBackups();
+          loadAuditLogs();
         }}
+        defaultKind={createDefaultKind}
       />
 
       <RestoreModal
@@ -107,8 +244,10 @@ export default function BackupCenterPage() {
         onClose={() => setIsRestoreModalOpen(false)}
         onSuccess={() => {
           setIsRestoreModalOpen(false);
-          setSuccess("Restore completed successfully! A safety backup was created.");
+          setSuccess("Restore completed successfully. A protection backup was created before restore.");
           loadBackups();
+          loadAuditLogs();
+          loadRestores();
         }}
       />
     </div>

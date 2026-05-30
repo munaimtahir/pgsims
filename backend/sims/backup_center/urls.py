@@ -9,6 +9,7 @@ urlpatterns = [
     path('backups/create-disaster/', views.CreateDisasterBackupView.as_view(), name='backup-create-disaster'),
     path('backups/<int:pk>/download/', views.DownloadBackupView.as_view(), name='backup-download'),
     path('backups/<int:pk>/delete/', views.DeleteBackupView.as_view(), name='backup-delete'),
+    path('backups/<int:pk>/validate/', views.ValidateBackupJobView.as_view(), name='backup-validate'),
     
     # Restores
     path('restores/', views.RestoreJobListView.as_view(), name='restore-list'),
