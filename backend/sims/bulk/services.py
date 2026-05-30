@@ -110,6 +110,9 @@ class BulkService:
     def import_userbase_hod_assignments(self, uploaded_file, *, dry_run: bool = True, allow_partial: bool = False) -> BulkOperation:
         return self._run_userbase_import("hod-assignments", uploaded_file, dry_run=dry_run, allow_partial=allow_partial)
 
+    def import_userbase_rotation_assignments(self, uploaded_file, *, dry_run: bool = True, allow_partial: bool = False) -> BulkOperation:
+        return self._run_userbase_import("rotation-assignments", uploaded_file, dry_run=dry_run, allow_partial=allow_partial)
+
     def export_template(self, resource: str) -> BulkExportFile:
         rows = userbase_template_rows(resource)
         rendered = _render_export_rows(rows, f"{resource}_template", "csv")

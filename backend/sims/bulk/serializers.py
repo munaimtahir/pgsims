@@ -52,6 +52,16 @@ class DepartmentImportSerializer(serializers.Serializer):
     allow_partial = serializers.BooleanField(default=False)
 
 
+from sims.bulk.models import MappingPreset
+
+
+class MappingPresetSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MappingPreset
+        fields = ["id", "name", "entity", "mapping", "created_at", "last_used_at"]
+        read_only_fields = ["id", "created_at", "last_used_at"]
+
+
 __all__ = [
     "BulkReviewSerializer",
     "BulkAssignmentSerializer",
@@ -60,4 +70,6 @@ __all__ = [
     "SupervisorImportSerializer",
     "ResidentImportSerializer",
     "DepartmentImportSerializer",
+    "MappingPresetSerializer",
 ]
+

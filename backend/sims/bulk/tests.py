@@ -298,3 +298,267 @@ class ActiveUserbaseBulkEngineTests(TestCase):
         self.assertEqual(response.data["success_count"], 0)
         self.assertEqual(response.data["failure_count"], 1)
         self.assertFalse(HospitalDepartment.objects.exists())
+
+
+from sims.bulk.models import MappingPreset
+
+
+class FlexibleColumnMappingTests(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+        self.admin = User.objects.create_user(
+            username="flex_admin",
+            password="pass12345",
+            role="admin",
+            email="flex_admin@example.com",
+        )
+        self.hospital = Hospital.objects.create(name="Allied Hospital", code="AH", is_active=True)
+        self.department = Department.objects.create(name="Internal Medicine", code="MED")
+        HospitalDepartment.objects.create(hospital=self.hospital, department=self.department, is_active=True)
+        
+        self.supervisor = User.objects.create_user(
+            username="existing.supervisor",
+            password="pass12345",
+            role="supervisor",
+            email="supervisor@example.com",
+            specialty="medicine",
+        )
+
+    def _upload(self, name: str, content: str):
+        return SimpleUploadedFile(name, content.encode("utf-8"), content_type="text/csv")
+
+    def test_detect_headers_csv(self):
+        self.client.force_authenticate(self.admin)
+        csv_data = "CustomName,CustomEmail,CustomSpecialty,CustomYear,CustomStart\nDr. Ali,ali@example.com,medicine,1,2026-01-01\n"
+        response = self.client.post(
+            "/api/bulk/flexible/detect-headers/",
+            {"file": self._upload("custom_residents.csv", csv_data)},
+            format="multipart"
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["headers"], ["CustomName", "CustomEmail", "CustomSpecialty", "CustomYear", "CustomStart"])
+        self.assertEqual(response.data["total_rows"], 1)
+
+    def test_validate_mapping_valid(self):
+        self.client.force_authenticate(self.admin)
+        response = self.client.post(
+            "/api/bulk/flexible/validate-mapping/",
+            {
+                "entity": "residents",
+                "mapping": {
+                    "email": "CustomEmail",
+                    "full_name": "CustomName",
+                    "specialty": "CustomSpecialty",
+                    "year": "CustomYear",
+                    "training_start": "CustomStart"
+                }
+            },
+            format="json"
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.data["ready"])
+        self.assertEqual(len(response.data["missing_required"]), 0)
+
+    def test_validate_mapping_missing_required(self):
+        self.client.force_authenticate(self.admin)
+        response = self.client.post(
+            "/api/bulk/flexible/validate-mapping/",
+            {
+                "entity": "residents",
+                "mapping": {
+                    "email": "CustomEmail",
+                    "specialty": "CustomSpecialty",
+                    "year": "CustomYear",
+                    "training_start": "CustomStart"
+                }
+            },
+            format="json"
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(response.data["ready"])
+        self.assertIn("full_name", response.data["missing_required"])
+
+    def test_validate_mapping_duplicate_mappings(self):
+        self.client.force_authenticate(self.admin)
+        response = self.client.post(
+            "/api/bulk/flexible/validate-mapping/",
+            {
+                "entity": "residents",
+                "mapping": {
+                    "email": "CustomEmail",
+                    "full_name": "CustomEmail",
+                    "specialty": "CustomSpecialty",
+                    "year": "CustomYear",
+                    "training_start": "CustomStart"
+                }
+            },
+            format="json"
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(response.data["ready"])
+        self.assertIn("CustomEmail", response.data["duplicate_mappings"])
+
+    def test_flexible_dry_run(self):
+        self.client.force_authenticate(self.admin)
+        csv_data = "CustomName,CustomEmail,CustomSpecialty,CustomYear,CustomStart,CustomHospital,CustomDept,CustomSupervisor\nDr. Ali,ali@example.com,medicine,1,2026-01-01,AH,MED,supervisor@example.com\n"
+        
+        mapping = {
+            "full_name": "CustomName",
+            "email": "CustomEmail",
+            "specialty": "CustomSpecialty",
+            "year": "CustomYear",
+            "training_start": "CustomStart",
+            "hospital_code": "CustomHospital",
+            "department_code": "CustomDept",
+            "supervisor_email": "CustomSupervisor"
+        }
+
+        import json
+        response = self.client.post(
+            "/api/bulk/flexible/dry-run/",
+            {
+                "file": self._upload("custom_residents.csv", csv_data),
+                "entity": "residents",
+                "mapping": json.dumps(mapping)
+            },
+            format="multipart"
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["success_count"], 1)
+        self.assertEqual(response.data["failure_count"], 0)
+        self.assertEqual(len(response.data["rows"]), 1)
+        self.assertEqual(response.data["rows"][0]["email"], "ali@example.com")
+
+    def test_flexible_apply_strict_mode_success(self):
+        self.client.force_authenticate(self.admin)
+        csv_data = "CustomName,CustomEmail,CustomSpecialty,CustomYear,CustomStart,CustomHospital,CustomDept,CustomSupervisor\nDr. Ali,ali@example.com,medicine,1,2026-01-01,AH,MED,supervisor@example.com\n"
+        
+        mapping = {
+            "full_name": "CustomName",
+            "email": "CustomEmail",
+            "specialty": "CustomSpecialty",
+            "year": "CustomYear",
+            "training_start": "CustomStart",
+            "hospital_code": "CustomHospital",
+            "department_code": "CustomDept",
+            "supervisor_email": "CustomSupervisor"
+        }
+
+        import json
+        response = self.client.post(
+            "/api/bulk/flexible/apply/",
+            {
+                "file": self._upload("custom_residents.csv", csv_data),
+                "entity": "residents",
+                "mapping": json.dumps(mapping),
+                "import_mode": "strict"
+            },
+            format="multipart"
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["success_count"], 1)
+        self.assertEqual(response.data["failure_count"], 0)
+        self.assertTrue(User.objects.filter(email="ali@example.com").exists())
+
+    def test_flexible_apply_strict_mode_rollback_on_error(self):
+        self.client.force_authenticate(self.admin)
+        csv_data = (
+            "CustomName,CustomEmail,CustomSpecialty,CustomYear,CustomStart,CustomHospital,CustomDept,CustomSupervisor\n"
+            "Dr. Ali,ali@example.com,medicine,1,2026-01-01,AH,MED,supervisor@example.com\n"
+            "Dr. Bob,bob@example.com,invalid_spec,1,2026-01-01,AH,MED,supervisor@example.com\n"
+        )
+        
+        mapping = {
+            "full_name": "CustomName",
+            "email": "CustomEmail",
+            "specialty": "CustomSpecialty",
+            "year": "CustomYear",
+            "training_start": "CustomStart",
+            "hospital_code": "CustomHospital",
+            "department_code": "CustomDept",
+            "supervisor_email": "CustomSupervisor"
+        }
+
+        import json
+        response = self.client.post(
+            "/api/bulk/flexible/apply/",
+            {
+                "file": self._upload("custom_residents.csv", csv_data),
+                "entity": "residents",
+                "mapping": json.dumps(mapping),
+                "import_mode": "strict"
+            },
+            format="multipart"
+        )
+        self.assertEqual(response.status_code, 400)
+        self.assertFalse(User.objects.filter(email="ali@example.com").exists())
+        self.assertFalse(User.objects.filter(email="bob@example.com").exists())
+
+    def test_flexible_apply_partial_mode_imports_valid(self):
+        self.client.force_authenticate(self.admin)
+        csv_data = (
+            "CustomName,CustomEmail,CustomSpecialty,CustomYear,CustomStart,CustomHospital,CustomDept,CustomSupervisor\n"
+            "Dr. Ali,ali@example.com,medicine,1,2026-01-01,AH,MED,supervisor@example.com\n"
+            "Dr. Bob,bob@example.com,invalid_spec,1,2026-01-01,AH,MED,supervisor@example.com\n"
+        )
+        
+        mapping = {
+            "full_name": "CustomName",
+            "email": "CustomEmail",
+            "specialty": "CustomSpecialty",
+            "year": "CustomYear",
+            "training_start": "CustomStart",
+            "hospital_code": "CustomHospital",
+            "department_code": "CustomDept",
+            "supervisor_email": "CustomSupervisor"
+        }
+
+        import json
+        response = self.client.post(
+            "/api/bulk/flexible/apply/",
+            {
+                "file": self._upload("custom_residents.csv", csv_data),
+                "entity": "residents",
+                "mapping": json.dumps(mapping),
+                "import_mode": "partial"
+            },
+            format="multipart"
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["success_count"], 1)
+        self.assertEqual(response.data["failure_count"], 1)
+        self.assertTrue(User.objects.filter(email="ali@example.com").exists())
+        self.assertFalse(User.objects.filter(email="bob@example.com").exists())
+
+    def test_presets_crud(self):
+        self.client.force_authenticate(self.admin)
+        response = self.client.get("/api/bulk/flexible/presets/")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.data["results"]), 0)
+
+        mapping = {"email": "CustomEmail", "full_name": "CustomName"}
+        response = self.client.post(
+            "/api/bulk/flexible/presets/",
+            {"name": "Resident Google Form Preset", "entity": "residents", "mapping": mapping},
+            format="json"
+        )
+        self.assertEqual(response.status_code, 201)
+        preset_id = response.data["id"]
+
+        response = self.client.get("/api/bulk/flexible/presets/?entity=residents")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.data["results"]), 1)
+        self.assertEqual(response.data["results"][0]["name"], "Resident Google Form Preset")
+
+        response = self.client.patch(
+            f"/api/bulk/flexible/presets/{preset_id}/",
+            {"name": "Updated Preset Name"},
+            format="json"
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["name"], "Updated Preset Name")
+
+        response = self.client.delete(f"/api/bulk/flexible/presets/{preset_id}/")
+        self.assertEqual(response.status_code, 204)
+        self.assertFalse(MappingPreset.objects.filter(pk=preset_id).exists())
+

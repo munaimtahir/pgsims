@@ -38,6 +38,7 @@ SUPPORTED_IMPORT_ENTITIES = {
     "residents",
     "supervision-links",
     "hod-assignments",
+    "rotation-assignments",
 }
 
 SUPPORTED_EXPORT_RESOURCES = SUPPORTED_IMPORT_ENTITIES
@@ -122,6 +123,17 @@ TEMPLATE_ROWS = {
             "start_date": "2026-01-01",
             "end_date": "",
             "active": "true",
+        }
+    ],
+    "rotation-assignments": [
+        {
+            "resident_email": "resident@example.com",
+            "hospital_code": "AH",
+            "department_code": "MED",
+            "start_date": "2026-01-01",
+            "end_date": "2026-01-31",
+            "status": "DRAFT",
+            "notes": "First placement",
         }
     ],
 }
@@ -305,6 +317,25 @@ def export_rows_for(resource: str) -> List[dict]:
             )
         ]
 
+    if resource == "rotation-assignments":
+        from sims.training.models import RotationAssignment
+        return [
+            {
+                "resident_email": item.resident_training.resident_user.email,
+                "hospital_code": item.hospital_department.hospital.code,
+                "department_code": item.hospital_department.department.code,
+                "start_date": item.start_date.isoformat(),
+                "end_date": item.end_date.isoformat(),
+                "status": item.status,
+                "notes": item.notes,
+            }
+            for item in RotationAssignment.objects.select_related(
+                "resident_training__resident_user",
+                "hospital_department__hospital",
+                "hospital_department__department"
+            ).all().order_by("-start_date")
+        ]
+
     raise ValidationError(f"Unsupported export resource '{resource}'.")
 
 
@@ -323,6 +354,7 @@ def import_entity(actor: User, entity: str, uploaded_file, *, dry_run: bool, all
         "residents": _import_residents,
         "supervision-links": _import_supervision_links,
         "hod-assignments": _import_hod_assignments,
+        "rotation-assignments": _import_rotation_assignments,
     }
     return handlers[entity](actor, rows, dry_run=dry_run, allow_partial=allow_partial)
 
@@ -460,7 +492,7 @@ def _import_faculty_supervisors(actor: User, rows: List[dict], *, dry_run: bool,
                     candidate.phone_number = (row.get("phone_number") or row.get("phone") or "").strip() or None
                     candidate.registration_number = (row.get("registration_number") or "").strip() or None
                     candidate.is_active = active
-                    candidate.full_clean()
+                    candidate.full_clean(exclude=["password"])
                 else:
                     user, generated_password = _upsert_staff_user(
                         actor=actor,
@@ -551,7 +583,7 @@ def _import_residents(actor: User, rows: List[dict], *, dry_run: bool, allow_par
                     candidate.home_department = department
                     candidate.home_hospital = hospital_department.hospital if hospital_department else None
                     candidate.supervisor = supervisor
-                    candidate.full_clean()
+                    candidate.full_clean(exclude=["password"])
                 else:
                     user, generated_password = _upsert_resident_user(
                         actor=actor,
@@ -1103,3 +1135,87 @@ def _error_text(exc: ValidationError) -> str:
     if hasattr(exc, "messages"):
         return "; ".join(str(message) for message in exc.messages)
     return str(exc)
+
+
+def _import_rotation_assignments(actor: User, rows: List[dict], *, dry_run: bool, allow_partial: bool) -> dict:
+    from sims.training.models import ResidentTrainingRecord, RotationAssignment
+    from sims.rotations.models import HospitalDepartment
+
+    successes: List[dict] = []
+    failures: List[dict] = []
+    for row in rows:
+        row_number = row["_row_number"]
+        try:
+            resident_email = _require_text(row, "resident_email")
+            hospital_code = _require_text(row, "hospital_code").upper()
+            department_code = _require_text(row, "department_code").upper()
+            start_date = _parse_required_date(row, "start_date")
+            end_date = _parse_required_date(row, "end_date")
+            status_val = (row.get("status") or "DRAFT").strip().upper()
+            notes = (row.get("notes") or "").strip()
+
+            # Validation checks
+            rtr = ResidentTrainingRecord.objects.filter(
+                resident_user__email=resident_email, active=True
+            ).first()
+            if not rtr:
+                raise ValidationError(f"Active training record for resident '{resident_email}' not found.")
+
+            hd = HospitalDepartment.objects.filter(
+                hospital__code=hospital_code,
+                department__code=department_code,
+                is_active=True
+            ).first()
+            if not hd:
+                raise ValidationError(f"Active matrix link for Hospital '{hospital_code}' and Department '{department_code}' not found.")
+
+            if end_date <= start_date:
+                raise ValidationError("End date must be after start date.")
+
+            # Validate status
+            valid_statuses = [choice[0] for choice in RotationAssignment.STATUS_CHOICES]
+            if status_val not in valid_statuses:
+                status_val = RotationAssignment.STATUS_DRAFT
+
+            # Overlap validation (like in clean())
+            overlap_statuses = {
+                RotationAssignment.STATUS_SUBMITTED,
+                RotationAssignment.STATUS_APPROVED,
+                RotationAssignment.STATUS_ACTIVE
+            }
+            if status_val in overlap_statuses:
+                qs = RotationAssignment.objects.filter(
+                    resident_training=rtr,
+                    status__in=overlap_statuses,
+                    start_date__lt=end_date,
+                    end_date__gt=start_date,
+                )
+                if qs.exists():
+                    raise ValidationError("Overlapping rotation assignment already exists for this resident.")
+
+            if not dry_run:
+                RotationAssignment.objects.create(
+                    resident_training=rtr,
+                    hospital_department=hd,
+                    start_date=start_date,
+                    end_date=end_date,
+                    status=status_val,
+                    notes=notes,
+                    requested_by=actor
+                )
+            successes.append({
+                "row": row_number,
+                "resident_email": resident_email,
+                "hospital_code": hospital_code,
+                "department_code": department_code
+            })
+        except ValidationError as exc:
+            failures.append({"row": row_number, "error": _error_text(exc)})
+            if not allow_partial:
+                break
+        except Exception as exc:
+            failures.append({"row": row_number, "error": str(exc)})
+            if not allow_partial:
+                break
+    return {"successes": successes, "failures": failures}
+

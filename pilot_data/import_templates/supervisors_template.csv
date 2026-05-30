@@ -1,0 +1,3 @@
+email,full_name,phone_number,role,specialty,department_code,hospital_code,designation,registration_number,username,password,active,start_date
+dr.asim@example.com,Dr. Asim Shahzad,03001234567,supervisor,medicine,MED,FMUH,Senior Registrar,PMC-12345,asim.shahzad,,true,2026-01-01
+dr.fatima@example.com,Dr. Fatima Zahra,03007654321,supervisor,surgery,SURG,FMUH,Associate Professor,PMC-67890,fatima.zahra,,true,2026-01-01

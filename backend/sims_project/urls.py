@@ -136,8 +136,8 @@ urlpatterns = [
     path("api/users/", include("sims.users.api_user_urls")),
     path("api/", include("sims.training.urls")),
     path("academics/", include("sims.academics.urls")),
-    # JWT Authentication endpoints
     path("api/auth/", include("sims.users.api_urls")),
+    path("api/backup_center/", include("sims.backup_center.urls")),
 ]
 
 # Serve media files in development

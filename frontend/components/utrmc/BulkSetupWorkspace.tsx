@@ -1,6 +1,6 @@
-'use client';
-
+import { useState } from 'react';
 import ImportExportPanel from '@/components/ui/ImportExportPanel';
+import FlexibleMappingImport from './FlexibleMappingImport';
 
 const PANELS = [
   {
@@ -122,40 +122,79 @@ const PANELS = [
 ];
 
 export default function BulkSetupWorkspace() {
+  const [importMode, setImportMode] = useState<'standard' | 'flexible'>('standard');
+
   return (
     <section className="space-y-6">
       <div>
         <h2 className="text-xl font-semibold text-gray-900">Bulk Setup & Import/Export</h2>
         <p className="mt-1 text-sm text-gray-500">
-          Use the prerequisite order below. Dry run first, then apply, then export the resulting truth if you need a reconciliation copy.
+          Use the template workflow or configure flexible custom mappings to load trainee rosters, supervisor datasets, placements and matrix connections.
         </p>
       </div>
 
-      <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
-        Prerequisite order matters: hospitals, departments, matrix, faculty/supervisors, residents, supervision links, then HOD assignments.
+      {/* Mode selection tabs */}
+      <div className="flex border-b border-gray-200">
+        <button
+          onClick={() => setImportMode('standard')}
+          className={`py-2.5 px-4 text-sm font-semibold border-b-2 transition-all ${
+            importMode === 'standard'
+              ? 'border-indigo-600 text-indigo-600'
+              : 'border-transparent text-gray-500 hover:text-gray-700'
+          }`}
+        >
+          Use Standard Template (Recommended)
+        </button>
+        <button
+          onClick={() => setImportMode('flexible')}
+          className={`py-2.5 px-4 text-sm font-semibold border-b-2 transition-all ${
+            importMode === 'flexible'
+              ? 'border-indigo-600 text-indigo-600'
+              : 'border-transparent text-gray-500 hover:text-gray-700'
+          }`}
+        >
+          Upload Custom File & Map Columns
+        </button>
       </div>
 
-      <div className="space-y-6">
-        {PANELS.map((panel) => (
-          <div key={panel.entity} className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-            <div className="mb-4 flex items-center gap-3">
-              <span className="rounded-full bg-indigo-100 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-indigo-700">
-                {panel.step}
-              </span>
-              <h3 className="text-lg font-semibold text-gray-900">{panel.title}</h3>
-            </div>
-
-            <ImportExportPanel
-              entity={panel.entity}
-              label={panel.title}
-              exportResource={panel.exportResource}
-              templateResource={panel.entity}
-              expectedColumns={panel.expectedColumns}
-              description={panel.description}
-            />
+      {importMode === 'standard' ? (
+        <div className="space-y-6">
+          <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+            Prerequisite order matters: hospitals, departments, matrix, faculty/supervisors, residents, supervision links, then HOD assignments.
           </div>
-        ))}
-      </div>
+
+          <div className="space-y-6">
+            {PANELS.map((panel) => (
+              <div key={panel.entity} className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+                <div className="mb-4 flex items-center gap-3">
+                  <span className="rounded-full bg-indigo-100 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-indigo-700">
+                    {panel.step}
+                  </span>
+                  <h3 className="text-lg font-semibold text-gray-900">{panel.title}</h3>
+                </div>
+
+                <ImportExportPanel
+                  entity={panel.entity}
+                  label={panel.title}
+                  exportResource={panel.exportResource}
+                  templateResource={panel.entity}
+                  expectedColumns={panel.expectedColumns}
+                  description={panel.description}
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : (
+        <div className="space-y-6">
+          <div className="rounded-xl border border-indigo-100 bg-indigo-50/45 p-4 text-sm text-indigo-900">
+            <span className="font-semibold block mb-0.5">Flexible Column Mapping Import</span>
+            Upload a CSV or Excel file from any custom source. You will match your headers to the required PGSIMS target fields, preview in-memory validation, save your preset, and apply final database loads.
+          </div>
+
+          <FlexibleMappingImport />
+        </div>
+      )}
     </section>
   );
 }

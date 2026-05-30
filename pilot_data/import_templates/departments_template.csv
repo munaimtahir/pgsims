@@ -1,0 +1,4 @@
+department_code,department_name,description,active
+MED,Internal Medicine,General Internal Medicine residency program,true
+SURG,General Surgery,General Surgery residency program,true
+PATH,Pathology,Clinical Pathology residency program,true

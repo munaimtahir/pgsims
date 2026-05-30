@@ -13,6 +13,12 @@ from sims.bulk.views import (
     BulkSupervisorImportView,
     BulkTraineeImportView,
     BulkImportEntityView,
+    FlexibleSchemasView,
+    FlexibleDetectHeadersView,
+    FlexibleValidateMappingView,
+    FlexibleDryRunView,
+    FlexibleImportApplyView,
+    MappingPresetViewSet,
 )
 
 app_name = "bulk_api"
@@ -29,4 +35,12 @@ urlpatterns = [
     path("templates/<str:resource>/", BulkTemplateView.as_view(), name="templates"),
     # New unified import endpoint
     path("import/<str:entity>/<str:action>/", BulkImportEntityView.as_view(), name="import_entity"),
+    # Flexible mapping import endpoints
+    path("flexible/schemas/", FlexibleSchemasView.as_view(), name="flexible_schemas"),
+    path("flexible/detect-headers/", FlexibleDetectHeadersView.as_view(), name="flexible_detect_headers"),
+    path("flexible/validate-mapping/", FlexibleValidateMappingView.as_view(), name="flexible_validate_mapping"),
+    path("flexible/dry-run/", FlexibleDryRunView.as_view(), name="flexible_dry_run"),
+    path("flexible/apply/", FlexibleImportApplyView.as_view(), name="flexible_apply"),
+    path("flexible/presets/", MappingPresetViewSet.as_view({"get": "list", "post": "create"}), name="preset_list"),
+    path("flexible/presets/<int:pk>/", MappingPresetViewSet.as_view({"get": "retrieve", "put": "update", "patch": "partial_update", "delete": "destroy"}), name="preset_detail"),
 ]

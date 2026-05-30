@@ -7,6 +7,7 @@ from typing import Any, Dict
 from django.contrib.auth import get_user_model
 from django.db import models
 from django.utils import timezone
+from simple_history.models import HistoricalRecords
 
 User = get_user_model()
 
@@ -76,4 +77,49 @@ class BulkOperation(models.Model):
         self.save(update_fields=["status", "details", "completed_at"])
 
 
-__all__ = ["BulkOperation"]
+class MappingPreset(models.Model):
+    """Stores user-defined CSV/Excel column mapping presets."""
+
+    name = models.CharField(max_length=100)
+    entity = models.CharField(max_length=64)
+    mapping = models.JSONField(help_text="Key-value pairs mapping database fields to custom headers.")
+    created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name="mapping_presets")
+    created_at = models.DateTimeField(auto_now_add=True)
+    last_used_at = models.DateTimeField(null=True, blank=True)
+    history = HistoricalRecords()
+
+    class Meta:
+        ordering = ["-created_at"]
+        unique_together = [("name", "created_by", "entity")]
+
+    def __str__(self):
+        return f"{self.name} ({self.entity})"
+
+
+class FlexibleImportAudit(models.Model):
+    """Audit log tracking flexible column mapping import attempts."""
+
+    file_name = models.CharField(max_length=255)
+    import_type = models.CharField(max_length=64)
+    uploaded_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name="flexible_imports")
+    mapping_used = models.JSONField()
+    dry_run_result = models.JSONField(null=True, blank=True)
+    final_import_result = models.JSONField(null=True, blank=True)
+    success_count = models.PositiveIntegerField(default=0)
+    failure_count = models.PositiveIntegerField(default=0)
+    status = models.CharField(max_length=20, default="pending")
+    error_report_path = models.CharField(max_length=500, blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+    history = HistoricalRecords()
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"{self.import_type} import by {self.uploaded_by} on {self.created_at}"
+
+
+__all__ = ["BulkOperation", "MappingPreset", "FlexibleImportAudit"]
+
+

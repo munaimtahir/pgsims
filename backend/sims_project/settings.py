@@ -92,6 +92,7 @@ INSTALLED_APPS = [
     "sims.bulk",
     "sims.notifications",
     "sims.training",
+    "sims.backup_center.apps.BackupCenterConfig",
 ]
 
 MIDDLEWARE = [

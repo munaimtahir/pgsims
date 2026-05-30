@@ -67,12 +67,12 @@ class ResetDemoDataCommandTests(TestCase):
         self.admin = UserModel.objects.get(username="admin")
 
         self.hospital = Hospital.objects.create(
-            code="TEST-HOSP-1778624851512",
+            code="H-1778624851512",
             name="Hospital e2e-1778624851512",
             is_active=True,
         )
         self.department = Department.objects.create(
-            code="TEST-DEPT-1778624851512",
+            code="D-1778624851512",
             name="Department e2e-1778624851512",
             active=True,
         )

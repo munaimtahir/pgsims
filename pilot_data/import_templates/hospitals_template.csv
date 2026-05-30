@@ -1,0 +1,3 @@
+hospital_code,hospital_name,address,phone,email,active
+FMUH,Faisalabad Medical University Hospital,Sargodha Road Faisalabad,041-9210080,fmuh@example.com,true
+DHQH,District Headquarters Hospital,DHQ Road Faisalabad,041-9200131,dhqh@example.com,true

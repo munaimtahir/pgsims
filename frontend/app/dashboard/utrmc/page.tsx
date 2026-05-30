@@ -451,6 +451,16 @@ export default function UTRMCOverviewPage() {
               Open onboarding tools
             </Link>
         </div>
+
+        <div className="pg-card flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h2 className="pg-section-title">Backup & Restore</h2>
+              <p className="pg-section-note">Manage system backups and critical restore operations.</p>
+            </div>
+            <Link href="/dashboard/utrmc/backup" className="pg-btn-primary">
+              Open backup center
+            </Link>
+        </div>
       </section>
 
       {opsDashboard && (

@@ -1,0 +1,4 @@
+hospital_code,department_code,active
+FMUH,MED,true
+FMUH,SURG,true
+DHQH,PATH,true
