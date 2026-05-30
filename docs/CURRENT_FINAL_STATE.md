@@ -2,11 +2,11 @@
 
 ## Application Metadata
 - **App Name**: PGSIMS
-- **Version**: Pilot Baseline v1.0
-- **Status**: Real-Data Ready Candidate / GO
+- **Version**: Pilot Baseline v1.2 — Backup Center Final Verified Module
+- **Status**: Real-Data Ready Candidate / GO (Backup Center verified)
 - **Branch**: `main`
-- **Latest Commit Hash**: `2b28525a1ab47ade4b5c5c9bcb4cffd5e3e5e498`
-- **Date/Time**: 2026-05-29T11:00:00Z
+- **Latest Commit Hash**: `5861184352634d8a75b5709ae6e32c935d4126ed`
+- **Date/Time**: 2026-05-30T23:00:00Z
 
 ## Current Model Decision
 The PGSIMS data model is strictly locked:
@@ -60,4 +60,3 @@ The Flexible Column Mapping Import feature allows administrators to upload CSV o
 4. **Final Import**:
    - **Strict Mode (Default & Recommended)**: Rollback the entire transaction if any single row contains an error. This prevents importing partial/broken data.
    - **Partial Mode**: Import only valid rows and skip/log the failed ones.
-

@@ -7,6 +7,7 @@ Before any user data is imported:
 1. Verify that `Hospital` list has correct codes (e.g. UTRMC).
 2. Verify that `Department` list contains canonical specialties (e.g., Surgery `SURG`, Pathology `PATH`).
 3. Ensure the matrix list (`HospitalDepartment`) represents actual active clinics.
+4. Create and download a **Regular System Backup** from `/dashboard/utrmc/backup` before importing real data (see `docs/BACKUP_AND_RESTORE.md`).
 
 ## Steps for Data Entry
 
@@ -57,4 +58,3 @@ The Flexible Column Mapping Import feature allows administrators to upload CSV o
 4. **Final Import**:
    - **Strict Mode (Default & Recommended)**: Rollback the entire transaction if any single row contains an error. This prevents importing partial/broken data.
    - **Partial Mode**: Import only valid rows and skip/log the failed ones.
-

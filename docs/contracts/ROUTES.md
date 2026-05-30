@@ -24,6 +24,7 @@ Current userbase/org graph screens under frozen area:
 - `/dashboard/utrmc/users`
 - `/dashboard/utrmc/supervision`
 - `/dashboard/utrmc/hod`
+- `/dashboard/utrmc/backup`
 
 Do not rename these paths after pilot begins.
 
@@ -43,6 +44,7 @@ Do not rename these paths after pilot begins.
 - `/dashboard/utrmc` — UTRMC overview and read-only oversight surface for `utrmc_user`
 - `/dashboard/utrmc/programs` — Programme definitions, policy editor, milestone viewer
 - `/dashboard/utrmc/eligibility-monitoring` — Eligibility monitoring with filters
+- `/dashboard/utrmc/backup` — Backup & Restore Center (Backup Center module)
 
 These routes are frozen after pilot begins.
 
@@ -50,6 +52,7 @@ UX freeze note:
 - 2026-04-02 approved change: added an admin-only bulk setup/import-export workspace inside the existing `/dashboard/utrmc` page.
 - No route or sidebar label change was introduced.
 - 2026-04-21 approved truth-hardening change: resident sidebar label `/dashboard/resident/progress` changed from "Academic Progress" to "Logbook"; inactive resident research/thesis/workshops/postings and supervisor research approvals were removed from active navigation. Routes still exist but are not active release-gated surfaces.
+- 2026-05-30 approved Backup Center module activation: added `/dashboard/utrmc/backup` as an admin-facing operational page under the already-frozen `/dashboard/utrmc/*` area. No existing route paths were renamed.
 
 ## Deferred Routes (not active release truth)
 - `/dashboard/resident/research`

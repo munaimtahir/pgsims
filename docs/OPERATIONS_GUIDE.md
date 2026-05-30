@@ -2,28 +2,25 @@
 
 This document defines standard procedures for administrative operations, data backups, and routine maintenance of the PGSIMS application.
 
-## 1. Database Backups
+## 1. Backups (Recommended)
 
-### Automated Backups
-Database backups are configured in settings under `SIMS_SETTINGS["BACKUP_LOCATION"]` (defaulting to the `backups/` directory relative to project root).
+PGSIMS supports **application data backups** via the Backup Center:
+- **Regular System Backup** (`.pgsimsbak`): database + uploaded files + manifest + integrity checks
+- **Full Server Recovery Backup** (`.pgsimsdr`): routine backup bundle plus recovery notes (no unencrypted secrets)
 
-### Manual Backup (CLI)
-To perform a manual hot backup of the PostgreSQL database:
+### UI
+- Navigate to `/dashboard/utrmc/backup`
+
+### CLI
 ```bash
-docker compose -f docker/docker-compose.yml exec -T db pg_dump -U sims_user sims_db > backups/db_backup_$(date +%F).sql
+cd backend
+python3 manage.py create_system_backup --routine
+python3 manage.py create_system_backup --disaster
+python3 manage.py validate_system_backup /path/to/backup.pgsimsbak
+python3 manage.py restore_system_backup /path/to/backup.pgsimsbak --dry-run
 ```
 
-### Restoration from Backup
-To restore a database dump:
-1. Re-initialize a blank database:
-   ```bash
-   docker compose -f docker/docker-compose.yml exec -T db dropdb -U sims_user sims_db
-   docker compose -f docker/docker-compose.yml exec -T db createdb -U sims_user sims_db
-   ```
-2. Inject the SQL file:
-   ```bash
-   docker compose -f docker/docker-compose.yml exec -T db psql -U sims_user sims_db < backups/db_backup.sql
-   ```
+See `docs/BACKUP_AND_RESTORE.md` for operator workflow and restore safety rules.
 
 ## 2. Inspecting Logs
 - **Django Logs**: `docker compose logs backend`

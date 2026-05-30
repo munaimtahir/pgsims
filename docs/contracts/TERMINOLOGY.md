@@ -16,6 +16,13 @@ These are user-facing terms. Do not change once pilot begins.
 - **Bulk Setup**: prerequisite-aware import/export workspace on the UTRMC overview page for canonical hospitals, departments, matrix, users, and assignments
 - **Dry Run**: validates uploaded rows without writing to the database
 - **Template CSV**: the canonical downloadable file showing the exact expected columns for a bulk import type
+- **Backup & Restore Center**: UTRMC operational page for creating, downloading, checking, and restoring backups
+- **Regular System Backup**: routine application data backup (`.pgsimsbak`) including database + uploaded files
+- **Full Server Recovery Backup**: disaster recovery bundle (`.pgsimsdr`) including an internal regular backup plus recovery notes (no unencrypted secrets)
+- **Check Backup File**: validates a backup archive’s integrity and required contents
+- **Automatic Protection Backup**: automatic safety backup created before a destructive restore
+- **Backup Record**: internal `BackupJob` record
+- **Restore Request**: internal `RestoreJob` record
 - **Under Review**: submission completeness review is in progress by supervisor/HOD/UTRMC reviewer
 - **Certificate Issued**: a verified synopsis/thesis/rotation-completion certificate exists with issue timestamp
 - **Rotation Completion Verification**: post-rotation check where department confirms and UTRMC verifies completion
@@ -26,3 +33,4 @@ Notes:
 - UI displays **Submitted** even if backend enum is `pending`.
 - UI reads `feedback` from API (alias of `supervisor_feedback`).
 - 2026-04-21 terminology lock update: synopsis, thesis, postings, and rotations phase-1 are deferred workflows, not active release claims.
+- 2026-05-30 terminology lock update: Backup Center operator terms added for pilot operations.

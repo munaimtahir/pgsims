@@ -101,6 +101,10 @@ def get_app_metadata() -> Dict[str, str]:
         metadata["branch"] = str(branch)
         metadata["commit_hash"] = str(commit)
     except Exception as e:
+        # In Docker/production images, `.git/` and `git` may not be present.
+        # Allow operators to inject build metadata via environment variables.
+        metadata["branch"] = os.environ.get("PGSIMS_GIT_BRANCH", metadata["branch"])
+        metadata["commit_hash"] = os.environ.get("PGSIMS_GIT_COMMIT", metadata["commit_hash"])
         logger.warning(f"Failed to get git metadata: {e}")
 
         
