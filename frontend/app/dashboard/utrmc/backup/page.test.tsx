@@ -1,24 +1,22 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import BackupCenterPage from './page';
 import { fetchAuth } from '../../../../lib/auth/fetch';
-import { toast } from 'react-hot-toast';
 
 // Mock the dependencies
 jest.mock('../../../../lib/auth/fetch');
-jest.mock('react-hot-toast');
 jest.mock('../../../../components/backup/BackupList', () => ({
   __esModule: true,
-  default: ({ backups }: any) => <div data-testid="backup-list">{backups?.length || 0} backups</div>,
+  default: ({ backups }: { backups: Record<string, unknown>[] }) => <div data-testid="backup-list">{backups?.length || 0} backups</div>,
 }));
 
 jest.mock('../../../../components/backup/CreateBackupModal', () => ({
   __esModule: true,
-  default: ({ isOpen }: any) => isOpen ? <div>Backup Pathway</div> : null,
+  default: ({ isOpen }: { isOpen: boolean }) => isOpen ? <div>Backup Pathway</div> : null,
 }));
 
 jest.mock('../../../../components/backup/RestoreModal', () => ({
   __esModule: true,
-  default: ({ isOpen }: any) => isOpen ? <div>Upload Backup</div> : null,
+  default: ({ isOpen }: { isOpen: boolean }) => isOpen ? <div>Upload Backup</div> : null,
 }));
 
 

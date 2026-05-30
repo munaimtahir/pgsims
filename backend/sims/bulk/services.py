@@ -209,7 +209,7 @@ class BulkService:
                 failures.append({"row": row, "error": "invalid-date"})
                 errors_triggered = True
                 return
-            
+
             rtr = ResidentTrainingRecord.objects.filter(resident_user=pg).first()
             if not rtr:
                 failures.append({"row": row, "error": "no-training-record"})
@@ -278,7 +278,7 @@ class BulkService:
     ) -> BulkOperation:
         """
         Import supervisor/faculty data from CSV or Excel file.
-        
+
         Expected columns (case-insensitive):
         - Name (or First Name, Last Name)
         - Email (optional, will be generated)
@@ -287,34 +287,34 @@ class BulkService:
         - Phone (optional)
         - Registration Number (optional)
         - Username (optional, will be generated)
-        
+
         Creates accounts with role 'supervisor' and generates secure passwords.
         """
         operation = BulkOperation.objects.create(
             user=self.actor, operation=BulkOperation.OP_IMPORT
         )
-        
+
         # Required columns (flexible matching)
-        required_cols = {"name", "specialty"}  # Flexible - can be "first name" + "last name"
-        
+        # required_cols = {"name", "specialty"}  # Flexible - can be "first name" + "last name"
+
         try:
             rows = list(_parse_csv_rows(uploaded_file, required_columns=None))
         except ValidationError as e:
             operation.mark_failed({"error": str(e)})
             return operation
-        
+
         successes: List[dict] = []
         failures: List[dict] = []
         errors_triggered = False
-        
+
         def process_row(row: dict) -> None:
             nonlocal errors_triggered
-            
+
             row_num = row.get("_row_number", "unknown")
-            
+
             # Extract data with flexible column matching
             name = (
-                row.get("name") or 
+                row.get("name") or
                 f"{row.get('first_name', '').strip()} {row.get('last_name', '').strip()}".strip()
             )
             email = row.get("email", "").strip()
@@ -323,7 +323,7 @@ class BulkService:
             phone = row.get("phone", "").strip() or row.get("phone_number", "").strip()
             registration_number = row.get("registration_number", "").strip() or row.get("reg_no", "").strip()
             username = row.get("username", "").strip()
-            
+
             # Validate required fields
             if not name:
                 failures.append({
@@ -333,7 +333,7 @@ class BulkService:
                 })
                 errors_triggered = True
                 return
-            
+
             if not specialty:
                 failures.append({
                     "row": row_num,
@@ -342,20 +342,21 @@ class BulkService:
                 })
                 errors_triggered = True
                 return
-            
+
             # Validate specialty
-            valid_specialties = [choice[0] for choice in SPECIALTY_CHOICES]
             specialty_lower = specialty.lower().replace(" ", "_")
             # Try to match specialty
             matched_specialty = None
             for spec_code, spec_name in SPECIALTY_CHOICES:
-                if (specialty_lower == spec_code.lower() or 
+                if (
+                    specialty_lower == spec_code.lower() or
                     specialty.lower() == spec_name.lower() or
                     specialty_lower in spec_name.lower() or
-                    spec_name.lower() in specialty_lower):
+                    spec_name.lower() in specialty_lower
+                ):
                     matched_specialty = spec_code
                     break
-            
+
             if not matched_specialty:
                 failures.append({
                     "row": row_num,
@@ -364,7 +365,7 @@ class BulkService:
                 })
                 errors_triggered = True
                 return
-            
+
             # Parse name
             try:
                 first_name, last_name = _parse_name(name)
@@ -384,7 +385,7 @@ class BulkService:
                 })
                 errors_triggered = True
                 return
-            
+
             # Generate username if not provided
             if not username:
                 try:
@@ -397,11 +398,11 @@ class BulkService:
                     })
                     errors_triggered = True
                     return
-            
+
             # Generate email if not provided
             if not email:
                 email = f"{username}.supervisor@pmc.edu.pk"
-            
+
             # Get or create department if provided
             department = None
             if department_name and Department:
@@ -411,7 +412,7 @@ class BulkService:
                         name__iexact=department_name,
                         active=True
                     ).first()
-                    
+
                     if not department:
                         # Optionally create department if hospital exists
                         # For now, we'll just warn
@@ -432,7 +433,7 @@ class BulkService:
                         })
                         errors_triggered = True
                         return
-            
+
             # Prepare user data
             user_data = {
                 "username": username,
@@ -446,14 +447,14 @@ class BulkService:
                 "is_active": True,
                 "created_by": self.actor,
             }
-            
+
             # Generate password
             password = None
             if generate_passwords:
                 password = _generate_password_from_username(username)
             else:
                 password = _generate_secure_password()
-            
+
             # Create or validate user
             try:
                 if dry_run:
@@ -471,19 +472,19 @@ class BulkService:
                         existing_user.modified_by = self.actor
                         existing_user.full_clean()
                         existing_user.save()
-                        
+
                         # Update password if specified
                         if password:
                             existing_user.set_password(password)
                             existing_user.save()
-                        
+
                         user = existing_user
                     else:
                         # Create new user
                         user = User(**user_data)
                         user.set_password(password)
                         user.save()
-                
+
                 successes.append({
                     "row": row_num,
                     "username": username,
@@ -507,7 +508,7 @@ class BulkService:
                     "data": row
                 })
                 errors_triggered = True
-        
+
         # Process rows
         if dry_run or allow_partial:
             for row in rows:
@@ -522,13 +523,13 @@ class BulkService:
             except BulkProcessingError:
                 operation.mark_failed({"failures": failures})
                 return operation
-        
+
         # Prepare operation details
         details = {
             "successes": successes,
             "failures": failures,
         }
-        
+
         operation.mark_completed(
             len(successes),
             len(failures),
@@ -546,7 +547,7 @@ class BulkService:
     ) -> BulkOperation:
         """
         Import resident/postgraduate data from CSV or Excel file.
-        
+
         Expected columns (case-insensitive):
         - Name (or First Name, Last Name)
         - Year (required) - Training year (1, 2, 3, 4)
@@ -558,33 +559,33 @@ class BulkService:
         - Registration Number (optional)
         - Username (optional, will be generated)
         - Date of Joining (optional)
-        
+
         Creates accounts with role 'pg' and links to supervisors.
         Handles cases where supervisors don't exist (creates warning/error based on allow_partial).
         """
         operation = BulkOperation.objects.create(
             user=self.actor, operation=BulkOperation.OP_IMPORT
         )
-        
+
         try:
             rows = list(_parse_csv_rows(uploaded_file, required_columns=None))
         except ValidationError as e:
             operation.mark_failed({"error": str(e)})
             return operation
-        
+
         successes: List[dict] = []
         failures: List[dict] = []
         errors_triggered = False
         unlinked_residents: List[dict] = []
-        
+
         def process_row(row: dict) -> None:
             nonlocal errors_triggered
-            
+
             row_num = row.get("_row_number", "unknown")
-            
+
             # Extract data with flexible column matching
             name = (
-                row.get("name") or 
+                row.get("name") or
                 f"{row.get('first_name', '').strip()} {row.get('last_name', '').strip()}".strip()
             )
             year = row.get("year", "").strip() or row.get("training_year", "").strip()
@@ -597,7 +598,7 @@ class BulkService:
             registration_number = row.get("registration_number", "").strip() or row.get("reg_no", "").strip()
             username = row.get("username", "").strip()
             date_joining_str = row.get("date_joining", "").strip() or row.get("date_of_joining", "").strip()
-            
+
             # Validate required fields
             if not name:
                 failures.append({
@@ -607,7 +608,7 @@ class BulkService:
                 })
                 errors_triggered = True
                 return
-            
+
             if not year:
                 failures.append({
                     "row": row_num,
@@ -616,7 +617,7 @@ class BulkService:
                 })
                 errors_triggered = True
                 return
-            
+
             # Validate year
             valid_years = [choice[0] for choice in YEAR_CHOICES]
             if year not in valid_years:
@@ -627,7 +628,7 @@ class BulkService:
                 })
                 errors_triggered = True
                 return
-            
+
             if not specialty:
                 failures.append({
                     "row": row_num,
@@ -636,19 +637,20 @@ class BulkService:
                 })
                 errors_triggered = True
                 return
-            
+
             # Validate specialty
-            valid_specialties = [choice[0] for choice in SPECIALTY_CHOICES]
             specialty_lower = specialty.lower().replace(" ", "_")
             matched_specialty = None
             for spec_code, spec_name in SPECIALTY_CHOICES:
-                if (specialty_lower == spec_code.lower() or 
+                if (
+                    specialty_lower == spec_code.lower() or
                     specialty.lower() == spec_name.lower() or
                     specialty_lower in spec_name.lower() or
-                    spec_name.lower() in specialty_lower):
+                    spec_name.lower() in specialty_lower
+                ):
                     matched_specialty = spec_code
                     break
-            
+
             if not matched_specialty:
                 failures.append({
                     "row": row_num,
@@ -657,7 +659,7 @@ class BulkService:
                 })
                 errors_triggered = True
                 return
-            
+
             # Parse name
             try:
                 first_name, last_name = _parse_name(name)
@@ -677,7 +679,7 @@ class BulkService:
                 })
                 errors_triggered = True
                 return
-            
+
             # Parse date of joining
             date_joined = None
             if date_joining_str:
@@ -695,7 +697,7 @@ class BulkService:
                     date_joined = date.today()
             else:
                 date_joined = date.today()
-            
+
             # Get supervisor
             supervisor = None
             if supervisor_username:
@@ -725,7 +727,7 @@ class BulkService:
             elif supervisor_name:
                 try:
                     supervisor = _get_or_create_supervisor(
-                        supervisor_name, 
+                        supervisor_name,
                         self.actor,
                         specialty=matched_specialty,
                         generate_password=generate_passwords
@@ -758,7 +760,7 @@ class BulkService:
                 if not allow_partial:
                     errors_triggered = True
                     return
-            
+
             # Generate username if not provided
             if not username:
                 try:
@@ -771,11 +773,11 @@ class BulkService:
                     })
                     errors_triggered = True
                     return
-            
+
             # Generate email if not provided
             if not email:
                 email = f"{username}.pgr@pmc.edu.pk"
-            
+
             # Get or create department if provided (optional)
             department = None
             if department_name and Department:
@@ -788,7 +790,7 @@ class BulkService:
                         pass  # Continue without department
                 except Exception:
                     pass  # Ignore department errors if allow_partial
-            
+
             # Prepare user data
             user_data = {
                 "username": username,
@@ -804,17 +806,17 @@ class BulkService:
                 "is_active": True,
                 "created_by": self.actor,
             }
-            
+
             if supervisor:
                 user_data["supervisor"] = supervisor
-            
+
             # Generate password
             password = None
             if generate_passwords:
                 password = _generate_password_from_username(username, year)
             else:
                 password = _generate_secure_password()
-            
+
             # Create or validate user
             try:
                 if dry_run:
@@ -837,7 +839,7 @@ class BulkService:
                             })
                             errors_triggered = True
                             return
-                    
+
                     user = User(**validation_data)
                     user.full_clean()
                 else:
@@ -851,12 +853,12 @@ class BulkService:
                         existing_user.modified_by = self.actor
                         existing_user.full_clean()
                         existing_user.save()
-                        
+
                         # Update password if specified
                         if password:
                             existing_user.set_password(password)
                             existing_user.save()
-                        
+
                         user = existing_user
                     else:
                         # Create new user
@@ -869,11 +871,11 @@ class BulkService:
                             })
                             errors_triggered = True
                             return
-                        
+
                         user = User(**user_data)
                         user.set_password(password)
                         user.save()
-                
+
                 success_entry = {
                     "row": row_num,
                     "username": username,
@@ -884,11 +886,11 @@ class BulkService:
                     "password": password if not dry_run else "***",
                     "supervisor": supervisor.username if supervisor else None,
                 }
-                
+
                 if not supervisor:
                     success_entry["warning"] = "Created without supervisor - will need manual linking"
                     unlinked_residents.append(success_entry)
-                
+
                 successes.append(success_entry)
             except ValidationError as exc:
                 failures.append({
@@ -904,7 +906,7 @@ class BulkService:
                     "data": row
                 })
                 errors_triggered = True
-        
+
         # Process rows
         if dry_run or allow_partial:
             for row in rows:
@@ -919,14 +921,14 @@ class BulkService:
             except BulkProcessingError:
                 operation.mark_failed({"failures": failures})
                 return operation
-        
+
         # Prepare operation details
         details = {
             "successes": successes,
             "failures": failures,
             "unlinked_residents": unlinked_residents,
         }
-        
+
         operation.mark_completed(
             len(successes),
             len(failures),
@@ -943,7 +945,7 @@ class BulkService:
     ) -> BulkOperation:
         """
         Import trainee data from Excel file.
-        
+
         Expected columns:
         - Sr. No. (ignored)
         - Name of Trainee
@@ -962,13 +964,13 @@ class BulkService:
 
         def process_row(row: dict) -> None:
             nonlocal errors_triggered
-            
+
             row_num = row.get("_row_number", "unknown")
             name = row.get("name", "").strip()
             date_joining = row.get("date_joining")
             qualification = row.get("qualification", "").strip()
             supervisor_name = row.get("supervisor_name", "").strip()
-            
+
             # Validate required fields
             if not name:
                 failures.append({
@@ -978,7 +980,7 @@ class BulkService:
                 })
                 errors_triggered = True
                 return
-            
+
             # Parse name
             try:
                 first_name, last_name = _parse_name(name)
@@ -998,7 +1000,7 @@ class BulkService:
                 })
                 errors_triggered = True
                 return
-            
+
             # Parse date
             try:
                 date_joined = _parse_date(str(date_joining)) if date_joining else date.today()
@@ -1010,7 +1012,7 @@ class BulkService:
                 })
                 errors_triggered = True
                 return
-            
+
             # Generate username
             try:
                 username = _generate_username(first_name, last_name)
@@ -1022,7 +1024,7 @@ class BulkService:
                 })
                 errors_triggered = True
                 return
-            
+
             # Infer training year
             try:
                 year = _infer_training_year(date_joined)
@@ -1033,7 +1035,7 @@ class BulkService:
                     "warning": f"Could not infer year, defaulting to 1: {str(e)}",
                     "data": row
                 })
-            
+
             # Get or create supervisor
             supervisor = None
             if supervisor_name:
@@ -1076,10 +1078,10 @@ class BulkService:
                     })
                     errors_triggered = True
                     return
-            
+
             # Generate email
             email = f"{username}.pgr@pmc.edu.pk"
-            
+
             # Prepare user data
             user_data = {
                 "username": username,
@@ -1094,10 +1096,10 @@ class BulkService:
                 "is_active": True,
                 "created_by": self.actor,
             }
-            
+
             if supervisor:
                 user_data["supervisor"] = supervisor
-            
+
             # Create or validate user
             try:
                 if dry_run:
@@ -1123,7 +1125,7 @@ class BulkService:
                         user.set_password("changeme123")
                         # Now save (this will validate and create the record)
                         user.save()
-                
+
                 successes.append({
                     "row": row_num,
                     "username": username,
@@ -1168,7 +1170,7 @@ class BulkService:
             "failures": failures,
             "created_supervisors": created_supervisors,
         }
-        
+
         operation.mark_completed(
             len(successes),
             len(failures),
@@ -1682,7 +1684,6 @@ class BulkService:
                 resident = User.objects.get(email=email, role__in=["pg", "resident"])
                 program = TrainingProgram.objects.get(code=prog_code)
                 if not dry_run:
-                    from datetime import date
                     end_raw = (row.get("expected_end_date") or "").strip() or None
                     level = (row.get("current_level") or "").strip()
                     ResidentTrainingRecord.objects.update_or_create(
@@ -1935,14 +1936,14 @@ def _parse_name(full_name: str) -> Tuple[str, str]:
     """
     if not full_name or not full_name.strip():
         return ("", "")
-    
+
     # Remove common titles
     title_pattern = r"^(Dr\.?|Mr\.?|Mrs\.?|Ms\.?|Prof\.?|Professor)\s+"
     name = re.sub(title_pattern, "", full_name.strip(), flags=re.IGNORECASE)
-    
+
     # Split by spaces
     parts = [p.strip() for p in name.split() if p.strip()]
-    
+
     if not parts:
         return ("", "")
     elif len(parts) == 1:
@@ -1962,7 +1963,7 @@ def _generate_username(first_name: str, last_name: str) -> str:
     # Clean names
     first_clean = re.sub(r"[^a-z0-9]", "", first_name.lower())
     last_clean = re.sub(r"[^a-z0-9]", "", last_name.lower())
-    
+
     if not first_clean and not last_clean:
         base_username = "trainee"
     elif not last_clean:
@@ -1971,14 +1972,14 @@ def _generate_username(first_name: str, last_name: str) -> str:
         base_username = last_clean
     else:
         base_username = f"{first_clean}.{last_clean}"
-    
+
     # Check for duplicates
     username = base_username
     counter = 1
     while User.objects.filter(username=username).exists():
         username = f"{base_username}{counter}"
         counter += 1
-    
+
     return username
 
 
@@ -1994,10 +1995,10 @@ def _infer_training_year(date_joined: date) -> str:
     if date_joined > today:
         # Future date, default to year 1
         return "1"
-    
+
     # Calculate months difference
     months_diff = (today.year - date_joined.year) * 12 + (today.month - date_joined.month)
-    
+
     if months_diff < 12:
         return "1"
     elif months_diff < 24:
@@ -2009,8 +2010,8 @@ def _infer_training_year(date_joined: date) -> str:
 
 
 def _get_or_create_supervisor(
-    supervisor_name: str, 
-    actor: User, 
+    supervisor_name: str,
+    actor: User,
     specialty: Optional[str] = None,
     generate_password: bool = True
 ) -> Optional[User]:
@@ -2020,34 +2021,34 @@ def _get_or_create_supervisor(
     - If not found, create new supervisor user
     - Uses provided specialty or defaults to urology
     - Generates username, email, and password
-    
+
     Args:
         supervisor_name: Full name of supervisor
         actor: User creating the supervisor
         specialty: Specialty code (optional, defaults to 'urology')
         generate_password: Whether to generate a secure password
-    
+
     Returns:
         User object (supervisor) or None if creation fails
     """
     if not supervisor_name or not supervisor_name.strip():
         return None
-    
+
     supervisor_name = supervisor_name.strip()
-    
+
     # Default specialty if not provided
     if not specialty:
         specialty = "urology"
-    
+
     # Validate specialty
     valid_specialties = [choice[0] for choice in SPECIALTY_CHOICES]
     if specialty not in valid_specialties:
         specialty = "urology"  # Default fallback
-    
+
     # Try to find existing supervisor by name
     # Search by first_name + last_name or full name match
     first_name, last_name = _parse_name(supervisor_name)
-    
+
     if first_name and last_name:
         # Try exact match
         supervisor = User.objects.filter(
@@ -2055,19 +2056,19 @@ def _get_or_create_supervisor(
             last_name__iexact=last_name,
             role="supervisor"
         ).first()
-        
+
         if supervisor:
             return supervisor
-        
+
         # Try full name match (where first_name contains the full name)
         supervisor = User.objects.filter(
             first_name__iexact=supervisor_name,
             role="supervisor"
         ).first()
-        
+
         if supervisor:
             return supervisor
-    
+
     # Try to find by username if supervisor_name looks like a username
     if "." in supervisor_name or len(supervisor_name.split()) == 1:
         supervisor = User.objects.filter(
@@ -2076,12 +2077,12 @@ def _get_or_create_supervisor(
         ).first()
         if supervisor:
             return supervisor
-    
+
     # Create new supervisor
     try:
         username = _generate_username(first_name, last_name)
         email = f"{username}.supervisor@pmc.edu.pk"
-        
+
         # Check if username already exists
         if User.objects.filter(username=username).exists():
             # Try to find existing user with this username (might be different role)
@@ -2095,7 +2096,7 @@ def _get_or_create_supervisor(
                 username = f"{base_username}{counter}"
                 counter += 1
             email = f"{username}.supervisor@pmc.edu.pk"
-        
+
         supervisor = User(
             username=username,
             email=email,
@@ -2113,7 +2114,7 @@ def _get_or_create_supervisor(
             password = _generate_secure_password()
         supervisor.set_password(password)
         supervisor.save()
-        
+
         return supervisor
     except Exception as e:
         # Log error but return None to allow graceful handling
@@ -2130,9 +2131,9 @@ def _parse_date(date_str: str) -> date:
     """
     if not date_str:
         raise ValueError("Empty date string")
-    
+
     date_str = str(date_str).strip()
-    
+
     # Try different date formats
     formats = [
         "%d/%m/%Y",
@@ -2143,13 +2144,13 @@ def _parse_date(date_str: str) -> date:
         "%d.%m.%Y",
         "%Y.%m.%d",
     ]
-    
+
     for fmt in formats:
         try:
             return datetime.strptime(date_str, fmt).date()
         except ValueError:
             continue
-    
+
     # If all formats fail, try parsing as Excel date serial number
     try:
         # Excel dates are sometimes stored as numbers
@@ -2160,7 +2161,7 @@ def _parse_date(date_str: str) -> date:
         return parsed_date.date()
     except (ValueError, OverflowError):
         pass
-    
+
     raise ValueError(f"Unable to parse date: {date_str}")
 
 
@@ -2172,13 +2173,13 @@ def _generate_secure_password(length: int = 12) -> str:
     """
     if length < 12:
         length = 12
-    
+
     # Character sets
     lowercase = string.ascii_lowercase
     uppercase = string.ascii_uppercase
     digits = string.digits
     special = "!@#$%^&*"
-    
+
     # Ensure at least one character from each set
     password = [
         secrets.choice(lowercase),
@@ -2186,14 +2187,14 @@ def _generate_secure_password(length: int = 12) -> str:
         secrets.choice(digits),
         secrets.choice(special),
     ]
-    
+
     # Fill the rest randomly
     all_chars = lowercase + uppercase + digits + special
     password.extend(secrets.choice(all_chars) for _ in range(length - 4))
-    
+
     # Shuffle to avoid predictable patterns
     secrets.SystemRandom().shuffle(password)
-    
+
     return "".join(password)
 
 
@@ -2212,24 +2213,24 @@ def _parse_csv_rows(uploaded_file, required_columns: Optional[set] = None) -> It
     """
     Parse CSV file and yield row dictionaries.
     Supports both CSV and Excel files.
-    
+
     Args:
         uploaded_file: File object
         required_columns: Set of required column names (case-insensitive)
-    
+
     Yields:
         dict: Row data with lowercase keys
     """
     name = getattr(uploaded_file, "name", "uploaded")
     content = uploaded_file.read()
-    
+
     # Reset file pointer
     if isinstance(content, bytes):
         stream = io.BytesIO(content)
     else:
         stream = io.StringIO(content)
     stream.seek(0)
-    
+
     def _normalize_header(header: str) -> str:
         normalized = re.sub(r"[^a-z0-9]+", "_", (header or "").strip().lower())
         return normalized.strip("_")
@@ -2237,17 +2238,18 @@ def _parse_csv_rows(uploaded_file, required_columns: Optional[set] = None) -> It
     # Handle CSV files
     if name.endswith(".csv"):
         text_stream = (
-            io.TextIOWrapper(stream, encoding="utf-8") 
-            if isinstance(stream, io.BytesIO) else stream
+            io.TextIOWrapper(stream, encoding="utf-8")
+            if isinstance(stream, io.BytesIO)
+            else stream
         )
         reader = csv.DictReader(text_stream)
-        
+
         if reader.fieldnames:
             # Normalize headers (strip, lowercase)
-            headers = [_normalize_header(h) if h else f"col_{i}" 
+            headers = [_normalize_header(h) if h else f"col_{i}"
                       for i, h in enumerate(reader.fieldnames)]
             reader.fieldnames = headers
-            
+
             # Validate required columns
             if required_columns:
                 missing = required_columns - {h.lower() for h in headers}
@@ -2255,27 +2257,27 @@ def _parse_csv_rows(uploaded_file, required_columns: Optional[set] = None) -> It
                     raise ValidationError(
                         f"Missing required columns: {', '.join(sorted(missing))}"
                     )
-        
+
         for row_idx, row in enumerate(reader, start=2):
             # Normalize row values
             normalized_row = {
-                _normalize_header(k): (v.strip() if v else "") 
+                _normalize_header(k): (v.strip() if v else "")
                 for k, v in row.items() if k
             }
             normalized_row["_row_number"] = row_idx
             yield normalized_row
-    
+
     # Handle Excel files
     elif name.endswith((".xlsx", ".xls")):
         workbook = load_workbook(stream)
         sheet = workbook.active
-        
+
         # Get headers from first row
         headers = [
             _normalize_header(str(cell.value)) if cell.value else f"col_{idx}"
             for idx, cell in enumerate(next(sheet.iter_rows(max_row=1)))
         ]
-        
+
         # Validate required columns
         if required_columns:
             missing = required_columns - {h.lower() for h in headers}
@@ -2283,12 +2285,12 @@ def _parse_csv_rows(uploaded_file, required_columns: Optional[set] = None) -> It
                 raise ValidationError(
                     f"Missing required columns: {', '.join(sorted(missing))}"
                 )
-        
+
         # Parse data rows
         for row_idx, row in enumerate(sheet.iter_rows(min_row=2, values_only=True), start=2):
             if not any(row):  # Skip empty rows
                 continue
-            
+
             payload = {
                 headers[idx] if idx < len(headers) else f"col_{idx}": (
                     str(value).strip() if value is not None else ""
@@ -2298,7 +2300,7 @@ def _parse_csv_rows(uploaded_file, required_columns: Optional[set] = None) -> It
             }
             payload["_row_number"] = row_idx
             yield payload
-    
+
     else:
         raise ValidationError("Unsupported file format. Please upload CSV or Excel file.")
 
@@ -2315,7 +2317,7 @@ def _parse_trainee_rows(uploaded_file) -> Iterator[dict]:
     else:
         stream = io.StringIO(content)
     stream.seek(0)
-    
+
     def _header_alias(header: str) -> str:
         norm = re.sub(r"[^a-z0-9]+", "_", (header or "").strip().lower()).strip("_")
         if norm in {"name", "name_of_trainee"}:
@@ -2379,32 +2381,32 @@ def generate_trainee_template() -> io.BytesIO:
     workbook = Workbook()
     sheet = workbook.active
     sheet.title = "Trainee Data"
-    
+
     # Set headers
     headers = ["Sr. No.", "Name of Trainee", "Date of Joining", "MS/FCPS", "Supervisor Name"]
     header_font = Font(bold=True)
-    
+
     for col_idx, header in enumerate(headers, start=1):
         cell = sheet.cell(row=1, column=col_idx)
         cell.value = header
         cell.font = header_font
-    
+
     # Add example rows
     examples = [
         [1, "John Doe", "2024-01-15", "MS", "Dr. Smith"],
         [2, "Jane Smith", "2024-02-01", "FCPS", "Dr. Johnson"],
         [3, "Ahmed Ali", "2024-03-10", "", "Dr. Khan"],
     ]
-    
+
     for row_idx, example in enumerate(examples, start=2):
         for col_idx, value in enumerate(example, start=1):
             sheet.cell(row=row_idx, column=col_idx, value=value)
-    
+
     # Auto-adjust column widths
     for col_idx in range(1, len(headers) + 1):
         column_letter = sheet.cell(row=1, column=col_idx).column_letter
         sheet.column_dimensions[column_letter].width = 20
-    
+
     # Save to BytesIO
     output = io.BytesIO()
     workbook.save(output)
@@ -2425,47 +2427,46 @@ def convert_excel_to_trainee_format(uploaded_file) -> io.BytesIO:
     else:
         stream = io.StringIO(content)
     stream.seek(0)
-    
+
     if not name.endswith((".xlsx", ".xls")):
         raise ValidationError("Only Excel files (.xlsx, .xls) are supported")
-    
+
     # Load the uploaded workbook
     source_workbook = load_workbook(stream)
     source_sheet = source_workbook.active
-    
+
     # Get headers from first row
     source_headers = []
     for cell in next(source_sheet.iter_rows(max_row=1)):
         header = str(cell.value).strip() if cell.value else ""
         source_headers.append(header)
-    
+
     # Create new workbook with required format
     output_workbook = Workbook()
     output_sheet = output_workbook.active
     output_sheet.title = "Trainee Data"
-    
+
     # Required headers
     required_headers = ["Sr. No.", "Name of Trainee", "Date of Joining", "MS/FCPS", "Supervisor Name"]
     header_font = Font(bold=True)
-    
+
     # Write headers
     for col_idx, header in enumerate(required_headers, start=1):
         cell = output_sheet.cell(row=1, column=col_idx)
         cell.value = header
         cell.font = header_font
-    
+
     # Try to map source columns to required columns
     column_mapping = {}
     for req_col in required_headers:
-        req_lower = req_col.lower()
         best_match_idx = None
         best_match_score = 0
-        
+
         for src_idx, src_header in enumerate(source_headers):
             if not src_header:
                 continue
             src_lower = src_header.lower()
-            
+
             # Calculate match score
             score = 0
             if req_col == "Sr. No.":
@@ -2489,20 +2490,20 @@ def convert_excel_to_trainee_format(uploaded_file) -> io.BytesIO:
                     score = 1
                     if "supervisor" in src_lower:
                         score = 2
-            
+
             if score > best_match_score:
                 best_match_score = score
                 best_match_idx = src_idx
-        
+
         if best_match_idx is not None:
             column_mapping[req_col] = best_match_idx
-    
+
     # Copy data rows
     output_row = 2
     for source_row_idx, source_row in enumerate(source_sheet.iter_rows(min_row=2, values_only=True), start=2):
         if not any(source_row):  # Skip empty rows
             continue
-        
+
         # Map columns
         for col_idx, req_header in enumerate(required_headers, start=1):
             if req_header in column_mapping:
@@ -2518,14 +2519,14 @@ def convert_excel_to_trainee_format(uploaded_file) -> io.BytesIO:
             elif req_header == "Sr. No.":
                 # Auto-generate serial number
                 output_sheet.cell(row=output_row, column=col_idx, value=output_row - 1)
-        
+
         output_row += 1
-    
+
     # Auto-adjust column widths
     for col_idx in range(1, len(required_headers) + 1):
         column_letter = output_sheet.cell(row=1, column=col_idx).column_letter
         output_sheet.column_dimensions[column_letter].width = 20
-    
+
     # Save to BytesIO
     output = io.BytesIO()
     output_workbook.save(output)

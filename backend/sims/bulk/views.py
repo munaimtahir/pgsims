@@ -2,16 +2,20 @@
 
 from __future__ import annotations
 
+import json
 from django.contrib.auth import get_user_model
+from django.db import transaction
+from django.utils import timezone
+from django.core.exceptions import ValidationError as DjangoValidationError
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
-from rest_framework import permissions, serializers, status
+from rest_framework import permissions, serializers, status, viewsets
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from drf_spectacular.utils import extend_schema
 
-from sims.bulk.models import BulkOperation
+from sims.bulk.models import BulkOperation, MappingPreset, FlexibleImportAudit
 from sims.bulk.serializers import (
     BulkAssignmentSerializer,
     BulkImportSerializer,
@@ -20,6 +24,7 @@ from sims.bulk.serializers import (
     ResidentImportSerializer,
     SupervisorImportSerializer,
     TraineeImportSerializer,
+    MappingPresetSerializer,
 )
 from sims.bulk.services import BulkService
 
@@ -487,13 +492,6 @@ class BulkImportEntityView(APIView):
 # FLEXIBLE COLUMN MAPPING IMPORT VIEWS
 # ---------------------------------------------------------------------------
 
-from django.db import transaction
-from django.utils import timezone
-from django.core.exceptions import ValidationError as DjangoValidationError
-from sims.bulk.models import MappingPreset, FlexibleImportAudit
-from sims.bulk.serializers import MappingPresetSerializer
-from rest_framework import viewsets
-
 FLEXIBLE_SCHEMAS = {
     "residents": {
         "label": "Residents",
@@ -631,14 +629,14 @@ def _transform_custom_file_to_standard_csv(uploaded_file, entity, mapping_dict, 
         if not sheet_name or sheet_name not in workbook.sheetnames:
             sheet_name = workbook.sheetnames[0]
         sheet = workbook[sheet_name]
-        
+
         row_iterator = sheet.iter_rows(values_only=True)
         try:
             header_row = next(row_iterator)
             headers = [str(cell) if cell is not None else f"col_{idx}" for idx, cell in enumerate(header_row)]
         except StopIteration:
             headers = []
-        
+
         for row in row_iterator:
             if not any(cell is not None for cell in row):
                 continue
@@ -653,7 +651,7 @@ def _transform_custom_file_to_standard_csv(uploaded_file, entity, mapping_dict, 
     # 2. Map and transform rows to target schema keys
     schema = FLEXIBLE_SCHEMAS[entity]
     target_fields = [f["name"] for f in schema["fields"]]
-    
+
     transformed_rows = []
     for row in rows:
         transformed_row = {}
@@ -671,9 +669,9 @@ def _transform_custom_file_to_standard_csv(uploaded_file, entity, mapping_dict, 
     writer.writeheader()
     for row in transformed_rows:
         writer.writerow(row)
-    
+
     out_content = out_stream.getvalue().encode("utf-8")
-    
+
     from django.core.files.uploadedfile import SimpleUploadedFile
     return SimpleUploadedFile(f"{entity}_transformed.csv", out_content, content_type="text/csv")
 
@@ -696,7 +694,7 @@ class FlexibleDetectHeadersView(APIView):
         uploaded_file = request.FILES.get("file")
         if not uploaded_file:
             return Response({"detail": "No file provided."}, status=400)
-        
+
         name = getattr(uploaded_file, "name", "uploaded").lower()
         sheet_name = request.data.get("sheet_name")
 
@@ -726,14 +724,14 @@ class FlexibleDetectHeadersView(APIView):
                 if not sheet_name or sheet_name not in sheets:
                     sheet_name = sheets[0]
                 sheet = workbook[sheet_name]
-                
+
                 row_iterator = sheet.iter_rows(values_only=True)
                 try:
                     header_row = next(row_iterator)
                     headers = [str(cell) if cell is not None else f"col_{idx}" for idx, cell in enumerate(header_row)]
                 except StopIteration:
                     headers = []
-                
+
                 rows = []
                 for row in row_iterator:
                     if not any(cell is not None for cell in row):
@@ -743,7 +741,7 @@ class FlexibleDetectHeadersView(APIView):
                         if idx < len(headers):
                             payload[headers[idx]] = str(val).strip() if val is not None else ""
                     rows.append(payload)
-                
+
                 total_rows = len(rows)
                 sample_rows = rows[:10]
             else:
@@ -766,15 +764,15 @@ class FlexibleValidateMappingView(APIView):
     def post(self, request: Request) -> Response:
         if getattr(request.user, "role", None) not in _ALLOWED_ROLES:
             return Response({"detail": "Permission denied."}, status=status.HTTP_403_FORBIDDEN)
-        
+
         entity = request.data.get("entity")
         mapping = request.data.get("mapping")
-        
+
         if not entity or entity not in FLEXIBLE_SCHEMAS:
             return Response({"detail": f"Invalid or missing entity '{entity}'."}, status=400)
         if not isinstance(mapping, dict):
             return Response({"detail": "mapping must be a dictionary."}, status=400)
-        
+
         schema = FLEXIBLE_SCHEMAS[entity]
         required_fields = [f["name"] for f in schema["fields"] if f["required"]]
         optional_fields = [f["name"] for f in schema["fields"] if not f["required"]]
@@ -807,10 +805,9 @@ class FlexibleDryRunView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request: Request) -> Response:
-        import json
         if getattr(request.user, "role", None) not in _ALLOWED_ROLES:
             return Response({"detail": "Permission denied."}, status=status.HTTP_403_FORBIDDEN)
-        
+
         entity = request.data.get("entity")
         mapping_str = request.data.get("mapping")
         sheet_name = request.data.get("sheet_name")
@@ -820,7 +817,7 @@ class FlexibleDryRunView(APIView):
             return Response({"detail": f"Invalid or missing entity '{entity}'."}, status=400)
         if not uploaded_file:
             return Response({"detail": "No file provided."}, status=400)
-        
+
         try:
             mapping = json.loads(mapping_str) if isinstance(mapping_str, str) else mapping_str
         except Exception:
@@ -868,11 +865,9 @@ class FlexibleImportApplyView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request: Request) -> Response:
-        import json
-        from django.db import transaction
         if getattr(request.user, "role", None) not in _ALLOWED_ROLES:
             return Response({"detail": "Permission denied."}, status=status.HTTP_403_FORBIDDEN)
-        
+
         entity = request.data.get("entity")
         mapping_str = request.data.get("mapping")
         sheet_name = request.data.get("sheet_name")
@@ -883,7 +878,7 @@ class FlexibleImportApplyView(APIView):
             return Response({"detail": f"Invalid or missing entity '{entity}'."}, status=400)
         if not uploaded_file:
             return Response({"detail": "No file provided."}, status=400)
-        
+
         try:
             mapping = json.loads(mapping_str) if isinstance(mapping_str, str) else mapping_str
         except Exception:
@@ -910,7 +905,7 @@ class FlexibleImportApplyView(APIView):
 
         try:
             service = BulkService(request.user)
-            
+
             if import_mode == "strict":
                 transformed_file.seek(0)
                 dry_run_op = getattr(service, method_name)(
@@ -1012,4 +1007,3 @@ __all__ = [
     "FlexibleImportApplyView",
     "MappingPresetViewSet",
 ]
-

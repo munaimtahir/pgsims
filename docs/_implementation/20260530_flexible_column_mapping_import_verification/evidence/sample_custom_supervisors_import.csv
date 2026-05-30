@@ -1,0 +1,3 @@
+email,full_name,role,specialty,department_code,hospital_code
+supervisor1@example.com,Dr. Supervisor One,supervisor,medicine,MED,AH
+supervisor2@example.com,Dr. Supervisor Two,supervisor,surgery,SURG,AH

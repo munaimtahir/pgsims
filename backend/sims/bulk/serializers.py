@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from rest_framework import serializers
-
+from sims.bulk.models import MappingPreset
 
 
 class BulkReviewSerializer(serializers.Serializer):
@@ -52,9 +52,6 @@ class DepartmentImportSerializer(serializers.Serializer):
     allow_partial = serializers.BooleanField(default=False)
 
 
-from sims.bulk.models import MappingPreset
-
-
 class MappingPresetSerializer(serializers.ModelSerializer):
     class Meta:
         model = MappingPreset
@@ -72,4 +69,3 @@ __all__ = [
     "DepartmentImportSerializer",
     "MappingPresetSerializer",
 ]
-

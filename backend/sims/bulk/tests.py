@@ -3,7 +3,7 @@ from django.test import TestCase
 from rest_framework.test import APIClient
 
 from sims.academics.models import Department
-from sims.bulk.models import BulkOperation
+from sims.bulk.models import BulkOperation, MappingPreset
 from sims.rotations.models import Hospital, HospitalDepartment
 from sims.users.models import (
     DepartmentMembership,
@@ -300,9 +300,6 @@ class ActiveUserbaseBulkEngineTests(TestCase):
         self.assertFalse(HospitalDepartment.objects.exists())
 
 
-from sims.bulk.models import MappingPreset
-
-
 class FlexibleColumnMappingTests(TestCase):
     def setUp(self):
         self.client = APIClient()
@@ -315,7 +312,7 @@ class FlexibleColumnMappingTests(TestCase):
         self.hospital = Hospital.objects.create(name="Allied Hospital", code="AH", is_active=True)
         self.department = Department.objects.create(name="Internal Medicine", code="MED")
         HospitalDepartment.objects.create(hospital=self.hospital, department=self.department, is_active=True)
-        
+
         self.supervisor = User.objects.create_user(
             username="existing.supervisor",
             password="pass12345",
@@ -401,7 +398,7 @@ class FlexibleColumnMappingTests(TestCase):
     def test_flexible_dry_run(self):
         self.client.force_authenticate(self.admin)
         csv_data = "CustomName,CustomEmail,CustomSpecialty,CustomYear,CustomStart,CustomHospital,CustomDept,CustomSupervisor\nDr. Ali,ali@example.com,medicine,1,2026-01-01,AH,MED,supervisor@example.com\n"
-        
+
         mapping = {
             "full_name": "CustomName",
             "email": "CustomEmail",
@@ -432,7 +429,7 @@ class FlexibleColumnMappingTests(TestCase):
     def test_flexible_apply_strict_mode_success(self):
         self.client.force_authenticate(self.admin)
         csv_data = "CustomName,CustomEmail,CustomSpecialty,CustomYear,CustomStart,CustomHospital,CustomDept,CustomSupervisor\nDr. Ali,ali@example.com,medicine,1,2026-01-01,AH,MED,supervisor@example.com\n"
-        
+
         mapping = {
             "full_name": "CustomName",
             "email": "CustomEmail",
@@ -467,7 +464,7 @@ class FlexibleColumnMappingTests(TestCase):
             "Dr. Ali,ali@example.com,medicine,1,2026-01-01,AH,MED,supervisor@example.com\n"
             "Dr. Bob,bob@example.com,invalid_spec,1,2026-01-01,AH,MED,supervisor@example.com\n"
         )
-        
+
         mapping = {
             "full_name": "CustomName",
             "email": "CustomEmail",
@@ -501,7 +498,7 @@ class FlexibleColumnMappingTests(TestCase):
             "Dr. Ali,ali@example.com,medicine,1,2026-01-01,AH,MED,supervisor@example.com\n"
             "Dr. Bob,bob@example.com,invalid_spec,1,2026-01-01,AH,MED,supervisor@example.com\n"
         )
-        
+
         mapping = {
             "full_name": "CustomName",
             "email": "CustomEmail",
@@ -561,4 +558,3 @@ class FlexibleColumnMappingTests(TestCase):
         response = self.client.delete(f"/api/bulk/flexible/presets/{preset_id}/")
         self.assertEqual(response.status_code, 204)
         self.assertFalse(MappingPreset.objects.filter(pk=preset_id).exists())
-

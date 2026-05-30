@@ -1,0 +1,3 @@
+Row Number,Error Description
+3,"{'specialty': [""Unknown specialty 'invalid_specialty'.""]}"
+4,"{'email': [""Enter a valid email address.""]}"

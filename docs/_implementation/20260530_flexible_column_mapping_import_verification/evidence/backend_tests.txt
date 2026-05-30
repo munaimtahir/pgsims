@@ -1,0 +1,29 @@
+============================= test session starts ==============================
+platform linux -- Python 3.12.3, pytest-8.4.2, pluggy-1.6.0 -- /usr/bin/python3
+cachedir: .pytest_cache
+django: version: 4.2.29, settings: sims_project.settings_test (from ini)
+rootdir: /home/munaim/srv/apps/pgsims/backend
+configfile: pytest.ini
+plugins: cov-7.1.0, django-4.12.0, Faker-40.11.0
+collecting ... collected 18 items
+
+sims/bulk/tests.py::ActiveUserbaseBulkEngineTests::test_admin_can_download_hospital_template PASSED [  5%]
+sims/bulk/tests.py::ActiveUserbaseBulkEngineTests::test_bulk_export_hospitals_matches_active_schema PASSED [ 11%]
+sims/bulk/tests.py::ActiveUserbaseBulkEngineTests::test_bulk_import_faculty_supervisors_creates_profiles_and_memberships PASSED [ 16%]
+sims/bulk/tests.py::ActiveUserbaseBulkEngineTests::test_bulk_import_residents_creates_profiles_memberships_and_sites PASSED [ 22%]
+sims/bulk/tests.py::ActiveUserbaseBulkEngineTests::test_bulk_import_supervision_and_hod_assignments_close_prerequisite_chain PASSED [ 27%]
+sims/bulk/tests.py::ActiveUserbaseBulkEngineTests::test_bulk_operation_model_tracking_still_works PASSED [ 33%]
+sims/bulk/tests.py::ActiveUserbaseBulkEngineTests::test_dry_run_reports_missing_prerequisite_without_writing PASSED [ 38%]
+sims/bulk/tests.py::ActiveUserbaseBulkEngineTests::test_pg_cannot_use_active_bulk_surface PASSED [ 44%]
+sims/bulk/tests.py::ActiveUserbaseBulkEngineTests::test_utrmc_admin_can_import_hospitals_departments_and_matrix PASSED [ 50%]
+sims/bulk/tests.py::FlexibleColumnMappingTests::test_detect_headers_csv PASSED [ 55%]
+sims/bulk/tests.py::FlexibleColumnMappingTests::test_flexible_apply_partial_mode_imports_valid PASSED [ 61%]
+sims/bulk/tests.py::FlexibleColumnMappingTests::test_flexible_apply_strict_mode_rollback_on_error PASSED [ 66%]
+sims/bulk/tests.py::FlexibleColumnMappingTests::test_flexible_apply_strict_mode_success PASSED [ 72%]
+sims/bulk/tests.py::FlexibleColumnMappingTests::test_flexible_dry_run PASSED [ 77%]
+sims/bulk/tests.py::FlexibleColumnMappingTests::test_presets_crud PASSED [ 83%]
+sims/bulk/tests.py::FlexibleColumnMappingTests::test_validate_mapping_duplicate_mappings PASSED [ 88%]
+sims/bulk/tests.py::FlexibleColumnMappingTests::test_validate_mapping_missing_required PASSED [ 94%]
+sims/bulk/tests.py::FlexibleColumnMappingTests::test_validate_mapping_valid PASSED [100%]
+
+============================= 18 passed in 17.99s ==============================

@@ -1,0 +1,3 @@
+resident_email,hospital_code,department_code,start_date,end_date
+resident1@example.com,AH,MED,2026-01-01,2026-01-31
+resident2@example.com,AH,SURG,2026-02-01,2026-02-28

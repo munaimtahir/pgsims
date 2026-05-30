@@ -1,0 +1,12 @@
+
+Running 1 test using 1 worker
+
+Successfully cleaned up E2E resident dummy data.
+  ✓  1 [workflow-gate] › e2e/workflow-gate/flexible-import.spec.ts:20:7 › Flexible Column Mapping Import E2E › utrmc admin can import residents via flexible column mapping (10.1s)
+
+  1 passed (20.1s)
+
+To open last HTML report run:
+[36m[39m
+[36m  npx playwright show-report ../output/playwright/report[39m
+[36m[39m

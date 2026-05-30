@@ -121,5 +121,3 @@ class FlexibleImportAudit(models.Model):
 
 
 __all__ = ["BulkOperation", "MappingPreset", "FlexibleImportAudit"]
-
-

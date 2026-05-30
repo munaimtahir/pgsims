@@ -1218,4 +1218,3 @@ def _import_rotation_assignments(actor: User, rows: List[dict], *, dry_run: bool
             if not allow_partial:
                 break
     return {"successes": successes, "failures": failures}
-

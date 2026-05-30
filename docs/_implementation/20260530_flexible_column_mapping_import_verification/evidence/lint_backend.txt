@@ -1,0 +1,745 @@
+backend/sims/bulk/migrations/0001_initial.py:17:80: E501 line too long (117 > 79 characters)
+backend/sims/bulk/migrations/0001_initial.py:18:80: E501 line too long (162 > 79 characters)
+backend/sims/bulk/migrations/0001_initial.py:19:80: E501 line too long (163 > 79 characters)
+backend/sims/bulk/migrations/0002_initial.py:21:80: E501 line too long (142 > 79 characters)
+backend/sims/bulk/migrations/0002_initial.py:25:80: E501 line too long (101 > 79 characters)
+backend/sims/bulk/migrations/0002_initial.py:29:80: E501 line too long (106 > 79 characters)
+backend/sims/bulk/migrations/0003_historicalmappingpreset_and_more.py:20:80: E501 line too long (112 > 79 characters)
+backend/sims/bulk/migrations/0003_historicalmappingpreset_and_more.py:23:80: E501 line too long (118 > 79 characters)
+backend/sims/bulk/migrations/0003_historicalmappingpreset_and_more.py:24:80: E501 line too long (81 > 79 characters)
+backend/sims/bulk/migrations/0003_historicalmappingpreset_and_more.py:26:80: E501 line too long (84 > 79 characters)
+backend/sims/bulk/migrations/0003_historicalmappingpreset_and_more.py:28:80: E501 line too long (87 > 79 characters)
+backend/sims/bulk/migrations/0003_historicalmappingpreset_and_more.py:29:80: E501 line too long (129 > 79 characters)
+backend/sims/bulk/migrations/0003_historicalmappingpreset_and_more.py:30:80: E501 line too long (189 > 79 characters)
+backend/sims/bulk/migrations/0003_historicalmappingpreset_and_more.py:31:80: E501 line too long (156 > 79 characters)
+backend/sims/bulk/migrations/0003_historicalmappingpreset_and_more.py:44:80: E501 line too long (112 > 79 characters)
+backend/sims/bulk/migrations/0003_historicalmappingpreset_and_more.py:49:80: E501 line too long (81 > 79 characters)
+backend/sims/bulk/migrations/0003_historicalmappingpreset_and_more.py:53:80: E501 line too long (95 > 79 characters)
+backend/sims/bulk/migrations/0003_historicalmappingpreset_and_more.py:54:80: E501 line too long (81 > 79 characters)
+backend/sims/bulk/migrations/0003_historicalmappingpreset_and_more.py:56:80: E501 line too long (84 > 79 characters)
+backend/sims/bulk/migrations/0003_historicalmappingpreset_and_more.py:58:80: E501 line too long (87 > 79 characters)
+backend/sims/bulk/migrations/0003_historicalmappingpreset_and_more.py:59:80: E501 line too long (129 > 79 characters)
+backend/sims/bulk/migrations/0003_historicalmappingpreset_and_more.py:60:80: E501 line too long (156 > 79 characters)
+backend/sims/bulk/migrations/0003_historicalmappingpreset_and_more.py:61:80: E501 line too long (190 > 79 characters)
+backend/sims/bulk/migrations/0003_historicalmappingpreset_and_more.py:74:80: E501 line too long (117 > 79 characters)
+backend/sims/bulk/migrations/0003_historicalmappingpreset_and_more.py:79:80: E501 line too long (81 > 79 characters)
+backend/sims/bulk/migrations/0003_historicalmappingpreset_and_more.py:83:80: E501 line too long (95 > 79 characters)
+backend/sims/bulk/migrations/0003_historicalmappingpreset_and_more.py:86:80: E501 line too long (158 > 79 characters)
+backend/sims/bulk/migrations/0003_historicalmappingpreset_and_more.py:95:80: E501 line too long (117 > 79 characters)
+backend/sims/bulk/migrations/0003_historicalmappingpreset_and_more.py:98:80: E501 line too long (118 > 79 characters)
+backend/sims/bulk/migrations/0003_historicalmappingpreset_and_more.py:101:80: E501 line too long (156 > 79 characters)
+backend/sims/bulk/models.py:36:80: E501 line too long (92 > 79 characters)
+backend/sims/bulk/models.py:38:80: E501 line too long (92 > 79 characters)
+backend/sims/bulk/models.py:85:80: E501 line too long (102 > 79 characters)
+backend/sims/bulk/models.py:86:80: E501 line too long (98 > 79 characters)
+backend/sims/bulk/models.py:104:80: E501 line too long (100 > 79 characters)
+backend/sims/bulk/models.py:120:80: E501 line too long (86 > 79 characters)
+backend/sims/bulk/models.py:125:1: W391 blank line at end of file
+backend/sims/bulk/serializers.py:9:1: E303 too many blank lines (3)
+backend/sims/bulk/serializers.py:13:80: E501 line too long (93 > 79 characters)
+backend/sims/bulk/serializers.py:55:1: E402 module level import not at top of file
+backend/sims/bulk/serializers.py:61:80: E501 line too long (82 > 79 characters)
+backend/sims/bulk/serializers.py:75:1: W391 blank line at end of file
+backend/sims/bulk/services.py:65:80: E501 line too long (90 > 79 characters)
+backend/sims/bulk/services.py:67:80: E501 line too long (109 > 79 characters)
+backend/sims/bulk/services.py:77:80: E501 line too long (100 > 79 characters)
+backend/sims/bulk/services.py:92:80: E501 line too long (126 > 79 characters)
+backend/sims/bulk/services.py:93:80: E501 line too long (114 > 79 characters)
+backend/sims/bulk/services.py:95:80: E501 line too long (128 > 79 characters)
+backend/sims/bulk/services.py:96:80: E501 line too long (116 > 79 characters)
+backend/sims/bulk/services.py:98:80: E501 line too long (123 > 79 characters)
+backend/sims/bulk/services.py:99:80: E501 line too long (111 > 79 characters)
+backend/sims/bulk/services.py:101:80: E501 line too long (136 > 79 characters)
+backend/sims/bulk/services.py:102:80: E501 line too long (124 > 79 characters)
+backend/sims/bulk/services.py:104:80: E501 line too long (126 > 79 characters)
+backend/sims/bulk/services.py:105:80: E501 line too long (114 > 79 characters)
+backend/sims/bulk/services.py:107:80: E501 line too long (134 > 79 characters)
+backend/sims/bulk/services.py:108:80: E501 line too long (122 > 79 characters)
+backend/sims/bulk/services.py:110:80: E501 line too long (132 > 79 characters)
+backend/sims/bulk/services.py:111:80: E501 line too long (120 > 79 characters)
+backend/sims/bulk/services.py:113:80: E501 line too long (137 > 79 characters)
+backend/sims/bulk/services.py:114:80: E501 line too long (125 > 79 characters)
+backend/sims/bulk/services.py:128:80: E501 line too long (85 > 79 characters)
+backend/sims/bulk/services.py:129:80: E501 line too long (100 > 79 characters)
+backend/sims/bulk/services.py:135:80: E501 line too long (97 > 79 characters)
+backend/sims/bulk/services.py:138:80: E501 line too long (81 > 79 characters)
+backend/sims/bulk/services.py:142:80: E501 line too long (84 > 79 characters)
+backend/sims/bulk/services.py:153:80: E501 line too long (93 > 79 characters)
+backend/sims/bulk/services.py:162:80: E501 line too long (97 > 79 characters)
+backend/sims/bulk/services.py:165:80: E501 line too long (81 > 79 characters)
+backend/sims/bulk/services.py:169:80: E501 line too long (87 > 79 characters)
+backend/sims/bulk/services.py:192:80: E501 line too long (100 > 79 characters)
+backend/sims/bulk/services.py:212:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:213:80: E501 line too long (81 > 79 characters)
+backend/sims/bulk/services.py:221:80: E501 line too long (80 > 79 characters)
+backend/sims/bulk/services.py:226:80: E501 line too long (110 > 79 characters)
+backend/sims/bulk/services.py:228:80: E501 line too long (85 > 79 characters)
+backend/sims/bulk/services.py:231:80: E501 line too long (84 > 79 characters)
+backend/sims/bulk/services.py:238:80: E501 line too long (89 > 79 characters)
+backend/sims/bulk/services.py:259:80: E501 line too long (80 > 79 characters)
+backend/sims/bulk/services.py:281:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:290:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:296:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:298:9: F841 local variable 'required_cols' is assigned to but never used
+backend/sims/bulk/services.py:298:80: E501 line too long (93 > 79 characters)
+backend/sims/bulk/services.py:299:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:305:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:309:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:312:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:314:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:317:35: W291 trailing whitespace
+backend/sims/bulk/services.py:318:80: E501 line too long (97 > 79 characters)
+backend/sims/bulk/services.py:323:80: E501 line too long (87 > 79 characters)
+backend/sims/bulk/services.py:324:80: E501 line too long (109 > 79 characters)
+backend/sims/bulk/services.py:326:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:336:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:345:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:347:13: F841 local variable 'valid_specialties' is assigned to but never used
+backend/sims/bulk/services.py:352:60: W291 trailing whitespace
+backend/sims/bulk/services.py:355:5: E129 visually indented line with same indent as next logical line
+backend/sims/bulk/services.py:358:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:362:80: E501 line too long (134 > 79 characters)
+backend/sims/bulk/services.py:367:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:387:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:400:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:404:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:414:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:423:80: E501 line too long (119 > 79 characters)
+backend/sims/bulk/services.py:430:80: E501 line too long (92 > 79 characters)
+backend/sims/bulk/services.py:435:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:445:80: E501 line too long (92 > 79 characters)
+backend/sims/bulk/services.py:449:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:456:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:465:80: E501 line too long (82 > 79 characters)
+backend/sims/bulk/services.py:474:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:479:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:486:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:493:80: E501 line too long (104 > 79 characters)
+backend/sims/bulk/services.py:499:80: E501 line too long (92 > 79 characters)
+backend/sims/bulk/services.py:510:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:521:80: E501 line too long (80 > 79 characters)
+backend/sims/bulk/services.py:525:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:531:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:549:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:561:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:563:80: E501 line too long (99 > 79 characters)
+backend/sims/bulk/services.py:568:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:574:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:579:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:582:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:584:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:587:35: W291 trailing whitespace
+backend/sims/bulk/services.py:588:80: E501 line too long (97 > 79 characters)
+backend/sims/bulk/services.py:590:80: E501 line too long (86 > 79 characters)
+backend/sims/bulk/services.py:592:80: E501 line too long (105 > 79 characters)
+backend/sims/bulk/services.py:596:80: E501 line too long (87 > 79 characters)
+backend/sims/bulk/services.py:597:80: E501 line too long (109 > 79 characters)
+backend/sims/bulk/services.py:599:80: E501 line too long (108 > 79 characters)
+backend/sims/bulk/services.py:600:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:610:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:619:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:625:80: E501 line too long (96 > 79 characters)
+backend/sims/bulk/services.py:630:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:639:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:641:13: F841 local variable 'valid_specialties' is assigned to but never used
+backend/sims/bulk/services.py:645:60: W291 trailing whitespace
+backend/sims/bulk/services.py:648:5: E129 visually indented line with same indent as next logical line
+backend/sims/bulk/services.py:651:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:660:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:680:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:698:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:710:80: E501 line too long (99 > 79 characters)
+backend/sims/bulk/services.py:719:80: E501 line too long (83 > 79 characters)
+backend/sims/bulk/services.py:728:41: W291 trailing whitespace
+backend/sims/bulk/services.py:736:80: E501 line too long (93 > 79 characters)
+backend/sims/bulk/services.py:745:80: E501 line too long (88 > 79 characters)
+backend/sims/bulk/services.py:755:80: E501 line too long (82 > 79 characters)
+backend/sims/bulk/services.py:761:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:774:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:778:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:791:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:802:80: E501 line too long (92 > 79 characters)
+backend/sims/bulk/services.py:807:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:810:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:817:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:822:80: E501 line too long (89 > 79 characters)
+backend/sims/bulk/services.py:823:80: E501 line too long (81 > 79 characters)
+backend/sims/bulk/services.py:827:80: E501 line too long (89 > 79 characters)
+backend/sims/bulk/services.py:831:80: E501 line too long (101 > 79 characters)
+backend/sims/bulk/services.py:832:80: E501 line too long (96 > 79 characters)
+backend/sims/bulk/services.py:835:80: E501 line too long (113 > 79 characters)
+backend/sims/bulk/services.py:840:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:845:80: E501 line too long (82 > 79 characters)
+backend/sims/bulk/services.py:854:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:859:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:864:80: E501 line too long (88 > 79 characters)
+backend/sims/bulk/services.py:867:80: E501 line too long (84 > 79 characters)
+backend/sims/bulk/services.py:872:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:876:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:887:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:889:80: E501 line too long (102 > 79 characters)
+backend/sims/bulk/services.py:891:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:896:80: E501 line too long (92 > 79 characters)
+backend/sims/bulk/services.py:907:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:918:80: E501 line too long (80 > 79 characters)
+backend/sims/bulk/services.py:922:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:929:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:946:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:965:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:971:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:981:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:1001:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:1004:80: E501 line too long (94 > 79 characters)
+backend/sims/bulk/services.py:1013:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:1025:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:1033:80: E501 line too long (82 > 79 characters)
+backend/sims/bulk/services.py:1036:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:1041:80: E501 line too long (87 > 79 characters)
+backend/sims/bulk/services.py:1043:80: E501 line too long (87 > 79 characters)
+backend/sims/bulk/services.py:1054:80: E501 line too long (97 > 79 characters)
+backend/sims/bulk/services.py:1062:80: E501 line too long (90 > 79 characters)
+backend/sims/bulk/services.py:1065:80: E501 line too long (82 > 79 characters)
+backend/sims/bulk/services.py:1079:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:1082:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:1097:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:1100:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:1109:80: E501 line too long (82 > 79 characters)
+backend/sims/bulk/services.py:1120:80: E501 line too long (97 > 79 characters)
+backend/sims/bulk/services.py:1122:80: E501 line too long (91 > 79 characters)
+backend/sims/bulk/services.py:1126:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:1138:80: E501 line too long (92 > 79 characters)
+backend/sims/bulk/services.py:1160:80: E501 line too long (80 > 79 characters)
+backend/sims/bulk/services.py:1171:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:1186:80: E501 line too long (100 > 79 characters)
+backend/sims/bulk/services.py:1187:80: E501 line too long (80 > 79 characters)
+backend/sims/bulk/services.py:1188:80: E501 line too long (87 > 79 characters)
+backend/sims/bulk/services.py:1191:80: E501 line too long (89 > 79 characters)
+backend/sims/bulk/services.py:1193:80: E501 line too long (101 > 79 characters)
+backend/sims/bulk/services.py:1220:80: E501 line too long (103 > 79 characters)
+backend/sims/bulk/services.py:1229:80: E501 line too long (101 > 79 characters)
+backend/sims/bulk/services.py:1258:80: E501 line too long (96 > 79 characters)
+backend/sims/bulk/services.py:1273:80: E501 line too long (91 > 79 characters)
+backend/sims/bulk/services.py:1281:80: E501 line too long (94 > 79 characters)
+backend/sims/bulk/services.py:1295:80: E501 line too long (100 > 79 characters)
+backend/sims/bulk/services.py:1313:80: E501 line too long (86 > 79 characters)
+backend/sims/bulk/services.py:1319:80: E501 line too long (96 > 79 characters)
+backend/sims/bulk/services.py:1341:80: E501 line too long (122 > 79 characters)
+backend/sims/bulk/services.py:1354:80: E501 line too long (89 > 79 characters)
+backend/sims/bulk/services.py:1359:80: E501 line too long (111 > 79 characters)
+backend/sims/bulk/services.py:1372:80: E501 line too long (100 > 79 characters)
+backend/sims/bulk/services.py:1373:80: E501 line too long (80 > 79 characters)
+backend/sims/bulk/services.py:1374:80: E501 line too long (87 > 79 characters)
+backend/sims/bulk/services.py:1391:80: E501 line too long (80 > 79 characters)
+backend/sims/bulk/services.py:1396:80: E501 line too long (126 > 79 characters)
+backend/sims/bulk/services.py:1401:80: E501 line too long (80 > 79 characters)
+backend/sims/bulk/services.py:1404:80: E501 line too long (112 > 79 characters)
+backend/sims/bulk/services.py:1408:80: E501 line too long (116 > 79 characters)
+backend/sims/bulk/services.py:1414:80: E501 line too long (122 > 79 characters)
+backend/sims/bulk/services.py:1421:80: E501 line too long (122 > 79 characters)
+backend/sims/bulk/services.py:1423:80: E501 line too long (81 > 79 characters)
+backend/sims/bulk/services.py:1435:80: E501 line too long (87 > 79 characters)
+backend/sims/bulk/services.py:1440:80: E501 line too long (111 > 79 characters)
+backend/sims/bulk/services.py:1455:80: E501 line too long (100 > 79 characters)
+backend/sims/bulk/services.py:1470:80: E501 line too long (82 > 79 characters)
+backend/sims/bulk/services.py:1472:80: E501 line too long (80 > 79 characters)
+backend/sims/bulk/services.py:1479:80: E501 line too long (123 > 79 characters)
+backend/sims/bulk/services.py:1483:80: E501 line too long (84 > 79 characters)
+backend/sims/bulk/services.py:1484:80: E501 line too long (80 > 79 characters)
+backend/sims/bulk/services.py:1486:80: E501 line too long (117 > 79 characters)
+backend/sims/bulk/services.py:1490:80: E501 line too long (113 > 79 characters)
+backend/sims/bulk/services.py:1496:80: E501 line too long (84 > 79 characters)
+backend/sims/bulk/services.py:1498:80: E501 line too long (80 > 79 characters)
+backend/sims/bulk/services.py:1509:80: E501 line too long (84 > 79 characters)
+backend/sims/bulk/services.py:1526:80: E501 line too long (81 > 79 characters)
+backend/sims/bulk/services.py:1538:80: E501 line too long (97 > 79 characters)
+backend/sims/bulk/services.py:1543:80: E501 line too long (111 > 79 characters)
+backend/sims/bulk/services.py:1559:80: E501 line too long (100 > 79 characters)
+backend/sims/bulk/services.py:1571:80: E501 line too long (85 > 79 characters)
+backend/sims/bulk/services.py:1576:80: E501 line too long (85 > 79 characters)
+backend/sims/bulk/services.py:1582:80: E501 line too long (131 > 79 characters)
+backend/sims/bulk/services.py:1587:80: E501 line too long (105 > 79 characters)
+backend/sims/bulk/services.py:1593:80: E501 line too long (111 > 79 characters)
+backend/sims/bulk/services.py:1603:80: E501 line too long (81 > 79 characters)
+backend/sims/bulk/services.py:1610:80: E501 line too long (100 > 79 characters)
+backend/sims/bulk/services.py:1628:80: E501 line too long (84 > 79 characters)
+backend/sims/bulk/services.py:1634:80: E501 line too long (117 > 79 characters)
+backend/sims/bulk/services.py:1642:80: E501 line too long (119 > 79 characters)
+backend/sims/bulk/services.py:1644:80: E501 line too long (91 > 79 characters)
+backend/sims/bulk/services.py:1646:80: E501 line too long (94 > 79 characters)
+backend/sims/bulk/services.py:1650:80: E501 line too long (111 > 79 characters)
+backend/sims/bulk/services.py:1660:80: E501 line too long (80 > 79 characters)
+backend/sims/bulk/services.py:1662:80: E501 line too long (100 > 79 characters)
+backend/sims/bulk/services.py:1679:80: E501 line too long (113 > 79 characters)
+backend/sims/bulk/services.py:1682:80: E501 line too long (85 > 79 characters)
+backend/sims/bulk/services.py:1685:21: F401 'datetime.date' imported but unused
+backend/sims/bulk/services.py:1686:80: E501 line too long (82 > 79 characters)
+backend/sims/bulk/services.py:1698:80: E501 line too long (88 > 79 characters)
+backend/sims/bulk/services.py:1700:80: E501 line too long (91 > 79 characters)
+backend/sims/bulk/services.py:1702:80: E501 line too long (94 > 79 characters)
+backend/sims/bulk/services.py:1706:80: E501 line too long (111 > 79 characters)
+backend/sims/bulk/services.py:1709:80: E501 line too long (91 > 79 characters)
+backend/sims/bulk/services.py:1711:80: E501 line too long (80 > 79 characters)
+backend/sims/bulk/services.py:1714:80: E501 line too long (95 > 79 characters)
+backend/sims/bulk/services.py:1717:80: E501 line too long (101 > 79 characters)
+backend/sims/bulk/services.py:1726:80: E501 line too long (86 > 79 characters)
+backend/sims/bulk/services.py:1727:80: E501 line too long (92 > 79 characters)
+backend/sims/bulk/services.py:1753:80: E501 line too long (90 > 79 characters)
+backend/sims/bulk/services.py:1785:80: E501 line too long (146 > 79 characters)
+backend/sims/bulk/services.py:1793:80: E501 line too long (87 > 79 characters)
+backend/sims/bulk/services.py:1794:80: E501 line too long (82 > 79 characters)
+backend/sims/bulk/services.py:1798:80: E501 line too long (129 > 79 characters)
+backend/sims/bulk/services.py:1803:80: E501 line too long (122 > 79 characters)
+backend/sims/bulk/services.py:1817:80: E501 line too long (140 > 79 characters)
+backend/sims/bulk/services.py:1826:80: E501 line too long (97 > 79 characters)
+backend/sims/bulk/services.py:1830:80: E501 line too long (122 > 79 characters)
+backend/sims/bulk/services.py:1838:80: E501 line too long (95 > 79 characters)
+backend/sims/bulk/services.py:1869:80: E501 line too long (89 > 79 characters)
+backend/sims/bulk/services.py:1897:80: E501 line too long (100 > 79 characters)
+backend/sims/bulk/services.py:1902:80: E501 line too long (83 > 79 characters)
+backend/sims/bulk/services.py:1910:80: E501 line too long (98 > 79 characters)
+backend/sims/bulk/services.py:1920:80: E501 line too long (84 > 79 characters)
+backend/sims/bulk/services.py:1938:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:1942:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:1945:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:1965:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:1974:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:1981:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:1997:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:1999:80: E501 line too long (90 > 79 characters)
+backend/sims/bulk/services.py:2000:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:2012:26: W291 trailing whitespace
+backend/sims/bulk/services.py:2013:17: W291 trailing whitespace
+backend/sims/bulk/services.py:2023:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:2029:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:2035:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:2037:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:2041:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:2046:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:2050:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:2058:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:2061:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:2067:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:2070:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:2079:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:2084:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:2087:80: E501 line too long (84 > 79 characters)
+backend/sims/bulk/services.py:2098:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:2116:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:2122:80: E501 line too long (80 > 79 characters)
+backend/sims/bulk/services.py:2133:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:2135:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:2146:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:2152:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:2157:80: E501 line too long (85 > 79 characters)
+backend/sims/bulk/services.py:2163:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:2175:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:2181:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:2189:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:2193:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:2196:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:2200:80: E501 line too long (87 > 79 characters)
+backend/sims/bulk/services.py:2211:80: E501 line too long (93 > 79 characters)
+backend/sims/bulk/services.py:2215:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:2219:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:2225:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:2232:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:2240:55: W291 trailing whitespace
+backend/sims/bulk/services.py:2244:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:2247:65: W291 trailing whitespace
+backend/sims/bulk/services.py:2248:23: E128 continuation line under-indented for visual indent
+backend/sims/bulk/services.py:2250:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:2256:80: E501 line too long (81 > 79 characters)
+backend/sims/bulk/services.py:2258:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:2262:63: W291 trailing whitespace
+backend/sims/bulk/services.py:2267:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:2272:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:2278:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:2286:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:2288:80: E501 line too long (93 > 79 characters)
+backend/sims/bulk/services.py:2291:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:2301:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:2303:80: E501 line too long (90 > 79 characters)
+backend/sims/bulk/services.py:2309:80: E501 line too long (89 > 79 characters)
+backend/sims/bulk/services.py:2318:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:2320:80: E501 line too long (84 > 79 characters)
+backend/sims/bulk/services.py:2336:80: E501 line too long (80 > 79 characters)
+backend/sims/bulk/services.py:2338:80: E501 line too long (102 > 79 characters)
+backend/sims/bulk/services.py:2342:80: E501 line too long (115 > 79 characters)
+backend/sims/bulk/services.py:2346:80: E501 line too long (81 > 79 characters)
+backend/sims/bulk/services.py:2347:80: E501 line too long (80 > 79 characters)
+backend/sims/bulk/services.py:2353:80: E501 line too long (95 > 79 characters)
+backend/sims/bulk/services.py:2357:80: E501 line too long (106 > 79 characters)
+backend/sims/bulk/services.py:2358:80: E501 line too long (80 > 79 characters)
+backend/sims/bulk/services.py:2360:80: E501 line too long (98 > 79 characters)
+backend/sims/bulk/services.py:2361:80: E501 line too long (89 > 79 characters)
+backend/sims/bulk/services.py:2365:80: E501 line too long (117 > 79 characters)
+backend/sims/bulk/services.py:2366:80: E501 line too long (87 > 79 characters)
+backend/sims/bulk/services.py:2367:80: E501 line too long (184 > 79 characters)
+backend/sims/bulk/services.py:2368:80: E501 line too long (174 > 79 characters)
+backend/sims/bulk/services.py:2382:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:2384:80: E501 line too long (93 > 79 characters)
+backend/sims/bulk/services.py:2386:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:2391:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:2398:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:2402:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:2407:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:2418:80: E501 line too long (88 > 79 characters)
+backend/sims/bulk/services.py:2428:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:2431:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:2435:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:2441:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:2446:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:2448:80: E501 line too long (102 > 79 characters)
+backend/sims/bulk/services.py:2450:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:2456:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:2460:9: F841 local variable 'req_lower' is assigned to but never used
+backend/sims/bulk/services.py:2463:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:2468:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:2472:80: E501 line too long (100 > 79 characters)
+backend/sims/bulk/services.py:2475:80: E501 line too long (97 > 79 characters)
+backend/sims/bulk/services.py:2480:80: E501 line too long (95 > 79 characters)
+backend/sims/bulk/services.py:2485:80: E501 line too long (102 > 79 characters)
+backend/sims/bulk/services.py:2488:80: E501 line too long (94 > 79 characters)
+backend/sims/bulk/services.py:2492:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:2496:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:2499:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:2502:80: E501 line too long (110 > 79 characters)
+backend/sims/bulk/services.py:2505:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:2517:80: E501 line too long (82 > 79 characters)
+backend/sims/bulk/services.py:2520:80: E501 line too long (87 > 79 characters)
+backend/sims/bulk/services.py:2521:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:2523:1: W293 blank line contains whitespace
+backend/sims/bulk/services.py:2528:1: W293 blank line contains whitespace
+backend/sims/bulk/tests.py:44:80: E501 line too long (89 > 79 characters)
+backend/sims/bulk/tests.py:47:80: E501 line too long (100 > 79 characters)
+backend/sims/bulk/tests.py:48:80: E501 line too long (88 > 79 characters)
+backend/sims/bulk/tests.py:57:80: E501 line too long (113 > 79 characters)
+backend/sims/bulk/tests.py:65:80: E501 line too long (105 > 79 characters)
+backend/sims/bulk/tests.py:80:80: E501 line too long (141 > 79 characters)
+backend/sims/bulk/tests.py:90:80: E501 line too long (119 > 79 characters)
+backend/sims/bulk/tests.py:111:80: E501 line too long (112 > 79 characters)
+backend/sims/bulk/tests.py:114:80: E501 line too long (104 > 79 characters)
+backend/sims/bulk/tests.py:116:80: E501 line too long (82 > 79 characters)
+backend/sims/bulk/tests.py:119:80: E501 line too long (85 > 79 characters)
+backend/sims/bulk/tests.py:122:80: E501 line too long (84 > 79 characters)
+backend/sims/bulk/tests.py:123:80: E501 line too long (93 > 79 characters)
+backend/sims/bulk/tests.py:124:80: E501 line too long (84 > 79 characters)
+backend/sims/bulk/tests.py:125:80: E501 line too long (99 > 79 characters)
+backend/sims/bulk/tests.py:135:80: E501 line too long (172 > 79 characters)
+backend/sims/bulk/tests.py:136:80: E501 line too long (165 > 79 characters)
+backend/sims/bulk/tests.py:147:80: E501 line too long (98 > 79 characters)
+backend/sims/bulk/tests.py:166:80: E501 line too long (80 > 79 characters)
+backend/sims/bulk/tests.py:167:80: E501 line too long (93 > 79 characters)
+backend/sims/bulk/tests.py:168:80: E501 line too long (84 > 79 characters)
+backend/sims/bulk/tests.py:169:80: E501 line too long (121 > 79 characters)
+backend/sims/bulk/tests.py:186:80: E501 line too long (201 > 79 characters)
+backend/sims/bulk/tests.py:187:80: E501 line too long (170 > 79 characters)
+backend/sims/bulk/tests.py:228:80: E501 line too long (88 > 79 characters)
+backend/sims/bulk/tests.py:229:80: E501 line too long (84 > 79 characters)
+backend/sims/bulk/tests.py:251:80: E501 line too long (162 > 79 characters)
+backend/sims/bulk/tests.py:261:80: E501 line too long (119 > 79 characters)
+backend/sims/bulk/tests.py:303:1: E402 module level import not at top of file
+backend/sims/bulk/tests.py:315:80: E501 line too long (98 > 79 characters)
+backend/sims/bulk/tests.py:316:80: E501 line too long (89 > 79 characters)
+backend/sims/bulk/tests.py:317:80: E501 line too long (109 > 79 characters)
+backend/sims/bulk/tests.py:318:1: W293 blank line contains whitespace
+backend/sims/bulk/tests.py:328:80: E501 line too long (89 > 79 characters)
+backend/sims/bulk/tests.py:332:80: E501 line too long (131 > 79 characters)
+backend/sims/bulk/tests.py:339:80: E501 line too long (129 > 79 characters)
+backend/sims/bulk/tests.py:403:80: E501 line too long (204 > 79 characters)
+backend/sims/bulk/tests.py:404:1: W293 blank line contains whitespace
+backend/sims/bulk/tests.py:434:80: E501 line too long (204 > 79 characters)
+backend/sims/bulk/tests.py:435:1: W293 blank line contains whitespace
+backend/sims/bulk/tests.py:466:80: E501 line too long (120 > 79 characters)
+backend/sims/bulk/tests.py:467:80: E501 line too long (91 > 79 characters)
+backend/sims/bulk/tests.py:468:80: E501 line too long (95 > 79 characters)
+backend/sims/bulk/tests.py:470:1: W293 blank line contains whitespace
+backend/sims/bulk/tests.py:500:80: E501 line too long (120 > 79 characters)
+backend/sims/bulk/tests.py:501:80: E501 line too long (91 > 79 characters)
+backend/sims/bulk/tests.py:502:80: E501 line too long (95 > 79 characters)
+backend/sims/bulk/tests.py:504:1: W293 blank line contains whitespace
+backend/sims/bulk/tests.py:542:80: E501 line too long (95 > 79 characters)
+backend/sims/bulk/tests.py:548:80: E501 line too long (82 > 79 characters)
+backend/sims/bulk/tests.py:551:80: E501 line too long (92 > 79 characters)
+backend/sims/bulk/tests.py:561:80: E501 line too long (81 > 79 characters)
+backend/sims/bulk/tests.py:564:1: W391 blank line at end of file
+backend/sims/bulk/urls.py:30:80: E501 line too long (86 > 79 characters)
+backend/sims/bulk/urls.py:31:80: E501 line too long (95 > 79 characters)
+backend/sims/bulk/urls.py:32:80: E501 line too long (89 > 79 characters)
+backend/sims/bulk/urls.py:33:80: E501 line too long (95 > 79 characters)
+backend/sims/bulk/urls.py:35:80: E501 line too long (84 > 79 characters)
+backend/sims/bulk/urls.py:37:80: E501 line too long (100 > 79 characters)
+backend/sims/bulk/urls.py:39:80: E501 line too long (86 > 79 characters)
+backend/sims/bulk/urls.py:40:80: E501 line too long (106 > 79 characters)
+backend/sims/bulk/urls.py:41:80: E501 line too long (112 > 79 characters)
+backend/sims/bulk/urls.py:42:80: E501 line too long (85 > 79 characters)
+backend/sims/bulk/urls.py:43:80: E501 line too long (86 > 79 characters)
+backend/sims/bulk/urls.py:44:80: E501 line too long (115 > 79 characters)
+backend/sims/bulk/urls.py:45:80: E501 line too long (177 > 79 characters)
+backend/sims/bulk/userbase_engine.py:145:80: E501 line too long (88 > 79 characters)
+backend/sims/bulk/userbase_engine.py:149:80: E501 line too long (110 > 79 characters)
+backend/sims/bulk/userbase_engine.py:151:80: E501 line too long (91 > 79 characters)
+backend/sims/bulk/userbase_engine.py:156:80: E501 line too long (121 > 79 characters)
+backend/sims/bulk/userbase_engine.py:170:80: E501 line too long (92 > 79 characters)
+backend/sims/bulk/userbase_engine.py:174:80: E501 line too long (91 > 79 characters)
+backend/sims/bulk/userbase_engine.py:227:80: E501 line too long (101 > 79 characters)
+backend/sims/bulk/userbase_engine.py:235:80: E501 line too long (113 > 79 characters)
+backend/sims/bulk/userbase_engine.py:237:80: E501 line too long (81 > 79 characters)
+backend/sims/bulk/userbase_engine.py:238:80: E501 line too long (97 > 79 characters)
+backend/sims/bulk/userbase_engine.py:247:80: E501 line too long (88 > 79 characters)
+backend/sims/bulk/userbase_engine.py:248:80: E501 line too long (104 > 79 characters)
+backend/sims/bulk/userbase_engine.py:254:80: E501 line too long (90 > 79 characters)
+backend/sims/bulk/userbase_engine.py:261:80: E501 line too long (109 > 79 characters)
+backend/sims/bulk/userbase_engine.py:264:80: E501 line too long (101 > 79 characters)
+backend/sims/bulk/userbase_engine.py:275:80: E501 line too long (92 > 79 characters)
+backend/sims/bulk/userbase_engine.py:276:80: E501 line too long (113 > 79 characters)
+backend/sims/bulk/userbase_engine.py:277:80: E501 line too long (80 > 79 characters)
+backend/sims/bulk/userbase_engine.py:278:80: E501 line too long (88 > 79 characters)
+backend/sims/bulk/userbase_engine.py:279:80: E501 line too long (104 > 79 characters)
+backend/sims/bulk/userbase_engine.py:280:80: E501 line too long (89 > 79 characters)
+backend/sims/bulk/userbase_engine.py:293:80: E501 line too long (83 > 79 characters)
+backend/sims/bulk/userbase_engine.py:311:80: E501 line too long (91 > 79 characters)
+backend/sims/bulk/userbase_engine.py:314:80: E501 line too long (102 > 79 characters)
+backend/sims/bulk/userbase_engine.py:342:80: E501 line too long (106 > 79 characters)
+backend/sims/bulk/userbase_engine.py:359:80: E501 line too long (86 > 79 characters)
+backend/sims/bulk/userbase_engine.py:362:80: E501 line too long (100 > 79 characters)
+backend/sims/bulk/userbase_engine.py:367:80: E501 line too long (82 > 79 characters)
+backend/sims/bulk/userbase_engine.py:370:80: E501 line too long (105 > 79 characters)
+backend/sims/bulk/userbase_engine.py:383:80: E501 line too long (82 > 79 characters)
+backend/sims/bulk/userbase_engine.py:386:80: E501 line too long (95 > 79 characters)
+backend/sims/bulk/userbase_engine.py:394:80: E501 line too long (102 > 79 characters)
+backend/sims/bulk/userbase_engine.py:399:80: E501 line too long (84 > 79 characters)
+backend/sims/bulk/userbase_engine.py:402:80: E501 line too long (109 > 79 characters)
+backend/sims/bulk/userbase_engine.py:421:80: E501 line too long (99 > 79 characters)
+backend/sims/bulk/userbase_engine.py:429:80: E501 line too long (97 > 79 characters)
+backend/sims/bulk/userbase_engine.py:437:80: E501 line too long (107 > 79 characters)
+backend/sims/bulk/userbase_engine.py:449:80: E501 line too long (104 > 79 characters)
+backend/sims/bulk/userbase_engine.py:457:80: E501 line too long (85 > 79 characters)
+backend/sims/bulk/userbase_engine.py:459:80: E501 line too long (113 > 79 characters)
+backend/sims/bulk/userbase_engine.py:463:80: E501 line too long (110 > 79 characters)
+backend/sims/bulk/userbase_engine.py:473:80: E501 line too long (97 > 79 characters)
+backend/sims/bulk/userbase_engine.py:475:80: E501 line too long (81 > 79 characters)
+backend/sims/bulk/userbase_engine.py:492:80: E501 line too long (112 > 79 characters)
+backend/sims/bulk/userbase_engine.py:493:80: E501 line too long (106 > 79 characters)
+backend/sims/bulk/userbase_engine.py:506:80: E501 line too long (97 > 79 characters)
+backend/sims/bulk/userbase_engine.py:507:80: E501 line too long (91 > 79 characters)
+backend/sims/bulk/userbase_engine.py:517:80: E501 line too long (144 > 79 characters)
+backend/sims/bulk/userbase_engine.py:526:80: E501 line too long (87 > 79 characters)
+backend/sims/bulk/userbase_engine.py:535:80: E501 line too long (102 > 79 characters)
+backend/sims/bulk/userbase_engine.py:547:80: E501 line too long (100 > 79 characters)
+backend/sims/bulk/userbase_engine.py:560:80: E501 line too long (97 > 79 characters)
+backend/sims/bulk/userbase_engine.py:567:80: E501 line too long (103 > 79 characters)
+backend/sims/bulk/userbase_engine.py:580:80: E501 line too long (112 > 79 characters)
+backend/sims/bulk/userbase_engine.py:581:80: E501 line too long (127 > 79 characters)
+backend/sims/bulk/userbase_engine.py:584:80: E501 line too long (107 > 79 characters)
+backend/sims/bulk/userbase_engine.py:598:80: E501 line too long (97 > 79 characters)
+backend/sims/bulk/userbase_engine.py:599:80: E501 line too long (91 > 79 characters)
+backend/sims/bulk/userbase_engine.py:603:80: E501 line too long (81 > 79 characters)
+backend/sims/bulk/userbase_engine.py:624:80: E501 line too long (91 > 79 characters)
+backend/sims/bulk/userbase_engine.py:633:80: E501 line too long (102 > 79 characters)
+backend/sims/bulk/userbase_engine.py:645:80: E501 line too long (108 > 79 characters)
+backend/sims/bulk/userbase_engine.py:651:80: E501 line too long (100 > 79 characters)
+backend/sims/bulk/userbase_engine.py:652:80: E501 line too long (89 > 79 characters)
+backend/sims/bulk/userbase_engine.py:654:80: E501 line too long (107 > 79 characters)
+backend/sims/bulk/userbase_engine.py:685:80: E501 line too long (106 > 79 characters)
+backend/sims/bulk/userbase_engine.py:694:80: E501 line too long (91 > 79 characters)
+backend/sims/bulk/userbase_engine.py:695:80: E501 line too long (107 > 79 characters)
+backend/sims/bulk/userbase_engine.py:699:80: E501 line too long (98 > 79 characters)
+backend/sims/bulk/userbase_engine.py:718:80: E501 line too long (114 > 79 characters)
+backend/sims/bulk/userbase_engine.py:811:80: E501 line too long (86 > 79 characters)
+backend/sims/bulk/userbase_engine.py:914:80: E501 line too long (95 > 79 characters)
+backend/sims/bulk/userbase_engine.py:916:80: E501 line too long (102 > 79 characters)
+backend/sims/bulk/userbase_engine.py:923:80: E501 line too long (90 > 79 characters)
+backend/sims/bulk/userbase_engine.py:925:80: E501 line too long (86 > 79 characters)
+backend/sims/bulk/userbase_engine.py:947:80: E501 line too long (88 > 79 characters)
+backend/sims/bulk/userbase_engine.py:964:80: E501 line too long (85 > 79 characters)
+backend/sims/bulk/userbase_engine.py:968:80: E501 line too long (123 > 79 characters)
+backend/sims/bulk/userbase_engine.py:973:80: E501 line too long (133 > 79 characters)
+backend/sims/bulk/userbase_engine.py:976:80: E501 line too long (81 > 79 characters)
+backend/sims/bulk/userbase_engine.py:977:80: E501 line too long (109 > 79 characters)
+backend/sims/bulk/userbase_engine.py:979:80: E501 line too long (133 > 79 characters)
+backend/sims/bulk/userbase_engine.py:983:80: E501 line too long (84 > 79 characters)
+backend/sims/bulk/userbase_engine.py:984:80: E501 line too long (82 > 79 characters)
+backend/sims/bulk/userbase_engine.py:987:80: E501 line too long (90 > 79 characters)
+backend/sims/bulk/userbase_engine.py:994:80: E501 line too long (84 > 79 characters)
+backend/sims/bulk/userbase_engine.py:999:80: E501 line too long (111 > 79 characters)
+backend/sims/bulk/userbase_engine.py:1010:80: E501 line too long (80 > 79 characters)
+backend/sims/bulk/userbase_engine.py:1015:80: E501 line too long (107 > 79 characters)
+backend/sims/bulk/userbase_engine.py:1042:80: E501 line too long (92 > 79 characters)
+backend/sims/bulk/userbase_engine.py:1097:80: E501 line too long (93 > 79 characters)
+backend/sims/bulk/userbase_engine.py:1130:80: E501 line too long (80 > 79 characters)
+backend/sims/bulk/userbase_engine.py:1131:80: E501 line too long (89 > 79 characters)
+backend/sims/bulk/userbase_engine.py:1140:80: E501 line too long (111 > 79 characters)
+backend/sims/bulk/userbase_engine.py:1162:80: E501 line too long (107 > 79 characters)
+backend/sims/bulk/userbase_engine.py:1170:80: E501 line too long (137 > 79 characters)
+backend/sims/bulk/userbase_engine.py:1176:80: E501 line too long (88 > 79 characters)
+backend/sims/bulk/userbase_engine.py:1194:80: E501 line too long (110 > 79 characters)
+backend/sims/bulk/userbase_engine.py:1221:1: W391 blank line at end of file
+backend/sims/bulk/views.py:45:80: E501 line too long (89 > 79 characters)
+backend/sims/bulk/views.py:59:80: E501 line too long (81 > 79 characters)
+backend/sims/bulk/views.py:76:80: E501 line too long (83 > 79 characters)
+backend/sims/bulk/views.py:78:80: E501 line too long (81 > 79 characters)
+backend/sims/bulk/views.py:88:80: E501 line too long (83 > 79 characters)
+backend/sims/bulk/views.py:94:80: E501 line too long (88 > 79 characters)
+backend/sims/bulk/views.py:109:80: E501 line too long (82 > 79 characters)
+backend/sims/bulk/views.py:141:80: E501 line too long (83 > 79 characters)
+backend/sims/bulk/views.py:147:80: E501 line too long (89 > 79 characters)
+backend/sims/bulk/views.py:162:80: E501 line too long (82 > 79 characters)
+backend/sims/bulk/views.py:200:80: E501 line too long (83 > 79 characters)
+backend/sims/bulk/views.py:206:80: E501 line too long (92 > 79 characters)
+backend/sims/bulk/views.py:213:80: E501 line too long (93 > 79 characters)
+backend/sims/bulk/views.py:222:80: E501 line too long (82 > 79 characters)
+backend/sims/bulk/views.py:255:80: E501 line too long (81 > 79 characters)
+backend/sims/bulk/views.py:261:80: E501 line too long (83 > 79 characters)
+backend/sims/bulk/views.py:267:80: E501 line too long (90 > 79 characters)
+backend/sims/bulk/views.py:274:80: E501 line too long (93 > 79 characters)
+backend/sims/bulk/views.py:283:80: E501 line too long (82 > 79 characters)
+backend/sims/bulk/views.py:316:80: E501 line too long (90 > 79 characters)
+backend/sims/bulk/views.py:321:80: E501 line too long (92 > 79 characters)
+backend/sims/bulk/views.py:356:80: E501 line too long (83 > 79 characters)
+backend/sims/bulk/views.py:359:80: E501 line too long (92 > 79 characters)
+backend/sims/bulk/views.py:362:80: E501 line too long (87 > 79 characters)
+backend/sims/bulk/views.py:364:80: E501 line too long (96 > 79 characters)
+backend/sims/bulk/views.py:373:80: E501 line too long (89 > 79 characters)
+backend/sims/bulk/views.py:374:80: E501 line too long (91 > 79 characters)
+backend/sims/bulk/views.py:375:80: E501 line too long (90 > 79 characters)
+backend/sims/bulk/views.py:385:80: E501 line too long (83 > 79 characters)
+backend/sims/bulk/views.py:388:80: E501 line too long (95 > 79 characters)
+backend/sims/bulk/views.py:394:80: E501 line too long (91 > 79 characters)
+backend/sims/bulk/views.py:395:80: E501 line too long (90 > 79 characters)
+backend/sims/bulk/views.py:402:80: E501 line too long (100 > 79 characters)
+backend/sims/bulk/views.py:437:80: E501 line too long (83 > 79 characters)
+backend/sims/bulk/views.py:440:80: E501 line too long (95 > 79 characters)
+backend/sims/bulk/views.py:442:80: E501 line too long (115 > 79 characters)
+backend/sims/bulk/views.py:446:80: E501 line too long (106 > 79 characters)
+backend/sims/bulk/views.py:450:80: E501 line too long (96 > 79 characters)
+backend/sims/bulk/views.py:456:80: E501 line too long (83 > 79 characters)
+backend/sims/bulk/views.py:458:80: E501 line too long (85 > 79 characters)
+backend/sims/bulk/views.py:466:80: E501 line too long (85 > 79 characters)
+backend/sims/bulk/views.py:478:9: E303 too many blank lines (2)
+backend/sims/bulk/views.py:490:1: F401 'django.db.transaction' imported but unused
+backend/sims/bulk/views.py:490:1: E402 module level import not at top of file
+backend/sims/bulk/views.py:491:1: E402 module level import not at top of file
+backend/sims/bulk/views.py:492:1: E402 module level import not at top of file
+backend/sims/bulk/views.py:493:1: E402 module level import not at top of file
+backend/sims/bulk/views.py:494:1: E402 module level import not at top of file
+backend/sims/bulk/views.py:495:1: E402 module level import not at top of file
+backend/sims/bulk/views.py:501:80: E501 line too long (83 > 79 characters)
+backend/sims/bulk/views.py:502:80: E501 line too long (92 > 79 characters)
+backend/sims/bulk/views.py:503:80: E501 line too long (99 > 79 characters)
+backend/sims/bulk/views.py:504:80: E501 line too long (128 > 79 characters)
+backend/sims/bulk/views.py:505:80: E501 line too long (92 > 79 characters)
+backend/sims/bulk/views.py:506:80: E501 line too long (95 > 79 characters)
+backend/sims/bulk/views.py:507:80: E501 line too long (87 > 79 characters)
+backend/sims/bulk/views.py:508:80: E501 line too long (118 > 79 characters)
+backend/sims/bulk/views.py:509:80: E501 line too long (115 > 79 characters)
+backend/sims/bulk/views.py:510:80: E501 line too long (113 > 79 characters)
+backend/sims/bulk/views.py:511:80: E501 line too long (105 > 79 characters)
+backend/sims/bulk/views.py:512:80: E501 line too long (101 > 79 characters)
+backend/sims/bulk/views.py:513:80: E501 line too long (106 > 79 characters)
+backend/sims/bulk/views.py:514:80: E501 line too long (91 > 79 characters)
+backend/sims/bulk/views.py:515:80: E501 line too long (91 > 79 characters)
+backend/sims/bulk/views.py:516:80: E501 line too long (101 > 79 characters)
+backend/sims/bulk/views.py:522:80: E501 line too long (83 > 79 characters)
+backend/sims/bulk/views.py:523:80: E501 line too long (92 > 79 characters)
+backend/sims/bulk/views.py:524:80: E501 line too long (99 > 79 characters)
+backend/sims/bulk/views.py:525:80: E501 line too long (141 > 79 characters)
+backend/sims/bulk/views.py:526:80: E501 line too long (93 > 79 characters)
+backend/sims/bulk/views.py:527:80: E501 line too long (105 > 79 characters)
+backend/sims/bulk/views.py:528:80: E501 line too long (101 > 79 characters)
+backend/sims/bulk/views.py:529:80: E501 line too long (97 > 79 characters)
+backend/sims/bulk/views.py:530:80: E501 line too long (118 > 79 characters)
+backend/sims/bulk/views.py:531:80: E501 line too long (91 > 79 characters)
+backend/sims/bulk/views.py:532:80: E501 line too long (91 > 79 characters)
+backend/sims/bulk/views.py:533:80: E501 line too long (101 > 79 characters)
+backend/sims/bulk/views.py:534:80: E501 line too long (106 > 79 characters)
+backend/sims/bulk/views.py:540:80: E501 line too long (101 > 79 characters)
+backend/sims/bulk/views.py:541:80: E501 line too long (100 > 79 characters)
+backend/sims/bulk/views.py:542:80: E501 line too long (104 > 79 characters)
+backend/sims/bulk/views.py:543:80: E501 line too long (105 > 79 characters)
+backend/sims/bulk/views.py:544:80: E501 line too long (101 > 79 characters)
+backend/sims/bulk/views.py:545:80: E501 line too long (131 > 79 characters)
+backend/sims/bulk/views.py:546:80: E501 line too long (85 > 79 characters)
+backend/sims/bulk/views.py:552:80: E501 line too long (105 > 79 characters)
+backend/sims/bulk/views.py:553:80: E501 line too long (101 > 79 characters)
+backend/sims/bulk/views.py:554:80: E501 line too long (105 > 79 characters)
+backend/sims/bulk/views.py:555:80: E501 line too long (105 > 79 characters)
+backend/sims/bulk/views.py:556:80: E501 line too long (102 > 79 characters)
+backend/sims/bulk/views.py:557:80: E501 line too long (101 > 79 characters)
+backend/sims/bulk/views.py:563:80: E501 line too long (100 > 79 characters)
+backend/sims/bulk/views.py:564:80: E501 line too long (100 > 79 characters)
+backend/sims/bulk/views.py:565:80: E501 line too long (89 > 79 characters)
+backend/sims/bulk/views.py:566:80: E501 line too long (85 > 79 characters)
+backend/sims/bulk/views.py:567:80: E501 line too long (84 > 79 characters)
+backend/sims/bulk/views.py:568:80: E501 line too long (101 > 79 characters)
+backend/sims/bulk/views.py:574:80: E501 line too long (104 > 79 characters)
+backend/sims/bulk/views.py:575:80: E501 line too long (104 > 79 characters)
+backend/sims/bulk/views.py:576:80: E501 line too long (97 > 79 characters)
+backend/sims/bulk/views.py:577:80: E501 line too long (101 > 79 characters)
+backend/sims/bulk/views.py:583:80: E501 line too long (100 > 79 characters)
+backend/sims/bulk/views.py:584:80: E501 line too long (104 > 79 characters)
+backend/sims/bulk/views.py:585:80: E501 line too long (101 > 79 characters)
+backend/sims/bulk/views.py:591:80: E501 line too long (104 > 79 characters)
+backend/sims/bulk/views.py:592:80: E501 line too long (91 > 79 characters)
+backend/sims/bulk/views.py:593:80: E501 line too long (105 > 79 characters)
+backend/sims/bulk/views.py:594:80: E501 line too long (102 > 79 characters)
+backend/sims/bulk/views.py:595:80: E501 line too long (101 > 79 characters)
+backend/sims/bulk/views.py:601:80: E501 line too long (98 > 79 characters)
+backend/sims/bulk/views.py:602:80: E501 line too long (100 > 79 characters)
+backend/sims/bulk/views.py:603:80: E501 line too long (104 > 79 characters)
+backend/sims/bulk/views.py:604:80: E501 line too long (106 > 79 characters)
+backend/sims/bulk/views.py:605:80: E501 line too long (105 > 79 characters)
+backend/sims/bulk/views.py:606:80: E501 line too long (101 > 79 characters)
+backend/sims/bulk/views.py:612:80: E501 line too long (97 > 79 characters)
+backend/sims/bulk/views.py:621:80: E501 line too long (88 > 79 characters)
+backend/sims/bulk/views.py:626:80: E501 line too long (110 > 79 characters)
+backend/sims/bulk/views.py:634:1: W293 blank line contains whitespace
+backend/sims/bulk/views.py:638:80: E501 line too long (110 > 79 characters)
+backend/sims/bulk/views.py:641:1: W293 blank line contains whitespace
+backend/sims/bulk/views.py:648:80: E501 line too long (87 > 79 characters)
+backend/sims/bulk/views.py:656:1: W293 blank line contains whitespace
+backend/sims/bulk/views.py:674:1: W293 blank line contains whitespace
+backend/sims/bulk/views.py:676:1: W293 blank line contains whitespace
+backend/sims/bulk/views.py:678:80: E501 line too long (96 > 79 characters)
+backend/sims/bulk/views.py:695:80: E501 line too long (95 > 79 characters)
+backend/sims/bulk/views.py:699:1: W293 blank line contains whitespace
+backend/sims/bulk/views.py:705:80: E501 line too long (92 > 79 characters)
+backend/sims/bulk/views.py:716:80: E501 line too long (118 > 79 characters)
+backend/sims/bulk/views.py:729:1: W293 blank line contains whitespace
+backend/sims/bulk/views.py:733:80: E501 line too long (118 > 79 characters)
+backend/sims/bulk/views.py:736:1: W293 blank line contains whitespace
+backend/sims/bulk/views.py:744:80: E501 line too long (95 > 79 characters)
+backend/sims/bulk/views.py:746:1: W293 blank line contains whitespace
+backend/sims/bulk/views.py:750:80: E501 line too long (104 > 79 characters)
+backend/sims/bulk/views.py:752:80: E501 line too long (86 > 79 characters)
+backend/sims/bulk/views.py:768:80: E501 line too long (95 > 79 characters)
+backend/sims/bulk/views.py:769:1: W293 blank line contains whitespace
+backend/sims/bulk/views.py:772:1: W293 blank line contains whitespace
+backend/sims/bulk/views.py:774:80: E501 line too long (93 > 79 characters)
+backend/sims/bulk/views.py:776:80: E501 line too long (84 > 79 characters)
+backend/sims/bulk/views.py:777:1: W293 blank line contains whitespace
+backend/sims/bulk/views.py:779:80: E501 line too long (80 > 79 characters)
+backend/sims/bulk/views.py:780:80: E501 line too long (84 > 79 characters)
+backend/sims/bulk/views.py:812:80: E501 line too long (95 > 79 characters)
+backend/sims/bulk/views.py:813:1: W293 blank line contains whitespace
+backend/sims/bulk/views.py:820:80: E501 line too long (93 > 79 characters)
+backend/sims/bulk/views.py:823:1: W293 blank line contains whitespace
+backend/sims/bulk/views.py:825:80: E501 line too long (94 > 79 characters)
+backend/sims/bulk/views.py:827:80: E501 line too long (83 > 79 characters)
+backend/sims/bulk/views.py:830:80: E501 line too long (113 > 79 characters)
+backend/sims/bulk/views.py:834:80: E501 line too long (90 > 79 characters)
+backend/sims/bulk/views.py:838:80: E501 line too long (82 > 79 characters)
+backend/sims/bulk/views.py:872:9: F811 redefinition of unused 'transaction' from line 490
+backend/sims/bulk/views.py:874:80: E501 line too long (95 > 79 characters)
+backend/sims/bulk/views.py:875:1: W293 blank line contains whitespace
+backend/sims/bulk/views.py:883:80: E501 line too long (93 > 79 characters)
+backend/sims/bulk/views.py:886:1: W293 blank line contains whitespace
+backend/sims/bulk/views.py:888:80: E501 line too long (94 > 79 characters)
+backend/sims/bulk/views.py:890:80: E501 line too long (83 > 79 characters)
+backend/sims/bulk/views.py:893:80: E501 line too long (113 > 79 characters)
+backend/sims/bulk/views.py:897:80: E501 line too long (90 > 79 characters)
+backend/sims/bulk/views.py:901:80: E501 line too long (82 > 79 characters)
+backend/sims/bulk/views.py:913:1: W293 blank line contains whitespace
+backend/sims/bulk/views.py:927:80: E501 line too long (101 > 79 characters)
+backend/sims/bulk/views.py:963:80: E501 line too long (119 > 79 characters)
+backend/sims/bulk/views.py:1015:1: W391 blank line at end of file

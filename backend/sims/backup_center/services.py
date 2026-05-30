@@ -107,7 +107,7 @@ def create_routine_application_data_backup(user=None, notes=None, backup_type='m
         job.commit_hash = app_meta["commit_hash"]
         job.save()
         
-        timestamp = timezone.now().strftime('%Y-%m-%d_%H%M')
+        timestamp = timezone.now().strftime('%Y-%m-%d_%H%M%S')
         backup_dir = Path(settings.SIMS_SETTINGS.get('BACKUP_LOCATION', settings.BASE_DIR / 'backups'))
         backup_dir.mkdir(parents=True, exist_ok=True)
         
@@ -143,13 +143,10 @@ def create_routine_application_data_backup(user=None, notes=None, backup_type='m
                     logger.error(f"pg_dump custom failed: {result.stderr}")
                     raise Exception(f"pg_dump failed: {result.stderr}")
             elif 'sqlite' in db_engine:
-                db_path = Path(settings.DATABASES['default']['NAME'])
-                if db_path.exists():
-                    shutil.copy2(db_path, db_dump_path)
-                else:
-                    # If memory DB or something else, use management command
-                    with open(db_dump_path, 'w') as f:
-                        call_command('dumpdata', stdout=f)
+                from django.core.management import call_command
+                db_dump_path = tmpdir / 'database_dump.json'
+                with open(db_dump_path, 'w') as f:
+                    call_command('dumpdata', '--exclude', 'contenttypes', '--exclude', 'auth.Permission', '--exclude', 'admin.logentry', '--exclude', 'sessions.session', stdout=f)
             else:
                 raise Exception(f"Unsupported database engine for backup: {db_engine}")
             
@@ -208,7 +205,11 @@ def create_routine_application_data_backup(user=None, notes=None, backup_type='m
             
             # 7. Compress into .pgsimsbak
             with zipfile.ZipFile(file_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
-                zipf.write(db_dump_path, arcname='database_dump.sql')
+                if 'postgresql' in db_engine:
+                    zipf.write(db_dump_path, arcname='database_dump.sql')
+                else:
+                    zipf.write(db_dump_path, arcname='database_dump.json')
+                
                 zipf.write(manifest_path, arcname='manifest.json')
                 zipf.write(report_path, arcname='backup_report.json')
                 zipf.write(checksum_path, arcname='checksum.sha256')
@@ -291,7 +292,7 @@ def create_disaster_recovery_backup(user=None, notes=None) -> BackupJob:
         # 1. Create Internal Routine Backup
         routine_job = create_routine_application_data_backup(user=user, notes=f"Internal routine backup for Disaster Recovery: {job.id}", backup_type='automatic')
         
-        timestamp = timezone.now().strftime('%Y-%m-%d_%H%M')
+        timestamp = timezone.now().strftime('%Y-%m-%d_%H%M%S')
         backup_dir = Path(settings.SIMS_SETTINGS.get('BACKUP_LOCATION', settings.BASE_DIR / 'backups'))
         file_name = f"PGSIMS_DISASTER_BACKUP_{timestamp}.pgsimsdr"
         file_path = backup_dir / file_name
@@ -417,8 +418,8 @@ def validate_backup_file(file_path: str) -> Dict[str, Any]:
                     if manifest.get("app_name") != "PGSIMS":
                         result["errors"].append("Not a PGSIMS backup file.")
                 
-                if 'database_dump.sql' not in namelist:
-                    result["errors"].append("database_dump.sql is missing.")
+                if 'database_dump.sql' not in namelist and 'database_dump.json' not in namelist:
+                    result["errors"].append("database_dump.sql or database_dump.json is missing.")
                     
                 if 'checksum.sha256' not in namelist:
                     result["errors"].append("checksum.sha256 is missing.")
@@ -533,6 +534,10 @@ def restore_routine_application_data_backup(file_path: str, restored_by, passwor
             db_dump_path = tmpdir / 'database_dump.sql'
             db_engine = detect_database_engine()
             
+            # Close connections before destructive restore
+            from django.db import connection
+            connection.close()
+
             if 'postgresql' in db_engine:
                 db_config = settings.DATABASES['default']
                 env = os.environ.copy()
@@ -559,8 +564,42 @@ def restore_routine_application_data_backup(file_path: str, restored_by, passwor
                 if result.returncode != 0:
                     raise Exception(f"pg_restore failed: {result.stderr}")
             elif 'sqlite' in db_engine:
-                db_path = Path(settings.DATABASES['default']['NAME'])
-                shutil.copy2(db_dump_path, db_path)
+                from django.core.management import call_command
+                
+                # If database_dump.sql exists, it's an old backup format using raw sqlite
+                db_dump_sql_path = tmpdir / 'database_dump.sql'
+                db_dump_json_path = tmpdir / 'database_dump.json'
+                
+                if db_dump_json_path.exists():
+                    # New format using dumpdata
+                    # First clear all tables to avoid unique constraint errors during loaddata
+                    from django.db import connection
+                    with connection.cursor() as cursor:
+                        cursor.execute("PRAGMA foreign_keys = OFF;")
+                        # Wipe all non-system tables
+                        from django.apps import apps
+                        for model in apps.get_models():
+                            if model._meta.app_label not in ['contenttypes', 'auth', 'sessions', 'admin', 'migrations']:
+                                cursor.execute(f"DELETE FROM {model._meta.db_table};")
+                        cursor.execute("PRAGMA foreign_keys = ON;")
+                        
+                    call_command('loaddata', str(db_dump_json_path))
+                elif db_dump_sql_path.exists():
+                    # Legacy support for sqlite file backup
+                    db_path = str(Path(settings.DATABASES['default']['NAME']))
+                    wal_path = Path(db_path + '-wal')
+                    shm_path = Path(db_path + '-shm')
+                    if wal_path.exists():
+                        wal_path.unlink()
+                    if shm_path.exists():
+                        shm_path.unlink()
+                    import sqlite3
+                    with sqlite3.connect(str(db_dump_sql_path)) as src, sqlite3.connect(db_path) as dst:
+                        src.backup(dst)
+                
+            # Close connection again so it's clean for the post-restore check and save
+            connection.close()
+
             
             # Restore Media
             manifest = validation["manifest"]
@@ -579,6 +618,13 @@ def restore_routine_application_data_backup(file_path: str, restored_by, passwor
             "user_count_matches": False
         }
         # In a real scenario, we'd verify counts here.
+        
+        # Re-create safety_backup in the new database if needed, or just clear the fk to avoid constraint errors
+        if restore_job.safety_backup_id:
+            restore_job.safety_backup = None
+
+        # Force an insert if the object was wiped during restore, or update if it survived
+        restore_job.id = None # Forces a new insert so we don't hit the update-0-rows fallback which might try to insert with old ID
         
         restore_job.status = 'restored'
         restore_job.post_restore_check_json = checks

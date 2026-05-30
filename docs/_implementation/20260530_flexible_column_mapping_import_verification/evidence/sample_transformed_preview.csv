@@ -1,0 +1,3 @@
+email,full_name,phone_number,role,specialty,year,pgr_id,training_start,training_end,training_level,department_code,hospital_code,supervisor_email,username,password,active
+resident1@example.com,Dr. Resident One,,pg,medicine,1,,2026-01-01,,,MED,AH,supervisor1@example.com,,,true
+resident2@example.com,Dr. Resident Two,,pg,surgery,2,,2026-02-01,,,SURG,AH,supervisor2@example.com,,,true

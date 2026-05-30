@@ -1,0 +1,3 @@
+email,full_name,specialty,year,training_start,hospital_code,department_code,supervisor_email
+resident1@example.com,Dr. Resident One,medicine,1,2026-01-01,AH,MED,supervisor1@example.com
+resident2@example.com,Dr. Resident Two,surgery,2,2026-02-01,AH,SURG,supervisor2@example.com

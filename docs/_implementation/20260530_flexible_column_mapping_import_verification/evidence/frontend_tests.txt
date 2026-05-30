@@ -1,0 +1,15 @@
+
+> frontend@0.1.0 test
+> jest frontend/components/utrmc/FlexibleMappingImport.test.tsx --watchAll=false
+
+PASS components/utrmc/FlexibleMappingImport.test.tsx
+  FlexibleMappingImport
+    ✓ renders target selector and upload dropzone on load (169 ms)
+    ✓ handles target entity selection changes (65 ms)
+    ✓ handles file upload and header detection with auto-mapping (107 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       3 passed, 3 total
+Snapshots:   0 total
+Time:        4.949 s
+Ran all test suites matching frontend/components/utrmc/FlexibleMappingImport.test.tsx.

@@ -1,7 +1,7 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React from 'react';
 import { format } from 'date-fns';
-import { ArrowDownTrayIcon, ClockIcon, TrashIcon } from '@heroicons/react/24/outline';
-import { toast } from 'react-hot-toast';
+import { Download, Clock, Trash2 } from 'lucide-react';
 import { fetchAuth } from '@/lib/auth/fetch';
 
 export default function BackupList({ backups, onRefresh }: { backups: any[], onRefresh: () => void }) {
@@ -12,7 +12,7 @@ export default function BackupList({ backups, onRefresh }: { backups: any[], onR
       });
       
       if (!response.ok) {
-        toast.error('Download failed or not authorized');
+        alert('Download failed or not authorized');
         return;
       }
       
@@ -27,7 +27,7 @@ export default function BackupList({ backups, onRefresh }: { backups: any[], onR
       a.remove();
     } catch (error) {
       console.error(error);
-      toast.error('An error occurred during download');
+      alert('An error occurred during download');
     }
   };
 
@@ -40,21 +40,21 @@ export default function BackupList({ backups, onRefresh }: { backups: any[], onR
       });
       
       if (response.ok) {
-        toast.success('Backup deleted');
+        alert('Backup deleted');
         onRefresh();
       } else {
-        toast.error('Failed to delete backup');
+        alert('Failed to delete backup');
       }
     } catch (error) {
       console.error(error);
-      toast.error('An error occurred while deleting');
+      alert('An error occurred while deleting');
     }
   };
 
   if (!backups || backups.length === 0) {
     return (
       <div className="p-10 text-center">
-        <ClockIcon className="mx-auto h-12 w-12 text-gray-400" />
+        <Clock className="mx-auto h-12 w-12 text-gray-400" />
         <h3 className="mt-2 text-sm font-semibold text-gray-900">No backups</h3>
         <p className="mt-1 text-sm text-gray-500">Get started by creating a new system backup.</p>
       </div>
@@ -120,7 +120,7 @@ export default function BackupList({ backups, onRefresh }: { backups: any[], onR
                 onClick={() => handleDownload(backup.id, backup.file_name)}
                 className="rounded-md bg-white px-2.5 py-1.5 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
               >
-                <ArrowDownTrayIcon className="h-4 w-4 inline-block mr-1" />
+                <Download className="h-4 w-4 inline-block mr-1" />
                 Download
               </button>
             )}
@@ -129,7 +129,7 @@ export default function BackupList({ backups, onRefresh }: { backups: any[], onR
                onClick={() => handleDelete(backup.id)}
                className="rounded-md bg-white px-2.5 py-1.5 text-sm font-semibold text-red-600 shadow-sm ring-1 ring-inset ring-red-300 hover:bg-red-50"
              >
-               <TrashIcon className="h-4 w-4" />
+               <Trash2 className="h-4 w-4" />
              </button>
             )}
           </div>
