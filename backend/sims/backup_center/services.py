@@ -891,3 +891,213 @@ def restore_routine_application_data_backup(
             details_json={'error': str(e)}
         )
         raise
+
+
+def upload_backup_to_cloud_service(backup_job: BackupJob, actor=None) -> BackupJob:
+    """
+    Orchestrates the upload of a local backup file to configured cloud storage.
+    Encrypts the file first, uploads it along with manifest and checksum, 
+    and verifies the remote object.
+    """
+    from .providers import get_storage_provider, LocalBackupStorageProvider
+
+    backup_job.cloud_enabled = True
+    backup_job.cloud_provider = os.environ.get("BACKUP_CLOUD_PROVIDER", "local")
+    backup_job.cloud_upload_status = 'uploading'
+    backup_job.cloud_upload_started_at = timezone.now()
+    backup_job.cloud_encryption_status = 'encrypted'
+    backup_job.save()
+
+    BackupAuditLog.objects.create(
+        action='cloud_upload_started',
+        actor=actor,
+        backup_job=backup_job,
+        details_json={'provider': backup_job.cloud_provider}
+    )
+
+    try:
+        provider = get_storage_provider()
+        if isinstance(provider, LocalBackupStorageProvider):
+            raise ValueError("Cloud backup is not enabled or set to local.")
+
+        # Trigger provider upload
+        res = provider.upload_backup(backup_job)
+
+        backup_job.cloud_bucket = res.get("bucket")
+        backup_job.cloud_prefix = res.get("prefix")
+        backup_job.cloud_object_key = res.get("backup_key")
+        backup_job.cloud_manifest_key = res.get("manifest_key")
+        backup_job.cloud_checksum_key = res.get("checksum_key")
+        backup_job.cloud_checksum = res.get("checksum")
+        backup_job.cloud_file_size = res.get("size")
+        
+        # Verify remote object immediately
+        is_verified = provider.verify_remote_object(backup_job)
+        if is_verified:
+            backup_job.cloud_upload_status = 'uploaded'
+            backup_job.cloud_upload_completed_at = timezone.now()
+            backup_job.cloud_last_verified_at = timezone.now()
+            backup_job.save()
+            BackupAuditLog.objects.create(
+                action='cloud_upload_completed',
+                actor=actor,
+                backup_job=backup_job,
+                details_json={'bucket': backup_job.cloud_bucket, 'key': backup_job.cloud_object_key}
+            )
+        else:
+            raise ValueError("Uploaded remote object checksum or existence verification failed.")
+
+    except Exception as e:
+        logger.exception(f"Cloud upload failed: {e}")
+        backup_job.cloud_upload_status = 'failed'
+        backup_job.cloud_error_message = str(e)
+        backup_job.save()
+        BackupAuditLog.objects.create(
+            action='cloud_upload_failed',
+            actor=actor,
+            backup_job=backup_job,
+            details_json={'error': str(e)}
+        )
+        raise
+
+    return backup_job
+
+
+def download_backup_from_cloud_service(backup_job: BackupJob, actor=None) -> BackupJob:
+    """
+    Downloads a cloud backup object, decrypts it locally, and verifies the checksum.
+    """
+    from .providers import get_storage_provider
+
+    if not backup_job.cloud_object_key:
+        raise ValueError("This backup does not have a cloud object key.")
+
+    backup_job.cloud_download_status = 'downloading'
+    backup_job.save()
+
+    BackupAuditLog.objects.create(
+        action='cloud_download_started',
+        actor=actor,
+        backup_job=backup_job
+    )
+
+    try:
+        provider = get_storage_provider()
+        
+        # Determine local path
+        backup_dir = Path(settings.SIMS_SETTINGS.get('BACKUP_LOCATION', settings.BASE_DIR / 'backups'))
+        backup_dir.mkdir(parents=True, exist_ok=True)
+        
+        dest_file_path = backup_dir / backup_job.file_name
+        
+        provider.download_backup(backup_job, str(dest_file_path))
+        
+        # Update local references so restore can use it
+        backup_job.file_path = str(dest_file_path)
+        backup_job.cloud_download_status = 'downloaded'
+        backup_job.save()
+        
+        BackupAuditLog.objects.create(
+            action='cloud_download_completed',
+            actor=actor,
+            backup_job=backup_job
+        )
+    except Exception as e:
+        logger.exception(f"Cloud download failed: {e}")
+        backup_job.cloud_download_status = 'failed'
+        backup_job.cloud_error_message = str(e)
+        backup_job.save()
+        BackupAuditLog.objects.create(
+            action='cloud_download_failed',
+            actor=actor,
+            backup_job=backup_job,
+            details_json={'error': str(e)}
+        )
+        raise
+
+    return backup_job
+
+
+def verify_cloud_backup_service(backup_job: BackupJob, actor=None) -> bool:
+    """
+    Verifies remote files existence and metadata matching.
+    """
+    from .providers import get_storage_provider
+
+    if not backup_job.cloud_object_key:
+        return False
+
+    try:
+        provider = get_storage_provider()
+        is_valid = provider.verify_remote_object(backup_job)
+        
+        if is_valid:
+            backup_job.cloud_upload_status = 'verified'
+            backup_job.cloud_last_verified_at = timezone.now()
+            backup_job.save()
+            BackupAuditLog.objects.create(
+                action='cloud_verified',
+                actor=actor,
+                backup_job=backup_job
+            )
+            return True
+        else:
+            backup_job.cloud_upload_status = 'failed'
+            backup_job.cloud_error_message = "Remote verification failed"
+            backup_job.save()
+            BackupAuditLog.objects.create(
+                action='cloud_verification_failed',
+                actor=actor,
+                backup_job=backup_job
+            )
+            return False
+    except Exception as e:
+        logger.exception(f"Cloud verification failed: {e}")
+        backup_job.cloud_upload_status = 'failed'
+        backup_job.cloud_error_message = str(e)
+        backup_job.save()
+        BackupAuditLog.objects.create(
+            action='cloud_verification_failed',
+            actor=actor,
+            backup_job=backup_job,
+            details_json={'error': str(e)}
+        )
+        return False
+
+
+def enforce_cloud_retention_policy() -> Dict[str, Any]:
+    """
+    Enforces cloud backup retention policies.
+    """
+    from .providers import get_storage_provider
+
+    enabled = os.environ.get("BACKUP_CLOUD_RETENTION_ENFORCEMENT", "false").lower() in ("true", "1", "yes")
+    if not enabled:
+        return {"status": "disabled"}
+
+    # Retention count configurations
+    daily_limit = int(os.environ.get("BACKUP_RETENTION_DAILY", 14))
+    
+    # Simple logic: keep latest N cloud backups, delete older ones
+    cloud_backups = BackupJob.objects.filter(
+        cloud_enabled=True,
+        cloud_upload_status='uploaded'
+    ).order_by('-created_at')
+
+    deleted_count = 0
+    provider = get_storage_provider()
+
+    if cloud_backups.count() > daily_limit:
+        to_delete = cloud_backups[daily_limit:]
+        for job in to_delete:
+            try:
+                provider.delete_remote_object(job)
+                job.cloud_upload_status = 'deleted'
+                job.save()
+                deleted_count += 1
+                logger.info(f"Deleted remote objects for backup job {job.id}")
+            except Exception as e:
+                logger.error(f"Failed to delete remote objects for job {job.id}: {e}")
+
+    return {"status": "success", "deleted_count": deleted_count}
+

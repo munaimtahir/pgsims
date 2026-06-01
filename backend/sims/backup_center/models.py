@@ -45,6 +45,24 @@ class BackupJob(models.Model):
     error_message = models.TextField(blank=True, null=True)
     notes = models.TextField(blank=True, null=True)
 
+    # Cloud Storage Fields
+    cloud_enabled = models.BooleanField(default=False)
+    cloud_provider = models.CharField(max_length=50, blank=True, null=True)
+    cloud_bucket = models.CharField(max_length=255, blank=True, null=True)
+    cloud_prefix = models.CharField(max_length=255, blank=True, null=True)
+    cloud_object_key = models.CharField(max_length=1024, blank=True, null=True)
+    cloud_manifest_key = models.CharField(max_length=1024, blank=True, null=True)
+    cloud_checksum_key = models.CharField(max_length=1024, blank=True, null=True)
+    cloud_upload_status = models.CharField(max_length=50, default='not_uploaded')
+    cloud_upload_started_at = models.DateTimeField(blank=True, null=True)
+    cloud_upload_completed_at = models.DateTimeField(blank=True, null=True)
+    cloud_download_status = models.CharField(max_length=50, default='not_uploaded')
+    cloud_last_verified_at = models.DateTimeField(blank=True, null=True)
+    cloud_file_size = models.BigIntegerField(blank=True, null=True)
+    cloud_checksum = models.CharField(max_length=255, blank=True, null=True)
+    cloud_encryption_status = models.CharField(max_length=50, default='unencrypted')
+    cloud_error_message = models.TextField(blank=True, null=True)
+
     class Meta:
         ordering = ['-created_at']
         verbose_name = 'Backup Job'
@@ -115,6 +133,14 @@ class BackupAuditLog(models.Model):
         ('restore_completed', 'Restore Completed'),
         ('restore_failed', 'Restore Failed'),
         ('restore_dry_run_completed', 'Restore Dry Run Completed'),
+        ('cloud_upload_started', 'Cloud Upload Started'),
+        ('cloud_upload_completed', 'Cloud Upload Completed'),
+        ('cloud_upload_failed', 'Cloud Upload Failed'),
+        ('cloud_download_started', 'Cloud Download Started'),
+        ('cloud_download_completed', 'Cloud Download Completed'),
+        ('cloud_download_failed', 'Cloud Download Failed'),
+        ('cloud_verified', 'Cloud Verified'),
+        ('cloud_verification_failed', 'Cloud Verification Failed'),
     )
 
     action = models.CharField(max_length=50, choices=ACTION_CHOICES)
