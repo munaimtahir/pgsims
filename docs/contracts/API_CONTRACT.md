@@ -160,6 +160,37 @@ Rotation summary response must include:
   - `supervision-links`
   - `hod-assignments`
 
+## Backup Center (v1.4 additive)
+
+Base: `/api/backup_center/`
+
+### Google Drive Backup Connector (Super Admin only)
+Connection/status:
+- `GET  /google-drive/status/`
+  - Response (no secrets):
+    - `enabled` (bool)
+    - `status` (`not_connected|connected|disconnected|failed`)
+    - `connected_account` (nullable email)
+    - `backup_folder` (nullable `{id,name}`)
+    - `token_expiry` (nullable datetime)
+    - `last_health_check_at` (nullable datetime)
+    - `last_error` (nullable string)
+- `GET  /google-drive/connect/` → `{ authorization_url }`
+- `GET  /google-drive/oauth/callback/` → redirects to `/dashboard/utrmc/backup?...`
+- `POST /google-drive/disconnect/`
+- `POST /google-drive/health-check/`
+- `POST /google-drive/create-folder/`
+
+Backup actions:
+- `POST /backups/{backup_id}/google-drive/upload/` → `{ status: uploaded, cloud_copy_id }`
+- `POST /backups/{backup_id}/google-drive/verify/` → `{ status: verified, cloud_copy_id }`
+- `POST /backups/{backup_id}/google-drive/download/`
+  - Response: `{ status: restore_ready, restore_job_id, cloud_copy_id }`
+  - Behavior: downloads encrypted Drive copy, verifies checksum, decrypts, stores as a server-side `RestoreJob` upload for the existing restore workflow.
+
+List:
+- `GET  /google-drive/list/` → `{ results: BackupCloudCopy[] }` (sanitized; no tokens)
+
 ### Rosters
 - `GET /api/departments/{id}/roster/`
   - Response includes:

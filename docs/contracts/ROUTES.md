@@ -53,6 +53,7 @@ UX freeze note:
 - No route or sidebar label change was introduced.
 - 2026-04-21 approved truth-hardening change: resident sidebar label `/dashboard/resident/progress` changed from "Academic Progress" to "Logbook"; inactive resident research/thesis/workshops/postings and supervisor research approvals were removed from active navigation. Routes still exist but are not active release-gated surfaces.
 - 2026-05-30 approved Backup Center module activation: added `/dashboard/utrmc/backup` as an admin-facing operational page under the already-frozen `/dashboard/utrmc/*` area. No existing route paths were renamed.
+- 2026-06-01 approved additive update: added a “Google Drive Backup” panel inside `/dashboard/utrmc/backup` (no route or navigation label changes).
 
 ## Deferred Routes (not active release truth)
 - `/dashboard/resident/research`

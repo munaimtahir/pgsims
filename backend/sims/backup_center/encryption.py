@@ -63,3 +63,27 @@ def decrypt_file(source_path: str, dest_path: str) -> None:
     
     with open(dest_path, "wb") as f_out:
         f_out.write(decrypted_data)
+
+
+def encrypt_string(value: str) -> str:
+    """
+    Encrypts a short string value (e.g., OAuth token) and returns a URL-safe base64 string.
+    """
+    if value is None:
+        raise ValueError("encrypt_string requires a non-null value")
+    key = get_encryption_key()
+    fernet = Fernet(key)
+    encrypted = fernet.encrypt(value.encode("utf-8"))
+    return encrypted.decode("utf-8")
+
+
+def decrypt_string(value: str) -> str:
+    """
+    Decrypts a value produced by encrypt_string().
+    """
+    if value is None:
+        raise ValueError("decrypt_string requires a non-null value")
+    key = get_encryption_key()
+    fernet = Fernet(key)
+    decrypted = fernet.decrypt(value.encode("utf-8"))
+    return decrypted.decode("utf-8")

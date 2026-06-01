@@ -20,4 +20,16 @@ urlpatterns = [
     
     # Audit
     path('audit-logs/', views.BackupAuditLogListView.as_view(), name='backup-audit-logs'),
+
+    # Google Drive Backup Connector
+    path('google-drive/status/', views.GoogleDriveStatusView.as_view(), name='google-drive-status'),
+    path('google-drive/connect/', views.GoogleDriveConnectView.as_view(), name='google-drive-connect'),
+    path('google-drive/oauth/callback/', views.GoogleDriveOAuthCallbackView.as_view(), name='google-drive-oauth-callback'),
+    path('google-drive/disconnect/', views.GoogleDriveDisconnectView.as_view(), name='google-drive-disconnect'),
+    path('google-drive/health-check/', views.GoogleDriveHealthCheckView.as_view(), name='google-drive-health-check'),
+    path('google-drive/create-folder/', views.GoogleDriveCreateFolderView.as_view(), name='google-drive-create-folder'),
+    path('backups/<int:pk>/google-drive/upload/', views.GoogleDriveUploadBackupView.as_view(), name='google-drive-upload'),
+    path('backups/<int:pk>/google-drive/verify/', views.GoogleDriveVerifyBackupView.as_view(), name='google-drive-verify'),
+    path('backups/<int:pk>/google-drive/download/', views.GoogleDriveDownloadBackupView.as_view(), name='google-drive-download'),
+    path('google-drive/list/', views.GoogleDriveListView.as_view(), name='google-drive-list'),
 ]

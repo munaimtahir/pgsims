@@ -22,6 +22,12 @@ python3 manage.py restore_system_backup /path/to/backup.pgsimsbak --dry-run
 
 See `docs/BACKUP_AND_RESTORE.md` for operator workflow and restore safety rules.
 
+### Google Drive (optional cloud copy)
+If enabled and connected (Super Admin only), the Backup Center can upload encrypted backup artifacts into Google Drive and later download them back to restore staging.
+
+See:
+- `docs/GOOGLE_DRIVE_BACKUP_CONNECTOR.md`
+
 ## 2. Inspecting Logs
 - **Django Logs**: `docker compose logs backend`
 - **Celery Worker Logs**: `docker compose logs worker`

@@ -11,7 +11,16 @@ from django.contrib.auth import get_user_model
 from rest_framework.test import APIClient
 from django.core.files.uploadedfile import SimpleUploadedFile
 
-from sims.backup_center.models import BackupJob, RestoreJob, BackupAuditLog
+from sims.backup_center.models import (
+    BackupJob,
+    RestoreJob,
+    BackupAuditLog,
+    BackupCloudConnection,
+    BackupCloudCopy,
+)
+from sims.backup_center.encryption import decrypt_string
+from sims.backup_center.encryption import encrypt_string
+from sims.backup_center.google_drive import GoogleDriveBackupProvider
 from sims.backup_center.services import (
     create_routine_application_data_backup,
     validate_backup_file,
@@ -342,3 +351,110 @@ class TestBackupCenterViews:
         assert restore_job.uploaded_file_name == "restore.pgsimsbak"
         assert restore_job.uploaded_file.name  # stored relative path
         assert os.path.exists(restore_job.uploaded_file.path)
+
+
+@pytest.mark.django_db
+class TestGoogleDriveConnector:
+    @pytest.fixture(autouse=True)
+    def _drive_env(self, monkeypatch):
+        monkeypatch.setenv("GOOGLE_DRIVE_BACKUP_ENABLED", "true")
+        monkeypatch.setenv("GOOGLE_DRIVE_CLIENT_ID", "client-id")
+        monkeypatch.setenv("GOOGLE_DRIVE_CLIENT_SECRET", "client-secret")
+        monkeypatch.setenv("GOOGLE_DRIVE_REDIRECT_URI", "http://localhost:8000/api/backup_center/google-drive/oauth/callback/")
+        monkeypatch.setenv("GOOGLE_DRIVE_SCOPES", "https://www.googleapis.com/auth/drive.file")
+        monkeypatch.setenv("GOOGLE_DRIVE_BACKUP_FOLDER_NAME", "PGSIMS Backups")
+        monkeypatch.setenv("PGSIMS_BACKUP_ENCRYPTION_KEY", "test-key")
+
+    def test_connect_requires_super_admin(self, api_client, normal_admin_user):
+        api_client.force_authenticate(user=normal_admin_user)
+        url = reverse("google-drive-connect")
+        response = api_client.get(url)
+        assert response.status_code == 403
+
+    def test_connect_returns_authorization_url_with_state(self, api_client):
+        url = reverse("google-drive-connect")
+        response = api_client.get(url)
+        assert response.status_code == 200
+        assert "authorization_url" in response.data
+        assert "state=" in response.data["authorization_url"]
+
+    @patch("sims.backup_center.google_drive.requests.post")
+    @patch("sims.backup_center.google_drive.requests.get")
+    def test_oauth_callback_stores_encrypted_tokens(self, mock_get, mock_post, api_client, super_admin):
+        api_client.force_authenticate(user=super_admin)
+        provider = GoogleDriveBackupProvider()
+        auth_url = provider.build_authorization_url(user_id=super_admin.id)
+        state = auth_url.split("state=")[1].split("&")[0]
+
+        mock_post.return_value = MagicMock(
+            status_code=200,
+            json=lambda: {
+                "access_token": "access-token-123",
+                "refresh_token": "refresh-token-456",
+                "expires_in": 3600,
+                "scope": "https://www.googleapis.com/auth/drive.file",
+            },
+            text="ok",
+        )
+        mock_get.return_value = MagicMock(status_code=404, json=lambda: {}, text="nope")
+
+        url = reverse("google-drive-oauth-callback")
+        response = api_client.get(url, {"code": "authcode", "state": state})
+        assert response.status_code == 302
+
+        connection = BackupCloudConnection.objects.get(provider="google_drive")
+        assert connection.status == "connected"
+        assert connection.access_token_encrypted != "access-token-123"
+        assert connection.refresh_token_encrypted != "refresh-token-456"
+        assert decrypt_string(connection.access_token_encrypted) == "access-token-123"
+        assert decrypt_string(connection.refresh_token_encrypted) == "refresh-token-456"
+
+    def test_oauth_callback_rejects_invalid_state(self, api_client):
+        url = reverse("google-drive-oauth-callback")
+        response = api_client.get(url, {"code": "authcode", "state": "invalid"})
+        assert response.status_code == 302
+        assert "googleDrive=error" in response["Location"]
+
+    def test_disconnect_wipes_tokens(self, api_client):
+        connection = BackupCloudConnection.objects.create(
+            provider="google_drive",
+            status="connected",
+            access_token_encrypted="enc",
+            refresh_token_encrypted="enc2",
+        )
+        url = reverse("google-drive-disconnect")
+        response = api_client.post(url)
+        assert response.status_code == 200
+        connection.refresh_from_db()
+        assert connection.status == "disconnected"
+        assert connection.access_token_encrypted is None
+        assert connection.refresh_token_encrypted is None
+
+    def test_upload_endpoint_requires_completed_backup_file(self, api_client, super_admin, tmp_path):
+        # Stub a completed backup file
+        bak_path = tmp_path / "ok.pgsimsbak"
+        bak_path.write_text("content")
+        job = BackupJob.objects.create(created_by=super_admin, status="completed", file_path=str(bak_path), file_name="ok.pgsimsbak")
+
+        BackupCloudConnection.objects.create(
+            provider="google_drive",
+            status="connected",
+            access_token_encrypted=encrypt_string("access-token-123"),
+            refresh_token_encrypted=encrypt_string("refresh-token-456"),
+        )
+
+        with patch("sims.backup_center.google_drive.GoogleDriveBackupProvider.upload_backup") as mock_upload:
+            cloud_copy = BackupCloudCopy.objects.create(
+                backup_record=job,
+                provider="google_drive",
+                connection=BackupCloudConnection.objects.get(provider="google_drive"),
+                upload_status="uploaded",
+                verification_status="verified",
+                remote_file_id="file123",
+            )
+            mock_upload.return_value = cloud_copy
+
+            url = reverse("google-drive-upload", kwargs={"pk": job.id})
+            response = api_client.post(url)
+            assert response.status_code == 200
+            assert response.data["status"] == "uploaded"

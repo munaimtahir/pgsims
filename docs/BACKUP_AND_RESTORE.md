@@ -62,6 +62,12 @@ Validate backups:
 Dry-run restore validation (non-destructive):
 - `python3 manage.py restore_system_backup /path/to/backup.pgsimsbak --dry-run`
 
+## Google Drive Connector (cloud copy)
+If Google Drive is connected, a Super Admin can upload an **encrypted** copy of a backup (plus manifest + checksum) to Drive and later download it back for restore staging.
+
+Operator documentation:
+- `docs/GOOGLE_DRIVE_BACKUP_CONNECTOR.md`
+
 ## Real Data Safety Workflow
 
 Follow these steps when handling real production data:

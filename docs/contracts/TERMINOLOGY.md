@@ -23,6 +23,9 @@ These are user-facing terms. Do not change once pilot begins.
 - **Automatic Protection Backup**: automatic safety backup created before a destructive restore
 - **Backup Record**: internal `BackupJob` record
 - **Restore Request**: internal `RestoreJob` record
+- **Google Drive Backup**: Backup Center panel for connecting Google Drive and managing encrypted Drive copies of backups
+- **Drive Backup Folder**: the Google Drive folder used to store encrypted backup artifacts (default name: `PGSIMS Backups`)
+- **Drive Copy**: internal record of an uploaded Google Drive backup artifact set (internal `BackupCloudCopy`)
 - **Under Review**: submission completeness review is in progress by supervisor/HOD/UTRMC reviewer
 - **Certificate Issued**: a verified synopsis/thesis/rotation-completion certificate exists with issue timestamp
 - **Rotation Completion Verification**: post-rotation check where department confirms and UTRMC verifies completion
@@ -34,3 +37,4 @@ Notes:
 - UI reads `feedback` from API (alias of `supervisor_feedback`).
 - 2026-04-21 terminology lock update: synopsis, thesis, postings, and rotations phase-1 are deferred workflows, not active release claims.
 - 2026-05-30 terminology lock update: Backup Center operator terms added for pilot operations.
+- 2026-06-01 terminology lock update: additive Google Drive Backup connector terms added (no renames of existing terms).

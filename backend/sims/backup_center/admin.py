@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import BackupJob, RestoreJob, BackupAuditLog
+from .models import BackupJob, RestoreJob, BackupAuditLog, BackupCloudConnection, BackupCloudCopy
 
 @admin.register(BackupJob)
 class BackupJobAdmin(admin.ModelAdmin):
@@ -21,3 +21,19 @@ class BackupAuditLogAdmin(admin.ModelAdmin):
     list_filter = ('action',)
     search_fields = ('actor__username', 'actor__email')
     readonly_fields = ('created_at',)
+
+
+@admin.register(BackupCloudConnection)
+class BackupCloudConnectionAdmin(admin.ModelAdmin):
+    list_display = ('id', 'provider', 'status', 'account_email', 'backup_folder_name', 'updated_at')
+    list_filter = ('provider', 'status')
+    search_fields = ('account_email',)
+    readonly_fields = ('created_at', 'updated_at', 'token_expiry', 'last_health_check_at', 'last_error')
+
+
+@admin.register(BackupCloudCopy)
+class BackupCloudCopyAdmin(admin.ModelAdmin):
+    list_display = ('id', 'provider', 'backup_record', 'upload_status', 'verification_status', 'download_status', 'created_at')
+    list_filter = ('provider', 'upload_status', 'verification_status', 'download_status')
+    search_fields = ('remote_file_id', 'remote_file_name')
+    readonly_fields = ('created_at', 'updated_at', 'uploaded_at', 'verified_at', 'downloaded_at', 'error_message')

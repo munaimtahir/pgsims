@@ -6,6 +6,7 @@ import { fetchAuth } from "@/lib/auth/fetch";
 import BackupList from "@/components/backup/BackupList";
 import CreateBackupModal from "@/components/backup/CreateBackupModal";
 import RestoreModal from "@/components/backup/RestoreModal";
+import GoogleDrivePanel from "@/components/backup/GoogleDrivePanel";
 import { RefreshCw } from "lucide-react";
 import ErrorBanner from "@/components/ui/ErrorBanner";
 import SuccessBanner from "@/components/ui/SuccessBanner";
@@ -24,6 +25,7 @@ export default function BackupCenterPage() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [createDefaultKind, setCreateDefaultKind] = useState<"routine_application_data" | "disaster_recovery">("routine_application_data");
   const [isRestoreModalOpen, setIsRestoreModalOpen] = useState(false);
+  const [initialRestoreJobId, setInitialRestoreJobId] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
@@ -80,10 +82,22 @@ export default function BackupCenterPage() {
     loadRestores();
   }, [loadAuditLogs, loadBackups, loadRestores]);
 
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const drive = params.get("googleDrive");
+    if (drive === "connected") {
+      setSuccess("Google Drive connected successfully.");
+    } else if (drive === "error") {
+      setError("Google Drive connection failed. Please check settings and try again.");
+    }
+  }, []);
+
   const lastRoutine = backups.find((b) => b.backup_kind === "routine_application_data" && b.status === "completed");
   const lastDisaster = backups.find((b) => b.backup_kind === "disaster_recovery" && b.status === "completed");
   const lastRestore = restores[0];
   const totalBackups = backups.length;
+  const completedBackups = backups.filter((b) => b.status === "completed");
 
   if (!user) {
     return <div className="py-10 text-center text-gray-500">Loading user profile...</div>;
@@ -187,6 +201,16 @@ export default function BackupCenterPage() {
         </div>
       </SectionCard>
 
+      <GoogleDrivePanel
+        canManage={user?.role === "admin"}
+        completedBackups={completedBackups}
+        onRestoreReady={(restoreJobId) => {
+          setInitialRestoreJobId(restoreJobId);
+          setIsRestoreModalOpen(true);
+          setSuccess("Drive backup downloaded and prepared for restore.");
+        }}
+      />
+
       <SectionCard title="Backup History">
         {isLoading ? (
           <div className="py-10 text-center text-gray-500">Loading backups...</div>
@@ -256,9 +280,14 @@ export default function BackupCenterPage() {
 
       <RestoreModal
         isOpen={isRestoreModalOpen}
-        onClose={() => setIsRestoreModalOpen(false)}
+        initialRestoreJobId={initialRestoreJobId}
+        onClose={() => {
+          setIsRestoreModalOpen(false);
+          setInitialRestoreJobId(null);
+        }}
         onSuccess={() => {
           setIsRestoreModalOpen(false);
+          setInitialRestoreJobId(null);
           setSuccess("Restore completed successfully. A protection backup was created before restore.");
           loadBackups();
           loadAuditLogs();

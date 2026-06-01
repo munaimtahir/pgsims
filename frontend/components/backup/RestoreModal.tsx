@@ -1,11 +1,21 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { format } from 'date-fns';
 import { TriangleAlert, CloudUpload, XCircle, CheckCircle } from 'lucide-react';
 import { fetchAuth } from '@/lib/auth/fetch';
 import Modal from '@/components/ui/Modal';
 
-export default function RestoreModal({ isOpen, onClose, onSuccess }: { isOpen: boolean, onClose: () => void, onSuccess: () => void }) {
+export default function RestoreModal({
+  isOpen,
+  onClose,
+  onSuccess,
+  initialRestoreJobId,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  onSuccess: () => void;
+  initialRestoreJobId?: number | null;
+}) {
   const [step, setStep] = useState<1 | 2 | 3 | 4 | 5>(1); // 1: upload, 2: check, 3: details, 4: confirm, 5: result
   const [file, setFile] = useState<File | null>(null);
   const [restoreJobId, setRestoreJobId] = useState<number | null>(null);
@@ -29,6 +39,17 @@ export default function RestoreModal({ isOpen, onClose, onSuccess }: { isOpen: b
     setIsDryRunSuccess(false);
     setError(null);
   };
+
+  useEffect(() => {
+    if (!isOpen) return;
+    if (!initialRestoreJobId) return;
+    if (restoreJobId) return;
+    setIsProcessing(true);
+    setRestoreJobId(initialRestoreJobId);
+    // Begin at validation step for a server-prepared restore upload.
+    // validateBackup will transition the UI to step 2.
+    void validateBackup(initialRestoreJobId);
+  }, [isOpen, initialRestoreJobId, restoreJobId]);
 
   const handleClose = () => {
     if (isProcessing && step === 4) {
