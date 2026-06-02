@@ -5,9 +5,20 @@ import { Download, Clock, Trash2, ShieldCheck, FileSearch } from 'lucide-react';
 import { fetchAuth } from '@/lib/auth/fetch';
 import useAuthStore from '@/store/authStore';
 
-export default function BackupList({ backups, onRefresh }: { backups: any[], onRefresh: () => void }) {
+export default function BackupList({
+  backups,
+  driveCopyByBackupId,
+  onDriveRestoreReady,
+  onRefresh,
+}: {
+  backups: any[];
+  driveCopyByBackupId?: Record<number, any>;
+  onDriveRestoreReady?: (restoreJobId: number) => void;
+  onRefresh: () => void;
+}) {
   const [expandedId, setExpandedId] = useState<number | null>(null);
   const [lastValidationById, setLastValidationById] = useState<Record<number, any>>({});
+  const [driveActionBusyById, setDriveActionBusyById] = useState<Record<number, string | null>>({});
   const user = useAuthStore((s) => s.user);
   const canRestore = user?.role === 'admin';
 
@@ -97,6 +108,56 @@ export default function BackupList({ backups, onRefresh }: { backups: any[], onR
     );
   };
 
+  const driveStatusLabel = (backupId: number) => {
+    const copy = driveCopyByBackupId?.[backupId];
+    if (!copy) return 'Not uploaded';
+    if (copy.download_status === 'restore_ready') return 'Restore-ready';
+    if (copy.verification_status === 'verified') return 'Verified';
+    if (copy.verification_status === 'verification_failed') return 'Failed';
+    if (copy.upload_status === 'uploaded') return 'Uploaded';
+    if (copy.upload_status === 'upload_failed') return 'Failed';
+    if (copy.upload_status === 'uploading') return 'Uploading';
+    if (copy.verification_status === 'verifying') return 'Verifying';
+    if (copy.download_status === 'downloading') return 'Downloading';
+    if (copy.download_status === 'download_failed') return 'Failed';
+    return 'Not uploaded';
+  };
+
+  const runDriveAction = async (backupId: number, action: 'upload' | 'verify' | 'download') => {
+    if (!canRestore) return;
+    setDriveActionBusyById((p) => ({ ...p, [backupId]: action }));
+    try {
+      const endpoint =
+        action === 'upload'
+          ? `/api/backup_center/backups/${backupId}/google-drive/upload/`
+          : action === 'verify'
+            ? `/api/backup_center/backups/${backupId}/google-drive/verify/`
+            : `/api/backup_center/backups/${backupId}/google-drive/download/`;
+
+      const response = await fetchAuth(endpoint, { method: 'POST' });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        alert(data?.error || 'Google Drive action failed.');
+        return;
+      }
+
+      if (action === 'download' && typeof data?.restore_job_id === 'number') {
+        alert('Backup downloaded and prepared for restore. Open Restore Wizard to continue.');
+        onDriveRestoreReady?.(data.restore_job_id);
+      } else if (action === 'upload') {
+        alert('Uploaded to Google Drive.');
+      } else {
+        alert('Google Drive copy verified.');
+      }
+      onRefresh();
+    } catch (e) {
+      console.error(e);
+      alert('Google Drive action failed.');
+    } finally {
+      setDriveActionBusyById((p) => ({ ...p, [backupId]: null }));
+    }
+  };
+
   if (!sortedBackups || sortedBackups.length === 0) {
     return (
       <div className="p-10 text-center">
@@ -117,30 +178,35 @@ export default function BackupList({ backups, onRefresh }: { backups: any[], onR
 
   return (
     <div className="overflow-x-auto">
-      <table className="min-w-full divide-y divide-gray-200" aria-label="Backup History">
-        <thead className="bg-gray-50">
-          <tr>
-            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600">Date</th>
-            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600">Type</th>
-            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600">Created By</th>
-            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600">Size</th>
-            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600">Status</th>
-            <th className="px-4 py-3 text-right text-xs font-semibold text-gray-600">Actions</th>
-          </tr>
-        </thead>
+	      <table className="min-w-full divide-y divide-gray-200" aria-label="Backup History">
+	        <thead className="bg-gray-50">
+	          <tr>
+	            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600">Date</th>
+	            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600">Type</th>
+	            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600">Created By</th>
+	            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600">Size</th>
+	            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600">Status</th>
+	            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600">Google Drive</th>
+	            <th className="px-4 py-3 text-right text-xs font-semibold text-gray-600">Actions</th>
+	          </tr>
+	        </thead>
         <tbody className="bg-white divide-y divide-gray-100">
-          {sortedBackups.map((backup) => {
-            const isExpanded = expandedId === backup.id;
-            const kindLabel = backup.backup_kind === 'disaster_recovery' ? 'Full Server Recovery Backup' : 'Regular System Backup';
-            const validation = lastValidationById[backup.id];
-            return (
+	          {sortedBackups.map((backup) => {
+	            const isExpanded = expandedId === backup.id;
+	            const kindLabel = backup.backup_kind === 'disaster_recovery' ? 'Full Server Recovery Backup' : 'Regular System Backup';
+	            const validation = lastValidationById[backup.id];
+	            const driveCopy = driveCopyByBackupId?.[backup.id];
+	            const canUploadToDrive = canRestore && backup.status === 'completed' && !!backup.file_name;
+	            const canVerifyDrive = canRestore && !!driveCopy && driveCopy.upload_status === 'uploaded' && driveCopy.verification_status !== 'verified';
+	            const canDownloadDrive = canRestore && !!driveCopy && driveCopy.verification_status === 'verified';
+	            return (
               <React.Fragment key={backup.id}>
-                <tr className="hover:bg-gray-50">
-                  <td className="px-4 py-3 text-sm text-gray-900 whitespace-nowrap">{format(new Date(backup.created_at), 'PPP p')}</td>
-                  <td className="px-4 py-3 text-sm text-gray-700">{kindLabel}</td>
-                  <td className="px-4 py-3 text-sm text-gray-700">{backup.created_by_username || 'System'}</td>
-                  <td className="px-4 py-3 text-sm text-gray-700">{formatSize(backup.file_size)}</td>
-                  <td className="px-4 py-3 text-sm">
+	                <tr className="hover:bg-gray-50">
+	                  <td className="px-4 py-3 text-sm text-gray-900 whitespace-nowrap">{format(new Date(backup.created_at), 'PPP p')}</td>
+	                  <td className="px-4 py-3 text-sm text-gray-700">{kindLabel}</td>
+	                  <td className="px-4 py-3 text-sm text-gray-700">{backup.created_by_username || 'System'}</td>
+	                  <td className="px-4 py-3 text-sm text-gray-700">{formatSize(backup.file_size)}</td>
+	                  <td className="px-4 py-3 text-sm">
                     <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-semibold ring-1 ring-inset ${
                       backup.status === 'completed' ? 'bg-green-50 text-green-700 ring-green-600/20' :
                       backup.status === 'failed' ? 'bg-red-50 text-red-700 ring-red-600/20' :
@@ -153,8 +219,11 @@ export default function BackupList({ backups, onRefresh }: { backups: any[], onR
                         <ShieldCheck className="h-3.5 w-3.5 mr-1" /> Checked
                       </span>
                     ) : null}
-                  </td>
-                  <td className="px-4 py-3 text-right space-x-2">
+	                  </td>
+	                  <td className="px-4 py-3 text-sm text-gray-700 whitespace-nowrap">
+	                    <span className="text-xs text-gray-700">Google Drive: {driveStatusLabel(backup.id)}</span>
+	                  </td>
+	                  <td className="px-4 py-3 text-right space-x-2">
                     {backup.status === 'completed' && backup.file_name ? (
                       <>
                         <button
@@ -198,16 +267,16 @@ export default function BackupList({ backups, onRefresh }: { backups: any[], onR
                     ) : null}
                   </td>
                 </tr>
-                {isExpanded ? (
-                  <tr>
-                    <td colSpan={6} className="px-4 pb-4">
-                      <div className="mt-2 rounded-md border border-gray-200 bg-gray-50 p-4 text-xs text-gray-700 space-y-3">
+	                {isExpanded ? (
+	                  <tr>
+	                    <td colSpan={7} className="px-4 pb-4">
+	                      <div className="mt-2 rounded-md border border-gray-200 bg-gray-50 p-4 text-xs text-gray-700 space-y-3">
                         <div className="flex flex-wrap gap-x-6 gap-y-1 font-semibold text-gray-900 border-b border-gray-200 pb-2">
                           <span>Backup Record: #{backup.id}</span>
                           <span>Type: {backup.backup_kind === 'disaster_recovery' ? 'Full Server Recovery Backup' : 'Regular System Backup'}</span>
                         </div>
                         
-                        <div className="space-y-2">
+	                        <div className="space-y-2">
                           <details className="group border border-gray-200 rounded-md bg-white p-2">
                             <summary className="cursor-pointer select-none font-semibold text-gray-800 focus:outline-none">
                               Backup Contents
@@ -249,12 +318,44 @@ export default function BackupList({ backups, onRefresh }: { backups: any[], onR
                               <div><strong>Git Commit Hash:</strong> {backup.commit_hash || '—'}</div>
                             </div>
                           </details>
-                        </div>
-                        {backup.notes ? <div className="text-gray-600 italic mt-2"><strong>Notes:</strong> {backup.notes}</div> : null}
-                      </div>
-                    </td>
-                  </tr>
-                ) : null}
+	                        </div>
+	                        {canRestore && (
+	                          <div className="pt-2 border-t border-gray-200 flex flex-wrap items-center gap-2">
+	                            <span className="font-semibold text-gray-900">Google Drive</span>
+	                            <span className="text-gray-700">Google Drive: {driveStatusLabel(backup.id)}</span>
+	                            <div className="ml-auto flex flex-wrap gap-2">
+	                              <button
+	                                type="button"
+	                                onClick={() => runDriveAction(backup.id, 'upload')}
+	                                className="rounded-md bg-white px-2.5 py-1.5 text-xs font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 disabled:opacity-50"
+	                                disabled={!!driveActionBusyById[backup.id] || !canUploadToDrive}
+	                              >
+	                                {driveActionBusyById[backup.id] === 'upload' ? 'Uploading…' : 'Upload to Drive'}
+	                              </button>
+	                              <button
+	                                type="button"
+	                                onClick={() => runDriveAction(backup.id, 'verify')}
+	                                className="rounded-md bg-white px-2.5 py-1.5 text-xs font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 disabled:opacity-50"
+	                                disabled={!!driveActionBusyById[backup.id] || !canVerifyDrive}
+	                              >
+	                                {driveActionBusyById[backup.id] === 'verify' ? 'Verifying…' : 'Verify Drive Copy'}
+	                              </button>
+	                              <button
+	                                type="button"
+	                                onClick={() => runDriveAction(backup.id, 'download')}
+	                                className="rounded-md bg-white px-2.5 py-1.5 text-xs font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 disabled:opacity-50"
+	                                disabled={!!driveActionBusyById[backup.id] || !canDownloadDrive}
+	                              >
+	                                {driveActionBusyById[backup.id] === 'download' ? 'Downloading…' : 'Download from Drive'}
+	                              </button>
+	                            </div>
+	                          </div>
+	                        )}
+	                        {backup.notes ? <div className="text-gray-600 italic mt-2"><strong>Notes:</strong> {backup.notes}</div> : null}
+	                      </div>
+	                    </td>
+	                  </tr>
+	                ) : null}
               </React.Fragment>
             );
           })}

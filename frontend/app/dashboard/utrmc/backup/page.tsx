@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { fetchAuth } from "@/lib/auth/fetch";
 import BackupList from "@/components/backup/BackupList";
 import CreateBackupModal from "@/components/backup/CreateBackupModal";
@@ -21,6 +21,7 @@ export default function BackupCenterPage() {
   const [backups, setBackups] = useState<any[]>([]);
   const [auditLogs, setAuditLogs] = useState<any[]>([]);
   const [restores, setRestores] = useState<any[]>([]);
+  const [driveCopies, setDriveCopies] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [createDefaultKind, setCreateDefaultKind] = useState<"routine_application_data" | "disaster_recovery">("routine_application_data");
@@ -76,11 +77,27 @@ export default function BackupCenterPage() {
     }
   }, [normalizeList]);
 
+  const loadDriveCopies = useCallback(async () => {
+    if (user?.role !== "admin") {
+      setDriveCopies([]);
+      return;
+    }
+    try {
+      const response = await fetchAuth("/api/backup_center/google-drive/list/");
+      if (!response.ok) return;
+      const data = await response.json();
+      setDriveCopies(normalizeList(data));
+    } catch (e) {
+      console.error(e);
+    }
+  }, [normalizeList, user?.role]);
+
   useEffect(() => {
     loadBackups();
     loadAuditLogs();
     loadRestores();
-  }, [loadAuditLogs, loadBackups, loadRestores]);
+    loadDriveCopies();
+  }, [loadAuditLogs, loadBackups, loadRestores, loadDriveCopies]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -98,6 +115,22 @@ export default function BackupCenterPage() {
   const lastRestore = restores[0];
   const totalBackups = backups.length;
   const completedBackups = backups.filter((b) => b.status === "completed");
+
+  const latestDriveCopyByBackupId = useMemo(() => {
+    const map: Record<number, any> = {};
+    for (const c of driveCopies || []) {
+      const id = c?.backup_record_id;
+      if (typeof id !== "number") continue;
+      if (!map[id]) {
+        map[id] = c;
+        continue;
+      }
+      const currTs = map[id]?.created_at ? new Date(map[id].created_at).getTime() : 0;
+      const nextTs = c?.created_at ? new Date(c.created_at).getTime() : 0;
+      if (nextTs >= currTs) map[id] = c;
+    }
+    return map;
+  }, [driveCopies]);
 
   if (!user) {
     return <div className="py-10 text-center text-gray-500">Loading user profile...</div>;
@@ -131,6 +164,7 @@ export default function BackupCenterPage() {
               loadBackups();
               loadAuditLogs();
               loadRestores();
+              loadDriveCopies();
             }}
             className="inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
           >
@@ -208,6 +242,8 @@ export default function BackupCenterPage() {
           setInitialRestoreJobId(restoreJobId);
           setIsRestoreModalOpen(true);
           setSuccess("Drive backup downloaded and prepared for restore.");
+          loadRestores();
+          loadDriveCopies();
         }}
       />
 
@@ -215,7 +251,18 @@ export default function BackupCenterPage() {
         {isLoading ? (
           <div className="py-10 text-center text-gray-500">Loading backups...</div>
         ) : (
-          <BackupList backups={backups} onRefresh={() => { loadBackups(); loadAuditLogs(); }} />
+          <BackupList
+            backups={backups}
+            driveCopyByBackupId={latestDriveCopyByBackupId}
+            onDriveRestoreReady={(restoreJobId) => {
+              setInitialRestoreJobId(restoreJobId);
+              setIsRestoreModalOpen(true);
+              setSuccess("Drive backup downloaded and prepared for restore.");
+              loadRestores();
+              loadDriveCopies();
+            }}
+            onRefresh={() => { loadBackups(); loadAuditLogs(); loadDriveCopies(); }}
+          />
         )}
       </SectionCard>
 
@@ -274,6 +321,7 @@ export default function BackupCenterPage() {
           setSuccess("Backup started. When complete, download and store the file safely.");
           loadBackups();
           loadAuditLogs();
+          loadDriveCopies();
         }}
         defaultKind={createDefaultKind}
       />

@@ -4,6 +4,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import SectionCard from "@/components/ui/SectionCard";
 import { fetchAuth } from "@/lib/auth/fetch";
+import Modal from "@/components/ui/Modal";
 
 type DriveStatus = {
   enabled: boolean;
@@ -27,8 +28,12 @@ export default function GoogleDrivePanel({
 }) {
   const [status, setStatus] = useState<DriveStatus | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [technicalError, setTechnicalError] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [selectedBackupId, setSelectedBackupId] = useState<number | null>(null);
+  const [driveCopies, setDriveCopies] = useState<any[]>([]);
+  const [noAccess, setNoAccess] = useState(false);
+  const [isDisconnectOpen, setIsDisconnectOpen] = useState(false);
 
   const selectedBackup = useMemo(() => {
     if (!selectedBackupId) return null;
@@ -37,8 +42,13 @@ export default function GoogleDrivePanel({
 
   const loadStatus = useCallback(async () => {
     setError(null);
+    setTechnicalError(null);
     try {
       const response = await fetchAuth("/api/backup_center/google-drive/status/");
+      if (response.status === 403) {
+        setNoAccess(true);
+        return;
+      }
       if (!response.ok) {
         setError("Failed to load Google Drive status");
         return;
@@ -51,9 +61,26 @@ export default function GoogleDrivePanel({
     }
   }, []);
 
+  const loadDriveCopies = useCallback(async () => {
+    if (!canManage) {
+      setDriveCopies([]);
+      return;
+    }
+    try {
+      const response = await fetchAuth("/api/backup_center/google-drive/list/");
+      if (!response.ok) return;
+      const data = await response.json();
+      const list = Array.isArray(data?.results) ? data.results : [];
+      setDriveCopies(list);
+    } catch (e) {
+      console.error(e);
+    }
+  }, [canManage]);
+
   useEffect(() => {
     loadStatus();
-  }, [loadStatus]);
+    loadDriveCopies();
+  }, [loadStatus, loadDriveCopies]);
 
   useEffect(() => {
     if (!selectedBackupId && completedBackups.length > 0) {
@@ -64,12 +91,30 @@ export default function GoogleDrivePanel({
   const doAction = async (name: string, fn: () => Promise<void>) => {
     setBusy(name);
     setError(null);
+    setTechnicalError(null);
     try {
       await fn();
       await loadStatus();
+      await loadDriveCopies();
     } catch (e: any) {
       console.error(e);
-      setError(e?.message || "Action failed");
+      const msg = String(e?.message || "Action failed");
+      if (msg.toLowerCase().includes("permission") || msg.toLowerCase().includes("403")) {
+        setError("Permission denied.");
+        setTechnicalError(msg);
+      } else if (msg.toLowerCase().includes("not connected")) {
+        setError("Google Drive is not connected. Please connect Google Drive first.");
+        setTechnicalError(msg);
+      } else if (msg.toLowerCase().includes("missing") && msg.toLowerCase().includes("oauth")) {
+        setError("Google Drive is not configured on the server. Please contact the technical administrator.");
+        setTechnicalError(msg);
+      } else if (msg.toLowerCase().includes("encryption key")) {
+        setError("Backup encryption is not configured on the server. Please contact the technical administrator.");
+        setTechnicalError(msg);
+      } else {
+        setError("Google Drive action failed.");
+        setTechnicalError(msg);
+      }
     } finally {
       setBusy(null);
     }
@@ -126,12 +171,35 @@ export default function GoogleDrivePanel({
 
   const statusLine = useMemo(() => {
     if (!status) return "Loading…";
-    if (!status.enabled) return "Disabled (GOOGLE_DRIVE_BACKUP_ENABLED=false)";
+    if (!status.enabled) return "Not configured";
     if (status.status === "connected") return "Connected";
     if (status.status === "failed") return "Failed";
     if (status.status === "disconnected") return "Disconnected";
     return "Not connected";
   }, [status]);
+
+  const tokenExpired = useMemo(() => {
+    if (!status?.token_expiry) return false;
+    const ts = Date.parse(status.token_expiry);
+    if (Number.isNaN(ts)) return false;
+    return ts <= Date.now();
+  }, [status?.token_expiry]);
+
+  const lastUploadAt = useMemo(() => {
+    const ts = (driveCopies || [])
+      .map((c) => (c?.uploaded_at ? Date.parse(c.uploaded_at) : 0))
+      .filter((n) => Number.isFinite(n) && n > 0)
+      .sort((a, b) => b - a)[0];
+    return ts ? new Date(ts).toLocaleString() : null;
+  }, [driveCopies]);
+
+  const lastVerifiedAt = useMemo(() => {
+    const ts = (driveCopies || [])
+      .map((c) => (c?.verified_at ? Date.parse(c.verified_at) : 0))
+      .filter((n) => Number.isFinite(n) && n > 0)
+      .sort((a, b) => b - a)[0];
+    return ts ? new Date(ts).toLocaleString() : null;
+  }, [driveCopies]);
 
   return (
     <SectionCard
@@ -143,13 +211,13 @@ export default function GoogleDrivePanel({
               type="button"
               onClick={() => doAction("connect", connect)}
               className="pg-btn-primary"
-              disabled={!!busy || status?.status === "connected"}
+              disabled={!!busy || status?.status === "connected" || status?.enabled === false}
             >
               {busy === "connect" ? "Connecting…" : "Connect Google Drive"}
             </button>
             <button
               type="button"
-              onClick={() => doAction("disconnect", disconnect)}
+              onClick={() => setIsDisconnectOpen(true)}
               className="rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
               disabled={!!busy || status?.status !== "connected"}
             >
@@ -159,7 +227,7 @@ export default function GoogleDrivePanel({
               type="button"
               onClick={() => doAction("health", healthCheck)}
               className="rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
-              disabled={!!busy || status?.status !== "connected"}
+              disabled={!!busy || status?.status !== "connected" || tokenExpired}
             >
               Check Connection
             </button>
@@ -170,21 +238,51 @@ export default function GoogleDrivePanel({
       }
     >
       <div className="space-y-3 text-sm">
-        {error && <div className="rounded-md border border-red-200 bg-red-50 p-3 text-red-800">{error}</div>}
+        {noAccess && (
+          <div className="rounded-md border border-gray-200 bg-gray-50 p-3 text-gray-700">
+            Google Drive management is available to Super Admin only.
+          </div>
+        )}
+        {error && !noAccess && (
+          <div className="rounded-md border border-red-200 bg-red-50 p-3 text-red-800">
+            <div className="font-semibold">Action failed</div>
+            <div className="mt-1">{error}</div>
+            {technicalError && (
+              <details className="mt-2 text-xs">
+                <summary className="cursor-pointer select-none">Technical details</summary>
+                <div className="mt-1 whitespace-pre-wrap text-red-900/80">{technicalError}</div>
+              </details>
+            )}
+          </div>
+        )}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           <div className="rounded-md border border-gray-200 bg-gray-50 p-3">
             <div className="text-xs text-gray-500">Status</div>
-            <div className="font-semibold text-gray-900">{statusLine}</div>
+            <div className="font-semibold text-gray-900">
+              {tokenExpired ? "Token expired" : statusLine}
+            </div>
             {status?.connected_account && <div className="mt-1 text-xs text-gray-600">Account: {status.connected_account}</div>}
           </div>
           <div className="rounded-md border border-gray-200 bg-gray-50 p-3">
             <div className="text-xs text-gray-500">Backup folder</div>
             <div className="font-semibold text-gray-900">{status?.backup_folder?.name || "Not set"}</div>
-            {status?.backup_folder?.id && <div className="mt-1 text-xs text-gray-600">Folder ID: {status.backup_folder.id}</div>}
+            {status?.backup_folder?.id && (
+              <details className="mt-1 text-xs text-gray-600">
+                <summary className="cursor-pointer select-none">Technical details</summary>
+                <div className="mt-1">Folder ID: {status.backup_folder.id}</div>
+              </details>
+            )}
           </div>
           <div className="rounded-md border border-gray-200 bg-gray-50 p-3">
-            <div className="text-xs text-gray-500">Last error</div>
-            <div className="text-gray-800">{status?.last_error || "None"}</div>
+            <div className="text-xs text-gray-500">Recent activity</div>
+            <div className="text-gray-800">
+              <div><span className="font-semibold">Last upload:</span> {lastUploadAt || "No upload yet"}</div>
+              <div className="mt-1"><span className="font-semibold">Last verification:</span> {lastVerifiedAt || "Not verified yet"}</div>
+              <details className="mt-2 text-xs text-gray-600">
+                <summary className="cursor-pointer select-none">Last error</summary>
+                <div className="mt-1 whitespace-pre-wrap">{status?.last_error || "None"}</div>
+              </details>
+            </div>
           </div>
         </div>
 
@@ -215,7 +313,7 @@ export default function GoogleDrivePanel({
                   type="button"
                   onClick={() => doAction("folder", createFolder)}
                   className="rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
-                  disabled={!!busy || status?.status !== "connected"}
+                  disabled={!!busy || status?.status !== "connected" || tokenExpired}
                 >
                   Create/Use Backup Folder
                 </button>
@@ -223,7 +321,7 @@ export default function GoogleDrivePanel({
                   type="button"
                   onClick={() => doAction("upload", uploadSelected)}
                   className="pg-btn-primary"
-                  disabled={!!busy || status?.status !== "connected" || !selectedBackup}
+                  disabled={!!busy || status?.status !== "connected" || tokenExpired || !selectedBackup}
                 >
                   {busy === "upload" ? "Uploading…" : "Upload Backup to Drive"}
                 </button>
@@ -231,7 +329,7 @@ export default function GoogleDrivePanel({
                   type="button"
                   onClick={() => doAction("verify", verifySelected)}
                   className="rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
-                  disabled={!!busy || status?.status !== "connected" || !selectedBackup}
+                  disabled={!!busy || status?.status !== "connected" || tokenExpired || !selectedBackup}
                 >
                   Verify Drive Copy
                 </button>
@@ -239,7 +337,7 @@ export default function GoogleDrivePanel({
                   type="button"
                   onClick={() => doAction("download", downloadSelected)}
                   className="rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
-                  disabled={!!busy || status?.status !== "connected" || !selectedBackup}
+                  disabled={!!busy || status?.status !== "connected" || tokenExpired || !selectedBackup}
                 >
                   {busy === "download" ? "Downloading…" : "Download from Drive"}
                 </button>
@@ -251,7 +349,35 @@ export default function GoogleDrivePanel({
           </div>
         )}
       </div>
+
+      <Modal
+        isOpen={isDisconnectOpen}
+        onClose={() => setIsDisconnectOpen(false)}
+        title="Disconnect Google Drive?"
+        maxWidth="max-w-lg"
+      >
+        <p className="text-sm text-gray-700">
+          Disconnecting Google Drive stops new uploads from PGSIMS. It does not delete backup files already present in Google Drive.
+        </p>
+        <div className="mt-4 flex justify-end gap-2">
+          <button
+            type="button"
+            onClick={() => setIsDisconnectOpen(false)}
+            className="rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
+            disabled={!!busy}
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={() => doAction("disconnect", async () => { await disconnect(); setIsDisconnectOpen(false); })}
+            className="rounded-md bg-red-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-500 disabled:opacity-50"
+            disabled={!!busy || status?.status !== "connected"}
+          >
+            {busy === "disconnect" ? "Disconnecting…" : "Disconnect"}
+          </button>
+        </div>
+      </Modal>
     </SectionCard>
   );
 }
-

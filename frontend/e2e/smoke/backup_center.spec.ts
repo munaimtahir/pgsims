@@ -11,6 +11,8 @@ test.describe('[smoke] Backup Center', () => {
     await expect(page.getByRole('heading', { name: 'Backup Center' })).toBeVisible();
     await expect(page.getByText('Create Regular System Backup')).toBeVisible();
     await expect(page.getByText('Create Full Server Recovery Backup')).toBeVisible();
+    await expect(page.getByText('Google Drive Backup')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Connect Google Drive' })).toBeVisible();
     await expect(page.getByText('Backup History')).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Restore Wizard' })).toBeVisible();
     await expect(page.getByText('Audit Log')).toBeVisible();
@@ -26,6 +28,8 @@ test.describe('[smoke] Backup Center', () => {
     await expect(page.getByText('Create Regular System Backup')).toBeVisible();
     await expect(page.getByText('Create Full Server Recovery Backup')).not.toBeVisible();
     await expect(page.getByText('Restore Wizard')).not.toBeVisible();
+    await expect(page.getByText('Google Drive Backup')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Connect Google Drive' })).not.toBeVisible();
     await expect(page.getByText('Backup History')).toBeVisible();
     await expect(page.getByText('Audit Log')).toBeVisible();
   });
