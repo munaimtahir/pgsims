@@ -71,6 +71,17 @@ services:
       - CELERY_BROKER_URL=redis://redis:6379/1
       - CELERY_RESULT_BACKEND=redis://redis:6379/1
       - LOGIN_RATE_LIMIT=${LOGIN_RATE_LIMIT:-30/min}
+      # Backup Center - encryption (required for Google Drive uploads/downloads)
+      - PGSIMS_BACKUP_ENCRYPTION_KEY=${PGSIMS_BACKUP_ENCRYPTION_KEY:-}
+      - PGSIMS_BACKUP_ENCRYPTION_KEY_FILE=${PGSIMS_BACKUP_ENCRYPTION_KEY_FILE:-}
+      # Backup Center - Google Drive connector (OAuth)
+      - GOOGLE_DRIVE_BACKUP_ENABLED=${GOOGLE_DRIVE_BACKUP_ENABLED:-false}
+      - GOOGLE_DRIVE_CLIENT_ID=${GOOGLE_DRIVE_CLIENT_ID:-}
+      - GOOGLE_DRIVE_CLIENT_SECRET=${GOOGLE_DRIVE_CLIENT_SECRET:-}
+      - GOOGLE_DRIVE_REDIRECT_URI=${GOOGLE_DRIVE_REDIRECT_URI:-}
+      - GOOGLE_DRIVE_SCOPES=${GOOGLE_DRIVE_SCOPES:-https://www.googleapis.com/auth/drive.file}
+      - GOOGLE_DRIVE_BACKUP_FOLDER_NAME=${GOOGLE_DRIVE_BACKUP_FOLDER_NAME:-PGSIMS Backups}
+      - GOOGLE_DRIVE_BACKUP_FOLDER_ID=${GOOGLE_DRIVE_BACKUP_FOLDER_ID:-}
       # Reverse proxy settings for Caddy
       - USE_PROXY_HEADERS=${USE_PROXY_HEADERS:-True}
       - SECURE_SSL_REDIRECT=${SECURE_SSL_REDIRECT:-True}
@@ -119,6 +130,17 @@ services:
       - REDIS_URL=redis://redis:6379/0
       - CELERY_BROKER_URL=redis://redis:6379/1
       - CELERY_RESULT_BACKEND=redis://redis:6379/1
+      # Backup Center - encryption (required for Google Drive uploads/downloads)
+      - PGSIMS_BACKUP_ENCRYPTION_KEY=${PGSIMS_BACKUP_ENCRYPTION_KEY:-}
+      - PGSIMS_BACKUP_ENCRYPTION_KEY_FILE=${PGSIMS_BACKUP_ENCRYPTION_KEY_FILE:-}
+      # Backup Center - Google Drive connector (OAuth)
+      - GOOGLE_DRIVE_BACKUP_ENABLED=${GOOGLE_DRIVE_BACKUP_ENABLED:-false}
+      - GOOGLE_DRIVE_CLIENT_ID=${GOOGLE_DRIVE_CLIENT_ID:-}
+      - GOOGLE_DRIVE_CLIENT_SECRET=${GOOGLE_DRIVE_CLIENT_SECRET:-}
+      - GOOGLE_DRIVE_REDIRECT_URI=${GOOGLE_DRIVE_REDIRECT_URI:-}
+      - GOOGLE_DRIVE_SCOPES=${GOOGLE_DRIVE_SCOPES:-https://www.googleapis.com/auth/drive.file}
+      - GOOGLE_DRIVE_BACKUP_FOLDER_NAME=${GOOGLE_DRIVE_BACKUP_FOLDER_NAME:-PGSIMS Backups}
+      - GOOGLE_DRIVE_BACKUP_FOLDER_ID=${GOOGLE_DRIVE_BACKUP_FOLDER_ID:-}
     volumes:
       - media_volume:/app/media
       - ../backend/logs:/app/logs
@@ -145,6 +167,17 @@ services:
       - REDIS_URL=redis://redis:6379/0
       - CELERY_BROKER_URL=redis://redis:6379/1
       - CELERY_RESULT_BACKEND=redis://redis:6379/1
+      # Backup Center - encryption (required for Google Drive uploads/downloads)
+      - PGSIMS_BACKUP_ENCRYPTION_KEY=${PGSIMS_BACKUP_ENCRYPTION_KEY:-}
+      - PGSIMS_BACKUP_ENCRYPTION_KEY_FILE=${PGSIMS_BACKUP_ENCRYPTION_KEY_FILE:-}
+      # Backup Center - Google Drive connector (OAuth)
+      - GOOGLE_DRIVE_BACKUP_ENABLED=${GOOGLE_DRIVE_BACKUP_ENABLED:-false}
+      - GOOGLE_DRIVE_CLIENT_ID=${GOOGLE_DRIVE_CLIENT_ID:-}
+      - GOOGLE_DRIVE_CLIENT_SECRET=${GOOGLE_DRIVE_CLIENT_SECRET:-}
+      - GOOGLE_DRIVE_REDIRECT_URI=${GOOGLE_DRIVE_REDIRECT_URI:-}
+      - GOOGLE_DRIVE_SCOPES=${GOOGLE_DRIVE_SCOPES:-https://www.googleapis.com/auth/drive.file}
+      - GOOGLE_DRIVE_BACKUP_FOLDER_NAME=${GOOGLE_DRIVE_BACKUP_FOLDER_NAME:-PGSIMS Backups}
+      - GOOGLE_DRIVE_BACKUP_FOLDER_ID=${GOOGLE_DRIVE_BACKUP_FOLDER_ID:-}
     volumes:
       - ../backend/logs:/app/logs
     depends_on:
