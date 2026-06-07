@@ -225,7 +225,8 @@ export default function FlexibleMappingImport() {
       phone: ['phone', 'telephone'],
       department_name: ['departmentname', 'deptname'],
       description: ['description', 'desc'],
-      active: ['active', 'status', 'isenabled']
+      active: ['active', 'status', 'isenabled'],
+      password: ['password', 'pass', 'userpassword', 'pwd', 'passcode']
     };
     return mappingRules[fieldName] || [fieldName.toLowerCase().replace(/[^a-z0-9]/g, '')];
   };

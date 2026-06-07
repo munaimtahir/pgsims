@@ -81,7 +81,7 @@ export interface DataCorrectionAuditRow {
 }
 
 export type UserbaseUserUpsert = Partial<
-  Pick<UserbaseUser, 'username' | 'email' | 'first_name' | 'last_name' | 'role' | 'is_active'>
+  Pick<UserbaseUser, 'username' | 'email' | 'first_name' | 'last_name' | 'role' | 'is_active' | 'specialty'>
 > & {
   password?: string;
 };
@@ -92,6 +92,17 @@ export interface DepartmentRosterResponse {
   faculty: Array<{ id: number; username: string; full_name?: string; role: string }>;
   supervisors: Array<{ id: number; username: string; full_name?: string; role: string }>;
   residents: Array<{ id: number; username: string; full_name?: string; role: string }>;
+}
+
+export interface UserbaseStaffProfile {
+  id: number;
+  user: UserbaseUser;
+  user_id?: number;
+  designation: string;
+  phone: string;
+  active: boolean;
+  created_at: string;
+  updated_at: string;
 }
 
 export const userbaseApi = {
@@ -114,6 +125,9 @@ export const userbaseApi = {
       const response = await apiClient.get(`/api/hospitals/${id}/departments/`);
       return response.data;
     },
+    delete: async (id: number) => {
+      await apiClient.delete(`/api/hospitals/${id}/`);
+    },
   },
   departments: {
     list: async () => {
@@ -129,6 +143,9 @@ export const userbaseApi = {
     update: async (id: number, payload: Partial<UserbaseDepartment>) => {
       const response = await apiClient.patch<UserbaseDepartment>(`/api/departments/${id}/`, payload);
       return response.data;
+    },
+    delete: async (id: number) => {
+      await apiClient.delete(`/api/departments/${id}/`);
     },
     roster: async (id: number) => {
       const response = await apiClient.get<DepartmentRosterResponse>(`/api/departments/${id}/roster/`);
@@ -178,6 +195,21 @@ export const userbaseApi = {
       payload: Partial<{ training_start: string; training_end: string; training_level: string }>
     ) => {
       const response = await apiClient.patch(`/api/residents/${userId}/`, payload);
+      return response.data;
+    },
+  },
+  staff: {
+    list: async () => {
+      const response = await apiClient.get<{ count?: number; results?: UserbaseStaffProfile[] } | UserbaseStaffProfile[]>(
+        '/api/staff/'
+      );
+      return Array.isArray(response.data) ? response.data : response.data.results || [];
+    },
+    update: async (
+      userId: number,
+      payload: Partial<{ designation: string; phone: string; active?: boolean }>
+    ) => {
+      const response = await apiClient.patch(`/api/staff/${userId}/`, payload);
       return response.data;
     },
   },

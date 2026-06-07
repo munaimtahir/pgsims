@@ -17,7 +17,7 @@ Create a `.env` file in the root directory based on `.env.template` with configu
 ```ini
 DEBUG=False
 SECRET_KEY=your-production-django-secret-key
-ALLOWED_HOSTS=api.pgsims.alshifalab.pk,localhost,127.0.0.1
+ALLOWED_HOSTS=api.pgsims.alshifalab.pk,pg.fmu.edu.pk,pgsims.alshifalab.pk,localhost,127.0.0.1
 DB_NAME=sims_db
 DB_USER=sims_user
 DB_PASSWORD=your-db-password
@@ -25,7 +25,7 @@ DB_HOST=db
 DB_PORT=5432
 REDIS_URL=redis://redis:6379/0
 CELERY_BROKER_URL=redis://redis:6379/1
-CORS_ALLOWED_ORIGINS=http://localhost:3000,http://localhost:8082
+CORS_ALLOWED_ORIGINS=http://localhost:3000,http://localhost:8082,https://pg.fmu.edu.pk,https://pgsims.alshifalab.pk
 ```
 
 ### 2. Launch Services

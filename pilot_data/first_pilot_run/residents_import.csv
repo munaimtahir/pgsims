@@ -1,0 +1,14 @@
+email,full_name,phone_number,role,specialty,year,pgr_id,training_start,training_end,training_level,department_code,hospital_code,supervisor_email,username,password,active
+haziqali58@gmail.com,Dr syed ali haziq,03216608284,resident,medicine,4,Med-2023-035-21454,2023-01-30,2027-01-30,Y4,MED,AH,amir.shaukat@placeholder.example.com,syed.ali.haziq,,true
+zainebwaris99@gmail.com,Zaineb,03351077754,resident,other,2,MED-2024-035-23736,2024-07-26,2029-07-26,Y2,ONCO,AH,muhammad.irfan@placeholder.example.com,zaineb,,true
+riyasheikh16@gmail.com,FATIMA RIAZ,03486200780,resident,medicine,2,2024-057-PG-FMU,2024-07-25,2028-07-24,Y2,MED,AH,muhammad.irfan@placeholder.example.com,fatima.riaz,,true
+minal.nsmc.3361@gmail.com,Manahil Khalil,03350779131,resident,medicine,3,MED-2024-035-23066,2024-01-31,2028-01-31,Y3,MED,AH,muhammad.irfan@placeholder.example.com,manahil.khalil,,true
+asadshabbir777@gmail.com,Muhammad Asad Shabbir,03000678701,resident,medicine,3,Med-2023-035-22224,2023-07-27,2027-07-26,Y3,MED,AH,amir.shaukat@placeholder.example.com,muhammad.asad.shabbir,,true
+usmanghuman2001@gmail.com,Muhammad usman,03366560110,resident,medicine,1,PGR-TEMP-006,2026-02-01,2030-01-31,Y1,MED,AH,umair.ahmed@placeholder.example.com,muhammad.usman,,true
+areeb2808@gmail.com,Areeb Amjad,03244384600,resident,cardiology,1,PGR-TEMP-007,2026-01-30,2031-01-30,Y1,CARD,AH,amir.shaukat@placeholder.example.com,areeb.amjad,,true
+farhan6279@gmail.com,Farhan Ali,03347578265,resident,medicine,4,2023-008-PG-FMU,2023-01-31,2027-01-30,Y4,MED,AH,amir.shaukat@placeholder.example.com,farhan.ali,,true
+pdphtt@gmail.com,Muhammad Haris Jamil,03318450661,resident,medicine,3,2024-005-PG-FMU,2024-01-31,2028-01-31,Y3,MED,AH,muhammad.arif@placeholder.example.com,muhammad.haris.jamil,,true
+aliarshed989@gmail.com,SYED ALI ARSHED,03226005411,resident,urology,4,2022-054-PG-FMU,2022-08-23,2027-08-22,Y4,SURG,AH,muhammad.irfan.munir@placeholder.example.com,ali.arshed,,true
+raja.bilawal.55@gmail.com,Dr.Bullawel Arshad,03005493568,resident,urology,5,2023-035-PG-FMU,2023-07-27,2028-07-26,Y5,SURG,AH,muhammad.irfan.munir@placeholder.example.com,dr.bullawel.arshad,,true
+frazkhalic@gmail.com,Faraz Khalid,03226093420,resident,urology,3,PGR-TEMP-URO-003,2024-02-01,2029-01-31,Y3,SURG,AH,dr.m.tahir.bashir.malik@placeholder.example.com,faraz.khalid,,true
+muzammilibraheem867@gmail.com,Muhammad Muzammil,03326080486,resident,urology,5,PGR-TEMP-URO-004,2026-02-01,2031-01-31,Y5,SURG,UTRMC,muhammad.irfan.munir@placeholder.example.com,muhammad.muzammil,,true

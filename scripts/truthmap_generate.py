@@ -51,9 +51,10 @@ if os.path.exists(FRONTEND_TXT):
                     })
 
 def strip_dynamic(url):
+    url = re.split(r'\?(?!P<)', url)[0]
     url = re.sub(r'\$\{.*?\}', '{id}', url)
-    url = re.sub(r'<[^>]+>', '{id}', url)
     url = re.sub(r'\(\?P<[^>]+>[^)]+\)', '{id}', url)
+    url = re.sub(r'<[^>]+>', '{id}', url)
     url = re.sub(r'/[^/]+\.ts', '', url) # some junk cleaner
     # backend specific regex cleans
     url = re.sub(r'\^', '', url)
@@ -61,7 +62,7 @@ def strip_dynamic(url):
     url = re.sub(r'\\\.\(\?P<format>\[a-z0-9\]\+\)/?', '', url)
     url = re.sub(r'<drf_format_suffix:format>', '', url)
     
-    url = re.sub(r'/api/', '/', url)
+    url = re.sub(r'^/?api/', '', url)
     return url.strip('/')
 
 # Map frontend to backend
@@ -72,10 +73,19 @@ for bc in backend_endpoints:
 for fc in frontend_calls:
     fc['matches'] = []
     fc_stripped = strip_dynamic(fc['url'])
-    # Very basic matching
+    fc_pattern = "^" + re.escape(fc_stripped).replace(r'\{id\}', r'[^/]+') + "$"
     for bc in backend_endpoints:
         bc_stripped = strip_dynamic(bc['path'])
-        if bc_stripped == fc_stripped or (bc_stripped in fc_stripped) or (fc_stripped in bc_stripped):
+        bc_pattern = "^" + re.escape(bc_stripped).replace(r'\{id\}', r'[^/]+') + "$"
+        
+        is_match = (
+            bc_stripped == fc_stripped or
+            (bc_stripped in fc_stripped) or
+            (fc_stripped in bc_stripped) or
+            re.match(fc_pattern, bc_stripped) or
+            re.match(bc_pattern, fc_stripped)
+        )
+        if is_match:
             if bc['method'] == 'ANY' or bc['method'] == fc['method']:
                 fc['matches'].append(bc)
                 bc['fe_callers'].append(fc)

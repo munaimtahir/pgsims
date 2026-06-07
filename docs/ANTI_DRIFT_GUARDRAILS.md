@@ -187,6 +187,7 @@ GUARDRAILS ACTIVE
 - ✅ DO change ONLY with explicit exception documented
 - **Validation**: `ROUTES.md` has version bump if changed
 - **Evidence**: CHANGELOG.md mentions exception + approval
+- **EXPLICIT OVERRIDE/UNLOCK**: The Frozen UX Rule is unlocked for debugging UI/UX, modifying/adding/updating routes, views, components, navigation labels, and terminology as explicitly directed by the project lead.
 
 #### Rule G15: No Migration Without Data Validation
 - ❌ DO NOT add migration without forward + reverse testing

@@ -91,6 +91,7 @@ Blockers:
 - **Any** UX-affecting change requires explicit approval AND version bump note in:
   - `docs/contracts/ROUTES.md`
   - `docs/contracts/TERMINOLOGY.md`
+- **EXPLICIT OVERRIDE/UNLOCK**: The Frozen UX Rule is unlocked for debugging UI/UX, modifying/adding/updating routes, views, components, navigation labels, and terminology as explicitly directed by the project lead.
 - **Reference**: See `docs/PROD_GATE_CLOSURE/02_phase_guide.md` for scope boundaries
 
 ---

@@ -53,11 +53,12 @@ ADMIN_RESET_FINGERPRINT = "RESET_2026-02-28_A"
 
 # ALLOWED_HOSTS - Support both localhost and VPS deployments
 # For localhost: localhost,127.0.0.1
-# For VPS: api.pgsims.alshifalab.pk,pgsims.alshifalab.pk,localhost,127.0.0.1
+# For VPS: api.pgsims.alshifalab.pk,pg.fmu.edu.pk,pgsims.alshifalab.pk,localhost,127.0.0.1
 ALLOWED_HOSTS = [
     host.strip()
     for host in os.environ.get(
-        "ALLOWED_HOSTS", "api.pgsims.alshifalab.pk,pgsims.alshifalab.pk,localhost,127.0.0.1"
+        "ALLOWED_HOSTS",
+        "api.pgsims.alshifalab.pk,pg.fmu.edu.pk,pgsims.alshifalab.pk,localhost,127.0.0.1",
     ).split(",")
     if host.strip()
 ]

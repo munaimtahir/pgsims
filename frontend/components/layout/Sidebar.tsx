@@ -44,6 +44,7 @@ function Icon({ name, className = 'h-5 w-5' }: { name: string; className?: strin
     'location-marker': <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.243-4.243a8 8 0 1111.314 0z M15 11a3 3 0 11-6 0 3 3 0 016 0z" />,
     'check-circle': <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />,
     logout: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />,
+    lock: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 00-2 2zm10-10V7a4 4 0 00-8 0v4h8z" />,
     menu: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />,
   };
 
@@ -255,6 +256,14 @@ export default function Sidebar({ role, userName, onLogout }: SidebarProps) {
             </div>
           </div>
         )}
+        <Link
+          href="/dashboard/change-password"
+          title={collapsed ? 'Change Password' : undefined}
+          className="group flex items-center gap-3 w-full px-3 py-2.5 mb-2 rounded-xl text-sm font-medium text-slate-400 hover:bg-slate-800/60 hover:text-slate-200 border border-transparent transition-all duration-200"
+        >
+          <Icon name="lock" className="h-5 w-5 flex-shrink-0" />
+          {!collapsed && <span>Change Password</span>}
+        </Link>
         <button
           onClick={onLogout}
           title={collapsed ? 'Logout' : undefined}

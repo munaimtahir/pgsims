@@ -542,7 +542,10 @@ class DataQualitySummaryView(APIView):
         incomplete = residents.filter(is_complete_profile=False).count()
         complete = residents.filter(is_complete_profile=True).count()
         missing_dates = residents.filter(
-            Q(training_records__has_default_dates=True) | Q(resident_links__has_default_dates=True)
+            Q(training_records__isnull=True)
+            | Q(training_records__has_default_dates=True)
+            | Q(resident_links__isnull=True)
+            | Q(resident_links__has_default_dates=True)
         ).distinct().count()
         return Response(
             {
@@ -576,7 +579,10 @@ class DataQualityUsersView(APIView):
             queryset = queryset.filter(is_complete_profile=False)
         elif filter_value == "missing_dates":
             queryset = queryset.filter(
-                Q(training_records__has_default_dates=True) | Q(resident_links__has_default_dates=True)
+                Q(training_records__isnull=True)
+                | Q(training_records__has_default_dates=True)
+                | Q(resident_links__isnull=True)
+                | Q(resident_links__has_default_dates=True)
             ).distinct()
         elif filter_value == "missing_email":
             queryset = queryset.filter(Q(email__isnull=True) | Q(email=""))
@@ -593,7 +599,9 @@ class DataQualityUsersView(APIView):
                     "issues": user.data_issues or [],
                     "is_complete_profile": user.is_complete_profile,
                     "has_placeholder_email": user.has_placeholder_email,
-                    "has_missing_dates": user.training_records.filter(has_default_dates=True).exists()
+                    "has_missing_dates": not user.training_records.exists()
+                    or user.training_records.filter(has_default_dates=True).exists()
+                    or not user.resident_links.exists()
                     or user.resident_links.filter(has_default_dates=True).exists(),
                 }
             )

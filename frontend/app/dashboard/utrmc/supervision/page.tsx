@@ -8,8 +8,8 @@ import { isUtrmcManagerRole, isUtrmcReadonlyRole } from '@/lib/rbac';
 
 interface LinkEntry {
   id: number;
-  supervisor: number | { id: number; username: string; full_name?: string };
-  resident: number | { id: number; username: string; full_name?: string };
+  supervisor_user?: { id: number; username: string; full_name?: string };
+  resident_user?: { id: number; username: string; full_name?: string };
   start_date: string;
   active: boolean;
 }
@@ -60,7 +60,13 @@ export default function SupervisionPage() {
   const save = async () => {
     setSaving(true);
     try {
-      await userbaseApi.supervisionLinks.create({ ...form, supervisor: Number(form.supervisor), resident: Number(form.resident) });
+      await userbaseApi.supervisionLinks.create({
+        supervisor_user_id: Number(form.supervisor),
+        resident_user_id: Number(form.resident),
+        start_date: form.start_date,
+        active: form.active,
+        department_id: null,
+      });
       setShowModal(false);
       load();
     } catch { setError('Save failed'); }
@@ -88,8 +94,8 @@ export default function SupervisionPage() {
           <tbody className="divide-y divide-gray-100">
             {links.map((l) => (
               <tr key={l.id} className="hover:bg-gray-50">
-                <td className="px-4 py-2">{userName(l.supervisor)}</td>
-                <td className="px-4 py-2">{userName(l.resident)}</td>
+                <td className="px-4 py-2">{userName(l.supervisor_user)}</td>
+                <td className="px-4 py-2">{userName(l.resident_user)}</td>
                 <td className="px-4 py-2 text-gray-500">{l.start_date||'—'}</td>
                 <td className="px-4 py-2">{l.active?<span className="text-green-600">Yes</span>:<span className="text-gray-400">No</span>}</td>
               </tr>

@@ -19,6 +19,24 @@ const DEPARTMENT_FIELDS: Array<{ key: keyof Pick<DepartmentForm, 'name' | 'code'
   { key: 'description', label: 'Description' },
 ];
 
+function getErrorMessage(error: unknown, fallback = 'Action failed'): string {
+  if (
+    typeof error === 'object' &&
+    error !== null &&
+    'response' in error &&
+    typeof (error as { response?: unknown }).response === 'object' &&
+    (error as { response?: unknown }).response !== null &&
+    'data' in ((error as { response?: { data?: unknown } }).response || {})
+  ) {
+    const data = (error as { response?: { data?: unknown } }).response?.data;
+    if (typeof data === 'object' && data !== null) {
+      return JSON.stringify(data);
+    }
+    return String(data);
+  }
+  return fallback;
+}
+
 export default function DepartmentsPage() {
   const { user } = useAuthStore();
   const canManage = isUtrmcManagerRole(user?.role);
@@ -37,6 +55,19 @@ export default function DepartmentsPage() {
 
   const openAdd = () => { setForm({ name:'',code:'',description:'',active:true }); setEditing(null); setShowModal(true); };
   const openEdit = (d: UserbaseDepartment) => { setForm({ name:d.name,code:d.code,description:d.description||'',active:d.active }); setEditing(d); setShowModal(true); };
+
+  const deleteDepartment = async (id: number, name: string) => {
+    if (!window.confirm(`Are you sure you want to delete the department "${name}"? This operation is destructive.`)) {
+      return;
+    }
+    setError('');
+    try {
+      await userbaseApi.departments.delete(id);
+      load();
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, 'Failed to delete department. It may have dependent data (e.g. matrix assignments).'));
+    }
+  };
 
   const save = async () => {
     setSaving(true);
@@ -88,9 +119,14 @@ export default function DepartmentsPage() {
                   <td className="px-4 py-3">{d.active ? <span className="text-green-600">Yes</span> : <span className="text-gray-400">No</span>}</td>
                   <td className="px-4 py-3">
                     {canManage ? (
-                      <button onClick={() => openEdit(d)} className="rounded-full border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700">
-                        Edit
-                      </button>
+                      <div className="flex gap-2">
+                        <button onClick={() => openEdit(d)} className="rounded-full border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700">
+                          Edit
+                        </button>
+                        <button onClick={() => deleteDepartment(d.id, d.name)} className="rounded-full border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-100">
+                          Delete
+                        </button>
+                      </div>
                     ) : (
                       <span className="text-xs text-gray-400">View only</span>
                     )}

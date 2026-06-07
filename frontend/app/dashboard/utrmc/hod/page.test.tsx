@@ -38,7 +38,7 @@ describe('UTRMC HOD assignments page', () => {
       {
         id: 40,
         department: { id: 10, name: 'Medicine' },
-        hod: { id: 20, username: 'hod_user', full_name: 'Dr HOD' },
+        hod_user: { id: 20, username: 'hod_user', full_name: 'Dr HOD' },
         start_date: '2026-04-01',
         active: true,
       },
@@ -66,9 +66,10 @@ describe('UTRMC HOD assignments page', () => {
 
     await waitFor(() =>
       expect(mockApi.hodAssignments.create).toHaveBeenCalledWith({
-        department: 10,
-        hod: 20,
+        department_id: 10,
+        hod_user_id: 20,
         start_date: '2026-05-01',
+        active: true,
       })
     );
   });

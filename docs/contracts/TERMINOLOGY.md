@@ -38,3 +38,4 @@ Notes:
 - 2026-04-21 terminology lock update: synopsis, thesis, postings, and rotations phase-1 are deferred workflows, not active release claims.
 - 2026-05-30 terminology lock update: Backup Center operator terms added for pilot operations.
 - 2026-06-01 terminology lock update: additive Google Drive Backup connector terms added (no renames of existing terms).
+- 2026-06-06 approved change (UX/UI Debug & Update): Added terminology and screen elements for "Supervisors" management and deletion of hospitals/departments under UTRMC admin dashboard. Unlocked terminology locks to support active debugging and updates to the user interface.

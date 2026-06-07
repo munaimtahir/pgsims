@@ -17,6 +17,24 @@ const HOSPITAL_FIELDS: Array<{ key: 'name' | 'code'; label: string }> = [
   { key: 'code', label: 'Code' },
 ];
 
+function getErrorMessage(error: unknown, fallback = 'Action failed'): string {
+  if (
+    typeof error === 'object' &&
+    error !== null &&
+    'response' in error &&
+    typeof (error as { response?: unknown }).response === 'object' &&
+    (error as { response?: unknown }).response !== null &&
+    'data' in ((error as { response?: { data?: unknown } }).response || {})
+  ) {
+    const data = (error as { response?: { data?: unknown } }).response?.data;
+    if (typeof data === 'object' && data !== null) {
+      return JSON.stringify(data);
+    }
+    return String(data);
+  }
+  return fallback;
+}
+
 export default function HospitalsPage() {
   const { user } = useAuthStore();
   const canManage = isUtrmcManagerRole(user?.role);
@@ -35,6 +53,19 @@ export default function HospitalsPage() {
 
   const openAdd = () => { setForm({ ...EMPTY }); setEditing(null); setShowModal(true); };
   const openEdit = (h: UserbaseHospital) => { setForm({ name: h.name, code: h.code, active: h.active }); setEditing(h); setShowModal(true); };
+
+  const deleteHospital = async (id: number, name: string) => {
+    if (!window.confirm(`Are you sure you want to delete the hospital "${name}"? This operation is destructive.`)) {
+      return;
+    }
+    setError('');
+    try {
+      await userbaseApi.hospitals.delete(id);
+      load();
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, 'Failed to delete hospital. It may have dependent data (e.g. matrix assignments).'));
+    }
+  };
 
   const save = async () => {
     setSaving(true);
@@ -86,9 +117,14 @@ export default function HospitalsPage() {
                   <td className="px-4 py-3">{h.active ? <span className="text-green-600">Yes</span> : <span className="text-gray-400">No</span>}</td>
                   <td className="px-4 py-3">
                     {canManage ? (
-                      <button onClick={() => openEdit(h)} className="rounded-full border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700">
-                        Edit
-                      </button>
+                      <div className="flex gap-2">
+                        <button onClick={() => openEdit(h)} className="rounded-full border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700">
+                          Edit
+                        </button>
+                        <button onClick={() => deleteHospital(h.id, h.name)} className="rounded-full border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-100">
+                          Delete
+                        </button>
+                      </div>
                     ) : (
                       <span className="text-xs text-gray-400">View only</span>
                     )}

@@ -56,7 +56,7 @@ export default function UsersPage() {
   useEffect(() => { load(); }, []);
 
   const openAdd = () => { setForm({username:'',email:'',password:'',first_name:'',last_name:'',role:'resident',is_active:true}); setEditing(null); setShowModal(true); };
-  const openEdit = (u: UserbaseUser) => { setForm({username:u.username,email:u.email,first_name:u.first_name,last_name:u.last_name,role:u.role,is_active:u.is_active}); setEditing(u); setShowModal(true); };
+  const openEdit = (u: UserbaseUser) => { setForm({username:u.username,email:u.email,password:'',first_name:u.first_name,last_name:u.last_name,role:u.role,is_active:u.is_active}); setEditing(u); setShowModal(true); };
 
   const save = async () => {
     setSaving(true);
@@ -150,23 +150,30 @@ export default function UsersPage() {
             <h2 className="text-lg font-semibold mb-4">{editing?'Edit':'Add'} User</h2>
             {USER_FIELDS.map(({ key, label }) => (
               <div key={key} className="mb-3">
-                <label className="pg-form-label">{label}</label>
+                <label className="pg-form-label" htmlFor={key}>{label}</label>
                 <input
+                  id={key}
                   className="pg-form-input"
                   value={form[key]}
                   onChange={(event) => setForm({ ...form, [key]: event.target.value })}
                 />
               </div>
             ))}
-            {!editing && (
-              <div className="mb-3">
-                <label className="pg-form-label">Password</label>
-                <input type="password" className="pg-form-input" value={form.password||''} onChange={e=>setForm({...form,password:e.target.value})} />
-              </div>
-            )}
             <div className="mb-3">
-              <label className="pg-form-label">Role</label>
-              <select className="pg-form-input" value={form.role} onChange={e=>setForm({...form,role:e.target.value})}>
+              <label className="pg-form-label" htmlFor="user-password">
+                {editing ? 'New Password (leave blank to keep current)' : 'Password'}
+              </label>
+              <input
+                id="user-password"
+                type="password"
+                className="pg-form-input"
+                value={form.password||''}
+                onChange={e=>setForm({...form,password:e.target.value})}
+              />
+            </div>
+            <div className="mb-3">
+              <label className="pg-form-label" htmlFor="role-select">Role</label>
+              <select id="role-select" className="pg-form-input" value={form.role} onChange={e=>setForm({...form,role:e.target.value})}>
                 {ROLES.map(r=><option key={r} value={r}>{r}</option>)}
               </select>
             </div>

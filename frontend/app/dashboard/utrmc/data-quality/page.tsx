@@ -32,6 +32,8 @@ const ISSUE_LABELS: Record<string, string> = {
   invalid_training_end: 'Invalid Training End',
   missing_training_dates: 'Missing Training Dates',
   missing_supervision_dates: 'Missing Supervision Dates',
+  invalid_expected_end_date: 'Invalid Expected End Date',
+  missing_current_level: 'Missing Current Level',
 };
 
 type EditState = {

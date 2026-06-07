@@ -9,7 +9,7 @@ import { isUtrmcManagerRole, isUtrmcReadonlyRole } from '@/lib/rbac';
 interface HodEntry {
   id: number;
   department: number | { id: number; name: string };
-  hod: number | { id: number; username: string; full_name?: string };
+  hod_user?: { id: number; username: string; full_name?: string };
   start_date: string;
   active: boolean;
 }
@@ -68,7 +68,12 @@ export default function HodPage() {
   const save = async () => {
     setSaving(true);
     try {
-      await userbaseApi.hodAssignments.create({ ...form, department: Number(form.department), hod: Number(form.hod) });
+      await userbaseApi.hodAssignments.create({
+        department_id: Number(form.department),
+        hod_user_id: Number(form.hod),
+        start_date: form.start_date,
+        active: true,
+      });
       setShowModal(false);
       load();
     } catch { setError('Save failed'); }
@@ -97,7 +102,7 @@ export default function HodPage() {
             {assignments.map((a) => (
               <tr key={a.id} className="hover:bg-gray-50">
                 <td className="px-4 py-2">{getName(a.department)}</td>
-                <td className="px-4 py-2">{getName(a.hod)}</td>
+                <td className="px-4 py-2">{getName(a.hod_user)}</td>
                 <td className="px-4 py-2 text-gray-500">{a.start_date||'—'}</td>
                 <td className="px-4 py-2">{a.active?<span className="text-green-600">Yes</span>:<span className="text-gray-400">No</span>}</td>
               </tr>

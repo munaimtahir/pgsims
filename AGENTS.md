@@ -21,6 +21,7 @@ PGSIMS is the operational system for UTRMC monitoring of postgraduate training. 
 - Any UX-affecting change requires explicit approval and a version bump note in:
   - `docs/contracts/ROUTES.md`
   - `docs/contracts/TERMINOLOGY.md`
+- **EXPLICIT OVERRIDE/UNLOCK**: The Frozen UX Rule is unlocked for debugging UI/UX, modifying/adding/updating routes, views, components, navigation labels, and terminology as explicitly directed by the project lead.
 
 ## 4) Canonical Data Model Rule (Critical)
 - There is exactly ONE canonical Department entity for the university.

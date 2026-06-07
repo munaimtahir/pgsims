@@ -1,12 +1,14 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-REPO_ROOT="/srv/apps/pgsims"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="${PGSIMS_REPO_ROOT:-$(cd "${SCRIPT_DIR}/.." && pwd)}"
 CANONICAL_CADDYFILE="${REPO_ROOT}/deploy/Caddyfile.pgsims"
 ACTIVE_CADDYFILE="/etc/caddy/Caddyfile"
 
 if [[ ! -f "${CANONICAL_CADDYFILE}" ]]; then
   echo "Missing canonical caddy file: ${CANONICAL_CADDYFILE}" >&2
+  echo "Set PGSIMS_REPO_ROOT to the repo root if this checkout lives elsewhere." >&2
   exit 1
 fi
 
@@ -22,10 +24,11 @@ sudo systemctl reload caddy
 cat <<'EOF'
 
 Verification checklist:
-  [ ] curl -I https://<domain>/
-  [ ] curl -I https://<domain>/api/health/
-  [ ] curl -I https://<domain>/admin/
-  [ ] curl -I https://<domain>/static/admin/css/base.css
-  [ ] curl -I https://<domain>/media/
+  [ ] curl -I https://pg.fmu.edu.pk/
+  [ ] curl -I https://pgsims.alshifalab.pk/
+  [ ] curl -I https://pg.fmu.edu.pk/healthz/
+  [ ] curl -I https://pg.fmu.edu.pk/admin/
+  [ ] curl -I https://pg.fmu.edu.pk/static/admin/css/base.css
+  [ ] curl -I https://pg.fmu.edu.pk/media/
 
 EOF

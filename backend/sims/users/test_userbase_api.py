@@ -416,6 +416,74 @@ class DataQualityAdminApiTests(TestCase):
         self.assertEqual(audit_response.status_code, 200)
         self.assertGreaterEqual(len(audit_response.data), 1)
 
+    def test_resident_without_training_record_or_supervisor_link_is_incomplete(self):
+        # Create a new resident user with profile, but no training record or links
+        resident = User.objects.create_user(
+            username="dq_resident_bare",
+            password="pass12345",
+            role="resident",
+            email="dq_resident_bare@example.com",
+            year="1",
+            specialty="medicine",
+        )
+        ResidentProfile.objects.create(
+            user=resident,
+            pgr_id="DQ-BARE-001",
+            training_start=date(2026, 5, 1),
+            training_level="y1",
+            active=True,
+        )
+        
+        # Recompute flags
+        recompute_flags_for_user(resident)
+        
+        # Verify it has issues and is marked incomplete
+        self.assertFalse(resident.is_complete_profile)
+        self.assertIn("missing_training_dates", resident.data_issues)
+        self.assertIn("missing_supervision_dates", resident.data_issues)
+
+    def test_training_record_issues_propagate_to_user_issues(self):
+        # Create a resident with a training record that has specific issues like missing current_level
+        resident = User.objects.create_user(
+            username="dq_resident_issue",
+            password="pass12345",
+            role="resident",
+            email="dq_resident_issue@example.com",
+            year="1",
+            specialty="medicine",
+        )
+        ResidentProfile.objects.create(
+            user=resident,
+            pgr_id="DQ-ISSUE-001",
+            training_start=date(2026, 5, 1),
+            training_level="y1",
+            active=True,
+        )
+        program = TrainingProgram.objects.create(name="DQ Issue Program", code="DQP-ISSUE", duration_months=60)
+        # Training record missing current_level
+        ResidentTrainingRecord.objects.create(
+            resident_user=resident,
+            program=program,
+            start_date=date(2026, 5, 1),
+            current_level="",
+            active=True,
+        )
+        # Add a valid supervision link so that missing supervision link is not the only issue
+        SupervisorResidentLink.objects.create(
+            supervisor_user=self.supervisor,
+            resident_user=resident,
+            department=self.department,
+            start_date=date(2026, 5, 1),
+            active=True,
+        )
+
+        # Recompute flags
+        recompute_flags_for_user(resident)
+
+        # Verify missing_current_level propagates to the user's data_issues
+        self.assertFalse(resident.is_complete_profile)
+        self.assertIn("missing_current_level", resident.data_issues)
+
 
 @override_settings(ENABLE_DATA_CORRECTION_LAYER=True)
 class ImportCorrectionsCommandTests(TestCase):

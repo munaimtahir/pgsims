@@ -43,6 +43,7 @@ export const NAV_SECTIONS: NavSection[] = [
       { label: 'Departments', href: '/dashboard/utrmc/departments', icon: 'academic-cap' },
       { label: 'H-D Matrix', href: '/dashboard/utrmc/matrix', icon: 'table' },
       { label: 'Users', href: '/dashboard/utrmc/users', icon: 'users' },
+      { label: 'Supervisors', href: '/dashboard/utrmc/supervisors', icon: 'user-group' },
       { label: 'Supervision Links', href: '/dashboard/utrmc/supervision', icon: 'link' },
       { label: 'HOD Assignments', href: '/dashboard/utrmc/hod', icon: 'badge-check' },
       { label: 'Programmes', href: '/dashboard/utrmc/programs', icon: 'book-open' },

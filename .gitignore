@@ -111,6 +111,7 @@ OUT/
 frontend/e2e/output/
 frontend/e2e/screenshots/
 frontend/.next/
+.gemini/
 *.pgsimsbak
 *.pgsimsdr
 backend/backups/

@@ -67,7 +67,7 @@ Authoritative current-state docs:
 - **`docs/PROD_GATE_CLOSURE/`** ← Production gate closure sprint documentation
 - **`docs/ANTI_DRIFT_GUARDRAILS.md`** ← Session focus guardrails
 
-**Deployment**: Production deployment is standardized on Docker Compose (`docker/docker-compose.prod.yml`) + Caddy reverse proxy. See [docs/deploy/CADDY_ROUTINE.md](docs/deploy/CADDY_ROUTINE.md).
+**Deployment**: Production deployment is standardized on Docker Compose (`docker/docker-compose.prod.yml`) + Caddy reverse proxy. See [docs/ARCHIVE/deploy/CADDY_ROUTINE.md](docs/ARCHIVE/deploy/CADDY_ROUTINE.md).
 
 ## ✨ Features
 
@@ -141,7 +141,7 @@ Create a `.env` file in the project root (copy from `.env.example` if available)
 # Required settings
 SECRET_KEY=your-secret-key-here
 DEBUG=False
-ALLOWED_HOSTS=localhost,127.0.0.1
+ALLOWED_HOSTS=localhost,127.0.0.1,pg.fmu.edu.pk,pgsims.alshifalab.pk
 
 # Database (use DATABASE_URL or individual settings)
 DATABASE_URL=postgresql://user:password@localhost:5432/sims_db
@@ -214,18 +214,18 @@ PGSIMS supports one production deployment path only:
 1. Start stack with Docker Compose:
 
 ```bash
-cd /srv/apps/pgsims
+cd /home/munaim/srv/apps/pgsims
 docker compose -f docker/docker-compose.prod.yml up -d --build
 ```
 
 2. Sync and reload Caddy:
 
 ```bash
-cd /srv/apps/pgsims
+cd /home/munaim/srv/apps/pgsims
 ./ops/caddy_sync_reload.sh
 ```
 
-3. Follow full verification routine in [docs/deploy/CADDY_ROUTINE.md](docs/deploy/CADDY_ROUTINE.md).
+3. Follow full verification routine in [docs/ARCHIVE/deploy/CADDY_ROUTINE.md](docs/ARCHIVE/deploy/CADDY_ROUTINE.md).
 
 ### Local Development
 
@@ -470,12 +470,12 @@ Use the canonical routine only:
 - Compose file: `docker/docker-compose.prod.yml`
 - Caddy source: `deploy/Caddyfile.pgsims`
 - Active Caddy path: `/etc/caddy/Caddyfile`
-- Step-by-step runbook: [docs/deploy/CADDY_ROUTINE.md](docs/deploy/CADDY_ROUTINE.md)
+- Step-by-step runbook: [docs/ARCHIVE/deploy/CADDY_ROUTINE.md](docs/ARCHIVE/deploy/CADDY_ROUTINE.md)
 
 Quick commands:
 
 ```bash
-cd /srv/apps/pgsims
+cd /home/munaim/srv/apps/pgsims
 docker compose -f docker/docker-compose.prod.yml up -d --build
 ./ops/caddy_sync_reload.sh
 ```

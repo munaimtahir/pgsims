@@ -1,0 +1,10 @@
+email,full_name,phone_number,role,specialty,department_code,hospital_code,designation,registration_number,username,password,active,start_date
+dr.muhammad.akmal@placeholder.example.com,Prof. Dr. Muhammad Akmal,03001234567,supervisor,urology,SURG,UTRMC,Professor,PMC-SUP-dr-muhammad-akmal,dr.muhammad.akmal,,true,2026-01-01
+muhammad.irfan.munir@placeholder.example.com,Dr. Muhammad Irfan Munir,03001234567,supervisor,urology,SURG,UTRMC,Associate Professor,PMC-SUP-muhammad-irfan-munir,muhammad.irfan.munir,,true,2026-01-01
+dr.m.tahir.bashir.malik@placeholder.example.com,Prof. Dr. M. Tahir Bashir Malik,03001234567,supervisor,urology,SURG,UTRMC,Professor,PMC-SUP-dr-m-tahir-bashir-malik,dr.m.tahir.bashir.malik,,true,2026-01-01
+sheraz.javed@placeholder.example.com,Dr. Sheraz Javed,03001234567,supervisor,urology,SURG,UTRMC,Assistant Professor,PMC-SUP-sheraz-javed,sheraz.javed,,true,2026-01-01
+amir.shaukat@placeholder.example.com,Prof. Dr. Amir Shaukat,03001234567,supervisor,medicine,MED,AH,Professor,PMC-SUP-amir-shaukat,dr.amir.shaukat,,true,2026-01-01
+muhammad.irfan@placeholder.example.com,Dr. Muhammad Irfan,03001234567,supervisor,medicine,MED,AH,Associate Professor,PMC-SUP-muhammad-irfan,muhammad.irfan,,true,2026-01-01
+umair.ahmed@placeholder.example.com,Dr. Umair Ahmed,03001234567,supervisor,medicine,MED,AH,Assistant Professor,PMC-SUP-umair-ahmed,umair.ahmed,,true,2026-01-01
+muhammad.arif@placeholder.example.com,Dr. Muhammad Arif,03001234567,supervisor,medicine,MED,AH,Assistant Professor,PMC-SUP-muhammad-arif,muhammad.arif,,true,2026-01-01
+shahid.abbas@placeholder.example.com,Dr. Shahid Abbas,03001234567,supervisor,medicine,MED,AH,Assistant Professor,PMC-SUP-shahid-abbas,shahid.abbas,,true,2026-01-01

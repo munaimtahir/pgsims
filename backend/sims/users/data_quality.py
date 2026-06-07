@@ -58,7 +58,8 @@ def scan_training_record(record: ResidentTrainingRecord) -> list[str]:
 @transaction.atomic
 def recompute_flags_for_user(user: User) -> dict[str, Any]:
     user_issues = scan_user_profile(user)
-    training_records = list(ResidentTrainingRecord.objects.filter(resident_user=user))
+    is_resident = user.role in {"pg", "resident"}
+    training_records = list(ResidentTrainingRecord.objects.filter(resident_user=user)) if is_resident else []
     training_issues = {record.id: scan_training_record(record) for record in training_records}
     has_training_issue = any(training_issues.values())
 
@@ -69,20 +70,32 @@ def recompute_flags_for_user(user: User) -> dict[str, Any]:
             record.has_default_dates = has_default_dates
             record.save(update_fields=["has_default_dates"])
 
-    links = SupervisorResidentLink.objects.filter(resident_user=user)
+    links = SupervisorResidentLink.objects.filter(resident_user=user) if is_resident else []
     has_default_link_dates = False
-    for link in links:
-        has_default = (
-            not bool(link.start_date) or (link.start_date and link.start_date.isoformat() in DEFAULT_DATE_STRINGS)
-        )
-        if has_default:
-            has_default_link_dates = True
-        if link.has_default_dates != has_default:
-            link.has_default_dates = has_default
-            link.save(update_fields=["has_default_dates"])
+    if is_resident and not links.exists():
+        has_default_link_dates = True
+    else:
+        for link in links:
+            has_default = (
+                not bool(link.start_date) or (link.start_date and link.start_date.isoformat() in DEFAULT_DATE_STRINGS)
+            )
+            if has_default:
+                has_default_link_dates = True
+            if link.has_default_dates != has_default:
+                link.has_default_dates = has_default
+                link.save(update_fields=["has_default_dates"])
 
-    if any(code in {"default_start_date", "missing_start_date"} for issues in training_issues.values() for code in issues):
+    if is_resident and not training_records:
         user_issues = sorted(set([*user_issues, "missing_training_dates"]))
+    elif any(code in {"default_start_date", "missing_start_date"} for issues in training_issues.values() for code in issues):
+        user_issues = sorted(set([*user_issues, "missing_training_dates"]))
+
+    # Propagate all other training record issue codes to user issues
+    for record_issues in training_issues.values():
+        for code in record_issues:
+            if code not in {"default_start_date", "missing_start_date"}:
+                user_issues = sorted(set([*user_issues, code]))
+
     if has_default_link_dates:
         user_issues = sorted(set([*user_issues, "missing_supervision_dates"]))
 
