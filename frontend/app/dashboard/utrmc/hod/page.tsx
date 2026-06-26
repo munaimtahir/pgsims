@@ -37,6 +37,22 @@ function getName(u: number | NamedEntity | undefined): string {
   return String(u);
 }
 
+function getErrorMessage(error: unknown, fallback = 'Save failed'): string {
+  if (
+    typeof error === 'object' &&
+    error !== null &&
+    'response' in error &&
+    typeof (error as { response?: unknown }).response === 'object' &&
+    (error as { response?: unknown }).response !== null &&
+    'data' in ((error as { response?: { data?: unknown } }).response || {})
+  ) {
+    const data = (error as { response?: { data?: unknown } }).response?.data;
+    if (typeof data === 'string') return data;
+    return JSON.stringify(data);
+  }
+  return fallback;
+}
+
 export default function HodPage() {
   const { user } = useAuthStore();
   const canManage = isUtrmcManagerRole(user?.role);
@@ -63,7 +79,7 @@ export default function HodPage() {
 
   useEffect(() => { load(); }, []);
 
-  const faculty = users.filter(u=>u.role==='faculty'||u.role==='supervisor'||u.role==='admin');
+  const faculty = users.filter(u=>u.role==='faculty'||u.role==='supervisor');
 
   const save = async () => {
     setSaving(true);
@@ -76,7 +92,7 @@ export default function HodPage() {
       });
       setShowModal(false);
       load();
-    } catch { setError('Save failed'); }
+    } catch (err: unknown) { setError(getErrorMessage(err)); }
     finally { setSaving(false); }
   };
 
@@ -115,22 +131,25 @@ export default function HodPage() {
           <div className="bg-white rounded-lg p-6 w-full max-w-md shadow-xl max-h-[90vh] overflow-y-auto">
             <h2 className="text-lg font-semibold mb-4">Add HOD Assignment</h2>
             <div className="mb-3">
-              <label className="pg-form-label">Department</label>
-              <select className="pg-form-input" value={form.department} onChange={e=>setForm({...form,department:e.target.value})}>
+              <label className="pg-form-label" htmlFor="hod-department">Department</label>
+              <select id="hod-department" className="pg-form-input" value={form.department} onChange={e=>setForm({...form,department:e.target.value})}>
                 <option value="">Select department</option>
                 {departments.map(d=><option key={d.id} value={d.id}>{d.name}</option>)}
               </select>
             </div>
             <div className="mb-3">
-              <label className="pg-form-label">HOD User</label>
-              <select className="pg-form-input" value={form.hod} onChange={e=>setForm({...form,hod:e.target.value})}>
+              <label className="pg-form-label" htmlFor="hod-user">Faculty/Supervisor to assign as HOD</label>
+              <select id="hod-user" className="pg-form-input" value={form.hod} onChange={e=>setForm({...form,hod:e.target.value})}>
                 <option value="">Select HOD</option>
                 {faculty.map(u=><option key={u.id} value={u.id}>{u.full_name||u.username}</option>)}
               </select>
+              {faculty.length === 0 && (
+                <p className="mt-1 text-xs text-amber-600">No faculty or supervisors are available yet.</p>
+              )}
             </div>
             <div className="mb-3">
-              <label className="pg-form-label">Start Date</label>
-              <input type="date" className="pg-form-input" value={form.start_date} onChange={e=>setForm({...form,start_date:e.target.value})} />
+              <label className="pg-form-label" htmlFor="hod-start-date">Start Date</label>
+              <input id="hod-start-date" type="date" className="pg-form-input" value={form.start_date} onChange={e=>setForm({...form,start_date:e.target.value})} />
             </div>
             <div className="flex gap-2 justify-end">
               <button onClick={()=>setShowModal(false)} className="px-4 py-2 text-sm border rounded">Cancel</button>

@@ -39,7 +39,7 @@ describe('LoginPage', () => {
   });
 
   it('handles successful login', async () => {
-    const user = { id: 1, role: 'resident' };
+    const user = { id: 1, role: 'resident', profile_completed: true, force_password_change: false };
     (authApi.login as jest.Mock).mockResolvedValue({
       user,
       access: 'access-token',
@@ -60,6 +60,29 @@ describe('LoginPage', () => {
       expect(authApi.login).toHaveBeenCalledWith({ username: 'testuser', password: 'password123' });
       expect(mockSetAuth).toHaveBeenCalledWith(user, 'access-token', 'refresh-token');
       expect(mockPush).toHaveBeenCalledWith('/dashboard/resident');
+    });
+  });
+
+  it('redirects residents needing profile completion to the completion page', async () => {
+    const user = { id: 1, role: 'resident', profile_completed: false, force_password_change: true };
+    (authApi.login as jest.Mock).mockResolvedValue({
+      user,
+      access: 'access-token',
+      refresh: 'refresh-token',
+    });
+
+    render(<LoginPage />);
+
+    fireEvent.change(screen.getByPlaceholderText(/Enter your username/i), {
+      target: { value: 'testuser' },
+    });
+    fireEvent.change(screen.getByPlaceholderText(/Enter your password/i), {
+      target: { value: 'password123' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: /Sign in/i }));
+
+    await waitFor(() => {
+      expect(mockPush).toHaveBeenCalledWith('/resident/complete-profile');
     });
   });
 

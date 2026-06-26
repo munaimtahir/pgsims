@@ -160,7 +160,7 @@ export default function SupervisorsPage() {
     setSaving(true);
     setError('');
     try {
-      const userPayload: Record<string, any> = {
+      const userPayload: Record<string, string> = {
         email: form.email,
         first_name: form.first_name,
         last_name: form.last_name,

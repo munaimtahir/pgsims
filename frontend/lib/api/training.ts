@@ -166,6 +166,15 @@ export interface ResidentTrainingRecordListItem {
   updated_at: string;
 }
 
+export interface ResidentTrainingRecordUpsert {
+  resident_user: number;
+  program: number;
+  start_date: string;
+  expected_end_date?: string | null;
+  current_level?: string;
+  active?: boolean;
+}
+
 export interface RotationAssignment {
   id: number;
   resident_training: number;
@@ -646,6 +655,23 @@ export const trainingApi = {
   async listResidentTrainingRecords(): Promise<ResidentTrainingRecordListItem[]> {
     const r = await apiClient.get('/api/resident-training/');
     return toArray<ResidentTrainingRecordListItem>(r.data);
+  },
+
+  async createResidentTrainingRecord(data: ResidentTrainingRecordUpsert): Promise<ResidentTrainingRecordListItem> {
+    const r = await apiClient.post<ResidentTrainingRecordListItem>('/api/resident-training/', data);
+    return r.data;
+  },
+
+  async updateResidentTrainingRecord(
+    id: number,
+    data: Partial<ResidentTrainingRecordUpsert>
+  ): Promise<ResidentTrainingRecordListItem> {
+    const r = await apiClient.patch<ResidentTrainingRecordListItem>(`/api/resident-training/${id}/`, data);
+    return r.data;
+  },
+
+  async deleteResidentTrainingRecord(id: number): Promise<void> {
+    await apiClient.delete(`/api/resident-training/${id}/`);
   },
 
   async listMyRotations(): Promise<{ count: number; results: RotationAssignment[] }> {

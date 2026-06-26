@@ -1,4 +1,4 @@
-.PHONY: help dev test up down logs shell migrate makemigrations seed collectstatic clean build restart
+.PHONY: help dev test up down logs shell migrate makemigrations seed collectstatic clean build restart deploy-update deploy-reload-proxy
 
 help:
 	@echo "SIMS Makefile Commands"
@@ -74,4 +74,10 @@ deploy-collectstatic:
 	docker compose -f docker/docker-compose.yml exec backend python manage.py collectstatic --noinput --clear
 
 deploy-restart:
-	docker compose -f docker/docker-compose.yml restart backend worker beat
+	./ops/deploy_live_update.sh
+
+deploy-update:
+	./ops/deploy_live_update.sh
+
+deploy-reload-proxy:
+	./ops/caddy_sync_reload.sh

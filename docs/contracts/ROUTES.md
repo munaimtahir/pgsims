@@ -6,6 +6,7 @@ Stable role areas:
 - `/login`
 - `/dashboard/pg/*` (legacy compatibility area; canonical resident area is `/dashboard/resident/*`)
 - `/dashboard/resident/*`
+- `/dashboard/onboarding/*`
 - `/dashboard/supervisor/*`
 - `/dashboard/utrmc/*`
 
@@ -25,6 +26,7 @@ Current userbase/org graph screens under frozen area:
 - `/dashboard/utrmc/supervisors`
 - `/dashboard/utrmc/supervision`
 - `/dashboard/utrmc/hod`
+- `/dashboard/utrmc/resident-training`
 - `/dashboard/utrmc/backup`
 
 Do not rename these paths after pilot begins.
@@ -37,6 +39,18 @@ Do not rename these paths after pilot begins.
 - `/dashboard/resident` — resident command-center dashboard
 - `/dashboard/resident/schedule` — schedule timeline and leave workflow
 - `/dashboard/resident/progress` — logbook draft/submit and threshold snapshot
+- `/resident/complete-profile` — forced first-login profile completion and password change
+
+### Admin Onboarding
+- `/dashboard/onboarding` — onboarding landing page
+- `/dashboard/onboarding/residents` — resident upload, mapping, preview, import, and login generation wizard
+- `/dashboard/onboarding/login-sheet` — login sheet table and export controls
+- `/dashboard/onboarding/batches` — imported batch review and batch-level actions
+- `/dashboard/onboarding/incomplete-profiles` — first-login profile completion tracking and remediation
+
+### Paused / Redirected Onboarding Surfaces
+- `/dashboard/utrmc/onboarding` — redirects to `/dashboard/onboarding/residents`
+- `/dashboard/onboarding/finalization` — redirects to `/dashboard/onboarding/residents`
 
 ### Supervisor
 - `/dashboard/supervisor` — supervisor dashboard with leave approvals and logbook review queue
@@ -44,6 +58,7 @@ Do not rename these paths after pilot begins.
 ### UTRMC Admin
 - `/dashboard/utrmc` — UTRMC overview and read-only oversight surface for `utrmc_user`
 - `/dashboard/utrmc/programs` — Programme definitions, policy editor, milestone viewer
+- `/dashboard/utrmc/resident-training` — Resident programme/course assignment workspace
 - `/dashboard/utrmc/eligibility-monitoring` — Eligibility monitoring with filters
 - `/dashboard/utrmc/backup` — Backup & Restore Center (Backup Center module)
 - `/dashboard/utrmc/supervisors` — Supervisor and faculty management dashboard (designation, specialty, and contact details)
@@ -58,6 +73,8 @@ UX freeze note:
 - 2026-06-01 approved additive update: added a “Google Drive Backup” panel inside `/dashboard/utrmc/backup` (no route or navigation label changes).
 - 2026-06-06 approved change (UX/UI Debug & Update): Added route `/dashboard/utrmc/supervisors` for managing supervisor and faculty profiles. Exposed deletion actions for hospitals and departments. Unlocked UX freeze rules for UI/UX debugging and active iteration as explicitly requested by the administration.
 - 2026-06-06 approved addition (Password Management & Onboarding): Activated self-registration form page at `/register`, added reset-password confirmation route at `/reset-password/[uid]/[token]`, and added change-password dashboard page at `/dashboard/change-password`.
+- 2026-06-20 approved onboarding hardening update: retained the resident onboarding route structure while completing login-sheet exports, incomplete-profile data exposure, and first-login fallback behavior. No onboarding routes or navigation labels were renamed.
+- 2026-06-20 cleanup update: paused the Google Workspace/AdminOps bridge from the visible pilot workflow and redirected legacy onboarding surfaces to the resident onboarding wizard. No resident onboarding route names changed.
 
 ## Deferred Routes (not active release truth)
 - `/dashboard/resident/research`

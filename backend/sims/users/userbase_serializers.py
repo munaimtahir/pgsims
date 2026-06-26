@@ -82,6 +82,11 @@ class UserManagementSerializer(serializers.ModelSerializer):
     full_name = serializers.CharField(source="get_full_name", read_only=True)
     resident_profile = serializers.JSONField(write_only=True, required=False)
     staff_profile = serializers.JSONField(write_only=True, required=False)
+    cnic = serializers.CharField(read_only=True)
+    force_password_change = serializers.BooleanField(read_only=True)
+    profile_completed = serializers.SerializerMethodField()
+    login_generated = serializers.SerializerMethodField()
+    login_issued = serializers.SerializerMethodField()
     departments = serializers.SerializerMethodField()
 
     class Meta:
@@ -98,6 +103,12 @@ class UserManagementSerializer(serializers.ModelSerializer):
             "specialty",
             "year",
             "is_active",
+            "is_complete_profile",
+            "force_password_change",
+            "profile_completed",
+            "login_generated",
+            "login_issued",
+            "cnic",
             "supervisor",
             "home_department",
             "home_hospital",
@@ -126,6 +137,21 @@ class UserManagementSerializer(serializers.ModelSerializer):
             }
             for membership in memberships
         ]
+
+    def _resident_profile(self, obj):
+        return getattr(obj, "resident_profile", None)
+
+    def get_profile_completed(self, obj) -> bool:
+        profile = self._resident_profile(obj)
+        return bool(profile.profile_completed) if profile else True
+
+    def get_login_generated(self, obj) -> bool:
+        profile = self._resident_profile(obj)
+        return bool(profile.login_generated) if profile else False
+
+    def get_login_issued(self, obj) -> bool:
+        profile = self._resident_profile(obj)
+        return bool(profile.login_issued) if profile else False
 
     def _upsert_profiles(self, user, resident_payload, staff_payload):
         if resident_payload and user.role in {"pg", "resident"}:
@@ -190,7 +216,17 @@ class ResidentProfileSerializer(serializers.ModelSerializer):
             "id",
             "user",
             "user_id",
+            "import_batch",
             "pgr_id",
+            "program_name",
+            "training_year",
+            "joining_date",
+            "profile_completed",
+            "profile_completed_at",
+            "first_login_completed_at",
+            "login_generated",
+            "login_issued",
+            "login_issued_at",
             "training_start",
             "training_end",
             "training_level",
@@ -198,7 +234,16 @@ class ResidentProfileSerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
         ]
-        read_only_fields = ["created_at", "updated_at"]
+        read_only_fields = [
+            "created_at",
+            "updated_at",
+            "import_batch",
+            "profile_completed_at",
+            "first_login_completed_at",
+            "login_generated",
+            "login_issued",
+            "login_issued_at",
+        ]
 
     def create(self, validated_data):
         if "user_id" in validated_data:

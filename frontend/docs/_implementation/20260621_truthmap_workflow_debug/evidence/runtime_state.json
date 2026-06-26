@@ -1,0 +1,11 @@
+{
+  "resetPasswordCalls": 1,
+  "screenshots": [
+    "users-filters-row-actions.png",
+    "users-reset-password.png",
+    "resident-programme-assignment.png",
+    "supervision-link-created.png",
+    "hod-assignment-created.png",
+    "utrmc-monitoring-dashboard.png"
+  ]
+}

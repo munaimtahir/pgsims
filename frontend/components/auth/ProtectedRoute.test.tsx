@@ -1,12 +1,13 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import ProtectedRoute from './ProtectedRoute';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/authStore';
 import { afterEach } from '@jest/globals';
 
 jest.mock('next/navigation', () => ({
   useRouter: jest.fn(),
+  usePathname: jest.fn(),
 }));
 
 jest.mock('@/store/authStore', () => ({
@@ -19,6 +20,7 @@ describe('ProtectedRoute', () => {
   beforeEach(() => {
     mockPush.mockReset();
     (useRouter as jest.Mock).mockReturnValue({ push: mockPush });
+    (usePathname as jest.Mock).mockReturnValue('/dashboard/resident');
   });
 
   afterEach(() => {
@@ -50,7 +52,7 @@ describe('ProtectedRoute', () => {
   it('renders children when authenticated and role is allowed', () => {
     (useAuthStore as unknown as jest.Mock).mockReturnValue({
       isAuthenticated: true,
-      user: { role: 'resident' },
+      user: { role: 'resident', profile_completed: true, force_password_change: false },
       hasHydrated: true,
     });
 
@@ -78,5 +80,16 @@ describe('ProtectedRoute', () => {
 
     render(<ProtectedRoute allowedRoles={['resident']}>Content</ProtectedRoute>);
     expect(screen.getByText('Content')).toBeInTheDocument();
+  });
+
+  it('redirects residents with incomplete profiles to the completion page', () => {
+    (useAuthStore as unknown as jest.Mock).mockReturnValue({
+      isAuthenticated: true,
+      user: { role: 'resident', profile_completed: false, force_password_change: true },
+      hasHydrated: true,
+    });
+
+    render(<ProtectedRoute allowedRoles={['resident']}>Content</ProtectedRoute>);
+    expect(mockPush).toHaveBeenCalledWith('/resident/complete-profile');
   });
 });

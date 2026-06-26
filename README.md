@@ -215,17 +215,19 @@ PGSIMS supports one production deployment path only:
 
 ```bash
 cd /home/munaim/srv/apps/pgsims
-docker compose -f docker/docker-compose.prod.yml up -d --build
+docker compose -f docker/docker-compose.prod.yml up -d --build --force-recreate
 ```
 
 2. Sync and reload Caddy:
 
 ```bash
 cd /home/munaim/srv/apps/pgsims
-./ops/caddy_sync_reload.sh
+./ops/deploy_live_update.sh
 ```
 
 3. Follow full verification routine in [docs/ARCHIVE/deploy/CADDY_ROUTINE.md](docs/ARCHIVE/deploy/CADDY_ROUTINE.md).
+
+The rebuild-and-reload helper is the safe default for live updates. It prevents restart-only deploys from leaving the public URL serving stale code.
 
 ### Local Development
 
@@ -476,8 +478,7 @@ Quick commands:
 
 ```bash
 cd /home/munaim/srv/apps/pgsims
-docker compose -f docker/docker-compose.prod.yml up -d --build
-./ops/caddy_sync_reload.sh
+./ops/deploy_live_update.sh
 ```
 
 ## 📖 Documentation

@@ -1,3 +1,4 @@
+from .api_bridge_views import AdminOpsCallbackView
 """
 API URLs for JWT authentication endpoints.
 """
@@ -9,6 +10,7 @@ from . import api_views, userbase_views
 app_name = "auth_api"
 
 urlpatterns = [
+    path('integrations/adminops/workspace-status/receive/', AdminOpsCallbackView.as_view(), name='adminops_callback'),
     # JWT Token endpoints
     path("login/", api_views.CustomTokenObtainPairView.as_view(), name="token_obtain_pair"),
     path("refresh/", TokenRefreshView.as_view(), name="token_refresh"),

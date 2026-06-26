@@ -53,6 +53,15 @@ def _is_resident(user):
     return getattr(user, "role", None) in {"pg", "resident"}
 
 
+def _resident_needs_completion(user):
+    if not _is_resident(user):
+        return False
+    from sims.users.models import ResidentProfile
+
+    profile = ResidentProfile.objects.filter(user=user).first()
+    return bool(user.force_password_change or (profile and not profile.profile_completed))
+
+
 class TrainingEmptySchemaSerializer(serializers.Serializer):
     pass
 
@@ -1397,6 +1406,14 @@ class ResidentSummaryView(APIView):
         user = request.user
         if not _is_resident(user) and not _is_admin_or_utrmc_admin(user):
             return Response({"detail": "Resident access required."}, status=403)
+        if _resident_needs_completion(user) and _is_resident(user):
+            return Response(
+                {
+                    "detail": "Resident profile completion required.",
+                    "redirect_to": "/resident/complete-profile",
+                },
+                status=403,
+            )
 
         rtr = _get_active_rtr_or_none(user)
         if rtr is None:
@@ -2728,6 +2745,14 @@ class ResidentOperationalDashboardView(APIView):
     def get(self, request):
         if not _is_resident(request.user):
             return Response({"detail": "Residents only."}, status=status.HTTP_403_FORBIDDEN)
+        if _resident_needs_completion(request.user):
+            return Response(
+                {
+                    "detail": "Resident profile completion required.",
+                    "redirect_to": "/resident/complete-profile",
+                },
+                status=status.HTTP_403_FORBIDDEN,
+            )
         rtr = _get_active_rtr_or_none(request.user)
         if rtr is None:
             return Response(

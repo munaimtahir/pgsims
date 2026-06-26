@@ -24,6 +24,23 @@ export function getDashboardPathForRole(role?: string | null): string {
   }
 }
 
+export function getPostLoginPathForUser(user?: {
+  role?: string | null;
+  profile_completed?: boolean;
+  force_password_change?: boolean;
+} | null): string {
+  if (!user) {
+    return '/login';
+  }
+  if (
+    (user.role === 'pg' || user.role === 'resident') &&
+    (user.profile_completed === false || user.force_password_change)
+  ) {
+    return '/resident/complete-profile';
+  }
+  return getDashboardPathForRole(user.role);
+}
+
 export function getRoleLabel(role?: string | null): string {
   switch (role) {
     case 'utrmc_user':

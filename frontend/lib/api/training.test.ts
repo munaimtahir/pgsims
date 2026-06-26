@@ -13,10 +13,16 @@ jest.mock('./client', () => ({
 }));
 
 const mockedGet = apiClient.get as jest.Mock;
+const mockedPost = apiClient.post as jest.Mock;
+const mockedPatch = apiClient.patch as jest.Mock;
+const mockedDelete = apiClient.delete as jest.Mock;
 
 describe('trainingApi eligibility contract', () => {
   beforeEach(() => {
     mockedGet.mockReset();
+    mockedPost.mockReset();
+    mockedPatch.mockReset();
+    mockedDelete.mockReset();
   });
 
   it('normalizes /api/my/eligibility/ envelope with reasons_json to reasons', async () => {
@@ -69,5 +75,29 @@ describe('trainingApi eligibility contract', () => {
     expect(mockedGet).toHaveBeenCalledWith('/api/utrmc/eligibility/', { params: undefined });
     expect(data.count).toBe(1);
     expect(data.results[0].reasons).toEqual(['Thesis not submitted']);
+  });
+
+  it('supports resident training record create/update/delete endpoints', async () => {
+    mockedPost.mockResolvedValueOnce({ data: { id: 99 } });
+    mockedPatch.mockResolvedValueOnce({ data: { id: 99 } });
+    mockedDelete.mockResolvedValueOnce({ data: {} });
+
+    await trainingApi.createResidentTrainingRecord({
+      resident_user: 4,
+      program: 5,
+      start_date: '2026-06-01',
+      current_level: 'y1',
+    });
+    await trainingApi.updateResidentTrainingRecord(99, { current_level: 'y2' });
+    await trainingApi.deleteResidentTrainingRecord(99);
+
+    expect(mockedPost).toHaveBeenCalledWith('/api/resident-training/', {
+      resident_user: 4,
+      program: 5,
+      start_date: '2026-06-01',
+      current_level: 'y1',
+    });
+    expect(mockedPatch).toHaveBeenCalledWith('/api/resident-training/99/', { current_level: 'y2' });
+    expect(mockedDelete).toHaveBeenCalledWith('/api/resident-training/99/');
   });
 });

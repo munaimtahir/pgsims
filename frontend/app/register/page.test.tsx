@@ -2,7 +2,6 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import RegisterPage from './page';
 import authApi from '@/lib/api/auth';
-import { useAuthStore } from '@/store/authStore';
 
 jest.mock('@/lib/api/auth', () => ({
   __esModule: true,

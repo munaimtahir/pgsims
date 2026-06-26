@@ -25,7 +25,17 @@ from .decorators import (
     supervisor_required,
 )
 from .forms import PGSearchForm, SupervisorAssignmentForm, UserProfileForm
-from .models import User
+from .models import ResidentProfile, User
+
+
+def _resident_completion_redirect(user):
+    resident_profile = ResidentProfile.objects.filter(user=user).first()
+    if user.is_pg() and (
+        user.force_password_change
+        or (resident_profile and not resident_profile.profile_completed)
+    ):
+        return True
+    return False
 
 
 # Authentication Views
@@ -48,6 +58,8 @@ def login_view(request):
                     messages.success(request, f"Welcome back, Dr. {user.get_display_name()}!")
                     return redirect("users:supervisor_dashboard")
                 elif user.is_pg():
+                    if _resident_completion_redirect(user):
+                        return redirect("/resident/complete-profile")
                     messages.success(request, f"Welcome back, {user.get_display_name()}!")
                     return redirect("users:pg_dashboard")
                 else:
@@ -185,6 +197,8 @@ class DashboardRedirectView(LoginRequiredMixin, View):
         elif user.is_supervisor():
             return redirect("users:supervisor_dashboard")
         elif user.is_pg():
+            if _resident_completion_redirect(user):
+                return redirect("/resident/complete-profile")
             return redirect("users:pg_dashboard")
         else:
             return redirect("users:profile")

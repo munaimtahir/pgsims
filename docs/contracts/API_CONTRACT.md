@@ -82,7 +82,11 @@ Rotation summary response must include:
 - Users:
   - `GET/POST /api/users/`
   - `GET/PATCH /api/users/{id}/`
-  - Filters: `role`, `department`, `active`, `search`
+  - `POST /api/users/{id}/reset-password/`
+  - `POST /api/users/{id}/deactivate/`
+  - `DELETE /api/users/{id}/` (archives the account)
+  - Filters: `role`, `department`, `supervisor`, `program`, `active`, `is_complete_profile`, `search`
+  - Response includes canonical user fields plus `departments` and `is_complete_profile` for roster filtering.
   - Managers (`admin`, `utrmc_admin`) may list and update any user.
   - Non-managers may read only their own user row through `GET /api/users/` and `GET /api/users/{id}/`.
   - Requests for another user ID resolve as `404` for non-managers because the queryset is self-scoped.
@@ -90,6 +94,50 @@ Rotation summary response must include:
   - `GET/PATCH /api/residents/{user_id}/`
 - Staff profiles:
   - `GET/PATCH /api/staff/{user_id}/`
+- Resident training records:
+  - `GET/POST /api/resident-training/`
+  - `GET/PATCH/DELETE /api/resident-training/{id}/`
+
+### Resident Onboarding (additive active surface)
+- Purpose: upload resident rosters, map spreadsheet columns, preview import rows, create resident accounts, generate login IDs, and manage first-login completion.
+- Admin/UTRMC admin only endpoints:
+  - `POST /api/onboarding/residents/upload-preview/`
+  - `POST /api/onboarding/residents/map-columns/`
+  - `POST /api/onboarding/residents/import/`
+  - `POST /api/onboarding/residents/generate-logins/`
+  - `GET /api/onboarding/residents/login-sheet/`
+  - `GET /api/onboarding/residents/login-sheet/export-excel/`
+  - `GET /api/onboarding/residents/login-sheet/export-pdf/`
+  - `POST /api/onboarding/residents/mark-issued/`
+  - `GET /api/onboarding/residents/batches/`
+  - `GET /api/onboarding/residents/batches/{batch_id}/`
+  - `GET /api/onboarding/residents/batches/{batch_id}/residents/`
+  - `POST /api/onboarding/residents/batches/{batch_id}/generate-logins/`
+  - `GET /api/onboarding/residents/batches/{batch_id}/login-sheet/export/`
+  - `GET /api/onboarding/residents/batches/{batch_id}/error-report/`
+  - `GET /api/onboarding/residents/incomplete-profiles/`
+  - `GET /api/onboarding/residents/incomplete-profiles/export/`
+  - `POST /api/onboarding/residents/{resident_id}/reset-password/`
+  - `PATCH /api/onboarding/residents/{resident_id}/`
+  - `POST /api/onboarding/residents/{resident_id}/mark-profile-complete/`
+- Resident self-service endpoints:
+  - `GET /api/resident/me/profile-completion-status/`
+  - `POST /api/resident/complete-profile/`
+- Resident onboarding data contract:
+  - Uploads may contain extra unmapped columns; only mapped fields are imported.
+  - Required import fields: `Resident Name`, `Department`
+  - Optional fields, including `Email`, may be blank. Optional values are validated only when supplied.
+  - Mapping values must reference headers returned by the upload endpoint.
+  - Re-importing an already imported batch returns `409` and does not create duplicate residents.
+  - Temporary password: `pgfmu123`
+  - Username pattern: `pgrNNN`
+  - Login-generation responses count only newly generated IDs; batch `logins_generated` stores the total generated count.
+  - Mark-issued operations apply only to residents whose login has been generated. A batch becomes `issued` only when all generated logins in that batch are issued.
+  - Login-sheet Excel and PDF exports contain `Resident Name`, `Department`, `Program`, `Username`, `Temporary Password`, and `Login URL`.
+  - Profile-completion status returns `profile_completed`, `force_password_change`, `needs_completion`, `program`, `training_year`, and `joining_date`.
+  - Legacy resident accounts without a `ResidentProfile` retain dashboard access unless `force_password_change=true`; forced legacy residents can create the profile through the completion endpoint.
+  - Admin `mark-profile-complete` updates profile completion only; it does not clear `force_password_change`.
+  - First login must clear `force_password_change` and set profile completion flags.
 
 ### Admin Data Quality Layer (additive, non-breaking)
 - Feature-flagged by backend setting/environment:

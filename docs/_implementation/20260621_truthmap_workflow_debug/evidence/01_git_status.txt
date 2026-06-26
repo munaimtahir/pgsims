@@ -1,0 +1,67 @@
+ M CHANGELOG.md
+ M Makefile
+ M README.md
+ M backend/.env.example
+ M backend/requirements.txt
+ M backend/sims/training/views.py
+ M backend/sims/users/api_urls.py
+ M backend/sims/users/api_views.py
+ M backend/sims/users/models.py
+ M backend/sims/users/serializers.py
+ M backend/sims/users/test_userbase_api.py
+ M backend/sims/users/userbase_serializers.py
+ M backend/sims/users/userbase_views.py
+ M backend/sims/users/views.py
+ M backend/sims_db
+ M backend/sims_project/urls.py
+ M docs/ARCHIVE/deploy/CADDY_ROUTINE.md
+ M docs/DEPLOYMENT.md
+ M docs/contracts/API_CONTRACT.md
+ M docs/contracts/DATA_MODEL.md
+ M docs/contracts/ROUTES.md
+ M docs/contracts/TERMINOLOGY.md
+ M frontend/app/dashboard/change-password/page.tsx
+ M frontend/app/dashboard/resident/progress/page.tsx
+ M frontend/app/dashboard/supervisor/page.tsx
+ M frontend/app/dashboard/utrmc/hod/page.test.tsx
+ M frontend/app/dashboard/utrmc/hod/page.tsx
+ M frontend/app/dashboard/utrmc/onboarding/page.tsx
+ M frontend/app/dashboard/utrmc/page.test.tsx
+ M frontend/app/dashboard/utrmc/page.tsx
+ M frontend/app/dashboard/utrmc/supervision/page.tsx
+ M frontend/app/dashboard/utrmc/supervisors/page.tsx
+ M frontend/app/dashboard/utrmc/users/page.test.tsx
+ M frontend/app/dashboard/utrmc/users/page.tsx
+ M frontend/app/login/page.test.tsx
+ M frontend/app/login/page.tsx
+ M frontend/app/register/page.test.tsx
+ M frontend/app/reset-password/[uid]/[token]/page.tsx
+ M frontend/components/auth/ProtectedRoute.test.tsx
+ M frontend/components/auth/ProtectedRoute.tsx
+ M frontend/components/layout/Sidebar.test.tsx
+ M frontend/e2e/workflow-gate/bulk-setup.spec.ts
+ M frontend/e2e/workflow-gate/flexible-import.spec.ts
+ M frontend/lib/api/auth.ts
+ M frontend/lib/api/training.test.ts
+ M frontend/lib/api/training.ts
+ M frontend/lib/api/userbase.test.ts
+ M frontend/lib/api/userbase.ts
+ M frontend/lib/navRegistry.ts
+ M frontend/lib/rbac.ts
+?? backend/sims/users/resident_onboarding_urls.py
+?? backend/sims/users/resident_onboarding_views.py
+?? backend/sims/users/resident_selfservice_urls.py
+?? backend/sims/users/tasks.py
+?? backend/sims/users/test_resident_onboarding.py
+?? docs/_audit/20260619_resident_onboarding.md
+?? docs/_audit/20260619_user_list_filtering.md
+?? docs/_audit/20260620_onboarding_cleanup.md
+?? docs/_implementation/20260621_truthmap_workflow_debug/
+?? frontend/app/dashboard/onboarding/
+?? frontend/app/dashboard/utrmc/resident-training/
+?? frontend/app/dashboard/utrmc/supervision/page.test.tsx
+?? frontend/app/resident/
+?? frontend/components/onboarding/
+?? frontend/components/resident/
+?? frontend/docs/
+?? frontend/lib/api/onboarding.ts

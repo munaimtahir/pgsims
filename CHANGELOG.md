@@ -10,11 +10,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Analytics app to INSTALLED_APPS for API analytics endpoints
 - Bulk operations app to INSTALLED_APPS
+- Resident onboarding wizard, login sheet, batch review, and incomplete profile screens
+- Resident first-login completion flow with forced password change
 - Notifications app to INSTALLED_APPS
 - Reports app to INSTALLED_APPS
 - API routing for analytics at `/api/analytics/`
+- API routing for resident onboarding and resident self-service flows
 - Comprehensive Stage 1 completion status documentation
 - Factory fixtures for all major models (User, Case, Logbook, etc.)
+
+### Fixed
+- Hardened resident onboarding optional-field validation, mapping validation, import replay protection, login-generation counts, batch issuance state, PDF exports, legacy resident profile completion, and incomplete-profile data exposure.
+- Preserved mandatory password change when an administrator marks resident profile data complete.
+- Cleared frontend lint blockers so the production frontend build completes.
 
 ### Changed
 - Improved test pass rate from 54% to 71% (+36 passing tests)

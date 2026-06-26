@@ -1,9 +1,15 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import type { ReactNode } from 'react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
 import HodPage from './page';
 import { userbaseApi } from '@/lib/api/userbase';
 import { useAuthStore } from '@/store/authStore';
+
+jest.mock('@/components/auth/ProtectedRoute', () => ({
+  __esModule: true,
+  default: ({ children }: { children: ReactNode }) => <>{children}</>,
+}));
 
 jest.mock('@/store/authStore', () => ({
   useAuthStore: jest.fn(),
@@ -61,7 +67,7 @@ describe('UTRMC HOD assignments page', () => {
     const [departmentSelect, hodSelect] = screen.getAllByRole('combobox');
     await user.selectOptions(departmentSelect, '10');
     await user.selectOptions(hodSelect, '20');
-    await user.type(screen.getByDisplayValue(''), '2026-05-01');
+    fireEvent.change(screen.getByLabelText(/start date/i), { target: { value: '2026-05-01' } });
     await user.click(screen.getByRole('button', { name: 'Save' }));
 
     await waitFor(() =>

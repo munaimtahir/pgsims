@@ -16,6 +16,11 @@ export interface User {
   specialty?: string;
   year?: string;
   phone_number?: string;
+  cnic?: string;
+  force_password_change?: boolean;
+  profile_completed?: boolean;
+  login_generated?: boolean;
+  login_issued?: boolean;
 }
 
 export interface LoginCredentials {
@@ -115,6 +120,32 @@ export const authApi = {
    */
   async updateProfile(data: Partial<User>): Promise<User> {
     const response = await apiClient.patch<User>('/api/auth/profile/update/', data);
+    return response.data;
+  },
+
+  async getProfileCompletionStatus(): Promise<{
+    profile_completed: boolean;
+    force_password_change: boolean;
+    needs_completion: boolean;
+    program: string;
+    training_year: string;
+    joining_date: string | null;
+  }> {
+    const response = await apiClient.get('/api/resident/me/profile-completion-status/');
+    return response.data;
+  },
+
+  async completeProfile(data: {
+    new_password: string;
+    confirm_new_password: string;
+    mobile_number: string;
+    email: string;
+    cnic: string;
+    program: string;
+    training_year: string;
+    joining_date?: string | null;
+  }): Promise<{ detail: string; redirect_to: string }> {
+    const response = await apiClient.post('/api/resident/complete-profile/', data);
     return response.data;
   },
 

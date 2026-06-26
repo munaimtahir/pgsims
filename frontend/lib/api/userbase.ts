@@ -36,8 +36,13 @@ export interface UserbaseUser {
   full_name?: string;
   role: string;
   is_active: boolean;
+  is_complete_profile?: boolean;
   specialty?: string;
   year?: string;
+  supervisor?: number | null;
+  home_department?: number | null;
+  home_hospital?: number | null;
+  is_archived?: boolean;
   phone_number?: string;
   departments?: Array<{
     id: number;
@@ -81,7 +86,7 @@ export interface DataCorrectionAuditRow {
 }
 
 export type UserbaseUserUpsert = Partial<
-  Pick<UserbaseUser, 'username' | 'email' | 'first_name' | 'last_name' | 'role' | 'is_active' | 'specialty'>
+  Pick<UserbaseUser, 'username' | 'email' | 'first_name' | 'last_name' | 'role' | 'is_active' | 'specialty' | 'year' | 'supervisor' | 'home_department' | 'home_hospital'>
 > & {
   password?: string;
 };
@@ -103,6 +108,15 @@ export interface UserbaseStaffProfile {
   active: boolean;
   created_at: string;
   updated_at: string;
+}
+
+export interface UserbaseHodAssignment {
+  id: number;
+  department: { id: number; name: string; code?: string };
+  hod_user: { id: number; username: string; full_name?: string };
+  start_date: string;
+  end_date?: string | null;
+  active: boolean;
 }
 
 export const userbaseApi = {
@@ -169,7 +183,15 @@ export const userbaseApi = {
     },
   },
   users: {
-    list: async (params?: { role?: string; department?: number; active?: boolean; search?: string }) => {
+    list: async (params?: {
+      role?: string;
+      department?: number;
+      supervisor?: number;
+      program?: number;
+      active?: boolean;
+      search?: string;
+      is_complete_profile?: boolean;
+    }) => {
       const response = await apiClient.get<{ count?: number; results?: UserbaseUser[] } | UserbaseUser[]>(
         '/api/users/',
         { params }
@@ -186,6 +208,18 @@ export const userbaseApi = {
     },
     update: async (id: number, payload: UserbaseUserUpsert) => {
       const response = await apiClient.patch<UserbaseUser>(`/api/users/${id}/`, payload);
+      return response.data;
+    },
+    resetPassword: async (id: number, password = 'pgfmu123') => {
+      const response = await apiClient.post<{ detail: string }>(`/api/users/${id}/reset-password/`, { password });
+      return response.data;
+    },
+    deactivate: async (id: number) => {
+      const response = await apiClient.post<UserbaseUser>(`/api/users/${id}/deactivate/`);
+      return response.data;
+    },
+    delete: async (id: number) => {
+      const response = await apiClient.delete<{ detail: string }>(`/api/users/${id}/`);
       return response.data;
     },
   },

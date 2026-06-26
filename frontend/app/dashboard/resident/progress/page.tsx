@@ -19,6 +19,88 @@ const STATUS_COLOR: Record<string, string> = {
   NOT_READY: 'bg-red-100 text-red-800',
 };
 
+const UROLOGY_CATEGORIES = [
+  {
+    name: '1. OPD & Ward Work',
+    procedures: [
+      'Clinical History & Management Plan Formulation',
+      'Ward Presentations & Case Discussions'
+    ]
+  },
+  {
+    name: '2. Emergency Urology',
+    procedures: [
+      'Acute Urinary Retention Management / Catheterization',
+      'Urological Trauma Assessment & Shock Management',
+      'Acute Scrotum / Testicular Torsion Repairs'
+    ]
+  },
+  {
+    name: '3. Diagnostic Skills',
+    procedures: [
+      'Retrograde/Voiding Cystourethrography Interpretation',
+      'Renal & Prostate Ultrasound/Doppler Interpretation',
+      'Prostate Biopsy (TRUS-guided)'
+    ]
+  },
+  {
+    name: '4. Basic Procedures',
+    procedures: [
+      'Suprapubic Catheterization (SPC)',
+      'Circumcision & Penile/Scrotal Biopsies',
+      'Urethral Dilatations / Manipulations'
+    ]
+  },
+  {
+    name: '5. Endoscopic Procedures',
+    procedures: [
+      'Diagnostic Cystoscopy / Urethroscopy',
+      'Ureteric Stent Insertion / JJ Stenting',
+      'Transurethral Resection of Prostate (TURP)',
+      'Transurethral Resection of Bladder Tumor (TURBT)',
+      'Ureteroscopy & Laser/Lithoclast Lithotripsy (URS)',
+      'Percutaneous Nephrolithotomy (PCNL)'
+    ]
+  },
+  {
+    name: '6. Open Surgical',
+    procedures: [
+      'Hydrocele / Varicocele / Epididymal surgeries',
+      'Orchidopexy & Orchidectomy (Simple/Radical)',
+      'Retropubic Prostatectomy',
+      'Urethroplasty & Reconstructive Surgery'
+    ]
+  },
+  {
+    name: '7. Therapeutic Tech',
+    procedures: [
+      'ESWL (Extracorporeal Shock Wave Lithotripsy)'
+    ]
+  },
+  {
+    name: '8. Renal Transplantation',
+    procedures: [
+      'Recipient & Donor Workup',
+      'Vascular Anastomosis / Implantation Exposure'
+    ]
+  },
+  {
+    name: '9. Nephrology Rotation',
+    procedures: [
+      'Pre-op Assessment of Medical Renal Diseases',
+      'Hemodialysis / Peritoneal Dialysis Exposure'
+    ]
+  }
+];
+
+const ROLES = [
+  'First Surgeon / Performed',
+  'Assistant',
+  'Observer / Presenter',
+  'Evaluator / Evaluated',
+  'First Assessor'
+];
+
 type LogbookForm = {
   patient_id_number: string;
   patient_name: string;
@@ -30,6 +112,7 @@ type LogbookForm = {
   management_plan: string;
   resident_reflection: string;
   patient_seen_at: string;
+  role: string;
 };
 
 const EMPTY_LOGBOOK_FORM: LogbookForm = {
@@ -43,6 +126,7 @@ const EMPTY_LOGBOOK_FORM: LogbookForm = {
   management_plan: '',
   resident_reflection: '',
   patient_seen_at: '',
+  role: '',
 };
 
 export default function ResidentProgressPage() {
@@ -116,6 +200,7 @@ export default function ResidentProgressPage() {
         management_plan: logbookForm.management_plan,
         resident_reflection: logbookForm.resident_reflection,
         patient_seen_at: logbookForm.patient_seen_at,
+        demographics: logbookForm.role ? `Role: ${logbookForm.role}` : '',
       });
       setLogbookForm(EMPTY_LOGBOOK_FORM);
       flash('Logbook draft saved.');
@@ -169,50 +254,164 @@ export default function ResidentProgressPage() {
                 />
               ))}
             </section>
-
             <section className="pg-card">
               <h2 className="text-lg font-semibold text-gray-800 mb-3">Logbook Entry (Draft)</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <input
-                  value={logbookForm.patient_id_number}
-                  onChange={(event) => setLogbookForm((current) => ({ ...current, patient_id_number: event.target.value }))}
-                  className="pg-form-input"
-                  placeholder="Patient ID number *"
-                />
-                <input
-                  type="datetime-local"
-                  value={logbookForm.patient_seen_at}
-                  onChange={(event) => setLogbookForm((current) => ({ ...current, patient_seen_at: event.target.value }))}
-                  className="pg-form-input"
-                />
-                <input
-                  value={logbookForm.patient_name}
-                  onChange={(event) => setLogbookForm((current) => ({ ...current, patient_name: event.target.value }))}
-                  className="pg-form-input"
-                  placeholder="Patient name (optional)"
-                />
-                <input
-                  value={logbookForm.age}
-                  onChange={(event) => setLogbookForm((current) => ({ ...current, age: event.target.value }))}
-                  className="pg-form-input"
-                  placeholder="Age"
+                <div>
+                  <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">Patient ID / MRN *</label>
+                  <input
+                    value={logbookForm.patient_id_number}
+                    onChange={(event) => setLogbookForm((current) => ({ ...current, patient_id_number: event.target.value }))}
+                    className="pg-form-input w-full"
+                    placeholder="Patient ID number"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">Patient Seen At *</label>
+                  <input
+                    type="datetime-local"
+                    value={logbookForm.patient_seen_at}
+                    onChange={(event) => setLogbookForm((current) => ({ ...current, patient_seen_at: event.target.value }))}
+                    className="pg-form-input w-full"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">Patient Name (Optional)</label>
+                  <input
+                    value={logbookForm.patient_name}
+                    onChange={(event) => setLogbookForm((current) => ({ ...current, patient_name: event.target.value }))}
+                    className="pg-form-input w-full"
+                    placeholder="Patient name"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">Age</label>
+                    <input
+                      type="number"
+                      value={logbookForm.age}
+                      onChange={(event) => setLogbookForm((current) => ({ ...current, age: event.target.value }))}
+                      className="pg-form-input w-full"
+                      placeholder="Age"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">Gender</label>
+                    <select
+                      value={logbookForm.gender}
+                      onChange={(event) => setLogbookForm((current) => ({ ...current, gender: event.target.value }))}
+                      className="pg-form-input w-full"
+                    >
+                      <option value="">Select Gender</option>
+                      <option value="Male">Male</option>
+                      <option value="Female">Female</option>
+                      <option value="Other">Other</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">Logbook Category *</label>
+                  <select
+                    value={logbookForm.disease_area.split(';')[0] || ''}
+                    onChange={(event) => {
+                      const catName = event.target.value;
+                      setLogbookForm((current) => ({
+                        ...current,
+                        disease_area: catName ? `${catName};` : '',
+                      }));
+                    }}
+                    className="pg-form-input w-full"
+                  >
+                    <option value="">Select Category</option>
+                    {UROLOGY_CATEGORIES.map((c) => (
+                      <option key={c.name} value={c.name}>{c.name}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">Procedure / Activity *</label>
+                  <select
+                    value={logbookForm.disease_area.split(';')[1] || ''}
+                    disabled={!logbookForm.disease_area.split(';')[0]}
+                    onChange={(event) => {
+                      const procName = event.target.value;
+                      const catName = logbookForm.disease_area.split(';')[0] || '';
+                      setLogbookForm((current) => ({
+                        ...current,
+                        disease_area: `${catName};${procName}`,
+                      }));
+                    }}
+                    className="pg-form-input w-full"
+                  >
+                    <option value="">Select Procedure</option>
+                    {UROLOGY_CATEGORIES.find(c => c.name === (logbookForm.disease_area.split(';')[0]))?.procedures.map((p) => (
+                      <option key={p} value={p}>{p}</option>
+                    )) || null}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">Resident Role *</label>
+                  <select
+                    value={logbookForm.role}
+                    onChange={(event) => setLogbookForm((current) => ({ ...current, role: event.target.value }))}
+                    className="pg-form-input w-full"
+                  >
+                    <option value="">Select Role</option>
+                    {ROLES.map((r) => (
+                      <option key={r} value={r}>{r}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="mt-3">
+                <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">Clinical Presentation</label>
+                <textarea
+                  value={logbookForm.clinical_presentation}
+                  onChange={(event) => setLogbookForm((current) => ({ ...current, clinical_presentation: event.target.value }))}
+                  className="pg-form-input w-full"
+                  rows={2}
+                  placeholder="Describe the clinical presentation"
                 />
               </div>
-              <input
-                value={logbookForm.diagnosis}
-                onChange={(event) => setLogbookForm((current) => ({ ...current, diagnosis: event.target.value }))}
-                className="mt-3 pg-form-input"
-                placeholder="Diagnosis"
-              />
-              <textarea
-                value={logbookForm.management_plan}
-                onChange={(event) => setLogbookForm((current) => ({ ...current, management_plan: event.target.value }))}
-                className="mt-3 pg-form-input"
-                rows={2}
-                placeholder="Management plan"
-              />
-              <button onClick={createLogbookDraft} disabled={busy} className="mt-3 pg-btn-primary">
-                Save Logbook Draft
+
+              <div className="mt-3">
+                <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">Diagnosis</label>
+                <input
+                  value={logbookForm.diagnosis}
+                  onChange={(event) => setLogbookForm((current) => ({ ...current, diagnosis: event.target.value }))}
+                  className="pg-form-input w-full"
+                  placeholder="Diagnosis"
+                />
+              </div>
+
+              <div className="mt-3">
+                <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">Management Plan</label>
+                <textarea
+                  value={logbookForm.management_plan}
+                  onChange={(event) => setLogbookForm((current) => ({ ...current, management_plan: event.target.value }))}
+                  className="pg-form-input w-full"
+                  rows={2}
+                  placeholder="Management plan"
+                />
+              </div>
+
+              <div className="mt-3">
+                <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">Resident Reflection & Learning Points</label>
+                <textarea
+                  value={logbookForm.resident_reflection}
+                  onChange={(event) => setLogbookForm((current) => ({ ...current, resident_reflection: event.target.value }))}
+                  className="pg-form-input w-full"
+                  rows={2}
+                  placeholder="Reflect on key learning points from this case"
+                />
+              </div>
+
+              <button onClick={createLogbookDraft} disabled={busy} className="mt-4 pg-btn-primary">
+                Save Urology Logbook Draft
               </button>
             </section>
 
@@ -222,26 +421,45 @@ export default function ResidentProgressPage() {
                 <p className="text-sm text-gray-500">No logbook entries yet.</p>
               ) : (
                 <div className="space-y-3">
-                  {logbook.slice(0, 12).map((entry) => (
-                    <div key={entry.id} className="pg-card-muted">
-                      <div className="flex items-start justify-between gap-4 flex-wrap">
-                        <div>
-                          <p className="font-medium text-gray-900">Patient ID: {entry.patient_id_number}</p>
-                          <p className="text-sm text-gray-500">
-                            Seen: {entry.patient_seen_at.slice(0, 16).replace('T', ' ')}
-                          </p>
-                          {entry.diagnosis && <p className="text-sm text-gray-700 mt-1">{entry.diagnosis}</p>}
-                          {entry.feedback && <p className="text-sm text-orange-700 mt-1">Feedback: {entry.feedback}</p>}
+                  {logbook.slice(0, 12).map((entry) => {
+                    const parts = entry.disease_area ? entry.disease_area.split(';') : [];
+                    const category = parts[0] || 'Uncategorized';
+                    const procedure = parts[1] || '';
+                    const role = entry.demographics && entry.demographics.startsWith('Role: ') ? entry.demographics.replace('Role: ', '') : '';
+
+                    return (
+                      <div key={entry.id} className="pg-card-muted">
+                        <div className="flex items-start justify-between gap-4 flex-wrap border-b border-slate-100 pb-2 mb-2">
+                          <div>
+                            <span className="text-xs font-bold uppercase tracking-wider text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded mr-2">
+                              {category}
+                            </span>
+                            {procedure && (
+                              <span className="text-xs font-semibold text-slate-600 bg-slate-100 px-2 py-0.5 rounded">
+                                {procedure}
+                              </span>
+                            )}
+                            <p className="font-medium text-gray-900 mt-1">Patient ID: {entry.patient_id_number} ({entry.age || '?'}y, {entry.gender || 'Unknown'})</p>
+                          </div>
+                          <WorkflowStatusBadge status={entry.status} />
                         </div>
-                        <WorkflowStatusBadge status={entry.status} />
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs text-slate-600 mt-2">
+                          {role && <p><span className="font-semibold text-slate-700">Role:</span> {role}</p>}
+                          <p><span className="font-semibold text-slate-700">Seen:</span> {entry.patient_seen_at.slice(0, 16).replace('T', ' ')}</p>
+                          {entry.diagnosis && <p className="md:col-span-2"><span className="font-semibold text-slate-700">Diagnosis:</span> {entry.diagnosis}</p>}
+                          {entry.clinical_presentation && <p className="md:col-span-2"><span className="font-semibold text-slate-700">Presentation:</span> {entry.clinical_presentation}</p>}
+                          {entry.management_plan && <p className="md:col-span-2"><span className="font-semibold text-slate-700">Management:</span> {entry.management_plan}</p>}
+                          {entry.resident_reflection && <p className="md:col-span-2"><span className="font-semibold text-slate-700">Reflection:</span> {entry.resident_reflection}</p>}
+                          {entry.feedback && <p className="md:col-span-2 text-orange-700 font-semibold"><span className="font-semibold">Feedback:</span> {entry.feedback}</p>}
+                        </div>
+                        {['DRAFT', 'RETURNED'].includes(entry.status) && (
+                          <button onClick={() => submitLogbook(entry.id)} disabled={busy} className="mt-3 pg-btn-success px-3 py-1.5 text-xs">
+                            Submit for Approval
+                          </button>
+                        )}
                       </div>
-                      {['DRAFT', 'RETURNED'].includes(entry.status) && (
-                        <button onClick={() => submitLogbook(entry.id)} disabled={busy} className="mt-3 pg-btn-success px-3 py-1.5">
-                          Submit
-                        </button>
-                      )}
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </section>
