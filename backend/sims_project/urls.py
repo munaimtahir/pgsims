@@ -20,6 +20,8 @@ from django.template.response import TemplateResponse
 from django.urls import include, path
 from drf_spectacular.views import SpectacularAPIView
 
+from sims.users.models import ResidentProfile
+
 # Import health check views
 from sims_project.health import healthz, liveness, readiness
 
@@ -68,6 +70,11 @@ def home_view(request):
                         messages.success(request, f"Welcome back, Dr. {user.get_display_name()}!")
                         return redirect("users:supervisor_dashboard")
                     elif user.is_pg():
+                        resident_profile = ResidentProfile.objects.filter(user=user).first()
+                        if user.force_password_change or (
+                            resident_profile and not resident_profile.profile_completed
+                        ):
+                            return redirect("/resident/complete-profile")
                         messages.success(request, f"Welcome back, {user.get_display_name()}!")
                         return redirect("users:pg_dashboard")
                     else:
@@ -137,6 +144,8 @@ urlpatterns = [
     path("api/", include("sims.training.urls")),
     path("academics/", include("sims.academics.urls")),
     path("api/auth/", include("sims.users.api_urls")),
+    path("api/onboarding/", include("sims.users.resident_onboarding_urls")),
+    path("api/resident/", include("sims.users.resident_selfservice_urls")),
     path("api/backup_center/", include("sims.backup_center.urls")),
 ]
 

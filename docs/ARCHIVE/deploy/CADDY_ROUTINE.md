@@ -6,11 +6,20 @@ This is the only supported production routing routine:
 - Caddy source of truth: `deploy/Caddyfile.pgsims`
 - Active Caddy file: `/etc/caddy/Caddyfile`
 
-## 1) Start application stack
+## 1) Start or refresh application stack
+
+Preferred helper:
 
 ```bash
 cd /home/munaim/srv/apps/pgsims
-docker compose -f docker/docker-compose.prod.yml up -d --build
+./ops/deploy_live_update.sh
+```
+
+Manual equivalent:
+
+```bash
+cd /home/munaim/srv/apps/pgsims
+docker compose -f docker/docker-compose.prod.yml up -d --build --force-recreate
 ```
 
 ## 2) Sync Caddyfile to active path

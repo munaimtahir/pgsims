@@ -12,6 +12,9 @@ class UserSerializer(serializers.ModelSerializer):
 
     full_name = serializers.CharField(source="get_full_name", read_only=True)
     display_name = serializers.CharField(source="get_display_name", read_only=True)
+    profile_completed = serializers.SerializerMethodField()
+    login_generated = serializers.SerializerMethodField()
+    login_issued = serializers.SerializerMethodField()
 
     class Meta:
         model = User
@@ -27,11 +30,31 @@ class UserSerializer(serializers.ModelSerializer):
             "specialty",
             "year",
             "registration_number",
+            "cnic",
             "phone_number",
+            "force_password_change",
+            "profile_completed",
+            "login_generated",
+            "login_issued",
             "date_joined",
             "is_active",
         ]
         read_only_fields = ["id", "date_joined", "full_name", "display_name"]
+
+    def _resident_profile(self, obj):
+        return getattr(obj, "resident_profile", None)
+
+    def get_profile_completed(self, obj) -> bool:
+        profile = self._resident_profile(obj)
+        return bool(profile.profile_completed) if profile else True
+
+    def get_login_generated(self, obj) -> bool:
+        profile = self._resident_profile(obj)
+        return bool(profile.login_generated) if profile else False
+
+    def get_login_issued(self, obj) -> bool:
+        profile = self._resident_profile(obj)
+        return bool(profile.login_issued) if profile else False
 
 
 class UserRegistrationSerializer(serializers.ModelSerializer):

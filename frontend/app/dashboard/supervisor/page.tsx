@@ -210,16 +210,43 @@ export default function SupervisorHomePage() {
                 <div className="space-y-3">
                   {pendingLogbook.map((entry) => (
                     <div key={entry.id} className="pg-card">
-                      <div className="flex items-start justify-between gap-4 flex-wrap">
-                        <div>
-                          <p className="font-semibold text-gray-900">{entry.resident_name}</p>
-                          <p className="text-sm text-gray-500">
-                            Patient ID: {entry.patient_id_number} · Seen: {entry.patient_seen_at.slice(0, 10)}
-                          </p>
-                          {entry.diagnosis && <p className="text-sm text-gray-700 mt-2">{entry.diagnosis}</p>}
+                        <div className="flex items-start justify-between gap-4 flex-wrap border-b border-slate-100 pb-2 mb-2">
+                          <div>
+                            <p className="font-semibold text-gray-900">{entry.resident_name}</p>
+                            <div className="mt-1 flex flex-wrap gap-1">
+                              {entry.disease_area && entry.disease_area.split(';')[0] && (
+                                <span className="text-xs font-bold uppercase tracking-wider text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded">
+                                  {entry.disease_area.split(';')[0]}
+                                </span>
+                              )}
+                              {entry.disease_area && entry.disease_area.split(';')[1] && (
+                                <span className="text-xs font-semibold text-slate-600 bg-slate-100 px-2 py-0.5 rounded">
+                                  {entry.disease_area.split(';')[1]}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                          <WorkflowStatusBadge status={entry.status} />
                         </div>
-                        <WorkflowStatusBadge status={entry.status} />
-                      </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs text-slate-600 mt-2">
+                          <p><span className="font-semibold text-slate-700">Patient ID:</span> {entry.patient_id_number} ({entry.age || '?'}y, {entry.gender || 'Unknown'})</p>
+                          <p><span className="font-semibold text-slate-700">Seen:</span> {entry.patient_seen_at.slice(0, 16).replace('T', ' ')}</p>
+                          {entry.demographics && entry.demographics.startsWith('Role: ') && (
+                            <p className="md:col-span-2"><span className="font-semibold text-slate-700">Role:</span> {entry.demographics.replace('Role: ', '')}</p>
+                          )}
+                          {entry.clinical_presentation && (
+                            <p className="md:col-span-2"><span className="font-semibold text-slate-700">Presentation:</span> {entry.clinical_presentation}</p>
+                          )}
+                          {entry.diagnosis && (
+                            <p className="md:col-span-2"><span className="font-semibold text-slate-700">Diagnosis:</span> {entry.diagnosis}</p>
+                          )}
+                          {entry.management_plan && (
+                            <p className="md:col-span-2"><span className="font-semibold text-slate-700">Management:</span> {entry.management_plan}</p>
+                          )}
+                          {entry.resident_reflection && (
+                            <p className="md:col-span-2"><span className="font-semibold text-slate-700">Reflection:</span> {entry.resident_reflection}</p>
+                          )}
+                        </div>
                       <div className="mt-4 flex gap-2 flex-wrap">
                         <button
                           onClick={() => reviewLogbook(entry.id, 'approved')}

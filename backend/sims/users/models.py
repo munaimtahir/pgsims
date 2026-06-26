@@ -2,6 +2,7 @@ from django.contrib.auth.models import AbstractUser
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils import timezone
+import uuid
 from simple_history.models import HistoricalRecords
 
 # Role choices for the SIMS system
@@ -119,9 +120,19 @@ class User(AbstractUser):
         null=True,
         help_text="Medical council registration number",
     )
+    cnic = models.CharField(
+        max_length=25,
+        blank=True,
+        null=True,
+        help_text="Computerized National Identity Card number",
+    )
 
     phone_number = models.CharField(
         max_length=15, blank=True, null=True, help_text="Contact phone number"
+    )
+    force_password_change = models.BooleanField(
+        default=False,
+        help_text="Force the user to change their password on next login.",
     )
     is_complete_profile = models.BooleanField(
         default=False,
@@ -383,13 +394,45 @@ class StaffProfile(models.Model):
 class ResidentProfile(models.Model):
     """Training metadata for residents/postgraduates."""
 
+    PROFILE_PENDING = "pending"
+    PROFILE_COMPLETE = "complete"
+    PROFILE_STATUS_CHOICES = (
+        (PROFILE_PENDING, "Pending"),
+        (PROFILE_COMPLETE, "Complete"),
+    )
+
     user = models.OneToOneField(
         "users.User",
         on_delete=models.CASCADE,
         related_name="resident_profile",
         limit_choices_to={"role__in": ["pg", "resident"]},
     )
+    import_batch = models.ForeignKey(
+        "users.OnboardingImportBatch",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="resident_profiles",
+    )
     pgr_id = models.CharField(max_length=60, blank=True)
+    program_name = models.CharField(max_length=200, blank=True)
+    training_year = models.CharField(max_length=20, blank=True)
+    joining_date = models.DateField(null=True, blank=True)
+    raw_import_data = models.JSONField(null=True, blank=True)
+    # Legacy residents predate onboarding; only imported/explicitly incomplete profiles opt in.
+    profile_completed = models.BooleanField(default=True)
+    profile_completed_at = models.DateTimeField(null=True, blank=True)
+    first_login_completed_at = models.DateTimeField(null=True, blank=True)
+    login_generated = models.BooleanField(default=False)
+    login_issued = models.BooleanField(default=False)
+    login_issued_at = models.DateTimeField(null=True, blank=True)
+    login_issued_by = models.ForeignKey(
+        "users.User",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="resident_logins_issued",
+    )
     training_start = models.DateField()
     training_end = models.DateField(null=True, blank=True)
     training_level = models.CharField(max_length=50, blank=True)
@@ -414,6 +457,58 @@ class ResidentProfile(models.Model):
     def save(self, *args, **kwargs):
         self.full_clean()
         return super().save(*args, **kwargs)
+
+
+class OnboardingImportBatch(models.Model):
+    """Audit record for resident onboarding imports."""
+
+    STATUS_UPLOADED = "uploaded"
+    STATUS_MAPPED = "mapped"
+    STATUS_READY = "ready"
+    STATUS_IMPORTED = "imported"
+    STATUS_LOGINS_GENERATED = "logins_generated"
+    STATUS_ISSUED = "issued"
+    STATUS_COMPLETED = "completed"
+    STATUS_FAILED = "failed"
+    STATUS_CHOICES = (
+        (STATUS_UPLOADED, "Uploaded"),
+        (STATUS_MAPPED, "Mapped"),
+        (STATUS_READY, "Ready"),
+        (STATUS_IMPORTED, "Imported"),
+        (STATUS_LOGINS_GENERATED, "Logins Generated"),
+        (STATUS_ISSUED, "Issued"),
+        (STATUS_COMPLETED, "Completed"),
+        (STATUS_FAILED, "Failed"),
+    )
+
+    file_name = models.CharField(max_length=255)
+    uploaded_by = models.ForeignKey(
+        "users.User",
+        on_delete=models.CASCADE,
+        related_name="onboarding_batches",
+    )
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+    total_rows = models.PositiveIntegerField(default=0)
+    ready_rows = models.PositiveIntegerField(default=0)
+    error_rows = models.PositiveIntegerField(default=0)
+    duplicate_rows = models.PositiveIntegerField(default=0)
+    imported_rows = models.PositiveIntegerField(default=0)
+    logins_generated = models.PositiveIntegerField(default=0)
+    status = models.CharField(max_length=32, choices=STATUS_CHOICES, default=STATUS_UPLOADED)
+    mapping_json = models.JSONField(default=dict, blank=True)
+    headers_json = models.JSONField(default=list, blank=True)
+    sample_rows_json = models.JSONField(default=list, blank=True)
+    raw_rows_json = models.JSONField(default=list, blank=True)
+    preview_rows_json = models.JSONField(default=list, blank=True)
+    error_rows_json = models.JSONField(default=list, blank=True)
+    imported_resident_ids_json = models.JSONField(default=list, blank=True)
+    notes = models.TextField(blank=True)
+
+    class Meta:
+        ordering = ["-uploaded_at"]
+
+    def __str__(self):
+        return f"OnboardingImportBatch<{self.id}:{self.file_name}>"
 
 
 class DepartmentMembership(models.Model):
@@ -797,3 +892,112 @@ class HODAssignment(models.Model):
             pass
 
         return count
+
+
+class WorkspaceIdentity(models.Model):
+    STATUS_NOT_SENT = "not_sent"
+    STATUS_SENT = "sent"
+    STATUS_RECEIVED = "received"
+    STATUS_NEEDS_REVIEW = "needs_review"
+    STATUS_MAPPING_REQUIRED = "mapping_required"
+    STATUS_READY_FOR_PROVISIONING = "ready_for_provisioning"
+    STATUS_APPROVAL_PENDING = "approval_pending"
+    STATUS_PROVISIONING = "provisioning"
+    STATUS_WORKSPACE_READY = "workspace_ready"
+    STATUS_SKIPPED_EXISTING = "skipped_existing"
+    STATUS_DUPLICATE_CONFLICT = "duplicate_conflict"
+    STATUS_FAILED = "failed"
+    STATUS_CANCELLED = "cancelled"
+    STATUS_REVOKED = "revoked"
+
+    STATUS_CHOICES = [
+        (STATUS_NOT_SENT, "Not Sent"),
+        (STATUS_SENT, "Sent"),
+        (STATUS_RECEIVED, "Received"),
+        (STATUS_NEEDS_REVIEW, "Needs Review"),
+        (STATUS_MAPPING_REQUIRED, "Mapping Required"),
+        (STATUS_READY_FOR_PROVISIONING, "Ready For Provisioning"),
+        (STATUS_APPROVAL_PENDING, "Approval Pending"),
+        (STATUS_PROVISIONING, "Provisioning"),
+        (STATUS_WORKSPACE_READY, "Workspace Ready"),
+        (STATUS_SKIPPED_EXISTING, "Skipped Existing"),
+        (STATUS_DUPLICATE_CONFLICT, "Duplicate Conflict"),
+        (STATUS_FAILED, "Failed"),
+        (STATUS_CANCELLED, "Cancelled"),
+        (STATUS_REVOKED, "Revoked"),
+    ]
+
+    ONBOARDING_STATUS_DRAFT = "DRAFT"
+    ONBOARDING_STATUS_VERIFIED = "VERIFIED_BY_DEPARTMENT"
+    ONBOARDING_STATUS_APPROVED = "APPROVED_FOR_WORKSPACE_ONBOARDING"
+
+    ONBOARDING_CHOICES = [
+        (ONBOARDING_STATUS_DRAFT, "Draft"),
+        (ONBOARDING_STATUS_VERIFIED, "Verified by Department"),
+        (ONBOARDING_STATUS_APPROVED, "Approved for Workspace Onboarding"),
+    ]
+
+    user = models.OneToOneField("users.User", on_delete=models.CASCADE, related_name="workspace_identity")
+    public_id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+
+    # PGSIMS side approval
+    onboarding_status = models.CharField(max_length=50, choices=ONBOARDING_CHOICES, default=ONBOARDING_STATUS_DRAFT)
+    approved_at = models.DateTimeField(null=True, blank=True)
+    approved_by = models.ForeignKey("users.User", null=True, blank=True, on_delete=models.SET_NULL, related_name="workspace_approvals")
+
+    # Workspace status returned from AdminOps
+    workspace_status = models.CharField(max_length=50, choices=STATUS_CHOICES, default=STATUS_NOT_SENT)
+    workspace_primary_email = models.EmailField(blank=True)
+    workspace_org_unit_path = models.CharField(max_length=500, blank=True)
+    workspace_groups = models.JSONField(default=list, blank=True)
+
+    workspace_last_sync_at = models.DateTimeField(null=True, blank=True)
+    workspace_ready_at = models.DateTimeField(null=True, blank=True)
+    workspace_failure_reason = models.TextField(blank=True)
+    adminops_reference = models.CharField(max_length=200, blank=True)
+
+    last_bridge_attempt_at = models.DateTimeField(null=True, blank=True)
+    last_bridge_error = models.TextField(blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    history = HistoricalRecords()
+
+    def get_external_id(self):
+        if self.user.is_resident() or self.user.is_pg():
+            return f"pgsims-resident-{self.public_id}"
+        return f"pgsims-supervisor-{self.public_id}"
+
+    class Meta:
+        verbose_name = "Workspace Identity"
+        verbose_name_plural = "Workspace Identities"
+        indexes = [
+            models.Index(fields=["onboarding_status"]),
+            models.Index(fields=["workspace_status"]),
+        ]
+
+    def __str__(self):
+        return f"WorkspaceIdentity<{self.user_id}:{self.onboarding_status}:{self.workspace_status}>"
+
+
+class WorkspaceBridgeLog(models.Model):
+    identity = models.ForeignKey(WorkspaceIdentity, on_delete=models.CASCADE, related_name="bridge_logs")
+    person_type = models.CharField(max_length=50)
+    external_id = models.CharField(max_length=200)
+    request_id = models.CharField(max_length=200)
+    endpoint = models.CharField(max_length=500)
+    payload_hash = models.CharField(max_length=64, blank=True)
+    response_status_code = models.IntegerField(null=True, blank=True)
+    response_body_sanitized = models.TextField(blank=True)
+    status = models.CharField(max_length=50)
+    error_message = models.TextField(blank=True)
+    sent_at = models.DateTimeField(auto_now_add=True)
+    created_by = models.ForeignKey("users.User", null=True, blank=True, on_delete=models.SET_NULL, related_name="bridge_logs_created")
+
+    class Meta:
+        verbose_name = "Workspace Bridge Log"
+        verbose_name_plural = "Workspace Bridge Logs"
+        ordering = ["-sent_at"]
+
+    def __str__(self):
+        return f"BridgeLog<{self.external_id}:{self.status}>"

@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { authApi } from '@/lib/api/auth';
 import { useAuthStore } from '@/store/authStore';
-import { getDashboardPathForRole } from '@/lib/rbac';
+import { getPostLoginPathForUser } from '@/lib/rbac';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -35,8 +35,7 @@ export default function LoginPage() {
       const response = await authApi.login(formData);
       setAuth(response.user, response.access, response.refresh);
 
-      // Redirect to role-specific dashboard
-      router.push(getDashboardPathForRole(response.user.role));
+      router.push(getPostLoginPathForUser(response.user));
     } catch (err: unknown) {
       const error = err as { response?: { data?: { detail?: string; error?: string } } };
       setError(

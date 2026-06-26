@@ -43,6 +43,15 @@ describe('Sidebar', () => {
     render(<Sidebar {...defaultProps} role="utrmc_admin" />);
     expect(screen.getByText('Hospitals')).toBeInTheDocument();
     expect(screen.getByText('Programmes')).toBeInTheDocument();
+    expect(screen.getByText('Resident Programme Assignment')).toBeInTheDocument();
     expect(screen.getByText('Eligibility Monitor')).toBeInTheDocument();
+  });
+
+  it('renders onboarding items for admin roles', () => {
+    render(<Sidebar {...defaultProps} role="admin" />);
+    expect(screen.getByText('Resident Onboarding')).toBeInTheDocument();
+    expect(screen.getByText('Login Sheet')).toBeInTheDocument();
+    expect(screen.getByText('Imported Batches')).toBeInTheDocument();
+    expect(screen.getByText('Incomplete Profiles')).toBeInTheDocument();
   });
 });

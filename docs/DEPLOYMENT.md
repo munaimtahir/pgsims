@@ -28,10 +28,10 @@ CELERY_BROKER_URL=redis://redis:6379/1
 CORS_ALLOWED_ORIGINS=http://localhost:3000,http://localhost:8082,https://pg.fmu.edu.pk,https://pgsims.alshifalab.pk
 ```
 
-### 2. Launch Services
-Run the following commands to build and run all services in detached mode:
+### 2. Launch or Refresh Services
+Run the following commands to build and recreate all services in detached mode:
 ```bash
-docker compose -f docker/docker-compose.yml up -d --build
+docker compose -f docker/docker-compose.yml up -d --build --force-recreate
 ```
 
 ### 3. Apply Migrations and Static assets
@@ -45,4 +45,10 @@ docker compose -f docker/docker-compose.yml exec backend python manage.py collec
 Initialize the admin credentials:
 ```bash
 docker compose -f docker/docker-compose.yml exec backend python manage.py create_superadmin
+```
+
+### 5. Public Proxy Refresh
+When code or containers change, refresh the live proxy after the rebuild so the public URL serves the latest container set:
+```bash
+./ops/deploy_live_update.sh
 ```

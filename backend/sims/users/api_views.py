@@ -25,7 +25,7 @@ from django.core.mail import send_mail
 from django.conf import settings
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
-from .models import User
+from .models import ResidentProfile, User
 from .serializers import AssignedPGSerializer, UserSerializer, UserRegistrationSerializer
 from .permissions import IsSupervisor
 
@@ -57,6 +57,7 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
 
     def validate(self, attrs):
         data = super().validate(attrs)
+        resident_profile = ResidentProfile.objects.filter(user=self.user).select_related("user").first()
 
         # Add user data to response
         data["user"] = {
@@ -67,6 +68,12 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
             "first_name": self.user.first_name,
             "last_name": self.user.last_name,
             "full_name": self.user.get_full_name(),
+            "phone_number": self.user.phone_number,
+            "cnic": self.user.cnic,
+            "force_password_change": self.user.force_password_change,
+            "profile_completed": resident_profile.profile_completed if resident_profile else True,
+            "login_generated": resident_profile.login_generated if resident_profile else False,
+            "login_issued": resident_profile.login_issued if resident_profile else False,
         }
 
         return data

@@ -47,8 +47,21 @@ export const NAV_SECTIONS: NavSection[] = [
       { label: 'Supervision Links', href: '/dashboard/utrmc/supervision', icon: 'link' },
       { label: 'HOD Assignments', href: '/dashboard/utrmc/hod', icon: 'badge-check' },
       { label: 'Programmes', href: '/dashboard/utrmc/programs', icon: 'book-open' },
+      { label: 'Resident Programme Assignment', href: '/dashboard/utrmc/resident-training', icon: 'clipboard-list' },
       { label: 'Eligibility Monitor', href: '/dashboard/utrmc/eligibility-monitoring', icon: 'chart-bar' },
       { label: 'Backup Center', href: '/dashboard/utrmc/backup', icon: 'download', allowedRoles: ['admin', 'utrmc_admin'] },
+    ],
+  },
+
+  // ------------------------------------------------------------------ Onboarding
+  {
+    title: 'Onboarding',
+    allowedRoles: ['admin', 'utrmc_admin'],
+    items: [
+      { label: 'Resident Onboarding', href: '/dashboard/onboarding/residents', icon: 'upload' },
+      { label: 'Login Sheet', href: '/dashboard/onboarding/login-sheet', icon: 'download' },
+      { label: 'Imported Batches', href: '/dashboard/onboarding/batches', icon: 'folder-open' },
+      { label: 'Incomplete Profiles', href: '/dashboard/onboarding/incomplete-profiles', icon: 'users' },
     ],
   },
 

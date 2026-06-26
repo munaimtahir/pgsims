@@ -24,6 +24,45 @@ For `User` with role=pg:
 
 Home affiliation does not change during rotations.
 
+### Resident onboarding fields
+`User`:
+- `cnic`
+- `force_password_change` (forces `/resident/complete-profile` on first login)
+
+`ResidentProfile`:
+- `import_batch` (nullable FK `users.OnboardingImportBatch`)
+- `program_name`
+- `training_year`
+- `joining_date`
+- `raw_import_data`
+- `profile_completed` (defaults true for legacy compatibility; resident imports explicitly set false)
+- `profile_completed_at`
+- `first_login_completed_at`
+- `login_generated`
+- `login_issued`
+- `login_issued_at`
+- `login_issued_by`
+
+`OnboardingImportBatch`:
+- `file_name`
+- `uploaded_by`
+- `uploaded_at`
+- `total_rows`
+- `ready_rows`
+- `error_rows`
+- `duplicate_rows`
+- `imported_rows`
+- `logins_generated`
+- `status`
+- `mapping_json`
+- `headers_json`
+- `sample_rows_json`
+- `raw_rows_json`
+- `preview_rows_json`
+- `error_rows_json`
+- `imported_resident_ids_json`
+- `notes`
+
 ## Rotation (posting)
 A rotation is a time-bounded placement in a (Hospital, Department) pair.
 

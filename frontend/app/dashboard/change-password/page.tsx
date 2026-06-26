@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import axios from 'react';
 import PageHeader from '@/components/ui/PageHeader';
 import SectionCard from '@/components/ui/SectionCard';
 import authApi from '@/lib/api/auth';

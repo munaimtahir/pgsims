@@ -5,9 +5,11 @@ import apiClient from './client';
 
 describe('userbaseApi', () => {
   let getSpy: jest.SpiedFunction<typeof apiClient.get>;
+  let postSpy: jest.SpiedFunction<typeof apiClient.post>;
 
   beforeEach(() => {
     getSpy = jest.spyOn(apiClient, 'get');
+    postSpy = jest.spyOn(apiClient, 'post');
   });
 
   afterEach(() => {
@@ -22,7 +24,23 @@ describe('userbaseApi', () => {
 
   it('users.list calls correct endpoint with params', async () => {
     getSpy.mockResolvedValue({ data: [] } as never);
-    await userbaseApi.users.list({ role: 'resident' });
-    expect(apiClient.get).toHaveBeenCalledWith('/api/users/', { params: { role: 'resident' } });
+    await userbaseApi.users.list({
+      role: 'resident',
+      department: 7,
+      supervisor: 3,
+      program: 11,
+      active: false,
+      search: 'uro',
+      is_complete_profile: true,
+    });
+    expect(apiClient.get).toHaveBeenCalledWith('/api/users/', {
+      params: { role: 'resident', department: 7, supervisor: 3, program: 11, active: false, search: 'uro', is_complete_profile: true },
+    });
+  });
+
+  it('users.resetPassword posts to the reset-password action', async () => {
+    postSpy.mockResolvedValue({ data: { detail: 'ok' } } as never);
+    await userbaseApi.users.resetPassword(42, 'pgfmu123');
+    expect(apiClient.post).toHaveBeenCalledWith('/api/users/42/reset-password/', { password: 'pgfmu123' });
   });
 });

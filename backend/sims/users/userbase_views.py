@@ -228,7 +228,7 @@ class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.select_related("home_department", "home_hospital", "supervisor")
     serializer_class = UserManagementSerializer
     permission_classes = [permissions.IsAuthenticated]
-    filterset_fields = ["role", "is_active"]
+    filterset_fields = ["role", "is_active", "is_complete_profile", "supervisor", "home_department"]
     search_fields = ["username", "first_name", "last_name", "email"]
     ordering_fields = ["username", "first_name", "last_name", "date_joined"]
 
@@ -242,8 +242,12 @@ class UserViewSet(viewsets.ModelViewSet):
         if not _is_roster_reader(user):
             return queryset.filter(id=user.id)
 
+        queryset = queryset.filter(is_archived=False)
+
         role = self.request.query_params.get("role")
         department = self.request.query_params.get("department")
+        supervisor = self.request.query_params.get("supervisor")
+        program = self.request.query_params.get("program")
         active = self.request.query_params.get("active")
         search = self.request.query_params.get("search")
 
@@ -254,14 +258,25 @@ class UserViewSet(viewsets.ModelViewSet):
                 department_memberships__department_id=department,
                 department_memberships__active=True,
             )
+        if supervisor:
+            queryset = queryset.filter(supervisor_id=supervisor)
+        if program:
+            queryset = queryset.filter(training_records__program_id=program, training_records__active=True)
         if active in {"true", "false"}:
             queryset = queryset.filter(is_active=(active == "true"))
+
+        completeness = self.request.query_params.get("is_complete_profile")
+        if completeness in {"true", "false"}:
+            queryset = queryset.filter(is_complete_profile=(completeness == "true"))
         if search:
             queryset = queryset.filter(
                 Q(username__icontains=search)
                 | Q(first_name__icontains=search)
                 | Q(last_name__icontains=search)
                 | Q(email__icontains=search)
+                | Q(supervisor__username__icontains=search)
+                | Q(supervisor__first_name__icontains=search)
+                | Q(supervisor__last_name__icontains=search)
             )
         return queryset.distinct()
 
@@ -296,7 +311,41 @@ class UserViewSet(viewsets.ModelViewSet):
 
     def destroy(self, request, *args, **kwargs):
         self._ensure_manage_permission()
-        return super().destroy(request, *args, **kwargs)
+        instance = self.get_object()
+        instance.is_active = False
+        instance.is_archived = True
+        instance.save(update_fields=["is_active", "is_archived"])
+        return Response({"detail": "User archived successfully."}, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=["post"], url_path="reset-password")
+    def reset_password(self, request, pk=None):
+        self._ensure_manage_permission()
+        instance = self.get_object()
+        password = request.data.get("password") or "pgfmu123"
+        instance.set_password(password)
+        instance.force_password_change = True
+        instance.is_active = True
+        instance.is_archived = False
+        instance.save(update_fields=["password", "force_password_change", "is_active", "is_archived"])
+        recompute_flags_for_user(instance)
+        return Response({"detail": "Password reset successfully."})
+
+    @action(detail=True, methods=["post"], url_path="deactivate")
+    def deactivate(self, request, pk=None):
+        self._ensure_manage_permission()
+        instance = self.get_object()
+        instance.is_active = False
+        instance.save(update_fields=["is_active"])
+        return Response(self.get_serializer(instance).data)
+
+    @action(detail=True, methods=["post"], url_path="archive")
+    def archive(self, request, pk=None):
+        self._ensure_manage_permission()
+        instance = self.get_object()
+        instance.is_active = False
+        instance.is_archived = True
+        instance.save(update_fields=["is_active", "is_archived"])
+        return Response({"detail": "User archived successfully."})
 
     def retrieve(self, request, *args, **kwargs):
         obj = self.get_object()

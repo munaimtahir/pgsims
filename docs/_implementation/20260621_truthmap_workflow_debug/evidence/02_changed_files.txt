@@ -1,0 +1,104 @@
+=== GIT DIFF --STAT ===
+ CHANGELOG.md                                       |   8 +
+ Makefile                                           |  10 +-
+ README.md                                          |   9 +-
+ backend/.env.example                               |  10 +
+ backend/requirements.txt                           |   1 +
+ backend/sims/training/views.py                     |  25 +
+ backend/sims/users/api_urls.py                     |   2 +
+ backend/sims/users/api_views.py                    |   9 +-
+ backend/sims/users/models.py                       | 204 +++++
+ backend/sims/users/serializers.py                  |  23 +
+ backend/sims/users/test_userbase_api.py            | 175 +++++
+ backend/sims/users/userbase_serializers.py         |  47 +-
+ backend/sims/users/userbase_views.py               |  53 +-
+ backend/sims/users/views.py                        |  16 +-
+ backend/sims_db                                    | Bin 2457600 -> 2457600 bytes
+ backend/sims_project/urls.py                       |   9 +
+ docs/ARCHIVE/deploy/CADDY_ROUTINE.md               |  13 +-
+ docs/DEPLOYMENT.md                                 |  12 +-
+ docs/contracts/API_CONTRACT.md                     |  50 +-
+ docs/contracts/DATA_MODEL.md                       |  39 +
+ docs/contracts/ROUTES.md                           |  17 +
+ docs/contracts/TERMINOLOGY.md                      |   7 +
+ frontend/app/dashboard/change-password/page.tsx    |   1 -
+ frontend/app/dashboard/resident/progress/page.tsx  | 324 ++++++--
+ frontend/app/dashboard/supervisor/page.tsx         |  45 +-
+ frontend/app/dashboard/utrmc/hod/page.test.tsx     |  10 +-
+ frontend/app/dashboard/utrmc/hod/page.tsx          |  35 +-
+ frontend/app/dashboard/utrmc/onboarding/page.tsx   |  30 +-
+ frontend/app/dashboard/utrmc/page.test.tsx         |  97 +--
+ frontend/app/dashboard/utrmc/page.tsx              | 822 +++------------------
+ frontend/app/dashboard/utrmc/supervision/page.tsx  |  64 +-
+ frontend/app/dashboard/utrmc/supervisors/page.tsx  |   2 +-
+ frontend/app/dashboard/utrmc/users/page.test.tsx   | 237 +++---
+ frontend/app/dashboard/utrmc/users/page.tsx        | 671 +++++++++++++----
+ frontend/app/login/page.test.tsx                   |  25 +-
+ frontend/app/login/page.tsx                        |   5 +-
+ frontend/app/register/page.test.tsx                |   1 -
+ frontend/app/reset-password/[uid]/[token]/page.tsx |   3 +-
+ frontend/components/auth/ProtectedRoute.test.tsx   |  17 +-
+ frontend/components/auth/ProtectedRoute.tsx        |  25 +-
+ frontend/components/layout/Sidebar.test.tsx        |   9 +
+ frontend/e2e/workflow-gate/bulk-setup.spec.ts      |  38 +-
+ frontend/e2e/workflow-gate/flexible-import.spec.ts | 112 +--
+ frontend/lib/api/auth.ts                           |  31 +
+ frontend/lib/api/training.test.ts                  |  30 +
+ frontend/lib/api/training.ts                       |  26 +
+ frontend/lib/api/userbase.test.ts                  |  22 +-
+ frontend/lib/api/userbase.ts                       |  38 +-
+ frontend/lib/navRegistry.ts                        |  13 +
+ frontend/lib/rbac.ts                               |  17 +
+ 50 files changed, 2198 insertions(+), 1291 deletions(-)
+
+=== GIT DIFF --NAME-ONLY ===
+CHANGELOG.md
+Makefile
+README.md
+backend/.env.example
+backend/requirements.txt
+backend/sims/training/views.py
+backend/sims/users/api_urls.py
+backend/sims/users/api_views.py
+backend/sims/users/models.py
+backend/sims/users/serializers.py
+backend/sims/users/test_userbase_api.py
+backend/sims/users/userbase_serializers.py
+backend/sims/users/userbase_views.py
+backend/sims/users/views.py
+backend/sims_db
+backend/sims_project/urls.py
+docs/ARCHIVE/deploy/CADDY_ROUTINE.md
+docs/DEPLOYMENT.md
+docs/contracts/API_CONTRACT.md
+docs/contracts/DATA_MODEL.md
+docs/contracts/ROUTES.md
+docs/contracts/TERMINOLOGY.md
+frontend/app/dashboard/change-password/page.tsx
+frontend/app/dashboard/resident/progress/page.tsx
+frontend/app/dashboard/supervisor/page.tsx
+frontend/app/dashboard/utrmc/hod/page.test.tsx
+frontend/app/dashboard/utrmc/hod/page.tsx
+frontend/app/dashboard/utrmc/onboarding/page.tsx
+frontend/app/dashboard/utrmc/page.test.tsx
+frontend/app/dashboard/utrmc/page.tsx
+frontend/app/dashboard/utrmc/supervision/page.tsx
+frontend/app/dashboard/utrmc/supervisors/page.tsx
+frontend/app/dashboard/utrmc/users/page.test.tsx
+frontend/app/dashboard/utrmc/users/page.tsx
+frontend/app/login/page.test.tsx
+frontend/app/login/page.tsx
+frontend/app/register/page.test.tsx
+frontend/app/reset-password/[uid]/[token]/page.tsx
+frontend/components/auth/ProtectedRoute.test.tsx
+frontend/components/auth/ProtectedRoute.tsx
+frontend/components/layout/Sidebar.test.tsx
+frontend/e2e/workflow-gate/bulk-setup.spec.ts
+frontend/e2e/workflow-gate/flexible-import.spec.ts
+frontend/lib/api/auth.ts
+frontend/lib/api/training.test.ts
+frontend/lib/api/training.ts
+frontend/lib/api/userbase.test.ts
+frontend/lib/api/userbase.ts
+frontend/lib/navRegistry.ts
+frontend/lib/rbac.ts

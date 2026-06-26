@@ -313,6 +313,181 @@ class UserbaseReadScopeTests(TestCase):
         self.assertEqual(blocked_response.status_code, 404)
 
 
+class UserbaseFilterTests(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+        self.admin = User.objects.create_user(
+            username="filter_admin",
+            password="pass12345",
+            role="admin",
+            email="filter_admin@example.com",
+        )
+        self.urology = Department.objects.create(name="Urology Userbase", code="URO-UB")
+        self.medicine = Department.objects.create(name="Medicine Userbase 2", code="MED-UB2")
+        self.complete_resident = User.objects.create_user(
+            username="complete_resident",
+            password="pass12345",
+            role="resident",
+            specialty="urology",
+            year="1",
+            email="complete_resident@example.com",
+            is_complete_profile=True,
+        )
+        self.incomplete_resident = User.objects.create_user(
+            username="incomplete_resident",
+            password="pass12345",
+            role="resident",
+            specialty="urology",
+            year="1",
+            email="incomplete_resident@example.com",
+            is_complete_profile=False,
+        )
+        DepartmentMembership.objects.create(
+            user=self.complete_resident,
+            department=self.urology,
+            member_type=DepartmentMembership.MEMBER_RESIDENT,
+            is_primary=True,
+            active=True,
+            start_date=date.today(),
+            created_by=self.admin,
+            updated_by=self.admin,
+        )
+        DepartmentMembership.objects.create(
+            user=self.incomplete_resident,
+            department=self.medicine,
+            member_type=DepartmentMembership.MEMBER_RESIDENT,
+            is_primary=True,
+            active=True,
+            start_date=date.today(),
+            created_by=self.admin,
+            updated_by=self.admin,
+        )
+
+    def _rows(self, response):
+        return response.data if isinstance(response.data, list) else response.data.get("results", [])
+
+    def test_admin_can_filter_users_by_department_active_and_completion(self):
+        self.client.force_authenticate(self.admin)
+        response = self.client.get(
+            "/api/users/",
+            {
+                "role": "resident",
+                "department": self.urology.id,
+                "active": "true",
+                "is_complete_profile": "true",
+            },
+        )
+        self.assertEqual(response.status_code, 200)
+
+        rows = self._rows(response)
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(rows[0]["id"], self.complete_resident.id)
+        self.assertTrue(rows[0]["is_complete_profile"])
+        self.assertEqual(rows[0]["departments"][0]["code"], self.urology.code)
+
+
+class UserbaseAccountActionTests(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+        self.admin = User.objects.create_user(
+            username="action_admin",
+            password="pass12345",
+            role="admin",
+            email="action_admin@example.com",
+        )
+        self.supervisor = User.objects.create_user(
+            username="action_supervisor",
+            password="pass12345",
+            role="supervisor",
+            specialty="medicine",
+            email="action_supervisor@example.com",
+        )
+        self.department = Department.objects.create(name="Action Medicine", code="ACT-MED")
+        self.program = TrainingProgram.objects.create(
+            name="Action Program",
+            code="ACT-PROG",
+            duration_months=60,
+            degree_type=TrainingProgram.DEGREE_FCPS,
+            department=self.department,
+            active=True,
+        )
+        self.resident = User.objects.create_user(
+            username="action_resident",
+            password="pass12345",
+            role="resident",
+            specialty="urology",
+            year="1",
+            email="action_resident@example.com",
+            supervisor=self.supervisor,
+            home_department=self.department,
+        )
+        DepartmentMembership.objects.create(
+            user=self.resident,
+            department=self.department,
+            member_type=DepartmentMembership.MEMBER_RESIDENT,
+            is_primary=True,
+            active=True,
+            start_date=date.today(),
+            created_by=self.admin,
+            updated_by=self.admin,
+        )
+        ResidentProfile.objects.create(
+            user=self.resident,
+            pgr_id="ACT-001",
+            program_name=self.program.name,
+            training_year="1",
+            training_start=date.today(),
+            active=True,
+        )
+        ResidentTrainingRecord.objects.create(
+            resident_user=self.resident,
+            program=self.program,
+            start_date=date.today(),
+            current_level="y1",
+            active=True,
+            created_by=self.admin,
+        )
+
+    def test_admin_can_filter_users_by_supervisor_and_program(self):
+        self.client.force_authenticate(self.admin)
+        response = self.client.get(
+            "/api/users/",
+            {
+                "supervisor": self.supervisor.id,
+                "program": self.program.id,
+                "role": "resident",
+            },
+        )
+        self.assertEqual(response.status_code, 200)
+        rows = response.data if isinstance(response.data, list) else response.data.get("results", [])
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(rows[0]["id"], self.resident.id)
+
+    def test_admin_reset_deactivate_and_archive_user(self):
+        self.client.force_authenticate(self.admin)
+        reset_response = self.client.post(
+            f"/api/users/{self.resident.id}/reset-password/",
+            {"password": "pgfmu123"},
+            format="json",
+        )
+        self.assertEqual(reset_response.status_code, 200)
+
+        self.resident.refresh_from_db()
+        self.assertTrue(self.resident.check_password("pgfmu123"))
+        self.assertTrue(self.resident.force_password_change)
+
+        deactivate_response = self.client.post(f"/api/users/{self.resident.id}/deactivate/", format="json")
+        self.assertEqual(deactivate_response.status_code, 200)
+        self.resident.refresh_from_db()
+        self.assertFalse(self.resident.is_active)
+
+        archive_response = self.client.delete(f"/api/users/{self.resident.id}/")
+        self.assertEqual(archive_response.status_code, 200)
+        self.resident.refresh_from_db()
+        self.assertTrue(self.resident.is_archived)
+
+
+
 @override_settings(ENABLE_DATA_CORRECTION_LAYER=True)
 class DataQualityAdminApiTests(TestCase):
     def setUp(self):

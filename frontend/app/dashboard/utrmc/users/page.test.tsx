@@ -1,11 +1,26 @@
+import type { ReactNode } from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+
 import UsersPage from './page';
+import { trainingApi } from '@/lib/api/training';
 import { userbaseApi } from '@/lib/api/userbase';
 import { useAuthStore } from '@/store/authStore';
 
+jest.mock('@/components/auth/ProtectedRoute', () => ({
+  __esModule: true,
+  default: ({ children }: { children: ReactNode }) => <>{children}</>,
+}));
+
 jest.mock('@/store/authStore', () => ({
   useAuthStore: jest.fn(),
+}));
+
+jest.mock('@/lib/api/training', () => ({
+  trainingApi: {
+    listPrograms: jest.fn(),
+    listResidentTrainingRecords: jest.fn(),
+  },
 }));
 
 jest.mock('@/lib/api/userbase', () => ({
@@ -14,154 +29,146 @@ jest.mock('@/lib/api/userbase', () => ({
       list: jest.fn(),
       create: jest.fn(),
       update: jest.fn(),
+      resetPassword: jest.fn(),
+      deactivate: jest.fn(),
+      delete: jest.fn(),
+    },
+    departments: {
+      list: jest.fn(),
     },
   },
 }));
 
 const mockAuth = useAuthStore as unknown as jest.Mock;
+const mockTrainingApi = trainingApi as unknown as {
+  listPrograms: jest.Mock;
+  listResidentTrainingRecords: jest.Mock;
+};
 const mockApi = userbaseApi as unknown as {
-  users: { list: jest.Mock; create: jest.Mock; update: jest.Mock };
+  users: {
+    list: jest.Mock;
+    create: jest.Mock;
+    update: jest.Mock;
+    resetPassword: jest.Mock;
+    deactivate: jest.Mock;
+    delete: jest.Mock;
+  };
+  departments: { list: jest.Mock };
 };
 
 describe('UTRMC Users Page', () => {
-  const mockUsers = [
-    {
-      id: 1,
-      username: 'admin_user',
-      full_name: 'Admin User',
-      email: 'admin@example.com',
-      role: 'admin',
-      is_active: true,
-      first_name: 'Admin',
-      last_name: 'User',
-    },
-    {
-      id: 2,
-      username: 'resident_user',
-      full_name: 'Resident User',
-      email: 'resident@example.com',
-      role: 'resident',
-      is_active: false,
-      first_name: 'Resident',
-      last_name: 'User',
-    },
-  ];
-
   beforeEach(() => {
     jest.clearAllMocks();
     mockAuth.mockReturnValue({ user: { role: 'utrmc_admin' } });
-    mockApi.users.list.mockResolvedValue(mockUsers);
-    mockApi.users.create.mockResolvedValue({ id: 3 });
-    mockApi.users.update.mockResolvedValue({ id: 1 });
-  });
-
-  it('renders user list and handles search filtering', async () => {
-    render(<UsersPage />);
-
-    expect(screen.getByText('Loading...')).toBeInTheDocument();
-
-    await waitFor(() => {
-      expect(screen.getByText('admin_user')).toBeInTheDocument();
-      expect(screen.getByText('resident_user')).toBeInTheDocument();
-    });
-
-    const searchInput = screen.getByLabelText(/search users/i);
-    await userEvent.type(searchInput, 'admin');
-
-    expect(screen.getByText('admin_user')).toBeInTheDocument();
-    expect(screen.queryByText('resident_user')).not.toBeInTheDocument();
-  });
-
-  it('allows UTRMC admin to add a new user with password', async () => {
-    const user = userEvent.setup();
-    render(<UsersPage />);
-
-    await waitFor(() => expect(screen.getByText('admin_user')).toBeInTheDocument());
-
-    await user.click(screen.getByRole('button', { name: /\+ Add User/i }));
-
-    expect(screen.getByRole('heading', { name: /add user/i })).toBeInTheDocument();
-
-    await user.type(screen.getByLabelText(/^Username/i), 'new_guy');
-    await user.type(screen.getByLabelText(/^Email/i), 'new_guy@example.com');
-    await user.type(screen.getByLabelText(/^First Name/i), 'New');
-    await user.type(screen.getByLabelText(/^Last Name/i), 'Guy');
-    await user.type(screen.getByLabelText(/^Password/i), 'SecretPassword123!');
-    await user.selectOptions(screen.getByLabelText(/role/i), 'resident');
-
-    await user.click(screen.getByRole('button', { name: 'Save' }));
-
-    await waitFor(() => {
-      expect(mockApi.users.create).toHaveBeenCalledWith({
-        username: 'new_guy',
-        email: 'new_guy@example.com',
-        first_name: 'New',
-        last_name: 'Guy',
-        password: 'SecretPassword123!',
-        role: 'resident',
-        is_active: true,
-      });
-    });
-  });
-
-  it('allows UTRMC admin to edit user and change password optionally', async () => {
-    const user = userEvent.setup();
-    render(<UsersPage />);
-
-    await waitFor(() => expect(screen.getAllByText('Edit').length).toBeGreaterThan(0));
-
-    // Click Edit on the first user (admin_user)
-    const editButtons = screen.getAllByText('Edit');
-    await user.click(editButtons[0]);
-
-    expect(screen.getByRole('heading', { name: /edit user/i })).toBeInTheDocument();
-
-    // Verify initial values
-    expect(screen.getByLabelText(/^Username/i)).toHaveValue('admin_user');
-
-    // Change first name and leave password blank
-    await user.clear(screen.getByLabelText(/^First Name/i));
-    await user.type(screen.getByLabelText(/^First Name/i), 'ModifiedAdmin');
-
-    await user.click(screen.getByRole('button', { name: 'Save' }));
-
-    await waitFor(() => {
-      expect(mockApi.users.update).toHaveBeenCalledWith(1, {
+    mockApi.departments.list.mockResolvedValue([
+      { id: 1, name: 'Medicine', code: 'MED', active: true, created_at: '2026-01-01T00:00:00Z' },
+      { id: 2, name: 'Urology', code: 'URO', active: true, created_at: '2026-01-01T00:00:00Z' },
+    ]);
+    mockApi.users.list.mockResolvedValue([
+      {
+        id: 1,
         username: 'admin_user',
+        full_name: 'Admin User',
         email: 'admin@example.com',
-        first_name: 'ModifiedAdmin',
-        last_name: 'User',
         role: 'admin',
         is_active: true,
-      });
-    });
-
-    // Open edit again and update password
-    await user.click(editButtons[0]);
-    await user.type(screen.getByLabelText(/new password/i), 'NewCoolPass987!');
-    await user.click(screen.getByRole('button', { name: 'Save' }));
-
-    await waitFor(() => {
-      expect(mockApi.users.update).toHaveBeenLastCalledWith(1, {
-        username: 'admin_user',
-        email: 'admin@example.com',
         first_name: 'Admin',
         last_name: 'User',
-        role: 'admin',
-        is_active: true,
-        password: 'NewCoolPass987!',
-      });
-    });
+        departments: [{ id: 1, name: 'Medicine', code: 'MED', member_type: 'supervisor', is_primary: true }],
+      },
+      {
+        id: 2,
+        username: 'resident_user',
+        full_name: 'Resident User',
+        email: 'resident@example.com',
+        role: 'resident',
+        is_active: false,
+        first_name: 'Resident',
+        last_name: 'User',
+        departments: [{ id: 2, name: 'Urology', code: 'URO', member_type: 'resident', is_primary: true }],
+        supervisor: 1,
+      },
+    ]);
+    mockTrainingApi.listPrograms.mockResolvedValue([
+      { id: 10, code: 'FCPS-URO', name: 'FCPS Urology', degree_type: 'FCPS', degree_type_display: 'FCPS', department: null, duration_months: 60, is_active: true, notes: '' },
+    ]);
+    mockTrainingApi.listResidentTrainingRecords.mockResolvedValue([
+      {
+        id: 3,
+        resident_user: 2,
+        resident_name: 'Resident User',
+        program: 10,
+        program_name: 'FCPS Urology',
+        program_code: 'FCPS-URO',
+        start_date: '2026-01-01',
+        expected_end_date: null,
+        current_level: 'y1',
+        active: true,
+        created_by: 1,
+        created_at: '2026-01-01T00:00:00Z',
+        updated_at: '2026-01-01T00:00:00Z',
+      },
+    ]);
+    mockApi.users.create.mockResolvedValue({ id: 3 });
+    mockApi.users.update.mockResolvedValue({ id: 1 });
+    mockApi.users.resetPassword.mockResolvedValue({ detail: 'ok' });
+    mockApi.users.deactivate.mockResolvedValue({ id: 1 });
+    mockApi.users.delete.mockResolvedValue({ detail: 'archived' });
   });
 
-  it('shows read-only view and hides add/edit controls for read-only UTRMC user', async () => {
-    mockAuth.mockReturnValue({ user: { role: 'utrmc_user' } });
+  it('renders filters and row actions', async () => {
+    const user = userEvent.setup();
     render(<UsersPage />);
 
-    await waitFor(() => expect(screen.getByText('admin_user')).toBeInTheDocument());
+    expect(await screen.findByText('admin_user')).toBeInTheDocument();
+    expect(screen.getByLabelText(/supervisor/i)).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /resident programme assignment/i })).toBeInTheDocument();
 
-    expect(screen.queryByRole('button', { name: /\+ Add User/i })).not.toBeInTheDocument();
-    expect(screen.getAllByText('View only')[0]).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Edit' })).not.toBeInTheDocument();
+    await user.selectOptions(screen.getByLabelText(/programme \/ course/i), '10');
+    await user.selectOptions(screen.getByLabelText(/^role$/i, { selector: '#role-filter' }), 'resident');
+
+    await waitFor(() => {
+      expect(mockApi.users.list).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          role: 'resident',
+          program: 10,
+        })
+      );
+    });
+
+    expect(screen.getByText('FCPS Urology')).toBeInTheDocument();
+    expect(screen.getAllByRole('button', { name: /reset password/i }).length).toBeGreaterThan(0);
+    expect(screen.getAllByRole('button', { name: /deactivate/i }).length).toBeGreaterThan(0);
+    expect(screen.getAllByRole('button', { name: /delete/i }).length).toBeGreaterThan(0);
+  });
+
+  it('allows creating a user with role-aware fields', async () => {
+    const user = userEvent.setup();
+    render(<UsersPage />);
+
+    await screen.findByText('admin_user');
+    await user.click(screen.getByRole('button', { name: /\+ Add User/i }));
+
+    await user.type(screen.getByLabelText(/^Username/i), 'new_supervisor');
+    await user.type(screen.getByLabelText(/^Email/i), 'supervisor@example.com');
+    await user.type(screen.getByLabelText(/^First Name/i), 'Super');
+    await user.type(screen.getByLabelText(/^Last Name/i), 'Visor');
+    await user.type(screen.getByLabelText(/^Password/i), 'SecretPass123!');
+    await user.selectOptions(screen.getByLabelText(/^Specialty/i), 'medicine');
+    await user.selectOptions(screen.getByLabelText(/^Role$/i, { selector: '#role' }), 'supervisor');
+    await user.click(screen.getByRole('button', { name: 'Save' }));
+
+    await waitFor(() => {
+      expect(mockApi.users.create).toHaveBeenCalledWith(expect.objectContaining({
+        username: 'new_supervisor',
+        email: 'supervisor@example.com',
+        first_name: 'Super',
+        last_name: 'Visor',
+        password: 'SecretPass123!',
+        role: 'supervisor',
+        specialty: 'medicine',
+        is_active: true,
+      }));
+    });
   });
 });

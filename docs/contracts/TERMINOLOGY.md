@@ -31,6 +31,11 @@ These are user-facing terms. Do not change once pilot begins.
 - **Rotation Completion Verification**: post-rotation check where department confirms and UTRMC verifies completion
 - **Logbook**: active resident page for logbook draft/submission and threshold state; replaces the previous active navigation label "Academic Progress" as of 2026-04-21
 - **Deferred Workflow**: implemented or partially implemented route/API that is intentionally hidden from active navigation and excluded from the release gate
+- **Resident Onboarding**: admin workflow for resident spreadsheet upload, column matching, preview, import, login generation, and login-sheet export
+- **Paused Bridge**: Google Workspace/AdminOps bridge functionality that is intentionally hidden from the pilot onboarding flow; current resident onboarding issues only PGSIMS local usernames and passwords
+- **Possible Duplicate**: preview row matching an existing resident or another uploaded row; skipped by default
+- **Login Issued**: generated resident credentials have been handed to the resident and timestamped by the system
+- **Profile Incomplete**: resident profile data or the mandatory first-login password change is still outstanding
 
 Notes:
 - UI displays **Submitted** even if backend enum is `pending`.
@@ -39,3 +44,5 @@ Notes:
 - 2026-05-30 terminology lock update: Backup Center operator terms added for pilot operations.
 - 2026-06-01 terminology lock update: additive Google Drive Backup connector terms added (no renames of existing terms).
 - 2026-06-06 approved change (UX/UI Debug & Update): Added terminology and screen elements for "Supervisors" management and deletion of hospitals/departments under UTRMC admin dashboard. Unlocked terminology locks to support active debugging and updates to the user interface.
+- 2026-06-20 approved onboarding terminology addition: Added Resident Onboarding, Possible Duplicate, Login Issued, and Profile Incomplete without renaming existing pilot terms.
+- 2026-06-20 cleanup update: added the paused bridge note so pilot onboarding terminology stays local to PGSIMS resident usernames only.
