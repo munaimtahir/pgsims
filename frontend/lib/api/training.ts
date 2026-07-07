@@ -396,22 +396,7 @@ export interface SupervisorOperationalDashboard {
   is_hod: boolean;
 }
 
-export interface HODOperationalDashboard {
-  departments: number[];
-  department_residents: number;
-  pending_logbook_approvals: number;
-  rotation_applications: number;
-  supervisor_lag: Array<{
-    supervisor_id: number | null;
-    supervisor_name: string;
-    pending_logbook_reviews: number;
-  }>;
-  milestone_completion: {
-    synopsis_certificates: number;
-    thesis_certificates: number;
-    rotation_verified: number;
-  };
-}
+
 
 export interface UTRMCOperationalDashboard {
   cross_department_overview: {
@@ -908,10 +893,7 @@ export const trainingApi = {
     return r.data;
   },
 
-  async getHODOperationalDashboard(): Promise<HODOperationalDashboard> {
-    const r = await apiClient.get<HODOperationalDashboard>('/api/dashboard/hod/');
-    return r.data;
-  },
+
 
   async getUTRMCOperationalDashboard(params?: { search?: string }): Promise<UTRMCOperationalDashboard> {
     const r = await apiClient.get<UTRMCOperationalDashboard>('/api/dashboard/utrmc/', { params });
