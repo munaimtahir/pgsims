@@ -29,7 +29,7 @@ def ensure_pilot_training_baseline(sender, instance: User, created: bool, **kwar
 
     if not instance.username.startswith("pilot_"):
         return
-    if getattr(instance, "role", None) not in {"pg", "resident"}:
+    if getattr(instance, "role", None) not in {"RESIDENT", "RESIDENT"}:
         return
 
     def _bootstrap():

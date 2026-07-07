@@ -13,8 +13,8 @@ User = get_user_model()
 
 class TrainingModelsTests(TestCase):
     def setUp(self):
-        self.pg = User.objects.create_user(username="pg", role="pg")
-        self.supervisor = User.objects.create_user(username="sup", role="supervisor")
+        self.pg = User.objects.create_user(username="RESIDENT", role="RESIDENT")
+        self.supervisor = User.objects.create_user(username="sup", role="SUPERVISOR")
         self.program = TrainingProgram.objects.create(name="Medicine", code="MED", duration_months=48)
         self.rtr = ResidentTrainingRecord.objects.create(
             resident_user=self.pg, program=self.program, 

@@ -31,7 +31,7 @@ export default function UTRMCEligibilityMonitoringPage() {
   };
 
   return (
-    <ProtectedRoute allowedRoles={['admin', 'utrmc_admin', 'utrmc_user']}>
+    <ProtectedRoute allowedRoles={['ADMIN', 'ADMIN', 'SUPPORT_STAFF']}>
         <div className="pg-page max-w-5xl">
           <PageHeader
             title="Eligibility Monitoring"

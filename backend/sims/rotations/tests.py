@@ -13,14 +13,14 @@ class CanonicalRotationModelTests(TestCase):
         self.supervisor = User.objects.create_user(
             username="sup",
             password="pass",
-            role="supervisor",
+            role="SUPERVISOR",
             email="sup@example.com",
             specialty="medicine",
         )
         self.utrmc_admin = User.objects.create_user(
             username="uadmin",
             password="pass",
-            role="utrmc_admin",
+            role="ADMIN",
             email="uadmin@example.com",
         )
         self.home_hospital = Hospital.objects.create(name="Home", code="HOME")
@@ -32,9 +32,9 @@ class CanonicalRotationModelTests(TestCase):
         HospitalDepartment.objects.create(hospital=self.other_hospital, department=self.surgery)
 
         self.pg = User.objects.create_user(
-            username="pg",
+            username="RESIDENT",
             password="pass",
-            role="pg",
+            role="RESIDENT",
             email="pg@example.com",
             specialty="medicine",
             year="1",
@@ -48,11 +48,11 @@ class CanonicalRotationModelTests(TestCase):
             validate_rotation_override_requirements(
                 self.pg, self.other_hospital, self.medicine, "", None
             )
-        with self.assertRaisesMessage(ValueError, "utrmc_admin"):
+        with self.assertRaisesMessage(ValueError, "ADMIN"):
             validate_rotation_override_requirements(
-                self.pg, self.other_hospital, self.medicine, "Need exposure", "supervisor"
+                self.pg, self.other_hospital, self.medicine, "Need exposure", "SUPERVISOR"
             )
         decision = validate_rotation_override_requirements(
-            self.pg, self.other_hospital, self.medicine, "Need exposure", "utrmc_admin"
+            self.pg, self.other_hospital, self.medicine, "Need exposure", "ADMIN"
         )
         self.assertTrue(decision.requires_utrmc_approval)

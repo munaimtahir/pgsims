@@ -6,7 +6,7 @@ import { useAuthStore } from '@/store/authStore';
 import { userbaseApi, UserbaseUser } from '@/lib/api/userbase';
 import { isUtrmcManagerRole, isUtrmcReadonlyRole } from '@/lib/rbac';
 
-const ROLES = ['admin','utrmc_admin','utrmc_user','supervisor','faculty','resident','pg'];
+const ROLES = ['ADMIN', 'RESIDENT', 'SUPERVISOR', 'SUPPORT_STAFF'];
 
 interface UserForm {
   username: string;
@@ -49,13 +49,13 @@ export default function UsersPage() {
   const [search, setSearch] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState<UserbaseUser | null>(null);
-  const [form, setForm] = useState<UserForm>({ username:'',email:'',password:'',first_name:'',last_name:'',role:'resident',is_active:true });
+  const [form, setForm] = useState<UserForm>({ username:'',email:'',password:'',first_name:'',last_name:'',role:'RESIDENT',is_active:true });
   const [saving, setSaving] = useState(false);
 
   const load = () => userbaseApi.users.list().then(setRows).catch(() => setError('Failed to load')).finally(() => setLoading(false));
   useEffect(() => { load(); }, []);
 
-  const openAdd = () => { setForm({username:'',email:'',password:'',first_name:'',last_name:'',role:'resident',is_active:true}); setEditing(null); setShowModal(true); };
+  const openAdd = () => { setForm({username:'',email:'',password:'',first_name:'',last_name:'',role:'RESIDENT',is_active:true}); setEditing(null); setShowModal(true); };
   const openEdit = (u: UserbaseUser) => { setForm({username:u.username,email:u.email,password:'',first_name:u.first_name,last_name:u.last_name,role:u.role,is_active:u.is_active}); setEditing(u); setShowModal(true); };
 
   const save = async () => {

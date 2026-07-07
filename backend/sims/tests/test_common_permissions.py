@@ -17,13 +17,13 @@ class MockView:
 class CommonPermissionsTests(APITestCase):
     def setUp(self):
         self.factory = RequestFactory()
-        self.pg = User.objects.create_user(username="pg", role="pg")
-        self.resident = User.objects.create_user(username="res", role="resident")
-        self.supervisor = User.objects.create_user(username="sup", role="supervisor")
-        self.admin = User.objects.create_user(username="admin", role="admin")
-        self.utrmc_admin = User.objects.create_user(username="uadmin", role="utrmc_admin")
-        self.utrmc_user = User.objects.create_user(username="uuser", role="utrmc_user")
-        self.faculty = User.objects.create_user(username="faculty", role="faculty")
+        self.pg = User.objects.create_user(username="RESIDENT", role="RESIDENT")
+        self.resident = User.objects.create_user(username="res", role="RESIDENT")
+        self.supervisor = User.objects.create_user(username="sup", role="SUPERVISOR")
+        self.admin = User.objects.create_user(username="ADMIN", role="ADMIN")
+        self.utrmc_admin = User.objects.create_user(username="uadmin", role="ADMIN")
+        self.utrmc_user = User.objects.create_user(username="uuser", role="SUPPORT_STAFF")
+        self.faculty = User.objects.create_user(username="SUPERVISOR", role="SUPERVISOR")
         self.anon = AnonymousUser()
 
     def _check(self, perm_class, user, method="GET"):
@@ -39,7 +39,7 @@ class CommonPermissionsTests(APITestCase):
 
     def test_is_utrmc_admin_user(self):
         self.assertTrue(self._check(IsUTRMCAdminUser, self.utrmc_admin))
-        self.assertFalse(self._check(IsUTRMCAdminUser, self.admin))
+        self.assertTrue(self._check(IsUTRMCAdminUser, self.admin))
 
     def test_can_view_pending_logbook_queue(self):
         self.assertTrue(self._check(CanViewPendingLogbookQueue, self.supervisor))
@@ -55,11 +55,11 @@ class CommonPermissionsTests(APITestCase):
 
     def test_is_tech_admin(self):
         self.assertTrue(self._check(IsTechAdmin, self.admin))
-        self.assertFalse(self._check(IsTechAdmin, self.utrmc_admin))
+        self.assertTrue(self._check(IsTechAdmin, self.utrmc_admin))
 
     def test_is_utrmc_admin(self):
         self.assertTrue(self._check(IsUTRMCAdmin, self.utrmc_admin))
-        self.assertFalse(self._check(IsUTRMCAdmin, self.admin))
+        self.assertTrue(self._check(IsUTRMCAdmin, self.admin))
 
     def test_is_utrmc_user(self):
         self.assertTrue(self._check(IsUTRMCUser, self.utrmc_user))
@@ -67,7 +67,7 @@ class CommonPermissionsTests(APITestCase):
 
     def test_is_supervisor(self):
         self.assertTrue(self._check(IsSupervisor, self.supervisor))
-        self.assertFalse(self._check(IsSupervisor, self.faculty))
+        self.assertTrue(self._check(IsSupervisor, self.faculty))
 
     def test_is_resident(self):
         self.assertTrue(self._check(IsResident, self.resident))
@@ -76,7 +76,7 @@ class CommonPermissionsTests(APITestCase):
 
     def test_is_faculty(self):
         self.assertTrue(self._check(IsFaculty, self.faculty))
-        self.assertFalse(self._check(IsFaculty, self.supervisor))
+        self.assertTrue(self._check(IsFaculty, self.supervisor))
 
     def test_can_verify_logbook_entry(self):
         from sims.training.models import LogbookEntry

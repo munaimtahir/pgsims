@@ -63,7 +63,7 @@ urlpatterns = [
         views.SupervisorDashboardView.as_view(),
         name="supervisor_dashboard",
     ),
-    path("pg-dashboard/", views.PGDashboardView.as_view(), name="pg_dashboard"),
+    path("resident-dashboard/", views.ResidentDashboardView.as_view(), name="resident_dashboard"),
     # Profile Management
     path("profile/", views.ProfileView.as_view(), name="profile"),
     path("profile/<int:pk>/", views.ProfileDetailView.as_view(), name="profile_detail"),

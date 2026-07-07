@@ -107,15 +107,15 @@ def register_view(request):
             status=status.HTTP_403_FORBIDDEN,
         )
 
-    requested_role = request.data.get("role", "pg")
-    if requested_role != "pg":
+    requested_role = request.data.get("role", "RESIDENT")
+    if requested_role != "RESIDENT":
         return Response(
             {"role": ["Public registration can only create PG accounts."]},
             status=status.HTTP_400_BAD_REQUEST,
         )
 
     data = request.data.copy()
-    data["role"] = "pg"
+    data["role"] = "RESIDENT"
     serializer = UserRegistrationSerializer(data=data)
 
     if serializer.is_valid():

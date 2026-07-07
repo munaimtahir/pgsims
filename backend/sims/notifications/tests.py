@@ -10,8 +10,8 @@ User = get_user_model()
 class NotificationBasicTests(TestCase):
     def setUp(self):
         self.client = APIClient()
-        self.user = User.objects.create_user(username="notif_user", password="pass", role="resident")
-        self.admin = User.objects.create_user(username="notif_admin", password="pass", role="admin")
+        self.user = User.objects.create_user(username="notif_user", password="pass", role="RESIDENT")
+        self.admin = User.objects.create_user(username="notif_admin", password="pass", role="ADMIN")
 
     def test_create_notification(self):
         n = Notification.objects.create(

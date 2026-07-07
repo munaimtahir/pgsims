@@ -30,7 +30,7 @@ describe('UTRMC Users Page', () => {
       username: 'admin_user',
       full_name: 'Admin User',
       email: 'admin@example.com',
-      role: 'admin',
+      role: 'ADMIN',
       is_active: true,
       first_name: 'Admin',
       last_name: 'User',
@@ -40,7 +40,7 @@ describe('UTRMC Users Page', () => {
       username: 'resident_user',
       full_name: 'Resident User',
       email: 'resident@example.com',
-      role: 'resident',
+      role: 'RESIDENT',
       is_active: false,
       first_name: 'Resident',
       last_name: 'User',
@@ -49,7 +49,7 @@ describe('UTRMC Users Page', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    mockAuth.mockReturnValue({ user: { role: 'utrmc_admin' } });
+    mockAuth.mockReturnValue({ user: { role: 'ADMIN' } });
     mockApi.users.list.mockResolvedValue(mockUsers);
     mockApi.users.create.mockResolvedValue({ id: 3 });
     mockApi.users.update.mockResolvedValue({ id: 1 });
@@ -66,7 +66,7 @@ describe('UTRMC Users Page', () => {
     });
 
     const searchInput = screen.getByLabelText(/search users/i);
-    await userEvent.type(searchInput, 'admin');
+    await userEvent.type(searchInput, 'ADMIN');
 
     expect(screen.getByText('admin_user')).toBeInTheDocument();
     expect(screen.queryByText('resident_user')).not.toBeInTheDocument();
@@ -87,7 +87,7 @@ describe('UTRMC Users Page', () => {
     await user.type(screen.getByLabelText(/^First Name/i), 'New');
     await user.type(screen.getByLabelText(/^Last Name/i), 'Guy');
     await user.type(screen.getByLabelText(/^Password/i), 'SecretPassword123!');
-    await user.selectOptions(screen.getByLabelText(/role/i), 'resident');
+    await user.selectOptions(screen.getByLabelText(/role/i), 'RESIDENT');
 
     await user.click(screen.getByRole('button', { name: 'Save' }));
 
@@ -98,7 +98,7 @@ describe('UTRMC Users Page', () => {
         first_name: 'New',
         last_name: 'Guy',
         password: 'SecretPassword123!',
-        role: 'resident',
+        role: 'RESIDENT',
         is_active: true,
       });
     });
@@ -131,7 +131,7 @@ describe('UTRMC Users Page', () => {
         email: 'admin@example.com',
         first_name: 'ModifiedAdmin',
         last_name: 'User',
-        role: 'admin',
+        role: 'ADMIN',
         is_active: true,
       });
     });
@@ -147,7 +147,7 @@ describe('UTRMC Users Page', () => {
         email: 'admin@example.com',
         first_name: 'Admin',
         last_name: 'User',
-        role: 'admin',
+        role: 'ADMIN',
         is_active: true,
         password: 'NewCoolPass987!',
       });
@@ -155,7 +155,7 @@ describe('UTRMC Users Page', () => {
   });
 
   it('shows read-only view and hides add/edit controls for read-only UTRMC user', async () => {
-    mockAuth.mockReturnValue({ user: { role: 'utrmc_user' } });
+    mockAuth.mockReturnValue({ user: { role: 'SUPPORT_STAFF' } });
     render(<UsersPage />);
 
     await waitFor(() => expect(screen.getByText('admin_user')).toBeInTheDocument());

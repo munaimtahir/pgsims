@@ -51,7 +51,7 @@ class CustomUserCreationForm(UserCreationForm):
     )
 
     supervisor = forms.ModelChoiceField(
-        queryset=User.objects.filter(role="supervisor", is_active=True),
+        queryset=User.objects.filter(role="SUPERVISOR", is_active=True),
         required=False,
         empty_label="Select Supervisor",
         widget=forms.Select(attrs={"class": "form-control"}),
@@ -104,14 +104,14 @@ class CustomUserCreationForm(UserCreationForm):
         # Filter supervisor choices by specialty if editing PG
         if self.instance and self.instance.pk and self.instance.specialty:
             self.fields["supervisor"].queryset = User.objects.filter(
-                role="supervisor", specialty=self.instance.specialty, is_active=True
+                role="SUPERVISOR", specialty=self.instance.specialty, is_active=True
             )
 
         # Restrict role choices for non-admin users
         if self.request_user and not self.request_user.is_superuser:
-            if self.request_user.role != "admin":
+            if self.request_user.role != "ADMIN":
                 # Remove admin role from choices
-                role_choices = [choice for choice in USER_ROLES if choice[0] != "admin"]
+                role_choices = [choice for choice in USER_ROLES if choice[0] != "ADMIN"]
                 self.fields["role"].choices = role_choices
 
     def clean(self):
@@ -122,7 +122,7 @@ class CustomUserCreationForm(UserCreationForm):
         supervisor = cleaned_data.get("supervisor")
 
         # Role-specific validation
-        if role == "pg":
+        if role == "RESIDENT":
             if not specialty:
                 raise ValidationError({"specialty": "Specialty is required for PGs"})
             if not year:
@@ -130,7 +130,7 @@ class CustomUserCreationForm(UserCreationForm):
             if not supervisor:
                 raise ValidationError({"supervisor": "Supervisor is required for PGs"})
 
-        elif role == "supervisor":
+        elif role == "SUPERVISOR":
             if not specialty:
                 raise ValidationError({"specialty": "Specialty is required for Supervisors"})
 
@@ -191,7 +191,7 @@ class CustomUserChangeForm(UserChangeForm):
             del self.fields["password"]
 
         # Filter supervisor choices
-        self.fields["supervisor"].queryset = User.objects.filter(role="supervisor", is_active=True)
+        self.fields["supervisor"].queryset = User.objects.filter(role="SUPERVISOR", is_active=True)
 
 
 class ProfileEditForm(forms.ModelForm):
@@ -213,13 +213,13 @@ class SupervisorAssignmentForm(forms.Form):
     """Form for bulk supervisor assignment"""
 
     pgs = forms.ModelMultipleChoiceField(
-        queryset=User.objects.filter(role="pg", is_active=True),
+        queryset=User.objects.filter(role="RESIDENT", is_active=True),
         widget=forms.CheckboxSelectMultiple(attrs={"class": "form-check-input"}),
         label="Select PGs",
     )
 
     supervisor = forms.ModelChoiceField(
-        queryset=User.objects.filter(role="supervisor", is_active=True),
+        queryset=User.objects.filter(role="SUPERVISOR", is_active=True),
         widget=forms.Select(attrs={"class": "form-control"}),
         label="Assign Supervisor",
     )
@@ -231,7 +231,7 @@ class SupervisorAssignmentForm(forms.Form):
         if specialty:
             # Filter by specialty
             self.fields["pgs"].queryset = self.fields["pgs"].queryset.filter(specialty=specialty)
-            self.fields["supervisor"].queryset = self.fields["supervisor"].queryset.filter(
+            self.fields["SUPERVISOR"].queryset = self.fields["SUPERVISOR"].queryset.filter(
                 specialty=specialty
             )
 
@@ -266,7 +266,7 @@ class UserSearchForm(forms.Form):
     )
 
     supervisor = forms.ModelChoiceField(
-        queryset=User.objects.filter(role="supervisor", is_active=True),
+        queryset=User.objects.filter(role="SUPERVISOR", is_active=True),
         required=False,
         empty_label="All Supervisors",
         widget=forms.Select(attrs={"class": "form-control"}),

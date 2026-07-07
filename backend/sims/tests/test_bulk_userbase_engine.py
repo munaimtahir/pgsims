@@ -6,7 +6,7 @@ from sims.bulk.userbase_engine import (
 )
 from sims.academics.models import Department
 from sims.rotations.models import Hospital, HospitalDepartment
-from sims.users.models import ResidentProfile, StaffProfile, SupervisorResidentLink
+from sims.users.models import ResidentProfile, SupervisorResidentLink, SupervisorProfile
 import io
 import pandas as pd
 from datetime import date
@@ -15,7 +15,7 @@ User = get_user_model()
 
 class BulkUserbaseEngineExtendedTests(TestCase):
     def setUp(self):
-        self.admin = User.objects.create_superuser(username="engine_admin", role="admin")
+        self.admin = User.objects.create_superuser(username="engine_admin", role="ADMIN")
         self.hospital = Hospital.objects.create(name="H1", code="H1")
         self.dept = Department.objects.create(name="D1", code="D1")
         self.hdept = HospitalDepartment.objects.create(hospital=self.hospital, department=self.dept)
@@ -35,9 +35,9 @@ class BulkUserbaseEngineExtendedTests(TestCase):
     def test_import_faculty_supervisor_conflict_resolution(self):
         # Existing user with different data
         user = User.objects.create_user(
-            username="jane.sup", email="jane@test.com", role="faculty", specialty="surgery"
+            username="jane.sup", email="jane@test.com", role="SUPERVISOR", specialty="surgery"
         )
-        StaffProfile.objects.create(user=user, designation="Junior")
+        SupervisorProfile.objects.create(user=user, designation_ref="Junior")
         
         csv_content = "email,full_name,role,specialty,department_code,hospital_code,designation,active,start_date\n" \
                       "jane@test.com,Jane Supervisor,supervisor,medicine,D1,H1,Senior,true,2026-01-01\n"
@@ -48,9 +48,9 @@ class BulkUserbaseEngineExtendedTests(TestCase):
         self.assertEqual(len(result["successes"]), 1)
         
         user.refresh_from_db()
-        self.assertEqual(user.role, "supervisor")
+        self.assertEqual(user.role, "SUPERVISOR")
         self.assertEqual(user.specialty, "medicine")
-        self.assertEqual(user.staff_profile.designation, "Senior")
+        self.assertEqual(user.supervisor_profile.designation_ref, "Senior")
 
     def test_import_residents_validation_errors(self):
         # Missing required training_start
@@ -73,8 +73,8 @@ class BulkUserbaseEngineExtendedTests(TestCase):
         self.assertIn("hospital 'MISSING_H'", result["failures"][0]["error"])
 
     def test_import_supervision_links(self):
-        sup = User.objects.create_user(username="sup1", email="sup1@test.com", role="supervisor")
-        res = User.objects.create_user(username="res1", email="res1@test.com", role="pg")
+        sup = User.objects.create_user(username="sup1", email="sup1@test.com", role="SUPERVISOR")
+        res = User.objects.create_user(username="res1", email="res1@test.com", role="RESIDENT")
         
         csv_content = "supervisor_email,resident_email,active\nsup1@test.com,res1@test.com,true\n"
         file = io.BytesIO(csv_content.encode('utf-8'))
@@ -83,18 +83,6 @@ class BulkUserbaseEngineExtendedTests(TestCase):
         result = import_entity(self.admin, "supervision-links", file, dry_run=False, allow_partial=False)
         self.assertEqual(len(result["successes"]), 1)
         self.assertTrue(SupervisorResidentLink.objects.filter(supervisor_user=sup, resident_user=res).exists())
-
-    def test_import_hod_assignments(self):
-        sup = User.objects.create_user(username="hod1", email="hod1@test.com", role="supervisor")
-        
-        csv_content = "email,department_code,active\nhod1@test.com,D1,true\n"
-        file = io.BytesIO(csv_content.encode('utf-8'))
-        file.name = "hod.csv"
-        
-        result = import_entity(self.admin, "hod-assignments", file, dry_run=False, allow_partial=False)
-        self.assertEqual(len(result["successes"]), 1)
-        from sims.users.models import HODAssignment
-        self.assertTrue(HODAssignment.objects.filter(hod_user=sup, department=self.dept).exists())
 
     def test_excel_parsing(self):
         df = pd.DataFrame([

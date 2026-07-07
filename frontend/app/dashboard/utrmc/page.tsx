@@ -129,7 +129,7 @@ function RotationSection({
 
 export default function UTRMCOverviewPage() {
   const { user } = useAuthStore();
-  const canManageRotations = user?.role === 'admin' || user?.role === 'utrmc_admin';
+  const canManageRotations = user?.role === 'ADMIN';
 
   const [stats, setStats] = useState({
     hospitals: 0,
@@ -223,8 +223,8 @@ export default function UTRMCOverviewPage() {
         hospitals: hospitals.length,
         departments: departments.length,
         users: userRows.length,
-        supervisors: userRows.filter((item) => item.role === 'supervisor').length,
-        residents: userRows.filter((item) => item.role === 'resident' || item.role === 'pg').length,
+        supervisors: userRows.filter((item) => item.role === 'SUPERVISOR').length,
+        residents: userRows.filter((item) => item.role === 'RESIDENT' || item.role === 'RESIDENT').length,
       });
 
       setTrainingRecords(records.filter((item) => item.active));
@@ -372,8 +372,8 @@ export default function UTRMCOverviewPage() {
   return (
     <div className="pg-page">
       <PageHeader
-        title="UTRMC Dashboard"
-        description="Simple overview of postgraduate training system setup and activity."
+        title="FMU-UTRMC Dashboard"
+        description="Faisalabad Medical University postgraduate training setup and activity."
         badges={[
           {
             label: dashboardStatus.label,
@@ -498,7 +498,7 @@ export default function UTRMCOverviewPage() {
           <h2 className="text-xl font-semibold text-gray-900">Certificate Verification Queues</h2>
           {pendingSynopsis.length + pendingThesis.length === 0 ? (
             <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 text-sm text-gray-500">
-              No synopsis/thesis submissions are awaiting UTRMC verification.
+              No synopsis/thesis submissions are awaiting FMU-UTRMC verification.
             </div>
           ) : (
             <div className="space-y-3">
@@ -558,13 +558,13 @@ export default function UTRMCOverviewPage() {
         <div>
           <h2 className="text-xl font-semibold text-gray-900">Rotation Operations</h2>
           <p className="text-sm text-gray-500 mt-1">
-            Active-scope lifecycle: create draft, resident submits, supervisor approves, UTRMC activates and completes.
+            Active-scope lifecycle: create draft, resident submits, supervisor approves, FMU-UTRMC activates and completes.
           </p>
         </div>
 
         {!canManageRotations ? (
           <div className="rounded-xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-800">
-            Rotation operations are read-only for UTRMC users. Use an admin or UTRMC admin account to create or transition rotations.
+            Rotation operations are read-only for FMU-UTRMC support staff. Use an admin account to create or transition rotations.
           </div>
         ) : (
           <>

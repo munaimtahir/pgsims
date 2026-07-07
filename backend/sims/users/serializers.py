@@ -71,7 +71,7 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         # Role-specific validation
         role = attrs.get("role")
 
-        if role == "pg":
+        if role == "RESIDENT":
             if not attrs.get("specialty"):
                 raise serializers.ValidationError(
                     {"specialty": "Specialty is required for PG students"}
@@ -83,7 +83,7 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
                     {"supervisor": "Supervisor is required for PG students"}
                 )
 
-        elif role == "supervisor":
+        elif role == "SUPERVISOR":
             if not attrs.get("specialty"):
                 raise serializers.ValidationError(
                     {"specialty": "Specialty is required for supervisors"}
@@ -119,7 +119,7 @@ class UserDetailSerializer(UserSerializer):
 
     def get_assigned_pgs_count(self, obj):
         """Get count of assigned PG students for supervisors."""
-        if obj.role == "supervisor":
+        if obj.role == "SUPERVISOR":
             return obj.assigned_pgs.filter(is_active=True, is_archived=False).count()
         return 0
 

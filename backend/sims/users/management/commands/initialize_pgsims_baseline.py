@@ -40,7 +40,7 @@ DEPARTMENTS = [
     {"code": "SURG", "name": "Surgery"},
 ]
 
-ROLE_GROUPS = ["admin", "utrmc_admin", "supervisor", "resident", "pg", "hod"]
+ROLE_GROUPS = ["ADMIN", "RESIDENT", "SUPERVISOR", "SUPPORT_STAFF"]
 
 
 class Command(BaseCommand):
@@ -67,7 +67,7 @@ class Command(BaseCommand):
             Group.objects.get_or_create(name=group_name)
 
         if not dry_run:
-            admin_group = Group.objects.get(name="admin")
+            admin_group = Group.objects.get(name="ADMIN")
             admin_group.permissions.set(Permission.objects.all())
 
         created_hospitals = []
@@ -93,12 +93,12 @@ class Command(BaseCommand):
         admin_user = None
         if not dry_run:
             admin_user, _ = User.objects.update_or_create(
-                username="admin",
+                username="ADMIN",
                 defaults={
                     "email": "admin@pgsims.local",
                     "first_name": "Pilot",
                     "last_name": "Admin",
-                    "role": "admin",
+                    "role": "ADMIN",
                     "is_staff": True,
                     "is_superuser": True,
                     "is_active": True,
@@ -106,13 +106,12 @@ class Command(BaseCommand):
             )
             admin_user.set_password("admin123")
             admin_user.save()
-            admin_user.groups.add(Group.objects.get(name="admin"))
+            admin_user.groups.add(Group.objects.get(name="ADMIN"))
 
         self.stdout.write(f"Groups: {', '.join(ROLE_GROUPS)}")
         self.stdout.write(f"Hospitals: {', '.join(spec['code'] for spec in HOSPITALS)}")
         self.stdout.write(f"Departments: {', '.join(spec['code'] for spec in DEPARTMENTS)}")
         self.stdout.write("Hospital-department matrix: intentionally left empty for manual correction.")
-        self.stdout.write("HOD assignments: intentionally left empty.")
         if admin_user is not None:
             self.stdout.write(f"Admin user ensured: {admin_user.username} <{admin_user.email}>")
 

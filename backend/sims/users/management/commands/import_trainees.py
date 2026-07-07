@@ -42,10 +42,10 @@ class Command(BaseCommand):
 
         # Get or create admin user
         try:
-            admin_user = User.objects.get(username=admin_username, role='admin')
+            admin_user = User.objects.get(username=admin_username, role='ADMIN')
         except User.DoesNotExist:
             # Try to get any admin user
-            admin_user = User.objects.filter(role='admin', is_active=True).first()
+            admin_user = User.objects.filter(role='ADMIN', is_active=True).first()
             if not admin_user:
                 # Create a temporary admin user
                 admin_user = User.objects.create(
@@ -53,7 +53,7 @@ class Command(BaseCommand):
                     email=f'{admin_username}@pmc.edu.pk',
                     first_name='Import',
                     last_name='Admin',
-                    role='admin',
+                    role='ADMIN',
                     is_active=True,
                     is_staff=True,
                 )

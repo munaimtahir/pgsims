@@ -67,9 +67,9 @@ def home_view(request):
                     elif user.is_supervisor():
                         messages.success(request, f"Welcome back, Dr. {user.get_display_name()}!")
                         return redirect("users:supervisor_dashboard")
-                    elif user.is_pg():
+                    elif user.is_resident():
                         messages.success(request, f"Welcome back, {user.get_display_name()}!")
-                        return redirect("users:pg_dashboard")
+                        return redirect("users:resident_dashboard")
                     else:
                         return redirect("users:profile")
                 else:

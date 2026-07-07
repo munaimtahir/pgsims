@@ -8,10 +8,10 @@ User = get_user_model()
 class UsersViewsFinalPushTests(TestCase):
     def setUp(self):
         self.client = Client()
-        self.admin = User.objects.create_superuser(username="admin_final", password="password123", role="admin")
+        self.admin = User.objects.create_superuser(username="admin_final", password="password123", role="ADMIN")
         self.client.login(username="admin_final", password="password123")
-        self.pg = User.objects.create_user(username="pg_final", password="password123", role="pg")
-        self.supervisor = User.objects.create_user(username="sup_final", password="password123", role="supervisor")
+        self.pg = User.objects.create_user(username="pg_final", password="password123", role="RESIDENT")
+        self.supervisor = User.objects.create_user(username="sup_final", password="password123", role="SUPERVISOR")
 
     def test_profile_detail_view(self):
         response = self.client.get(reverse("users:profile_detail", kwargs={"pk": self.pg.pk}))

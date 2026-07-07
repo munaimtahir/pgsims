@@ -14,7 +14,7 @@ class CanonicalRotationMigrationGateTests(TestCase):
     def setUp(self):
         self.client = APIClient()
         self.supervisor = User.objects.create_user(
-            username="sup_gate", password="pass", role="supervisor",
+            username="sup_gate", password="pass", role="SUPERVISOR",
             email="sup_gate@example.com", specialty="surgery",
         )
         self.home_hospital = Hospital.objects.create(name="Home Hospital", code="HH")
@@ -23,7 +23,7 @@ class CanonicalRotationMigrationGateTests(TestCase):
         self.medicine = Department.objects.create(name="Medicine", code="MED")
         HospitalDepartment.objects.create(hospital=self.home_hospital, department=self.surgery)
         self.pg = User.objects.create_user(
-            username="pg_gate", password="pass", role="pg",
+            username="pg_gate", password="pass", role="RESIDENT",
             email="pg_gate@example.com", specialty="surgery", year="1",
             supervisor=self.supervisor,
             home_hospital=self.home_hospital,

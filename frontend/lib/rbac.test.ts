@@ -2,20 +2,17 @@ import { getDashboardPathForRole, getRoleLabel, isUtrmcManagerRole, isUtrmcReado
 
 describe('rbac utilities', () => {
   describe('getDashboardPathForRole', () => {
-    it('returns /dashboard/utrmc for utrmc roles', () => {
-      expect(getDashboardPathForRole('admin')).toBe('/dashboard/utrmc');
-      expect(getDashboardPathForRole('utrmc_admin')).toBe('/dashboard/utrmc');
-      expect(getDashboardPathForRole('utrmc_user')).toBe('/dashboard/utrmc');
+    it('returns /dashboard/utrmc for admin and support staff roles', () => {
+      expect(getDashboardPathForRole('ADMIN')).toBe('/dashboard/utrmc');
+      expect(getDashboardPathForRole('SUPPORT_STAFF')).toBe('/dashboard/utrmc');
     });
 
-    it('returns /dashboard/supervisor for supervisor roles', () => {
-      expect(getDashboardPathForRole('supervisor')).toBe('/dashboard/supervisor');
-      expect(getDashboardPathForRole('faculty')).toBe('/dashboard/supervisor');
+    it('returns /dashboard/supervisor for supervisor role', () => {
+      expect(getDashboardPathForRole('SUPERVISOR')).toBe('/dashboard/supervisor');
     });
 
-    it('returns /dashboard/resident for pg roles', () => {
-      expect(getDashboardPathForRole('pg')).toBe('/dashboard/resident');
-      expect(getDashboardPathForRole('resident')).toBe('/dashboard/resident');
+    it('returns /dashboard/resident for resident role', () => {
+      expect(getDashboardPathForRole('RESIDENT')).toBe('/dashboard/resident');
     });
 
     it('returns /unauthorized for unknown or null roles', () => {
@@ -26,37 +23,36 @@ describe('rbac utilities', () => {
   });
 
   describe('getRoleLabel', () => {
-    it('returns custom labels for utrmc roles', () => {
-      expect(getRoleLabel('utrmc_user')).toBe('UTRMC Read-only');
-      expect(getRoleLabel('utrmc_admin')).toBe('UTRMC Admin');
+    it('returns labels for canonical roles', () => {
+      expect(getRoleLabel('SUPPORT_STAFF')).toBe('Support Staff');
+      expect(getRoleLabel('ADMIN')).toBe('Admin');
     });
 
     it('returns input role or unknown for others', () => {
-      expect(getRoleLabel('pg')).toBe('pg');
+      expect(getRoleLabel('RESIDENT')).toBe('RESIDENT');
       expect(getRoleLabel(null)).toBe('unknown');
     });
   });
 
   describe('isUtrmcManagerRole', () => {
-    it('returns true for admin and utrmc_admin', () => {
-      expect(isUtrmcManagerRole('admin')).toBe(true);
-      expect(isUtrmcManagerRole('utrmc_admin')).toBe(true);
+    it('returns true for admin', () => {
+      expect(isUtrmcManagerRole('ADMIN')).toBe(true);
     });
 
     it('returns false for others', () => {
-      expect(isUtrmcManagerRole('utrmc_user')).toBe(false);
-      expect(isUtrmcManagerRole('pg')).toBe(false);
+      expect(isUtrmcManagerRole('SUPPORT_STAFF')).toBe(false);
+      expect(isUtrmcManagerRole('RESIDENT')).toBe(false);
     });
   });
 
   describe('isUtrmcReadonlyRole', () => {
-    it('returns true for utrmc_user', () => {
-      expect(isUtrmcReadonlyRole('utrmc_user')).toBe(true);
+    it('returns true for support staff', () => {
+      expect(isUtrmcReadonlyRole('SUPPORT_STAFF')).toBe(true);
     });
 
     it('returns false for others', () => {
-      expect(isUtrmcReadonlyRole('utrmc_admin')).toBe(false);
-      expect(isUtrmcReadonlyRole('admin')).toBe(false);
+      expect(isUtrmcReadonlyRole('ADMIN')).toBe(false);
+      expect(isUtrmcReadonlyRole('RESIDENT')).toBe(false);
     });
   });
 });

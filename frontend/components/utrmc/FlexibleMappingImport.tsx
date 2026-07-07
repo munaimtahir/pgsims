@@ -202,7 +202,7 @@ export default function FlexibleMappingImport() {
   const getAutoSuggestionsForField = (fieldName: string): string[] => {
     const mappingRules: Record<string, string[]> = {
       email: ['email', 'emailaddress', 'emailid', 'mail', 'residentemail', 'supervisoremail', 'hodemail', 'customemail'],
-      full_name: ['name', 'fullname', 'residentname', 'supervisorname', 'supervisor', 'facultyname', 'faculty', 'customname'],
+      full_name: ['name', 'fullname', 'residentname', 'supervisorname', 'SUPERVISOR', 'facultyname', 'SUPERVISOR', 'customname'],
       phone_number: ['phone', 'phonenumber', 'mobile', 'mobilecode', 'contact', 'cell', 'contactnumber'],
       role: ['role', 'designation', 'userrole'],
       specialty: ['specialty', 'speciality', 'deptspecialty', 'specialtyarea'],
@@ -213,9 +213,9 @@ export default function FlexibleMappingImport() {
       training_level: ['traininglevel', 'level'],
       department_code: ['departmentcode', 'department', 'dept', 'specialtycode', 'deptcode'],
       hospital_code: ['hospitalcode', 'hospital', 'instcode', 'traininghospital', 'institute'],
-      supervisor_email: ['supervisoremail', 'supervisor', 'facultysupervisoremail'],
-      resident_email: ['residentemail', 'resident', 'traineeemail'],
-      hod_email: ['hodemail', 'hod', 'headofdepartmentemail'],
+      supervisor_email: ['supervisoremail', 'SUPERVISOR', 'facultysupervisoremail'],
+      resident_email: ['residentemail', 'RESIDENT', 'traineeemail'],
+      hod_email: ['hodemail', 'SUPERVISOR', 'headofdepartmentemail'],
       start_date: ['startdate', 'joiningdate', 'fromdate'],
       end_date: ['enddate', 'todate'],
       status: ['status', 'state'],

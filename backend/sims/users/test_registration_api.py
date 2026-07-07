@@ -12,7 +12,7 @@ class PublicRegistrationAPITests(TestCase):
             username="sup_registration",
             email="sup@example.com",
             password="testpass123",
-            role="supervisor",
+            role="SUPERVISOR",
             specialty="medicine",
         )
         self.url = reverse("auth_api:register")
@@ -23,7 +23,7 @@ class PublicRegistrationAPITests(TestCase):
             "password2": "SafePassword123!",
             "first_name": "New",
             "last_name": "Resident",
-            "role": "pg",
+            "role": "RESIDENT",
             "specialty": "medicine",
             "year": "1",
             "supervisor": self.supervisor.id,
@@ -40,11 +40,11 @@ class PublicRegistrationAPITests(TestCase):
         response = self.client.post(self.url, self.base_payload, format="json")
         self.assertEqual(response.status_code, 201)
         created = User.objects.get(username="new_pg_user")
-        self.assertEqual(created.role, "pg")
+        self.assertEqual(created.role, "RESIDENT")
 
     @override_settings(ENABLE_PUBLIC_REGISTRATION=True)
     def test_public_registration_rejects_privileged_roles(self):
-        payload = {**self.base_payload, "username": "bad_role_user", "role": "admin"}
+        payload = {**self.base_payload, "username": "bad_role_user", "role": "ADMIN"}
         response = self.client.post(self.url, payload, format="json")
         self.assertEqual(response.status_code, 400)
         self.assertIn("role", response.data)

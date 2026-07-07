@@ -105,20 +105,6 @@ const PANELS = [
       { name: 'active' },
     ],
   },
-  {
-    step: 'Step 7',
-    title: 'HOD Assignments',
-    entity: 'hod-assignments',
-    exportResource: 'hod-assignments',
-    description: 'Assign the active HOD per department after faculty/supervisor accounts and departments exist.',
-    expectedColumns: [
-      { name: 'department_code', required: true },
-      { name: 'hod_email', required: true },
-      { name: 'start_date', required: true },
-      { name: 'end_date' },
-      { name: 'active' },
-    ],
-  },
 ];
 
 export default function BulkSetupWorkspace() {
@@ -160,7 +146,7 @@ export default function BulkSetupWorkspace() {
       {importMode === 'standard' ? (
         <div className="space-y-6">
           <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
-            Prerequisite order matters: hospitals, departments, matrix, faculty/supervisors, residents, supervision links, then HOD assignments.
+            Prerequisite order matters: hospitals, departments, matrix, faculty/supervisors, residents, then supervision links.
           </div>
 
           <div className="space-y-6">

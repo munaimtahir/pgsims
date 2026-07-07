@@ -12,7 +12,7 @@ export interface User {
   first_name: string;
   last_name: string;
   full_name?: string;
-  role: 'pg' | 'resident' | 'supervisor' | 'faculty' | 'admin' | 'utrmc_user' | 'utrmc_admin';
+  role: 'ADMIN' | 'RESIDENT' | 'SUPERVISOR' | 'SUPPORT_STAFF';
   specialty?: string;
   year?: string;
   phone_number?: string;
@@ -30,11 +30,44 @@ export interface RegisterData {
   password2: string;
   first_name: string;
   last_name: string;
-  role: 'pg' | 'resident' | 'supervisor' | 'faculty' | 'admin' | 'utrmc_user' | 'utrmc_admin';
+  role: 'ADMIN' | 'RESIDENT' | 'SUPERVISOR' | 'SUPPORT_STAFF';
   specialty?: string;
   year?: string;
   supervisor?: number;
   phone_number?: string;
+}
+
+export interface AuthMeResponse {
+  id: number;
+  username: string;
+  role: User['role'];
+  must_change_password: boolean;
+  is_profile_complete: boolean;
+  profile_type: string;
+  profile_id: number | null;
+  profile_status: string;
+  profile_schema_version: number;
+  completed_schema_version: number;
+  missing_required_fields: string[];
+  allowed_next_route: string;
+}
+
+export interface MissingProfileField {
+  field: string;
+  label: string;
+  source: 'user' | 'profile';
+  input_type: string;
+  required: boolean;
+  options_key?: string | null;
+  help_text?: string;
+}
+
+export interface CompleteProfileForm {
+  profile_type: string;
+  profile_status: string;
+  schema_version: number;
+  completed_schema_version: number;
+  missing_fields: MissingProfileField[];
 }
 
 export interface LoginResponse {
@@ -95,6 +128,21 @@ export const authApi = {
    */
   async getCurrentUser(): Promise<User> {
     const response = await apiClient.get<User>('/api/auth/profile/');
+    return response.data;
+  },
+
+  async me(): Promise<AuthMeResponse> {
+    const response = await apiClient.get<AuthMeResponse>('/api/auth/me/');
+    return response.data;
+  },
+
+  async getCompleteProfileForm(): Promise<CompleteProfileForm> {
+    const response = await apiClient.get<CompleteProfileForm>('/api/auth/complete-profile/');
+    return response.data;
+  },
+
+  async completeProfile(data: Record<string, string>): Promise<AuthMeResponse> {
+    const response = await apiClient.post<AuthMeResponse>('/api/auth/complete-profile/', data);
     return response.data;
   },
 

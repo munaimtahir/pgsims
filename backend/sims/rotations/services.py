@@ -60,7 +60,6 @@ def validate_rotation_override_requirements(
 
     if not str(override_reason or "").strip():
         raise ValueError("override_reason is required for this inter-hospital rotation")
-    if approved_by_role != "utrmc_admin":
-        raise ValueError("utrmc_admin approval is required for this inter-hospital rotation")
+    if approved_by_role != "ADMIN":
+        raise ValueError("ADMIN approval is required for this inter-hospital rotation")
     return decision
-

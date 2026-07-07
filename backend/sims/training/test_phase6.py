@@ -38,19 +38,19 @@ def _make_supervisor(username="supervisor_default"):
         return User.objects.create_user(
             username=username,
             password="Test1234!",
-            role="supervisor",
+            role="SUPERVISOR",
             email=f"{username}@test.com",
             specialty="urology",
         )
 
 
 def _make_user(username, role, **kwargs):
-    if role == "pg":
+    if role == "RESIDENT":
         kwargs.setdefault("specialty", "urology")
         kwargs.setdefault("year", "1")
         if "supervisor" not in kwargs:
             kwargs["supervisor"] = _make_supervisor(f"sup_{username}")
-    elif role == "supervisor":
+    elif role == "SUPERVISOR":
         kwargs.setdefault("specialty", "urology")
     user = User.objects.create_user(
         username=username,
@@ -124,7 +124,7 @@ class TrainingProgramModelTests(APITestCase):
 
 class ResidentTrainingRecordConstraintTests(APITestCase):
     def setUp(self):
-        self.pg = _make_user("pg_constraint", "pg")
+        self.pg = _make_user("pg_constraint", "RESIDENT")
         self.program = _make_program("FCPS-CONST")
 
     def test_unique_active_program_per_resident(self):
@@ -163,9 +163,9 @@ class ResidentTrainingRecordConstraintTests(APITestCase):
 
 class ResearchProjectTransitionTests(APITestCase):
     def setUp(self):
-        self.pg = _make_user("pg_research", "pg")
-        self.supervisor = _make_user("sup_research", "supervisor")
-        self.admin = _make_user("admin_research", "admin")
+        self.pg = _make_user("pg_research", "RESIDENT")
+        self.supervisor = _make_user("sup_research", "SUPERVISOR")
+        self.admin = _make_user("admin_research", "ADMIN")
         self.rtr = _make_rtr(self.pg)
 
     def test_create_draft(self):
@@ -218,8 +218,8 @@ class ResearchProjectTransitionTests(APITestCase):
 
 class EligibilityComputationTests(APITestCase):
     def setUp(self):
-        self.pg = _make_user("pg_elig", "pg")
-        self.supervisor = _make_user("sup_elig", "supervisor")
+        self.pg = _make_user("pg_elig", "RESIDENT")
+        self.supervisor = _make_user("sup_elig", "SUPERVISOR")
         self.program = _make_program("FCPS-ELIG")
         self.rtr = _make_rtr(self.pg, self.program)
 
@@ -308,8 +308,8 @@ class EligibilityComputationTests(APITestCase):
 
 class ProgramPolicyAPITests(APITestCase):
     def setUp(self):
-        self.admin = _make_user("admin_api_pol", "admin")
-        self.pg = _make_user("pg_api_pol", "pg")
+        self.admin = _make_user("admin_api_pol", "ADMIN")
+        self.pg = _make_user("pg_api_pol", "RESIDENT")
         self.program = _make_program("FCPS-POLTEST")
         self.url = f"/api/programs/{self.program.pk}/policy/"
 
@@ -336,8 +336,8 @@ class ProgramPolicyAPITests(APITestCase):
 
 class ResearchProjectAPITests(APITestCase):
     def setUp(self):
-        self.pg = _make_user("pg_api_res", "pg")
-        self.supervisor = _make_user("sup_api_res", "supervisor")
+        self.pg = _make_user("pg_api_res", "RESIDENT")
+        self.supervisor = _make_user("sup_api_res", "SUPERVISOR")
         self.rtr = _make_rtr(self.pg)
         self.pg.supervisor = self.supervisor
         self.pg.save()
@@ -405,7 +405,7 @@ class ResearchProjectAPITests(APITestCase):
 
 class WorkshopCompletionAPITests(APITestCase):
     def setUp(self):
-        self.pg = _make_user("pg_ws_test", "pg")
+        self.pg = _make_user("pg_ws_test", "RESIDENT")
         self.rtr = _make_rtr(self.pg)
         self.workshop = Workshop.objects.create(name="ACLS Test", code="ACLS-TEST")
 
@@ -432,8 +432,8 @@ class WorkshopCompletionAPITests(APITestCase):
 
 class EligibilityAPITests(APITestCase):
     def setUp(self):
-        self.pg = _make_user("pg_eli_api", "pg")
-        self.admin = _make_user("admin_eli_api", "admin")
+        self.pg = _make_user("pg_eli_api", "RESIDENT")
+        self.admin = _make_user("admin_eli_api", "ADMIN")
         self.program = _make_program("FCPS-ELI-API")
         self.rtr = _make_rtr(self.pg, self.program)
 
@@ -502,7 +502,7 @@ class EligibilityAPITests(APITestCase):
 
 class SystemSettingsAPITests(APITestCase):
     def setUp(self):
-        self.pg = _make_user("pg_settings", "pg")
+        self.pg = _make_user("pg_settings", "RESIDENT")
 
     def test_system_settings_accessible(self):
         self.client.force_authenticate(user=self.pg)
@@ -540,7 +540,7 @@ class ResidentSummaryTests(APITestCase):
         _make_milestone(self.prog, "IMM", "Intermediate Milestone")
         _make_milestone(self.prog, "FINAL", "Final Milestone")
 
-        self.resident = _make_user("res_summary", "pg")
+        self.resident = _make_user("res_summary", "RESIDENT")
         self.client.force_authenticate(user=self.resident)
 
         self.rtr = ResidentTrainingRecord.objects.create(
@@ -579,7 +579,7 @@ class ResidentSummaryTests(APITestCase):
         self.assertIn(resp.status_code, [401, 403])
 
     def test_supervisor_denied(self):
-        sup = _make_user("sup_summary_test", "supervisor")
+        sup = _make_user("sup_summary_test", "SUPERVISOR")
         self.client.force_authenticate(user=sup)
         resp = self.client.get("/api/residents/me/summary/")
         # Supervisor role is rejected by RBAC check before RTR lookup
@@ -597,9 +597,9 @@ class SupervisorSummaryTests(APITestCase):
         self.prog = TrainingProgram.objects.create(
             name="FCPS Surgery", code="FCPS-SURG", degree_type="fcps", duration_months=60
         )
-        self.supervisor = _make_user("sup_summary", "supervisor")
-        self.resident1 = _make_user("res_sup_sum1", "pg")
-        self.resident2 = _make_user("res_sup_sum2", "pg")
+        self.supervisor = _make_user("sup_summary", "SUPERVISOR")
+        self.resident1 = _make_user("res_sup_sum1", "RESIDENT")
+        self.resident2 = _make_user("res_sup_sum2", "RESIDENT")
         self.client.force_authenticate(user=self.supervisor)
 
         from sims.users.models import SupervisorResidentLink
@@ -637,7 +637,7 @@ class SupervisorSummaryTests(APITestCase):
         self.assertNotIn(self.resident2.id, ids)
 
     def test_scoping_includes_direct_supervisor_assignment(self):
-        resident = _make_user("res_direct_sup", "pg")
+        resident = _make_user("res_direct_sup", "RESIDENT")
         resident.supervisor = self.supervisor
         resident.save()
         ResidentTrainingRecord.objects.create(
@@ -655,9 +655,9 @@ class SupervisorSummaryTests(APITestCase):
     def test_residents_sorted_by_name(self):
         from sims.users.models import SupervisorResidentLink
         # Add second resident to same supervisor
-        res_a = _make_user("res_alpha", "pg")
+        res_a = _make_user("res_alpha", "RESIDENT")
         res_a.last_name = "Aardvark"; res_a.save()
-        res_z = _make_user("res_zeta", "pg")
+        res_z = _make_user("res_zeta", "RESIDENT")
         res_z.last_name = "Zebra"; res_z.save()
 
         for res in [res_a, res_z]:
@@ -675,7 +675,7 @@ class SupervisorSummaryTests(APITestCase):
         self.assertEqual(names, sorted(names, key=str.lower))
 
     def test_resident_denied(self):
-        res = _make_user("res_denied_sup", "pg")
+        res = _make_user("res_denied_sup", "RESIDENT")
         self.client.force_authenticate(user=res)
         resp = self.client.get("/api/supervisors/me/summary/")
         self.assertEqual(resp.status_code, 403)
@@ -692,8 +692,8 @@ class ResidentProgressViewTests(APITestCase):
         self.prog = TrainingProgram.objects.create(
             name="FCPS Peds", code="FCPS-PEDS", degree_type="fcps", duration_months=60
         )
-        self.supervisor = _make_user("sup_progress", "supervisor")
-        self.resident = _make_user("res_progress", "pg")
+        self.supervisor = _make_user("sup_progress", "SUPERVISOR")
+        self.resident = _make_user("res_progress", "RESIDENT")
         self.rtr = ResidentTrainingRecord.objects.create(
             resident_user=self.resident,
             program=self.prog,
@@ -706,7 +706,7 @@ class ResidentProgressViewTests(APITestCase):
         resp = self.client.get(f"/api/supervisors/residents/{self.resident.id}/progress/")
         self.assertEqual(resp.status_code, 200)
         data = resp.data
-        self.assertIn("resident", data)
+        self.assertIn("RESIDENT", data)
         self.assertIn("training_record", data)
         self.assertIn("eligibility", data)
 

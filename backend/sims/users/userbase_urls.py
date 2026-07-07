@@ -1,5 +1,3 @@
-"""Top-level API routes for userbase/org graph endpoints."""
-
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
@@ -13,7 +11,10 @@ router.register(
     userbase_views.HospitalDepartmentViewSet,
     basename="userbase-hospital-departments",
 )
+router.register(r"admins", userbase_views.AdminProfileViewSet, basename="userbase-admins")
 router.register(r"residents", userbase_views.ResidentProfileViewSet, basename="userbase-residents")
+router.register(r"supervisors", userbase_views.SupervisorProfileViewSet, basename="userbase-supervisors")
+router.register(r"support-staff", userbase_views.SupportStaffProfileViewSet, basename="userbase-support-staff")
 router.register(r"staff", userbase_views.StaffProfileViewSet, basename="userbase-staff")
 router.register(
     r"department-memberships",
@@ -30,15 +31,11 @@ router.register(
     userbase_views.SupervisionLinkViewSet,
     basename="userbase-supervision-links",
 )
-router.register(
-    r"hod-assignments",
-    userbase_views.HODAssignmentViewSet,
-    basename="userbase-hod-assignments",
-)
 
 urlpatterns = [path("", include(router.urls))]
 
 urlpatterns += [
+    path("identity/options/", userbase_views.IdentityOptionsView.as_view(), name="identity_options"),
     path("admin/data-quality/summary", userbase_views.DataQualitySummaryView.as_view(), name="data-quality-summary"),
     path("admin/data-quality/users", userbase_views.DataQualityUsersView.as_view(), name="data-quality-users"),
     path("admin/data-quality/recompute", userbase_views.DataQualityRecomputeView.as_view(), name="data-quality-recompute"),

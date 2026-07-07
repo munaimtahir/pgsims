@@ -4,7 +4,7 @@ from django.core.exceptions import PermissionDenied
 from django.http import HttpResponse
 from unittest.mock import patch
 from sims.users.decorators import (
-    admin_required, supervisor_required, pg_required,
+    admin_required, supervisor_required, resident_required,
     supervisor_or_admin_required
 )
 
@@ -18,8 +18,8 @@ def mock_admin_view(request):
 def mock_supervisor_view(request):
     return HttpResponse("OK")
 
-@pg_required
-def mock_pg_view(request):
+@resident_required
+def mock_resident_view(request):
     return HttpResponse("OK")
 
 @supervisor_or_admin_required
@@ -29,9 +29,9 @@ def mock_supervisor_or_admin_view(request):
 class DecoratorTests(TestCase):
     def setUp(self):
         self.factory = RequestFactory()
-        self.pg = User.objects.create_user(username="pg", role="pg")
-        self.supervisor = User.objects.create_user(username="sup", role="supervisor")
-        self.admin = User.objects.create_user(username="admin", role="admin")
+        self.pg = User.objects.create_user(username="RESIDENT", role="RESIDENT")
+        self.supervisor = User.objects.create_user(username="sup", role="SUPERVISOR")
+        self.admin = User.objects.create_user(username="ADMIN", role="ADMIN")
 
     @patch("django.contrib.messages.error")
     def test_admin_required(self, mock_msg):
@@ -56,14 +56,14 @@ class DecoratorTests(TestCase):
         self.assertTrue(mock_msg.called)
 
     @patch("django.contrib.messages.error")
-    def test_pg_required(self, mock_msg):
+    def test_resident_required(self, mock_msg):
         request = self.factory.get("/")
         request.user = self.pg
-        self.assertEqual(mock_pg_view(request).status_code, 200)
+        self.assertEqual(mock_resident_view(request).status_code, 200)
 
         request.user = self.admin
         with self.assertRaises(PermissionDenied):
-            mock_pg_view(request)
+            mock_resident_view(request)
         self.assertTrue(mock_msg.called)
 
     @patch("django.contrib.messages.error")

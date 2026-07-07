@@ -14,8 +14,8 @@ const geistMono = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "FMU - PGR SIMS",
-  description: "Postgraduate Student Information Management System",
+  title: "FMU-UTRMC PGSIMS",
+  description: "Faisalabad Medical University Postgraduate Management System",
 };
 
 export default function RootLayout({

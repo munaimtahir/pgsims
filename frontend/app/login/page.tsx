@@ -54,10 +54,10 @@ export default function LoginPage() {
       <div className="max-w-md w-full space-y-6 bg-white p-10 rounded-[20px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-[#EAECEA]">
         <div>
           <h2 className="mt-2 text-center text-3xl font-bold tracking-tight text-[#2C3333]">
-            Sign in to SIMS
+            Sign in to FMU-UTRMC PGSIMS
           </h2>
           <p className="mt-3 text-center text-sm text-[#7D8A8A]">
-            Postgraduate Student Information Management System
+            Faisalabad Medical University Postgraduate Management System
           </p>
         </div>
 

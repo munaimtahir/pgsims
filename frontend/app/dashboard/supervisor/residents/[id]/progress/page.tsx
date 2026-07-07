@@ -33,7 +33,7 @@ export default function ResidentProgressPage() {
   }, [residentId]);
 
   return (
-    <ProtectedRoute allowedRoles={['supervisor', 'faculty', 'admin', 'utrmc_admin']}>
+    <ProtectedRoute allowedRoles={['SUPERVISOR', 'SUPERVISOR', 'ADMIN', 'ADMIN']}>
       <div className="pg-page max-w-4xl">
         <PageHeader
           title="Resident Progress"

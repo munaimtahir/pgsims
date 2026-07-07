@@ -33,7 +33,7 @@ const mockedTrainingApi = trainingApi as unknown as {
 
 describe('ResidentProgressPage', () => {
   beforeEach(() => {
-    (useAuthStore as unknown as jest.Mock).mockReturnValue({ user: { role: 'resident' } });
+    (useAuthStore as unknown as jest.Mock).mockReturnValue({ user: { role: 'RESIDENT' } });
     
     mockedTrainingApi.getResidentOperationalDashboard.mockResolvedValue({
       logbook: { total: 0, draft: 0, submitted: 0, returned: 0, approved: 0, threshold: { overall_met: false, count: 0, items: [] } },

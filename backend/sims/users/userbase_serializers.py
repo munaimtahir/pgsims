@@ -1,5 +1,3 @@
-"""Serializers for userbase/org graph APIs."""
-
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
@@ -8,10 +6,11 @@ from sims.academics.serializers import DepartmentSerializer as CanonicalDepartme
 from sims.rotations.models import Hospital, HospitalDepartment
 from sims.users.models import (
     DepartmentMembership,
-    HODAssignment,
     HospitalAssignment,
+    AdminProfile,
     ResidentProfile,
-    StaffProfile,
+    SupervisorProfile,
+    SupportStaffProfile,
     SupervisorResidentLink,
 )
 
@@ -77,11 +76,127 @@ class HospitalDepartmentSerializer(serializers.ModelSerializer):
         return super().update(instance, validated_data)
 
 
+class AdminProfileSerializer(serializers.ModelSerializer):
+    user = UserRefSerializer(read_only=True)
+    user_id = serializers.IntegerField(write_only=True, required=False)
+
+    class Meta:
+        model = AdminProfile
+        fields = [
+            "id",
+            "user",
+            "user_id",
+            "designation",
+            "phone",
+            "email",
+            "admin_scope",
+            "profile_status",
+            "profile_schema_version",
+            "completed_schema_version",
+            "profile_completed_at",
+            "extra_data",
+        ]
+        read_only_fields = ["id", "profile_status", "profile_schema_version", "completed_schema_version", "profile_completed_at"]
+
+
+class ResidentProfileSerializer(serializers.ModelSerializer):
+    user = UserRefSerializer(read_only=True)
+    user_id = serializers.IntegerField(write_only=True, required=False)
+
+    class Meta:
+        model = ResidentProfile
+        fields = [
+            "id",
+            "user",
+            "user_id",
+            "registration_no",
+            "cnic",
+            "phone",
+            "email",
+            "hospital",
+            "department_ref",
+            "program_ref",
+            "academic_session_ref",
+            "specialty_ref",
+            "profile_status",
+            "profile_schema_version",
+            "completed_schema_version",
+            "profile_completed_at",
+            "extra_data",
+            "is_archived",
+        ]
+        read_only_fields = ["id", "profile_status", "profile_schema_version", "completed_schema_version", "profile_completed_at"]
+
+
+class SupervisorProfileSerializer(serializers.ModelSerializer):
+    user = UserRefSerializer(read_only=True)
+    user_id = serializers.IntegerField(write_only=True, required=False)
+
+    class Meta:
+        model = SupervisorProfile
+        fields = [
+            "id",
+            "user",
+            "user_id",
+            "pmdc_no",
+            "official_email",
+            "phone",
+            "email",
+            "hospital",
+            "department_ref",
+            "designation_ref",
+            "program_ref",
+            "specialty_ref",
+            "profile_status",
+            "profile_schema_version",
+            "completed_schema_version",
+            "profile_completed_at",
+            "extra_data",
+            "is_archived",
+        ]
+        read_only_fields = ["id", "profile_status", "profile_schema_version", "completed_schema_version", "profile_completed_at"]
+
+
+class SupportStaffProfileSerializer(serializers.ModelSerializer):
+    user = UserRefSerializer(read_only=True)
+    user_id = serializers.IntegerField(write_only=True, required=False)
+
+    class Meta:
+        model = SupportStaffProfile
+        fields = [
+            "id",
+            "user",
+            "user_id",
+            "designation",
+            "department_ref",
+            "hospital",
+            "phone",
+            "email",
+            "scope_notes",
+            "profile_status",
+            "profile_schema_version",
+            "completed_schema_version",
+            "profile_completed_at",
+            "extra_data",
+            "is_archived",
+        ]
+        read_only_fields = ["id", "profile_status", "profile_schema_version", "completed_schema_version", "profile_completed_at"]
+
+
+# Backward compatibility alias
+class StaffProfileSerializer(SupervisorProfileSerializer):
+    pass
+
+
 class UserManagementSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, required=False, min_length=8)
     full_name = serializers.CharField(source="get_full_name", read_only=True)
-    resident_profile = serializers.JSONField(write_only=True, required=False)
-    staff_profile = serializers.JSONField(write_only=True, required=False)
+    
+    admin_profile = AdminProfileSerializer(read_only=True)
+    resident_profile = ResidentProfileSerializer(read_only=True)
+    supervisor_profile = SupervisorProfileSerializer(read_only=True)
+    support_staff_profile = SupportStaffProfileSerializer(read_only=True)
+    
     departments = serializers.SerializerMethodField()
 
     class Meta:
@@ -103,10 +218,14 @@ class UserManagementSerializer(serializers.ModelSerializer):
             "home_hospital",
             "registration_number",
             "phone_number",
+            "admin_profile",
             "resident_profile",
-            "staff_profile",
+            "supervisor_profile",
+            "support_staff_profile",
             "departments",
             "date_joined",
+            "must_change_password",
+            "is_profile_complete",
         ]
         read_only_fields = ["date_joined"]
 
@@ -126,116 +245,6 @@ class UserManagementSerializer(serializers.ModelSerializer):
             }
             for membership in memberships
         ]
-
-    def _upsert_profiles(self, user, resident_payload, staff_payload):
-        if resident_payload and user.role in {"pg", "resident"}:
-            existing = ResidentProfile.objects.filter(user=user).first()
-            training_start = resident_payload.get(
-                "training_start",
-                existing.training_start if existing else None,
-            )
-            if not training_start:
-                raise serializers.ValidationError(
-                    {"resident_profile": "training_start is required for resident profile."}
-                )
-            defaults = {
-                "pgr_id": resident_payload.get("pgr_id", ""),
-                "training_start": training_start,
-                "training_end": resident_payload.get("training_end"),
-                "training_level": resident_payload.get("training_level", ""),
-                "active": resident_payload.get("active", True),
-            }
-            ResidentProfile.objects.update_or_create(user=user, defaults=defaults)
-        if staff_payload and user.role in {"supervisor", "faculty"}:
-            defaults = {
-                "designation": staff_payload.get("designation", ""),
-                "phone": staff_payload.get("phone", ""),
-                "active": staff_payload.get("active", True),
-            }
-            StaffProfile.objects.update_or_create(user=user, defaults=defaults)
-
-    def create(self, validated_data):
-        resident_payload = validated_data.pop("resident_profile", None)
-        staff_payload = validated_data.pop("staff_profile", None)
-        password = validated_data.pop("password", None)
-        user = User(**validated_data)
-        if password:
-            user.set_password(password)
-        else:
-            user.set_unusable_password()
-        user.save()
-        self._upsert_profiles(user, resident_payload, staff_payload)
-        return user
-
-    def update(self, instance, validated_data):
-        resident_payload = validated_data.pop("resident_profile", None)
-        staff_payload = validated_data.pop("staff_profile", None)
-        password = validated_data.pop("password", None)
-        for attr, value in validated_data.items():
-            setattr(instance, attr, value)
-        if password:
-            instance.set_password(password)
-        instance.save()
-        self._upsert_profiles(instance, resident_payload, staff_payload)
-        return instance
-
-
-class ResidentProfileSerializer(serializers.ModelSerializer):
-    user = UserRefSerializer(read_only=True)
-    user_id = serializers.IntegerField(write_only=True, required=False)
-
-    class Meta:
-        model = ResidentProfile
-        fields = [
-            "id",
-            "user",
-            "user_id",
-            "pgr_id",
-            "training_start",
-            "training_end",
-            "training_level",
-            "active",
-            "created_at",
-            "updated_at",
-        ]
-        read_only_fields = ["created_at", "updated_at"]
-
-    def create(self, validated_data):
-        if "user_id" in validated_data:
-            validated_data["user_id"] = validated_data.pop("user_id")
-        return super().create(validated_data)
-
-    def update(self, instance, validated_data):
-        validated_data.pop("user_id", None)
-        return super().update(instance, validated_data)
-
-
-class StaffProfileSerializer(serializers.ModelSerializer):
-    user = UserRefSerializer(read_only=True)
-    user_id = serializers.IntegerField(write_only=True, required=False)
-
-    class Meta:
-        model = StaffProfile
-        fields = [
-            "id",
-            "user",
-            "user_id",
-            "designation",
-            "phone",
-            "active",
-            "created_at",
-            "updated_at",
-        ]
-        read_only_fields = ["created_at", "updated_at"]
-
-    def create(self, validated_data):
-        if "user_id" in validated_data:
-            validated_data["user_id"] = validated_data.pop("user_id")
-        return super().create(validated_data)
-
-    def update(self, instance, validated_data):
-        validated_data.pop("user_id", None)
-        return super().update(instance, validated_data)
 
 
 class DepartmentMembershipSerializer(serializers.ModelSerializer):
@@ -349,39 +358,4 @@ class SupervisorResidentLinkSerializer(serializers.ModelSerializer):
         validated_data.pop("supervisor_user_id", None)
         validated_data.pop("resident_user_id", None)
         validated_data.pop("department_id", None)
-        return super().update(instance, validated_data)
-
-
-class HODAssignmentSerializer(serializers.ModelSerializer):
-    department = DepartmentRefSerializer(read_only=True)
-    hod_user = UserRefSerializer(read_only=True)
-    department_id = serializers.IntegerField(write_only=True)
-    hod_user_id = serializers.IntegerField(write_only=True)
-
-    class Meta:
-        model = HODAssignment
-        fields = [
-            "id",
-            "department",
-            "hod_user",
-            "department_id",
-            "hod_user_id",
-            "start_date",
-            "end_date",
-            "active",
-            "created_at",
-            "updated_at",
-        ]
-        read_only_fields = ["created_at", "updated_at"]
-
-    def create(self, validated_data):
-        return HODAssignment.objects.create(
-            department_id=validated_data.pop("department_id"),
-            hod_user_id=validated_data.pop("hod_user_id"),
-            **validated_data,
-        )
-
-    def update(self, instance, validated_data):
-        validated_data.pop("department_id", None)
-        validated_data.pop("hod_user_id", None)
         return super().update(instance, validated_data)

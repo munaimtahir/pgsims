@@ -16,12 +16,11 @@ from sims.training.models import (
 )
 from sims.users.models import (
     DepartmentMembership,
-    HODAssignment,
     HospitalAssignment,
     ResidentProfile,
-    StaffProfile,
     SupervisorResidentLink,
     User,
+    SupervisorProfile,
 )
 
 
@@ -29,16 +28,16 @@ class SeedDemoDataCommandTests(TestCase):
     def test_seed_demo_data_creates_demo_graph_and_admin_login(self):
         call_command("seed_demo_data", reset=True)
 
-        admin = User.objects.get(username="admin")
-        self.assertEqual(admin.role, "admin")
+        admin = User.objects.get(username="ADMIN")
+        self.assertEqual(admin.role, "ADMIN")
         self.assertTrue(admin.is_superuser)
         self.assertTrue(admin.is_staff)
         self.assertTrue(admin.check_password("admin123"))
-        self.assertTrue(Client().login(username="admin", password="admin123"))
+        self.assertTrue(Client().login(username="ADMIN", password="admin123"))
 
         self.assertEqual(User.objects.filter(username__startswith="demo_").count(), 14)
         self.assertEqual(
-            User.objects.filter(username__startswith="demo_", role__in=["resident", "pg"]).count(),
+            User.objects.filter(username__startswith="demo_", role__in=["RESIDENT", "RESIDENT"]).count(),
             8,
         )
         self.assertEqual(Hospital.objects.filter(code__startswith="DEMO-").count(), 2)
@@ -50,7 +49,7 @@ class SeedDemoDataCommandTests(TestCase):
             ).count(),
             4,
         )
-        self.assertEqual(StaffProfile.objects.count(), 4)
+        self.assertEqual(SupervisorProfile.objects.count(), 4)
         self.assertEqual(ResidentProfile.objects.count(), 8)
         self.assertEqual(
             DepartmentMembership.objects.filter(department__code__startswith="DEMO-").count(),
@@ -62,7 +61,7 @@ class SeedDemoDataCommandTests(TestCase):
             ).count(),
             12,
         )
-        self.assertEqual(HODAssignment.objects.filter(department__code__startswith="DEMO-").count(), 2)
+        self.assertEqual(SupervisorProfile.objects.filter(designation_ref="HOD", department_ref__code__startswith="DEMO-").count(), 2)
         self.assertEqual(
             SupervisorResidentLink.objects.filter(department__code__startswith="DEMO-").count(),
             8,
@@ -108,7 +107,7 @@ class SeedDemoDataCommandTests(TestCase):
 
         call_command("seed_demo_data")
         self.assertEqual(self._snapshot_counts(), snapshot)
-        self.assertTrue(User.objects.get(username="admin").check_password("admin123"))
+        self.assertTrue(User.objects.get(username="ADMIN").check_password("admin123"))
 
     def _snapshot_counts(self):
         return {

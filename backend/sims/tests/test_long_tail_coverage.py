@@ -16,10 +16,10 @@ User = get_user_model()
 
 class LongTailCoverageTests(APITestCase):
     def setUp(self):
-        self.admin = User.objects.create_superuser(username="tail_admin", role="admin")
-        self.supervisor = User.objects.create_user(username="tail_sup", role="supervisor")
-        self.pg = User.objects.create_user(username="tail_pg", role="pg")
-        self.other_pg = User.objects.create_user(username="other_pg", role="pg")
+        self.admin = User.objects.create_superuser(username="tail_admin", role="ADMIN")
+        self.supervisor = User.objects.create_user(username="tail_sup", role="SUPERVISOR")
+        self.pg = User.objects.create_user(username="tail_pg", role="RESIDENT")
+        self.other_pg = User.objects.create_user(username="other_pg", role="RESIDENT")
         
         self.program = TrainingProgram.objects.create(name="T", code="T", duration_months=12)
         self.rtr = ResidentTrainingRecord.objects.create(resident_user=self.pg, program=self.program, start_date=date.today())

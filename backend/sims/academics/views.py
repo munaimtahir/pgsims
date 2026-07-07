@@ -17,6 +17,6 @@ class DepartmentViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         queryset = super().get_queryset()
         user = self.request.user
-        if getattr(user, "is_superuser", False) or getattr(user, "role", None) in {"admin", "utrmc_admin"}:
+        if getattr(user, "is_superuser", False) or getattr(user, "role", None) in {"ADMIN", "ADMIN"}:
             return queryset
         return queryset.filter(active=True)

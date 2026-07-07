@@ -1,23 +1,17 @@
 export type AppRole =
-  | 'pg'
-  | 'resident'
-  | 'supervisor'
-  | 'faculty'
-  | 'admin'
-  | 'utrmc_user'
-  | 'utrmc_admin';
+  | 'ADMIN'
+  | 'RESIDENT'
+  | 'SUPERVISOR'
+  | 'SUPPORT_STAFF';
 
 export function getDashboardPathForRole(role?: string | null): string {
   switch (role) {
-    case 'admin':
-    case 'utrmc_admin':
-    case 'utrmc_user':
+    case 'ADMIN':
+    case 'SUPPORT_STAFF':
       return '/dashboard/utrmc';
-    case 'supervisor':
-    case 'faculty':
+    case 'SUPERVISOR':
       return '/dashboard/supervisor';
-    case 'pg':
-    case 'resident':
+    case 'RESIDENT':
       return '/dashboard/resident';
     default:
       return '/unauthorized';
@@ -26,19 +20,19 @@ export function getDashboardPathForRole(role?: string | null): string {
 
 export function getRoleLabel(role?: string | null): string {
   switch (role) {
-    case 'utrmc_user':
-      return 'UTRMC Read-only';
-    case 'utrmc_admin':
-      return 'UTRMC Admin';
+    case 'SUPPORT_STAFF':
+      return 'Support Staff';
+    case 'ADMIN':
+      return 'Admin';
     default:
       return role ?? 'unknown';
   }
 }
 
 export function isUtrmcManagerRole(role?: string | null): boolean {
-  return role === 'admin' || role === 'utrmc_admin';
+  return role === 'ADMIN';
 }
 
 export function isUtrmcReadonlyRole(role?: string | null): boolean {
-  return role === 'utrmc_user';
+  return role === 'SUPPORT_STAFF';
 }

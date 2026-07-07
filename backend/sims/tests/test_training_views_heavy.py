@@ -14,10 +14,10 @@ User = get_user_model()
 class TrainingViewsHeavyTests(TestCase):
     def setUp(self):
         self.client = Client()
-        self.admin = User.objects.create_superuser(username="admin_heavy", password="password123", role="admin")
-        self.admin.role = "admin"
+        self.admin = User.objects.create_superuser(username="admin_heavy", password="password123", role="ADMIN")
+        self.admin.role = "ADMIN"
         self.admin.save()
-        self.pg = User.objects.create_user(username="pg_heavy", password="password123", role="pg")
+        self.pg = User.objects.create_user(username="pg_heavy", password="password123", role="RESIDENT")
         self.client.login(username="admin_heavy", password="password123")
         self.dept = Department.objects.create(name="H Heavy", code="HHEAVY")
 

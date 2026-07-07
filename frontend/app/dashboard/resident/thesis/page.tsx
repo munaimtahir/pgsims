@@ -5,7 +5,7 @@ import DeferredWorkflowNotice from '@/components/ui/DeferredWorkflowNotice';
 
 export default function ResidentThesisPage() {
   return (
-    <ProtectedRoute allowedRoles={['resident', 'pg']}>
+    <ProtectedRoute allowedRoles={['RESIDENT', 'RESIDENT']}>
       <DeferredWorkflowNotice
         title="Thesis"
         description="Thesis submission is deferred from the current active release surface."

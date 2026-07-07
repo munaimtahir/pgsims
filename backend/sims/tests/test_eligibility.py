@@ -14,7 +14,7 @@ User = get_user_model()
 
 class EligibilityTests(TestCase):
     def setUp(self):
-        self.pg = User.objects.create_user(username="pg_elig", role="pg")
+        self.pg = User.objects.create_user(username="pg_elig", role="RESIDENT")
         self.program = TrainingProgram.objects.create(name="Medicine", code="MED_E", duration_months=48)
         self.rtr = ResidentTrainingRecord.objects.create(
             resident_user=self.pg, program=self.program, 

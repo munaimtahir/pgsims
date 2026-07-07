@@ -38,19 +38,19 @@ from .serializers import (
 
 
 def _is_admin_or_utrmc_admin(user):
-    return getattr(user, "role", None) in {"admin", "utrmc_admin"} or getattr(user, "is_superuser", False)
+    return getattr(user, "role", None) in {"ADMIN", "ADMIN"} or getattr(user, "is_superuser", False)
 
 
 def _is_utrmc_viewer(user):
-    return getattr(user, "role", None) in {"admin", "utrmc_admin", "utrmc_user"} or getattr(user, "is_superuser", False)
+    return getattr(user, "role", None) in {"ADMIN", "ADMIN", "SUPPORT_STAFF"} or getattr(user, "is_superuser", False)
 
 
 def _is_supervisor_or_hod(user):
-    return getattr(user, "role", None) in {"supervisor", "faculty"}
+    return getattr(user, "role", None) in {"SUPERVISOR", "SUPERVISOR"}
 
 
 def _is_resident(user):
-    return getattr(user, "role", None) in {"pg", "resident"}
+    return getattr(user, "role", None) in {"RESIDENT", "RESIDENT"}
 
 
 class TrainingEmptySchemaSerializer(serializers.Serializer):
@@ -65,7 +65,7 @@ def _get_supervised_resident_ids(user):
     ).values_list("resident_user_id", flat=True)
     direct_ids = SIMSUser.objects.filter(
         supervisor=user,
-        role__in=["pg", "resident"],
+        role__in=["RESIDENT", "RESIDENT"],
         is_active=True,
         is_archived=False,
     ).values_list("id", flat=True)
@@ -73,12 +73,16 @@ def _get_supervised_resident_ids(user):
 
 
 def _get_rotation_scope(user):
-    from sims.users.models import DepartmentMembership, HODAssignment
+    from sims.users.models import DepartmentMembership, SupervisorProfile
 
     supervised_ids = _get_supervised_resident_ids(user)
-    hod_dept_ids = HODAssignment.objects.filter(
-        hod_user=user, active=True
-    ).values_list("department_id", flat=True)
+    hod_dept_ids = []
+    try:
+        profile = user.supervisor_profile
+        if profile.designation_ref == "HOD" and profile.department_ref_id:
+            hod_dept_ids = [profile.department_ref_id]
+    except SupervisorProfile.DoesNotExist:
+        pass
     member_dept_ids = DepartmentMembership.objects.filter(
         user=user, active=True
     ).values_list("department_id", flat=True)
@@ -1625,7 +1629,7 @@ class SupervisorSummaryView(APIView):
 
         if _is_admin_or_utrmc_admin(user):
             resident_users = list(
-                SIMSUser.objects.filter(role__in=["pg", "resident"], is_active=True)
+                SIMSUser.objects.filter(role__in=["RESIDENT", "RESIDENT"], is_active=True)
             )
         else:
             resident_users = list(
@@ -1805,7 +1809,7 @@ class SupervisorResidentProgressView(APIView):
                 final_eli = entry
 
         return Response({
-            "resident": {
+            "RESIDENT": {
                 "id": resident.id,
                 "name": resident.get_full_name() or resident.username,
                 "username": resident.username,
@@ -1820,17 +1824,23 @@ class SupervisorResidentProgressView(APIView):
 
 
 def _is_hod(user):
-    from sims.users.models import HODAssignment
-
-    return HODAssignment.objects.filter(hod_user=user, active=True).exists()
+    from sims.users.models import SupervisorProfile
+    try:
+        profile = user.supervisor_profile
+        return profile.designation_ref == "HOD"
+    except SupervisorProfile.DoesNotExist:
+        return False
 
 
 def _get_hod_department_ids(user):
-    from sims.users.models import HODAssignment
-
-    return set(
-        HODAssignment.objects.filter(hod_user=user, active=True).values_list("department_id", flat=True)
-    )
+    from sims.users.models import SupervisorProfile
+    try:
+        profile = user.supervisor_profile
+        if profile.designation_ref == "HOD" and profile.department_ref_id:
+            return {profile.department_ref_id}
+    except SupervisorProfile.DoesNotExist:
+        pass
+    return set()
 
 
 def _get_department_resident_ids(department_ids):
@@ -1840,7 +1850,7 @@ def _get_department_resident_ids(department_ids):
 
     return set(
         SIMSUser.objects.filter(
-            role__in=["pg", "resident"],
+            role__in=["RESIDENT", "RESIDENT"],
             is_active=True,
             is_archived=False,
             home_department_id__in=department_ids,
@@ -2445,7 +2455,7 @@ class _SubmissionReviewQueueBaseView(APIView):
             "resident_training_record__resident_user",
             "resident_training_record__program",
         )
-        if _is_admin_or_utrmc_admin(user) or user.role == "utrmc_user":
+        if _is_admin_or_utrmc_admin(user) or user.role == "SUPPORT_STAFF":
             pass
         elif _is_supervisor_or_hod(user):
             supervised_ids = _get_supervised_resident_ids(user)
@@ -2477,7 +2487,7 @@ class _SubmissionReviewActionBaseView(APIView):
 
     def post(self, request, submission_id):
         user = request.user
-        if user.role == "utrmc_user":
+        if user.role == "SUPPORT_STAFF":
             return Response({"detail": "Read-only role."}, status=status.HTTP_403_FORBIDDEN)
         if not (_is_supervisor_or_hod(user) or _is_admin_or_utrmc_admin(user)):
             return Response({"detail": "Permission denied."}, status=status.HTTP_403_FORBIDDEN)
@@ -2601,7 +2611,7 @@ class SubmissionCertificatesView(APIView):
 
         if _is_resident(user):
             qs = qs.filter(submission__resident_training_record__resident_user=user)
-        elif _is_admin_or_utrmc_admin(user) or user.role == "utrmc_user":
+        elif _is_admin_or_utrmc_admin(user) or user.role == "SUPPORT_STAFF":
             pass
         elif _is_supervisor_or_hod(user):
             supervised_ids = _get_supervised_resident_ids(user)
@@ -2669,7 +2679,7 @@ class RotationCompletionsView(APIView):
             qs = qs.filter(status=status_param)
         if _is_resident(user):
             qs = qs.filter(rotation__resident_training__resident_user=user)
-        elif _is_admin_or_utrmc_admin(user) or user.role == "utrmc_user":
+        elif _is_admin_or_utrmc_admin(user) or user.role == "SUPPORT_STAFF":
             pass
         elif _is_supervisor_or_hod(user):
             supervised_ids = _get_supervised_resident_ids(user)
@@ -2927,70 +2937,7 @@ class SupervisorOperationalDashboardView(APIView):
         )
 
 
-@extend_schema(responses={200: None})
-class HODOperationalDashboardView(APIView):
-    permission_classes = [IsAuthenticated]
 
-    def get(self, request):
-        user = request.user
-        if not (_is_supervisor_or_hod(user) and _is_hod(user)):
-            return Response({"detail": "Active HOD access required."}, status=status.HTTP_403_FORBIDDEN)
-        dept_ids = _get_hod_department_ids(user)
-        resident_ids = _get_department_resident_ids(dept_ids)
-        rtrs = ResidentTrainingRecord.objects.filter(
-            active=True, resident_user_id__in=resident_ids
-        ).select_related("resident_user", "program")
-        rtr_ids = list(rtrs.values_list("id", flat=True))
-
-        supervisor_lag = []
-        resident_by_supervisor = {}
-        for row in rtrs:
-            sup = row.resident_user.supervisor
-            key = sup.id if sup else None
-            if key not in resident_by_supervisor:
-                resident_by_supervisor[key] = {
-                    "supervisor_id": sup.id if sup else None,
-                    "supervisor_name": (sup.get_full_name() or sup.username) if sup else "Unassigned",
-                    "pending_logbook_reviews": 0,
-                }
-            resident_by_supervisor[key]["pending_logbook_reviews"] += LogbookEntry.objects.filter(
-                resident_training_record=row, status=LogbookEntry.STATUS_SUBMITTED
-            ).count()
-        supervisor_lag = sorted(
-            resident_by_supervisor.values(),
-            key=lambda item: item["pending_logbook_reviews"],
-            reverse=True,
-        )
-
-        return Response(
-            {
-                "departments": list(dept_ids),
-                "department_residents": len(resident_ids),
-                "pending_logbook_approvals": LogbookEntry.objects.filter(
-                    resident_training_record_id__in=rtr_ids,
-                    status=LogbookEntry.STATUS_SUBMITTED,
-                ).count(),
-                "rotation_applications": RotationAssignment.objects.filter(
-                    resident_training_id__in=rtr_ids,
-                    status=RotationAssignment.STATUS_SUBMITTED,
-                ).count(),
-                "supervisor_lag": supervisor_lag,
-                "milestone_completion": {
-                    "synopsis_certificates": SubmissionCertificate.objects.filter(
-                        submission__resident_training_record_id__in=rtr_ids,
-                        submission__submission_type=ResidentSubmission.TYPE_SYNOPSIS,
-                    ).count(),
-                    "thesis_certificates": SubmissionCertificate.objects.filter(
-                        submission__resident_training_record_id__in=rtr_ids,
-                        submission__submission_type=ResidentSubmission.TYPE_THESIS,
-                    ).count(),
-                    "rotation_verified": RotationCompletion.objects.filter(
-                        rotation__resident_training_id__in=rtr_ids,
-                        status=RotationCompletion.STATUS_VERIFIED,
-                    ).count(),
-                },
-            }
-        )
 
 
 @extend_schema(responses={200: None})

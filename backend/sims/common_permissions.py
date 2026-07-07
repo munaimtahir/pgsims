@@ -18,26 +18,26 @@ def _track_rbac_denied(request, required_roles: str, reason: str):
 
 
 class IsPGUser(permissions.BasePermission):
-    """Allows access only to resident roles ('pg' or 'resident')."""
+    """Allows access only to resident roles ('RESIDENT' or 'RESIDENT')."""
 
     message = "Only PG users can access this resource."
 
     def has_permission(self, request, view):
-        allowed = _is_authenticated_user(request.user) and _role(request.user) in {"pg", "resident"}
+        allowed = _is_authenticated_user(request.user) and _role(request.user) in {"RESIDENT", "RESIDENT"}
         if not allowed:
             _track_rbac_denied(request, "pg|resident", "pg_role_required")
         return allowed
 
 
 class IsUTRMCAdminUser(permissions.BasePermission):
-    """Allows access only to users with the 'utrmc_admin' role."""
+    """Allows access only to users with the 'ADMIN' role."""
 
     message = "Only UTRMC admins can access this resource."
 
     def has_permission(self, request, view):
-        allowed = _is_authenticated_user(request.user) and _role(request.user) == "utrmc_admin"
+        allowed = _is_authenticated_user(request.user) and _role(request.user) == "ADMIN"
         if not allowed:
-            _track_rbac_denied(request, "utrmc_admin", "utrmc_admin_required")
+            _track_rbac_denied(request, "ADMIN", "utrmc_admin_required")
         return allowed
 
 
@@ -55,7 +55,7 @@ class CanViewPendingLogbookQueue(permissions.BasePermission):
         role = _role(request.user)
         allowed = bool(
             request.user.is_superuser
-            or role in {"supervisor", "admin", "utrmc_user", "utrmc_admin"}
+            or role in {"SUPERVISOR", "ADMIN", "SUPPORT_STAFF", "ADMIN"}
         )
         if not allowed:
             _track_rbac_denied(
@@ -74,16 +74,16 @@ class CanVerifyLogbookEntry(permissions.BasePermission):
             _track_rbac_denied(request, "supervisor|admin", "not_authenticated")
             return False
         role = _role(request.user)
-        allowed = bool(request.user.is_superuser or role in {"supervisor", "admin"})
+        allowed = bool(request.user.is_superuser or role in {"SUPERVISOR", "ADMIN"})
         if not allowed:
             _track_rbac_denied(request, "supervisor|admin", "role_not_allowed")
         return allowed
 
     def has_object_permission(self, request, view, obj):
         user = request.user
-        if getattr(user, "is_superuser", False) or _role(user) == "admin":
+        if getattr(user, "is_superuser", False) or _role(user) == "ADMIN":
             return True
-        if _role(user) == "supervisor":
+        if _role(user) == "SUPERVISOR":
             allowed = (
                 getattr(obj, "pg_id", None) and getattr(obj.pg, "supervisor_id", None) == user.id
             )
@@ -100,9 +100,9 @@ class CanApproveRotationOverride(permissions.BasePermission):
     message = "Only UTRMC admins can approve inter-hospital rotation overrides."
 
     def has_permission(self, request, view):
-        allowed = _is_authenticated_user(request.user) and _role(request.user) == "utrmc_admin"
+        allowed = _is_authenticated_user(request.user) and _role(request.user) == "ADMIN"
         if not allowed:
-            _track_rbac_denied(request, "utrmc_admin", "utrmc_admin_required")
+            _track_rbac_denied(request, "ADMIN", "utrmc_admin_required")
         return allowed
 
 
@@ -117,7 +117,7 @@ class ReadAnyWriteAdminOrUTRMCAdmin(permissions.BasePermission):
             return False
         if request.method in SAFE_METHODS:
             return True
-        allowed = bool(request.user.is_superuser or _role(request.user) in {"admin", "utrmc_admin"})
+        allowed = bool(request.user.is_superuser or _role(request.user) in {"ADMIN", "ADMIN"})
         if not allowed:
             _track_rbac_denied(request, "admin|utrmc_admin", "write_denied")
         return allowed
@@ -134,9 +134,9 @@ class ReadAnyWriteAdminOnly(permissions.BasePermission):
             return False
         if request.method in SAFE_METHODS:
             return True
-        allowed = bool(request.user.is_superuser or _role(request.user) == "admin")
+        allowed = bool(request.user.is_superuser or _role(request.user) == "ADMIN")
         if not allowed:
-            _track_rbac_denied(request, "admin", "write_denied")
+            _track_rbac_denied(request, "ADMIN", "write_denied")
         return allowed
 
 
@@ -151,9 +151,9 @@ class ReadAnyWriteUTRMCAdmin(permissions.BasePermission):
             return False
         if request.method in SAFE_METHODS:
             return True
-        allowed = _role(request.user) == "utrmc_admin"
+        allowed = _role(request.user) == "ADMIN"
         if not allowed:
-            _track_rbac_denied(request, "utrmc_admin", "write_denied")
+            _track_rbac_denied(request, "ADMIN", "write_denied")
         return allowed
 
 
@@ -164,11 +164,11 @@ class IsTechAdmin(permissions.BasePermission):
 
     def has_permission(self, request, view):
         if not _is_authenticated_user(request.user):
-            _track_rbac_denied(request, "admin", "not_authenticated")
+            _track_rbac_denied(request, "ADMIN", "not_authenticated")
             return False
-        allowed = bool(request.user.is_superuser or _role(request.user) == "admin")
+        allowed = bool(request.user.is_superuser or _role(request.user) == "ADMIN")
         if not allowed:
-            _track_rbac_denied(request, "admin", "admin_required")
+            _track_rbac_denied(request, "ADMIN", "admin_required")
         return allowed
 
 
@@ -179,11 +179,11 @@ class IsUTRMCAdmin(permissions.BasePermission):
 
     def has_permission(self, request, view):
         if not _is_authenticated_user(request.user):
-            _track_rbac_denied(request, "utrmc_admin", "not_authenticated")
+            _track_rbac_denied(request, "ADMIN", "not_authenticated")
             return False
-        allowed = bool(request.user.is_superuser or _role(request.user) == "utrmc_admin")
+        allowed = bool(request.user.is_superuser or _role(request.user) == "ADMIN")
         if not allowed:
-            _track_rbac_denied(request, "utrmc_admin", "utrmc_admin_required")
+            _track_rbac_denied(request, "ADMIN", "utrmc_admin_required")
         return allowed
 
 
@@ -194,11 +194,11 @@ class IsUTRMCUser(permissions.BasePermission):
 
     def has_permission(self, request, view):
         if not _is_authenticated_user(request.user):
-            _track_rbac_denied(request, "utrmc_user", "not_authenticated")
+            _track_rbac_denied(request, "SUPPORT_STAFF", "not_authenticated")
             return False
-        allowed = bool(request.user.is_superuser or _role(request.user) == "utrmc_user")
+        allowed = bool(request.user.is_superuser or _role(request.user) == "SUPPORT_STAFF")
         if not allowed:
-            _track_rbac_denied(request, "utrmc_user", "utrmc_user_required")
+            _track_rbac_denied(request, "SUPPORT_STAFF", "utrmc_user_required")
         return allowed
 
 
@@ -209,11 +209,11 @@ class IsSupervisor(permissions.BasePermission):
 
     def has_permission(self, request, view):
         if not _is_authenticated_user(request.user):
-            _track_rbac_denied(request, "supervisor", "not_authenticated")
+            _track_rbac_denied(request, "SUPERVISOR", "not_authenticated")
             return False
-        allowed = _role(request.user) == "supervisor"
+        allowed = _role(request.user) == "SUPERVISOR"
         if not allowed:
-            _track_rbac_denied(request, "supervisor", "supervisor_required")
+            _track_rbac_denied(request, "SUPERVISOR", "supervisor_required")
         return allowed
 
 
@@ -226,7 +226,7 @@ class IsResident(permissions.BasePermission):
         if not _is_authenticated_user(request.user):
             _track_rbac_denied(request, "resident|pg", "not_authenticated")
             return False
-        allowed = _role(request.user) in {"resident", "pg"}
+        allowed = _role(request.user) in {"RESIDENT", "RESIDENT"}
         if not allowed:
             _track_rbac_denied(request, "resident|pg", "resident_required")
         return allowed
@@ -239,9 +239,9 @@ class IsFaculty(permissions.BasePermission):
 
     def has_permission(self, request, view):
         if not _is_authenticated_user(request.user):
-            _track_rbac_denied(request, "faculty", "not_authenticated")
+            _track_rbac_denied(request, "SUPERVISOR", "not_authenticated")
             return False
-        allowed = _role(request.user) == "faculty"
+        allowed = _role(request.user) == "SUPERVISOR"
         if not allowed:
-            _track_rbac_denied(request, "faculty", "faculty_required")
+            _track_rbac_denied(request, "SUPERVISOR", "faculty_required")
         return allowed

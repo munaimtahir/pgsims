@@ -26,19 +26,12 @@ def scan_user_profile(user: User) -> list[str]:
     elif _is_placeholder_email(email):
         issues.append("placeholder_email")
 
-    if user.role in {"pg", "resident"}:
+    if user.role == "RESIDENT":
         if not (user.year or "").strip():
             issues.append("missing_year")
         profile = ResidentProfile.objects.filter(user=user).first()
         if not profile:
             issues.append("missing_resident_profile")
-        else:
-            if not profile.training_start:
-                issues.append("missing_training_start")
-            elif profile.training_start.isoformat() in DEFAULT_DATE_STRINGS:
-                issues.append("default_training_start")
-            if profile.training_end and profile.training_start and profile.training_end < profile.training_start:
-                issues.append("invalid_training_end")
     return sorted(set(issues))
 
 
@@ -58,7 +51,7 @@ def scan_training_record(record: ResidentTrainingRecord) -> list[str]:
 @transaction.atomic
 def recompute_flags_for_user(user: User) -> dict[str, Any]:
     user_issues = scan_user_profile(user)
-    is_resident = user.role in {"pg", "resident"}
+    is_resident = user.role == "RESIDENT"
     training_records = list(ResidentTrainingRecord.objects.filter(resident_user=user)) if is_resident else []
     training_issues = {record.id: scan_training_record(record) for record in training_records}
     has_training_issue = any(training_issues.values())
@@ -118,7 +111,7 @@ def recompute_all() -> dict[str, int]:
     placeholders = 0
     users_with_missing_dates = 0
     default_records = 0
-    for user in User.objects.filter(role__in=["resident", "pg"]).iterator():
+    for user in User.objects.filter(role="RESIDENT").iterator():
         total += 1
         result = recompute_flags_for_user(user)
         if not user.is_complete_profile:

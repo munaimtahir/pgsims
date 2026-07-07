@@ -20,7 +20,7 @@ export default function BackupList({
   const [lastValidationById, setLastValidationById] = useState<Record<number, any>>({});
   const [driveActionBusyById, setDriveActionBusyById] = useState<Record<number, string | null>>({});
   const user = useAuthStore((s) => s.user);
-  const canRestore = user?.role === 'admin';
+  const canRestore = user?.role === 'ADMIN';
 
   const sortedBackups = useMemo(() => {
     const arr = Array.isArray(backups) ? [...backups] : [];

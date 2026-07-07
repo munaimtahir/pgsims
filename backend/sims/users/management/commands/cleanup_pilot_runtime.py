@@ -35,10 +35,10 @@ from sims.training.models import (
 )
 from sims.users.models import (
     DepartmentMembership,
-    HODAssignment,
     HospitalAssignment,
     ResidentProfile,
-    StaffProfile,
+    SupervisorProfile,
+    SupportStaffProfile,
     SupervisorResidentLink,
 )
 
@@ -156,7 +156,7 @@ class Command(BaseCommand):
         parser.add_argument(
             "--keep-username",
             action="append",
-            default=["admin"],
+            default=["ADMIN"],
             help="Username to preserve even if it matches a purge pattern. Repeatable.",
         )
 
@@ -327,12 +327,8 @@ class Command(BaseCommand):
         )
         supervision_links = supervision_links.distinct()
 
-        hod_assignments = HODAssignment.objects.filter(hod_user_id__in=purge_user_ids) | HODAssignment.objects.filter(
-            department_id__in=purge_department_ids
-        )
-        hod_assignments = hod_assignments.distinct()
-
-        staff_profiles = StaffProfile.objects.filter(user_id__in=purge_user_ids)
+        supervisor_profiles = SupervisorProfile.objects.filter(user_id__in=purge_user_ids)
+        support_staff_profiles = SupportStaffProfile.objects.filter(user_id__in=purge_user_ids)
         resident_profiles = ResidentProfile.objects.filter(user_id__in=purge_user_ids)
 
         notifications = Notification.objects.filter(recipient_id__in=purge_user_ids) | Notification.objects.filter(
@@ -458,10 +454,10 @@ class Command(BaseCommand):
             DeletionTarget("training_workshop", Workshop.objects.filter(id__in=purge_workshop_ids), "code"),
             DeletionTarget("training_trainingprogram", TrainingProgram.objects.filter(id__in=purge_program_ids), "code"),
             DeletionTarget("users_supervisorresidentlink", supervision_links),
-            DeletionTarget("users_hodassignment", hod_assignments),
             DeletionTarget("users_hospitalassignment", hospital_assignments),
             DeletionTarget("users_departmentmembership", department_memberships),
-            DeletionTarget("users_staffprofile", staff_profiles),
+            DeletionTarget("users_supervisorprofile", supervisor_profiles),
+            DeletionTarget("users_supportstaffprofile", support_staff_profiles),
             DeletionTarget("users_residentprofile", resident_profiles),
             DeletionTarget("users_user", User.objects.filter(id__in=purge_user_ids), "username"),
             DeletionTarget(
@@ -476,7 +472,7 @@ class Command(BaseCommand):
         manual_review_users = [
             user.username
             for user in User.objects.exclude(id__in=purge_user_ids).order_by("username")
-            if user.username not in keep_usernames and user.role == "admin"
+            if user.username not in keep_usernames and user.role == "ADMIN"
         ]
         manual_review_programs = [
             program.code

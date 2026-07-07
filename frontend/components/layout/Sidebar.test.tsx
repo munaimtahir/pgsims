@@ -15,7 +15,7 @@ jest.mock('next/link', () => ({
 
 describe('Sidebar', () => {
   const defaultProps = {
-    role: 'resident',
+    role: 'RESIDENT',
     userName: 'Test Resident',
     onLogout: jest.fn(),
   };
@@ -34,13 +34,13 @@ describe('Sidebar', () => {
   });
 
   it('renders supervisor specific items', () => {
-    render(<Sidebar {...defaultProps} role="supervisor" />);
+    render(<Sidebar {...defaultProps} role="SUPERVISOR" />);
     expect(screen.getByText('Overview')).toBeInTheDocument();
     expect(screen.getByText('My Residents')).toBeInTheDocument();
   });
 
   it('renders utrmc admin specific items', () => {
-    render(<Sidebar {...defaultProps} role="utrmc_admin" />);
+    render(<Sidebar {...defaultProps} role="ADMIN" />);
     expect(screen.getByText('Hospitals')).toBeInTheDocument();
     expect(screen.getByText('Programmes')).toBeInTheDocument();
     expect(screen.getByText('Eligibility Monitor')).toBeInTheDocument();

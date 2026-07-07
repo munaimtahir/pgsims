@@ -273,20 +273,6 @@ export const userbaseApi = {
       return response.data;
     },
   },
-  hodAssignments: {
-    list: async (params?: Record<string, unknown>) => {
-      const response = await apiClient.get('/api/hod-assignments/', { params });
-      return response.data;
-    },
-    create: async (payload: Record<string, unknown>) => {
-      const response = await apiClient.post('/api/hod-assignments/', payload);
-      return response.data;
-    },
-    update: async (id: number, payload: Record<string, unknown>) => {
-      const response = await apiClient.patch(`/api/hod-assignments/${id}/`, payload);
-      return response.data;
-    },
-  },
 };
 
 export default userbaseApi;

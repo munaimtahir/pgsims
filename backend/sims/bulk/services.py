@@ -62,7 +62,7 @@ class BulkService:
     def _validate_permissions(self) -> None:
         if not (
             self.actor.is_superuser
-            or getattr(self.actor, "role", None) in {"admin", "utrmc_admin", "supervisor"}
+            or getattr(self.actor, "role", None) in {"ADMIN", "ADMIN", "SUPERVISOR"}
         ):
             raise PermissionDenied("Bulk operations are restricted to admins, utrmc_admin, and supervisors.")
 
@@ -106,9 +106,6 @@ class BulkService:
 
     def import_userbase_supervision_links(self, uploaded_file, *, dry_run: bool = True, allow_partial: bool = False) -> BulkOperation:
         return self._run_userbase_import("supervision-links", uploaded_file, dry_run=dry_run, allow_partial=allow_partial)
-
-    def import_userbase_hod_assignments(self, uploaded_file, *, dry_run: bool = True, allow_partial: bool = False) -> BulkOperation:
-        return self._run_userbase_import("hod-assignments", uploaded_file, dry_run=dry_run, allow_partial=allow_partial)
 
     def import_userbase_rotation_assignments(self, uploaded_file, *, dry_run: bool = True, allow_partial: bool = False) -> BulkOperation:
         return self._run_userbase_import("rotation-assignments", uploaded_file, dry_run=dry_run, allow_partial=allow_partial)
@@ -166,7 +163,7 @@ class BulkService:
                     for entry in entries:
                         entry.reviewed_by = supervisor
                         entry.save(update_fields=["reviewed_by"])
-                        successes.append({"id": entry.pk, "supervisor": supervisor.pk})
+                        successes.append({"id": entry.pk, "SUPERVISOR": supervisor.pk})
             except ValidationError as exc:
                 failures.append({"ids": list(chunk), "error": str(exc)})
         operation.mark_completed(
@@ -198,7 +195,7 @@ class BulkService:
         def process_row(row: dict) -> None:
             nonlocal errors_triggered
             try:
-                pg = User.objects.get(username=row["pg_username"], role="pg")
+                pg = User.objects.get(username=row["pg_username"], role="RESIDENT")
             except User.DoesNotExist:
                 failures.append({"row": row, "error": "invalid-pg"})
                 errors_triggered = True
@@ -238,7 +235,7 @@ class BulkService:
                     entry = LogbookEntry.objects.create(**payload, created_by=self.actor)
                 successes.append(
                     {
-                        "pg": pg.username,
+                        "RESIDENT": pg.username,
                         "case_title": payload["diagnosis"],
                         "status": status,
                     }
@@ -288,7 +285,7 @@ class BulkService:
         - Registration Number (optional)
         - Username (optional, will be generated)
 
-        Creates accounts with role 'supervisor' and generates secure passwords.
+        Creates accounts with role 'SUPERVISOR' and generates secure passwords.
         """
         operation = BulkOperation.objects.create(
             user=self.actor, operation=BulkOperation.OP_IMPORT
@@ -440,7 +437,7 @@ class BulkService:
                 "email": email,
                 "first_name": first_name,
                 "last_name": last_name,
-                "role": "supervisor",
+                "role": "SUPERVISOR",
                 "specialty": matched_specialty,
                 "phone_number": phone if phone else None,
                 "registration_number": registration_number if registration_number else None,
@@ -560,7 +557,7 @@ class BulkService:
         - Username (optional, will be generated)
         - Date of Joining (optional)
 
-        Creates accounts with role 'pg' and links to supervisors.
+        Creates accounts with role 'RESIDENT' and links to supervisors.
         Handles cases where supervisors don't exist (creates warning/error based on allow_partial).
         """
         operation = BulkOperation.objects.create(
@@ -590,7 +587,7 @@ class BulkService:
             )
             year = row.get("year", "").strip() or row.get("training_year", "").strip()
             specialty = row.get("specialty", "").strip()
-            supervisor_name = row.get("supervisor_name", "").strip() or row.get("supervisor", "").strip()
+            supervisor_name = row.get("supervisor_name", "").strip() or row.get("SUPERVISOR", "").strip()
             supervisor_username = row.get("supervisor_username", "").strip()
             email = row.get("email", "").strip()
             department_name = row.get("department", "").strip()
@@ -704,7 +701,7 @@ class BulkService:
                 try:
                     supervisor = User.objects.filter(
                         username=supervisor_username,
-                        role="supervisor"
+                        role="SUPERVISOR"
                     ).first()
                     if not supervisor:
                         failures.append({
@@ -797,7 +794,7 @@ class BulkService:
                 "email": email,
                 "first_name": first_name,
                 "last_name": last_name,
-                "role": "pg",
+                "role": "RESIDENT",
                 "specialty": matched_specialty,
                 "year": year,
                 "phone_number": phone if phone else None,
@@ -826,7 +823,7 @@ class BulkService:
                     validation_data = user_data.copy()
                     if not supervisor:
                         # Find any existing supervisor for validation purposes
-                        dummy_supervisor = User.objects.filter(role="supervisor").first()
+                        dummy_supervisor = User.objects.filter(role="SUPERVISOR").first()
                         if dummy_supervisor:
                             validation_data["supervisor"] = dummy_supervisor
                         elif not allow_partial:
@@ -884,7 +881,7 @@ class BulkService:
                     "specialty": matched_specialty,
                     "year": year,
                     "password": password if not dry_run else "***",
-                    "supervisor": supervisor.username if supervisor else None,
+                    "SUPERVISOR": supervisor.username if supervisor else None,
                 }
 
                 if not supervisor:
@@ -1088,7 +1085,7 @@ class BulkService:
                 "email": email,
                 "first_name": first_name,
                 "last_name": last_name,
-                "role": "pg",
+                "role": "RESIDENT",
                 "specialty": "urology",
                 "year": year,
                 "date_joined": date_joined,
@@ -1132,7 +1129,7 @@ class BulkService:
                     "name": f"{first_name} {last_name}".strip(),
                     "email": email,
                     "year": year,
-                    "supervisor": supervisor.username if supervisor else None,
+                    "SUPERVISOR": supervisor.username if supervisor else None,
                 })
             except ValidationError as exc:
                 failures.append({
@@ -1504,8 +1501,8 @@ class BulkService:
                 if dry_run:
                     successes.append({
                         "row": row_num,
-                        "supervisor": supervisor_email,
-                        "resident": resident_email,
+                        "SUPERVISOR": supervisor_email,
+                        "RESIDENT": resident_email,
                     })
                 else:
                     link, created = SupervisorResidentLink.objects.update_or_create(
@@ -1520,8 +1517,8 @@ class BulkService:
                     )
                     successes.append({
                         "row": row_num,
-                        "supervisor": supervisor_email,
-                        "resident": resident_email,
+                        "SUPERVISOR": supervisor_email,
+                        "RESIDENT": resident_email,
                         "created": created,
                     })
             except Exception as exc:
@@ -1681,7 +1678,7 @@ class BulkService:
                 failures.append({"row": row_num, "error": "Missing resident_email, program_code, or start_date"})
                 continue
             try:
-                resident = User.objects.get(email=email, role__in=["pg", "resident"])
+                resident = User.objects.get(email=email, role__in=["RESIDENT", "RESIDENT"])
                 program = TrainingProgram.objects.get(code=prog_code)
                 if not dry_run:
                     end_raw = (row.get("expected_end_date") or "").strip() or None
@@ -1715,7 +1712,7 @@ class BulkService:
             return _render_export_rows(export_userbase_rows(resource), resource, export_format)
 
         if resource == "residents":
-            queryset = User.objects.filter(role="pg").select_related("supervisor", "home_department")
+            queryset = User.objects.filter(role="RESIDENT").select_related("supervisor", "home_department")
             rows = [
                 {
                     "username": user.username,
@@ -1730,7 +1727,7 @@ class BulkService:
                 for user in queryset
             ]
         elif resource == "supervisors":
-            queryset = User.objects.filter(role="supervisor")
+            queryset = User.objects.filter(role="SUPERVISOR")
             rows = [
                 {
                     "username": user.username,
@@ -1965,7 +1962,7 @@ def _generate_username(first_name: str, last_name: str) -> str:
     last_clean = re.sub(r"[^a-z0-9]", "", last_name.lower())
 
     if not first_clean and not last_clean:
-        base_username = "trainee"
+        base_username = "RESIDENT"
     elif not last_clean:
         base_username = first_clean
     elif not first_clean:
@@ -2054,7 +2051,7 @@ def _get_or_create_supervisor(
         supervisor = User.objects.filter(
             first_name__iexact=first_name,
             last_name__iexact=last_name,
-            role="supervisor"
+            role="SUPERVISOR"
         ).first()
 
         if supervisor:
@@ -2063,7 +2060,7 @@ def _get_or_create_supervisor(
         # Try full name match (where first_name contains the full name)
         supervisor = User.objects.filter(
             first_name__iexact=supervisor_name,
-            role="supervisor"
+            role="SUPERVISOR"
         ).first()
 
         if supervisor:
@@ -2073,7 +2070,7 @@ def _get_or_create_supervisor(
     if "." in supervisor_name or len(supervisor_name.split()) == 1:
         supervisor = User.objects.filter(
             username__iexact=supervisor_name,
-            role="supervisor"
+            role="SUPERVISOR"
         ).first()
         if supervisor:
             return supervisor
@@ -2087,7 +2084,7 @@ def _get_or_create_supervisor(
         if User.objects.filter(username=username).exists():
             # Try to find existing user with this username (might be different role)
             existing = User.objects.filter(username=username).first()
-            if existing.role == "supervisor":
+            if existing.role == "SUPERVISOR":
                 return existing
             # If different role, append suffix
             counter = 1
@@ -2102,7 +2099,7 @@ def _get_or_create_supervisor(
             email=email,
             first_name=first_name or supervisor_name,
             last_name=last_name,
-            role="supervisor",
+            role="SUPERVISOR",
             specialty=specialty,
             is_active=True,
             created_by=actor,
@@ -2326,8 +2323,8 @@ def _parse_trainee_rows(uploaded_file) -> Iterator[dict]:
             return "date"
         if norm in {"ms_fcps", "qualification"}:
             return "qualification"
-        if norm in {"supervisor_name", "supervisor"}:
-            return "supervisor"
+        if norm in {"supervisor_name", "SUPERVISOR"}:
+            return "SUPERVISOR"
         if norm in {"sr_no", "serial_no", "serial_number"}:
             return "sr_no"
         return norm
@@ -2346,7 +2343,7 @@ def _parse_trainee_rows(uploaded_file) -> Iterator[dict]:
                 "name": (normalized.get("name") or "").strip(),
                 "date_joining": normalized.get("date"),
                 "qualification": (normalized.get("qualification") or "").strip(),
-                "supervisor_name": (normalized.get("supervisor") or "").strip(),
+                "supervisor_name": (normalized.get("SUPERVISOR") or "").strip(),
                 "_row_number": row_idx,
             }
         return
@@ -2367,7 +2364,7 @@ def _parse_trainee_rows(uploaded_file) -> Iterator[dict]:
             "name": str(row[col_map["name"]]).strip() if col_map["name"] < len(row) and row[col_map["name"]] else "",
             "date_joining": row[col_map["date"]] if col_map["date"] < len(row) else "",
             "qualification": str(row[col_map["qualification"]]).strip() if "qualification" in col_map and col_map["qualification"] < len(row) and row[col_map["qualification"]] else "",
-            "supervisor_name": str(row[col_map["supervisor"]]).strip() if "supervisor" in col_map and col_map["supervisor"] < len(row) and row[col_map["supervisor"]] else "",
+            "supervisor_name": str(row[col_map["SUPERVISOR"]]).strip() if "SUPERVISOR" in col_map and col_map["SUPERVISOR"] < len(row) and row[col_map["SUPERVISOR"]] else "",
             "_row_number": row_idx,
         }
         yield row_data
@@ -2473,9 +2470,9 @@ def convert_excel_to_trainee_format(uploaded_file) -> io.BytesIO:
                 if any(keyword in src_lower for keyword in ["sr", "serial", "no", "number", "sno"]):
                     score = 1
             elif req_col == "Name of Trainee":
-                if any(keyword in src_lower for keyword in ["name", "trainee", "student", "pg"]):
+                if any(keyword in src_lower for keyword in ["name", "RESIDENT", "student", "RESIDENT"]):
                     score = 1
-                    if "trainee" in src_lower or "name" in src_lower:
+                    if "RESIDENT" in src_lower or "name" in src_lower:
                         score = 2
             elif req_col == "Date of Joining":
                 if any(keyword in src_lower for keyword in ["date", "joining", "join", "doj"]):
@@ -2486,9 +2483,9 @@ def convert_excel_to_trainee_format(uploaded_file) -> io.BytesIO:
                 if any(keyword in src_lower for keyword in ["ms", "fcps", "qualification", "degree"]):
                     score = 1
             elif req_col == "Supervisor Name":
-                if any(keyword in src_lower for keyword in ["supervisor", "mentor", "guide"]):
+                if any(keyword in src_lower for keyword in ["SUPERVISOR", "mentor", "guide"]):
                     score = 1
-                    if "supervisor" in src_lower:
+                    if "SUPERVISOR" in src_lower:
                         score = 2
 
             if score > best_match_score:

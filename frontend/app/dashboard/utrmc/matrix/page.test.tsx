@@ -34,7 +34,7 @@ const mockApi = userbaseApi as unknown as {
 
 describe('UTRMC hospital-department matrix page', () => {
   beforeEach(() => {
-    mockAuth.mockReturnValue({ user: { role: 'utrmc_admin' } });
+    mockAuth.mockReturnValue({ user: { role: 'ADMIN' } });
     mockApi.hospitals.list.mockResolvedValue([{ id: 1, name: 'Teaching Hospital', code: 'TH', active: true }]);
     mockApi.departments.list.mockResolvedValue([{ id: 2, name: 'Medicine', code: 'MED', active: true }]);
     mockApi.matrix.list.mockResolvedValue([]);
@@ -59,7 +59,7 @@ describe('UTRMC hospital-department matrix page', () => {
   });
 
   it('keeps matrix controls disabled for UTRMC read-only users', async () => {
-    mockAuth.mockReturnValue({ user: { role: 'utrmc_user' } });
+    mockAuth.mockReturnValue({ user: { role: 'SUPPORT_STAFF' } });
     mockApi.matrix.list.mockResolvedValue([
       {
         id: 50,

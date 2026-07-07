@@ -36,10 +36,10 @@ class Command(BaseCommand):
             return user
 
         admin = upsert_user(
-            "admin",
+            "ADMIN",
             "admin123",
             email="admin@pgsims.local",
-            role="admin",
+            role="ADMIN",
             first_name="Pilot",
             last_name="Admin",
             is_staff=True,
@@ -49,7 +49,7 @@ class Command(BaseCommand):
             "pilot_supervisor",
             "Pilot123!",
             email="pilot_supervisor@pgsims.local",
-            role="supervisor",
+            role="SUPERVISOR",
             specialty="medicine",
             first_name="Pilot",
             last_name="Supervisor",
@@ -60,7 +60,7 @@ class Command(BaseCommand):
             "pilot_utrmc_admin",
             "Pilot123!",
             email="pilot_utrmc_admin@pgsims.local",
-            role="utrmc_admin",
+            role="ADMIN",
             first_name="Pilot",
             last_name="UTRMC Admin",
         )
@@ -68,7 +68,7 @@ class Command(BaseCommand):
             "pilot_utrmc_user",
             "Pilot123!",
             email="pilot_utrmc_user@pgsims.local",
-            role="utrmc_user",
+            role="SUPPORT_STAFF",
             first_name="Pilot",
             last_name="UTRMC User",
         )
@@ -77,7 +77,7 @@ class Command(BaseCommand):
                 "pilot_pg",
                 "Pilot123!",
                 email="pilot_pg@pgsims.local",
-                role="pg",
+                role="RESIDENT",
                 specialty="medicine",
                 year="1",
                 supervisor=supervisor,
@@ -90,7 +90,7 @@ class Command(BaseCommand):
                 "pilot_resident",
                 "Pilot123!",
                 email="pilot_resident@pgsims.local",
-                role="resident",
+                role="RESIDENT",
                 specialty="medicine",
                 year="1",
                 supervisor=supervisor,

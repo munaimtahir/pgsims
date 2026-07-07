@@ -24,11 +24,11 @@ NEXT_YEAR = TODAY + timedelta(days=365)
 
 
 def make_user(username, role, **kwargs):
-    if role in ("resident", "pg") and "specialty" not in kwargs:
+    if role in ("RESIDENT", "RESIDENT") and "specialty" not in kwargs:
         kwargs["specialty"] = "medicine"
-    if role in ("resident", "pg") and "year" not in kwargs:
+    if role in ("RESIDENT", "RESIDENT") and "year" not in kwargs:
         kwargs["year"] = "1"
-    if role in ("supervisor", "faculty") and "specialty" not in kwargs:
+    if role in ("SUPERVISOR", "SUPERVISOR") and "specialty" not in kwargs:
         kwargs["specialty"] = "medicine"
     u = User.objects.create_user(
         username=username, password="Test1234!", role=role,
@@ -46,7 +46,7 @@ class TrainingProgramModelTest(TestCase):
 
 class ResidentTrainingRecordConstraintTest(TestCase):
     def setUp(self):
-        self.resident = make_user("res1", "resident")
+        self.resident = make_user("res1", "RESIDENT")
         self.prog = TrainingProgram.objects.create(name="Medicine", code="MED", duration_months=36)
 
     def test_clean_raises_if_end_before_start(self):
@@ -61,7 +61,7 @@ class ResidentTrainingRecordConstraintTest(TestCase):
 
 class RotationAssignmentOverlapTest(TestCase):
     def setUp(self):
-        self.resident = make_user("res2", "resident")
+        self.resident = make_user("res2", "RESIDENT")
         self.prog = TrainingProgram.objects.create(name="Surgery", code="SURG", duration_months=48)
         self.rec = ResidentTrainingRecord.objects.create(
             resident_user=self.resident, program=self.prog, start_date=TODAY, active=True
@@ -100,10 +100,10 @@ class RotationAssignmentOverlapTest(TestCase):
 
 class TrainingProgramAPITest(APITestCase):
     def setUp(self):
-        self.admin = make_user("admin1", "admin")
-        self.utrmc = make_user("utrmc1", "utrmc_admin")
-        self.utrmc_user = make_user("utrmcviewer", "utrmc_user")
-        self.resident = make_user("res3", "resident")
+        self.admin = make_user("admin1", "ADMIN")
+        self.utrmc = make_user("utrmc1", "ADMIN")
+        self.utrmc_user = make_user("utrmcviewer", "SUPPORT_STAFF")
+        self.resident = make_user("res3", "RESIDENT")
         self.prog = TrainingProgram.objects.create(
             name="Pediatrics", code="PED", duration_months=36
         )
@@ -146,9 +146,9 @@ class TrainingProgramAPITest(APITestCase):
 
 class UTRMCEligibilityReadOnlyTests(APITestCase):
     def setUp(self):
-        self.utrmc_admin = make_user("eligadmin", "utrmc_admin")
-        self.utrmc_user = make_user("eligviewer", "utrmc_user")
-        self.resident = make_user("eligresident", "resident")
+        self.utrmc_admin = make_user("eligadmin", "ADMIN")
+        self.utrmc_user = make_user("eligviewer", "SUPPORT_STAFF")
+        self.resident = make_user("eligresident", "RESIDENT")
         self.program = TrainingProgram.objects.create(name="Medicine", code="MED-ELI", duration_months=36)
         self.record = ResidentTrainingRecord.objects.create(
             resident_user=self.resident,
@@ -166,9 +166,9 @@ class UTRMCEligibilityReadOnlyTests(APITestCase):
 
 class RotationAssignmentAPITest(APITestCase):
     def setUp(self):
-        self.utrmc = make_user("utrmc2", "utrmc_admin")
-        self.supervisor = make_user("sup1", "supervisor")
-        self.resident_user = make_user("res4", "resident")
+        self.utrmc = make_user("utrmc2", "ADMIN")
+        self.supervisor = make_user("sup1", "SUPERVISOR")
+        self.resident_user = make_user("res4", "RESIDENT")
         self.resident_user.supervisor = self.supervisor
         self.resident_user.save(update_fields=["supervisor"])
 
@@ -262,9 +262,9 @@ class RotationAssignmentAPITest(APITestCase):
 
 class LeaveRequestAPITest(APITestCase):
     def setUp(self):
-        self.utrmc = make_user("utrmc3", "utrmc_admin")
-        self.supervisor = make_user("sup2", "supervisor")
-        self.resident_user = make_user("res5", "resident")
+        self.utrmc = make_user("utrmc3", "ADMIN")
+        self.supervisor = make_user("sup2", "SUPERVISOR")
+        self.resident_user = make_user("res5", "RESIDENT")
 
         prog = TrainingProgram.objects.create(name="Medicine", code="MED3", duration_months=36)
         self.rec = ResidentTrainingRecord.objects.create(
@@ -315,7 +315,7 @@ class LeaveRequestAPITest(APITestCase):
 
 class ResidentDashboardFallbackTest(APITestCase):
     def setUp(self):
-        self.resident = make_user("lonely_pg", "resident")
+        self.resident = make_user("lonely_pg", "RESIDENT")
 
     def _auth(self):
         self.client.force_authenticate(self.resident)

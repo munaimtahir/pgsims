@@ -7,14 +7,14 @@ import { getDashboardPathForRole } from '@/lib/rbac';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
-  allowedRoles?: ('pg' | 'resident' | 'supervisor' | 'faculty' | 'admin' | 'utrmc_user' | 'utrmc_admin')[];
+  allowedRoles?: ('RESIDENT' | 'RESIDENT' | 'SUPERVISOR' | 'SUPERVISOR' | 'ADMIN' | 'SUPPORT_STAFF' | 'ADMIN')[];
 }
 
 export default function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) {
   const router = useRouter();
   const { isAuthenticated, user, hasHydrated } = useAuthStore();
 
-  const isRoleAllowed = !allowedRoles || !user || allowedRoles.includes(user.role) || user.role === 'admin';
+  const isRoleAllowed = !allowedRoles || !user || allowedRoles.includes(user.role) || user.role === 'ADMIN';
 
   useEffect(() => {
     if (!hasHydrated) {

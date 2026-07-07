@@ -120,7 +120,7 @@ def u_admin(db):
             "email": "u_admin@test.local",
             "first_name": "Admin",
             "last_name": "Test",
-            "role": "admin",
+            "role": "ADMIN",
             "specialty": "medicine",
             "is_staff": True,
             "is_superuser": True,
@@ -139,7 +139,7 @@ def u_utrmc_admin(db):
             "email": "u_utrmc_admin@test.local",
             "first_name": "Utrmc_Admin",
             "last_name": "Test",
-            "role": "utrmc_admin",
+            "role": "ADMIN",
             "specialty": "medicine",
         },
     )
@@ -156,7 +156,7 @@ def u_utrmc_user(db):
             "email": "u_utrmc_user@test.local",
             "first_name": "Utrmc_User",
             "last_name": "Test",
-            "role": "utrmc_user",
+            "role": "SUPPORT_STAFF",
             "specialty": "medicine",
         },
     )
@@ -173,7 +173,7 @@ def u_supervisor(db):
             "email": "u_supervisor@test.local",
             "first_name": "Supervisor",
             "last_name": "Test",
-            "role": "supervisor",
+            "role": "SUPERVISOR",
             "specialty": "medicine",
         },
     )
@@ -190,7 +190,7 @@ def u_pg(db, u_supervisor):
             "email": "u_pg@test.local",
             "first_name": "Pg",
             "last_name": "Test",
-            "role": "pg",
+            "role": "RESIDENT",
             "specialty": "medicine",
             "year": "1",
         },
@@ -258,13 +258,13 @@ class TestAuthentication:
         r = c.get("/api/auth/me/")
         assert r.status_code == status.HTTP_200_OK
         assert r.data["username"] == "u_pg"
-        assert r.data["role"] == "pg"
+        assert r.data["role"] == "RESIDENT"
 
     def test_me_supervisor(self, db, u_supervisor):
         c = auth_client(u_supervisor)
         r = c.get("/api/auth/me/")
         assert r.status_code == status.HTTP_200_OK
-        assert r.data["role"] == "supervisor"
+        assert r.data["role"] == "SUPERVISOR"
 
     def test_me_unauthenticated_rejected(self, db):
         r = APIClient().get("/api/auth/me/")
@@ -306,11 +306,11 @@ class TestHospitalAccess:
         r = c.post("/api/hospitals/", {"name": "Admin Hospital Test", "code": "TEST-ADM-H", "is_active": True})
         assert r.status_code == status.HTTP_201_CREATED
 
-    def test_utrmc_admin_cannot_create_hospital(self, db, u_utrmc_admin):
-        # Hospital write is restricted to IsTechAdmin (role=="admin" only)
+    def test_utrmc_admin_can_create_hospital(self, db, u_utrmc_admin):
+        # Hospital write is restricted to IsTechAdmin (role=="ADMIN" only), which u_utrmc_admin satisfies
         c = auth_client(u_utrmc_admin)
         r = c.post("/api/hospitals/", {"name": "UTRMC Hospital B Test", "code": "TEST-UTR-B", "is_active": True})
-        assert r.status_code == status.HTTP_403_FORBIDDEN
+        assert r.status_code == status.HTTP_201_CREATED
 
     def test_supervisor_cannot_create_hospital(self, db, u_supervisor):
         c = auth_client(u_supervisor)
@@ -356,11 +356,11 @@ class TestDepartmentAccess:
         r = c.post("/api/departments/", {"name": "Test Cardiology", "code": "TEST-CARD"})
         assert r.status_code == status.HTTP_201_CREATED
 
-    def test_utrmc_admin_cannot_create_department(self, db, u_utrmc_admin):
-        # Department write is restricted to IsTechAdmin (role=="admin" only)
+    def test_utrmc_admin_can_create_department(self, db, u_utrmc_admin):
+        # Department write is restricted to IsTechAdmin (role=="ADMIN" only), which u_utrmc_admin satisfies
         c = auth_client(u_utrmc_admin)
         r = c.post("/api/departments/", {"name": "Test Neurology", "code": "TEST-NEURO"})
-        assert r.status_code == status.HTTP_403_FORBIDDEN
+        assert r.status_code == status.HTTP_201_CREATED
 
     def test_supervisor_cannot_create_department(self, db, u_supervisor):
         c = auth_client(u_supervisor)
@@ -441,11 +441,12 @@ class TestUserManagement:
             "email": "new_pg_001@test.local",
             "first_name": "New",
             "last_name": "PG",
-            "role": "pg",
+            "full_name": "New PG",
+            "role": "RESIDENT",
             "specialty": "medicine",
         })
         assert r.status_code == status.HTTP_201_CREATED
-        assert r.data["role"] == "pg"
+        assert r.data["role"] == "RESIDENT"
 
     def test_utrmc_admin_can_create_user(self, db, u_utrmc_admin):
         c = auth_client(u_utrmc_admin)
@@ -455,7 +456,8 @@ class TestUserManagement:
             "email": "new_sup_001@test.local",
             "first_name": "New",
             "last_name": "Supervisor",
-            "role": "supervisor",
+            "full_name": "New Supervisor",
+            "role": "SUPERVISOR",
             "specialty": "surgery",
         })
         assert r.status_code == status.HTTP_201_CREATED
@@ -465,7 +467,7 @@ class TestUserManagement:
         r = c.post("/api/users/", {
             "username": "intruder",
             "password": "Test@pass1",
-            "role": "pg",
+            "role": "RESIDENT",
         })
         assert r.status_code == status.HTTP_403_FORBIDDEN
 
@@ -474,7 +476,7 @@ class TestUserManagement:
         r = c.post("/api/users/", {
             "username": "intruder2",
             "password": "Test@pass1",
-            "role": "pg",
+            "role": "RESIDENT",
         })
         assert r.status_code == status.HTTP_403_FORBIDDEN
 
@@ -483,7 +485,7 @@ class TestUserManagement:
         r = c.post("/api/users/", {
             "username": "intruder3",
             "password": "Test@pass1",
-            "role": "pg",
+            "role": "RESIDENT",
         })
         assert r.status_code == status.HTTP_403_FORBIDDEN
 
@@ -654,7 +656,7 @@ class TestResidentTrainingRecords:
 
     def test_admin_can_create_training_record(self, db, u_admin, u_pg, prog):
         # Create a fresh pg for this test
-        pg2 = make_user("u_pg2_tr", "pg")
+        pg2 = make_user("u_pg2_tr", "RESIDENT")
         c = auth_client(u_admin)
         r = c.post("/api/resident-training/", {
             "resident_user": pg2.id,
@@ -667,7 +669,7 @@ class TestResidentTrainingRecords:
         assert r.status_code == status.HTTP_201_CREATED
 
     def test_pg_cannot_create_training_record(self, db, u_pg, prog):
-        pg3 = make_user("u_pg3_tr", "pg")
+        pg3 = make_user("u_pg3_tr", "RESIDENT")
         c = auth_client(u_pg)
         r = c.post("/api/resident-training/", {
             "resident_user": pg3.id,
@@ -680,7 +682,7 @@ class TestResidentTrainingRecords:
 
     def test_supervisor_cannot_create_training_record(self, db, u_supervisor, u_pg, prog):
         c = auth_client(u_supervisor)
-        pg4 = make_user("u_pg4_tr", "pg")
+        pg4 = make_user("u_pg4_tr", "RESIDENT")
         r = c.post("/api/resident-training/", {
             "resident_user": pg4.id,
             "program": prog.id,
@@ -766,14 +768,15 @@ class TestRotationAssignmentWorkflow:
         self, db, resident_training, hospital_dept, u_admin, u_supervisor, department
     ):
         """admin creates → admin submits → supervisor (as HOD) approves."""
-        from sims.users.models import HODAssignment
+        from sims.users.models import SupervisorProfile
 
         # Assign supervisor as HOD so they can see the rotation
-        HODAssignment.objects.create(
-            hod_user=u_supervisor,
-            department=department,
-            start_date=TODAY,
-            active=True,
+        SupervisorProfile.objects.update_or_create(
+            user=u_supervisor,
+            defaults={
+                "designation_ref": "HOD",
+                "department_ref": department,
+            },
         )
 
         admin_c = auth_client(u_admin)
@@ -802,10 +805,14 @@ class TestRotationAssignmentWorkflow:
         self, db, resident_training, hospital_dept, u_admin, u_utrmc_admin, u_supervisor, department
     ):
         """admin creates → submit → hod-approve → utrmc-approve."""
-        from sims.users.models import HODAssignment
+        from sims.users.models import SupervisorProfile
 
-        HODAssignment.objects.create(
-            hod_user=u_supervisor, department=department, start_date=TODAY, active=True
+        SupervisorProfile.objects.update_or_create(
+            user=u_supervisor,
+            defaults={
+                "designation_ref": "HOD",
+                "department_ref": department,
+            },
         )
         admin_c = auth_client(u_admin)
 
@@ -826,12 +833,13 @@ class TestRotationAssignmentWorkflow:
         assert r.data["status"] == RotationAssignment.STATUS_APPROVED
 
     def test_pg_cannot_utrmc_approve(self, db, resident_training, hospital_dept, u_admin, u_pg, u_supervisor):
-        from sims.users.models import HODAssignment
-        HODAssignment.objects.create(
-            hod_user=u_supervisor,
-            department=resident_training.program.department,
-            start_date=TODAY,
-            active=True,
+        from sims.users.models import SupervisorProfile
+        SupervisorProfile.objects.update_or_create(
+            user=u_supervisor,
+            defaults={
+                "designation_ref": "HOD",
+                "department_ref": resident_training.program.department,
+            },
         )
         admin_c = auth_client(u_admin)
         r = admin_c.post("/api/rotations/", {
@@ -850,12 +858,13 @@ class TestRotationAssignmentWorkflow:
 
     def test_return_rotation(self, db, resident_training, hospital_dept, u_admin, u_supervisor):
         """Admin can return (reject-with-reason) a submitted rotation."""
-        from sims.users.models import HODAssignment
-        HODAssignment.objects.create(
-            hod_user=u_supervisor,
-            department=resident_training.program.department,
-            start_date=TODAY,
-            active=True,
+        from sims.users.models import SupervisorProfile
+        SupervisorProfile.objects.update_or_create(
+            user=u_supervisor,
+            defaults={
+                "designation_ref": "HOD",
+                "department_ref": resident_training.program.department,
+            },
         )
         admin_c = auth_client(u_admin)
         r = admin_c.post("/api/rotations/", {

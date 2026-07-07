@@ -136,7 +136,7 @@ export default function ResidentSchedulePage() {
   const hasTrainingRecord = Boolean(summary?.training_record);
 
   return (
-    <ProtectedRoute allowedRoles={['pg', 'resident']}>
+    <ProtectedRoute allowedRoles={['RESIDENT', 'RESIDENT']}>
       <div className="pg-page">
         <PageHeader
           title="My Schedule"
@@ -152,8 +152,8 @@ export default function ResidentSchedulePage() {
             <EmptyStateCard
               lines={[
                 'No active resident training record is linked yet.',
-                'This page will show your training progress once UTRMC/admin completes your setup.',
-                'Please contact the UTRMC office if this is unexpected.',
+                'This page will show your training progress once FMU-UTRMC admin completes your setup.',
+                'Please contact the FMU-UTRMC postgraduate office if this is unexpected.',
               ]}
             />
             <div className="pg-card">

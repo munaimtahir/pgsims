@@ -49,11 +49,12 @@ from sims.training.models import (
 from sims.users.models import (
     DataCorrectionAudit,
     DepartmentMembership,
-    HODAssignment,
     HospitalAssignment,
     ResidentProfile,
-    StaffProfile,
     SupervisorResidentLink,
+    SupervisorProfile,
+    SupportStaffProfile,
+    AdminProfile,
 )
 
 User = get_user_model()
@@ -219,7 +220,7 @@ class Command(BaseCommand):
         parser.add_argument(
             "--keep-user",
             action="append",
-            default=["admin", "pilot_admin"],
+            default=["ADMIN", "pilot_admin"],
             help="Username to preserve even if it matches a purge pattern. Repeatable.",
         )
         parser.add_argument(
@@ -437,7 +438,9 @@ class Command(BaseCommand):
         ) | SubmissionRequirementTemplate.objects.filter(department_id__in=purge_department_ids)
         submission_templates = submission_templates.distinct()
 
-        staff_profiles = StaffProfile.objects.filter(user_id__in=purge_user_ids)
+        supervisor_profiles = SupervisorProfile.objects.filter(user_id__in=purge_user_ids)
+        support_staff_profiles = SupportStaffProfile.objects.filter(user_id__in=purge_user_ids)
+        admin_profiles = AdminProfile.objects.filter(user_id__in=purge_user_ids)
         resident_profiles = ResidentProfile.objects.filter(user_id__in=purge_user_ids)
         department_memberships = DepartmentMembership.objects.filter(user_id__in=purge_user_ids) | DepartmentMembership.objects.filter(
             department_id__in=purge_department_ids
@@ -453,10 +456,6 @@ class Command(BaseCommand):
             department_id__in=purge_department_ids
         )
         supervision_links = supervision_links.distinct()
-        hod_assignments = HODAssignment.objects.filter(hod_user_id__in=purge_user_ids) | HODAssignment.objects.filter(
-            department_id__in=purge_department_ids
-        )
-        hod_assignments = hod_assignments.distinct()
         data_corrections = DataCorrectionAudit.objects.filter(actor_id__in=purge_user_ids)
         notification_preferences = NotificationPreference.objects.filter(user_id__in=purge_user_ids)
 
@@ -568,12 +567,13 @@ class Command(BaseCommand):
             self._history_target("training_historicalworkshop", Workshop, purge_workshop_ids, "code"),
             self._history_target("training_historicalworkshopblock", WorkshopBlock, workshop_block_ids, "name"),
             self._history_target("training_historicalworkshoprun", WorkshopRun, workshop_run_ids),
-            self._history_target("users_historicalstaffprofile", StaffProfile, set(staff_profiles.values_list("id", flat=True))),
+            self._history_target("users_historicalsupervisorprofile", SupervisorProfile, set(supervisor_profiles.values_list("id", flat=True))),
+            self._history_target("users_historicalsupportstaffprofile", SupportStaffProfile, set(support_staff_profiles.values_list("id", flat=True))),
+            self._history_target("users_historicaladminprofile", AdminProfile, set(admin_profiles.values_list("id", flat=True))),
             self._history_target("users_historicalresidentprofile", ResidentProfile, set(resident_profiles.values_list("id", flat=True))),
             self._history_target("users_historicaldepartmentmembership", DepartmentMembership, set(department_memberships.values_list("id", flat=True))),
             self._history_target("users_historicalhospitalassignment", HospitalAssignment, set(hospital_assignments.values_list("id", flat=True))),
             self._history_target("users_historicalsupervisorresidentlink", SupervisorResidentLink, set(supervision_links.values_list("id", flat=True))),
-            self._history_target("users_historicalhodassignment", HODAssignment, set(hod_assignments.values_list("id", flat=True))),
         ]
 
         targets = [
@@ -614,10 +614,11 @@ class Command(BaseCommand):
             DeletionTarget("training_workshop", Workshop.objects.filter(id__in=purge_workshop_ids)),
             DeletionTarget("training_trainingprogram", TrainingProgram.objects.filter(id__in=purge_program_ids)),
             DeletionTarget("users_supervisorresidentlink", supervision_links),
-            DeletionTarget("users_hodassignment", hod_assignments),
             DeletionTarget("users_hospitalassignment", hospital_assignments),
             DeletionTarget("users_departmentmembership", department_memberships),
-            DeletionTarget("users_staffprofile", staff_profiles),
+            DeletionTarget("users_supervisorprofile", supervisor_profiles),
+            DeletionTarget("users_supportstaffprofile", support_staff_profiles),
+            DeletionTarget("users_adminprofile", admin_profiles),
             DeletionTarget("users_residentprofile", resident_profiles),
             DeletionTarget("users_user", User.objects.filter(id__in=purge_user_ids), "username"),
             DeletionTarget(
@@ -646,7 +647,7 @@ class Command(BaseCommand):
         surviving_admins = [
             user
             for user in all_users
-            if user.id not in purge_user_ids and (user.is_superuser or user.role in {"admin", "utrmc_admin"})
+            if user.id not in purge_user_ids and (user.is_superuser or user.role in {"ADMIN", "ADMIN"})
         ]
         if surviving_admins:
             return surviving_admins[0]
@@ -654,7 +655,7 @@ class Command(BaseCommand):
         admin_candidates = [
             user
             for user in all_users
-            if user.id in purge_user_ids and (user.is_superuser or user.role in {"admin", "utrmc_admin"})
+            if user.id in purge_user_ids and (user.is_superuser or user.role in {"ADMIN", "ADMIN"})
         ]
         if not admin_candidates:
             return None
@@ -662,7 +663,7 @@ class Command(BaseCommand):
         def score(user: User) -> tuple[int, int]:
             username = (user.username or "").lower()
             email = (user.email or "").lower()
-            if username == "admin" or email == "admin@pgsims.local":
+            if username == "ADMIN" or email == "admin@pgsims.local":
                 return (0, user.id)
             if username == "pilot_admin":
                 return (1, user.id)

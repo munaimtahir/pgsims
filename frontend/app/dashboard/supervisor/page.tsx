@@ -129,7 +129,7 @@ export default function SupervisorHomePage() {
   };
 
   return (
-    <ProtectedRoute allowedRoles={['supervisor', 'faculty', 'admin', 'utrmc_admin']}>
+    <ProtectedRoute allowedRoles={['SUPERVISOR', 'SUPERVISOR', 'ADMIN', 'ADMIN']}>
       <div className="pg-page">
         <PageHeader
           title="Supervisor Dashboard"
@@ -159,7 +159,7 @@ export default function SupervisorHomePage() {
               <EmptyStateCard
                 lines={[
                   'No residents are assigned to you yet.',
-                  'Once UTRMC assigns residents, pending reviews and submissions will appear here.',
+                  'Once FMU-UTRMC assigns residents, pending reviews and submissions will appear here.',
                 ]}
               />
             )}

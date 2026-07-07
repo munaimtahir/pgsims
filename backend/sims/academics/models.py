@@ -21,7 +21,7 @@ class Department(models.Model):
         null=True,
         blank=True,
         related_name="headed_departments",
-        limit_choices_to={"role__in": ["admin", "supervisor"]},
+        limit_choices_to={"role__in": ["ADMIN", "SUPERVISOR"]},
         help_text="Department head",
     )
     active = models.BooleanField(default=True, help_text="Is department active?")

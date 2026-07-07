@@ -19,7 +19,7 @@ from sims.training.models import (
     SubmissionCertificate,
     SubmissionRequirementTemplate,
 )
-from sims.users.models import HODAssignment, SupervisorResidentLink
+from sims.users.models import SupervisorResidentLink, SupervisorProfile
 
 from .models import ResidentTrainingRecord, TrainingProgram
 
@@ -27,10 +27,10 @@ User = get_user_model()
 
 
 def make_user(username, role, **kwargs):
-    if role in {"pg", "resident"}:
+    if role in {"RESIDENT", "RESIDENT"}:
         kwargs.setdefault("specialty", "medicine")
         kwargs.setdefault("year", "1")
-    if role in {"supervisor", "faculty"}:
+    if role in {"SUPERVISOR", "SUPERVISOR"}:
         kwargs.setdefault("specialty", "medicine")
     return User.objects.create_user(
         username=username,
@@ -56,13 +56,13 @@ class FeatureLayerOperationalFlowTests(APITestCase):
             department=self.department,
         )
 
-        self.admin = make_user("fl_admin", "admin")
-        self.utrmc_admin = make_user("fl_utrmc_admin", "utrmc_admin")
-        self.utrmc_user = make_user("fl_utrmc_user", "utrmc_user")
-        self.supervisor = make_user("fl_supervisor", "supervisor")
+        self.admin = make_user("fl_admin", "ADMIN")
+        self.utrmc_admin = make_user("fl_utrmc_admin", "ADMIN")
+        self.utrmc_user = make_user("fl_utrmc_user", "SUPPORT_STAFF")
+        self.supervisor = make_user("fl_supervisor", "SUPERVISOR")
         self.resident = make_user(
             "fl_resident",
-            "pg",
+            "RESIDENT",
             supervisor=self.supervisor,
             home_department=self.department,
             home_hospital=self.hospital,
@@ -82,11 +82,12 @@ class FeatureLayerOperationalFlowTests(APITestCase):
             start_date=date.today() - timedelta(days=120),
             active=True,
         )
-        HODAssignment.objects.create(
-            department=self.department,
-            hod_user=self.supervisor,
-            start_date=date.today() - timedelta(days=30),
-            active=True,
+        SupervisorProfile.objects.update_or_create(
+            user=self.supervisor,
+            defaults={
+                "designation_ref": "HOD",
+                "department_ref": self.department,
+            },
         )
 
     def test_logbook_submit_return_resubmit_approve_flow(self):
@@ -166,7 +167,7 @@ class FeatureLayerOperationalFlowTests(APITestCase):
         )
         self.assertEqual(draft_review.status_code, status.HTTP_400_BAD_REQUEST)
 
-        unrelated_supervisor = make_user("fl_unrelated_supervisor", "supervisor")
+        unrelated_supervisor = make_user("fl_unrelated_supervisor", "SUPERVISOR")
         self.client.force_authenticate(unrelated_supervisor)
         unrelated_review = self.client.post(
             f"/api/logbook/{entry_id}/review/",
@@ -415,7 +416,7 @@ class FeatureLayerOperationalFlowTests(APITestCase):
         second_submit = self.client.post(f"/api/leaves/{leave.id}/submit/")
         self.assertEqual(second_submit.status_code, status.HTTP_400_BAD_REQUEST)
 
-        unrelated_supervisor = make_user("fl_leave_unrelated_supervisor", "supervisor")
+        unrelated_supervisor = make_user("fl_leave_unrelated_supervisor", "SUPERVISOR")
         self.client.force_authenticate(unrelated_supervisor)
         wrong_supervisor = self.client.post(f"/api/leaves/{leave.id}/approve/")
         self.assertEqual(wrong_supervisor.status_code, status.HTTP_404_NOT_FOUND)
@@ -444,9 +445,7 @@ class FeatureLayerOperationalFlowTests(APITestCase):
         supervisor_dashboard = self.client.get("/api/dashboard/supervisor/")
         self.assertEqual(supervisor_dashboard.status_code, status.HTTP_200_OK)
         self.assertIn("pending_logbook_reviews", supervisor_dashboard.data)
-        hod_dashboard = self.client.get("/api/dashboard/hod/")
-        self.assertEqual(hod_dashboard.status_code, status.HTTP_200_OK)
-        self.assertIn("supervisor_lag", hod_dashboard.data)
+
 
         self.client.force_authenticate(self.utrmc_user)
         utrmc_dashboard = self.client.get("/api/dashboard/utrmc/")
@@ -490,7 +489,7 @@ class ActiveSurfaceBaselineTests(APITestCase):
         )
 
     def test_resident_cannot_create_leave_for_another_training_record(self):
-        other = make_user("other_resident", "pg")
+        other = make_user("other_resident", "RESIDENT")
         other_rtr = ResidentTrainingRecord.objects.create(
             resident_user=other,
             program=self.program if hasattr(self, "program") else TrainingProgram.objects.create(
@@ -501,7 +500,7 @@ class ActiveSurfaceBaselineTests(APITestCase):
             start_date=date.today(),
             active=True,
         )
-        resident = make_user("own_resident", "pg")
+        resident = make_user("own_resident", "RESIDENT")
         own_program = TrainingProgram.objects.create(
             name="Own Program",
             code="OWN-ACTIVE",

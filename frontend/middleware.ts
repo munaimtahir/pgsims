@@ -1,13 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 type Role =
-  | 'pg'
-  | 'resident'
-  | 'supervisor'
-  | 'faculty'
-  | 'admin'
-  | 'utrmc_user'
-  | 'utrmc_admin';
+  | 'ADMIN'
+  | 'RESIDENT'
+  | 'SUPERVISOR'
+  | 'SUPPORT_STAFF';
 
 function decodeJwtPayload(token: string | undefined): Record<string, unknown> | null {
   if (!token) return null;
@@ -29,33 +26,61 @@ function isExpired(expEpochSeconds: number | null): boolean {
   return expEpochSeconds <= Math.floor(Date.now() / 1000);
 }
 
-function getRoleHome(role?: string | null) {
+function normalizeRole(role?: string | null): Role | null {
   switch (role) {
-    case 'pg':
+    case 'ADMIN':
+    case 'admin':
+    case 'utrmc_admin':
+    case 'super_admin':
+    case 'system_admin':
+      return 'ADMIN';
+    case 'RESIDENT':
     case 'resident':
-      return '/dashboard/pg';
+    case 'pg':
+    case 'pgr':
+    case 'trainee':
+      return 'RESIDENT';
+    case 'SUPERVISOR':
     case 'supervisor':
     case 'faculty':
-      return '/dashboard/supervisor';
-    case 'admin':
-      return '/dashboard/utrmc';
+    case 'teacher':
+      return 'SUPERVISOR';
+    case 'SUPPORT_STAFF':
+    case 'support_staff':
     case 'utrmc_user':
-    case 'utrmc_admin':
+    case 'clerk':
+    case 'office_staff':
+    case 'data_entry':
+      return 'SUPPORT_STAFF';
+    default:
+      return null;
+  }
+}
+
+function getRoleHome(role?: Role | null) {
+  switch (role) {
+    case 'RESIDENT':
+      return '/dashboard/resident';
+    case 'SUPERVISOR':
+      return '/dashboard/supervisor';
+    case 'ADMIN':
+    case 'SUPPORT_STAFF':
       return '/dashboard/utrmc';
     default:
       return '/login';
   }
 }
 
-function roleAllowedForPath(pathname: string, role: string | null): boolean {
+function roleAllowedForPath(pathname: string, role: Role | null): boolean {
   if (!role) return false;
-  if (pathname.startsWith('/dashboard/pg')) return role === 'pg' || role === 'resident' || role === 'admin';
+  if (pathname.startsWith('/dashboard/pg')) return role === 'RESIDENT' || role === 'ADMIN';
+  if (pathname.startsWith('/dashboard/resident')) return role === 'RESIDENT' || role === 'ADMIN';
   if (pathname.startsWith('/dashboard/supervisor')) {
-    return role === 'supervisor' || role === 'faculty' || role === 'admin';
+    return role === 'SUPERVISOR' || role === 'ADMIN';
   }
-  if (pathname.startsWith('/dashboard/admin')) return role === 'admin';
+  if (pathname.startsWith('/dashboard/admin')) return role === 'ADMIN';
   if (pathname.startsWith('/dashboard/utrmc')) {
-    return role === 'utrmc_user' || role === 'utrmc_admin' || role === 'admin';
+    return role === 'SUPPORT_STAFF' || role === 'ADMIN';
   }
   return true;
 }
@@ -81,15 +106,16 @@ export function middleware(request: NextRequest) {
   const cookieExp = cookieExpRaw && /^-?\d+$/.test(cookieExpRaw) ? Number(cookieExpRaw) : null;
   const effectiveExp = jwtExp ?? cookieExp;
 
-  if (typeof jwtRole !== 'string' || isExpired(effectiveExp)) {
+  const rawRole = typeof jwtRole === 'string' ? jwtRole : cookieRole;
+  const role = normalizeRole(rawRole);
+
+  if (!role || isExpired(effectiveExp)) {
     const response = NextResponse.redirect(new URL('/login', request.url));
     response.cookies.delete('pgsims_access_token');
     response.cookies.delete('pgsims_user_role');
     response.cookies.delete('pgsims_access_exp');
     return response;
   }
-
-  const role = (jwtRole ?? cookieRole) as Role | null;
 
   if (!roleAllowedForPath(pathname, role)) {
     const redirectUrl = new URL(getRoleHome(role), request.url);

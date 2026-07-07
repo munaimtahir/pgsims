@@ -73,7 +73,7 @@ class BulkAssignmentView(APIView):
         serializer = BulkAssignmentSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         supervisor = get_object_or_404(
-            User.objects.filter(role="supervisor"),
+            User.objects.filter(role="SUPERVISOR"),
             pk=serializer.validated_data["supervisor_id"],
         )
         service = BulkService(request.user)
@@ -196,7 +196,7 @@ class BulkSupervisorImportView(APIView):
     Bulk import view for supervisors/faculty.
 
     Accepts CSV or Excel files with supervisor data.
-    Creates accounts with role 'supervisor' and generates passwords.
+    Creates accounts with role 'SUPERVISOR' and generates passwords.
     """
     serializer_class = BulkEmptySchemaSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -256,7 +256,7 @@ class BulkResidentImportView(APIView):
     Bulk import view for residents/postgraduates.
 
     Accepts CSV or Excel files with resident data.
-    Creates accounts with role 'pg' and links to supervisors.
+    Creates accounts with role 'RESIDENT' and links to supervisors.
     Handles cases where supervisors don't exist (based on allow_partial setting).
     """
     serializer_class = BulkEmptySchemaSerializer
@@ -317,7 +317,7 @@ class BulkDepartmentImportView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request: Request) -> Response:
-        if getattr(request.user, "role", None) != "admin":
+        if getattr(request.user, "role", None) != "ADMIN":
             return Response({"detail": "Only admins can import departments."}, status=403)
 
         serializer = DepartmentImportSerializer(data=request.data)
@@ -360,7 +360,7 @@ class BulkExportView(APIView):
     def get(self, request: Request, resource: str) -> HttpResponse:
         from django.core.exceptions import ValidationError as DjangoValidationError
 
-        if getattr(request.user, "role", None) not in {"admin", "utrmc_admin"}:
+        if getattr(request.user, "role", None) not in {"ADMIN", "ADMIN"}:
             return Response({"detail": "Only admins can export bulk datasets."}, status=403)
         export_format = request.query_params.get("file_format", "xlsx").lower()
         service = BulkService(request.user)
@@ -389,7 +389,7 @@ class BulkTemplateView(APIView):
     def get(self, request: Request, resource: str) -> HttpResponse:
         from django.core.exceptions import ValidationError as DjangoValidationError
 
-        if getattr(request.user, "role", None) not in {"admin", "utrmc_admin"}:
+        if getattr(request.user, "role", None) not in {"ADMIN", "ADMIN"}:
             return Response({"detail": "Only admins can download bulk templates."}, status=403)
         service = BulkService(request.user)
         try:
@@ -413,7 +413,6 @@ _ENTITY_METHOD_MAP = {
     "departments": "import_userbase_departments",
     "faculty-supervisors": "import_userbase_faculty_supervisors",
     "residents": "import_userbase_residents",
-    "hod-assignments": "import_userbase_hod_assignments",
     "rotation-assignments": "import_userbase_rotation_assignments",
     "supervisors": "import_supervisors",
     "trainees": "import_trainees",
@@ -423,7 +422,7 @@ _ENTITY_METHOD_MAP = {
     "resident-training-records": "import_resident_training_records",
 }
 
-_ALLOWED_ROLES = {"admin", "utrmc_admin"}
+_ALLOWED_ROLES = {"ADMIN", "ADMIN"}
 
 
 @extend_schema(responses={200: None})
@@ -499,7 +498,7 @@ FLEXIBLE_SCHEMAS = {
             {"name": "email", "label": "Email", "required": True, "type": "email"},
             {"name": "full_name", "label": "Full Name", "required": True, "type": "string"},
             {"name": "phone_number", "label": "Phone Number", "required": False, "type": "string"},
-            {"name": "role", "label": "Role (resident/pg)", "required": False, "type": "choice", "choices": ["resident", "pg"]},
+            {"name": "role", "label": "Role (resident/pg)", "required": False, "type": "choice", "choices": ["RESIDENT", "RESIDENT"]},
             {"name": "specialty", "label": "Specialty", "required": True, "type": "string"},
             {"name": "year", "label": "Year (1, 2, 3, 4)", "required": True, "type": "string"},
             {"name": "pgr_id", "label": "PGR ID", "required": False, "type": "string"},
@@ -520,7 +519,7 @@ FLEXIBLE_SCHEMAS = {
             {"name": "email", "label": "Email", "required": True, "type": "email"},
             {"name": "full_name", "label": "Full Name", "required": True, "type": "string"},
             {"name": "phone_number", "label": "Phone Number", "required": False, "type": "string"},
-            {"name": "role", "label": "Role (faculty/supervisor)", "required": True, "type": "choice", "choices": ["faculty", "supervisor"]},
+            {"name": "role", "label": "Role (faculty/supervisor)", "required": True, "type": "choice", "choices": ["SUPERVISOR", "SUPERVISOR"]},
             {"name": "specialty", "label": "Specialty", "required": False, "type": "string"},
             {"name": "department_code", "label": "Department Code", "required": False, "type": "string"},
             {"name": "hospital_code", "label": "Hospital Code", "required": False, "type": "string"},
@@ -580,16 +579,6 @@ FLEXIBLE_SCHEMAS = {
         "fields": [
             {"name": "hospital_code", "label": "Hospital Code", "required": True, "type": "string"},
             {"name": "department_code", "label": "Department Code", "required": True, "type": "string"},
-            {"name": "active", "label": "Active (true/false)", "required": False, "type": "boolean"},
-        ]
-    },
-    "hod-assignments": {
-        "label": "HODs",
-        "fields": [
-            {"name": "department_code", "label": "Department Code", "required": True, "type": "string"},
-            {"name": "hod_email", "label": "HOD Email", "required": True, "type": "email"},
-            {"name": "start_date", "label": "Start Date (YYYY-MM-DD)", "required": True, "type": "date"},
-            {"name": "end_date", "label": "End Date (YYYY-MM-DD)", "required": False, "type": "date"},
             {"name": "active", "label": "Active (true/false)", "required": False, "type": "boolean"},
         ]
     },

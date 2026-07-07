@@ -8,10 +8,10 @@ User = get_user_model()
 class UsersViewsExtendedTests(TestCase):
     def setUp(self):
         self.client = Client()
-        self.admin = User.objects.create_superuser(username="admin_ext_v", password="password123", role="admin")
+        self.admin = User.objects.create_superuser(username="admin_ext_v", password="password123", role="ADMIN")
         self.client.login(username="admin_ext_v", password="password123")
-        self.supervisor = User.objects.create_user(username="sup_ext_v", password="password123", role="supervisor")
-        self.pg = User.objects.create_user(username="pg_ext_v", password="password123", role="pg")
+        self.supervisor = User.objects.create_user(username="sup_ext_v", password="password123", role="SUPERVISOR")
+        self.pg = User.objects.create_user(username="pg_ext_v", password="password123", role="RESIDENT")
 
     def test_profile_edit_view(self):
         response = self.client.get(reverse("users:profile_edit"))

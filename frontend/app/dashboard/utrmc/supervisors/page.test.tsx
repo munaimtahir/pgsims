@@ -30,13 +30,13 @@ const mockApi = userbaseApi as unknown as {
 
 describe('UTRMC Supervisors page', () => {
   beforeEach(() => {
-    mockAuth.mockReturnValue({ user: { role: 'utrmc_admin' } });
+    mockAuth.mockReturnValue({ user: { role: 'ADMIN' } });
     mockApi.users.list.mockResolvedValue([
       {
         id: 20,
         username: 'supervisor_user',
         full_name: 'Dr Supervisor',
-        role: 'supervisor',
+        role: 'SUPERVISOR',
         is_active: true,
         specialty: 'medicine',
         email: 'supervisor@example.com',
@@ -112,7 +112,7 @@ describe('UTRMC Supervisors page', () => {
   });
 
   it('shows read-only view and hides edit controls for read-only UTRMC user', async () => {
-    mockAuth.mockReturnValue({ user: { role: 'utrmc_user' } });
+    mockAuth.mockReturnValue({ user: { role: 'SUPPORT_STAFF' } });
     render(<SupervisorsPage />);
 
     await waitFor(() => expect(screen.getByText('Dr Supervisor')).toBeInTheDocument());

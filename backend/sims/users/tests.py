@@ -10,33 +10,33 @@ from rest_framework.test import APIClient
 from django.contrib.auth import get_user_model
 from sims.academics.models import Department
 from sims.training.models import ResidentTrainingRecord
-from sims.users.models import HODAssignment, SupervisorResidentLink
+from sims.users.models import SupervisorResidentLink, SupervisorProfile
 
 User = get_user_model()
 
 
 class UserModelBasicTests(TestCase):
     def setUp(self):
-        self.admin = User.objects.create_user(username="admin1", password="pass", role="admin")
-        self.supervisor = User.objects.create_user(username="sup1", password="pass", role="supervisor")
-        self.resident = User.objects.create_user(username="res1", password="pass", role="resident")
+        self.admin = User.objects.create_user(username="admin1", password="pass", role="ADMIN")
+        self.supervisor = User.objects.create_user(username="sup1", password="pass", role="SUPERVISOR")
+        self.resident = User.objects.create_user(username="res1", password="pass", role="RESIDENT")
 
     def test_roles_set(self):
-        self.assertEqual(self.admin.role, "admin")
-        self.assertEqual(self.supervisor.role, "supervisor")
-        self.assertEqual(self.resident.role, "resident")
+        self.assertEqual(self.admin.role, "ADMIN")
+        self.assertEqual(self.supervisor.role, "SUPERVISOR")
+        self.assertEqual(self.resident.role, "RESIDENT")
 
     def test_str(self):
         self.assertIn("admin1", str(self.admin))
 
     def test_is_admin_property(self):
-        self.assertTrue(self.admin.role in ("admin", "utrmc_admin"))
+        self.assertTrue(self.admin.role in ("ADMIN", "ADMIN"))
 
     def test_pilot_pg_bootstrap_creates_active_training_record(self):
         pilot = User.objects.create_user(
             username="pilot_pg",
             password="pass",
-            role="pg",
+            role="RESIDENT",
         )
 
         records = ResidentTrainingRecord.objects.filter(resident_user=pilot, active=True)
@@ -49,7 +49,7 @@ class UserModelBasicTests(TestCase):
 class UserAPIAuthTests(TestCase):
     def setUp(self):
         self.client = APIClient()
-        self.admin = User.objects.create_user(username="apiadmin", password="pass", role="admin", is_staff=True, is_superuser=True)
+        self.admin = User.objects.create_user(username="apiadmin", password="pass", role="ADMIN", is_staff=True, is_superuser=True)
 
     def test_login_returns_token(self):
         r = self.client.post("/api/auth/login/", {"username": "apiadmin", "password": "pass"}, format="json")
@@ -71,7 +71,7 @@ class UserAPIAuthTests(TestCase):
         user = User.objects.create_user(
             username="reset_user",
             password="pass",
-            role="resident",
+            role="RESIDENT",
             email="reset@example.com",
         )
 
@@ -86,13 +86,13 @@ class UserAPIAuthTests(TestCase):
 class UserbaseReadOnlyScopeTests(TestCase):
     def setUp(self):
         self.client = APIClient()
-        self.admin = User.objects.create_user(username="mgr", password="pass", role="utrmc_admin")
-        self.utrmc_user = User.objects.create_user(username="viewer", password="pass", role="utrmc_user")
-        self.supervisor = User.objects.create_user(username="supviewer", password="pass", role="supervisor")
+        self.admin = User.objects.create_user(username="mgr", password="pass", role="ADMIN")
+        self.utrmc_user = User.objects.create_user(username="viewer", password="pass", role="SUPPORT_STAFF")
+        self.supervisor = User.objects.create_user(username="supviewer", password="pass", role="SUPERVISOR")
         self.resident = User.objects.create_user(
             username="resviewer",
             password="pass",
-            role="resident",
+            role="RESIDENT",
             specialty="medicine",
             year="1",
         )
@@ -105,23 +105,19 @@ class UserbaseReadOnlyScopeTests(TestCase):
             created_by=self.admin,
             updated_by=self.admin,
         )
-        HODAssignment.objects.create(
-            department=self.department,
-            hod_user=self.supervisor,
-            start_date="2026-01-01",
-            created_by=self.admin,
-            updated_by=self.admin,
+        SupervisorProfile.objects.create(
+            user=self.supervisor,
+            designation_ref="HOD",
+            department_ref=self.department,
         )
 
-    def test_utrmc_user_can_list_users_for_read_only_oversight(self):
+    def test_support_staff_user_list_is_self_scoped(self):
         self.client.force_authenticate(self.utrmc_user)
         response = self.client.get("/api/users/")
         self.assertEqual(response.status_code, 200)
         rows = response.data if isinstance(response.data, list) else response.data.get("results", [])
         usernames = {row["username"] for row in rows}
-        self.assertIn("viewer", usernames)
-        self.assertIn("supviewer", usernames)
-        self.assertIn("resviewer", usernames)
+        self.assertEqual(usernames, {"viewer"})
 
     def test_utrmc_user_cannot_create_users(self):
         self.client.force_authenticate(self.utrmc_user)
@@ -133,30 +129,15 @@ class UserbaseReadOnlyScopeTests(TestCase):
                 "password": "pass12345",
                 "first_name": "Blocked",
                 "last_name": "User",
-                "role": "resident",
+                "role": "RESIDENT",
                 "is_active": True,
             },
             format="json",
         )
         self.assertEqual(response.status_code, 403)
 
-    def test_utrmc_user_can_list_supervision_links_and_hod_assignments(self):
+    def test_support_staff_cannot_list_supervision_links(self):
         self.client.force_authenticate(self.utrmc_user)
         supervision_response = self.client.get("/api/supervision-links/")
-        hod_response = self.client.get("/api/hod-assignments/")
 
-        self.assertEqual(supervision_response.status_code, 200)
-        self.assertEqual(hod_response.status_code, 200)
-
-        supervision_rows = (
-            supervision_response.data
-            if isinstance(supervision_response.data, list)
-            else supervision_response.data.get("results", [])
-        )
-        hod_rows = (
-            hod_response.data
-            if isinstance(hod_response.data, list)
-            else hod_response.data.get("results", [])
-        )
-        self.assertEqual(len(supervision_rows), 1)
-        self.assertEqual(len(hod_rows), 1)
+        self.assertEqual(supervision_response.status_code, 403)

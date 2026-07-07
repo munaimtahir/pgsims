@@ -5,14 +5,16 @@ from rest_framework.test import APIClient
 from sims.academics.models import Department
 from sims.bulk.models import BulkOperation, MappingPreset
 from sims.rotations.models import Hospital, HospitalDepartment
+from sims.training.models import ResidentTrainingRecord
 from sims.users.models import (
     DepartmentMembership,
-    HODAssignment,
     HospitalAssignment,
     ResidentProfile,
-    StaffProfile,
     SupervisorResidentLink,
     User,
+    SupervisorProfile,
+    SupportStaffProfile,
+    AdminProfile,
 )
 
 
@@ -22,19 +24,19 @@ class ActiveUserbaseBulkEngineTests(TestCase):
         self.admin = User.objects.create_user(
             username="bulk_admin",
             password="pass12345",
-            role="admin",
+            role="ADMIN",
             email="bulk_admin@example.com",
         )
         self.utrmc_admin = User.objects.create_user(
             username="bulk_utrmc_admin",
             password="pass12345",
-            role="utrmc_admin",
+            role="ADMIN",
             email="bulk_utrmc_admin@example.com",
         )
         self.pg = User.objects.create_user(
             username="bulk_pg",
             password="pass12345",
-            role="pg",
+            role="RESIDENT",
             email="bulk_pg@example.com",
             specialty="medicine",
             year="1",
@@ -143,8 +145,8 @@ class ActiveUserbaseBulkEngineTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         user = User.objects.get(email="supervisor@example.com")
-        self.assertEqual(user.role, "supervisor")
-        self.assertTrue(StaffProfile.objects.filter(user=user, designation="Consultant").exists())
+        self.assertEqual(user.role, "SUPERVISOR")
+        self.assertTrue(SupervisorProfile.objects.filter(user=user, designation_ref="Consultant").exists())
         self.assertTrue(
             DepartmentMembership.objects.filter(
                 user=user,
@@ -170,7 +172,7 @@ class ActiveUserbaseBulkEngineTests(TestCase):
         supervisor = User.objects.create_user(
             username="existing.supervisor",
             password="pass12345",
-            role="supervisor",
+            role="SUPERVISOR",
             email="supervisor@example.com",
             specialty="medicine",
         )
@@ -194,16 +196,22 @@ class ActiveUserbaseBulkEngineTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         user = User.objects.get(email="resident@example.com")
-        self.assertEqual(user.role, "resident")
+        self.assertEqual(user.role, "RESIDENT")
         self.assertEqual(user.home_department, department)
         self.assertEqual(user.home_hospital, hospital)
         self.assertEqual(user.supervisor, supervisor)
         self.assertTrue(
             ResidentProfile.objects.filter(
                 user=user,
-                pgr_id="PGR001",
-                training_start="2026-01-01",
-                training_level="Y1",
+                registration_no="PGR001",
+                is_archived=False,
+            ).exists()
+        )
+        self.assertTrue(
+            ResidentTrainingRecord.objects.filter(
+                resident_user=user,
+                start_date="2026-01-01",
+                current_level="Y1",
                 active=True,
             ).exists()
         )
@@ -225,23 +233,22 @@ class ActiveUserbaseBulkEngineTests(TestCase):
             ).exists()
         )
 
-    def test_bulk_import_supervision_and_hod_assignments_close_prerequisite_chain(self):
+    def test_bulk_import_supervision_links_close_prerequisite_chain(self):
         department = Department.objects.create(name="Internal Medicine", code="MED")
         supervisor = User.objects.create_user(
             username="faculty.supervisor",
             password="pass12345",
-            role="faculty",
+            role="SUPERVISOR",
             email="faculty@example.com",
         )
         resident = User.objects.create_user(
             username="resident.user",
             password="pass12345",
-            role="resident",
+            role="RESIDENT",
             email="resident@example.com",
             specialty="medicine",
             year="1",
         )
-
         self.client.force_authenticate(self.admin)
         links_response = self.client.post(
             "/api/bulk/import/supervision-links/apply/",
@@ -253,31 +260,12 @@ class ActiveUserbaseBulkEngineTests(TestCase):
             },
             format="multipart",
         )
-        hod_response = self.client.post(
-            "/api/bulk/import/hod-assignments/apply/",
-            {
-                "file": self._upload(
-                    "hod_assignments.csv",
-                    "department_code,hod_email,start_date,end_date,active\nMED,faculty@example.com,2026-01-01,,true\n",
-                )
-            },
-            format="multipart",
-        )
-
         self.assertEqual(links_response.status_code, 200)
-        self.assertEqual(hod_response.status_code, 200)
         self.assertTrue(
             SupervisorResidentLink.objects.filter(
                 supervisor_user=supervisor,
                 resident_user=resident,
                 department=department,
-                active=True,
-            ).exists()
-        )
-        self.assertTrue(
-            HODAssignment.objects.filter(
-                department=department,
-                hod_user=supervisor,
                 active=True,
             ).exists()
         )
@@ -306,7 +294,7 @@ class FlexibleColumnMappingTests(TestCase):
         self.admin = User.objects.create_user(
             username="flex_admin",
             password="pass12345",
-            role="admin",
+            role="ADMIN",
             email="flex_admin@example.com",
         )
         self.hospital = Hospital.objects.create(name="Allied Hospital", code="AH", is_active=True)
@@ -316,7 +304,7 @@ class FlexibleColumnMappingTests(TestCase):
         self.supervisor = User.objects.create_user(
             username="existing.supervisor",
             password="pass12345",
-            role="supervisor",
+            role="SUPERVISOR",
             email="supervisor@example.com",
             specialty="medicine",
         )

@@ -25,8 +25,8 @@ class SIMSAdminSite(AdminSite):
         # Get statistics for the dashboard
         try:
             total_users = User.objects.filter(is_archived=False).count()
-            total_pgs = User.objects.filter(role="pg", is_archived=False).count()
-            total_supervisors = User.objects.filter(role="supervisor", is_archived=False).count()
+            total_pgs = User.objects.filter(role="RESIDENT", is_archived=False).count()
+            total_supervisors = User.objects.filter(role="SUPERVISOR", is_archived=False).count()
             new_users_this_month = User.objects.filter(
                 date_joined__month=timezone.now().month,
                 date_joined__year=timezone.now().year,
@@ -55,7 +55,7 @@ class SIMSAdminSite(AdminSite):
 
 
 # Create custom admin site instance
-admin_site = SIMSAdminSite(name="admin")
+admin_site = SIMSAdminSite(name="ADMIN")
 
 # Import settings for debug check
 try:

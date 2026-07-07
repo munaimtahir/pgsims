@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from django.core.exceptions import ValidationError
 from django.db import models
@@ -6,13 +7,10 @@ from simple_history.models import HistoricalRecords
 
 # Role choices for the SIMS system
 USER_ROLES = (
-    ("admin", "Admin"),
-    ("supervisor", "Supervisor"),
-    ("pg", "Postgraduate"),
-    ("resident", "Resident"),
-    ("faculty", "Faculty"),
-    ("utrmc_user", "UTRMC User"),
-    ("utrmc_admin", "UTRMC Admin"),
+    ("ADMIN", "Admin"),
+    ("RESIDENT", "Resident"),
+    ("SUPERVISOR", "Supervisor"),
+    ("SUPPORT_STAFF", "Support Staff"),
 )
 
 # Medical specialty choices (expand as needed)
@@ -52,13 +50,10 @@ class User(AbstractUser):
     Custom User model for SIMS with role-based access control.
 
     Extends Django's AbstractUser to include medical training specific fields:
-    - Role-based permissions (Admin/Supervisor/PG)
+    - Role-based permissions (ADMIN/SUPERVISOR/RESIDENT/SUPPORT_STAFF)
     - Medical specialty and training year
     - Supervisor-PG relationships
     - Audit trail fields
-
-    Created: 2025-05-29 15:57:19 UTC
-    Author: SMIB2012
     """
 
     # Core SIMS fields
@@ -90,7 +85,7 @@ class User(AbstractUser):
         null=True,
         blank=True,
         related_name="assigned_pgs",
-        limit_choices_to={"role__in": ["supervisor", "faculty"]},
+        limit_choices_to={"role": "SUPERVISOR"},
         help_text="Assigned supervisor (required for PGs)",
     )
 
@@ -123,14 +118,27 @@ class User(AbstractUser):
     phone_number = models.CharField(
         max_length=15, blank=True, null=True, help_text="Contact phone number"
     )
+
     is_complete_profile = models.BooleanField(
         default=False,
         help_text="Computed data quality flag for resident/admin correction workflows.",
     )
+
+    is_profile_complete = models.BooleanField(
+        default=False,
+        help_text="Computed flag indicating if required onboarding profile fields are filled.",
+    )
+
+    must_change_password = models.BooleanField(
+        default=False,
+        help_text="Flag indicating the user must change password on next login.",
+    )
+
     has_placeholder_email = models.BooleanField(
         default=False,
         help_text="True when email appears to be a placeholder value.",
     )
+
     data_issues = models.JSONField(
         default=list,
         blank=True,
@@ -205,38 +213,37 @@ class User(AbstractUser):
     # Role checking methods
     def is_admin(self):
         """Check if user is an admin"""
-        return self.role == "admin"
+        return self.role == "ADMIN"
 
     def is_supervisor(self):
         """Check if user is a supervisor"""
-        return self.role == "supervisor"
-
-    def is_pg(self):
-        """Check if user is a resident/postgraduate."""
-        return self.role in {"pg", "resident"}
+        return self.role == "SUPERVISOR"
 
     def is_resident(self):
-        """Check if user is explicitly resident role."""
-        return self.role == "resident"
+        """Check if user is resident role."""
+        return self.role == "RESIDENT"
+
+    def is_support_staff(self):
+        """Check if user is support staff role."""
+        return self.role == "SUPPORT_STAFF"
+
+    # Compatibility methods
+    def is_pg(self):
+        return self.role == "RESIDENT"
 
     def is_faculty(self):
-        """Check if user is faculty role."""
-        return self.role == "faculty"
+        return self.role == "SUPERVISOR"
 
     def is_utrmc_user(self):
-        """Check if user is UTRMC read-only oversight user."""
-        return self.role == "utrmc_user"
+        return self.role == "ADMIN"
 
     def is_utrmc_admin(self):
-        """Check if user is UTRMC admin user."""
-        return self.role == "utrmc_admin"
+        return self.role == "ADMIN"
 
     # Relationship methods
     def get_assigned_pgs(self):
         """Get all PGs assigned to this supervisor"""
         if self.is_supervisor():
-            return self.assigned_pgs.filter(is_active=True, is_archived=False)
-        if self.is_faculty():
             return self.assigned_pgs.filter(is_active=True, is_archived=False)
         return User.objects.none()
 
@@ -249,11 +256,11 @@ class User(AbstractUser):
     # Dashboard URLs
     def get_dashboard_url(self):
         """Get appropriate dashboard URL based on role"""
-        if self.role in {"admin", "utrmc_admin", "utrmc_user"}:
+        if self.role == "ADMIN":
             return "/dashboard/utrmc"
-        elif self.role in {"supervisor", "faculty"}:
+        elif self.role == "SUPERVISOR":
             return "/dashboard/supervisor"
-        elif self.role in {"pg", "resident"}:
+        elif self.role == "RESIDENT":
             return "/dashboard/resident"
         return "/dashboard"
 
@@ -269,13 +276,10 @@ class User(AbstractUser):
     def get_role_badge_class(self):
         """Get CSS class for role badge"""
         role_classes = {
-            "admin": "badge-danger",
-            "supervisor": "badge-warning",
-            "pg": "badge-info",
-            "resident": "badge-info",
-            "faculty": "badge-primary",
-            "utrmc_user": "badge-secondary",
-            "utrmc_admin": "badge-dark",
+            "ADMIN": "badge-danger",
+            "SUPERVISOR": "badge-warning",
+            "RESIDENT": "badge-info",
+            "SUPPORT_STAFF": "badge-secondary",
         }
         return role_classes.get(self.role, "badge-secondary")
 
@@ -284,7 +288,7 @@ class User(AbstractUser):
         Get count of pending documents requiring action by this user/supervisor.
         """
         try:
-            if self.role in {"supervisor", "faculty"}:
+            if self.role == "SUPERVISOR":
                 assigned_pgs = self.get_assigned_pgs()
                 if not assigned_pgs.exists():
                     return 0
@@ -333,7 +337,7 @@ class User(AbstractUser):
                 
                 return total
             
-            elif self.role in {"pg", "resident"}:
+            elif self.role == "RESIDENT":
                 total = 0
                 try:
                     from sims.training.models import LogbookEntry
@@ -348,32 +352,92 @@ class User(AbstractUser):
             return 0
         return 0
 
-class StaffProfile(models.Model):
-    """Profile metadata for faculty and supervisors."""
+    def get_documents_submitted_count(self):
+        """Get count of documents submitted by this PG"""
+        if not self.is_pg():
+            return 0
+
+        count = 0
+        try:
+            # Import here to avoid circular imports
+            from django.apps import apps
+
+            # Check if apps exist before importing
+            if apps.is_installed("sims.certificates"):
+                from sims.certificates.models import Certificate
+                count += Certificate.objects.filter(pg=self).count()
+
+            if apps.is_installed("sims.training"):
+                from sims.training.models import RotationAssignment
+                count += RotationAssignment.objects.filter(
+                    resident_training__resident_user=self
+                ).count()
+
+            if apps.is_installed("sims.logbook"):
+                from sims.logbook.models import LogbookEntry
+                count += LogbookEntry.objects.filter(pg=self).count()
+
+            if apps.is_installed("sims.cases"):
+                from sims.cases.models import ClinicalCase
+                count += ClinicalCase.objects.filter(pg=self).count()
+
+        except ImportError:
+            # Handle case where related models don't exist yet
+            pass
+
+        return count
+
+
+class AdminProfile(models.Model):
+    """Profile metadata for admin users."""
 
     user = models.OneToOneField(
-        "users.User",
-        on_delete=models.CASCADE,
-        related_name="staff_profile",
-        limit_choices_to={"role__in": ["supervisor", "faculty"]},
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="admin_profile",
     )
     designation = models.CharField(max_length=120, blank=True)
     phone = models.CharField(max_length=20, blank=True)
-    active = models.BooleanField(default=True)
+    email = models.EmailField(blank=True)
+    admin_scope = models.TextField(blank=True, help_text="Scope of administrative authority")
+    profile_status = models.CharField(
+        max_length=20,
+        choices=[("INCOMPLETE", "Incomplete"), ("COMPLETE", "Complete")],
+        default="INCOMPLETE",
+    )
+    profile_schema_version = models.PositiveIntegerField(default=1)
+    completed_schema_version = models.PositiveIntegerField(default=0)
+    profile_completed_at = models.DateTimeField(null=True, blank=True)
+    extra_data = models.JSONField(default=dict, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        related_name="+",
+        on_delete=models.SET_NULL,
+    )
+    updated_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        related_name="+",
+        on_delete=models.SET_NULL,
+    )
+    history = HistoricalRecords()
 
     class Meta:
-        ordering = ["user__last_name", "user__first_name"]
-        indexes = [models.Index(fields=["active"])]
+        verbose_name = "Admin Profile"
+        verbose_name_plural = "Admin Profiles"
 
     def __str__(self):
-        return f"StaffProfile<{self.user_id}>"
+        return f"AdminProfile<{self.user_id}>"
 
     def clean(self):
         super().clean()
-        if self.user_id and self.user.role not in {"supervisor", "faculty"}:
-            raise ValidationError({"user": "Staff profile requires supervisor/faculty role."})
+        if self.user_id and self.user.role != "ADMIN":
+            raise ValidationError({"user": "Admin profile requires ADMIN role."})
 
     def save(self, *args, **kwargs):
         self.full_clean()
@@ -384,32 +448,227 @@ class ResidentProfile(models.Model):
     """Training metadata for residents/postgraduates."""
 
     user = models.OneToOneField(
-        "users.User",
-        on_delete=models.CASCADE,
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
         related_name="resident_profile",
-        limit_choices_to={"role__in": ["pg", "resident"]},
     )
-    pgr_id = models.CharField(max_length=60, blank=True)
-    training_start = models.DateField()
-    training_end = models.DateField(null=True, blank=True)
-    training_level = models.CharField(max_length=50, blank=True)
-    active = models.BooleanField(default=True)
+    registration_no = models.CharField(max_length=50, blank=True, null=True)
+    cnic = models.CharField(max_length=20, blank=True, null=True)
+    phone = models.CharField(max_length=20, blank=True)
+    email = models.EmailField(blank=True)
+    hospital = models.ForeignKey(
+        "rotations.Hospital",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="resident_profiles",
+    )
+    department_ref = models.ForeignKey(
+        "academics.Department",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="resident_profiles",
+    )
+    program_ref = models.ForeignKey(
+        "training.TrainingProgram",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="resident_profiles",
+    )
+    academic_session_ref = models.CharField(max_length=100, blank=True, null=True)
+    specialty_ref = models.CharField(max_length=100, blank=True, null=True)
+    profile_status = models.CharField(
+        max_length=20,
+        choices=[("INCOMPLETE", "Incomplete"), ("COMPLETE", "Complete")],
+        default="INCOMPLETE",
+    )
+    profile_schema_version = models.PositiveIntegerField(default=1)
+    completed_schema_version = models.PositiveIntegerField(default=0)
+    profile_completed_at = models.DateTimeField(null=True, blank=True)
+    extra_data = models.JSONField(default=dict, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        related_name="+",
+        on_delete=models.SET_NULL,
+    )
+    updated_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        related_name="+",
+        on_delete=models.SET_NULL,
+    )
+    is_archived = models.BooleanField(default=False)
+    history = HistoricalRecords()
 
     class Meta:
-        ordering = ["user__last_name", "user__first_name"]
-        indexes = [models.Index(fields=["active"]), models.Index(fields=["training_start"])]
+        verbose_name = "Resident Profile"
+        verbose_name_plural = "Resident Profiles"
 
     def __str__(self):
         return f"ResidentProfile<{self.user_id}>"
 
     def clean(self):
         super().clean()
-        if self.user_id and self.user.role not in {"pg", "resident"}:
-            raise ValidationError({"user": "Resident profile requires pg/resident role."})
-        if self.training_end and self.training_end < self.training_start:
-            raise ValidationError({"training_end": "Training end must be on/after training_start."})
+        if self.user_id and self.user.role != "RESIDENT":
+            raise ValidationError({"user": "Resident profile requires RESIDENT role."})
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        return super().save(*args, **kwargs)
+
+
+class SupervisorProfile(models.Model):
+    """Profile metadata for supervisors."""
+
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="supervisor_profile",
+    )
+    pmdc_no = models.CharField(max_length=50, blank=True, null=True)
+    official_email = models.EmailField(blank=True)
+    phone = models.CharField(max_length=20, blank=True)
+    email = models.EmailField(blank=True)
+    hospital = models.ForeignKey(
+        "rotations.Hospital",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="supervisor_profiles",
+    )
+    department_ref = models.ForeignKey(
+        "academics.Department",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="supervisor_profiles",
+    )
+    designation_ref = models.CharField(max_length=100, blank=True, null=True)
+    program_ref = models.ForeignKey(
+        "training.TrainingProgram",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="supervisor_profiles",
+    )
+    specialty_ref = models.CharField(max_length=100, blank=True, null=True)
+    profile_status = models.CharField(
+        max_length=20,
+        choices=[("INCOMPLETE", "Incomplete"), ("COMPLETE", "Complete")],
+        default="INCOMPLETE",
+    )
+    profile_schema_version = models.PositiveIntegerField(default=1)
+    completed_schema_version = models.PositiveIntegerField(default=0)
+    profile_completed_at = models.DateTimeField(null=True, blank=True)
+    extra_data = models.JSONField(default=dict, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        related_name="+",
+        on_delete=models.SET_NULL,
+    )
+    updated_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        related_name="+",
+        on_delete=models.SET_NULL,
+    )
+    is_archived = models.BooleanField(default=False)
+    history = HistoricalRecords()
+
+    class Meta:
+        verbose_name = "Supervisor Profile"
+        verbose_name_plural = "Supervisor Profiles"
+
+    def __str__(self):
+        return f"SupervisorProfile<{self.user_id}>"
+
+    def clean(self):
+        super().clean()
+        if self.user_id and self.user.role != "SUPERVISOR":
+            raise ValidationError({"user": "Supervisor profile requires SUPERVISOR role."})
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        return super().save(*args, **kwargs)
+
+
+class SupportStaffProfile(models.Model):
+    """Profile metadata for support staff."""
+
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="support_staff_profile",
+    )
+    designation = models.CharField(max_length=100, blank=True, null=True)
+    department_ref = models.ForeignKey(
+        "academics.Department",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="support_staff_profiles",
+    )
+    hospital = models.ForeignKey(
+        "rotations.Hospital",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="support_staff_profiles",
+    )
+    phone = models.CharField(max_length=20, blank=True)
+    email = models.EmailField(blank=True)
+    scope_notes = models.TextField(blank=True)
+    profile_status = models.CharField(
+        max_length=20,
+        choices=[("INCOMPLETE", "Incomplete"), ("COMPLETE", "Complete")],
+        default="INCOMPLETE",
+    )
+    profile_schema_version = models.PositiveIntegerField(default=1)
+    completed_schema_version = models.PositiveIntegerField(default=0)
+    profile_completed_at = models.DateTimeField(null=True, blank=True)
+    extra_data = models.JSONField(default=dict, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        related_name="+",
+        on_delete=models.SET_NULL,
+    )
+    updated_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        related_name="+",
+        on_delete=models.SET_NULL,
+    )
+    is_archived = models.BooleanField(default=False)
+    history = HistoricalRecords()
+
+    class Meta:
+        verbose_name = "Support Staff Profile"
+        verbose_name_plural = "Support Staff Profiles"
+
+    def __str__(self):
+        return f"SupportStaffProfile<{self.user_id}>"
+
+    def clean(self):
+        super().clean()
+        if self.user_id and self.user.role != "SUPPORT_STAFF":
+            raise ValidationError({"user": "Support staff profile requires SUPPORT_STAFF role."})
 
     def save(self, *args, **kwargs):
         self.full_clean()
@@ -485,11 +744,11 @@ class DepartmentMembership(models.Model):
     def clean(self):
         super().clean()
         role_map = {
-            self.MEMBER_FACULTY: {"faculty"},
-            self.MEMBER_SUPERVISOR: {"supervisor"},
-            self.MEMBER_RESIDENT: {"pg", "resident"},
+            self.MEMBER_FACULTY: {"SUPERVISOR"},
+            self.MEMBER_SUPERVISOR: {"SUPERVISOR"},
+            self.MEMBER_RESIDENT: {"RESIDENT"},
         }
-        if self.user_id and self.user.role not in role_map[self.member_type]:
+        if self.user_id and self.user.role not in role_map.get(self.member_type, set()):
             raise ValidationError({"member_type": "member_type must match user role."})
         if self.end_date and self.end_date < self.start_date:
             raise ValidationError({"end_date": "end_date must be on/after start_date."})
@@ -570,7 +829,7 @@ class HospitalAssignment(models.Model):
 
 
 class SupervisorResidentLink(models.Model):
-    """Tracks dated supervisor/faculty to resident links."""
+    """Tracks dated supervisor to resident links."""
 
     supervisor_user = models.ForeignKey(
         "users.User",
@@ -638,12 +897,12 @@ class SupervisorResidentLink(models.Model):
 
     def clean(self):
         super().clean()
-        if self.supervisor_user_id and self.supervisor_user.role not in {"supervisor", "faculty"}:
+        if self.supervisor_user_id and self.supervisor_user.role != "SUPERVISOR":
             raise ValidationError(
-                {"supervisor_user": "Supervisor must have supervisor/faculty role."}
+                {"supervisor_user": "Supervisor must have SUPERVISOR role."}
             )
-        if self.resident_user_id and self.resident_user.role not in {"pg", "resident"}:
-            raise ValidationError({"resident_user": "Resident must have pg/resident role."})
+        if self.resident_user_id and self.resident_user.role != "RESIDENT":
+            raise ValidationError({"resident_user": "Resident must have RESIDENT role."})
         if (
             self.supervisor_user_id
             and self.resident_user_id
@@ -691,109 +950,3 @@ class DataCorrectionAudit(models.Model):
 
     def __str__(self):
         return f"{self.entity_type}:{self.entity_id}:{self.field_name}"
-
-
-class HODAssignment(models.Model):
-    """Tracks dated HOD assignment per department."""
-
-    department = models.ForeignKey(
-        "academics.Department",
-        on_delete=models.CASCADE,
-        related_name="hod_assignments",
-    )
-    hod_user = models.ForeignKey(
-        "users.User",
-        on_delete=models.CASCADE,
-        related_name="hod_assignments",
-    )
-    start_date = models.DateField()
-    end_date = models.DateField(null=True, blank=True)
-    active = models.BooleanField(default=True)
-    created_by = models.ForeignKey(
-        "users.User",
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name="hod_assignments_created",
-    )
-    updated_by = models.ForeignKey(
-        "users.User",
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name="hod_assignments_updated",
-    )
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        ordering = ["department__name", "-start_date"]
-        constraints = [
-            models.CheckConstraint(
-                check=models.Q(end_date__isnull=True)
-                | models.Q(end_date__gte=models.F("start_date")),
-                name="hod_assignment_dates_valid",
-            ),
-            models.UniqueConstraint(
-                fields=["department"],
-                condition=models.Q(active=True),
-                name="uniq_active_hod_assignment_per_department",
-            ),
-        ]
-        indexes = [
-            models.Index(fields=["department", "active"]),
-            models.Index(fields=["hod_user", "active"]),
-        ]
-
-    def __str__(self):
-        return f"HOD<{self.department}>: {self.hod_user}"
-
-    def clean(self):
-        super().clean()
-        if self.hod_user_id and self.hod_user.role not in {"faculty", "supervisor"}:
-            raise ValidationError({"hod_user": "HOD must have faculty/supervisor role."})
-        if self.end_date and self.end_date < self.start_date:
-            raise ValidationError({"end_date": "end_date must be on/after start_date."})
-
-    def save(self, *args, **kwargs):
-        self.full_clean()
-        return super().save(*args, **kwargs)
-
-    def get_documents_submitted_count(self):
-        """Get count of documents submitted by this PG"""
-        if not self.is_pg():
-            return 0
-
-        count = 0
-        try:
-            # Import here to avoid circular imports
-            from django.apps import apps
-
-            # Check if apps exist before importing
-            if apps.is_installed("sims.certificates"):
-                from sims.certificates.models import Certificate
-
-                count += Certificate.objects.filter(pg=self).count()
-
-            if apps.is_installed("sims.training"):
-                from sims.training.models import RotationAssignment
-
-                count += RotationAssignment.objects.filter(
-                    resident_training__resident_user=self
-                ).count()
-
-            if apps.is_installed("sims.logbook"):
-                from sims.logbook.models import LogbookEntry
-
-                count += LogbookEntry.objects.filter(pg=self).count()
-
-            if apps.is_installed("sims.cases"):
-                from sims.cases.models import ClinicalCase
-
-                count += ClinicalCase.objects.filter(pg=self).count()
-
-        except ImportError:
-            # Handle case where related models don't exist yet
-            pass
-
-        return count

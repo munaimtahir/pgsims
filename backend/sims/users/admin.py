@@ -7,10 +7,11 @@ from import_export.admin import ImportExportModelAdmin
 
 from .models import (
     DepartmentMembership,
-    HODAssignment,
     HospitalAssignment,
+    AdminProfile,
     ResidentProfile,
-    StaffProfile,
+    SupervisorProfile,
+    SupportStaffProfile,
     SupervisorResidentLink,
     User,
 )
@@ -43,7 +44,7 @@ class UserResource(resources.ModelResource):
         supervisor_username = row.get("supervisor__username")
         if supervisor_username:
             try:
-                supervisor = User.objects.get(username=supervisor_username, role="supervisor")
+                supervisor = User.objects.get(username=supervisor_username, role="SUPERVISOR")
                 row["supervisor"] = supervisor.id
             except User.DoesNotExist:
                 row["supervisor"] = None
@@ -141,9 +142,9 @@ class UserAdmin(BaseUserAdmin, ImportExportModelAdmin):
         qs = super().get_queryset(request)
         if request.user.is_superuser:
             return qs
-        elif request.user.role == "admin":
+        elif request.user.role == "ADMIN":
             return qs
-        elif request.user.role == "supervisor":
+        elif request.user.role == "SUPERVISOR":
             # Supervisors can only view their assigned PGs
             return qs.filter(supervisor=request.user)
         else:
@@ -160,9 +161,9 @@ class UserAdmin(BaseUserAdmin, ImportExportModelAdmin):
                 form.base_fields["is_superuser"].disabled = True
 
             # Only admins can assign admin role
-            if request.user.role != "admin" and "role" in form.base_fields:
+            if request.user.role != "ADMIN" and "role" in form.base_fields:
                 choices = [
-                    choice for choice in form.base_fields["role"].choices if choice[0] != "admin"
+                    choice for choice in form.base_fields["role"].choices if choice[0] != "ADMIN"
                 ]
                 form.base_fields["role"].choices = choices
 
@@ -171,18 +172,18 @@ class UserAdmin(BaseUserAdmin, ImportExportModelAdmin):
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         """Filter supervisor choices to only show supervisors"""
         if db_field.name == "supervisor":
-            kwargs["queryset"] = User.objects.filter(role__in=["supervisor", "faculty"])
+            kwargs["queryset"] = User.objects.filter(role="SUPERVISOR")
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
     def has_add_permission(self, request):
         """Control who can add users"""
-        return request.user.is_superuser or request.user.role == "admin"
+        return request.user.is_superuser or request.user.role == "ADMIN"
 
     def has_change_permission(self, request, obj=None):
         """Control who can change users"""
-        if request.user.is_superuser or request.user.role == "admin":
+        if request.user.is_superuser or request.user.role == "ADMIN":
             return True
-        if request.user.role == "supervisor" and obj:
+        if request.user.role == "SUPERVISOR" and obj:
             return obj.supervisor == request.user
         if obj:
             return obj == request.user
@@ -190,7 +191,7 @@ class UserAdmin(BaseUserAdmin, ImportExportModelAdmin):
 
     def has_delete_permission(self, request, obj=None):
         """Control who can delete users"""
-        return request.user.is_superuser or request.user.role == "admin"
+        return request.user.is_superuser or request.user.role == "ADMIN"
 
     def save_model(self, request, obj, form, change):
         """Custom save logic"""
@@ -203,24 +204,32 @@ class UserAdmin(BaseUserAdmin, ImportExportModelAdmin):
 # Admin branding overrides disabled to restore vanilla Django admin defaults.
 
 
-@admin.register(StaffProfile)
-class StaffProfileAdmin(admin.ModelAdmin):
-    list_display = ("user", "designation", "phone", "active", "updated_at")
-    list_filter = ("active", "user__role")
-    search_fields = (
-        "user__username",
-        "user__first_name",
-        "user__last_name",
-        "designation",
-        "phone",
-    )
+@admin.register(AdminProfile)
+class AdminProfileAdmin(admin.ModelAdmin):
+    list_display = ("user", "designation", "phone", "profile_status")
+    list_filter = ("profile_status",)
+    search_fields = ("user__username", "user__first_name", "user__last_name", "designation")
 
 
 @admin.register(ResidentProfile)
 class ResidentProfileAdmin(admin.ModelAdmin):
-    list_display = ("user", "pgr_id", "training_start", "training_end", "training_level", "active")
-    list_filter = ("active", "training_level")
-    search_fields = ("user__username", "user__first_name", "user__last_name", "pgr_id")
+    list_display = ("user", "registration_no", "profile_status", "is_archived")
+    list_filter = ("profile_status", "is_archived")
+    search_fields = ("user__username", "user__first_name", "user__last_name", "registration_no")
+
+
+@admin.register(SupervisorProfile)
+class SupervisorProfileAdmin(admin.ModelAdmin):
+    list_display = ("user", "pmdc_no", "profile_status", "is_archived")
+    list_filter = ("profile_status", "is_archived")
+    search_fields = ("user__username", "user__first_name", "user__last_name", "pmdc_no")
+
+
+@admin.register(SupportStaffProfile)
+class SupportStaffProfileAdmin(admin.ModelAdmin):
+    list_display = ("user", "designation", "profile_status", "is_archived")
+    list_filter = ("profile_status", "is_archived")
+    search_fields = ("user__username", "user__first_name", "user__last_name", "designation")
 
 
 @admin.register(DepartmentMembership)
@@ -280,17 +289,4 @@ class SupervisorResidentLinkAdmin(admin.ModelAdmin):
         "resident_user__username",
         "supervisor_user__first_name",
         "resident_user__first_name",
-    )
-
-
-@admin.register(HODAssignment)
-class HODAssignmentAdmin(admin.ModelAdmin):
-    list_display = ("department", "hod_user", "active", "start_date", "end_date")
-    list_filter = ("active", "department")
-    search_fields = (
-        "department__name",
-        "department__code",
-        "hod_user__username",
-        "hod_user__first_name",
-        "hod_user__last_name",
     )

@@ -17,12 +17,12 @@ User = get_user_model()
 class BackendCoveragePushTests(TestCase):
     def setUp(self):
         self.client = Client()
-        self.admin = User.objects.create_superuser(username="admin_push", password="password123", role="admin")
-        self.admin.role = "admin"
+        self.admin = User.objects.create_superuser(username="admin_push", password="password123", role="ADMIN")
+        self.admin.role = "ADMIN"
         self.admin.save()
         
-        self.supervisor = User.objects.create_user(username="sup_push", password="password123", role="supervisor")
-        self.pg = User.objects.create_user(username="pg_push", password="password123", role="pg")
+        self.supervisor = User.objects.create_user(username="sup_push", password="password123", role="SUPERVISOR")
+        self.pg = User.objects.create_user(username="pg_push", password="password123", role="RESIDENT")
         
         self.program = TrainingProgram.objects.create(name="Push Program", code="PUSH", duration_months=48)
         self.rtr = ResidentTrainingRecord.objects.create(
@@ -111,14 +111,7 @@ class BackendCoveragePushTests(TestCase):
         response = self.client.post(f"/api/leaves/{leave.id}/approve/")
         self.assertEqual(response.status_code, 200)
 
-    def test_dashboard_hod_as_hod(self):
-        # Create HOD assignment
-        from sims.users.models import HODAssignment
-        HODAssignment.objects.create(hod_user=self.supervisor, department=self.dept, start_date=date.today())
-        
-        self.client.login(username="sup_push", password="password123")
-        response = self.client.get("/api/dashboard/hod/")
-        self.assertEqual(response.status_code, 200)
+
         
     def test_dashboard_supervisor_stats(self):
         self.client.login(username="sup_push", password="password123")

@@ -1,0 +1,12 @@
+node_modules/
+.next/
+coverage/
+playwright-report/
+test-results/
+pw-test-results/
+pw-screenshots/
+.swc/
+*.tsbuildinfo
+.env.local
+.env
+npm-debug.log*

@@ -155,17 +155,6 @@ test('utrmc admin can build userbase graph and resident scope is enforced', asyn
   });
   expect(supervisionResponse.ok()).toBeTruthy();
 
-  const hodResponse = await page.request.post('/api/hod-assignments/', {
-    headers: utrmcAuthHeaders,
-    data: {
-      department_id: departmentId,
-      hod_user_id: supervisorId,
-      start_date: new Date().toISOString().slice(0, 10),
-      active: true,
-    },
-  });
-  expect(hodResponse.ok()).toBeTruthy();
-
   await page.goto(`/dashboard/utrmc/departments/${departmentId}/roster`);
   await expect(page.getByText(departmentName)).toBeVisible();
   await expect(page.locator('li', { hasText: 'Sup User' })).toBeVisible();

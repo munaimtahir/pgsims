@@ -54,8 +54,8 @@ export default function SupervisionPage() {
 
   useEffect(() => { load(); }, []);
 
-  const supervisors = users.filter(u=>u.role==='supervisor'||u.role==='faculty');
-  const residents = users.filter(u=>u.role==='resident'||u.role==='pg');
+  const supervisors = users.filter(u=>u.role==='SUPERVISOR'||u.role==='SUPERVISOR');
+  const residents = users.filter(u=>u.role==='RESIDENT'||u.role==='RESIDENT');
 
   const save = async () => {
     setSaving(true);

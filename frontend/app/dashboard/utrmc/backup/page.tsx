@@ -16,8 +16,8 @@ import useAuthStore from "@/store/authStore";
 
 export default function BackupCenterPage() {
   const user = useAuthStore((s) => s.user);
-  const isAllowedAdmin = user?.role === "admin" || user?.role === "utrmc_admin";
-  const canRestore = user?.role === "admin";
+  const isAllowedAdmin = user?.role === "ADMIN";
+  const canRestore = user?.role === "ADMIN";
   const [backups, setBackups] = useState<any[]>([]);
   const [auditLogs, setAuditLogs] = useState<any[]>([]);
   const [restores, setRestores] = useState<any[]>([]);
@@ -78,7 +78,7 @@ export default function BackupCenterPage() {
   }, [normalizeList]);
 
   const loadDriveCopies = useCallback(async () => {
-    if (user?.role !== "admin") {
+    if (user?.role !== "ADMIN") {
       setDriveCopies([]);
       return;
     }
@@ -236,7 +236,7 @@ export default function BackupCenterPage() {
       </SectionCard>
 
       <GoogleDrivePanel
-        canManage={user?.role === "admin"}
+        canManage={user?.role === "ADMIN"}
         completedBackups={completedBackups}
         onRestoreReady={(restoreJobId) => {
           setInitialRestoreJobId(restoreJobId);

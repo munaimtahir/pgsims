@@ -14,9 +14,9 @@ User = get_user_model()
 
 class BulkServicesTests(TestCase):
     def setUp(self):
-        self.admin = User.objects.create_superuser(username="admin_srv", password="password123", role="admin")
-        self.supervisor = User.objects.create_user(username="sup_srv", password="password123", role="supervisor", email="sup@test.com")
-        self.pg = User.objects.create_user(username="pg_srv", password="password123", role="pg", email="pg@test.com")
+        self.admin = User.objects.create_superuser(username="admin_srv", password="password123", role="ADMIN")
+        self.supervisor = User.objects.create_user(username="sup_srv", password="password123", role="SUPERVISOR", email="sup@test.com")
+        self.pg = User.objects.create_user(username="pg_srv", password="password123", role="RESIDENT", email="pg@test.com")
         self.service = BulkService(self.admin)
         
         self.hospital = Hospital.objects.create(name="Allied Hospital", code="AH", is_active=True)

@@ -42,13 +42,13 @@ describe('BackupCenterPage', () => {
       id: 1,
       action: 'routine_backup_completed',
       created_at: new Date().toISOString(),
-      actor_username: 'admin',
+      actor_username: 'ADMIN',
     },
   ];
 
   beforeEach(() => {
     useAuthStore.setState({
-      user: { id: 1, username: 'admin', role: 'admin' } as any,
+      user: { id: 1, username: 'ADMIN', role: 'ADMIN' } as any,
       accessToken: 't',
       refreshToken: 'r',
       isAuthenticated: true,
@@ -95,7 +95,7 @@ describe('BackupCenterPage', () => {
   });
 
   it('shows access denied to restricted roles', async () => {
-    useAuthStore.setState({ user: { id: 2, username: 'pg1', role: 'pg' } as any });
+    useAuthStore.setState({ user: { id: 2, username: 'pg1', role: 'RESIDENT' } as any });
     render(<BackupCenterPage />);
 
     await waitFor(() => {
@@ -107,7 +107,7 @@ describe('BackupCenterPage', () => {
   });
 
   it('allows other admins to view page and create routine backup, but hides restore/disaster controls', async () => {
-    useAuthStore.setState({ user: { id: 3, username: 'utrmc_admin1', role: 'utrmc_admin' } as any });
+    useAuthStore.setState({ user: { id: 3, username: 'utrmc_admin1', role: 'ADMIN' } as any });
     render(<BackupCenterPage />);
 
     await waitFor(() => {

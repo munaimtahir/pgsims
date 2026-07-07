@@ -16,11 +16,11 @@ from django.views.generic import DetailView, ListView, UpdateView, View
 
 from .decorators import (
     AdminRequiredMixin,
-    PGRequiredMixin,
+    ResidentRequiredMixin,
     SupervisorOrAdminRequiredMixin,
     SupervisorRequiredMixin,
     admin_required,
-    pg_required,
+    resident_required,
     supervisor_or_admin_required,
     supervisor_required,
 )
@@ -47,9 +47,9 @@ def login_view(request):
                 elif user.is_supervisor():
                     messages.success(request, f"Welcome back, Dr. {user.get_display_name()}!")
                     return redirect("users:supervisor_dashboard")
-                elif user.is_pg():
+                elif user.is_resident():
                     messages.success(request, f"Welcome back, {user.get_display_name()}!")
-                    return redirect("users:pg_dashboard")
+                    return redirect("users:resident_dashboard")
                 else:
                     return redirect("users:profile")
             else:
@@ -110,14 +110,14 @@ def supervisor_dashboard(request):
         "assigned_pgs_count": assigned_pgs.count(),
         "pending_documents": pending_count,
         "recent_submissions": recent_submissions[:10],
-        "dashboard_type": "supervisor",
+        "dashboard_type": "SUPERVISOR",
     }
     return render(request, "users/supervisor_dashboard.html", context)
 
 
-@pg_required
+@resident_required
 def pg_dashboard(request):
-    """PG dashboard with personal progress overview"""
+    """Resident dashboard with personal progress overview"""
 
     # Get supervisor info
     supervisor = request.user.supervisor
@@ -167,10 +167,10 @@ def pg_dashboard(request):
 
     context = {
         "documents_submitted": documents_submitted,
-        "supervisor": supervisor,
+        "SUPERVISOR": supervisor,
         "recent_submissions": recent_submissions[:10],
         "progress_stats": progress_stats,
-        "dashboard_type": "pg",
+        "dashboard_type": "RESIDENT",
     }
     return render(request, "users/pg_dashboard.html", context)
 
@@ -184,8 +184,8 @@ class DashboardRedirectView(LoginRequiredMixin, View):
             return redirect("users:admin_dashboard")  # Changed from admin:index to show dashboard with navigation
         elif user.is_supervisor():
             return redirect("users:supervisor_dashboard")
-        elif user.is_pg():
-            return redirect("users:pg_dashboard")
+        elif user.is_resident():
+            return redirect("users:resident_dashboard")
         else:
             return redirect("users:profile")
 
@@ -200,8 +200,8 @@ class AdminDashboardView(AdminRequiredMixin, View):
 
         # Get user statistics
         total_users = User.objects.filter(is_archived=False).count()
-        total_pgs = User.objects.filter(role="pg", is_archived=False).count()
-        total_supervisors = User.objects.filter(role="supervisor", is_archived=False).count()
+        total_pgs = User.objects.filter(role="RESIDENT", is_archived=False).count()
+        total_supervisors = User.objects.filter(role="SUPERVISOR", is_archived=False).count()
 
         # Get new users this month
         current_month_start = timezone.now().replace(
@@ -216,7 +216,7 @@ class AdminDashboardView(AdminRequiredMixin, View):
 
         # Get specialty distribution for chart
         specialty_distribution = (
-            User.objects.filter(role__in=["pg", "supervisor"], is_archived=False, specialty__isnull=False)
+            User.objects.filter(role__in=["RESIDENT", "SUPERVISOR"], is_archived=False, specialty__isnull=False)
             .values("specialty")
             .annotate(count=Count("id"))
             .order_by("-count")
@@ -248,8 +248,8 @@ class SupervisorDashboardView(SupervisorRequiredMixin, View):
         return supervisor_dashboard(request)
 
 
-class PGDashboardView(PGRequiredMixin, View):
-    """PG dashboard class-based view"""
+class ResidentDashboardView(ResidentRequiredMixin, View):
+    """Resident dashboard class-based view"""
 
     def get(self, request, *args, **kwargs):
         return pg_dashboard(request)
@@ -361,9 +361,9 @@ class UserCreateView(AdminRequiredMixin, View):
             password2 = request.POST.get("password2", "").strip()
             supervisor_id = request.POST.get("supervisor_choice", "").strip()
 
-            # Also check for 'supervisor' field as backup
+            # Also check for 'SUPERVISOR' field as backup
             if not supervisor_id:
-                supervisor_id = request.POST.get("supervisor", "").strip()
+                supervisor_id = request.POST.get("SUPERVISOR", "").strip()
 
             # Validation
             errors = []
@@ -395,10 +395,10 @@ class UserCreateView(AdminRequiredMixin, View):
                 errors.append("Password must be at least 8 characters")
 
             # Role-specific validation
-            if role in ["pg", "supervisor"] and not specialty:
+            if role in ["RESIDENT", "SUPERVISOR"] and not specialty:
                 errors.append("Specialty is required for PGs and Supervisors")
 
-            if role == "pg":
+            if role == "RESIDENT":
                 if not year:
                     errors.append("Year is required for PGs")
                 if not supervisor_id:
@@ -416,17 +416,17 @@ class UserCreateView(AdminRequiredMixin, View):
                 first_name=first_name,
                 last_name=last_name,
                 role=role,
-                specialty=specialty if role in ["pg", "supervisor"] else None,
-                year=year if role == "pg" else None,
+                specialty=specialty if role in ["RESIDENT", "SUPERVISOR"] else None,
+                year=year if role == "RESIDENT" else None,
                 phone_number=phone_number,
                 registration_number=registration_number,
                 is_active=True,
             )
 
             # Set supervisor for PG users
-            if role == "pg" and supervisor_id:
+            if role == "RESIDENT" and supervisor_id:
                 try:
-                    supervisor = User.objects.get(id=supervisor_id, role="supervisor")
+                    supervisor = User.objects.get(id=supervisor_id, role="SUPERVISOR")
                     user.supervisor = supervisor
                 except User.DoesNotExist:
                     messages.error(request, "Selected supervisor not found")
@@ -454,7 +454,7 @@ class UserEditView(AdminRequiredMixin, UpdateView):
         "role",
         "specialty",
         "year",
-        "supervisor",
+        "SUPERVISOR",
         "is_active",
         "phone_number",
         "registration_number",
@@ -471,11 +471,11 @@ class UserEditView(AdminRequiredMixin, UpdateView):
         # Customize supervisor field queryset to show only active supervisors
         if "form" in context:
             form = context["form"]
-            if "supervisor" in form.fields:
-                form.fields["supervisor"].queryset = User.objects.filter(
-                    role="supervisor", is_active=True
+            if "SUPERVISOR" in form.fields:
+                form.fields["SUPERVISOR"].queryset = User.objects.filter(
+                    role="SUPERVISOR", is_active=True
                 ).order_by("first_name", "last_name")
-                form.fields["supervisor"].empty_label = "No Supervisor (for Supervisors/Admins)"
+                form.fields["SUPERVISOR"].empty_label = "No Supervisor (for Supervisors/Admins)"
 
         return context
 
@@ -544,7 +544,7 @@ class SupervisorListView(AdminRequiredMixin, ListView):
     context_object_name = "supervisors"
 
     def get_queryset(self):
-        return User.objects.filter(role="supervisor", is_archived=False)
+        return User.objects.filter(role="SUPERVISOR", is_archived=False)
 
 
 class SupervisorPGsView(LoginRequiredMixin, DetailView):
@@ -552,7 +552,7 @@ class SupervisorPGsView(LoginRequiredMixin, DetailView):
 
     model = User
     template_name = "users/supervisor_pgs.html"
-    context_object_name = "supervisor"
+    context_object_name = "SUPERVISOR"
 
     def dispatch(self, request, *args, **kwargs):
         if not (request.user.is_admin() or request.user.pk == kwargs.get("pk")):
@@ -591,7 +591,7 @@ def pg_list_view(request):
         pgs = request.user.get_assigned_pgs()
     elif request.user.is_admin():
         # Admins see all PGs
-        pgs = User.objects.filter(role="pg", is_archived=False)
+        pgs = User.objects.filter(role="RESIDENT", is_archived=False)
 
     # Search functionality
     form = PGSearchForm(request.GET)
@@ -753,8 +753,8 @@ class UserReportsView(AdminRequiredMixin, View):
     def get(self, request):
         # Get basic statistics for the template
         total_users = User.objects.filter(is_archived=False).count()
-        total_pgs = User.objects.filter(role="pg", is_archived=False).count()
-        total_supervisors = User.objects.filter(role="supervisor", is_archived=False).count()
+        total_pgs = User.objects.filter(role="RESIDENT", is_archived=False).count()
+        total_supervisors = User.objects.filter(role="SUPERVISOR", is_archived=False).count()
         
         # Get new users this month
         current_month_start = timezone.now().replace(
@@ -814,7 +814,7 @@ class SupervisorsBySpecialtyAPIView(LoginRequiredMixin, View):
 
     def get(self, request, specialty):
         supervisors = User.objects.filter(
-            role="supervisor", specialty=specialty, is_active=True, is_archived=False
+            role="SUPERVISOR", specialty=specialty, is_active=True, is_archived=False
         )
 
         results = [{"id": sup.id, "name": sup.get_display_name()} for sup in supervisors]
@@ -855,12 +855,12 @@ class UserListStatsAPIView(LoginRequiredMixin, View):
         # Get user counts
         total_users = User.objects.filter(is_archived=False).count()
         active_users = User.objects.filter(is_active=True, is_archived=False).count()
-        pg_count = User.objects.filter(role="pg", is_archived=False).count()
-        supervisor_count = User.objects.filter(role="supervisor", is_archived=False).count()
+        pg_count = User.objects.filter(role="RESIDENT", is_archived=False).count()
+        supervisor_count = User.objects.filter(role="SUPERVISOR", is_archived=False).count()
 
         # Get specialty count for PGs
         specialty_count = (
-            User.objects.filter(role="pg", is_archived=False, specialty__isnull=False)
+            User.objects.filter(role="RESIDENT", is_archived=False, specialty__isnull=False)
             .values("specialty")
             .distinct()
             .count()
@@ -871,7 +871,7 @@ class UserListStatsAPIView(LoginRequiredMixin, View):
             day=1, hour=0, minute=0, second=0, microsecond=0
         )
         new_this_month = User.objects.filter(
-            role="pg", is_archived=False, date_joined__gte=current_month_start
+            role="RESIDENT", is_archived=False, date_joined__gte=current_month_start
         ).count()
 
         stats = {
@@ -894,8 +894,8 @@ class UserStatisticsAPIView(AdminRequiredMixin, View):
         
         # Get basic counts
         total_users = User.objects.filter(is_archived=False).count()
-        total_pgs = User.objects.filter(role="pg", is_archived=False).count()
-        total_supervisors = User.objects.filter(role="supervisor", is_archived=False).count()
+        total_pgs = User.objects.filter(role="RESIDENT", is_archived=False).count()
+        total_supervisors = User.objects.filter(role="SUPERVISOR", is_archived=False).count()
         
         # Get new users this month
         current_month_start = timezone.now().replace(
@@ -920,15 +920,15 @@ class UserStatisticsAPIView(AdminRequiredMixin, View):
         
         # Role distribution
         role_distribution = {
-            "pg": total_pgs,
-            "supervisor": total_supervisors,
-            "admin": User.objects.filter(role="admin", is_archived=False).count(),
+            "RESIDENT": total_pgs,
+            "SUPERVISOR": total_supervisors,
+            "ADMIN": User.objects.filter(role="ADMIN", is_archived=False).count(),
         }
         
         # Specialty distribution
         specialty_distribution = {}
         specialty_stats = (
-            User.objects.filter(role="pg", is_archived=False, specialty__isnull=False)
+            User.objects.filter(role="RESIDENT", is_archived=False, specialty__isnull=False)
             .values("specialty")
             .annotate(count=Count("id"))
             .order_by("-count")
@@ -1064,9 +1064,9 @@ def supervisor_analytics_view(request):
     return _HttpResponse("Analytics coming soon.", status=200)
 
 
-@pg_required
+@resident_required
 def pg_analytics_view(request):
-    """PG analytics — placeholder."""
+    """Resident analytics — placeholder."""
     return _HttpResponse("Analytics coming soon.", status=200)
 
 

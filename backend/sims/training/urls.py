@@ -53,7 +53,6 @@ from .views import (
     RotationCompletionVerifyView,
     ResidentOperationalDashboardView,
     SupervisorOperationalDashboardView,
-    HODOperationalDashboardView,
     UTRMCOperationalDashboardView,
 )
 
@@ -162,7 +161,6 @@ urlpatterns = [
         SupervisorOperationalDashboardView.as_view(),
         name="dashboard-supervisor",
     ),
-    path("dashboard/hod/", HODOperationalDashboardView.as_view(), name="dashboard-hod"),
     path("dashboard/utrmc/", UTRMCOperationalDashboardView.as_view(), name="dashboard-utrmc"),
     path("", include(router.urls)),
     # Supervisor routes

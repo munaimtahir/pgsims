@@ -20,12 +20,12 @@ User = get_user_model()
 class BackendMegaCoverageTests(TestCase):
     def setUp(self):
         self.client = Client()
-        self.admin = User.objects.create_superuser(username="admin_mega_v2", password="password123", role="admin")
-        self.admin.role = "admin"
+        self.admin = User.objects.create_superuser(username="admin_mega_v2", password="password123", role="ADMIN")
+        self.admin.role = "ADMIN"
         self.admin.save()
         
-        self.supervisor = User.objects.create_user(username="sup_mega_v2", password="password123", role="supervisor")
-        self.pg = User.objects.create_user(username="pg_mega_v2", password="password123", role="pg")
+        self.supervisor = User.objects.create_user(username="sup_mega_v2", password="password123", role="SUPERVISOR")
+        self.pg = User.objects.create_user(username="pg_mega_v2", password="password123", role="RESIDENT")
         
         self.program = TrainingProgram.objects.create(name="Mega Program V2", code="MEGAV2", duration_months=48)
         self.rtr = ResidentTrainingRecord.objects.create(

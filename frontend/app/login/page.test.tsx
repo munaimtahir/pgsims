@@ -39,7 +39,7 @@ describe('LoginPage', () => {
   });
 
   it('handles successful login', async () => {
-    const user = { id: 1, role: 'resident' };
+    const user = { id: 1, role: 'RESIDENT' };
     (authApi.login as jest.Mock).mockResolvedValue({
       user,
       access: 'access-token',

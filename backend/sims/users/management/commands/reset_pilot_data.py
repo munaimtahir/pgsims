@@ -7,8 +7,8 @@ from django.db import transaction
 from sims.academics.models import Department
 from sims.rotations.models import Hospital, HospitalDepartment
 from sims.users.models import (
-    ResidentProfile, StaffProfile, DepartmentMembership,
-    HospitalAssignment, SupervisorResidentLink, HODAssignment
+    ResidentProfile, SupervisorProfile, SupportStaffProfile, DepartmentMembership,
+    HospitalAssignment, SupervisorResidentLink
 )
 from sims.training.models import (
     ResidentTrainingRecord, RotationAssignment, LeaveRequest,
@@ -43,14 +43,14 @@ class Command(BaseCommand):
 
         # 1. Identify users to delete
         # Preserve superadmin/admin accounts, delete all test/demo/E2E accounts.
-        # We preserve any superusers or users with username 'admin' or 'pilot_admin'.
-        preserved_usernames = {"admin", "pilot_admin"}
+        # We preserve any superusers or users with username 'ADMIN' or 'pilot_admin'.
+        preserved_usernames = {"ADMIN", "pilot_admin"}
         all_users = User.objects.all()
         users_to_delete = []
         users_to_keep = []
 
         for user in all_users:
-            if user.is_superuser or user.username.lower() in preserved_usernames or user.role == "admin":
+            if user.is_superuser or user.username.lower() in preserved_usernames or user.role == "ADMIN":
                 users_to_keep.append(user)
             else:
                 users_to_delete.append(user)
@@ -81,10 +81,10 @@ class Command(BaseCommand):
             "ResidentSubmission": ResidentSubmission.objects.all(),
             "ResidentTrainingRecord": ResidentTrainingRecord.objects.all(),
             "SupervisorResidentLink": SupervisorResidentLink.objects.all(),
-            "HODAssignment": HODAssignment.objects.all(),
             "HospitalAssignment": HospitalAssignment.objects.all(),
             "DepartmentMembership": DepartmentMembership.objects.all(),
-            "StaffProfile": StaffProfile.objects.all(),
+            "SupervisorProfile": SupervisorProfile.objects.all(),
+            "SupportStaffProfile": SupportStaffProfile.objects.all(),
             "ResidentProfile": ResidentProfile.objects.all(),
             "User": User.objects.filter(id__in=[u.id for u in users_to_delete]),
         }

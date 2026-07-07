@@ -38,7 +38,7 @@ describe('DashboardLayout', () => {
   beforeEach(() => {
     (useRouter as jest.Mock).mockReturnValue({ push: mockPush });
     (useAuthStore as unknown as jest.Mock).mockReturnValue({
-      user: { full_name: 'Test User', role: 'resident' },
+      user: { full_name: 'Test User', role: 'RESIDENT' },
       clearAuth: mockClearAuth,
     });
     (authApi.logout as jest.Mock).mockResolvedValue({});

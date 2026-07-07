@@ -58,7 +58,7 @@ const mockedUserbaseApi = userbaseApi as unknown as {
 
 describe('UTRMCOverviewPage', () => {
   beforeEach(() => {
-    (useAuthStore as unknown as jest.Mock).mockReturnValue({ user: { role: 'admin' } });
+    (useAuthStore as unknown as jest.Mock).mockReturnValue({ user: { role: 'ADMIN' } });
     
     mockedUserbaseApi.hospitals.list.mockResolvedValue([]);
     mockedUserbaseApi.departments.list.mockResolvedValue([]);

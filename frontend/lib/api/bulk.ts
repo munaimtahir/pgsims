@@ -6,8 +6,7 @@ export type BulkUserbaseEntity =
   | 'matrix'
   | 'faculty-supervisors'
   | 'residents'
-  | 'supervision-links'
-  | 'hod-assignments';
+  | 'supervision-links';
 
 export type BulkImportAction = 'dry-run' | 'apply';
 export type BulkExportFormat = 'csv' | 'xlsx';

@@ -59,7 +59,7 @@ export default function RegisterPage() {
         last_name: formData.last_name.trim(),
         password: formData.password,
         password2: formData.password2,
-        role: 'pg', // Public registration only supports role 'pg'
+        role: 'RESIDENT', // Public registration only supports role 'RESIDENT'
       });
 
       setSuccess(true);

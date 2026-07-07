@@ -15,7 +15,7 @@ const STATUS_LABELS: Record<string, string> = {
 
 export default function UTRMCPostingsPage() {
   const { user } = useAuthStore();
-  const canManagePostings = user?.role === 'admin' || user?.role === 'utrmc_admin';
+  const canManagePostings = user?.role === 'ADMIN';
   const [postings, setPostings] = useState<DeputationPosting[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -72,7 +72,7 @@ export default function UTRMCPostingsPage() {
   const visible = postings;
 
   return (
-    <ProtectedRoute allowedRoles={['admin', 'utrmc_admin', 'utrmc_user']}>
+    <ProtectedRoute allowedRoles={['ADMIN', 'ADMIN', 'SUPPORT_STAFF']}>
       <div className="pg-page max-w-5xl">
         <PageHeader
           title="Deputation Postings"
@@ -100,7 +100,7 @@ export default function UTRMCPostingsPage() {
         {success && <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg text-sm text-green-700">{success}</div>}
         {!canManagePostings && (
           <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-800">
-            Deputation postings are read-only for UTRMC users. Approval and completion actions require an admin or UTRMC admin account.
+            Deputation postings are read-only for FMU-UTRMC support staff. Approval and completion actions require an admin account.
           </div>
         )}
 

@@ -50,12 +50,11 @@ from sims.training.models import (
 from sims.users.models import (
     DataCorrectionAudit,
     DepartmentMembership,
-    HODAssignment,
     HospitalAssignment,
     ResidentProfile,
-    StaffProfile,
     SupervisorResidentLink,
     User,
+    SupervisorProfile,
 )
 
 UserModel = get_user_model()
@@ -64,7 +63,7 @@ UserModel = get_user_model()
 class ResetDemoDataCommandTests(TestCase):
     def setUp(self):
         call_command("initialize_pgsims_baseline", verbosity=0)
-        self.admin = UserModel.objects.get(username="admin")
+        self.admin = UserModel.objects.get(username="ADMIN")
 
         self.hospital = Hospital.objects.create(
             code="H-1778624851512",
@@ -88,7 +87,7 @@ class ResetDemoDataCommandTests(TestCase):
             email="supervisor_user@pgsims.local",
             first_name="Feature",
             last_name="Supervisor",
-            role="supervisor",
+            role="SUPERVISOR",
             specialty="medicine",
             home_hospital=self.hospital,
             home_department=self.department,
@@ -99,7 +98,7 @@ class ResetDemoDataCommandTests(TestCase):
             email="hod_user@pgsims.local",
             first_name="Feature",
             last_name="HOD",
-            role="supervisor",
+            role="SUPERVISOR",
             specialty="medicine",
             home_hospital=self.hospital,
             home_department=self.department,
@@ -110,7 +109,7 @@ class ResetDemoDataCommandTests(TestCase):
             email="resident_user@pgsims.local",
             first_name="Feature",
             last_name="Resident",
-            role="resident",
+            role="RESIDENT",
             specialty="medicine",
             year="1",
             supervisor=self.supervisor,
@@ -118,13 +117,10 @@ class ResetDemoDataCommandTests(TestCase):
             home_department=self.department,
         )
 
-        StaffProfile.objects.create(user=self.supervisor, designation="Professor", active=True)
+        SupervisorProfile.objects.create(user=self.supervisor, designation_ref="Professor")
         ResidentProfile.objects.create(
             user=self.resident,
-            pgr_id="PGR-001",
-            training_start=timezone.now().date() - timedelta(days=90),
-            training_level="Year 1",
-            active=True,
+            registration_no="PGR-001",
         )
 
         DepartmentMembership.objects.create(
@@ -165,13 +161,10 @@ class ResetDemoDataCommandTests(TestCase):
             created_by=self.admin,
             updated_by=self.admin,
         )
-        HODAssignment.objects.create(
-            department=self.department,
-            hod_user=self.hod,
-            active=True,
-            start_date=timezone.now().date(),
-            created_by=self.admin,
-            updated_by=self.admin,
+        SupervisorProfile.objects.create(
+            user=self.hod,
+            designation_ref="HOD",
+            department_ref=self.department,
         )
 
         self.program = TrainingProgram.objects.create(
@@ -411,9 +404,9 @@ class ResetDemoDataCommandTests(TestCase):
     def test_confirm_removes_fake_graph_and_preserves_canonical_data(self):
         call_command("reset_demo_data", verbosity=0, confirm=True)
 
-        self.assertTrue(UserModel.objects.filter(username="admin").exists())
-        self.assertTrue(UserModel.objects.get(username="admin").is_superuser)
-        self.assertTrue(UserModel.objects.get(username="admin").check_password("admin123"))
+        self.assertTrue(UserModel.objects.filter(username="ADMIN").exists())
+        self.assertTrue(UserModel.objects.get(username="ADMIN").is_superuser)
+        self.assertTrue(UserModel.objects.get(username="ADMIN").check_password("admin123"))
 
         self.assertTrue(Hospital.objects.filter(code__in=["AH", "DHQ", "GGH", "UTRMC"]).count() >= 4)
         self.assertEqual(Hospital.objects.filter(name__icontains="e2e").count(), 0)
@@ -424,7 +417,7 @@ class ResetDemoDataCommandTests(TestCase):
         self.assertEqual(DepartmentMembership.objects.filter(department=self.department).count(), 0)
         self.assertEqual(HospitalAssignment.objects.filter(hospital_department__hospital=self.hospital).count(), 0)
         self.assertEqual(SupervisorResidentLink.objects.filter(department=self.department).count(), 0)
-        self.assertEqual(HODAssignment.objects.filter(department=self.department).count(), 0)
+        self.assertEqual(SupervisorProfile.objects.filter(department_ref=self.department).count(), 0)
         self.assertEqual(TrainingProgram.objects.filter(code="E2E-FCPS").count(), 0)
         self.assertEqual(ProgramPolicy.objects.filter(program=self.program).count(), 0)
         self.assertEqual(ProgramMilestone.objects.filter(program=self.program).count(), 0)
@@ -476,9 +469,12 @@ class InitializeBaselineCommandTests(TestCase):
         call_command("initialize_pgsims_baseline", verbosity=0)
         self.assertEqual(self._snapshot(), initial_snapshot)
 
-        self.assertTrue(UserModel.objects.filter(username="admin", is_superuser=True).exists())
-        self.assertEqual(UserModel.objects.filter(username="admin").count(), 1)
-        self.assertEqual(Group.objects.filter(name__in=["admin", "utrmc_admin", "supervisor", "resident", "pg", "hod"]).count(), 6)
+        self.assertTrue(UserModel.objects.filter(username="ADMIN", is_superuser=True).exists())
+        self.assertEqual(UserModel.objects.filter(username="ADMIN").count(), 1)
+        self.assertEqual(
+            Group.objects.filter(name__in=["ADMIN", "RESIDENT", "SUPERVISOR", "SUPPORT_STAFF"]).count(),
+            4,
+        )
 
     def test_baseline_creates_canonical_org_data(self):
         call_command("initialize_pgsims_baseline", verbosity=0)

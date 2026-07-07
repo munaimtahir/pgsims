@@ -34,11 +34,6 @@ test.describe('UTRMC read-only oversight', () => {
     await expect(page.getByTestId('readonly-notice')).toBeVisible();
     await expect(page.getByRole('button', { name: /\+ add link/i })).toHaveCount(0);
 
-    await page.goto('/dashboard/utrmc/hod');
-    await expect(page.getByRole('heading', { name: 'HOD Assignments' })).toBeVisible();
-    await expect(page.getByTestId('readonly-notice')).toBeVisible();
-    await expect(page.getByRole('button', { name: /\+ add hod/i })).toHaveCount(0);
-
     await page.goto('/dashboard/utrmc/programs');
     await expect(page.getByRole('heading', { name: 'Programmes' })).toBeVisible();
     await page.locator('ul.space-y-1 > li button').first().click();

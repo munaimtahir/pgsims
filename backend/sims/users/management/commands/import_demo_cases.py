@@ -416,8 +416,8 @@ class Command(BaseCommand):
         user.specialty = specialty
         user.home_hospital = home_hospital
         user.home_department = home_department
-        user.supervisor = supervisor if role == "pg" else None
-        user.year = year if role == "pg" else None
+        user.supervisor = supervisor if role == "RESIDENT" else None
+        user.year = year if role == "RESIDENT" else None
         user.is_active = True
 
         if not user.password or not user.has_usable_password():
@@ -441,7 +441,7 @@ class Command(BaseCommand):
             supervisors[row.supervisor_email] = self._ensure_user(
                 email=row.supervisor_email,
                 full_name=row.supervisor_name,
-                role="supervisor",
+                role="SUPERVISOR",
                 specialty="urology",
                 year=None,
                 supervisor=None,
@@ -458,7 +458,7 @@ class Command(BaseCommand):
             by_email[row.trainee_email] = self._ensure_user(
                 email=row.trainee_email,
                 full_name=row.trainee_name,
-                role="pg",
+                role="RESIDENT",
                 specialty="urology",
                 year="2",
                 supervisor=supervisor,
@@ -499,7 +499,7 @@ class Command(BaseCommand):
                 start_date=start_date,
                 end_date=end_date,
                 defaults={
-                    "supervisor": supervisor,
+                    "SUPERVISOR": supervisor,
                     "status": "completed",
                     "objectives": f"Demo rotation: {marked_name}",
                     "notes": f"Imported via import_demo_cases {ROTATION_DEMO_SUFFIX.strip()}",
@@ -620,7 +620,7 @@ class Command(BaseCommand):
         after_non_demo: dict[str, int],
     ):
         demo_cases_qs = LogbookEntry.objects.filter(case_title__startswith=DEMO_CASE_PREFIX).select_related(
-            "pg", "verified_by"
+            "RESIDENT", "verified_by"
         )
         total_demo_cases = demo_cases_qs.count()
 

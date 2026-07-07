@@ -50,33 +50,33 @@ describe('ProtectedRoute', () => {
   it('renders children when authenticated and role is allowed', () => {
     (useAuthStore as unknown as jest.Mock).mockReturnValue({
       isAuthenticated: true,
-      user: { role: 'resident' },
+      user: { role: 'RESIDENT' },
       hasHydrated: true,
     });
 
-    render(<ProtectedRoute allowedRoles={['resident']}>Content</ProtectedRoute>);
+    render(<ProtectedRoute allowedRoles={['RESIDENT']}>Content</ProtectedRoute>);
     expect(screen.getByText('Content')).toBeInTheDocument();
   });
 
   it('redirects to role dashboard when role is not allowed', () => {
     (useAuthStore as unknown as jest.Mock).mockReturnValue({
       isAuthenticated: true,
-      user: { role: 'supervisor' },
+      user: { role: 'SUPERVISOR' },
       hasHydrated: true,
     });
 
-    render(<ProtectedRoute allowedRoles={['resident']}>Content</ProtectedRoute>);
+    render(<ProtectedRoute allowedRoles={['RESIDENT']}>Content</ProtectedRoute>);
     expect(mockPush).toHaveBeenCalledWith('/dashboard/supervisor');
   });
 
   it('allows admin role even if not in allowedRoles', () => {
     (useAuthStore as unknown as jest.Mock).mockReturnValue({
       isAuthenticated: true,
-      user: { role: 'admin' },
+      user: { role: 'ADMIN' },
       hasHydrated: true,
     });
 
-    render(<ProtectedRoute allowedRoles={['resident']}>Content</ProtectedRoute>);
+    render(<ProtectedRoute allowedRoles={['RESIDENT']}>Content</ProtectedRoute>);
     expect(screen.getByText('Content')).toBeInTheDocument();
   });
 });

@@ -4,13 +4,10 @@
  */
 
 export type AppRole =
-  | 'admin'
-  | 'utrmc_admin'
-  | 'utrmc_user'
-  | 'supervisor'
-  | 'faculty'
-  | 'pg'
-  | 'resident';
+  | 'ADMIN'
+  | 'RESIDENT'
+  | 'SUPERVISOR'
+  | 'SUPPORT_STAFF';
 
 export interface NavSubItem {
   label: string;
@@ -36,7 +33,7 @@ export const NAV_SECTIONS: NavSection[] = [
   // ------------------------------------------------------------------ Program Administration
   {
     title: 'Program Administration',
-    allowedRoles: ['admin', 'utrmc_admin', 'utrmc_user'],
+    allowedRoles: ['ADMIN', 'SUPPORT_STAFF'],
     items: [
       { label: 'Overview', href: '/dashboard/utrmc', icon: 'home' },
       { label: 'Hospitals', href: '/dashboard/utrmc/hospitals', icon: 'office-building' },
@@ -45,17 +42,16 @@ export const NAV_SECTIONS: NavSection[] = [
       { label: 'Users', href: '/dashboard/utrmc/users', icon: 'users' },
       { label: 'Supervisors', href: '/dashboard/utrmc/supervisors', icon: 'user-group' },
       { label: 'Supervision Links', href: '/dashboard/utrmc/supervision', icon: 'link' },
-      { label: 'HOD Assignments', href: '/dashboard/utrmc/hod', icon: 'badge-check' },
       { label: 'Programmes', href: '/dashboard/utrmc/programs', icon: 'book-open' },
       { label: 'Eligibility Monitor', href: '/dashboard/utrmc/eligibility-monitoring', icon: 'chart-bar' },
-      { label: 'Backup Center', href: '/dashboard/utrmc/backup', icon: 'download', allowedRoles: ['admin', 'utrmc_admin'] },
+      { label: 'Backup Center', href: '/dashboard/utrmc/backup', icon: 'download', allowedRoles: ['ADMIN'] },
     ],
   },
 
   // ------------------------------------------------------------------ Supervisor
   {
     title: 'Supervisory Dashboard',
-    allowedRoles: ['supervisor', 'faculty'],
+    allowedRoles: ['SUPERVISOR'],
     items: [
       { label: 'Overview', href: '/dashboard/supervisor', icon: 'home' },
       { label: 'My Residents', href: '/dashboard/supervisor', icon: 'users' },
@@ -65,7 +61,7 @@ export const NAV_SECTIONS: NavSection[] = [
   // ------------------------------------------------------------------ Resident / PG
   {
     title: 'Resident Portfolio',
-    allowedRoles: ['pg', 'resident'],
+    allowedRoles: ['RESIDENT'],
     items: [
       { label: 'My Dashboard', href: '/dashboard/resident', icon: 'home' },
       { label: 'My Schedule', href: '/dashboard/resident/schedule', icon: 'calendar' },

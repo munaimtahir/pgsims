@@ -1,14 +1,13 @@
 'use client';
 
 import { useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import axios from 'axios';
 import authApi from '@/lib/api/auth';
 
 export default function ResetPasswordConfirmPage() {
   const params = useParams();
-  const router = useRouter();
   const uid = typeof params?.uid === 'string' ? params.uid : '';
   const token = typeof params?.token === 'string' ? params.token : '';
 

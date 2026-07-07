@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import ReadonlyNotice from '@/components/ReadonlyNotice';
 import PageHeader from '@/components/ui/PageHeader';
 import { useAuthStore } from '@/store/authStore';
-import { userbaseApi, UserbaseStaffProfile } from '@/lib/api/userbase';
+import { userbaseApi, UserbaseStaffProfile, UserbaseUserUpsert } from '@/lib/api/userbase';
 import { isUtrmcManagerRole, isUtrmcReadonlyRole } from '@/lib/rbac';
 
 interface SupervisorRow {
@@ -108,7 +108,7 @@ export default function SupervisorsPage() {
       });
 
       const joined: SupervisorRow[] = usersData
-        .filter((u) => u.role === 'supervisor' || u.role === 'faculty')
+        .filter((u) => u.role === 'SUPERVISOR' || u.role === 'SUPERVISOR')
         .map((u) => {
           const profile = staffMap.get(u.id);
           return {
@@ -160,7 +160,7 @@ export default function SupervisorsPage() {
     setSaving(true);
     setError('');
     try {
-      const userPayload: Record<string, any> = {
+      const userPayload: UserbaseUserUpsert = {
         email: form.email,
         first_name: form.first_name,
         last_name: form.last_name,

@@ -141,7 +141,7 @@ export default function ResidentProgressPage() {
   };
 
   return (
-    <ProtectedRoute allowedRoles={['resident', 'pg']}>
+    <ProtectedRoute allowedRoles={['RESIDENT', 'RESIDENT']}>
       <div className="pg-page">
         <PageHeader
           title="Logbook"

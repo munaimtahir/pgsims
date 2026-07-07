@@ -22,7 +22,7 @@ describe('userbaseApi', () => {
 
   it('users.list calls correct endpoint with params', async () => {
     getSpy.mockResolvedValue({ data: [] } as never);
-    await userbaseApi.users.list({ role: 'resident' });
-    expect(apiClient.get).toHaveBeenCalledWith('/api/users/', { params: { role: 'resident' } });
+    await userbaseApi.users.list({ role: 'RESIDENT' });
+    expect(apiClient.get).toHaveBeenCalledWith('/api/users/', { params: { role: 'RESIDENT' } });
   });
 });

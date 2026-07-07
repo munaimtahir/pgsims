@@ -22,7 +22,7 @@ def admin_required(view_func):
     def wrapper(request, *args, **kwargs):
         if not request.user.is_admin():
             messages.error(request, "You don't have permission to access this page.")
-            _track_rbac_denied(request, "admin", "admin_required")
+            _track_rbac_denied(request, "ADMIN", "admin_required")
             raise PermissionDenied("Admin access required")
         return view_func(request, *args, **kwargs)
 
@@ -37,23 +37,23 @@ def supervisor_required(view_func):
     def wrapper(request, *args, **kwargs):
         if not request.user.is_supervisor():
             messages.error(request, "You don't have permission to access this page.")
-            _track_rbac_denied(request, "supervisor", "supervisor_required")
+            _track_rbac_denied(request, "SUPERVISOR", "supervisor_required")
             raise PermissionDenied("Supervisor access required")
         return view_func(request, *args, **kwargs)
 
     return wrapper
 
 
-def pg_required(view_func):
-    """Decorator to require PG role"""
+def resident_required(view_func):
+    """Decorator to require Resident role"""
 
     @wraps(view_func)
     @login_required
     def wrapper(request, *args, **kwargs):
-        if not request.user.is_pg():
+        if not request.user.is_resident():
             messages.error(request, "You don't have permission to access this page.")
-            _track_rbac_denied(request, "pg", "pg_required")
-            raise PermissionDenied("PG access required")
+            _track_rbac_denied(request, "RESIDENT", "resident_required")
+            raise PermissionDenied("Resident access required")
         return view_func(request, *args, **kwargs)
 
     return wrapper
@@ -85,7 +85,7 @@ class AdminRequiredMixin(LoginRequiredMixin):
 
         if not request.user.is_admin():
             messages.error(request, "You don't have permission to access this page.")
-            _track_rbac_denied(request, "admin", "admin_mixin_required")
+            _track_rbac_denied(request, "ADMIN", "admin_mixin_required")
             raise PermissionDenied("Admin access required")
 
         return super().dispatch(request, *args, **kwargs)
@@ -100,23 +100,23 @@ class SupervisorRequiredMixin(LoginRequiredMixin):
 
         if not request.user.is_supervisor():
             messages.error(request, "You don't have permission to access this page.")
-            _track_rbac_denied(request, "supervisor", "supervisor_mixin_required")
+            _track_rbac_denied(request, "SUPERVISOR", "supervisor_mixin_required")
             raise PermissionDenied("Supervisor access required")
 
         return super().dispatch(request, *args, **kwargs)
 
 
-class PGRequiredMixin(LoginRequiredMixin):
-    """Mixin to require PG role for class-based views"""
+class ResidentRequiredMixin(LoginRequiredMixin):
+    """Mixin to require Resident role for class-based views"""
 
     def dispatch(self, request, *args, **kwargs):
         if not request.user.is_authenticated:
             return self.handle_no_permission()
 
-        if not request.user.is_pg():
+        if not request.user.is_resident():
             messages.error(request, "You don't have permission to access this page.")
-            _track_rbac_denied(request, "pg", "pg_mixin_required")
-            raise PermissionDenied("PG access required")
+            _track_rbac_denied(request, "RESIDENT", "resident_mixin_required")
+            raise PermissionDenied("Resident access required")
 
         return super().dispatch(request, *args, **kwargs)
 

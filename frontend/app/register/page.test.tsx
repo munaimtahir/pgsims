@@ -2,7 +2,6 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import RegisterPage from './page';
 import authApi from '@/lib/api/auth';
-import { useAuthStore } from '@/store/authStore';
 
 jest.mock('@/lib/api/auth', () => ({
   __esModule: true,
@@ -40,7 +39,7 @@ describe('RegisterPage', () => {
         email: 'testpg@example.com',
         first_name: 'Test',
         last_name: 'PG',
-        role: 'pg',
+        role: 'RESIDENT',
       },
       tokens: {
         access: 'access_tok',
@@ -75,7 +74,7 @@ describe('RegisterPage', () => {
         email: 'testpg@example.com',
         password: 'Password123!',
         password2: 'Password123!',
-        role: 'pg',
+        role: 'RESIDENT',
       });
     });
 

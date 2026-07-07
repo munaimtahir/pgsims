@@ -33,8 +33,8 @@ DISCOVERY_PATTERNS = {
 }
 
 SHEET_HINTS = {
-    "supervisors": {"supervisor", "faculty", "consultant"},
-    "residents": {"resident", "trainee", "pgr", "pg"},
+    "supervisors": {"SUPERVISOR", "SUPERVISOR", "consultant"},
+    "residents": {"RESIDENT", "RESIDENT", "RESIDENT", "RESIDENT"},
     "links": {"supervision", "link", "assignment"},
     "programs": {"program"},
     "training_records": {"training", "enrollment"},
@@ -43,7 +43,7 @@ SHEET_HINTS = {
 ALIASES = {
     "supervisors": {
         "email": ["email", "supervisor_email"],
-        "full_name": ["full_name", "name", "supervisor_name", "supervisor"],
+        "full_name": ["full_name", "name", "supervisor_name", "SUPERVISOR"],
         "phone_number": ["phone", "phone_number", "mobile", "contact", "contact_number"],
         "designation": ["designation", "title", "role_title"],
         "registration_number": ["registration_number", "pmc_no", "pmdc_no", "license_number"],
@@ -66,7 +66,7 @@ ALIASES = {
         "hospital_code": ["hospital_code", "hospital", "site", "hospital_name"],
         "specialty": ["specialty", "discipline"],
         "supervisor_email": ["supervisor_email"],
-        "supervisor_name": ["supervisor_name", "supervisor"],
+        "supervisor_name": ["supervisor_name", "SUPERVISOR"],
         "role": ["role"],
         "program_track": ["track", "program", "qualification", "ms_fcps", "ms/fcps"],
         "thesis_status": ["thesis_status", "thesis", "synopsis_thesis_status", "synopsis/thesis status"],
@@ -120,12 +120,12 @@ class Command(BaseCommand):
         parser.add_argument(
             "--admin-username",
             type=str,
-            default="admin",
+            default="ADMIN",
             help="Admin username used as the actor for import operations.",
         )
 
     def handle(self, *args, **options):
-        actor = User.objects.filter(username=options["admin_username"], role="admin").first()
+        actor = User.objects.filter(username=options["admin_username"], role="ADMIN").first()
         if not actor:
             raise CommandError(f"Admin user '{options['admin_username']}' not found.")
 
@@ -409,10 +409,10 @@ class Command(BaseCommand):
             username = self._generate_unique_username(full_name, used_usernames)
             normalized_rows.append(
                 {
-                    "email": self._pick(row, ALIASES["supervisors"]["email"]) or self._placeholder_email(username, "supervisor"),
+                    "email": self._pick(row, ALIASES["supervisors"]["email"]) or self._placeholder_email(username, "SUPERVISOR"),
                     "full_name": full_name,
                     "phone_number": self._pick(row, ALIASES["supervisors"]["phone_number"]),
-                    "role": self._pick(row, ALIASES["supervisors"]["role"]) or "supervisor",
+                    "role": self._pick(row, ALIASES["supervisors"]["role"]) or "SUPERVISOR",
                     "specialty": specialty,
                     "department_code": department_code,
                     "hospital_code": self._resolve_hospital_code(
@@ -456,10 +456,10 @@ class Command(BaseCommand):
             year_value = self._normalize_year(self._pick(row, ALIASES["residents"]["year"]), training_start)
             normalized_rows.append(
                 {
-                    "email": self._pick(row, ALIASES["residents"]["email"]) or self._placeholder_email(username, "resident"),
+                    "email": self._pick(row, ALIASES["residents"]["email"]) or self._placeholder_email(username, "RESIDENT"),
                     "full_name": full_name,
                     "phone_number": self._pick(row, ALIASES["residents"]["phone_number"]),
-                    "role": self._pick(row, ALIASES["residents"]["role"]) or "resident",
+                    "role": self._pick(row, ALIASES["residents"]["role"]) or "RESIDENT",
                     "specialty": specialty,
                     "year": year_value,
                     "pgr_id": self._pick(row, ALIASES["residents"]["pgr_id"]),

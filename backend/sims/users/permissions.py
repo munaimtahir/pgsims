@@ -4,7 +4,7 @@ from rest_framework import permissions
 
 
 class IsSupervisor(permissions.BasePermission):
-    """Allows access only to users with the 'supervisor' role."""
+    """Allows access only to users with the 'SUPERVISOR' role."""
     
     message = "Only supervisors can access this resource."
 
@@ -12,5 +12,5 @@ class IsSupervisor(permissions.BasePermission):
         return (
             request.user and 
             request.user.is_authenticated and 
-            getattr(request.user, "role", None) == "supervisor"
+            getattr(request.user, "role", None) == "SUPERVISOR"
         )

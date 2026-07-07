@@ -15,7 +15,6 @@ from sims.users.data_quality import recompute_flags_for_user
 from sims.users.models import (
     DataCorrectionAudit,
     DepartmentMembership,
-    HODAssignment,
     ResidentProfile,
     SupervisorResidentLink,
     User,
@@ -28,33 +27,33 @@ class UserbasePermissionAndConstraintTests(TestCase):
         self.admin = User.objects.create_user(
             username="admin_userbase",
             password="pass12345",
-            role="admin",
+            role="ADMIN",
             email="admin_userbase@example.com",
         )
         self.utrmc_admin = User.objects.create_user(
             username="utrmc_admin_userbase",
             password="pass12345",
-            role="utrmc_admin",
+            role="ADMIN",
             email="utrmc_admin_userbase@example.com",
         )
         self.supervisor = User.objects.create_user(
             username="supervisor_userbase",
             password="pass12345",
-            role="supervisor",
+            role="SUPERVISOR",
             specialty="medicine",
             email="supervisor_userbase@example.com",
         )
         self.faculty = User.objects.create_user(
             username="faculty_userbase",
             password="pass12345",
-            role="faculty",
+            role="SUPERVISOR",
             specialty="medicine",
             email="faculty_userbase@example.com",
         )
         self.resident = User.objects.create_user(
             username="resident_userbase",
             password="pass12345",
-            role="resident",
+            role="RESIDENT",
             specialty="medicine",
             year="1",
             email="resident_userbase@example.com",
@@ -85,7 +84,7 @@ class UserbasePermissionAndConstraintTests(TestCase):
                 "password": "Pass123456!",
                 "first_name": "Blocked",
                 "last_name": "User",
-                "role": "resident",
+                "role": "RESIDENT",
                 "specialty": "medicine",
                 "year": "1",
             },
@@ -110,24 +109,7 @@ class UserbasePermissionAndConstraintTests(TestCase):
         self.assertEqual(response.data["supervisor_user"]["id"], self.faculty.id)
         self.assertEqual(response.data["resident_user"]["id"], self.resident.id)
 
-    def test_hod_assignment_allows_only_one_active_per_department(self):
-        HODAssignment.objects.create(
-            department=self.department,
-            hod_user=self.faculty,
-            start_date=date.today(),
-            active=True,
-            created_by=self.admin,
-            updated_by=self.admin,
-        )
-        with self.assertRaises(ValidationError):
-            HODAssignment.objects.create(
-                department=self.department,
-                hod_user=self.supervisor,
-                start_date=date.today() + timedelta(days=1),
-                active=True,
-                created_by=self.admin,
-                updated_by=self.admin,
-            )
+
 
     def test_hospital_department_pair_is_unique(self):
         with self.assertRaises(IntegrityError):
@@ -140,8 +122,7 @@ class UserbasePermissionAndConstraintTests(TestCase):
                 resident_user=self.supervisor,
                 department=self.department,
                 start_date=date.today(),
-                active=True,
-                created_by=self.admin,
+                    created_by=self.admin,
                 updated_by=self.admin,
             )
 
@@ -149,20 +130,18 @@ class UserbasePermissionAndConstraintTests(TestCase):
         DepartmentMembership.objects.create(
             user=self.faculty,
             department=self.department,
-            member_type="faculty",
+            member_type=DepartmentMembership.MEMBER_SUPERVISOR,
             is_primary=True,
             start_date=date.today(),
-            active=True,
             created_by=self.utrmc_admin,
             updated_by=self.utrmc_admin,
         )
         DepartmentMembership.objects.create(
             user=self.resident,
             department=self.department,
-            member_type="resident",
+            member_type=DepartmentMembership.MEMBER_RESIDENT,
             is_primary=True,
             start_date=date.today(),
-            active=True,
             created_by=self.utrmc_admin,
             updated_by=self.utrmc_admin,
         )
@@ -171,26 +150,12 @@ class UserbasePermissionAndConstraintTests(TestCase):
         roster = self.client.get(f"/api/departments/{self.department.id}/roster/")
         self.assertEqual(roster.status_code, 200)
         self.assertEqual(roster.data["department"]["id"], self.department.id)
-        self.assertEqual(roster.data["faculty"][0]["id"], self.faculty.id)
+        self.assertEqual(roster.data["supervisors"][0]["id"], self.faculty.id)
         self.assertEqual(roster.data["residents"][0]["id"], self.resident.id)
 
         hospital_departments = self.client.get(f"/api/hospitals/{self.hospital.id}/departments/")
         self.assertEqual(hospital_departments.status_code, 200)
         self.assertEqual(hospital_departments.data[0]["department"]["id"], self.department.id)
-
-        hod = self.client.post(
-            "/api/hod-assignments/",
-            {
-                "department_id": self.department.id,
-                "hod_user_id": self.supervisor.id,
-                "start_date": date.today().isoformat(),
-                "active": True,
-            },
-            format="json",
-        )
-        self.assertEqual(hod.status_code, 201)
-        self.assertEqual(hod.data["department"]["id"], self.department.id)
-        self.assertEqual(hod.data["hod_user"]["id"], self.supervisor.id)
 
         inactive_matrix = HospitalDepartment.objects.create(
             hospital=Hospital.objects.create(name="Secondary Userbase", code="HOSP-UB2"),
@@ -209,25 +174,13 @@ class UserbasePermissionAndConstraintTests(TestCase):
         utrmc_user = User.objects.create_user(
             username="utrmc_user_readonly",
             password="pass12345",
-            role="utrmc_user",
+            role="SUPPORT_STAFF",
             email="utrmc_user_readonly@example.com",
         )
 
         self.client.force_authenticate(utrmc_user)
         roster = self.client.get(f"/api/departments/{self.department.id}/roster/")
-        self.assertEqual(roster.status_code, 200)
-
-        blocked_hod = self.client.post(
-            "/api/hod-assignments/",
-            {
-                "department_id": self.department.id,
-                "hod_user_id": self.supervisor.id,
-                "start_date": date.today().isoformat(),
-                "active": True,
-            },
-            format="json",
-        )
-        self.assertEqual(blocked_hod.status_code, 403)
+        self.assertEqual(roster.status_code, 403)
 
         blocked_link = self.client.post(
             "/api/supervision-links/",
@@ -257,7 +210,7 @@ class UserbasePermissionAndConstraintTests(TestCase):
                 "password": "Pass123456!",
                 "first_name": "Read",
                 "last_name": "Only",
-                "role": "resident",
+                "role": "RESIDENT",
             },
             format="json",
         )
@@ -270,20 +223,20 @@ class UserbaseReadScopeTests(TestCase):
         self.admin = User.objects.create_user(
             username="scope_admin",
             password="pass12345",
-            role="admin",
+            role="ADMIN",
             email="scope_admin@example.com",
         )
         self.supervisor = User.objects.create_user(
             username="scope_supervisor",
             password="pass12345",
-            role="supervisor",
+            role="SUPERVISOR",
             specialty="medicine",
             email="scope_supervisor@example.com",
         )
         self.other_user = User.objects.create_user(
             username="scope_other",
             password="pass12345",
-            role="resident",
+            role="RESIDENT",
             specialty="medicine",
             year="1",
             email="scope_other@example.com",
@@ -320,27 +273,27 @@ class DataQualityAdminApiTests(TestCase):
         self.admin = User.objects.create_user(
             username="dq_admin",
             password="pass12345",
-            role="utrmc_admin",
+            role="ADMIN",
             email="dq_admin@example.com",
             is_staff=True,
         )
         self.viewer = User.objects.create_user(
             username="dq_viewer",
             password="pass12345",
-            role="utrmc_user",
+            role="SUPPORT_STAFF",
             email="dq_viewer@example.com",
         )
         self.supervisor = User.objects.create_user(
             username="dq_supervisor",
             password="pass12345",
-            role="supervisor",
+            role="SUPERVISOR",
             email="dq_supervisor@example.com",
             specialty="medicine",
         )
         self.resident = User.objects.create_user(
             username="dq_resident",
             password="pass12345",
-            role="resident",
+            role="RESIDENT",
             email="dq_resident@pilot-placeholder.local",
             year="5",
             specialty="medicine",
@@ -349,17 +302,12 @@ class DataQualityAdminApiTests(TestCase):
         self.department = Department.objects.create(name="DQ Medicine", code="MED-DQ")
         ResidentProfile.objects.create(
             user=self.resident,
-            pgr_id="DQ-001",
-            training_start=date(2026, 1, 1),
-            training_level="y5",
-            active=True,
         )
         SupervisorResidentLink.objects.create(
             supervisor_user=self.supervisor,
             resident_user=self.resident,
             department=self.department,
             start_date=date(2026, 1, 1),
-            active=True,
             created_by=self.admin,
             updated_by=self.admin,
         )
@@ -369,7 +317,6 @@ class DataQualityAdminApiTests(TestCase):
             program=program,
             start_date=date(2026, 1, 1),
             current_level="y5",
-            active=True,
             created_by=self.admin,
         )
         recompute_flags_for_user(self.resident)
@@ -421,17 +368,13 @@ class DataQualityAdminApiTests(TestCase):
         resident = User.objects.create_user(
             username="dq_resident_bare",
             password="pass12345",
-            role="resident",
+            role="RESIDENT",
             email="dq_resident_bare@example.com",
             year="1",
             specialty="medicine",
         )
         ResidentProfile.objects.create(
             user=resident,
-            pgr_id="DQ-BARE-001",
-            training_start=date(2026, 5, 1),
-            training_level="y1",
-            active=True,
         )
         
         # Recompute flags
@@ -447,17 +390,13 @@ class DataQualityAdminApiTests(TestCase):
         resident = User.objects.create_user(
             username="dq_resident_issue",
             password="pass12345",
-            role="resident",
+            role="RESIDENT",
             email="dq_resident_issue@example.com",
             year="1",
             specialty="medicine",
         )
         ResidentProfile.objects.create(
             user=resident,
-            pgr_id="DQ-ISSUE-001",
-            training_start=date(2026, 5, 1),
-            training_level="y1",
-            active=True,
         )
         program = TrainingProgram.objects.create(name="DQ Issue Program", code="DQP-ISSUE", duration_months=60)
         # Training record missing current_level
@@ -466,7 +405,6 @@ class DataQualityAdminApiTests(TestCase):
             program=program,
             start_date=date(2026, 5, 1),
             current_level="",
-            active=True,
         )
         # Add a valid supervision link so that missing supervision link is not the only issue
         SupervisorResidentLink.objects.create(
@@ -474,7 +412,6 @@ class DataQualityAdminApiTests(TestCase):
             resident_user=resident,
             department=self.department,
             start_date=date(2026, 5, 1),
-            active=True,
         )
 
         # Recompute flags
@@ -491,21 +428,21 @@ class ImportCorrectionsCommandTests(TestCase):
         self.admin = User.objects.create_user(
             username="dq_admin_cmd",
             password="pass12345",
-            role="admin",
+            role="ADMIN",
             email="dq_admin_cmd@example.com",
             is_staff=True,
         )
         self.supervisor = User.objects.create_user(
             username="dq_sup_cmd",
             password="pass12345",
-            role="supervisor",
+            role="SUPERVISOR",
             specialty="medicine",
             email="dq_sup_cmd@example.com",
         )
         self.resident = User.objects.create_user(
             username="dq_res_cmd",
             password="pass12345",
-            role="resident",
+            role="RESIDENT",
             specialty="medicine",
             email="dq_res_cmd@pilot-placeholder.local",
             year="1",
@@ -513,10 +450,6 @@ class ImportCorrectionsCommandTests(TestCase):
         )
         ResidentProfile.objects.create(
             user=self.resident,
-            pgr_id="DQ-CMD-1",
-            training_start=date(2026, 1, 1),
-            training_level="y1",
-            active=True,
         )
 
     def test_dry_run_does_not_mutate(self):

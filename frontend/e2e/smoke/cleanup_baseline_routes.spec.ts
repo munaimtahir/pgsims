@@ -81,9 +81,6 @@ test.describe('Cleanup baseline routes', () => {
     await page.goto('/dashboard/utrmc/matrix');
     await expect(page.getByRole('heading', { name: /matrix/i })).toBeVisible({ timeout: 10_000 });
 
-    await page.goto('/dashboard/utrmc/hod');
-    await expect(page.getByRole('heading', { name: /hod assignments/i })).toBeVisible({ timeout: 10_000 });
-
     await page.goto('/dashboard/utrmc/programs');
     await expect(page.getByRole('heading', { name: /programs/i })).toBeVisible({ timeout: 10_000 });
 

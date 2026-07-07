@@ -13,7 +13,7 @@ export default function UtrmcOnboardingPage() {
         description="Guided onboarding and import tools will be available here."
         actions={(
           <Link href="/dashboard/utrmc" className="pg-btn-primary inline-flex items-center">
-            Back to UTRMC Dashboard
+            Back to FMU-UTRMC Dashboard
           </Link>
         )}
       />

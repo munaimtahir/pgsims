@@ -18,7 +18,7 @@ export default function CreateBackupModal({
   defaultKind?: BackupKind;
 }) {
   const user = useAuthStore((s) => s.user);
-  const isSuperAdmin = user?.role === 'admin';
+  const isSuperAdmin = user?.role === 'ADMIN';
   const [notes, setNotes] = useState('');
   const [kind, setKind] = useState<BackupKind>('routine_application_data');
   const [isSubmitting, setIsSubmitting] = useState(false);

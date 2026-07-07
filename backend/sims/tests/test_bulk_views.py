@@ -9,7 +9,7 @@ User = get_user_model()
 class BulkViewsTests(TestCase):
     def setUp(self):
         self.client = Client()
-        self.admin = User.objects.create_superuser(username="admin_bulk", password="password123", role="admin")
+        self.admin = User.objects.create_superuser(username="admin_bulk", password="password123", role="ADMIN")
         self.client.login(username="admin_bulk", password="password123")
 
     def test_bulk_import_entity_dry_run(self):

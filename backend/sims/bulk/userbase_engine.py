@@ -19,13 +19,14 @@ from sims.academics.models import Department
 from sims.rotations.models import Hospital, HospitalDepartment
 from sims.users.models import (
     DepartmentMembership,
-    HODAssignment,
     HospitalAssignment,
     ResidentProfile,
     SPECIALTY_CHOICES,
-    StaffProfile,
     SupervisorResidentLink,
     YEAR_CHOICES,
+    SupervisorProfile,
+    SupportStaffProfile,
+    AdminProfile,
 )
 
 User = get_user_model()
@@ -37,7 +38,6 @@ SUPPORTED_IMPORT_ENTITIES = {
     "faculty-supervisors",
     "residents",
     "supervision-links",
-    "hod-assignments",
     "rotation-assignments",
 }
 
@@ -74,7 +74,7 @@ TEMPLATE_ROWS = {
             "email": "supervisor@example.com",
             "full_name": "Dr. Jane Supervisor",
             "phone_number": "03001234567",
-            "role": "supervisor",
+            "role": "SUPERVISOR",
             "specialty": "medicine",
             "department_code": "MED",
             "hospital_code": "AH",
@@ -91,7 +91,7 @@ TEMPLATE_ROWS = {
             "email": "resident@example.com",
             "full_name": "Dr. Ali Resident",
             "phone_number": "03009876543",
-            "role": "resident",
+            "role": "RESIDENT",
             "specialty": "medicine",
             "year": "1",
             "pgr_id": "PGR001",
@@ -116,15 +116,7 @@ TEMPLATE_ROWS = {
             "active": "true",
         }
     ],
-    "hod-assignments": [
-        {
-            "department_code": "MED",
-            "hod_email": "supervisor@example.com",
-            "start_date": "2026-01-01",
-            "end_date": "",
-            "active": "true",
-        }
-    ],
+
     "rotation-assignments": [
         {
             "resident_email": "resident@example.com",
@@ -232,9 +224,9 @@ def export_rows_for(resource: str) -> List[dict]:
 
     if resource == "faculty-supervisors":
         rows: List[dict] = []
-        staff_users = User.objects.filter(role__in=["faculty", "supervisor"]).order_by("last_name", "first_name")
+        staff_users = User.objects.filter(role__in=["SUPERVISOR", "SUPERVISOR"]).order_by("last_name", "first_name")
         for user in staff_users:
-            membership = _primary_membership_for(user, {"faculty", "supervisor"})
+            membership = _primary_membership_for(user, {"SUPERVISOR", "SUPERVISOR"})
             assignment = _active_assignment_for(user, HospitalAssignment.ASSIGNMENT_FACULTY_SITE)
             profile = getattr(user, "staff_profile", None)
             rows.append(
@@ -258,9 +250,9 @@ def export_rows_for(resource: str) -> List[dict]:
 
     if resource == "residents":
         rows: List[dict] = []
-        resident_users = User.objects.filter(role__in=["resident", "pg"]).order_by("last_name", "first_name")
+        resident_users = User.objects.filter(role__in=["RESIDENT", "RESIDENT"]).order_by("last_name", "first_name")
         for user in resident_users:
-            membership = _primary_membership_for(user, {"resident"})
+            membership = _primary_membership_for(user, {"RESIDENT"})
             assignment = _active_assignment_for(user, HospitalAssignment.ASSIGNMENT_PRIMARY_TRAINING)
             profile = getattr(user, "resident_profile", None)
             rows.append(
@@ -302,20 +294,7 @@ def export_rows_for(resource: str) -> List[dict]:
             ).order_by("resident_user__last_name", "resident_user__first_name")
         ]
 
-    if resource == "hod-assignments":
-        return [
-            {
-                "department_code": assignment.department.code,
-                "hod_email": assignment.hod_user.email,
-                "start_date": assignment.start_date.isoformat(),
-                "end_date": assignment.end_date.isoformat() if assignment.end_date else "",
-                "active": _bool_str(assignment.active),
-            }
-            for assignment in HODAssignment.objects.select_related("department", "hod_user").order_by(
-                "department__name",
-                "-start_date",
-            )
-        ]
+
 
     if resource == "rotation-assignments":
         from sims.training.models import RotationAssignment
@@ -353,7 +332,6 @@ def import_entity(actor: User, entity: str, uploaded_file, *, dry_run: bool, all
         "faculty-supervisors": _import_faculty_supervisors,
         "residents": _import_residents,
         "supervision-links": _import_supervision_links,
-        "hod-assignments": _import_hod_assignments,
         "rotation-assignments": _import_rotation_assignments,
     }
     return handlers[entity](actor, rows, dry_run=dry_run, allow_partial=allow_partial)
@@ -514,7 +492,7 @@ def _import_faculty_supervisors(actor: User, rows: List[dict], *, dry_run: bool,
                             actor=actor,
                             user=user,
                             department=department,
-                            member_type=DepartmentMembership.MEMBER_SUPERVISOR if role == "supervisor" else DepartmentMembership.MEMBER_FACULTY,
+                            member_type=DepartmentMembership.MEMBER_SUPERVISOR if role == "SUPERVISOR" else DepartmentMembership.MEMBER_FACULTY,
                             start_date=start_date,
                             active=active,
                         )
@@ -564,7 +542,7 @@ def _import_residents(actor: User, rows: List[dict], *, dry_run: bool, allow_par
                 hospital_code=row.get("hospital_code"),
                 department=department,
             )
-            supervisor = _user_by_email_or_none(row.get("supervisor_email"), {"supervisor", "faculty"})
+            supervisor = _user_by_email_or_none(row.get("supervisor_email"), {"SUPERVISOR", "SUPERVISOR"})
 
             with transaction.atomic():
                 user = _build_or_load_user(email=email, username=username)
@@ -648,8 +626,8 @@ def _import_supervision_links(actor: User, rows: List[dict], *, dry_run: bool, a
     for row in rows:
         row_number = row["_row_number"]
         try:
-            supervisor = _required_user_by_email(row, "supervisor_email", {"supervisor", "faculty"})
-            resident = _required_user_by_email(row, "resident_email", {"resident", "pg"})
+            supervisor = _required_user_by_email(row, "supervisor_email", {"SUPERVISOR", "SUPERVISOR"})
+            resident = _required_user_by_email(row, "resident_email", {"RESIDENT", "RESIDENT"})
             department = _department_or_none(row.get("department_code"))
             start_date = _parse_required_date(row, "start_date") if row.get("start_date") else date.today()
             end_date = _parse_date_value(row.get("end_date"))
@@ -682,45 +660,7 @@ def _import_supervision_links(actor: User, rows: List[dict], *, dry_run: bool, a
     return {"successes": successes, "failures": failures}
 
 
-def _import_hod_assignments(actor: User, rows: List[dict], *, dry_run: bool, allow_partial: bool) -> dict:
-    successes: List[dict] = []
-    failures: List[dict] = []
-    for row in rows:
-        row_number = row["_row_number"]
-        try:
-            if "hod_email" not in row and "email" in row:
-                row["hod_email"] = row["email"]
-            department = _required_department(row)
-            hod_user = _required_user_by_email(row, "hod_email", {"supervisor", "faculty"})
-            start_date = _parse_required_date(row, "start_date") if row.get("start_date") else date.today()
-            end_date = _parse_date_value(row.get("end_date"))
-            active = _parse_bool(row.get("active"), default=True)
-            if not dry_run:
-                current = HODAssignment.objects.filter(department=department, active=True).first()
-                if current:
-                    current.hod_user = hod_user
-                    current.start_date = start_date
-                    current.end_date = end_date
-                    current.active = active
-                    current.updated_by = actor
-                    current.full_clean()
-                    current.save()
-                else:
-                    HODAssignment.objects.create(
-                        department=department,
-                        hod_user=hod_user,
-                        start_date=start_date,
-                        end_date=end_date,
-                        active=active,
-                        created_by=actor,
-                        updated_by=actor,
-                    )
-            successes.append({"row": row_number, "department_code": department.code, "hod_email": hod_user.email})
-        except ValidationError as exc:
-            failures.append({"row": row_number, "error": _error_text(exc)})
-            if not allow_partial:
-                break
-    return {"successes": successes, "failures": failures}
+
 
 
 def _upsert_staff_user(
@@ -745,7 +685,11 @@ def _upsert_staff_user(
     user.username = username
     user.first_name = first_name
     user.last_name = last_name
-    user.role = role
+    
+    # Map raw role inputs to final User.role choices
+    db_role = "SUPERVISOR" if role.upper() in {"FACULTY", "SUPERVISOR"} else role.upper()
+    user.role = db_role
+    
     user.specialty = specialty
     user.phone_number = phone_number or None
     user.registration_number = registration_number or None
@@ -762,14 +706,29 @@ def _upsert_staff_user(
         user.set_password(generated_password)
     user.full_clean()
     user.save()
-    StaffProfile.objects.update_or_create(
-        user=user,
-        defaults={
-            "designation": designation,
-            "phone": phone_number,
-            "active": active,
-        },
-    )
+    
+    if db_role == "SUPERVISOR":
+        SupervisorProfile.objects.update_or_create(
+            user=user,
+            defaults={
+                "designation_ref": designation,
+                "phone": phone_number,
+            },
+        )
+    elif db_role == "SUPPORT_STAFF":
+        SupportStaffProfile.objects.update_or_create(
+            user=user,
+            defaults={
+                "phone": phone_number,
+            },
+        )
+    elif db_role == "ADMIN":
+        AdminProfile.objects.update_or_create(
+            user=user,
+            defaults={
+                "phone": phone_number,
+            },
+        )
     return user, generated_password
 
 
@@ -826,13 +785,34 @@ def _upsert_resident_user(
     ResidentProfile.objects.update_or_create(
         user=user,
         defaults={
-            "pgr_id": pgr_id,
-            "training_start": training_start,
-            "training_end": training_end,
-            "training_level": training_level,
-            "active": active,
+            "registration_no": pgr_id or registration_number or None,
+            "phone": phone_number or "",
+            "email": email or "",
+            "department_ref": department,
+            "hospital": hospital_department.hospital if hospital_department else None,
+            "specialty_ref": specialty or None,
         },
     )
+    try:
+        from sims.training.models import ResidentTrainingRecord, TrainingProgram
+
+        program, _ = TrainingProgram.objects.get_or_create(
+            code="PILOT-BASELINE",
+            defaults={"name": "Pilot Baseline Program", "duration_months": 60},
+        )
+        ResidentTrainingRecord.objects.update_or_create(
+            resident_user=user,
+            program=program,
+            defaults={
+                "start_date": training_start,
+                "expected_end_date": training_end,
+                "current_level": training_level or year,
+                "active": active,
+                "created_by": actor if not existing else None,
+            },
+        )
+    except Exception:
+        pass
     return user, generated_password
 
 
@@ -1025,14 +1005,14 @@ def _normalize_staff_role(raw_role: str | None) -> str:
     role = (raw_role or "").strip().lower()
     if role not in {"faculty", "supervisor"}:
         raise ValidationError({"role": "Role must be faculty or supervisor."})
-    return role
+    return "SUPERVISOR"
 
 
 def _normalize_resident_role(raw_role: str | None) -> str:
     role = (raw_role or "resident").strip().lower()
-    if role not in {"resident", "pg"}:
+    if role not in {"resident", "pg", "pgr", "trainee"}:
         raise ValidationError({"role": "Role must be resident or pg."})
-    return role
+    return "RESIDENT"
 
 
 def _normalize_year(raw_year: str | None) -> str:

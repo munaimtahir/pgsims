@@ -1,7 +1,3 @@
-"""
-API URLs for JWT authentication endpoints.
-"""
-
 from django.urls import path
 from rest_framework_simplejwt.views import TokenRefreshView
 from . import api_views, userbase_views
@@ -17,6 +13,7 @@ urlpatterns = [
     path("register/", api_views.register_view, name="register"),
     # User profile
     path("me/", userbase_views.AuthMeView.as_view(), name="me"),
+    path("complete-profile/", userbase_views.CompleteProfileView.as_view(), name="complete_profile"),
     path("profile/", api_views.user_profile_view, name="profile"),
     path("profile/update/", api_views.update_profile_view, name="profile_update"),
     # Password management

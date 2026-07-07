@@ -6,7 +6,7 @@ import { useAuthStore } from "@/store/authStore";
 describe("BackupList (Google Drive integration)", () => {
   beforeEach(() => {
     useAuthStore.setState({
-      user: { id: 1, username: "admin", role: "admin" } as any,
+      user: { id: 1, username: "ADMIN", role: "ADMIN" } as any,
       isAuthenticated: true,
       isLoading: false,
       hasHydrated: true,

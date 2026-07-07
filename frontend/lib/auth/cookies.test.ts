@@ -17,7 +17,7 @@ describe('auth cookies', () => {
       const payload = btoa(JSON.stringify({ exp }));
       const token = `header.${payload}.signature`;
 
-      syncAuthCookies({ accessToken: token, role: 'resident' });
+      syncAuthCookies({ accessToken: token, role: 'RESIDENT' });
 
       expect(document.cookie).toContain('pgsims_access_token=header');
       expect(document.cookie).toContain('pgsims_user_role=resident');

@@ -70,7 +70,7 @@ class Command(BaseCommand):
                     last_clean = re.sub(r"[^a-z0-9]", "", last_name.lower())
                     
                     if not first_clean and not last_clean:
-                        base_username = "trainee"
+                        base_username = "RESIDENT"
                     elif not last_clean:
                         base_username = first_clean
                     elif not first_clean:
@@ -121,7 +121,7 @@ class Command(BaseCommand):
                     last_clean = re.sub(r"[^a-z0-9]", "", last_name.lower())
                     
                     if not first_clean and not last_clean:
-                        base_username = "supervisor"
+                        base_username = "SUPERVISOR"
                     elif not last_clean:
                         base_username = first_clean
                     elif not first_clean:

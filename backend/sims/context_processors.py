@@ -18,8 +18,8 @@ def admin_stats_context(request):
 
         # Get statistics for the dashboard
         total_users = User.objects.filter(is_archived=False).count()
-        total_pgs = User.objects.filter(role="pg", is_archived=False).count()
-        total_supervisors = User.objects.filter(role="supervisor", is_archived=False).count()
+        total_pgs = User.objects.filter(role="RESIDENT", is_archived=False).count()
+        total_supervisors = User.objects.filter(role="SUPERVISOR", is_archived=False).count()
         new_users_this_month = User.objects.filter(
             date_joined__month=timezone.now().month,
             date_joined__year=timezone.now().year,

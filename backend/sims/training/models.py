@@ -130,7 +130,7 @@ class ResidentTrainingRecord(models.Model):
         User,
         on_delete=models.CASCADE,
         related_name="training_records",
-        limit_choices_to={"role__in": ["pg", "resident"]},
+        limit_choices_to={"role__in": ["RESIDENT", "RESIDENT"]},
     )
     program = models.ForeignKey(
         TrainingProgram, on_delete=models.CASCADE, related_name="resident_records"
@@ -695,7 +695,7 @@ class ResidentResearchProject(models.Model):
     supervisor = models.ForeignKey(
         User, on_delete=models.SET_NULL, null=True, blank=True,
         related_name="supervised_research_projects",
-        limit_choices_to={"role__in": ["supervisor", "faculty", "admin"]},
+        limit_choices_to={"role__in": ["SUPERVISOR", "SUPERVISOR", "ADMIN"]},
     )
     status = models.CharField(max_length=40, choices=STATUS_CHOICES, default=STATUS_DRAFT)
     synopsis_file = models.FileField(

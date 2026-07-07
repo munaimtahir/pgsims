@@ -32,16 +32,18 @@ from sims.training.models import (
     WorkshopRun,
 )
 from sims.users.models import (
+    AdminProfile,
+    DataCorrectionAudit,
     DepartmentMembership,
-    HODAssignment,
     HospitalAssignment,
     ResidentProfile,
-    StaffProfile,
+    SupervisorProfile,
     SupervisorResidentLink,
+    SupportStaffProfile,
     User,
 )
 
-ADMIN_USERNAME = "admin"
+ADMIN_USERNAME = "ADMIN"
 ADMIN_PASSWORD = "admin123"
 ADMIN_EMAIL = "admin@sims.com"
 
@@ -94,14 +96,14 @@ DEMO_OVERSIGHT_USERS = [
         "email": "utrmc.admin@demo.local",
         "first_name": "Rida",
         "last_name": "Mansoor",
-        "role": "utrmc_admin",
+        "role": "ADMIN",
     },
     {
         "username": "demo_utrmc_user",
         "email": "utrmc.readonly@demo.local",
         "first_name": "Hamid",
         "last_name": "Qureshi",
-        "role": "utrmc_user",
+        "role": "SUPPORT_STAFF",
     },
 ]
 
@@ -111,7 +113,7 @@ DEMO_STAFF_USERS = [
         "email": "farooq.ahmed@demo.local",
         "first_name": "Farooq",
         "last_name": "Ahmed",
-        "role": "supervisor",
+        "role": "SUPERVISOR",
         "specialty": "surgery",
         "department_code": "DEMO-SURG",
         "hospital_code": "DEMO-AH",
@@ -122,7 +124,7 @@ DEMO_STAFF_USERS = [
         "email": "maria.khan@demo.local",
         "first_name": "Maria",
         "last_name": "Khan",
-        "role": "faculty",
+        "role": "SUPERVISOR",
         "specialty": "surgery",
         "department_code": "DEMO-SURG",
         "hospital_code": "DEMO-DHQ",
@@ -133,7 +135,7 @@ DEMO_STAFF_USERS = [
         "email": "ayesha.khalid@demo.local",
         "first_name": "Ayesha",
         "last_name": "Khalid",
-        "role": "supervisor",
+        "role": "SUPERVISOR",
         "specialty": "medicine",
         "department_code": "DEMO-MED",
         "hospital_code": "DEMO-DHQ",
@@ -144,7 +146,7 @@ DEMO_STAFF_USERS = [
         "email": "salman.javed@demo.local",
         "first_name": "Salman",
         "last_name": "Javed",
-        "role": "faculty",
+        "role": "SUPERVISOR",
         "specialty": "medicine",
         "department_code": "DEMO-MED",
         "hospital_code": "DEMO-AH",
@@ -158,7 +160,7 @@ DEMO_RESIDENT_USERS = [
         "email": "ali.hamza@demo.local",
         "first_name": "Ali",
         "last_name": "Hamza",
-        "role": "resident",
+        "role": "RESIDENT",
         "specialty": "surgery",
         "year": "1",
         "department_code": "DEMO-SURG",
@@ -174,7 +176,7 @@ DEMO_RESIDENT_USERS = [
         "email": "bilal.raza@demo.local",
         "first_name": "Bilal",
         "last_name": "Raza",
-        "role": "pg",
+        "role": "RESIDENT",
         "specialty": "surgery",
         "year": "2",
         "department_code": "DEMO-SURG",
@@ -190,7 +192,7 @@ DEMO_RESIDENT_USERS = [
         "email": "hira.aslam@demo.local",
         "first_name": "Hira",
         "last_name": "Aslam",
-        "role": "resident",
+        "role": "RESIDENT",
         "specialty": "surgery",
         "year": "3",
         "department_code": "DEMO-SURG",
@@ -206,7 +208,7 @@ DEMO_RESIDENT_USERS = [
         "email": "umar.farid@demo.local",
         "first_name": "Umar",
         "last_name": "Farid",
-        "role": "pg",
+        "role": "RESIDENT",
         "specialty": "surgery",
         "year": "4",
         "department_code": "DEMO-SURG",
@@ -222,7 +224,7 @@ DEMO_RESIDENT_USERS = [
         "email": "areeba.noor@demo.local",
         "first_name": "Areeba",
         "last_name": "Noor",
-        "role": "resident",
+        "role": "RESIDENT",
         "specialty": "medicine",
         "year": "1",
         "department_code": "DEMO-MED",
@@ -238,7 +240,7 @@ DEMO_RESIDENT_USERS = [
         "email": "saad.malik@demo.local",
         "first_name": "Saad",
         "last_name": "Malik",
-        "role": "pg",
+        "role": "RESIDENT",
         "specialty": "medicine",
         "year": "2",
         "department_code": "DEMO-MED",
@@ -254,7 +256,7 @@ DEMO_RESIDENT_USERS = [
         "email": "fatima.sheikh@demo.local",
         "first_name": "Fatima",
         "last_name": "Sheikh",
-        "role": "resident",
+        "role": "RESIDENT",
         "specialty": "medicine",
         "year": "3",
         "department_code": "DEMO-MED",
@@ -270,7 +272,7 @@ DEMO_RESIDENT_USERS = [
         "email": "usman.shah@demo.local",
         "first_name": "Usman",
         "last_name": "Shah",
-        "role": "pg",
+        "role": "RESIDENT",
         "specialty": "medicine",
         "year": "4",
         "department_code": "DEMO-MED",
@@ -567,7 +569,7 @@ class Command(BaseCommand):
         user.email = ADMIN_EMAIL
         user.first_name = "Admin"
         user.last_name = "User"
-        user.role = "admin"
+        user.role = "ADMIN"
         user.is_active = True
         user.is_staff = True
         user.is_superuser = True
@@ -630,7 +632,18 @@ class Command(BaseCommand):
             user.email = spec["email"]
             user.first_name = spec["first_name"]
             user.last_name = spec["last_name"]
-            user.role = spec["role"]
+            raw_role = spec["role"]
+            role_lower = raw_role.lower()
+            if role_lower in ["admin", "utrmc_admin", "super_admin", "system_admin"]:
+                user.role = "ADMIN"
+            elif role_lower in ["teacher", "faculty", "supervisor"]:
+                user.role = "SUPERVISOR"
+            elif role_lower in ["student", "pgr", "trainee", "resident", "pg"]:
+                user.role = "RESIDENT"
+            elif role_lower in ["clerk", "office_staff", "data_entry", "support_staff", "utrmc_user"]:
+                user.role = "SUPPORT_STAFF"
+            else:
+                user.role = "SUPPORT_STAFF"
             user.specialty = spec.get("specialty")
             user.year = spec.get("year")
             user.registration_number = spec.get("pgr_id") or f"STAFF-{spec['username'].upper()}"
@@ -652,18 +665,30 @@ class Command(BaseCommand):
 
     def _seed_staff_profiles(self, users):
         for spec in DEMO_STAFF_USERS:
-            StaffProfile.objects.update_or_create(
-                user=users[spec["username"]],
-                defaults={
-                    "designation": spec["designation"],
-                    "phone": "+92-300-1111111",
-                    "active": True,
-                },
-            )
+            user = users[spec["username"]]
+            if user.role == "SUPERVISOR":
+                SupervisorProfile.objects.update_or_create(
+                    user=user,
+                    defaults={
+                        "designation_ref": spec["designation"],
+                        "phone": "+92-300-1111111",
+                    },
+                )
+            elif user.role == "SUPPORT_STAFF":
+                SupportStaffProfile.objects.update_or_create(
+                    user=user,
+                    defaults={
+                        "designation": spec["designation"],
+                        "phone": "+92-300-1111111",
+                    },
+                )
 
     def _seed_department_memberships(self, admin, users, departments):
         for spec in DEMO_STAFF_USERS + DEMO_RESIDENT_USERS:
-            member_type = "resident" if spec["role"] in {"resident", "pg"} else spec["role"]
+            if users[spec["username"]].role == "RESIDENT":
+                member_type = DepartmentMembership.MEMBER_RESIDENT
+            else:
+                member_type = DepartmentMembership.MEMBER_SUPERVISOR
             DepartmentMembership.objects.update_or_create(
                 user=users[spec["username"]],
                 department=departments[spec["department_code"]],
@@ -716,21 +741,16 @@ class Command(BaseCommand):
             "DEMO-SURG": "demo_surg_hod",
             "DEMO-MED": "demo_med_hod",
         }
-        today = timezone.now().date()
         for department_code, username in hod_map.items():
             department = departments[department_code]
             hod_user = users[username]
             department.head = hod_user
             department.save(update_fields=["head"])
-            HODAssignment.objects.update_or_create(
-                department=department,
-                active=True,
+            SupervisorProfile.objects.update_or_create(
+                user=hod_user,
                 defaults={
-                    "hod_user": hod_user,
-                    "start_date": today - timedelta(days=365),
-                    "end_date": None,
-                    "created_by": admin,
-                    "updated_by": admin,
+                    "designation_ref": "HOD",
+                    "department_ref": department,
                 },
             )
 
@@ -892,14 +912,15 @@ class Command(BaseCommand):
             resident = users[spec["username"]]
             training_start = today - timedelta(days=spec["months_in_program"] * 30)
             training_end = training_start + timedelta(days=48 * 30)
+            hospital = Hospital.objects.filter(code=spec["hospital_code"]).first()
+            department = Department.objects.filter(code=spec["department_code"]).first()
             ResidentProfile.objects.update_or_create(
                 user=resident,
                 defaults={
-                    "pgr_id": spec["pgr_id"],
-                    "training_start": training_start,
-                    "training_end": training_end,
-                    "training_level": spec["training_level"],
-                    "active": True,
+                    "registration_no": spec["pgr_id"],
+                    "hospital": hospital,
+                    "department_ref": department,
+                    "program_ref": programs.get(spec["program_code"]),
                 },
             )
             record, _ = ResidentTrainingRecord.objects.update_or_create(

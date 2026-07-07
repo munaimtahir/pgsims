@@ -1,7 +1,7 @@
 from django.test import TestCase
 from django.contrib.auth import get_user_model
 from sims.users.models import (
-    User, DepartmentMembership, HODAssignment, SupervisorResidentLink
+    User, DepartmentMembership, SupervisorResidentLink, SupervisorProfile
 )
 from sims.academics.models import Department
 from datetime import date, timedelta
@@ -11,8 +11,8 @@ User = get_user_model()
 class UsersModelsTests(TestCase):
     def setUp(self):
         self.dept = Department.objects.create(name="Medicine", code="MED")
-        self.user = User.objects.create_user(username="testuser", email="test@test.com", role="resident")
-        self.supervisor = User.objects.create_user(username="sup", role="supervisor")
+        self.user = User.objects.create_user(username="testuser", email="test@test.com", role="RESIDENT")
+        self.supervisor = User.objects.create_user(username="sup", role="SUPERVISOR")
 
     def test_user_display_name(self):
         self.user.first_name = "Test"
@@ -24,14 +24,14 @@ class UsersModelsTests(TestCase):
         self.assertEqual(self.user.get_display_name(), "testuser")
 
     def test_is_roles(self):
-        self.user.role = "pg"
+        self.user.role = "RESIDENT"
         self.assertTrue(self.user.is_pg())
         self.assertFalse(self.user.is_supervisor())
         
-        self.user.role = "supervisor"
+        self.user.role = "SUPERVISOR"
         self.assertTrue(self.user.is_supervisor())
         
-        self.user.role = "admin"
+        self.user.role = "ADMIN"
         self.assertTrue(self.user.is_admin())
 
     def test_department_membership(self):
@@ -48,10 +48,13 @@ class UsersModelsTests(TestCase):
         self.assertTrue(membership.active)
 
     def test_hod_assignment(self):
-        assignment = HODAssignment.objects.create(
-            hod_user=self.supervisor, department=self.dept, start_date=date.today()
+        assignment = SupervisorProfile.objects.create(
+            user=self.supervisor,
+            designation_ref="HOD",
+            department_ref=self.dept,
         )
-        self.assertEqual(assignment.hod_user, self.supervisor)
+        self.assertEqual(assignment.user, self.supervisor)
+        self.assertEqual(assignment.designation_ref, "HOD")
 
     def test_supervisor_resident_link(self):
         self.user.supervisor = self.supervisor

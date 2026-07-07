@@ -17,7 +17,7 @@ from sims.training.models import (
     SubmissionRequirementTemplate,
     TrainingProgram,
 )
-from sims.users.models import DepartmentMembership, HODAssignment, SupervisorResidentLink, User
+from sims.users.models import DepartmentMembership, SupervisorResidentLink, User
 
 
 class Command(BaseCommand):
@@ -78,7 +78,7 @@ class Command(BaseCommand):
             username="e2e_admin",
             password="Admin123!",
             email="e2e_admin@pgsims.local",
-            role="admin",
+            role="ADMIN",
             first_name="E2E",
             last_name="Admin",
         )
@@ -87,7 +87,7 @@ class Command(BaseCommand):
             username="e2e_utrmc_user",
             password="Utrmc123!",
             email="e2e_utrmc_user@pgsims.local",
-            role="utrmc_user",
+            role="SUPPORT_STAFF",
             first_name="E2E",
             last_name="UTRMC User",
         )
@@ -96,7 +96,7 @@ class Command(BaseCommand):
             username="e2e_utrmc_admin",
             password="UtrmcAdmin123!",
             email="e2e_utrmc_admin@pgsims.local",
-            role="utrmc_admin",
+            role="ADMIN",
             first_name="E2E",
             last_name="UTRMC Admin",
         )
@@ -105,7 +105,7 @@ class Command(BaseCommand):
             username="e2e_supervisor",
             password="Supervisor123!",
             email="e2e_supervisor@pgsims.local",
-            role="supervisor",
+            role="SUPERVISOR",
             specialty="surgery",
             first_name="E2E",
             last_name="Supervisor",
@@ -115,7 +115,7 @@ class Command(BaseCommand):
             username="e2e_pg",
             password="Pg123456!",
             email="e2e_pg@pgsims.local",
-            role="pg",
+            role="RESIDENT",
             specialty="surgery",
             year="1",
             supervisor=supervisor,
@@ -140,7 +140,7 @@ class Command(BaseCommand):
             username="supervisor_user",
             password="SupervisorUser123!",
             email="supervisor_user@pgsims.local",
-            role="supervisor",
+            role="SUPERVISOR",
             specialty="surgery",
             first_name="Feature",
             last_name="Supervisor",
@@ -151,7 +151,7 @@ class Command(BaseCommand):
             username="hod_user",
             password="HodUser123!",
             email="hod_user@pgsims.local",
-            role="supervisor",
+            role="SUPERVISOR",
             specialty="surgery",
             first_name="Feature",
             last_name="HOD",
@@ -162,7 +162,7 @@ class Command(BaseCommand):
             username="resident_user",
             password="ResidentUser123!",
             email="resident_user@pgsims.local",
-            role="pg",
+            role="RESIDENT",
             specialty="surgery",
             year="1",
             supervisor=supervisor_user,
@@ -175,7 +175,7 @@ class Command(BaseCommand):
             username="utrmc_admin_user",
             password="UtrmcAdminUser123!",
             email="utrmc_admin_user@pgsims.local",
-            role="utrmc_admin",
+            role="ADMIN",
             first_name="Feature",
             last_name="UTRMC Admin",
         )
@@ -183,7 +183,7 @@ class Command(BaseCommand):
             username="utrmc_staff_user",
             password="UtrmcStaffUser123!",
             email="utrmc_staff_user@pgsims.local",
-            role="utrmc_user",
+            role="SUPPORT_STAFF",
             first_name="Feature",
             last_name="UTRMC Staff",
         )
@@ -191,7 +191,7 @@ class Command(BaseCommand):
             username="negative_role_user",
             password="NegativeRole123!",
             email="negative_role_user@pgsims.local",
-            role="pg",
+            role="RESIDENT",
             specialty="medicine",
             year="1",
             home_hospital=hospital,
@@ -219,15 +219,6 @@ class Command(BaseCommand):
                 "is_primary": False,
                 "active": True,
                 "start_date": today,
-                "created_by": e2e_admin,
-            },
-        )
-        HODAssignment.objects.update_or_create(
-            department=departments[0],
-            defaults={
-                "hod_user": hod_user,
-                "start_date": today,
-                "active": True,
                 "created_by": e2e_admin,
             },
         )
@@ -363,7 +354,7 @@ class Command(BaseCommand):
             defaults={
                 "title": "E2E Baseline Research Project",
                 "topic_area": "Clinical Education",
-                "supervisor": supervisor,
+                "SUPERVISOR": supervisor,
                 "status": ResidentResearchProject.STATUS_SUBMITTED_SUPERVISOR,
                 "supervisor_feedback": "",
                 "submitted_to_supervisor_at": timezone.now(),

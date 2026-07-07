@@ -40,7 +40,7 @@ class Command(BaseCommand):
             action="store_true",
             help="Required together with --apply to prevent accidental overwrite.",
         )
-        parser.add_argument("--actor-username", type=str, default="admin", help="Actor for audit logs.")
+        parser.add_argument("--actor-username", type=str, default="ADMIN", help="Actor for audit logs.")
 
     def handle(self, *args, **options):
         csv_path = Path(options["csv_file"]).expanduser().resolve()
@@ -82,9 +82,9 @@ class Command(BaseCommand):
             user = None
             known_user_id = email_to_user_id.get(email)
             if known_user_id:
-                user = User.objects.filter(id=known_user_id, role__in=["resident", "pg"]).first()
+                user = User.objects.filter(id=known_user_id, role__in=["RESIDENT", "RESIDENT"]).first()
             if not user:
-                user = User.objects.filter(email__iexact=email, role__in=["resident", "pg"]).first()
+                user = User.objects.filter(email__iexact=email, role__in=["RESIDENT", "RESIDENT"]).first()
             if not user:
                 self.stdout.write(self.style.ERROR(f"row {row_num}: resident '{email}' not found"))
                 errors += 1

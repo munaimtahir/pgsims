@@ -17,11 +17,11 @@ class TrainingViewsExtendedTests(TestCase):
     def setUp(self):
         self.client = Client()
         self.admin = User.objects.create_superuser(username="admin_view", password="password123", email="admin_view@test.com")
-        self.admin.role = "admin"
+        self.admin.role = "ADMIN"
         self.admin.save()
         
-        self.supervisor = User.objects.create_user(username="sup_view", password="password123", role="supervisor")
-        self.pg = User.objects.create_user(username="pg_view", password="password123", role="pg")
+        self.supervisor = User.objects.create_user(username="sup_view", password="password123", role="SUPERVISOR")
+        self.pg = User.objects.create_user(username="pg_view", password="password123", role="RESIDENT")
         
         self.program = TrainingProgram.objects.create(name="Medicine", code="MED-V", duration_months=48)
         self.rtr = ResidentTrainingRecord.objects.create(

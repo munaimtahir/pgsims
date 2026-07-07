@@ -100,7 +100,7 @@ export default function UTRMCProgramsPage() {
   };
 
   return (
-    <ProtectedRoute allowedRoles={['admin', 'utrmc_admin', 'utrmc_user']}>
+    <ProtectedRoute allowedRoles={['ADMIN', 'ADMIN', 'SUPPORT_STAFF']}>
         <div className="pg-page">
           <PageHeader
             title="Programs"

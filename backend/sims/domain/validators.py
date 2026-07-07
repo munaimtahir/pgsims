@@ -28,7 +28,7 @@ def validate_same_supervisor(pg, supervisor) -> None:
     ):
         raise ValidationError(
             {
-                "supervisor": "Assigned supervisor must match the PG's registered supervisor.",
+                "SUPERVISOR": "Assigned supervisor must match the PG's registered supervisor.",
             }
         )
 
