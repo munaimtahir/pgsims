@@ -1,4 +1,5 @@
 import string
+from django.db.models import Q
 from django.db import transaction
 from django.contrib.auth import get_user_model
 from django.utils import timezone
@@ -55,6 +56,38 @@ PROFILE_COMPLETION_REQUIREMENTS = {
                 "source": "user",
                 "input_type": "email",
             },
+            {
+                "field": "hospital",
+                "label": "Hospital / Training Site",
+                "source": "profile",
+                "input_type": "select",
+                "options_key": "hospitals",
+                "help_text": "Select the primary hospital/training site.",
+            },
+            {
+                "field": "department_ref",
+                "label": "Department / Discipline",
+                "source": "profile",
+                "input_type": "select",
+                "options_key": "departments",
+                "help_text": "Select the primary department.",
+            },
+            {
+                "field": "program_ref",
+                "label": "Postgraduate Program",
+                "source": "profile",
+                "input_type": "select",
+                "options_key": "programs",
+                "help_text": "Select your postgraduate program.",
+            },
+            {
+                "field": "academic_session_ref",
+                "label": "Academic Session / Induction",
+                "source": "profile",
+                "input_type": "select",
+                "options_key": "academic_sessions",
+                "help_text": "Select your induction session.",
+            },
         ],
     },
     "SUPERVISOR": {
@@ -78,6 +111,30 @@ PROFILE_COMPLETION_REQUIREMENTS = {
                 "label": "Email",
                 "source": "user",
                 "input_type": "email",
+            },
+            {
+                "field": "hospital",
+                "label": "Hospital / Training Site",
+                "source": "profile",
+                "input_type": "select",
+                "options_key": "hospitals",
+                "help_text": "Select the primary hospital/training site.",
+            },
+            {
+                "field": "department_ref",
+                "label": "Department / Discipline",
+                "source": "profile",
+                "input_type": "select",
+                "options_key": "departments",
+                "help_text": "Select the primary department.",
+            },
+            {
+                "field": "designation_ref",
+                "label": "Supervisor Designation",
+                "source": "profile",
+                "input_type": "select",
+                "options_key": "designations",
+                "help_text": "Select your academic/professional designation.",
             },
         ],
     },
@@ -271,6 +328,20 @@ def create_user_with_profile(
                 created_by=actor,
             )
         elif role == "RESIDENT":
+            academic_session_val = profile_payload.get("academic_session_ref")
+            if isinstance(academic_session_val, str) and academic_session_val:
+                from sims.academics.models import AcademicSession
+                academic_session_ref = AcademicSession.objects.filter(Q(code=academic_session_val) | Q(name=academic_session_val)).first()
+            else:
+                academic_session_ref = academic_session_val
+
+            specialty_val = profile_payload.get("specialty_ref")
+            if isinstance(specialty_val, str) and specialty_val:
+                from sims.academics.models import Specialty
+                specialty_ref = Specialty.objects.filter(Q(code=specialty_val) | Q(name=specialty_val)).first()
+            else:
+                specialty_ref = specialty_val
+
             profile = ResidentProfile.objects.create(
                 user=user,
                 registration_no=profile_payload.get("registration_no"),
@@ -280,12 +351,26 @@ def create_user_with_profile(
                 hospital=profile_payload.get("hospital"),
                 department_ref=profile_payload.get("department_ref"),
                 program_ref=profile_payload.get("program_ref"),
-                academic_session_ref=profile_payload.get("academic_session_ref"),
-                specialty_ref=profile_payload.get("specialty_ref"),
+                academic_session_ref=academic_session_ref,
+                specialty_ref=specialty_ref,
                 profile_status="INCOMPLETE",
                 created_by=actor,
             )
         elif role == "SUPERVISOR":
+            designation_val = profile_payload.get("designation_ref")
+            if isinstance(designation_val, str) and designation_val:
+                from sims.academics.models import Designation
+                designation_ref = Designation.objects.filter(Q(code=designation_val) | Q(name=designation_val)).first()
+            else:
+                designation_ref = designation_val
+
+            specialty_val = profile_payload.get("specialty_ref")
+            if isinstance(specialty_val, str) and specialty_val:
+                from sims.academics.models import Specialty
+                specialty_ref = Specialty.objects.filter(Q(code=specialty_val) | Q(name=specialty_val)).first()
+            else:
+                specialty_ref = specialty_val
+
             profile = SupervisorProfile.objects.create(
                 user=user,
                 pmdc_no=profile_payload.get("pmdc_no"),
@@ -294,9 +379,9 @@ def create_user_with_profile(
                 email=profile_payload.get("email", email or ""),
                 hospital=profile_payload.get("hospital"),
                 department_ref=profile_payload.get("department_ref"),
-                designation_ref=profile_payload.get("designation_ref"),
+                designation_ref=designation_ref,
                 program_ref=profile_payload.get("program_ref"),
-                specialty_ref=profile_payload.get("specialty_ref"),
+                specialty_ref=specialty_ref,
                 profile_status="INCOMPLETE",
                 created_by=actor,
             )

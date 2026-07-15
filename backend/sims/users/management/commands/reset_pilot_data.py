@@ -6,9 +6,10 @@ from django.db import transaction
 
 from sims.academics.models import Department
 from sims.rotations.models import Hospital, HospitalDepartment
+from sims.supervision.models import ResidentSupervisorAssignment
 from sims.users.models import (
     ResidentProfile, SupervisorProfile, SupportStaffProfile, DepartmentMembership,
-    HospitalAssignment, SupervisorResidentLink
+    HospitalAssignment
 )
 from sims.training.models import (
     ResidentTrainingRecord, RotationAssignment, LeaveRequest,
@@ -80,7 +81,7 @@ class Command(BaseCommand):
             "SubmissionDocument": SubmissionDocument.objects.all(),
             "ResidentSubmission": ResidentSubmission.objects.all(),
             "ResidentTrainingRecord": ResidentTrainingRecord.objects.all(),
-            "SupervisorResidentLink": SupervisorResidentLink.objects.all(),
+            "ResidentSupervisorAssignment": ResidentSupervisorAssignment.objects.all(),
             "HospitalAssignment": HospitalAssignment.objects.all(),
             "DepartmentMembership": DepartmentMembership.objects.all(),
             "SupervisorProfile": SupervisorProfile.objects.all(),

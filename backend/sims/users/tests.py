@@ -9,8 +9,9 @@ from rest_framework.test import APIClient
 
 from django.contrib.auth import get_user_model
 from sims.academics.models import Department
+from sims.supervision.models import ResidentSupervisorAssignment
 from sims.training.models import ResidentTrainingRecord
-from sims.users.models import SupervisorResidentLink, SupervisorProfile
+from sims.users.models import ResidentProfile, SupervisorProfile
 
 User = get_user_model()
 
@@ -97,18 +98,25 @@ class UserbaseReadOnlyScopeTests(TestCase):
             year="1",
         )
         self.department = Department.objects.create(name="Medicine", code="MED")
-        SupervisorResidentLink.objects.create(
-            supervisor_user=self.supervisor,
-            resident_user=self.resident,
-            department=self.department,
-            start_date="2026-01-01",
-            created_by=self.admin,
-            updated_by=self.admin,
-        )
         SupervisorProfile.objects.create(
             user=self.supervisor,
             designation_ref="HOD",
             department_ref=self.department,
+        )
+        resident_profile = ResidentProfile.objects.create(
+            user=self.resident,
+            department_ref=self.department,
+        )
+        supervisor_profile = self.supervisor.supervisor_profile
+        ResidentSupervisorAssignment.objects.create(
+            supervisor=supervisor_profile,
+            resident=resident_profile,
+            assignment_type=ResidentSupervisorAssignment.ASSIGNMENT_PRIMARY,
+            start_date="2026-01-01",
+            is_active=True,
+            status=ResidentSupervisorAssignment.STATUS_ACTIVE,
+            created_by=self.admin,
+            updated_by=self.admin,
         )
 
     def test_support_staff_user_list_is_self_scoped(self):
@@ -136,8 +144,8 @@ class UserbaseReadOnlyScopeTests(TestCase):
         )
         self.assertEqual(response.status_code, 403)
 
-    def test_support_staff_cannot_list_supervision_links(self):
+    def test_support_staff_cannot_list_supervision_assignments(self):
         self.client.force_authenticate(self.utrmc_user)
-        supervision_response = self.client.get("/api/supervision-links/")
+        supervision_response = self.client.get("/api/supervision/assignments/")
 
         self.assertEqual(supervision_response.status_code, 403)

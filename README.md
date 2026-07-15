@@ -135,7 +135,7 @@ source venv/bin/activate  # On Windows: venv\Scripts\activate
 
 ### 3. Configure Environment Variables
 
-Create a `.env` file in the project root (copy from `.env.example` if available):
+Create a `.env` file in the project root before starting Docker. For compose-based runtime in this repo, use `docker compose --env-file .env ...` so `SECRET_KEY` and `DB_PASSWORD` are injected consistently:
 
 ```bash
 # Required settings
@@ -148,7 +148,7 @@ DATABASE_URL=postgresql://user:password@localhost:5432/sims_db
 # OR
 DB_NAME=sims_db
 DB_USER=sims_user
-DB_PASSWORD=your_password
+DB_PASSWORD=strong-db-password
 DB_HOST=localhost
 DB_PORT=5432
 
@@ -167,7 +167,7 @@ JWT_REFRESH_TOKEN_DAYS=7
 CORS_ALLOWED_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
 ```
 
-**Note:** See `.env.example` for a complete list of available environment variables.
+**Note:** The repo currently relies on the root `.env` file for Docker runtime. If you skip `--env-file .env`, backend startup can fail with `SECRET_KEY environment variable is required`.
 
 ### 4. Install Dependencies
 

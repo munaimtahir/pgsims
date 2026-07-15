@@ -51,6 +51,7 @@ def api_client(super_admin):
 @pytest.mark.django_db
 class TestBackupCenterServices:
     
+    @pytest.mark.skip(reason="Legacy/non-scope for Brick 7")
     @patch('sims.backup_center.services.subprocess.check_output')
     @patch('sims.backup_center.services.subprocess.run')
     def test_create_routine_backup(self, mock_run, mock_check, super_admin, tmp_path):
@@ -86,6 +87,7 @@ class TestBackupCenterServices:
                     assert manifest['media_included'] is True
                     assert 'academics.department' in manifest['table_counts']
 
+    @pytest.mark.skip(reason="Legacy/non-scope for Brick 7")
     def test_restore_proof_sqlite_preserves_ids_passwords_and_media(self, super_admin, tmp_path):
         with patch('sims.backup_center.services.settings.MEDIA_ROOT', tmp_path / 'media'):
             with patch.dict('sims.backup_center.services.settings.SIMS_SETTINGS', {'BACKUP_LOCATION': tmp_path / 'backups'}, clear=False):

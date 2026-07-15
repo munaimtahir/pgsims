@@ -6,6 +6,8 @@ from sims.training.models import (
 )
 from sims.rotations.models import Hospital, HospitalDepartment
 from sims.academics.models import Department
+from sims.supervision.models import ResidentSupervisorAssignment
+from sims.users.models import ResidentProfile, SupervisorProfile
 from django.utils import timezone
 from datetime import date, timedelta
 import io
@@ -26,6 +28,16 @@ class BulkServicesTests(TestCase):
         self.rtr = ResidentTrainingRecord.objects.create(
             resident_user=self.pg, program=self.program, 
             start_date=date.today(), expected_end_date=date.today() + timedelta(days=365)
+        )
+        self.resident_profile = ResidentProfile.objects.create(
+            user=self.pg,
+            hospital=self.hospital,
+            department_ref=self.dept,
+        )
+        self.supervisor_profile = SupervisorProfile.objects.create(
+            user=self.supervisor,
+            hospital=self.hospital,
+            department_ref=self.dept,
         )
 
     def test_import_trainees_srv(self):

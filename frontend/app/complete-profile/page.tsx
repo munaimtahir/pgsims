@@ -2,7 +2,7 @@
 
 import { FormEvent, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import authApi, { CompleteProfileForm, MissingProfileField } from '@/lib/api/auth';
+import authApi, { CompleteProfileForm, MissingProfileField, IdentityOptions } from '@/lib/api/auth';
 
 function inputType(field: MissingProfileField): string {
   if (field.input_type === 'phone') return 'tel';
@@ -13,17 +13,21 @@ function inputType(field: MissingProfileField): string {
 export default function CompleteProfilePage() {
   const router = useRouter();
   const [form, setForm] = useState<CompleteProfileForm | null>(null);
+  const [options, setOptions] = useState<IdentityOptions | null>(null);
   const [values, setValues] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
-    authApi
-      .getCompleteProfileForm()
-      .then((data) => {
-        setForm(data);
-        setValues(Object.fromEntries(data.missing_fields.map((field) => [field.field, ''])));
+    Promise.all([
+      authApi.getCompleteProfileForm(),
+      authApi.getIdentityOptions(),
+    ])
+      .then(([formData, optionsData]) => {
+        setForm(formData);
+        setOptions(optionsData);
+        setValues(Object.fromEntries(formData.missing_fields.map((field) => [field.field, ''])));
       })
       .catch(() => setError('Unable to load profile requirements'))
       .finally(() => setLoading(false));
@@ -60,14 +64,33 @@ export default function CompleteProfilePage() {
             form.missing_fields.map((field) => (
               <div key={field.field}>
                 <label className="pg-form-label" htmlFor={field.field}>{field.label}</label>
-                <input
-                  id={field.field}
-                  className="pg-form-input"
-                  type={inputType(field)}
-                  value={values[field.field] || ''}
-                  onChange={(event) => setValues({ ...values, [field.field]: event.target.value })}
-                  required={field.required}
-                />
+                {field.input_type === 'select' ? (
+                  <select
+                    id={field.field}
+                    className="pg-form-input bg-white"
+                    value={values[field.field] || ''}
+                    onChange={(event) => setValues({ ...values, [field.field]: event.target.value })}
+                    required={field.required}
+                  >
+                    <option value="">Select {field.label}...</option>
+                    {field.options_key && options && options[field.options_key as keyof IdentityOptions] ? (
+                      (options[field.options_key as keyof IdentityOptions] || []).map((opt) => (
+                        <option key={String(opt.id)} value={String(opt.id)}>
+                          {opt.name} {opt.code ? `(${opt.code})` : ''}
+                        </option>
+                      ))
+                    ) : null}
+                  </select>
+                ) : (
+                  <input
+                    id={field.field}
+                    className="pg-form-input"
+                    type={inputType(field)}
+                    value={values[field.field] || ''}
+                    onChange={(event) => setValues({ ...values, [field.field]: event.target.value })}
+                    required={field.required}
+                  />
+                )}
                 {field.help_text && <p className="mt-1 text-xs text-slate-500">{field.help_text}</p>}
               </div>
             ))

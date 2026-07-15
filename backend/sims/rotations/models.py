@@ -35,6 +35,15 @@ class Hospital(models.Model):
 
     facilities = models.TextField(blank=True, help_text="Available facilities and equipment")
 
+    institution = models.ForeignKey(
+        "academics.Institution",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="hospitals",
+        help_text="Parent institution / awarding body",
+    )
+
     is_active = models.BooleanField(
         default=True, help_text="Whether this hospital is currently accepting rotations"
     )

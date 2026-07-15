@@ -93,6 +93,7 @@ INSTALLED_APPS = [
     "sims.bulk",
     "sims.notifications",
     "sims.training",
+    "sims.supervision",
     "sims.backup_center.apps.BackupCenterConfig",
 ]
 

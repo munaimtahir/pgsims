@@ -1449,7 +1449,8 @@ class BulkService:
         dry_run: bool = True,
         allow_partial: bool = False,
     ) -> BulkOperation:
-        from sims.users.models import SupervisorResidentLink
+        from sims.supervision.models import ResidentSupervisorAssignment
+        from sims.supervision.services import create_supervisor_assignment
 
         operation = BulkOperation.objects.create(user=self.actor, operation=BulkOperation.OP_IMPORT)
 
@@ -1505,21 +1506,28 @@ class BulkService:
                         "RESIDENT": resident_email,
                     })
                 else:
-                    link, created = SupervisorResidentLink.objects.update_or_create(
-                        supervisor_user=supervisor,
-                        resident_user=resident,
-                        defaults={
-                            "department": department,
-                            "start_date": start_date,
-                            "end_date": end_date,
-                            "active": active,
-                        },
+                    resident_profile = getattr(resident, "resident_profile", None)
+                    supervisor_profile = getattr(supervisor, "supervisor_profile", None)
+                    if resident_profile is None or supervisor_profile is None:
+                        raise ValidationError("Resident or supervisor profile missing.")
+                    assignment = create_supervisor_assignment(
+                        resident=resident_profile,
+                        supervisor=supervisor_profile,
+                        assignment_type=ResidentSupervisorAssignment.ASSIGNMENT_PRIMARY,
+                        start_date=start_date or date.today(),
+                        notes="Imported via bulk supervision mapping",
+                        actor=self.actor,
                     )
+                    if not active:
+                        assignment.is_active = False
+                        assignment.status = ResidentSupervisorAssignment.STATUS_ENDED
+                        assignment.end_date = end_date or start_date or date.today()
+                        assignment.save()
                     successes.append({
                         "row": row_num,
                         "SUPERVISOR": supervisor_email,
                         "RESIDENT": resident_email,
-                        "created": created,
+                        "created": True,
                     })
             except Exception as exc:
                 failures.append({"row": row_num, "error": str(exc), "data": row})
@@ -1783,17 +1791,19 @@ class BulkService:
                 for hd in HospitalDepartment.objects.all().select_related("hospital", "department").order_by("hospital__code", "department__code")
             ]
         elif resource == "supervision_links":
-            from sims.users.models import SupervisorResidentLink
+            from sims.supervision.models import ResidentSupervisorAssignment
             rows = [
                 {
-                    "supervisor_email": link.supervisor_user.email,
-                    "resident_email": link.resident_user.email,
-                    "department_code": link.department.code if link.department else "",
+                    "supervisor_email": link.supervisor.user.email,
+                    "resident_email": link.resident.user.email,
+                    "department_code": link.resident.department_ref.code if link.resident.department_ref else "",
                     "start_date": str(link.start_date) if link.start_date else "",
                     "end_date": str(link.end_date) if link.end_date else "",
-                    "active": link.active,
+                    "active": link.is_active,
                 }
-                for link in SupervisorResidentLink.objects.all().select_related("supervisor_user", "resident_user", "department")
+                for link in ResidentSupervisorAssignment.objects.all().select_related(
+                    "supervisor__user", "resident__user", "resident__department_ref"
+                )
             ]
         elif resource == "training_programs":
             from sims.training.models import TrainingProgram

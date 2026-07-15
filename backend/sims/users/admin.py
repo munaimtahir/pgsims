@@ -12,7 +12,6 @@ from .models import (
     ResidentProfile,
     SupervisorProfile,
     SupportStaffProfile,
-    SupervisorResidentLink,
     User,
 )
 
@@ -272,21 +271,3 @@ class HospitalAssignmentAdmin(admin.ModelAdmin):
         "hospital_department__department__name",
     )
 
-
-@admin.register(SupervisorResidentLink)
-class SupervisorResidentLinkAdmin(admin.ModelAdmin):
-    list_display = (
-        "supervisor_user",
-        "resident_user",
-        "department",
-        "active",
-        "start_date",
-        "end_date",
-    )
-    list_filter = ("active", "department")
-    search_fields = (
-        "supervisor_user__username",
-        "resident_user__username",
-        "supervisor_user__first_name",
-        "resident_user__first_name",
-    )

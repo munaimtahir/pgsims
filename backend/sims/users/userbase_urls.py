@@ -26,16 +26,12 @@ router.register(
     userbase_views.HospitalAssignmentViewSet,
     basename="userbase-hospital-assignments",
 )
-router.register(
-    r"supervision-links",
-    userbase_views.SupervisionLinkViewSet,
-    basename="userbase-supervision-links",
-)
 
 urlpatterns = [path("", include(router.urls))]
 
 urlpatterns += [
     path("identity/options/", userbase_views.IdentityOptionsView.as_view(), name="identity_options"),
+    path("data-quality/", userbase_views.DataQualityView.as_view(), name="data-quality"),
     path("admin/data-quality/summary", userbase_views.DataQualitySummaryView.as_view(), name="data-quality-summary"),
     path("admin/data-quality/users", userbase_views.DataQualityUsersView.as_view(), name="data-quality-users"),
     path("admin/data-quality/recompute", userbase_views.DataQualityRecomputeView.as_view(), name="data-quality-recompute"),

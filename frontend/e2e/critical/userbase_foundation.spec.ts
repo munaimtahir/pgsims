@@ -81,9 +81,14 @@ test('utrmc admin can build userbase graph and resident scope is enforced', asyn
     },
   });
   expect(supervisorResponse.ok()).toBeTruthy();
-  const supervisorPayload = (await supervisorResponse.json()) as { id: number };
+  const supervisorPayload = (await supervisorResponse.json()) as {
+    id: number;
+    supervisor_profile?: { id: number };
+  };
   const supervisorId = supervisorPayload.id;
+  const supervisorProfileId = supervisorPayload.supervisor_profile?.id;
   expect(supervisorId).toBeGreaterThan(0);
+  expect(supervisorProfileId).toBeGreaterThan(0);
 
   const residentResponse = await page.request.post('/api/users/', {
     headers: utrmcAuthHeaders,
@@ -101,9 +106,14 @@ test('utrmc admin can build userbase graph and resident scope is enforced', asyn
     },
   });
   expect(residentResponse.ok()).toBeTruthy();
-  const residentPayload = (await residentResponse.json()) as { id: number };
+  const residentPayload = (await residentResponse.json()) as {
+    id: number;
+    resident_profile?: { id: number };
+  };
   const residentId = residentPayload.id;
+  const residentProfileId = residentPayload.resident_profile?.id;
   expect(residentId).toBeGreaterThan(0);
+  expect(residentProfileId).toBeGreaterThan(0);
 
   const supervisorMembershipResponse = await page.request.post('/api/department-memberships/', {
     headers: utrmcAuthHeaders,
@@ -143,14 +153,13 @@ test('utrmc admin can build userbase graph and resident scope is enforced', asyn
   });
   expect(hospitalAssignmentResponse.ok()).toBeTruthy();
 
-  const supervisionResponse = await page.request.post('/api/supervision-links/', {
+  const supervisionResponse = await page.request.post('/api/supervision/assignments/', {
     headers: utrmcAuthHeaders,
     data: {
-      supervisor_user_id: supervisorId,
-      resident_user_id: residentId,
-      department_id: departmentId,
+      supervisor_id: supervisorProfileId,
+      resident_id: residentProfileId,
       start_date: new Date().toISOString().slice(0, 10),
-      active: true,
+      assignment_type: 'PRIMARY',
     },
   });
   expect(supervisionResponse.ok()).toBeTruthy();

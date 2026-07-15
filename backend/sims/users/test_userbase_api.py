@@ -16,9 +16,10 @@ from sims.users.models import (
     DataCorrectionAudit,
     DepartmentMembership,
     ResidentProfile,
-    SupervisorResidentLink,
+    SupervisorProfile,
     User,
 )
+from sims.supervision.models import ResidentSupervisorAssignment
 
 
 class UserbasePermissionAndConstraintTests(TestCase):
@@ -64,6 +65,16 @@ class UserbasePermissionAndConstraintTests(TestCase):
             hospital=self.hospital,
             department=self.department,
         )
+        self.resident_profile = ResidentProfile.objects.create(
+            user=self.resident,
+            hospital=self.hospital,
+            department_ref=self.department,
+        )
+        self.supervisor_profile = SupervisorProfile.objects.create(
+            user=self.faculty,
+            hospital=self.hospital,
+            department_ref=self.department,
+        )
 
     def test_resident_cannot_create_departments(self):
         self.client.force_authenticate(self.resident)
@@ -92,22 +103,21 @@ class UserbasePermissionAndConstraintTests(TestCase):
         )
         self.assertEqual(response.status_code, 403)
 
-    def test_utrmc_admin_can_create_supervision_link(self):
+    def test_utrmc_admin_can_create_supervision_assignment(self):
         self.client.force_authenticate(self.utrmc_admin)
         response = self.client.post(
-            "/api/supervision-links/",
+            "/api/supervision/assignments/",
             {
-                "supervisor_user_id": self.faculty.id,
-                "resident_user_id": self.resident.id,
-                "department_id": self.department.id,
+                "supervisor_id": self.supervisor_profile.id,
+                "resident_id": self.resident_profile.id,
                 "start_date": date.today().isoformat(),
-                "active": True,
+                "assignment_type": ResidentSupervisorAssignment.ASSIGNMENT_PRIMARY,
             },
             format="json",
         )
         self.assertEqual(response.status_code, 201)
-        self.assertEqual(response.data["supervisor_user"]["id"], self.faculty.id)
-        self.assertEqual(response.data["resident_user"]["id"], self.resident.id)
+        self.assertEqual(response.data["supervisor"]["id"], self.supervisor_profile.id)
+        self.assertEqual(response.data["resident"]["id"], self.resident_profile.id)
 
 
 
@@ -115,15 +125,15 @@ class UserbasePermissionAndConstraintTests(TestCase):
         with self.assertRaises(IntegrityError):
             HospitalDepartment.objects.create(hospital=self.hospital, department=self.department)
 
-    def test_supervision_link_role_constraints(self):
-        with self.assertRaises(ValidationError):
-            SupervisorResidentLink.objects.create(
-                supervisor_user=self.resident,
-                resident_user=self.supervisor,
-                department=self.department,
+    def test_supervision_assignment_role_constraints(self):
+        with self.assertRaises(ValueError):
+            ResidentSupervisorAssignment.objects.create(
+                supervisor=self.supervisor_profile,
+                resident=self.supervisor_profile,
+                assignment_type=ResidentSupervisorAssignment.ASSIGNMENT_PRIMARY,
                 start_date=date.today(),
-                    created_by=self.admin,
-                updated_by=self.admin,
+                is_active=True,
+                status=ResidentSupervisorAssignment.STATUS_ACTIVE,
             )
 
     def test_utrmc_admin_org_graph_routes_cover_roster_and_matrix_actions(self):
@@ -183,13 +193,12 @@ class UserbasePermissionAndConstraintTests(TestCase):
         self.assertEqual(roster.status_code, 403)
 
         blocked_link = self.client.post(
-            "/api/supervision-links/",
+            "/api/supervision/assignments/",
             {
-                "supervisor_user_id": self.faculty.id,
-                "resident_user_id": self.resident.id,
-                "department_id": self.department.id,
+                "supervisor_id": self.supervisor_profile.id,
+                "resident_id": self.resident_profile.id,
                 "start_date": date.today().isoformat(),
-                "active": True,
+                "assignment_type": ResidentSupervisorAssignment.ASSIGNMENT_PRIMARY,
             },
             format="json",
         )
@@ -300,16 +309,21 @@ class DataQualityAdminApiTests(TestCase):
             supervisor=self.supervisor,
         )
         self.department = Department.objects.create(name="DQ Medicine", code="MED-DQ")
-        ResidentProfile.objects.create(
+        self.resident_profile = ResidentProfile.objects.create(
             user=self.resident,
+            department_ref=self.department,
         )
-        SupervisorResidentLink.objects.create(
-            supervisor_user=self.supervisor,
-            resident_user=self.resident,
-            department=self.department,
+        self.supervisor_profile = SupervisorProfile.objects.create(
+            user=self.supervisor,
+            department_ref=self.department,
+        )
+        ResidentSupervisorAssignment.objects.create(
+            resident=self.resident_profile,
+            supervisor=self.supervisor_profile,
+            assignment_type=ResidentSupervisorAssignment.ASSIGNMENT_PRIMARY,
             start_date=date(2026, 1, 1),
-            created_by=self.admin,
-            updated_by=self.admin,
+            is_active=True,
+            status=ResidentSupervisorAssignment.STATUS_ACTIVE,
         )
         program = TrainingProgram.objects.create(name="DQ Program", code="DQP", duration_months=60)
         ResidentTrainingRecord.objects.create(
@@ -406,12 +420,19 @@ class DataQualityAdminApiTests(TestCase):
             start_date=date(2026, 5, 1),
             current_level="",
         )
-        # Add a valid supervision link so that missing supervision link is not the only issue
-        SupervisorResidentLink.objects.create(
-            supervisor_user=self.supervisor,
-            resident_user=resident,
-            department=self.department,
+        # Add a valid supervision assignment so that missing supervision data is not the only issue
+        resident_profile, _ = ResidentProfile.objects.get_or_create(
+            user=resident,
+            defaults={"department_ref": self.department},
+        )
+        supervisor_profile = self.supervisor_profile
+        ResidentSupervisorAssignment.objects.create(
+            resident=resident_profile,
+            supervisor=supervisor_profile,
+            assignment_type=ResidentSupervisorAssignment.ASSIGNMENT_PRIMARY,
             start_date=date(2026, 5, 1),
+            is_active=True,
+            status=ResidentSupervisorAssignment.STATUS_ACTIVE,
         )
 
         # Recompute flags

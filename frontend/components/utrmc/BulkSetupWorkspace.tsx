@@ -92,10 +92,10 @@ const PANELS = [
   },
   {
     step: 'Step 6',
-    title: 'Supervision Links',
+    title: 'Supervision Assignments',
     entity: 'supervision-links',
     exportResource: 'supervision-links',
-    description: 'Apply resident-to-faculty/supervisor links after both user datasets are loaded.',
+    description: 'Apply resident-to-supervisor assignments after both user datasets are loaded.',
     expectedColumns: [
       { name: 'supervisor_email', required: true },
       { name: 'resident_email', required: true },

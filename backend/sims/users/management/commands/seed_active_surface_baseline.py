@@ -6,8 +6,10 @@ from django.utils import timezone
 
 from sims.academics.models import Department
 from sims.rotations.models import Hospital
+from sims.supervision.models import ResidentSupervisorAssignment
+from sims.supervision.services import create_supervisor_assignment
 from sims.training.models import ResidentTrainingRecord, TrainingProgram
-from sims.users.models import DepartmentMembership, SupervisorResidentLink, User
+from sims.users.models import DepartmentMembership, ResidentProfile, SupervisorProfile, User
 
 
 class Command(BaseCommand):
@@ -107,6 +109,10 @@ class Command(BaseCommand):
             member_type=DepartmentMembership.MEMBER_SUPERVISOR,
             defaults={"active": True, "is_primary": True, "start_date": today, "created_by": admin},
         )
+        supervisor_profile, _ = SupervisorProfile.objects.update_or_create(
+            user=supervisor,
+            defaults={"hospital": hospital, "department_ref": department},
+        )
 
         program, _ = TrainingProgram.objects.update_or_create(
             code="ACTIVE-BASELINE",
@@ -127,16 +133,21 @@ class Command(BaseCommand):
                 member_type=DepartmentMembership.MEMBER_RESIDENT,
                 defaults={"active": True, "is_primary": True, "start_date": today, "created_by": admin},
             )
-            SupervisorResidentLink.objects.update_or_create(
-                supervisor_user=supervisor,
-                resident_user=resident,
-                defaults={
-                    "active": True,
-                    "start_date": today,
-                    "department": department,
-                    "created_by": admin,
-                    "updated_by": admin,
-                },
+            resident_profile, _ = ResidentProfile.objects.update_or_create(
+                user=resident,
+                defaults={"hospital": hospital, "department_ref": department},
+            )
+            ResidentSupervisorAssignment.objects.filter(
+                resident=resident_profile,
+                supervisor=supervisor_profile,
+                assignment_type=ResidentSupervisorAssignment.ASSIGNMENT_PRIMARY,
+                is_active=True,
+            ).first() or create_supervisor_assignment(
+                resident=resident_profile,
+                supervisor=supervisor_profile,
+                assignment_type=ResidentSupervisorAssignment.ASSIGNMENT_PRIMARY,
+                start_date=today,
+                actor=admin,
             )
             ResidentTrainingRecord.objects.filter(resident_user=resident).exclude(program=program).update(active=False)
             ResidentTrainingRecord.objects.update_or_create(

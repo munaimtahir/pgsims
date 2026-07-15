@@ -151,11 +151,11 @@ test.describe('02 — UTRMC Admin dashboard', () => {
     await shot(page, '02-utrmc-admin', '05-users-list');
   });
 
-  test('06 supervision links', async ({ page, context }) => {
+  test('06 supervision assignments', async ({ page, context }) => {
     await loginAs(context, page, 'utrmc_admin');
     await page.goto('/dashboard/utrmc/supervision');
     await page.waitForLoadState('networkidle');
-    await shot(page, '02-utrmc-admin', '06-supervision-links');
+    await shot(page, '02-utrmc-admin', '06-supervision-assignments');
   });
 
   test('07 hospital-department matrix', async ({ page, context }) => {

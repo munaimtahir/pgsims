@@ -9,8 +9,9 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from drf_spectacular.utils import extend_schema
 
-from sims.academics.models import Department
+from sims.academics.models import Department, Institution, Specialty, Designation, AcademicSession
 from sims.common_permissions import IsTechAdmin
+from sims.audit.models import ActivityLog
 from sims.rotations.models import Hospital, HospitalDepartment
 from sims.users.models import (
     DataCorrectionAudit,
@@ -20,8 +21,10 @@ from sims.users.models import (
     ResidentProfile,
     SupervisorProfile,
     SupportStaffProfile,
-    SupervisorResidentLink,
 )
+from sims.supervision.models import ResidentSupervisorAssignment
+from sims.supervision.serializers import ResidentSupervisorAssignmentSerializer
+from sims.supervision.services import create_supervisor_assignment, end_supervisor_assignment
 from sims.users.data_quality import log_data_correction, recompute_all, recompute_flags_for_user
 from sims.academics.serializers import DepartmentSerializer as CanonicalDepartmentSerializer
 from sims.users.userbase_serializers import (
@@ -33,7 +36,6 @@ from sims.users.userbase_serializers import (
     ResidentProfileSerializer,
     SupervisorProfileSerializer,
     SupportStaffProfileSerializer,
-    SupervisorResidentLinkSerializer,
     UserManagementSerializer,
 )
 from sims.users.services import (
@@ -502,27 +504,43 @@ class HospitalAssignmentViewSet(viewsets.ModelViewSet):
 
 
 class SupervisionLinkViewSet(viewsets.ModelViewSet):
-    queryset = SupervisorResidentLink.objects.select_related(
-        "supervisor_user", "resident_user", "department"
-    ).order_by("-active", "resident_user__last_name")
-    serializer_class = SupervisorResidentLinkSerializer
-    filterset_fields = ["supervisor_user", "resident_user", "department", "active"]
+    queryset = ResidentSupervisorAssignment.objects.select_related(
+        "supervisor__user",
+        "resident__user",
+        "resident__department_ref",
+        "resident__hospital",
+        "supervisor__department_ref",
+        "supervisor__hospital",
+    ).order_by("-is_active", "resident__user__last_name")
+    serializer_class = ResidentSupervisorAssignmentSerializer
+    filterset_fields = ["supervisor_id", "resident_id", "is_active", "assignment_type"]
     search_fields = [
-        "supervisor_user__username",
-        "supervisor_user__first_name",
-        "supervisor_user__last_name",
-        "resident_user__username",
-        "resident_user__first_name",
-        "resident_user__last_name",
+        "supervisor__user__username",
+        "supervisor__user__first_name",
+        "supervisor__user__last_name",
+        "resident__user__username",
+        "resident__user__first_name",
+        "resident__user__last_name",
     ]
 
     def _ensure_manage_permission(self):
         if not _is_manager(self.request.user):
-            raise PermissionDenied("Only admins may manage supervision links.")
+            raise PermissionDenied("Only admins may manage supervision assignments.")
 
     def create(self, request, *args, **kwargs):
         self._ensure_manage_permission()
-        return super().create(request, *args, **kwargs)
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        payload = serializer.validated_data
+        assignment = create_supervisor_assignment(
+            resident=payload["resident"],
+            supervisor=payload["supervisor"],
+            assignment_type=payload.get("assignment_type", ResidentSupervisorAssignment.ASSIGNMENT_PRIMARY),
+            start_date=payload["start_date"],
+            notes=payload.get("notes", ""),
+            actor=request.user,
+        )
+        return Response(self.get_serializer(assignment).data, status=status.HTTP_201_CREATED)
 
     def update(self, request, *args, **kwargs):
         self._ensure_manage_permission()
@@ -536,21 +554,32 @@ class SupervisionLinkViewSet(viewsets.ModelViewSet):
         self._ensure_manage_permission()
         return super().destroy(request, *args, **kwargs)
 
-    def perform_create(self, serializer):
-        serializer.save(created_by=self.request.user, updated_by=self.request.user)
-
-    def perform_update(self, serializer):
-        serializer.save(updated_by=self.request.user)
-
     def list(self, request, *args, **kwargs):
         if not _is_roster_reader(request.user):
-            raise PermissionDenied("Only UTRMC/admin oversight roles may view supervision links.")
+            raise PermissionDenied("Only UTRMC/admin oversight roles may view supervision assignments.")
         return viewsets.ModelViewSet.list(self, request, *args, **kwargs)
 
     def retrieve(self, request, *args, **kwargs):
         if not _is_roster_reader(request.user):
-            raise PermissionDenied("Only UTRMC/admin oversight roles may view supervision links.")
+            raise PermissionDenied("Only UTRMC/admin oversight roles may view supervision assignments.")
         return viewsets.ModelViewSet.retrieve(self, request, *args, **kwargs)
+
+    def perform_update(self, serializer):
+        serializer.save(updated_by=self.request.user)
+
+    def end_assignment(self, request, *args, **kwargs):
+        assignment = self.get_object()
+        end_date = request.data.get("end_date")
+        reason_for_change = request.data.get("reason_for_change", "")
+        if not end_date:
+            return Response({"end_date": "End date is required."}, status=status.HTTP_400_BAD_REQUEST)
+        ended = end_supervisor_assignment(
+            assignment=assignment,
+            end_date=end_date,
+            reason_for_change=reason_for_change,
+            actor=request.user,
+        )
+        return Response(self.get_serializer(ended).data)
 
 
 @extend_schema(responses={200: None})
@@ -694,6 +723,27 @@ class CompleteProfileView(APIView):
                             profile.program_ref = TrainingProgram.objects.get(id=val)
                         except Exception:
                             return Response({"detail": f"Program ID {val} does not exist"}, status=status.HTTP_400_BAD_REQUEST)
+                    elif field_name in ["academic_session_ref", "specialty_ref", "designation_ref"]:
+                        if not val:
+                            setattr(profile, field_name, None)
+                        elif field_name == "academic_session_ref":
+                            from sims.academics.models import AcademicSession
+                            try:
+                                profile.academic_session_ref = AcademicSession.objects.get(code=val)
+                            except AcademicSession.DoesNotExist:
+                                return Response({"detail": f"Academic session {val} does not exist"}, status=status.HTTP_400_BAD_REQUEST)
+                        elif field_name == "specialty_ref":
+                            from sims.academics.models import Specialty
+                            try:
+                                profile.specialty_ref = Specialty.objects.get(code=val)
+                            except Specialty.DoesNotExist:
+                                return Response({"detail": f"Specialty {val} does not exist"}, status=status.HTTP_400_BAD_REQUEST)
+                        elif field_name == "designation_ref":
+                            from sims.academics.models import Designation
+                            try:
+                                profile.designation_ref = Designation.objects.get(code=val)
+                            except Designation.DoesNotExist:
+                                return Response({"detail": f"Designation {val} does not exist"}, status=status.HTTP_400_BAD_REQUEST)
                     else:
                         setattr(profile, field_name, val)
 
@@ -740,6 +790,8 @@ class IdentityOptionsView(APIView):
     def get(self, request):
         hospitals = Hospital.objects.filter(is_active=True).order_by("name")
         departments = Department.objects.filter(active=True).order_by("name")
+        institutions = Institution.objects.filter(active=True).order_by("name")
+        specialties_qs = Specialty.objects.filter(active=True).order_by("name")
         
         # Safe lookup for TrainingProgram if initialized
         programs_qs = []
@@ -749,27 +801,42 @@ class IdentityOptionsView(APIView):
         except Exception:
             pass
 
-        academic_sessions = [
-            {"id": "2025-2026", "name": "2025-2026 Session"},
-            {"id": "2026-2027", "name": "2026-2027 Session"},
-            {"id": "2027-2028", "name": "2027-2028 Session"},
-        ]
+        # Load designations with HOD fallback
+        designations_qs = Designation.objects.filter(active=True).order_by("name")
+        if designations_qs.exists():
+            designations = [{"id": d.code, "name": d.name, "code": d.code} for d in designations_qs]
+        else:
+            designations = [
+                {"id": "HOD", "name": "Head of Department (HOD)", "code": "HOD"},
+                {"id": "Professor", "name": "Professor", "code": "Professor"},
+                {"id": "Associate Professor", "name": "Associate Professor", "code": "Associate Professor"},
+                {"id": "Assistant Professor", "name": "Assistant Professor", "code": "Assistant Professor"},
+                {"id": "Senior Registrar", "name": "Senior Registrar", "code": "Senior Registrar"},
+                {"id": "Consultant", "name": "Consultant", "code": "Consultant"},
+            ]
 
-        designations = [
-            {"id": "HOD", "name": "Head of Department (HOD)"},
-            {"id": "Professor", "name": "Professor"},
-            {"id": "Associate Professor", "name": "Associate Professor"},
-            {"id": "Assistant Professor", "name": "Assistant Professor"},
-            {"id": "Senior Registrar", "name": "Senior Registrar"},
-            {"id": "Consultant", "name": "Consultant"},
-        ]
+        # Load academic sessions with fallback
+        academic_sessions_qs = AcademicSession.objects.filter(active=True).order_by("name")
+        if academic_sessions_qs.exists():
+            academic_sessions = [{"id": s.code, "name": s.name, "code": s.code} for s in academic_sessions_qs]
+        else:
+            academic_sessions = [
+                {"id": "2025-2026", "name": "2025-2026 Session", "code": "2025-2026"},
+                {"id": "2026-2027", "name": "2026-2027 Session", "code": "2026-2027"},
+                {"id": "2027-2028", "name": "2027-2028 Session", "code": "2027-2028"},
+            ]
+
+        specialties = [{"id": sp.code, "name": sp.name, "code": sp.code} for sp in specialties_qs]
 
         return Response({
+            "institutions": [{"id": inst.id, "name": inst.name, "code": inst.code} for inst in institutions],
+            "training_sites": [{"id": h.id, "name": h.name, "code": h.code} for h in hospitals],
             "hospitals": [{"id": h.id, "name": h.name, "code": h.code} for h in hospitals],
             "departments": [{"id": d.id, "name": d.name, "code": d.code} for d in departments],
             "programs": [{"id": p.id, "name": p.name, "code": p.code} for p in programs_qs],
             "academic_sessions": academic_sessions,
             "designations": designations,
+            "specialties": specialties,
         }, status=status.HTTP_200_OK)
 
 
@@ -920,3 +987,136 @@ class DataCorrectionAuditView(APIView):
                 for row in rows
             ]
         )
+
+
+@extend_schema(responses={200: None})
+class DataQualityView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        if not _is_manager(request.user):
+            raise PermissionDenied("Only admin can view data quality.")
+
+        users = User.objects.all().prefetch_related(
+            "admin_profile", "resident_profile", "supervisor_profile", "support_staff_profile"
+        )
+
+        users_incomplete = []
+        users_must_change_pwd = []
+        res_missing_hosp = []
+        res_missing_dept = []
+        res_missing_prog = []
+        res_missing_sess = []
+        sup_missing_hosp = []
+        sup_missing_dept = []
+        sup_missing_desig = []
+        staff_missing_dept = []
+        missing_email = []
+        missing_phone = []
+        inactive_with_active_profile = []
+        active_with_archived_profile = []
+        missing_profile = []
+        wrong_role_profile = []
+
+        for u in users:
+            role = u.role
+            profile = None
+            link_path = f"/users/{u.id}"
+            
+            if role == "ADMIN":
+                profile = getattr(u, "admin_profile", None)
+                link_path = f"/admins/{u.id}"
+            elif role == "RESIDENT":
+                profile = getattr(u, "resident_profile", None)
+                link_path = f"/residents/{u.id}"
+            elif role == "SUPERVISOR":
+                profile = getattr(u, "supervisor_profile", None)
+                link_path = f"/supervisors/{u.id}"
+            elif role == "SUPPORT_STAFF":
+                profile = getattr(u, "support_staff_profile", None)
+                link_path = f"/support-staff/{u.id}"
+
+            item = {
+                "user_id": u.id,
+                "profile_id": profile.id if profile else None,
+                "name": u.get_full_name() or u.username,
+                "username": u.username,
+                "link": link_path,
+            }
+
+            if not profile:
+                missing_profile.append(item)
+                continue
+
+            if profile.profile_status == "INCOMPLETE" or not u.is_profile_complete:
+                users_incomplete.append(item)
+
+            if u.must_change_password:
+                users_must_change_pwd.append(item)
+
+            if role == "RESIDENT":
+                if not profile.hospital:
+                    res_missing_hosp.append(item)
+                if not profile.department_ref:
+                    res_missing_dept.append(item)
+                if not profile.program_ref:
+                    res_missing_prog.append(item)
+                if not profile.academic_session_ref:
+                    res_missing_sess.append(item)
+            elif role == "SUPERVISOR":
+                if not profile.hospital:
+                    sup_missing_hosp.append(item)
+                if not profile.department_ref:
+                    sup_missing_dept.append(item)
+                if not profile.designation_ref:
+                    sup_missing_desig.append(item)
+            elif role == "SUPPORT_STAFF":
+                if not profile.department_ref:
+                    staff_missing_dept.append(item)
+
+            email_val = getattr(profile, "email", None) or u.email
+            phone_val = getattr(profile, "phone", None) or u.phone_number
+            if not email_val:
+                missing_email.append(item)
+            if not phone_val:
+                missing_phone.append(item)
+
+            is_profile_archived = getattr(profile, "is_archived", False)
+            if not u.is_active and not is_profile_archived:
+                inactive_with_active_profile.append(item)
+            if u.is_active and is_profile_archived:
+                active_with_archived_profile.append(item)
+
+            profile_count = 0
+            if getattr(u, "admin_profile", None): profile_count += 1
+            if getattr(u, "resident_profile", None): profile_count += 1
+            if getattr(u, "supervisor_profile", None): profile_count += 1
+            if getattr(u, "support_staff_profile", None): profile_count += 1
+            if profile_count > 1:
+                wrong_role_profile.append(item)
+
+        sections = [
+            {"key": "users_incomplete_profile", "label": "Users with Incomplete Profile", "count": len(users_incomplete), "items": users_incomplete},
+            {"key": "users_must_change_password", "label": "Users Who Must Change Password", "count": len(users_must_change_pwd), "items": users_must_change_pwd},
+            {"key": "residents_missing_hospital", "label": "Residents Missing Hospital / Training Site", "count": len(res_missing_hosp), "items": res_missing_hosp},
+            {"key": "residents_missing_department", "label": "Residents Missing Department", "count": len(res_missing_dept), "items": res_missing_dept},
+            {"key": "residents_missing_program", "label": "Residents Missing Program", "count": len(res_missing_prog), "items": res_missing_prog},
+            {"key": "residents_missing_session", "label": "Residents Missing Academic Session", "count": len(res_missing_sess), "items": res_missing_sess},
+            {"key": "supervisors_missing_hospital", "label": "Supervisors Missing Hospital / Training Site", "count": len(sup_missing_hosp), "items": sup_missing_hosp},
+            {"key": "supervisors_missing_department", "label": "Supervisors Missing Department", "count": len(sup_missing_dept), "items": sup_missing_dept},
+            {"key": "supervisors_missing_designation", "label": "Supervisors Missing Designation", "count": len(sup_missing_desig), "items": sup_missing_desig},
+            {"key": "support_staff_missing_department", "label": "Support Staff Missing Department", "count": len(staff_missing_dept), "items": staff_missing_dept},
+            {"key": "profiles_missing_email", "label": "Profiles with Missing Email", "count": len(missing_email), "items": missing_email},
+            {"key": "profiles_missing_phone", "label": "Profiles with Missing Phone", "count": len(missing_phone), "items": missing_phone},
+            {"key": "inactive_users_active_profiles", "label": "Inactive Users with Active Profiles", "count": len(inactive_with_active_profile), "items": inactive_with_active_profile},
+            {"key": "active_users_archived_profiles", "label": "Active Users with Archived Profiles", "count": len(active_with_archived_profile), "items": active_with_archived_profile},
+            {"key": "users_missing_profile", "label": "Users Missing Linked Profile", "count": len(missing_profile), "items": missing_profile},
+            {"key": "profiles_wrong_role", "label": "Profiles Linked to Wrong Role", "count": len(wrong_role_profile), "items": wrong_role_profile},
+        ]
+
+        summary = {s["key"]: s["count"] for s in sections}
+
+        return Response({
+            "summary": summary,
+            "sections": sections
+        }, status=status.HTTP_200_OK)

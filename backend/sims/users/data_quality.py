@@ -6,7 +6,7 @@ from django.contrib.auth import get_user_model
 from django.db import transaction
 
 from sims.training.models import ResidentTrainingRecord
-from sims.users.models import DataCorrectionAudit, ResidentProfile, SupervisorResidentLink
+from sims.users.models import DataCorrectionAudit, ResidentProfile
 
 User = get_user_model()
 
@@ -63,20 +63,26 @@ def recompute_flags_for_user(user: User) -> dict[str, Any]:
             record.has_default_dates = has_default_dates
             record.save(update_fields=["has_default_dates"])
 
-    links = SupervisorResidentLink.objects.filter(resident_user=user) if is_resident else []
+    from sims.supervision.models import ResidentSupervisorAssignment
+    try:
+        resident = user.resident_profile
+        has_resident_profile = True
+    except Exception:
+        resident = None
+        has_resident_profile = False
+
+    links = ResidentSupervisorAssignment.objects.filter(resident=resident) if (is_resident and has_resident_profile) else None
     has_default_link_dates = False
-    if is_resident and not links.exists():
-        has_default_link_dates = True
-    else:
-        for link in links:
-            has_default = (
-                not bool(link.start_date) or (link.start_date and link.start_date.isoformat() in DEFAULT_DATE_STRINGS)
-            )
-            if has_default:
-                has_default_link_dates = True
-            if link.has_default_dates != has_default:
-                link.has_default_dates = has_default
-                link.save(update_fields=["has_default_dates"])
+    if is_resident:
+        if not links or not links.exists():
+            has_default_link_dates = True
+        else:
+            for link in links:
+                has_default = (
+                    not bool(link.start_date) or (link.start_date and link.start_date.isoformat() in DEFAULT_DATE_STRINGS)
+                )
+                if has_default:
+                    has_default_link_dates = True
 
     if is_resident and not training_records:
         user_issues = sorted(set([*user_issues, "missing_training_dates"]))

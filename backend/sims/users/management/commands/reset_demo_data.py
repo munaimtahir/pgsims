@@ -51,11 +51,11 @@ from sims.users.models import (
     DepartmentMembership,
     HospitalAssignment,
     ResidentProfile,
-    SupervisorResidentLink,
     SupervisorProfile,
     SupportStaffProfile,
     AdminProfile,
 )
+from sims.supervision.models import ResidentSupervisorAssignment
 
 User = get_user_model()
 
@@ -450,14 +450,15 @@ class Command(BaseCommand):
             hospital_department_id__in=hospital_department_ids
         )
         hospital_assignments = hospital_assignments.distinct()
-        supervision_links = SupervisorResidentLink.objects.filter(
-            supervisor_user_id__in=purge_user_ids
-        ) | SupervisorResidentLink.objects.filter(resident_user_id__in=purge_user_ids) | SupervisorResidentLink.objects.filter(
-            department_id__in=purge_department_ids
-        )
-        supervision_links = supervision_links.distinct()
         data_corrections = DataCorrectionAudit.objects.filter(actor_id__in=purge_user_ids)
         notification_preferences = NotificationPreference.objects.filter(user_id__in=purge_user_ids)
+
+        supervision_assignments = ResidentSupervisorAssignment.objects.filter(
+            resident_id__in=set(resident_profiles.values_list("id", flat=True))
+        ) | ResidentSupervisorAssignment.objects.filter(
+            supervisor_id__in=set(supervisor_profiles.values_list("id", flat=True))
+        )
+        supervision_assignments = supervision_assignments.distinct()
 
         notifications = [
             notification
@@ -573,7 +574,7 @@ class Command(BaseCommand):
             self._history_target("users_historicalresidentprofile", ResidentProfile, set(resident_profiles.values_list("id", flat=True))),
             self._history_target("users_historicaldepartmentmembership", DepartmentMembership, set(department_memberships.values_list("id", flat=True))),
             self._history_target("users_historicalhospitalassignment", HospitalAssignment, set(hospital_assignments.values_list("id", flat=True))),
-            self._history_target("users_historicalsupervisorresidentlink", SupervisorResidentLink, set(supervision_links.values_list("id", flat=True))),
+            self._history_target("supervision_historicalresidentsupervisorassignment", ResidentSupervisorAssignment, set(supervision_assignments.values_list("id", flat=True))),
         ]
 
         targets = [
@@ -613,9 +614,9 @@ class Command(BaseCommand):
             DeletionTarget("training_residenttrainingrecord", training_records),
             DeletionTarget("training_workshop", Workshop.objects.filter(id__in=purge_workshop_ids)),
             DeletionTarget("training_trainingprogram", TrainingProgram.objects.filter(id__in=purge_program_ids)),
-            DeletionTarget("users_supervisorresidentlink", supervision_links),
             DeletionTarget("users_hospitalassignment", hospital_assignments),
             DeletionTarget("users_departmentmembership", department_memberships),
+            DeletionTarget("supervision_residentsupervisorassignment", supervision_assignments),
             DeletionTarget("users_supervisorprofile", supervisor_profiles),
             DeletionTarget("users_supportstaffprofile", support_staff_profiles),
             DeletionTarget("users_adminprofile", admin_profiles),

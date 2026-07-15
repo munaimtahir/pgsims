@@ -13,6 +13,7 @@ from sims.academics.models import Department
 from sims.audit.models import ActivityLog
 from sims.notifications.models import Notification, NotificationPreference
 from sims.rotations.models import Hospital, HospitalDepartment
+from sims.supervision.models import ResidentSupervisorAssignment
 from sims.training.models import (
     DeputationPosting,
     LeaveRequest,
@@ -39,7 +40,6 @@ from sims.users.models import (
     ResidentProfile,
     SupervisorProfile,
     SupportStaffProfile,
-    SupervisorResidentLink,
 )
 
 User = get_user_model()
@@ -320,16 +320,15 @@ class Command(BaseCommand):
         )
         hospital_assignments = hospital_assignments.distinct()
 
-        supervision_links = SupervisorResidentLink.objects.filter(
-            supervisor_user_id__in=purge_user_ids
-        ) | SupervisorResidentLink.objects.filter(resident_user_id__in=purge_user_ids) | SupervisorResidentLink.objects.filter(
-            department_id__in=purge_department_ids
-        )
-        supervision_links = supervision_links.distinct()
-
         supervisor_profiles = SupervisorProfile.objects.filter(user_id__in=purge_user_ids)
         support_staff_profiles = SupportStaffProfile.objects.filter(user_id__in=purge_user_ids)
         resident_profiles = ResidentProfile.objects.filter(user_id__in=purge_user_ids)
+        supervision_assignments = ResidentSupervisorAssignment.objects.filter(
+            resident_id__in=set(resident_profiles.values_list("id", flat=True))
+        ) | ResidentSupervisorAssignment.objects.filter(
+            supervisor_id__in=set(supervisor_profiles.values_list("id", flat=True))
+        )
+        supervision_assignments = supervision_assignments.distinct()
 
         notifications = Notification.objects.filter(recipient_id__in=purge_user_ids) | Notification.objects.filter(
             actor_id__in=purge_user_ids
@@ -429,6 +428,12 @@ class Command(BaseCommand):
                 "training_historicalworkshoprun",
                 WorkshopRun.history.model.objects.filter(id__in=workshop_run_ids),
             ),
+            DeletionTarget(
+                "supervision_historicalresidentsupervisorassignment",
+                ResidentSupervisorAssignment.history.model.objects.filter(
+                    id__in=supervision_assignments.values_list("id", flat=True)
+                ),
+            ),
         ]
 
         targets = [
@@ -453,7 +458,7 @@ class Command(BaseCommand):
             DeletionTarget("training_residenttrainingrecord", training_records),
             DeletionTarget("training_workshop", Workshop.objects.filter(id__in=purge_workshop_ids), "code"),
             DeletionTarget("training_trainingprogram", TrainingProgram.objects.filter(id__in=purge_program_ids), "code"),
-            DeletionTarget("users_supervisorresidentlink", supervision_links),
+            DeletionTarget("supervision_residentsupervisorassignment", supervision_assignments),
             DeletionTarget("users_hospitalassignment", hospital_assignments),
             DeletionTarget("users_departmentmembership", department_memberships),
             DeletionTarget("users_supervisorprofile", supervisor_profiles),

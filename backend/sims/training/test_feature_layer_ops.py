@@ -9,6 +9,7 @@ from rest_framework.test import APITestCase
 
 from sims.academics.models import Department
 from sims.rotations.models import Hospital, HospitalDepartment
+from sims.supervision.models import ResidentSupervisorAssignment
 from sims.training.models import (
     LeaveRequest,
     LogbookEntry,
@@ -19,7 +20,7 @@ from sims.training.models import (
     SubmissionCertificate,
     SubmissionRequirementTemplate,
 )
-from sims.users.models import SupervisorResidentLink, SupervisorProfile
+from sims.users.models import ResidentProfile, SupervisorProfile
 
 from .models import ResidentTrainingRecord, TrainingProgram
 
@@ -75,19 +76,26 @@ class FeatureLayerOperationalFlowTests(APITestCase):
             active=True,
         )
 
-        SupervisorResidentLink.objects.create(
-            supervisor_user=self.supervisor,
-            resident_user=self.resident,
-            department=self.department,
-            start_date=date.today() - timedelta(days=120),
-            active=True,
+        resident_profile = ResidentProfile.objects.create(
+            user=self.resident,
+            hospital=self.hospital,
+            department_ref=self.department,
         )
-        SupervisorProfile.objects.update_or_create(
+        supervisor_profile, _ = SupervisorProfile.objects.update_or_create(
             user=self.supervisor,
             defaults={
                 "designation_ref": "HOD",
                 "department_ref": self.department,
+                "hospital": self.hospital,
             },
+        )
+        ResidentSupervisorAssignment.objects.create(
+            supervisor=supervisor_profile,
+            resident=resident_profile,
+            assignment_type=ResidentSupervisorAssignment.ASSIGNMENT_PRIMARY,
+            start_date=date.today() - timedelta(days=120),
+            is_active=True,
+            status=ResidentSupervisorAssignment.STATUS_ACTIVE,
         )
 
     def test_logbook_submit_return_resubmit_approve_flow(self):

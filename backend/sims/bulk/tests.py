@@ -6,11 +6,11 @@ from sims.academics.models import Department
 from sims.bulk.models import BulkOperation, MappingPreset
 from sims.rotations.models import Hospital, HospitalDepartment
 from sims.training.models import ResidentTrainingRecord
+from sims.supervision.models import ResidentSupervisorAssignment
 from sims.users.models import (
     DepartmentMembership,
     HospitalAssignment,
     ResidentProfile,
-    SupervisorResidentLink,
     User,
     SupervisorProfile,
     SupportStaffProfile,
@@ -33,6 +33,13 @@ class ActiveUserbaseBulkEngineTests(TestCase):
             role="ADMIN",
             email="bulk_utrmc_admin@example.com",
         )
+        self.supervisor = User.objects.create_user(
+            username="bulk_supervisor",
+            password="pass12345",
+            role="SUPERVISOR",
+            email="bulk_supervisor@example.com",
+            specialty="medicine",
+        )
         self.pg = User.objects.create_user(
             username="bulk_pg",
             password="pass12345",
@@ -40,6 +47,19 @@ class ActiveUserbaseBulkEngineTests(TestCase):
             email="bulk_pg@example.com",
             specialty="medicine",
             year="1",
+        )
+        self.hospital = Hospital.objects.create(name="Bulk Hospital", code="BH", is_active=True)
+        self.dept = Department.objects.create(name="Bulk Dept", code="BDEP", active=True)
+        self.hdept = HospitalDepartment.objects.create(hospital=self.hospital, department=self.dept, is_active=True)
+        self.resident_profile = ResidentProfile.objects.create(
+            user=self.pg,
+            hospital=self.hospital,
+            department_ref=self.dept,
+        )
+        self.supervisor_profile = SupervisorProfile.objects.create(
+            user=self.supervisor,
+            hospital=self.hospital,
+            department_ref=self.dept,
         )
 
     def _upload(self, name: str, content: str):
@@ -249,6 +269,8 @@ class ActiveUserbaseBulkEngineTests(TestCase):
             specialty="medicine",
             year="1",
         )
+        ResidentProfile.objects.create(user=resident, hospital=self.hospital, department_ref=self.dept)
+        SupervisorProfile.objects.create(user=supervisor, hospital=self.hospital, department_ref=self.dept)
         self.client.force_authenticate(self.admin)
         links_response = self.client.post(
             "/api/bulk/import/supervision-links/apply/",
@@ -262,16 +284,16 @@ class ActiveUserbaseBulkEngineTests(TestCase):
         )
         self.assertEqual(links_response.status_code, 200)
         self.assertTrue(
-            SupervisorResidentLink.objects.filter(
-                supervisor_user=supervisor,
-                resident_user=resident,
-                department=department,
-                active=True,
+            ResidentSupervisorAssignment.objects.filter(
+                supervisor__user=supervisor,
+                resident__user=resident,
+                is_active=True,
             ).exists()
         )
 
     def test_dry_run_reports_missing_prerequisite_without_writing(self):
         self.client.force_authenticate(self.admin)
+        before_count = HospitalDepartment.objects.count()
         response = self.client.post(
             "/api/bulk/import/matrix/dry-run/",
             {
@@ -285,7 +307,7 @@ class ActiveUserbaseBulkEngineTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data["success_count"], 0)
         self.assertEqual(response.data["failure_count"], 1)
-        self.assertFalse(HospitalDepartment.objects.exists())
+        self.assertEqual(HospitalDepartment.objects.count(), before_count)
 
 
 class FlexibleColumnMappingTests(TestCase):

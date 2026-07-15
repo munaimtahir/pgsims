@@ -29,28 +29,12 @@ function isExpired(expEpochSeconds: number | null): boolean {
 function normalizeRole(role?: string | null): Role | null {
   switch (role) {
     case 'ADMIN':
-    case 'admin':
-    case 'utrmc_admin':
-    case 'super_admin':
-    case 'system_admin':
       return 'ADMIN';
     case 'RESIDENT':
-    case 'resident':
-    case 'pg':
-    case 'pgr':
-    case 'trainee':
       return 'RESIDENT';
     case 'SUPERVISOR':
-    case 'supervisor':
-    case 'faculty':
-    case 'teacher':
       return 'SUPERVISOR';
     case 'SUPPORT_STAFF':
-    case 'support_staff':
-    case 'utrmc_user':
-    case 'clerk':
-    case 'office_staff':
-    case 'data_entry':
       return 'SUPPORT_STAFF';
     default:
       return null;
@@ -81,6 +65,18 @@ function roleAllowedForPath(pathname: string, role: Role | null): boolean {
   if (pathname.startsWith('/dashboard/admin')) return role === 'ADMIN';
   if (pathname.startsWith('/dashboard/utrmc')) {
     return role === 'SUPPORT_STAFF' || role === 'ADMIN';
+  }
+  if (
+    pathname.startsWith('/users') ||
+    pathname.startsWith('/residents') ||
+    pathname.startsWith('/supervisors') ||
+    pathname.startsWith('/support-staff') ||
+    pathname.startsWith('/admins') ||
+    pathname.startsWith('/masters') ||
+    pathname.startsWith('/supervision') ||
+    pathname.startsWith('/academics')
+  ) {
+    return role === 'ADMIN';
   }
   return true;
 }

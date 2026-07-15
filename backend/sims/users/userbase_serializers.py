@@ -1,7 +1,7 @@
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
-from sims.academics.models import Department
+from sims.academics.models import Department, Specialty, Designation, AcademicSession
 from sims.academics.serializers import DepartmentSerializer as CanonicalDepartmentSerializer
 from sims.rotations.models import Hospital, HospitalDepartment
 from sims.users.models import (
@@ -11,7 +11,6 @@ from sims.users.models import (
     ResidentProfile,
     SupervisorProfile,
     SupportStaffProfile,
-    SupervisorResidentLink,
 )
 
 User = get_user_model()
@@ -102,6 +101,12 @@ class AdminProfileSerializer(serializers.ModelSerializer):
 class ResidentProfileSerializer(serializers.ModelSerializer):
     user = UserRefSerializer(read_only=True)
     user_id = serializers.IntegerField(write_only=True, required=False)
+    academic_session_ref = serializers.SlugRelatedField(
+        slug_field="code", queryset=AcademicSession.objects.all(), required=False, allow_null=True
+    )
+    specialty_ref = serializers.SlugRelatedField(
+        slug_field="code", queryset=Specialty.objects.all(), required=False, allow_null=True
+    )
 
     class Meta:
         model = ResidentProfile
@@ -131,6 +136,12 @@ class ResidentProfileSerializer(serializers.ModelSerializer):
 class SupervisorProfileSerializer(serializers.ModelSerializer):
     user = UserRefSerializer(read_only=True)
     user_id = serializers.IntegerField(write_only=True, required=False)
+    designation_ref = serializers.SlugRelatedField(
+        slug_field="code", queryset=Designation.objects.all(), required=False, allow_null=True
+    )
+    specialty_ref = serializers.SlugRelatedField(
+        slug_field="code", queryset=Specialty.objects.all(), required=False, allow_null=True
+    )
 
     class Meta:
         model = SupervisorProfile
@@ -317,45 +328,4 @@ class HospitalAssignmentSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         validated_data.pop("user_id", None)
         validated_data.pop("hospital_department_id", None)
-        return super().update(instance, validated_data)
-
-
-class SupervisorResidentLinkSerializer(serializers.ModelSerializer):
-    supervisor_user = UserRefSerializer(read_only=True)
-    resident_user = UserRefSerializer(read_only=True)
-    department = DepartmentRefSerializer(read_only=True)
-    supervisor_user_id = serializers.IntegerField(write_only=True)
-    resident_user_id = serializers.IntegerField(write_only=True)
-    department_id = serializers.IntegerField(write_only=True, required=False, allow_null=True)
-
-    class Meta:
-        model = SupervisorResidentLink
-        fields = [
-            "id",
-            "supervisor_user",
-            "resident_user",
-            "department",
-            "supervisor_user_id",
-            "resident_user_id",
-            "department_id",
-            "start_date",
-            "end_date",
-            "active",
-            "created_at",
-            "updated_at",
-        ]
-        read_only_fields = ["created_at", "updated_at"]
-
-    def create(self, validated_data):
-        return SupervisorResidentLink.objects.create(
-            supervisor_user_id=validated_data.pop("supervisor_user_id"),
-            resident_user_id=validated_data.pop("resident_user_id"),
-            department_id=validated_data.pop("department_id", None),
-            **validated_data,
-        )
-
-    def update(self, instance, validated_data):
-        validated_data.pop("supervisor_user_id", None)
-        validated_data.pop("resident_user_id", None)
-        validated_data.pop("department_id", None)
         return super().update(instance, validated_data)

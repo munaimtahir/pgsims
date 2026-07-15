@@ -12,6 +12,8 @@ from django.utils import timezone
 from sims.academics.models import Department
 from sims.notifications.models import Notification, NotificationPreference
 from sims.rotations.models import Hospital, HospitalDepartment
+from sims.supervision.models import ResidentSupervisorAssignment
+from sims.supervision.services import create_supervisor_assignment
 from sims.training.eligibility import recompute_for_record
 from sims.training.models import (
     DeputationPosting,
@@ -38,7 +40,6 @@ from sims.users.models import (
     HospitalAssignment,
     ResidentProfile,
     SupervisorProfile,
-    SupervisorResidentLink,
     SupportStaffProfile,
     User,
 )
@@ -460,10 +461,11 @@ class Command(BaseCommand):
             users=users,
             departments=departments,
         )
-        self._seed_supervision_links(
+        self._seed_supervision_assignments(
             admin=admin,
             users=users,
             departments=departments,
+            hospitals=hospitals,
         )
 
         workshops = self._upsert_workshops(users=users, today=today)
@@ -754,20 +756,34 @@ class Command(BaseCommand):
                 },
             )
 
-    def _seed_supervision_links(self, admin, users, departments):
+    def _seed_supervision_assignments(self, admin, users, departments, hospitals):
         today = timezone.now().date()
         for spec in DEMO_RESIDENT_USERS:
-            SupervisorResidentLink.objects.update_or_create(
-                supervisor_user=users[spec["supervisor_username"]],
-                resident_user=users[spec["username"]],
-                department=departments[spec["department_code"]],
+            supervisor_profile, _ = SupervisorProfile.objects.update_or_create(
+                user=users[spec["supervisor_username"]],
                 defaults={
-                    "start_date": today - timedelta(days=300),
-                    "end_date": None,
-                    "active": True,
-                    "created_by": admin,
-                    "updated_by": admin,
+                    "department_ref": departments[spec["department_code"]],
+                    "hospital": hospitals[spec["hospital_code"]],
                 },
+            )
+            resident_profile, _ = ResidentProfile.objects.update_or_create(
+                user=users[spec["username"]],
+                defaults={
+                    "department_ref": departments[spec["department_code"]],
+                    "hospital": hospitals[spec["hospital_code"]],
+                },
+            )
+            ResidentSupervisorAssignment.objects.filter(
+                resident=resident_profile,
+                supervisor=supervisor_profile,
+                assignment_type=ResidentSupervisorAssignment.ASSIGNMENT_PRIMARY,
+                is_active=True,
+            ).first() or create_supervisor_assignment(
+                resident=resident_profile,
+                supervisor=supervisor_profile,
+                assignment_type=ResidentSupervisorAssignment.ASSIGNMENT_PRIMARY,
+                start_date=today - timedelta(days=300),
+                actor=admin,
             )
 
     def _upsert_programs(self, departments):

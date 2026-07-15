@@ -1,7 +1,9 @@
 import type { ReactNode } from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
+
 import UTRMCOverviewPage from './page';
-import { trainingApi } from '@/lib/api/training';
+import { academicsApi } from '@/lib/api/academics';
+import { supervisionApi } from '@/lib/api/supervision';
 import { userbaseApi } from '@/lib/api/userbase';
 import { useAuthStore } from '@/store/authStore';
 
@@ -10,29 +12,21 @@ jest.mock('@/components/auth/ProtectedRoute', () => ({
   default: ({ children }: { children: ReactNode }) => <>{children}</>,
 }));
 
-jest.mock('@/components/utrmc/BulkSetupWorkspace', () => ({
-  __esModule: true,
-  default: () => <div data-testid="bulk-setup">Bulk Setup</div>,
+jest.mock('@/lib/api/academics', () => ({
+  academicsApi: {
+    getOverview: jest.fn(),
+  },
 }));
 
-jest.mock('@/lib/api/training', () => ({
-  trainingApi: {
-    listResidentTrainingRecords: jest.fn(),
-    listRotations: jest.fn(),
-    getUTRMCOperationalDashboard: jest.fn(),
-    getSynopsisReviewQueue: jest.fn(),
-    getThesisReviewQueue: jest.fn(),
-    listRotationCompletions: jest.fn(),
+jest.mock('@/lib/api/supervision', () => ({
+  supervisionApi: {
+    getSupervisionDataQuality: jest.fn(),
   },
 }));
 
 jest.mock('@/lib/api/userbase', () => ({
   userbaseApi: {
-    hospitals: { list: jest.fn() },
-    departments: { list: jest.fn() },
     users: { list: jest.fn() },
-    matrix: { list: jest.fn() },
-    dataQuality: { summary: jest.fn() },
   },
 }));
 
@@ -40,55 +34,44 @@ jest.mock('@/store/authStore', () => ({
   useAuthStore: jest.fn(),
 }));
 
-const mockedTrainingApi = trainingApi as unknown as {
-  listResidentTrainingRecords: jest.Mock;
-  listRotations: jest.Mock;
-  getUTRMCOperationalDashboard: jest.Mock;
-  getSynopsisReviewQueue: jest.Mock;
-  getThesisReviewQueue: jest.Mock;
-  listRotationCompletions: jest.Mock;
+const mockedAcademicsApi = academicsApi as unknown as {
+  getOverview: jest.Mock;
+};
+const mockedSupervisionApi = supervisionApi as unknown as {
+  getSupervisionDataQuality: jest.Mock;
 };
 const mockedUserbaseApi = userbaseApi as unknown as {
-  hospitals: { list: jest.Mock };
-  departments: { list: jest.Mock };
   users: { list: jest.Mock };
-  matrix: { list: jest.Mock };
-  dataQuality: { summary: jest.Mock };
 };
 
 describe('UTRMCOverviewPage', () => {
   beforeEach(() => {
     (useAuthStore as unknown as jest.Mock).mockReturnValue({ user: { role: 'ADMIN' } });
-    
-    mockedUserbaseApi.hospitals.list.mockResolvedValue([]);
-    mockedUserbaseApi.departments.list.mockResolvedValue([]);
-    mockedUserbaseApi.users.list.mockResolvedValue([]);
-    mockedUserbaseApi.matrix.list.mockResolvedValue([]);
-    mockedUserbaseApi.dataQuality.summary.mockResolvedValue({ incomplete_profiles: 0 });
-    
-    mockedTrainingApi.listResidentTrainingRecords.mockResolvedValue([]);
-    mockedTrainingApi.listRotations.mockResolvedValue([]);
-    mockedTrainingApi.getUTRMCOperationalDashboard.mockResolvedValue({
-      cross_department_overview: { active_residents: 0 },
-      pending_synopsis_reviews: 0,
-      pending_thesis_reviews: 0,
-      pending_rotation_completion_verifications: 0,
-    });
-    mockedTrainingApi.getSynopsisReviewQueue.mockResolvedValue({ count: 0, results: [] });
-    mockedTrainingApi.getThesisReviewQueue.mockResolvedValue({ count: 0, results: [] });
-    mockedTrainingApi.listRotationCompletions.mockResolvedValue({ count: 0, results: [] });
+    mockedUserbaseApi.users.list.mockResolvedValue([
+      { role: 'ADMIN' },
+      { role: 'RESIDENT' },
+      { role: 'SUPERVISOR' },
+      { role: 'SUPPORT_STAFF' },
+    ]);
+    mockedAcademicsApi.getOverview.mockResolvedValue({
+      cards: {
+        active_training_records: 4,
+        pending_review_queue_items: 3,
+        residents_without_training_record: 1,
+      },
+    } as never);
+    mockedSupervisionApi.getSupervisionDataQuality.mockResolvedValue({
+      residents_without_primary_supervisor: [{ resident_id: 9 }],
+    } as never);
   });
 
-  it('renders the UTRMC dashboard', async () => {
+  it('renders the canonical admin dashboard shell', async () => {
     render(<UTRMCOverviewPage />);
-    
-    // Wait for "Loading..." to disappear and header to be visible
-    await waitFor(() => {
-      expect(screen.queryByText('Loading...')).not.toBeInTheDocument();
-    }, { timeout: 4000 });
-    
-    expect(screen.getByText('UTRMC Dashboard')).toBeInTheDocument();
-    expect(screen.getAllByRole('link', { name: /open onboarding tools/i }).length).toBeGreaterThan(0);
-    expect(screen.getByRole('heading', { name: /Rotation Operations/i })).toBeInTheDocument();
+
+    await waitFor(() => expect(screen.getByText('Admin Dashboard')).toBeInTheDocument());
+    expect(screen.getByText('Canonical Modules')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Users' })).toHaveAttribute('href', '/users');
+    expect(screen.getByRole('link', { name: 'Supervision' })).toHaveAttribute('href', '/supervision');
+    expect(screen.getByRole('link', { name: 'Academics' })).toHaveAttribute('href', '/academics');
   });
 });

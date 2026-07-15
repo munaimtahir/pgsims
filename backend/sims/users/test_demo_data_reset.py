@@ -14,6 +14,7 @@ from sims.audit.models import ActivityLog, AuditReport
 from sims.bulk.models import BulkOperation
 from sims.notifications.models import Notification, NotificationPreference
 from sims.rotations.models import Hospital, HospitalDepartment
+from sims.supervision.models import ResidentSupervisorAssignment
 from sims.training.eligibility import recompute_for_record
 from sims.training.models import (
     DeputationPosting,
@@ -52,7 +53,6 @@ from sims.users.models import (
     DepartmentMembership,
     HospitalAssignment,
     ResidentProfile,
-    SupervisorResidentLink,
     User,
     SupervisorProfile,
 )
@@ -117,10 +117,15 @@ class ResetDemoDataCommandTests(TestCase):
             home_department=self.department,
         )
 
-        SupervisorProfile.objects.create(user=self.supervisor, designation_ref="Professor")
-        ResidentProfile.objects.create(
+        supervisor_profile = SupervisorProfile.objects.create(
+            user=self.supervisor,
+            designation_ref="Professor",
+            department_ref=self.department,
+        )
+        resident_profile = ResidentProfile.objects.create(
             user=self.resident,
             registration_no="PGR-001",
+            department_ref=self.department,
         )
 
         DepartmentMembership.objects.create(
@@ -152,14 +157,13 @@ class ResetDemoDataCommandTests(TestCase):
             created_by=self.admin,
             updated_by=self.admin,
         )
-        SupervisorResidentLink.objects.create(
-            supervisor_user=self.supervisor,
-            resident_user=self.resident,
-            department=self.department,
-            active=True,
+        ResidentSupervisorAssignment.objects.create(
+            resident=resident_profile,
+            supervisor=supervisor_profile,
+            assignment_type=ResidentSupervisorAssignment.ASSIGNMENT_PRIMARY,
             start_date=timezone.now().date(),
-            created_by=self.admin,
-            updated_by=self.admin,
+            is_active=True,
+            status=ResidentSupervisorAssignment.STATUS_ACTIVE,
         )
         SupervisorProfile.objects.create(
             user=self.hod,
@@ -416,7 +420,12 @@ class ResetDemoDataCommandTests(TestCase):
         self.assertEqual(HospitalDepartment.objects.filter(hospital=self.hospital).count(), 0)
         self.assertEqual(DepartmentMembership.objects.filter(department=self.department).count(), 0)
         self.assertEqual(HospitalAssignment.objects.filter(hospital_department__hospital=self.hospital).count(), 0)
-        self.assertEqual(SupervisorResidentLink.objects.filter(department=self.department).count(), 0)
+        self.assertEqual(
+            ResidentSupervisorAssignment.objects.filter(
+                resident__department_ref=self.department
+            ).count(),
+            0,
+        )
         self.assertEqual(SupervisorProfile.objects.filter(department_ref=self.department).count(), 0)
         self.assertEqual(TrainingProgram.objects.filter(code="E2E-FCPS").count(), 0)
         self.assertEqual(ProgramPolicy.objects.filter(program=self.program).count(), 0)

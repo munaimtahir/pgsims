@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 
 import ResidentHomePage from './page';
-import { trainingApi } from '@/lib/api/training';
+import { academicsApi } from '@/lib/api/academics';
 
 jest.mock('next/link', () => ({
   __esModule: true,
@@ -18,100 +18,67 @@ jest.mock('@/components/auth/ProtectedRoute', () => ({
   default: ({ children }: { children: ReactNode }) => <>{children}</>,
 }));
 
-jest.mock('@/lib/api/training', () => ({
-  trainingApi: {
-    getResidentSummary: jest.fn(),
-    getResidentOperationalDashboard: jest.fn(),
+jest.mock('@/lib/api/academics', () => ({
+  academicsApi: {
+    getMyResidentSummary: jest.fn(),
   },
 }));
 
-const mockedTrainingApi = trainingApi as unknown as {
-  getResidentSummary: jest.Mock;
-  getResidentOperationalDashboard: jest.Mock;
+const mockedAcademicsApi = academicsApi as unknown as {
+  getMyResidentSummary: jest.Mock;
 };
 
 describe('ResidentHomePage', () => {
   beforeEach(() => {
-    mockedTrainingApi.getResidentSummary.mockResolvedValue({
+    mockedAcademicsApi.getMyResidentSummary.mockResolvedValue({
+      resident: {
+        id: 7,
+        name: 'Dr Resident',
+        username: 'resident001',
+        department: 'Medicine',
+        program: 'FCPS Medicine',
+        academic_session: 'Session 2026',
+      },
       training_record: {
         id: 17,
-        program_name: 'Internal Medicine',
-        current_month_index: 8,
-        degree_type: 'fcps',
-        start_date: '2025-01-01',
+        status: 'ACTIVE',
+        training_year: 1,
+        start_date: '2026-07-01',
+        expected_end_date: '2027-06-30',
       },
-      rotation: {
-        current: null,
-        next: null,
+      supervision: {
+        primary_supervisor: {
+          supervisor: {
+            name: 'Prof Supervisor',
+            designation: 'Professor',
+            department: 'Medicine',
+            start_date: '2026-07-01',
+            email: 'sup@example.com',
+            phone: '03001234567',
+          },
+        },
+        co_supervisors: [{ name: 'Dr Co Supervisor' }],
       },
-      research: {
-        status: 'DRAFT',
-        supervisor_name: null,
+      review_queue: {
+        pending_count: 2,
+        items: [],
       },
-      thesis: {
-        status: 'DRAFT',
-        submitted_at: null,
+      readiness: {
+        has_active_training_record: true,
+        has_primary_supervisor: true,
+        missing_items: [],
       },
-      workshops: {
-        total_completed: 0,
-        required_for_imm: 2,
-        required_for_final: 4,
-      },
-      eligibility: {
-        IMM: { status: 'NOT_READY', reasons: [] },
-        FINAL: { status: 'NOT_READY', reasons: [] },
-      },
-      leaves: { pending_count: 0 },
-      postings: { pending_count: 0 },
     } as never);
-    mockedTrainingApi.getResidentOperationalDashboard.mockResolvedValue(null as never);
   });
 
-  it('keeps the dashboard as a summary surface instead of a launcher for inactive subflows', async () => {
+  it('renders the canonical resident dashboard summary', async () => {
     render(<ResidentHomePage />);
 
-    await waitFor(() => expect(screen.getByText('My Training Dashboard')).toBeInTheDocument());
-    const scheduleLink = await screen.findByRole('link', { name: 'View Schedule' });
-    const readinessLink = await screen.findByRole('link', { name: 'Logbook & Readiness' });
-
-    expect(scheduleLink).toHaveAttribute(
-      'href',
-      '/dashboard/resident/schedule'
-    );
-    expect(readinessLink).toHaveAttribute(
-      'href',
-      '/dashboard/resident/progress'
-    );
-
-    expect(screen.queryByRole('link', { name: /Update Research/i })).not.toBeInTheDocument();
-    expect(screen.queryByRole('link', { name: /Upload Workshop/i })).not.toBeInTheDocument();
-    expect(screen.queryByRole('link', { name: /Apply for Leave/i })).not.toBeInTheDocument();
-    expect(screen.queryByRole('link', { name: /Manage/i })).not.toBeInTheDocument();
-  });
-
-  it('shows a calm empty state when no resident training record is linked', async () => {
-    mockedTrainingApi.getResidentSummary.mockResolvedValueOnce({
-      training_record: null,
-      rotation: { current: null, next: null },
-      research: { status: null, supervisor_name: null, synopsis_uploaded: false, university_submitted: false },
-      thesis: { status: 'DRAFT', submitted_at: null },
-      workshops: { total_completed: 0, required_for_imm: 0, required_for_final: 0, completed_list: [] },
-      eligibility: {
-        IMM: { status: null, reasons: [] },
-        FINAL: { status: null, reasons: [] },
-      },
-      leaves: { active_count: 0, pending_count: 0, list: [] },
-      postings: { active_count: 0, pending_count: 0 },
-    } as never);
-
-    render(<ResidentHomePage />);
-
-    await waitFor(() => {
-      expect(screen.getByText('No active resident training record is linked yet.')).toBeInTheDocument();
-    });
-    expect(screen.getByRole('link', { name: 'View Schedule' })).toHaveAttribute(
-      'href',
-      '/dashboard/resident/schedule'
-    );
+    await waitFor(() => expect(screen.getByText('Resident Dashboard')).toBeInTheDocument());
+    expect(screen.getByText('My Training')).toBeInTheDocument();
+    expect(screen.getByText('My Supervisor')).toBeInTheDocument();
+    expect(screen.getByText('My Academic Summary')).toBeInTheDocument();
+    expect(screen.getByText('Prof Supervisor')).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /View Schedule/i })).not.toBeInTheDocument();
   });
 });

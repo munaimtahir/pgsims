@@ -22,7 +22,6 @@ from sims.users.models import (
     HospitalAssignment,
     ResidentProfile,
     SPECIALTY_CHOICES,
-    SupervisorResidentLink,
     YEAR_CHOICES,
     SupervisorProfile,
     SupportStaffProfile,
@@ -278,20 +277,21 @@ def export_rows_for(resource: str) -> List[dict]:
         return rows
 
     if resource == "supervision-links":
+        from sims.supervision.models import ResidentSupervisorAssignment
         return [
             {
-                "supervisor_email": link.supervisor_user.email,
-                "resident_email": link.resident_user.email,
-                "department_code": link.department.code if link.department else "",
+                "supervisor_email": link.supervisor.user.email,
+                "resident_email": link.resident.user.email,
+                "department_code": link.resident.department_ref.code if link.resident.department_ref else "",
                 "start_date": link.start_date.isoformat(),
                 "end_date": link.end_date.isoformat() if link.end_date else "",
-                "active": _bool_str(link.active),
+                "active": _bool_str(link.is_active),
             }
-            for link in SupervisorResidentLink.objects.select_related(
-                "supervisor_user",
-                "resident_user",
-                "department",
-            ).order_by("resident_user__last_name", "resident_user__first_name")
+            for link in ResidentSupervisorAssignment.objects.select_related(
+                "supervisor__user",
+                "resident__user",
+                "resident__department_ref",
+            ).order_by("resident__user__last_name", "resident__user__first_name")
         ]
 
 
@@ -621,6 +621,8 @@ def _import_residents(actor: User, rows: List[dict], *, dry_run: bool, allow_par
 
 
 def _import_supervision_links(actor: User, rows: List[dict], *, dry_run: bool, allow_partial: bool) -> dict:
+    from sims.supervision.models import ResidentSupervisorAssignment
+    from sims.supervision.services import create_supervisor_assignment
     successes: List[dict] = []
     failures: List[dict] = []
     for row in rows:
@@ -633,18 +635,23 @@ def _import_supervision_links(actor: User, rows: List[dict], *, dry_run: bool, a
             end_date = _parse_date_value(row.get("end_date"))
             active = _parse_bool(row.get("active"), default=True)
             if not dry_run:
-                SupervisorResidentLink.objects.update_or_create(
-                    supervisor_user=supervisor,
-                    resident_user=resident,
-                    department=department,
-                    defaults={
-                        "start_date": start_date,
-                        "end_date": end_date,
-                        "active": active,
-                        "created_by": actor,
-                        "updated_by": actor,
-                    },
+                resident_profile = getattr(resident, "resident_profile", None)
+                supervisor_profile = getattr(supervisor, "supervisor_profile", None)
+                if resident_profile is None or supervisor_profile is None:
+                    raise ValidationError("Resident or supervisor profile missing.")
+                assignment = create_supervisor_assignment(
+                    resident=resident_profile,
+                    supervisor=supervisor_profile,
+                    assignment_type=ResidentSupervisorAssignment.ASSIGNMENT_PRIMARY,
+                    start_date=start_date,
+                    notes="Imported via userbase bulk engine",
+                    actor=actor,
                 )
+                if not active:
+                    assignment.is_active = False
+                    assignment.status = ResidentSupervisorAssignment.STATUS_ENDED
+                    assignment.end_date = end_date or start_date
+                    assignment.save()
             successes.append(
                 {
                     "row": row_number,

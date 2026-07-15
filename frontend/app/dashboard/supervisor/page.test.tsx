@@ -1,52 +1,59 @@
 import type { ReactNode } from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
+
 import SupervisorHomePage from './page';
-import { trainingApi } from '@/lib/api/training';
+import { academicsApi } from '@/lib/api/academics';
 
 jest.mock('@/components/auth/ProtectedRoute', () => ({
   __esModule: true,
   default: ({ children }: { children: ReactNode }) => <>{children}</>,
 }));
 
-jest.mock('@/lib/api/training', () => ({
-  trainingApi: {
-    getSupervisorSummary: jest.fn(),
-    getSupervisorOperationalDashboard: jest.fn(),
-    getSupervisorPendingLeaves: jest.fn(),
-    getLogbookReviewQueue: jest.fn(),
+jest.mock('@/lib/api/academics', () => ({
+  academicsApi: {
+    getMySupervisorSummary: jest.fn(),
   },
 }));
 
-const mockedTrainingApi = trainingApi as unknown as {
-  getSupervisorSummary: jest.Mock;
-  getSupervisorOperationalDashboard: jest.Mock;
-  getSupervisorPendingLeaves: jest.Mock;
-  getLogbookReviewQueue: jest.Mock;
+const mockedAcademicsApi = academicsApi as unknown as {
+  getMySupervisorSummary: jest.Mock;
 };
 
 describe('SupervisorHomePage', () => {
   beforeEach(() => {
-    mockedTrainingApi.getSupervisorSummary.mockResolvedValue({
-      residents: [],
-      pending: { leave_approvals: 0 },
-    });
-    mockedTrainingApi.getSupervisorOperationalDashboard.mockResolvedValue({
-      assigned_residents: 0,
-      pending_logbook_reviews: 0,
-      returned_logbook_queue: 0,
-      is_hod: false,
-    });
-    mockedTrainingApi.getSupervisorPendingLeaves.mockResolvedValue([]);
-    mockedTrainingApi.getLogbookReviewQueue.mockResolvedValue({ count: 0, results: [] });
+    mockedAcademicsApi.getMySupervisorSummary.mockResolvedValue({
+      supervisor: {
+        id: 11,
+        name: 'Prof Supervisor',
+      },
+      summary: {
+        assigned_residents: 3,
+        active_training_records: 2,
+        residents_missing_training_records: 1,
+        pending_review_queue_items: 4,
+      },
+      assigned_residents: [
+        {
+          resident_id: 101,
+          name: 'Dr Resident',
+          program: 'FCPS Medicine',
+          training_year: 1,
+          status: 'ACTIVE',
+        },
+      ],
+      review_queue: {
+        pending_count: 4,
+        items: [],
+      },
+    } as never);
   });
 
-  it('renders the supervisor dashboard', async () => {
+  it('renders the canonical supervisor dashboard summary', async () => {
     render(<SupervisorHomePage />);
-    
-    // Wait for header to be visible
+
     await waitFor(() => expect(screen.getByText('Supervisor Dashboard')).toBeInTheDocument());
-    
-    await waitFor(() => expect(screen.getByRole('heading', { name: /today’s attention/i })).toBeInTheDocument());
-    expect(screen.getByRole('heading', { name: /my residents/i })).toBeInTheDocument();
+    expect(screen.getByText('My Residents')).toBeInTheDocument();
+    expect(screen.getByText('Academic Review Queue')).toBeInTheDocument();
+    expect(screen.getByText('Dr Resident')).toBeInTheDocument();
   });
 });

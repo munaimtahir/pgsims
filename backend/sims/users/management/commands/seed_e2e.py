@@ -6,6 +6,8 @@ from django.utils import timezone
 
 from sims.academics.models import Department
 from sims.rotations.models import Hospital, HospitalDepartment
+from sims.supervision.models import ResidentSupervisorAssignment
+from sims.supervision.services import create_supervisor_assignment
 from sims.training.models import (
     LogbookThresholdConfig,
     ProgramRotationRequirement,
@@ -17,7 +19,7 @@ from sims.training.models import (
     SubmissionRequirementTemplate,
     TrainingProgram,
 )
-from sims.users.models import DepartmentMembership, SupervisorResidentLink, User
+from sims.users.models import DepartmentMembership, ResidentProfile, SupervisorProfile, User
 
 
 class Command(BaseCommand):
@@ -125,14 +127,25 @@ class Command(BaseCommand):
             last_name="PG",
         )
 
-        SupervisorResidentLink.objects.update_or_create(
-            supervisor_user=supervisor,
-            resident_user=pg,
-            defaults={
-                "active": True,
-                "start_date": today,
-                "department": departments[0],
-            },
+        supervisor_profile, _ = SupervisorProfile.objects.update_or_create(
+            user=supervisor,
+            defaults={"hospital": hospital, "department_ref": departments[0]},
+        )
+        resident_profile, _ = ResidentProfile.objects.update_or_create(
+            user=pg,
+            defaults={"hospital": hospital, "department_ref": departments[0]},
+        )
+        ResidentSupervisorAssignment.objects.filter(
+            resident=resident_profile,
+            supervisor=supervisor_profile,
+            assignment_type=ResidentSupervisorAssignment.ASSIGNMENT_PRIMARY,
+            is_active=True,
+        ).first() or create_supervisor_assignment(
+            resident=resident_profile,
+            supervisor=supervisor_profile,
+            assignment_type=ResidentSupervisorAssignment.ASSIGNMENT_PRIMARY,
+            start_date=today,
+            actor=e2e_admin,
         )
 
         # Feature-layer explicit role fixtures for Playwright verification suite.
@@ -222,14 +235,25 @@ class Command(BaseCommand):
                 "created_by": e2e_admin,
             },
         )
-        SupervisorResidentLink.objects.update_or_create(
-            supervisor_user=supervisor_user,
-            resident_user=resident_user,
-            defaults={
-                "active": True,
-                "start_date": today,
-                "department": departments[0],
-            },
+        supervisor_user_profile, _ = SupervisorProfile.objects.update_or_create(
+            user=supervisor_user,
+            defaults={"hospital": hospital, "department_ref": departments[0]},
+        )
+        resident_user_profile, _ = ResidentProfile.objects.update_or_create(
+            user=resident_user,
+            defaults={"hospital": hospital, "department_ref": departments[0]},
+        )
+        ResidentSupervisorAssignment.objects.filter(
+            resident=resident_user_profile,
+            supervisor=supervisor_user_profile,
+            assignment_type=ResidentSupervisorAssignment.ASSIGNMENT_PRIMARY,
+            is_active=True,
+        ).first() or create_supervisor_assignment(
+            resident=resident_user_profile,
+            supervisor=supervisor_user_profile,
+            assignment_type=ResidentSupervisorAssignment.ASSIGNMENT_PRIMARY,
+            start_date=today,
+            actor=e2e_admin,
         )
 
         # Deterministic training baseline for workflow E2E

@@ -7,7 +7,7 @@ from sims.training.models import (
 )
 from sims.rotations.models import Hospital, HospitalDepartment
 from sims.academics.models import Department
-from sims.users.models import SupervisorResidentLink
+from sims.supervision.models import ResidentSupervisorAssignment
 from django.utils import timezone
 from datetime import date, timedelta
 import json
@@ -27,11 +27,23 @@ class LongTailCoverageTests(APITestCase):
         self.dept = Department.objects.create(name="D", code="D")
         self.hdept = HospitalDepartment.objects.create(hospital=self.hospital, department=self.dept)
         
-        # Link supervisor to PG for some tests
-        SupervisorResidentLink.objects.create(
-            supervisor_user=self.supervisor,
-            resident_user=self.pg,
-            start_date=date.today()
+        from sims.users.models import ResidentProfile, SupervisorProfile
+        sup_prof, _ = SupervisorProfile.objects.get_or_create(
+            user=self.supervisor,
+            defaults={"hospital": self.hospital, "department_ref": self.dept},
+        )
+        res_prof, _ = ResidentProfile.objects.get_or_create(
+            user=self.pg,
+            defaults={"hospital": self.hospital, "department_ref": self.dept},
+        )
+        ResidentSupervisorAssignment.objects.get_or_create(
+            resident=res_prof,
+            supervisor=sup_prof,
+            assignment_type=ResidentSupervisorAssignment.ASSIGNMENT_PRIMARY,
+            defaults={
+                "start_date": date.today(),
+                "is_active": True
+            }
         )
 
     def test_rotation_assignment_submit_denied_for_other_pg(self):

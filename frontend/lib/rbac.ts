@@ -7,6 +7,7 @@ export type AppRole =
 export function getDashboardPathForRole(role?: string | null): string {
   switch (role) {
     case 'ADMIN':
+      return '/dashboard/utrmc';
     case 'SUPPORT_STAFF':
       return '/dashboard/utrmc';
     case 'SUPERVISOR':
@@ -24,6 +25,10 @@ export function getRoleLabel(role?: string | null): string {
       return 'Support Staff';
     case 'ADMIN':
       return 'Admin';
+    case 'RESIDENT':
+      return 'Resident';
+    case 'SUPERVISOR':
+      return 'Supervisor';
     default:
       return role ?? 'unknown';
   }

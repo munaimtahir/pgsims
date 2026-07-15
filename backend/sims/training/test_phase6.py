@@ -8,6 +8,8 @@ from rest_framework.test import APITestCase
 
 from sims.academics.models import Department
 from sims.rotations.models import Hospital, HospitalDepartment
+from sims.supervision.models import ResidentSupervisorAssignment
+from sims.users.models import ResidentProfile, SupervisorProfile
 from sims.training.models import (
     TrainingProgram,
     ProgramPolicy,
@@ -556,7 +558,7 @@ class ResidentSummaryTests(APITestCase):
         data = resp.data
         # Top-level keys deterministic
         expected_keys = {"training_record", "rotation", "schedule", "leaves", "postings",
-                         "research", "thesis", "workshops", "eligibility"}
+                         "research", "thesis", "workshops", "eligibility", "supervision"}
         self.assertEqual(set(data.keys()), expected_keys)
 
     def test_training_record_fields(self):
@@ -602,11 +604,27 @@ class SupervisorSummaryTests(APITestCase):
         self.resident2 = _make_user("res_sup_sum2", "RESIDENT")
         self.client.force_authenticate(user=self.supervisor)
 
-        from sims.users.models import SupervisorResidentLink
-        SupervisorResidentLink.objects.create(
-            supervisor_user=self.supervisor,
-            resident_user=self.resident1,
-            active=True,
+        self.supervisor_profile = SupervisorProfile.objects.create(
+            user=self.supervisor,
+            hospital=hospital,
+            department_ref=dept,
+        )
+        self.resident1_profile = ResidentProfile.objects.create(
+            user=self.resident1,
+            hospital=hospital,
+            department_ref=dept,
+        )
+        ResidentProfile.objects.create(
+            user=self.resident2,
+            hospital=hospital,
+            department_ref=dept,
+        )
+        ResidentSupervisorAssignment.objects.create(
+            resident=self.resident1_profile,
+            supervisor=self.supervisor_profile,
+            assignment_type=ResidentSupervisorAssignment.ASSIGNMENT_PRIMARY,
+            is_active=True,
+            status=ResidentSupervisorAssignment.STATUS_ACTIVE,
             start_date=date.today(),
         )
 
@@ -653,7 +671,6 @@ class SupervisorSummaryTests(APITestCase):
         self.assertIn(resident.id, ids)
 
     def test_residents_sorted_by_name(self):
-        from sims.users.models import SupervisorResidentLink
         # Add second resident to same supervisor
         res_a = _make_user("res_alpha", "RESIDENT")
         res_a.last_name = "Aardvark"; res_a.save()
@@ -661,9 +678,18 @@ class SupervisorSummaryTests(APITestCase):
         res_z.last_name = "Zebra"; res_z.save()
 
         for res in [res_a, res_z]:
-            SupervisorResidentLink.objects.create(
-                supervisor_user=self.supervisor, resident_user=res,
-                active=True, start_date=date.today()
+            res_profile = ResidentProfile.objects.create(
+                user=res,
+                hospital=self.hd.hospital,
+                department_ref=self.hd.department,
+            )
+            ResidentSupervisorAssignment.objects.create(
+                resident=res_profile,
+                supervisor=self.supervisor_profile,
+                assignment_type=ResidentSupervisorAssignment.ASSIGNMENT_PRIMARY,
+                is_active=True,
+                status=ResidentSupervisorAssignment.STATUS_ACTIVE,
+                start_date=date.today(),
             )
             ResidentTrainingRecord.objects.create(
                 resident_user=res, program=self.prog,

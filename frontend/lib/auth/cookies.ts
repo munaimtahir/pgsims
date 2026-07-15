@@ -4,12 +4,9 @@ const ACCESS_COOKIE = 'pgsims_access_token';
 const ROLE_COOKIE = 'pgsims_user_role';
 
 function cookieSecurityAttrs() {
-  // `Secure` would block local http://localhost cookies, so enable it outside local dev.
   const isBrowser = typeof window !== 'undefined';
-  const isLocalhost =
-    isBrowser &&
-    (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
-  return isLocalhost ? 'SameSite=Lax' : 'SameSite=Lax; Secure';
+  const isHttps = isBrowser && window.location.protocol === 'https:';
+  return isHttps ? 'SameSite=Lax; Secure' : 'SameSite=Lax';
 }
 
 function setCookie(name: string, value: string, maxAge = COOKIE_MAX_AGE) {

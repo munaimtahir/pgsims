@@ -58,18 +58,31 @@ class TrainingEmptySchemaSerializer(serializers.Serializer):
 
 
 def _get_supervised_resident_ids(user):
-    from sims.users.models import SupervisorResidentLink, User as SIMSUser
+    from sims.supervision.models import ResidentSupervisorAssignment
+    from sims.users.models import User as SIMSUser
 
-    link_ids = SupervisorResidentLink.objects.filter(
-        supervisor_user=user, active=True
-    ).values_list("resident_user_id", flat=True)
+    resident_ids = set()
+
+    # 1. New spine assignments (via ResidentSupervisorAssignment)
+    try:
+        profile = user.supervisor_profile
+        if profile:
+            new_ids = ResidentSupervisorAssignment.objects.filter(
+                supervisor=profile,
+                is_active=True
+            ).values_list("resident__user_id", flat=True)
+            resident_ids.update(new_ids)
+    except Exception:
+        pass
+
+    # 2. Legacy direct User.supervisor FK is retained only as a narrow compatibility fallback.
     direct_ids = SIMSUser.objects.filter(
         supervisor=user,
-        role__in=["RESIDENT", "RESIDENT"],
-        is_active=True,
-        is_archived=False,
+        role="RESIDENT"
     ).values_list("id", flat=True)
-    return set(link_ids).union(set(direct_ids))
+    resident_ids.update(direct_ids)
+
+    return resident_ids
 
 
 def _get_rotation_scope(user):
@@ -88,6 +101,51 @@ def _get_rotation_scope(user):
     ).values_list("department_id", flat=True)
     dept_ids = set(hod_dept_ids).union(set(member_dept_ids))
     return supervised_ids, dept_ids
+
+
+def _serialize_supervisor_profile(profile):
+    if not profile:
+        return None
+    return {
+        "id": profile.id,
+        "name": profile.user.get_full_name() or profile.user.username,
+        "username": profile.user.username,
+        "email": profile.email or profile.official_email or profile.user.email or "",
+        "phone": profile.phone or "",
+        "designation": profile.designation_ref.name if profile.designation_ref else "",
+        "department": profile.department_ref.name if profile.department_ref else "",
+        "training_site": profile.hospital.name if profile.hospital else "",
+    }
+
+
+def _serialize_resident_profile(profile):
+    if not profile:
+        return None
+    return {
+        "id": profile.id,
+        "name": profile.user.get_full_name() or profile.user.username,
+        "username": profile.user.username,
+        "email": profile.email or profile.user.email or "",
+        "phone": profile.phone or "",
+        "department": profile.department_ref.name if profile.department_ref else "",
+        "training_site": profile.hospital.name if profile.hospital else "",
+    }
+
+
+def _serialize_assignment(assignment):
+    if not assignment:
+        return None
+    return {
+        "id": assignment.id,
+        "assignment_type": assignment.assignment_type,
+        "status": assignment.status,
+        "start_date": assignment.start_date.isoformat() if assignment.start_date else None,
+        "end_date": assignment.end_date.isoformat() if assignment.end_date else None,
+        "notes": assignment.notes,
+        "reason_for_change": assignment.reason_for_change,
+        "supervisor": _serialize_supervisor_profile(assignment.supervisor),
+        "resident": _serialize_resident_profile(assignment.resident),
+    }
 
 
 # ---------------------------------------------------------------------------
@@ -1404,6 +1462,9 @@ class ResidentSummaryView(APIView):
 
         rtr = _get_active_rtr_or_none(user)
         if rtr is None:
+            from sims.supervision.services import get_resident_supervision_summary
+            resident_profile = getattr(user, "resident_profile", None)
+            resident_supervision = get_resident_supervision_summary(resident=resident_profile)
             return Response({
                 "training_record": None,
                 "rotation": {"current": None, "next": None},
@@ -1426,6 +1487,15 @@ class ResidentSummaryView(APIView):
                 "eligibility": {
                     "IMM": {"status": None, "reasons": []},
                     "FINAL": {"status": None, "reasons": []},
+                },
+                "supervision": {
+                    "active_primary": _serialize_assignment(resident_supervision["active_primary"]),
+                    "active_co_supervisors": [
+                        _serialize_assignment(item) for item in resident_supervision["active_co_supervisors"]
+                    ],
+                    "past_assignments": [
+                        _serialize_assignment(item) for item in resident_supervision["past_assignments"]
+                    ],
                 },
             })
         today = timezone.now().date()
@@ -1596,6 +1666,19 @@ class ResidentSummaryView(APIView):
             elif eli.milestone.code == "FINAL":
                 final_eli = entry
 
+        from sims.supervision.services import get_resident_supervision_summary
+        resident_profile = getattr(user, "resident_profile", None)
+        resident_supervision = get_resident_supervision_summary(resident=resident_profile)
+        supervision_data = {
+            "active_primary": _serialize_assignment(resident_supervision["active_primary"]),
+            "active_co_supervisors": [
+                _serialize_assignment(item) for item in resident_supervision["active_co_supervisors"]
+            ],
+            "past_assignments": [
+                _serialize_assignment(item) for item in resident_supervision["past_assignments"]
+            ],
+        }
+
         return Response({
             "training_record": training_data,
             "rotation": {"current": current_rotation, "next": next_rotation},
@@ -1610,6 +1693,7 @@ class ResidentSummaryView(APIView):
             "thesis": thesis_data,
             "workshops": workshops_data,
             "eligibility": {"IMM": imm_eli, "FINAL": final_eli},
+            "supervision": supervision_data,
         })
 
 
@@ -1699,6 +1783,21 @@ class SupervisorSummaryView(APIView):
         )
         research_map = {rp.resident_training_record_id: rp.status for rp in research_qs}
 
+        from sims.supervision.services import get_supervisor_resident_summary
+        supervisor_profile = getattr(user, "supervisor_profile", None)
+        supervisor_supervision = get_supervisor_resident_summary(supervisor=supervisor_profile)
+        supervision_data = {
+            "active_primary_residents": [
+                _serialize_assignment(item) for item in supervisor_supervision["active_primary_residents"]
+            ],
+            "active_co_supervised_residents": [
+                _serialize_assignment(item) for item in supervisor_supervision["active_co_supervised_residents"]
+            ],
+            "past_assigned_residents": [
+                _serialize_assignment(item) for item in supervisor_supervision["past_assigned_residents"]
+            ],
+        }
+
         # ---- Build residents list (sorted by display name) ----
         rtrs_sorted = sorted(
             rtrs,
@@ -1725,6 +1824,7 @@ class SupervisorSummaryView(APIView):
                 "research_approvals": pending_research,
             },
             "residents": residents_list,
+            "supervision": supervision_data,
         })
 
 

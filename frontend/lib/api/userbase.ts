@@ -84,6 +84,16 @@ export type UserbaseUserUpsert = Partial<
   Pick<UserbaseUser, 'username' | 'email' | 'first_name' | 'last_name' | 'role' | 'is_active' | 'specialty'>
 > & {
   password?: string;
+  full_name?: string;
+  phone?: string;
+  phone_number?: string;
+  profile?: {
+    hospital?: number;
+    department_ref?: number;
+    program_ref?: number;
+    academic_session_ref?: string;
+    designation_ref?: string;
+  };
 };
 
 export interface DepartmentRosterResponse {
@@ -190,6 +200,10 @@ export const userbaseApi = {
     },
   },
   residents: {
+    get: async (userId: number) => {
+      const response = await apiClient.get(`/api/residents/${userId}/`);
+      return response.data;
+    },
     update: async (
       userId: number,
       payload: Partial<{ training_start: string; training_end: string; training_level: string }>
@@ -210,6 +224,12 @@ export const userbaseApi = {
       payload: Partial<{ designation: string; phone: string; active?: boolean }>
     ) => {
       const response = await apiClient.patch(`/api/staff/${userId}/`, payload);
+      return response.data;
+    },
+  },
+  supervisors: {
+    get: async (userId: number) => {
+      const response = await apiClient.get(`/api/supervisors/${userId}/`);
       return response.data;
     },
   },
@@ -257,20 +277,6 @@ export const userbaseApi = {
     },
     remove: async (id: number) => {
       await apiClient.delete(`/api/hospital-assignments/${id}/`);
-    },
-  },
-  supervisionLinks: {
-    list: async (params?: Record<string, unknown>) => {
-      const response = await apiClient.get('/api/supervision-links/', { params });
-      return response.data;
-    },
-    create: async (payload: Record<string, unknown>) => {
-      const response = await apiClient.post('/api/supervision-links/', payload);
-      return response.data;
-    },
-    update: async (id: number, payload: Record<string, unknown>) => {
-      const response = await apiClient.patch(`/api/supervision-links/${id}/`, payload);
-      return response.data;
     },
   },
 };

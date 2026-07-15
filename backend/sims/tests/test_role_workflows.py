@@ -33,6 +33,8 @@ from sims.training.models import (
     TrainingProgram,
 )
 from sims.users.models import User
+from sims.supervision.models import ResidentSupervisorAssignment
+from sims.users.models import ResidentProfile, SupervisorProfile
 
 # ---------------------------------------------------------------------------
 # Shared helpers
@@ -494,69 +496,72 @@ class TestUserManagement:
 # 6. Supervision Links
 # ---------------------------------------------------------------------------
 
-class TestSupervisionLinks:
+class TestSupervisionAssignments:
 
-    def test_admin_can_list_supervision_links(self, db, u_admin):
+    def test_admin_can_list_supervision_assignments(self, db, u_admin):
         c = auth_client(u_admin)
-        r = c.get("/api/supervision-links/")
+        r = c.get("/api/supervision/assignments/")
         assert r.status_code == status.HTTP_200_OK
 
-    def test_supervisor_can_list_supervision_links(self, db, u_supervisor):
-        # BaseManagedModelViewSet.list() restricts to manager roles (admin/utrmc_admin)
+    def test_supervisor_can_list_supervision_assignments(self, db, u_supervisor):
         c = auth_client(u_supervisor)
-        r = c.get("/api/supervision-links/")
-        assert r.status_code == status.HTTP_403_FORBIDDEN
+        r = c.get("/api/supervision/assignments/")
+        assert r.status_code == status.HTTP_200_OK
 
-    def test_pg_can_list_supervision_links(self, db, u_pg):
-        # BaseManagedModelViewSet.list() restricts to manager roles (admin/utrmc_admin)
+    def test_pg_can_list_supervision_assignments(self, db, u_pg):
         c = auth_client(u_pg)
-        r = c.get("/api/supervision-links/")
-        assert r.status_code == status.HTTP_403_FORBIDDEN
+        r = c.get("/api/supervision/assignments/")
+        assert r.status_code == status.HTTP_200_OK
 
-    def test_admin_can_create_supervision_link(self, db, u_admin, u_supervisor, u_pg, department):
+    def test_admin_can_create_supervision_assignment(self, db, u_admin, u_supervisor, u_pg, department, hospital):
+        resident_profile = ResidentProfile.objects.create(user=u_pg, hospital=hospital, department_ref=department)
+        supervisor_profile = SupervisorProfile.objects.create(user=u_supervisor, hospital=hospital, department_ref=department)
         c = auth_client(u_admin)
-        r = c.post("/api/supervision-links/", {
-            "supervisor_user_id": u_supervisor.id,
-            "resident_user_id": u_pg.id,
-            "department_id": department.id,
+        r = c.post("/api/supervision/assignments/", {
+            "supervisor_id": supervisor_profile.id,
+            "resident_id": resident_profile.id,
             "start_date": str(TODAY),
-            "active": True,
+            "assignment_type": ResidentSupervisorAssignment.ASSIGNMENT_PRIMARY,
         })
         assert r.status_code == status.HTTP_201_CREATED
 
-    def test_utrmc_admin_can_create_supervision_link(
-        self, db, u_utrmc_admin, u_supervisor, u_pg, department
+    def test_utrmc_admin_can_create_supervision_assignment(
+        self, db, u_utrmc_admin, u_supervisor, u_pg, department, hospital
     ):
+        resident_profile = ResidentProfile.objects.create(user=u_pg, hospital=hospital, department_ref=department)
+        supervisor_profile = SupervisorProfile.objects.create(user=u_supervisor, hospital=hospital, department_ref=department)
         c = auth_client(u_utrmc_admin)
-        r = c.post("/api/supervision-links/", {
-            "supervisor_user_id": u_supervisor.id,
-            "resident_user_id": u_pg.id,
-            "department_id": department.id,
+        r = c.post("/api/supervision/assignments/", {
+            "supervisor_id": supervisor_profile.id,
+            "resident_id": resident_profile.id,
             "start_date": str(TODAY),
-            "active": True,
+            "assignment_type": ResidentSupervisorAssignment.ASSIGNMENT_PRIMARY,
         })
         assert r.status_code == status.HTTP_201_CREATED
 
-    def test_supervisor_cannot_create_supervision_link(
-        self, db, u_supervisor, u_pg, department
+    def test_supervisor_cannot_create_supervision_assignment(
+        self, db, u_supervisor, u_pg, department, hospital
     ):
+        resident_profile = ResidentProfile.objects.create(user=u_pg, hospital=hospital, department_ref=department)
+        supervisor_profile = SupervisorProfile.objects.create(user=u_supervisor, hospital=hospital, department_ref=department)
         c = auth_client(u_supervisor)
-        r = c.post("/api/supervision-links/", {
-            "supervisor_user_id": u_supervisor.id,
-            "resident_user_id": u_pg.id,
-            "department_id": department.id,
+        r = c.post("/api/supervision/assignments/", {
+            "supervisor_id": supervisor_profile.id,
+            "resident_id": resident_profile.id,
             "start_date": str(TODAY),
-            "active": True,
+            "assignment_type": ResidentSupervisorAssignment.ASSIGNMENT_PRIMARY,
         })
         assert r.status_code == status.HTTP_403_FORBIDDEN
 
-    def test_pg_cannot_create_supervision_link(self, db, u_pg, u_supervisor, department):
+    def test_pg_cannot_create_supervision_assignment(self, db, u_pg, u_supervisor, department, hospital):
+        resident_profile = ResidentProfile.objects.create(user=u_pg, hospital=hospital, department_ref=department)
+        supervisor_profile = SupervisorProfile.objects.create(user=u_supervisor, hospital=hospital, department_ref=department)
         c = auth_client(u_pg)
-        r = c.post("/api/supervision-links/", {
-            "supervisor_user_id": u_supervisor.id,
-            "resident_user_id": u_pg.id,
-            "department_id": department.id,
+        r = c.post("/api/supervision/assignments/", {
+            "supervisor_id": supervisor_profile.id,
+            "resident_id": resident_profile.id,
             "start_date": str(TODAY),
+            "assignment_type": ResidentSupervisorAssignment.ASSIGNMENT_PRIMARY,
         })
         assert r.status_code == status.HTTP_403_FORBIDDEN
 
@@ -948,15 +953,24 @@ class TestLeaveRequestWorkflow:
         self, db, resident_training, u_pg, u_supervisor, u_admin
     ):
         """pg creates → pg submits → supervisor approves."""
-        from sims.users.models import SupervisorResidentLink
+        from sims.academics.models import Department
+        from sims.rotations.models import Hospital, HospitalDepartment
 
-        # Link supervisor to pg
-        SupervisorResidentLink.objects.create(
-            supervisor_user=u_supervisor,
-            resident_user=u_pg,
-            department=resident_training.program.department,
+        hospital = Hospital.objects.create(name="Leave Hospital", code="LEAVE")
+        department = resident_training.program.department or Department.objects.create(name="Leave Dept", code="LDEP")
+        resident_profile = ResidentProfile.objects.create(user=u_pg, hospital=hospital, department_ref=department)
+        supervisor_profile = SupervisorProfile.objects.create(user=u_supervisor, hospital=hospital, department_ref=department)
+        HospitalDepartment.objects.create(
+            hospital=hospital,
+            department=department,
+        )
+        ResidentSupervisorAssignment.objects.create(
+            resident=resident_profile,
+            supervisor=supervisor_profile,
+            assignment_type=ResidentSupervisorAssignment.ASSIGNMENT_PRIMARY,
             start_date=TODAY,
-            active=True,
+            is_active=True,
+            status=ResidentSupervisorAssignment.STATUS_ACTIVE,
         )
 
         pg_c = auth_client(u_pg)
@@ -983,12 +997,19 @@ class TestLeaveRequestWorkflow:
 
     def test_leave_reject_workflow(self, db, resident_training, u_pg, u_supervisor):
         """pg creates → pg submits → supervisor rejects."""
-        from sims.users.models import SupervisorResidentLink
-        SupervisorResidentLink.objects.get_or_create(
-            supervisor_user=u_supervisor,
-            resident_user=u_pg,
-            defaults={"department": resident_training.program.department, "start_date": TODAY, "active": True},
+        from sims.academics.models import Department
+        from sims.rotations.models import Hospital, HospitalDepartment
+
+        hospital = Hospital.objects.create(name="Reject Hospital", code="REJECT")
+        department = resident_training.program.department or Department.objects.create(name="Reject Dept", code="RDEP")
+        resident_profile = ResidentProfile.objects.create(user=u_pg, hospital=hospital, department_ref=department)
+        supervisor_profile = SupervisorProfile.objects.create(user=u_supervisor, hospital=hospital, department_ref=department)
+        ResidentSupervisorAssignment.objects.get_or_create(
+            resident=resident_profile,
+            supervisor=supervisor_profile,
+            defaults={"start_date": TODAY, "is_active": True, "assignment_type": ResidentSupervisorAssignment.ASSIGNMENT_PRIMARY},
         )
+        HospitalDepartment.objects.create(hospital=hospital, department=department)
 
         pg_c = auth_client(u_pg)
         r = pg_c.post("/api/leaves/", {

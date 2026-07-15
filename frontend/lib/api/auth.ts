@@ -70,6 +70,23 @@ export interface CompleteProfileForm {
   missing_fields: MissingProfileField[];
 }
 
+export interface IdentityOption {
+  id: string | number;
+  name: string;
+  code: string;
+}
+
+export interface IdentityOptions {
+  institutions: IdentityOption[];
+  training_sites: IdentityOption[];
+  hospitals: IdentityOption[];
+  departments: IdentityOption[];
+  programs: IdentityOption[];
+  academic_sessions: IdentityOption[];
+  designations: IdentityOption[];
+  specialties: IdentityOption[];
+}
+
 export interface LoginResponse {
   user: User;
   access: string;
@@ -143,6 +160,30 @@ export const authApi = {
 
   async completeProfile(data: Record<string, string>): Promise<AuthMeResponse> {
     const response = await apiClient.post<AuthMeResponse>('/api/auth/complete-profile/', data);
+    return response.data;
+  },
+
+  async getIdentityOptions(): Promise<IdentityOptions> {
+    const response = await apiClient.get<IdentityOptions>('/api/identity/options/');
+    return response.data;
+  },
+
+  async getDataQuality(): Promise<{
+    summary: Record<string, number>;
+    sections: Array<{
+      key: string;
+      label: string;
+      count: number;
+      items: Array<{
+        user_id: number;
+        profile_id: number | null;
+        name: string;
+        username: string;
+        link: string;
+      }>;
+    }>;
+  }> {
+    const response = await apiClient.get('/api/data-quality/');
     return response.data;
   },
 

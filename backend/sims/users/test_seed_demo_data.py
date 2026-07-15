@@ -4,6 +4,7 @@ from django.test import Client, TestCase
 from sims.academics.models import Department
 from sims.notifications.models import Notification
 from sims.rotations.models import Hospital, HospitalDepartment
+from sims.supervision.models import ResidentSupervisorAssignment
 from sims.training.models import (
     ProgramMilestone,
     ProgramRotationTemplate,
@@ -18,7 +19,6 @@ from sims.users.models import (
     DepartmentMembership,
     HospitalAssignment,
     ResidentProfile,
-    SupervisorResidentLink,
     User,
     SupervisorProfile,
 )
@@ -63,7 +63,7 @@ class SeedDemoDataCommandTests(TestCase):
         )
         self.assertEqual(SupervisorProfile.objects.filter(designation_ref="HOD", department_ref__code__startswith="DEMO-").count(), 2)
         self.assertEqual(
-            SupervisorResidentLink.objects.filter(department__code__startswith="DEMO-").count(),
+            ResidentSupervisorAssignment.objects.filter(resident__department_ref__code__startswith="DEMO-").count(),
             8,
         )
         self.assertEqual(TrainingProgram.objects.filter(code__startswith="DEMO-").count(), 2)

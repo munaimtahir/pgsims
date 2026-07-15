@@ -6,7 +6,8 @@ from sims.bulk.userbase_engine import (
 )
 from sims.academics.models import Department
 from sims.rotations.models import Hospital, HospitalDepartment
-from sims.users.models import ResidentProfile, SupervisorResidentLink, SupervisorProfile
+from sims.supervision.models import ResidentSupervisorAssignment
+from sims.users.models import ResidentProfile, SupervisorProfile
 import io
 import pandas as pd
 from datetime import date
@@ -19,6 +20,10 @@ class BulkUserbaseEngineExtendedTests(TestCase):
         self.hospital = Hospital.objects.create(name="H1", code="H1")
         self.dept = Department.objects.create(name="D1", code="D1")
         self.hdept = HospitalDepartment.objects.create(hospital=self.hospital, department=self.dept)
+        self.resident = User.objects.create_user(username="res1", email="res1@test.com", role="RESIDENT")
+        self.supervisor = User.objects.create_user(username="sup1", email="sup1@test.com", role="SUPERVISOR")
+        ResidentProfile.objects.create(user=self.resident, hospital=self.hospital, department_ref=self.dept)
+        SupervisorProfile.objects.create(user=self.supervisor, hospital=self.hospital, department_ref=self.dept)
 
     def test_split_name(self):
         self.assertEqual(_split_name("Dr. Jane Doe"), ("Jane", "Doe"))
@@ -73,16 +78,19 @@ class BulkUserbaseEngineExtendedTests(TestCase):
         self.assertIn("hospital 'MISSING_H'", result["failures"][0]["error"])
 
     def test_import_supervision_links(self):
-        sup = User.objects.create_user(username="sup1", email="sup1@test.com", role="SUPERVISOR")
-        res = User.objects.create_user(username="res1", email="res1@test.com", role="RESIDENT")
-        
         csv_content = "supervisor_email,resident_email,active\nsup1@test.com,res1@test.com,true\n"
         file = io.BytesIO(csv_content.encode('utf-8'))
         file.name = "links.csv"
         
         result = import_entity(self.admin, "supervision-links", file, dry_run=False, allow_partial=False)
         self.assertEqual(len(result["successes"]), 1)
-        self.assertTrue(SupervisorResidentLink.objects.filter(supervisor_user=sup, resident_user=res).exists())
+        self.assertTrue(
+            ResidentSupervisorAssignment.objects.filter(
+                supervisor__user=self.supervisor,
+                resident__user=self.resident,
+                is_active=True,
+            ).exists()
+        )
 
     def test_excel_parsing(self):
         df = pd.DataFrame([

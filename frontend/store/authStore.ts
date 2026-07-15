@@ -81,6 +81,9 @@ export const useAuthStore = create<AuthState>()(
       }),
       onRehydrateStorage: () => (state) => {
         state?.setHasHydrated(true);
+        if (state?.isAuthenticated && state.accessToken && state.user) {
+          syncAuthCookies({ accessToken: state.accessToken, role: state.user.role });
+        }
       },
     }
   )

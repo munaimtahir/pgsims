@@ -8,6 +8,8 @@ from sims.training.models import (
 )
 from sims.rotations.models import Hospital, HospitalDepartment
 from sims.academics.models import Department
+from sims.supervision.models import ResidentSupervisorAssignment
+from sims.users.models import ResidentProfile, SupervisorProfile
 from django.utils import timezone
 from datetime import date, timedelta
 import json
@@ -33,6 +35,16 @@ class BackendCoveragePushTests(TestCase):
         self.hospital = Hospital.objects.create(name="Push Hospital", code="PH", is_active=True)
         self.dept = Department.objects.create(name="Push Dept", code="PDEP")
         self.hdept = HospitalDepartment.objects.create(hospital=self.hospital, department=self.dept)
+        self.resident_profile = ResidentProfile.objects.create(
+            user=self.pg,
+            hospital=self.hospital,
+            department_ref=self.dept,
+        )
+        self.supervisor_profile = SupervisorProfile.objects.create(
+            user=self.supervisor,
+            hospital=self.hospital,
+            department_ref=self.dept,
+        )
 
     def test_logbook_entry_crud_actions(self):
         self.client.login(username="pg_push", password="password123")
@@ -102,10 +114,13 @@ class BackendCoveragePushTests(TestCase):
         
         # Approve (as supervisor)
         self.client.login(username="sup_push", password="password123")
-        # Link supervisor
-        from sims.users.models import SupervisorResidentLink
-        SupervisorResidentLink.objects.create(
-            supervisor_user=self.supervisor, resident_user=self.pg, start_date=date.today()
+        ResidentSupervisorAssignment.objects.create(
+            resident=self.resident_profile,
+            supervisor=self.supervisor_profile,
+            assignment_type=ResidentSupervisorAssignment.ASSIGNMENT_PRIMARY,
+            start_date=date.today(),
+            is_active=True,
+            status=ResidentSupervisorAssignment.STATUS_ACTIVE,
         )
         
         response = self.client.post(f"/api/leaves/{leave.id}/approve/")

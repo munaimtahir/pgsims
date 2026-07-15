@@ -1,0 +1,16 @@
+# Frontend Delete Candidates
+
+| Name | Type | Path | Why legacy | Canonical replacement | Active references found | Action taken | Deletion risk | Can delete later? | Planned deletion sprint |
+|---|---|---|---|---|---|---|---|---|---|
+| Old PG dashboard family | route | `frontend/app/dashboard/pg/*` | Legacy resident shell naming | `/dashboard/resident` | Redirect compatibility only | Retained as redirect-only | Low | YES | Brick 8.6 |
+| Old resident workflow pages | route | `frontend/app/dashboard/resident/(progress,schedule,research,thesis,workshops,postings)` | Non-canonical resident workflows | `/dashboard/resident` | Redirect compatibility only | Retained as redirect-only | Low | YES | Brick 8.6 |
+| Old supervisor workflow pages | route | `frontend/app/dashboard/supervisor/(research-approvals,residents/[id]/progress)` | Non-canonical supervisor workflows | `/dashboard/supervisor` | Redirect compatibility only | Retained as redirect-only | Low | YES | Brick 8.6 |
+| Old admin workflow pages | route | `frontend/app/dashboard/utrmc/(backup,eligibility-monitoring,postings,onboarding)` | Non-canonical admin modules | `/dashboard/utrmc`, `/users/new` | Redirect compatibility only | Retained as redirect-only | Low | YES | Brick 8.6 |
+| Duplicate UTRMC route family | route | `frontend/app/dashboard/utrmc/(users,supervisors,hospitals,departments,matrix,programs)` | Duplicate full UI route family | `/users`, `/supervisors`, `/masters` | Redirect compatibility only | Converted to redirect-only | Low | YES | Brick 8.6 |
+| UTRMC department roster page | route | `frontend/app/dashboard/utrmc/departments/[id]/roster/page.tsx` | Duplicate roster surface | `/masters` | Redirect compatibility only | Converted to redirect-only | Low | YES | Brick 8.6 |
+| Deprecated department helper | helper | `frontend/lib/api/departments.ts` | Duplicate thin wrapper | `frontend/lib/api/masters.ts` | None | Deleted | Low | NO | Brick 8.6 |
+| Deprecated hospital helper | helper | `frontend/lib/api/hospitals.ts` | Duplicate thin wrapper | `frontend/lib/api/masters.ts` | None | Deleted | Low | NO | Brick 8.6 |
+| Legacy training workflow helper | helper | `frontend/lib/api/training.ts` | Non-canonical workflow API surface | `frontend/lib/api/academics.ts`, `frontend/lib/api/supervision.ts`, `frontend/lib/api/masters.ts`, `frontend/lib/api/dataQuality.ts` | None in active UI | Deleted | Medium | NO | Brick 8.6 |
+| Legacy dashboard route tests | test | `frontend/app/dashboard/**/page.test.tsx` old route variants | Tested deleted or deprecated surfaces | Canonical dashboard tests | None required | Deleted or replaced | Low | NO | Brick 8.6 |
+| Transitional `userbaseApi` monolith | helper | `frontend/lib/api/userbase.ts` | Mixed canonical and transitional concerns | split canonical helpers over time | Active canonical usage remains | Retained | Medium | NEEDS REVIEW | Future cleanup sprint |
+| Bulk setup workspace | component | `frontend/components/utrmc/BulkSetupWorkspace.tsx` | Still speaks in old userbase import language | `/supervision/import`, canonical bulk/import surfaces | No canonical dashboard references | Retained pending bulk cleanup | Medium | NEEDS REVIEW | Later import cleanup sprint |

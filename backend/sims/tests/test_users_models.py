@@ -1,7 +1,8 @@
 from django.test import TestCase
 from django.contrib.auth import get_user_model
+from sims.supervision.models import ResidentSupervisorAssignment
 from sims.users.models import (
-    User, DepartmentMembership, SupervisorResidentLink, SupervisorProfile
+    User, DepartmentMembership, SupervisorProfile, ResidentProfile
 )
 from sims.academics.models import Department
 from datetime import date, timedelta
@@ -56,15 +57,22 @@ class UsersModelsTests(TestCase):
         self.assertEqual(assignment.user, self.supervisor)
         self.assertEqual(assignment.designation_ref, "HOD")
 
-    def test_supervisor_resident_link(self):
+    def test_resident_supervisor_assignment(self):
         self.user.supervisor = self.supervisor
         self.user.save()
-        
-        link = SupervisorResidentLink.objects.create(
-            supervisor_user=self.supervisor, resident_user=self.user,
-            start_date=date.today()
+
+        resident_profile = ResidentProfile.objects.create(user=self.user, department_ref=self.dept)
+        supervisor_profile = SupervisorProfile.objects.create(user=self.supervisor, department_ref=self.dept)
+        assignment = ResidentSupervisorAssignment.objects.create(
+            supervisor=supervisor_profile,
+            resident=resident_profile,
+            assignment_type=ResidentSupervisorAssignment.ASSIGNMENT_PRIMARY,
+            start_date=date.today(),
+            is_active=True,
+            status=ResidentSupervisorAssignment.STATUS_ACTIVE,
         )
         self.assertEqual(self.user.supervisor, self.supervisor)
+        self.assertEqual(assignment.resident.user, self.user)
         self.assertIn(self.user, self.supervisor.get_assigned_pgs())
 
     def test_user_archive(self):

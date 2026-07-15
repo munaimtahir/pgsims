@@ -477,8 +477,24 @@ class ResidentProfile(models.Model):
         blank=True,
         related_name="resident_profiles",
     )
-    academic_session_ref = models.CharField(max_length=100, blank=True, null=True)
-    specialty_ref = models.CharField(max_length=100, blank=True, null=True)
+    academic_session_ref = models.ForeignKey(
+        "academics.AcademicSession",
+        to_field="code",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="resident_profiles",
+        db_column="academic_session_ref",
+    )
+    specialty_ref = models.ForeignKey(
+        "academics.Specialty",
+        to_field="code",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="resident_profiles",
+        db_column="specialty_ref",
+    )
     profile_status = models.CharField(
         max_length=20,
         choices=[("INCOMPLETE", "Incomplete"), ("COMPLETE", "Complete")],
@@ -550,7 +566,15 @@ class SupervisorProfile(models.Model):
         blank=True,
         related_name="supervisor_profiles",
     )
-    designation_ref = models.CharField(max_length=100, blank=True, null=True)
+    designation_ref = models.ForeignKey(
+        "academics.Designation",
+        to_field="code",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="supervisor_profiles",
+        db_column="designation_ref",
+    )
     program_ref = models.ForeignKey(
         "training.TrainingProgram",
         on_delete=models.SET_NULL,
@@ -558,7 +582,15 @@ class SupervisorProfile(models.Model):
         blank=True,
         related_name="supervisor_profiles",
     )
-    specialty_ref = models.CharField(max_length=100, blank=True, null=True)
+    specialty_ref = models.ForeignKey(
+        "academics.Specialty",
+        to_field="code",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="supervisor_profiles",
+        db_column="specialty_ref",
+    )
     profile_status = models.CharField(
         max_length=20,
         choices=[("INCOMPLETE", "Incomplete"), ("COMPLETE", "Complete")],
@@ -828,97 +860,6 @@ class HospitalAssignment(models.Model):
         return super().save(*args, **kwargs)
 
 
-class SupervisorResidentLink(models.Model):
-    """Tracks dated supervisor to resident links."""
-
-    supervisor_user = models.ForeignKey(
-        "users.User",
-        on_delete=models.CASCADE,
-        related_name="supervisor_links",
-    )
-    resident_user = models.ForeignKey(
-        "users.User",
-        on_delete=models.CASCADE,
-        related_name="resident_links",
-    )
-    department = models.ForeignKey(
-        "academics.Department",
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name="supervision_links",
-    )
-    start_date = models.DateField()
-    end_date = models.DateField(null=True, blank=True)
-    active = models.BooleanField(default=True)
-    has_default_dates = models.BooleanField(
-        default=False,
-        help_text="Computed flag set when this link uses default/synthetic dates.",
-    )
-    created_by = models.ForeignKey(
-        "users.User",
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name="supervision_links_created",
-    )
-    updated_by = models.ForeignKey(
-        "users.User",
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name="supervision_links_updated",
-    )
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        ordering = ["-active", "resident_user__last_name"]
-        constraints = [
-            models.CheckConstraint(
-                check=models.Q(end_date__isnull=True)
-                | models.Q(end_date__gte=models.F("start_date")),
-                name="supervision_link_dates_valid",
-            ),
-            models.UniqueConstraint(
-                fields=["supervisor_user", "resident_user", "department"],
-                condition=models.Q(active=True),
-                name="uniq_active_supervision_link",
-            ),
-        ]
-        indexes = [
-            models.Index(fields=["supervisor_user", "active"]),
-            models.Index(fields=["resident_user", "active"]),
-            models.Index(fields=["department", "active"]),
-        ]
-
-    def __str__(self):
-        return f"{self.supervisor_user} -> {self.resident_user}"
-
-    def clean(self):
-        super().clean()
-        if self.supervisor_user_id and self.supervisor_user.role != "SUPERVISOR":
-            raise ValidationError(
-                {"supervisor_user": "Supervisor must have SUPERVISOR role."}
-            )
-        if self.resident_user_id and self.resident_user.role != "RESIDENT":
-            raise ValidationError({"resident_user": "Resident must have RESIDENT role."})
-        if (
-            self.supervisor_user_id
-            and self.resident_user_id
-            and self.supervisor_user_id == self.resident_user_id
-        ):
-            raise ValidationError(
-                {"resident_user": "Supervisor and resident must be different users."}
-            )
-        if self.end_date and self.end_date < self.start_date:
-            raise ValidationError({"end_date": "end_date must be on/after start_date."})
-
-    def save(self, *args, **kwargs):
-        self.full_clean()
-        return super().save(*args, **kwargs)
-
-
 class DataCorrectionAudit(models.Model):
     """Field-level audit trail for manual and bulk correction actions."""
 
@@ -950,3 +891,49 @@ class DataCorrectionAudit(models.Model):
 
     def __str__(self):
         return f"{self.entity_type}:{self.entity_id}:{self.field_name}"
+
+
+class SafeForeignKeyDescriptor:
+    def __init__(self, original_descriptor, target_model):
+        self.orig = original_descriptor
+        self.target_model = target_model
+
+    def __get__(self, instance, owner):
+        if instance is None:
+            return self
+        return self.orig.__get__(instance, owner)
+
+    def __set__(self, instance, value):
+        if isinstance(value, str):
+            if not value.strip():
+                value = None
+            else:
+                obj, _ = self.target_model.objects.get_or_create(
+                    code=value,
+                    defaults={"name": value, "active": True}
+                )
+                value = obj
+        elif isinstance(value, int):
+            try:
+                value = self.target_model.objects.get(id=value)
+            except self.target_model.DoesNotExist:
+                value = None
+        self.orig.__set__(instance, value)
+
+
+# Wrap descriptors to allow string assignments cleanly
+from sims.academics.models import Designation, Specialty, AcademicSession
+
+ResidentProfile.academic_session_ref = SafeForeignKeyDescriptor(
+    ResidentProfile.academic_session_ref, AcademicSession
+)
+ResidentProfile.specialty_ref = SafeForeignKeyDescriptor(
+    ResidentProfile.specialty_ref, Specialty
+)
+SupervisorProfile.designation_ref = SafeForeignKeyDescriptor(
+    SupervisorProfile.designation_ref, Designation
+)
+SupervisorProfile.specialty_ref = SafeForeignKeyDescriptor(
+    SupervisorProfile.specialty_ref, Specialty
+)
+

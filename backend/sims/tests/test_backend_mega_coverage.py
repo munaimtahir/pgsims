@@ -10,6 +10,8 @@ from sims.training.models import (
 )
 from sims.rotations.models import Hospital, HospitalDepartment
 from sims.academics.models import Department
+from sims.supervision.models import ResidentSupervisorAssignment
+from sims.users.models import ResidentProfile, SupervisorProfile
 from django.utils import timezone
 from datetime import date, timedelta
 from django.core.files.uploadedfile import SimpleUploadedFile
@@ -36,6 +38,16 @@ class BackendMegaCoverageTests(TestCase):
         self.hospital = Hospital.objects.create(name="Mega Hospital V2", code="MHV2", is_active=True)
         self.dept = Department.objects.create(name="Mega Dept V2", code="MDEV2")
         self.hdept = HospitalDepartment.objects.create(hospital=self.hospital, department=self.dept)
+        self.resident_profile = ResidentProfile.objects.create(
+            user=self.pg,
+            hospital=self.hospital,
+            department_ref=self.dept,
+        )
+        self.supervisor_profile = SupervisorProfile.objects.create(
+            user=self.supervisor,
+            hospital=self.hospital,
+            department_ref=self.dept,
+        )
         self.client.login(username="admin_mega_v2", password="password123")
 
     def test_logbook_config_viewset_exhaustive(self):
@@ -91,9 +103,13 @@ class BackendMegaCoverageTests(TestCase):
             status="SUBMITTED"
         )
         self.client.login(username="sup_mega_v2", password="password123")
-        from sims.users.models import SupervisorResidentLink
-        SupervisorResidentLink.objects.create(
-            supervisor_user=self.supervisor, resident_user=self.pg, start_date=date.today()
+        ResidentSupervisorAssignment.objects.create(
+            resident=self.resident_profile,
+            supervisor=self.supervisor_profile,
+            assignment_type=ResidentSupervisorAssignment.ASSIGNMENT_PRIMARY,
+            start_date=date.today(),
+            is_active=True,
+            status=ResidentSupervisorAssignment.STATUS_ACTIVE,
         )
         review_url = reverse("logbook-entry-review", kwargs={"pk": entry.id})
         response = self.client.post(review_url, 
