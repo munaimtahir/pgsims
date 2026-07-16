@@ -90,7 +90,7 @@ export const NAV_SECTIONS: NavSection[] = [
     title: 'Support Staff',
     allowedRoles: ['SUPPORT_STAFF'],
     items: [
-      { label: 'My Dashboard', href: '/dashboard/utrmc', icon: 'home' },
+      { label: 'My Dashboard', href: '/dashboard', icon: 'home' },
       { label: 'My Profile', href: '/complete-profile', icon: 'user-circle' },
     ],
   },

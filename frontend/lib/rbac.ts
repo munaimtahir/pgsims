@@ -9,7 +9,7 @@ export function getDashboardPathForRole(role?: string | null): string {
     case 'ADMIN':
       return '/dashboard/utrmc';
     case 'SUPPORT_STAFF':
-      return '/dashboard/utrmc';
+      return '/dashboard';
     case 'SUPERVISOR':
       return '/dashboard/supervisor';
     case 'RESIDENT':

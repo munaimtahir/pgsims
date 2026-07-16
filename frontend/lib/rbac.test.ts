@@ -2,9 +2,12 @@ import { getDashboardPathForRole, getRoleLabel, isUtrmcManagerRole, isUtrmcReado
 
 describe('rbac utilities', () => {
   describe('getDashboardPathForRole', () => {
-    it('returns /dashboard/utrmc for admin and support staff roles', () => {
+    it('returns /dashboard/utrmc for admin role', () => {
       expect(getDashboardPathForRole('ADMIN')).toBe('/dashboard/utrmc');
-      expect(getDashboardPathForRole('SUPPORT_STAFF')).toBe('/dashboard/utrmc');
+    });
+
+    it('returns /dashboard for support staff role', () => {
+      expect(getDashboardPathForRole('SUPPORT_STAFF')).toBe('/dashboard');
     });
 
     it('returns /dashboard/supervisor for supervisor role', () => {
@@ -29,7 +32,7 @@ describe('rbac utilities', () => {
     });
 
     it('returns input role or unknown for others', () => {
-      expect(getRoleLabel('RESIDENT')).toBe('RESIDENT');
+      expect(getRoleLabel('RESIDENT')).toBe('Resident');
       expect(getRoleLabel(null)).toBe('unknown');
     });
   });
