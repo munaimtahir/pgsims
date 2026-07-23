@@ -1,5 +1,12 @@
 # PGSIMS Production Gate Closure Sprint - Complete Documentation
 
+> **SUPERSEDED (as of 2026-07-23).** This closure sprint and its 11-blocker framing predate the
+> Update 0 clean-room identity rewrite and the numbered-"brick" delivery process now used
+> (`AGENTS.md`, `docs/implementation/`, `scripts/check_brick_*.sh`). It is kept for historical
+> reference only. For current status, read `docs/AUDIT_2026-07-23_PILOT_READINESS.md` and
+> `docs/truth-map/FRONTEND_BACKEND_TRUTH_MAP.md` instead — do not treat the "NO-GO" verdict below
+> as current.
+
 **Status**: NO-GO → Targeted Closure Sprint  
 **Session**: 3 (Session 2 Investigation + Session 3 Initial Fixes + Comprehensive Docs)  
 **Last Updated**: 2026-04-23  

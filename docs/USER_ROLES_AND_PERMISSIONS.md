@@ -1,27 +1,44 @@
 # PGSIMS User Roles and Permissions
 
-This document outlines the Role-Based Access Control (RBAC) matrix for PGSIMS.
+This document outlines the Role-Based Access Control (RBAC) matrix for PGSIMS, matching the
+current clean-room identity model (`AGENTS.md`, `docs/CANONICAL_SOURCE_OF_TRUTH.md`,
+`backend/sims/users/models.py`).
+
+**Superseded note**: an earlier version of this document described a seven-role model (Super
+Admin, UTRMC Admin, UTRMC User/Viewer, HOD, Supervisor/Faculty, Resident/PG, Data Entry/Clerk).
+That model no longer exists in the code — `AGENTS.md` explicitly forbids reintroducing HOD,
+CLERK/DATA_ENTRY, or a separate super-admin/UTRMC-admin split as roles. If you find other docs or
+code still describing that model, treat it as stale and flag it the same way.
 
 ## Roles
-1. **Super Admin / Admin**: Complete access to create/update configuration masters, onboard staff/residents, assign supervisors, and execute bulk setup data imports.
-2. **UTRMC Admin**: Clinical governance admin with oversight, setup access, and override approval rights for inter-hospital assignments.
-3. **UTRMC User / Viewer**: Read-only oversight access to programs, eligibility statistics, and matrix layouts. Cannot mutate data.
-4. **HOD (Head of Department)**: Manages and approves rotation placements and logbook configurations at the department level.
-5. **Supervisor / Faculty**: Reviews and verifies logbook entries, leaves, and documents for assigned residents.
-6. **Resident / Postgraduate (PG)**: Submits logbook entries, leaves, and academic documents. Views personal dashboard and scheduling timelines.
-7. **Data Entry / Clerk**: Limited administrative access for trainee registration and data entry.
+
+Exactly four roles exist:
+
+1. **`ADMIN`** — full system access: manage hospitals/departments/matrix, onboard all account
+   types, assign supervisors, run bulk imports, approve inter-hospital rotation overrides.
+2. **`SUPERVISOR`** — reviews and approves logbook entries and evaluations for assigned residents;
+   `SupervisorProfile.designation` can hold a free-text value like `"HOD"`, but that is a display
+   label only, not a distinct role, permission tier, or route.
+3. **`RESIDENT`** — submits logbook entries and evaluations, views own training record, rotation
+   placements, and progress/eligibility status.
+4. **`SUPPORT_STAFF`** — restricted, mostly read-only access; profile completion and limited
+   operational support only. Does not create or mutate users, masters data, or academic records.
 
 ## Permissions & Scope Matrix
 
-| Action | Admin / UTRMC Admin | HOD | Supervisor | Resident |
+| Action | Admin | Supervisor | Resident | Support Staff |
 | :--- | :---: | :---: | :---: | :---: |
-| **Manage Hospitals/Depts** | Yes | No | No | No |
-| **Manage Matrix Setup** | Yes | No | No | No |
-| **Onboard Users / Bulk Import** | Yes | No | No | No |
-| **Assign Supervisors** | Yes | Yes (Dept) | No | No |
-| **Create Rotation Placements** | Yes | Yes (Dept) | No | No (View only) |
-| **Submit Leaves** | No | No | No | Yes (Own) |
-| **Approve Leaves / Rotations** | Yes | Yes (Dept) | Yes (Assigned) | No |
-| **Submit Logbook** | No | No | No | Yes (Own) |
-| **Approve/Return Logbook** | No | Yes (Dept) | Yes (Assigned) | No |
-| **View Eligibility Monitors** | Yes | Yes (Dept) | Yes (Assigned) | Yes (Own) |
+| Create any account (`/users/new`) | Yes | No | No | No |
+| Manage hospitals/departments/matrix/programs (`/masters`) | Yes | No | No | No |
+| Bulk import rosters | Yes | No | No | No |
+| Assign resident↔supervisor links | Yes | No | No | No |
+| Create rotation placements | Yes | No | No (view own only) | No |
+| Approve inter-hospital rotation overrides | Yes | No | No | No |
+| Submit logbook entries / evaluations | No | No | Yes (own) | No |
+| Review/approve/return logbook entries & evaluations | No | Yes (assigned residents) | No | No |
+| View dashboards & reports (own scope) | Yes (all) | Yes (assigned residents) | Yes (own) | Limited |
+| Backup/restore | Yes | No | No | No |
+
+All of the above is enforced server-side (see `backend/sims/common_permissions.py` and each app's
+`permissions.py`) — frontend route guarding (`frontend/lib/rbac.ts`) is a UX convenience, not the
+security boundary.

@@ -40,7 +40,7 @@ cd backend && pytest sims --cov=sims --cov-report=html --cov-report=term-missing
 # Or: make test
 
 # Run specific test
-cd backend && pytest sims/logbook/test_api.py::PGLogbookEntryAPITests::test_submit_return_feedback_visible_and_resubmit_approve_flow -v
+cd backend && pytest sims/academics/tests.py::SomeTestCase::test_name -v
 
 # Run tests for specific app
 cd backend && pytest sims/users/ -v
@@ -125,7 +125,7 @@ docker compose -f docker/docker-compose.yml build --no-cache
 ```
 pgsims/
 ├── backend/            # Django REST API (Python 3.11+, Django 4.2)
-│   ├── sims/           # Core app modules (users, logbook, rotations, etc.)
+│   ├── sims/           # Core app modules (users, academics, rotations, supervision, etc.)
 │   ├── sims_project/   # Project config (settings, urls, celery)
 │   └── manage.py
 ├── frontend/           # Next.js 14 frontend (TypeScript, Tailwind, React Query)
@@ -140,23 +140,35 @@ pgsims/
 
 ### Backend Architecture
 
-**Django App Structure**:
+**Superseded note**: this section previously listed `sims/logbook`, `sims/cases`,
+`sims/certificates`, `sims/analytics`, `sims/search` as active apps, and roles `pg`/`supervisor`/
+`admin`/`utrmc_user`/`utrmc_admin`. Neither matches the current code — verified 2026-07-23 (see
+`docs/AUDIT_2026-07-23_PILOT_READINESS.md`). Corrected below.
+
+**Django App Structure** (apps actually in `INSTALLED_APPS`,
+`backend/sims_project/settings.py`):
 - `sims/users/` - User management and authentication (JWT via `djangorestframework-simplejwt`)
-- `sims/logbook/` - Digital logbook entries with supervisor review workflow
-- `sims/rotations/` - Rotation management with inter-hospital policy validation
-- `sims/academics/` - Canonical Department model and academic configurations
-- `sims/certificates/` - Certificate tracking
-- `sims/cases/` - Clinical case submissions
+- `sims/academics/` - Canonical Department model, academic workflow (logbook entries, evaluations,
+  training records, reports/dashboards)
+- `sims/rotations/` - Canonical Hospital model, rotation management with inter-hospital policy
+  validation
+- `sims/supervision/` - Resident-supervisor assignment
+- `sims/bulk/` - Bulk CSV/Excel import/export, including flexible column mapping
 - `sims/notifications/` - Notification delivery via `NotificationService`
-- `sims/analytics/` - Statistics and reporting
-- `sims/search/` - Global cross-module search
 - `sims/audit/` - Activity logging and audit trail
+- `sims/backup_center/` - Database backup/restore, optional Google Drive connector
 - `sims/domain/` - Business rules and validators (`domain/validators.py`)
+
+`sims/_legacy/` contains `logbook`, `cases`, `certificates`, `analytics`, `search`, `attendance`,
+`reports`, `results` — kept for reference, **not installed**, not part of the active surface.
 
 **Key Patterns**:
 - **Contract-driven APIs**: All backend ↔ frontend integration specs live in `docs/contracts/API_CONTRACT.md`
-- **Role-based access control**: Defined in `docs/contracts/RBAC_MATRIX.md`. Roles: `pg`, `supervisor`, `admin`, `utrmc_user`, `utrmc_admin`
-- **Supervisor scope**: Option A (supervisees-only) - supervisors only see records for assigned PGs
+- **Role-based access control**: exactly four roles — `ADMIN`, `RESIDENT`, `SUPERVISOR`,
+  `SUPPORT_STAFF` (uppercase; see `docs/USER_ROLES_AND_PERMISSIONS.md` and `AGENTS.md` §4). The
+  legacy `pg`/`supervisor`/`admin`/`utrmc_user`/`utrmc_admin` lowercase model no longer exists.
+- **Supervisor scope**: supervisors only see records for their assigned residents, enforced
+  server-side.
 - **Audit trail**: Uses `django-simple-history` for automatic historical tracking
 - **Background tasks**: Celery with Redis broker for async operations
 - **NotificationService**: Centralized notification helper at `sims/notifications/services.py`
@@ -233,7 +245,7 @@ class RotationDepartment(models.Model):  # NEVER DO THIS
 **Inter-hospital rotation policy**:
 - If `rotation.hospital != user.home_hospital`:
   - Allowed if destination department NOT available in home hospital (missing `HospitalDepartment` row), OR
-  - Requires `override_reason` + approval by `utrmc_admin`
+  - Requires `override_reason` + approval by an `ADMIN` user
 - If `rotation.department == user.home_department` AND `rotation.hospital != user.home_hospital`:
   - Always requires override + approval (rare exception)
 
@@ -266,9 +278,11 @@ Notification.objects.create(
 
 ### Edit Permissions by Status
 
-**Logbook entries**:
-- PG can edit only when status in `draft`, `returned`
-- Supervisors verify via `PATCH /api/logbook/<id>/verify/` with payload: `action` (`approved`/`returned`/`rejected`), `feedback`
+**Logbook entries** (current, active implementation: `sims.academics`, not `sims.training`'s
+orphaned duplicate at bare `/api/logbook/` — see `docs/truth-map/FRONTEND_BACKEND_TRUTH_MAP.md` §7.5):
+- Resident can edit only when status in `draft`, `returned`
+- Supervisors verify via `PATCH /api/academics/logbook-entries/<id>/verify/` with payload: `action`
+  (`approved`/`returned`/`rejected`), `feedback`
 
 **Rotations**:
 - UTRMC admins approve overrides via `PATCH /api/rotations/<id>/utrmc-approve/`
@@ -367,11 +381,15 @@ Scanner should fail if these appear:
 
 ## Phase Gates
 
-**Current status**: Production-ready for pilot deployment (90% complete)
+**Current status**: see `docs/AUDIT_2026-07-23_PILOT_READINESS.md` for the current,
+independently-verified status and phased plan to pilot readiness — the "90% complete" figure
+previously here predates that audit and the brick 9-12 work.
 
-**Must-pass tests** (from `docs/contracts/TRUTH_TESTS.md`):
-- Phase 1 Gate: `sims.logbook.test_api.PGLogbookEntryAPITests.test_submit_return_feedback_visible_and_resubmit_approve_flow`
-- Migration Gate: Department/Hospital/Rotation creation with policy validation
-- Drift Gate: No forbidden patterns appear
+**Must-pass checks**:
+- `bash scripts/check_all_pgms_gates.sh` — all brick/identity/legacy gates
+- `cd backend && pytest sims` — 406 passed / 8 skipped as of the last verified run
+- `cd frontend && npm run build && npm run typecheck && npm run lint && npm test`
+- Drift Gate: no forbidden patterns (duplicate Department/Hospital models, legacy Notification
+  keys, legacy roles) appear
 
 Run gates before considering any phase "done".

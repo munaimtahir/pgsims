@@ -1,6 +1,15 @@
-# SIMS - Student (Postgrduate) Information Management System
+# PGSIMS - Postgraduate Student Information Management System
 
-A comprehensive Django web application for managing postgraduate medical residents' academic and training records.
+A comprehensive Django + Next.js application for managing postgraduate medical residents' academic
+and training records at UTRMC.
+
+> **This file is partially historical.** Several sections below (User Roles, and the Production
+> Gate Closure banner immediately following) describe an earlier three-role model and a
+> since-superseded closure sprint. **`AGENTS.md` is the authoritative, current operating-rules
+> file** — read it first. `docs/CANONICAL_SOURCE_OF_TRUTH.md` is a short current summary of roles
+> and routes, and `docs/AUDIT_2026-07-23_PILOT_READINESS.md` +
+> `docs/truth-map/FRONTEND_BACKEND_TRUTH_MAP.md` are the current, independently-verified status of
+> what's built and working. Where this README conflicts with those, trust them.
 
 [![Python Version](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![Django Version](https://img.shields.io/badge/django-4.2+-green.svg)](https://www.djangoproject.com/)
@@ -23,41 +32,22 @@ A comprehensive Django web application for managing postgraduate medical residen
 
 ## 🎯 Overview
 
-SIMS is the postgraduate training operations system for UTRMC. The current engineering priority is truth alignment and workflow stabilization, not broad feature expansion.
+PGSIMS is the postgraduate training operations system for UTRMC.
 
-**Current Status**: ⚠️ **Active surface stabilized; legacy workflow boundary still constrained**
+**Current status** (as of the independently-verified 2026-07-23 audit — see
+`docs/AUDIT_2026-07-23_PILOT_READINESS.md`): core identity, supervision, academic workflow,
+dashboards/reports, backup/restore, and bulk roster import are all built, verified working, and
+gate-passing. A short, concrete punch list remains before pilot launch — see that audit's §6 for the
+current phased plan.
 
-### 🚨 CRITICAL: Production Gate Closure Sprint + Anti-Drift Guardrails
+### Superseded: Production Gate Closure Sprint + Anti-Drift Guardrails
 
-**BEFORE EXECUTING ANY TASK**, read these in order:
-
-1. **Documentation**: `docs/PROD_GATE_CLOSURE/00_README.md`
-   - Overview of 11 blockers and current status
-   - Quick-start scenarios for different tasks
-
-2. **Anti-Drift Guardrails**: `docs/ANTI_DRIFT_GUARDRAILS.md`
-   - Ensures you stay focused on your specific window
-   - 20 core guardrails (G1-G20) to prevent scope creep
-   - Drift detection checklist (before every commit)
-   - Session window template
-
-3. **Quick Reference**: `docs/PROD_GATE_CLOSURE/QUICK_REFERENCE.md`
-   - One-page cheat sheet for quick lookups
-   - Copy-paste ready commands
-
-4. **Full Index**: `docs/PROD_GATE_CLOSURE/INDEX.md`
-   - Complete navigation guide
-
-**Current Verdict**: NO-GO (11 blockers identified, all documented, ready for closure)
-
-**Mandatory Before Starting Any Session:**
-- [ ] Read AGENTS.md / GEMINI.md sections 11-24
-- [ ] Read docs/PROD_GATE_CLOSURE/00_README.md
-- [ ] Read docs/ANTI_DRIFT_GUARDRAILS.md (guardrails enforcement)
-- [ ] Fill out session window template
-- [ ] Confirm guardrails are ACTIVE
-
-**Do not skip these** - all tasks affecting tests, coverage, schemas, or E2E must follow the documented gate procedures and anti-drift guardrails.
+`docs/PROD_GATE_CLOSURE/` (an 11-blocker closure sprint, dated 2026-04-23, "NO-GO" verdict) and
+`docs/ANTI_DRIFT_GUARDRAILS.md` describe an earlier delivery process that has been superseded by the
+numbered-"brick" process described in `AGENTS.md` and tracked under `docs/implementation/`, each
+validated by its own `scripts/check_brick_*.sh` gate script. Those two documents are kept for
+historical reference only — **read `AGENTS.md` before starting any task**, not the closure-sprint
+docs.
 
 Authoritative current-state docs:
 - `docs/_recovery/20260402T122809Z/00-executive-recovery-summary.md`
@@ -71,45 +61,48 @@ Authoritative current-state docs:
 
 ## ✨ Features
 
-### Active Surface
+The lists below reflect the independently-verified 2026-07-23 audit
+(`docs/AUDIT_2026-07-23_PILOT_READINESS.md`, `docs/truth-map/FRONTEND_BACKEND_TRUTH_MAP.md`), not
+self-reported status. Where earlier docs disagree, trust these.
 
-- **👥 User Management**: Role-based access control for admins, supervisors, and postgraduate students
-- **📊 Dashboard System**: Customized dashboards for resident, supervisor, and UTRMC roles
-- **🔄 Rotation Management**: Track and manage training rotations across different departments
-- **🗓️ Leave Workflow**: Resident leave draft/submission and supervisor approval on active resident/supervisor surfaces
-- **🎓 Academic Core**: Research, thesis, workshops, eligibility, postings
-- **🏥 UTRMC Administration**: Hospitals, departments, H-D matrix, users, supervision links, HOD assignments, programmes
-- **📈 Active Dashboards**: Training and eligibility dashboards on the verified active surface
-- **🔐 Security**: Role-based permissions, secure authentication, and session management
-- **🛡️ Audit Trail**: Historical tracking for key models plus Activity Log APIs on the active backend surface
-- **✅ Business Rules Engine**: Centralised validators, sanitisation and consistent error handling
+### Active Surface (verified working, frontend + backend)
 
-### Deferred or Legacy Surface
+- **👥 Universal identity & onboarding**: one creation flow (`/users/new`) for all four roles;
+  dynamic first-login state machine (forced password change, then profile completion if required).
+- **🏥 Masters & bulk import** (`/masters`): hospitals, departments, hospital-department matrix,
+  training programmes — individually or via bulk CSV/Excel import (standard template or flexible
+  column mapping), covering hospitals, departments, matrix, programmes, supervisors, residents,
+  resident-supervisor links, and rotation placements.
+- **🔗 Supervision**: resident-to-supervisor assignment with CSV import and data-quality checks.
+- **🔄 Rotation management**: placements into a hospital-department pairing, with
+  inter-hospital override/approval workflow.
+- **🎓 Academic workflow**: logbook entries and evaluations, each on a
+  draft → submit → supervisor-review (approve/return/reject) cycle.
+- **📊 Dashboards, reports & exports**: role-scoped summaries for Admin/Supervisor/Resident with CSV
+  export.
+- **🛡️ Audit trail**: `django-simple-history` on state-changing models, plus an Activity Log API.
+- **💾 Backup & restore**: database backup/restore (including an optional Google Drive connector)
+  and a health-check endpoint.
 
-- **📚 Digital Logbook**: Not part of the active frontend or active backend URL include set in the current runtime
-- **🏥 Clinical Cases**: Not part of the active frontend or active backend URL include set in the current runtime
-- **📈 Legacy Analytics Modules**: Historical docs and code remain, but are not the authoritative active surface
-- **📜 Certificates / Search / Reporting**: Historical code and docs exist, but these are not currently verified active-surface workflows
+### Deferred, legacy, or gapped (see the truth map for the full, current breakdown)
 
-### Additional Features
-
-- **Admin Interface**: Comprehensive Django admin with custom branding
-- **RESTful APIs**: JSON endpoints for statistics and data retrieval
-- **File Management**: Upload and manage documents and images
-- **Responsive Design**: Mobile-friendly Bootstrap 5 interface
-- **PMC Theme**: Professional medical college branding throughout
-
-Historical status snapshots such as [FEATURES_STATUS.md](docs/FEATURES_STATUS.md) are not authoritative for current delivery truth. Use `docs/_recovery/20260402T122809Z/` and `docs/contracts/` instead.
+- **📚 Digital logbook / clinical cases / certificates / search / legacy analytics**: code exists
+  under `backend/sims/_legacy/` but is not installed and not reachable.
+- **🎓 Thesis / research / workshops / postings self-service**: real backend support exists, but the
+  frontend pages are deliberate redirect stubs (a documented decision, not an oversight).
+- **🗓️ Leave management**: has a complete backend (`LeaveRequestViewSet` and related endpoints) and
+  currently **no** frontend — this is an open, undecided scope question, not a confirmed deferral.
+- A second, unused "masters" API and a second, unused "operational dashboard"/logbook
+  implementation exist as dead code from earlier iterations — harmless (nothing calls them) but
+  flagged for cleanup.
 
 ## 📊 Development Status
 
-Recovery baseline after the 2026-04-02 stabilization pass:
-
-- **Active and verified**: authentication, userbase administration, resident dashboard, supervisor dashboard, resident leave workflow, active rotation lifecycle, active postings lifecycle, research workflow, thesis/workshops baseline, eligibility monitor
-- **Active but partial**: some resident/supervisor/UTRMC happy paths outside the promoted workflow gate, broader program administration depth beyond the active workflow surface
-- **Deferred**: logbook, cases, legacy analytics
-
-See `docs/_recovery/20260402T122809Z/STATUS_AFTER_RECOVERY_SCORECARD.md` for the current scored baseline.
+See `docs/AUDIT_2026-07-23_PILOT_READINESS.md` for the current, independently-verified status
+(backend test pass rate, coverage, frontend build/lint/test results, gate-script results) and its
+phased plan to pilot readiness. Older status snapshots
+(`docs/_recovery/20260402T122809Z/`, `docs/CURRENT_FINAL_STATE.md`, `docs/FEATURES_STATUS.md`)
+predate the Update 0 clean-room rewrite and the brick 9-12 work and are not authoritative.
 
 ## 🚀 Quick Start
 
@@ -264,28 +257,23 @@ sims/
 
 ## 👥 User Roles
 
-The system supports three primary user roles:
+The system supports exactly four roles — see `docs/USER_ROLES_AND_PERMISSIONS.md` for the full
+permissions matrix.
 
-### 1. **Admin** 
-- Full system access
-- User management and creation
-- System configuration
-- View all data and analytics
-- Manage all modules
+### 1. **Admin**
+- Full system access: user/masters management, bulk roster import, backup/restore
+- Creates all account types via the universal `/users/new` flow
 
 ### 2. **Supervisor**
-- Manage assigned postgraduate students
-- Review and approve logbook entries
-- Review clinical cases
-- Evaluate rotations
-- View trainee progress and analytics
+- Reviews and approves logbook entries and evaluations for assigned residents
+- Views assigned residents' progress and workload
 
-### 3. **Postgraduate (PG)**
-- Maintain personal digital logbook
-- Submit clinical cases for review
-- Track certifications and achievements
-- View rotation schedule
-- Access personal analytics and progress
+### 3. **Resident**
+- Submits logbook entries and evaluations for supervisor review
+- Views own training record, rotation placements, and progress/eligibility
+
+### 4. **Support Staff**
+- Restricted, largely read-only access for administrative support
 
 ## 🛠️ Development Guidelines
 
@@ -538,6 +526,5 @@ For support, issues, or questions:
 
 ---
 
-**SIMS - Surgical Information Management System**  
-*Version 1.0 - January 2025*  
+**PGSIMS - Postgraduate Student Information Management System**  
 *Production-Ready for Pilot Deployment*

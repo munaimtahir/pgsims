@@ -1,63 +1,73 @@
 # PGSIMS Onboarding Workflow
 
-This document provides a guide for onboarding clinical users into the PGSIMS platform.
+This document is a guide for onboarding real hospitals, departments, supervisors, and residents
+into PGSIMS, matching the current clean-room identity model and the bulk-import screen at
+`/masters` (wired up 2026-07-23 — see `docs/AUDIT_2026-07-23_PILOT_READINESS.md` Step 5).
 
-## Onboarding Sequence
+**Superseded note**: an earlier version of this document referenced lowercase roles
+(`supervisor`/`faculty`/`resident`/`pg`), an `HODAssignment` model, and a `SupervisorResidentLink`
+model. None of these exist in the current code — roles are `ADMIN`/`RESIDENT`/`SUPERVISOR`/
+`SUPPORT_STAFF` (see `docs/USER_ROLES_AND_PERMISSIONS.md`), HOD is at most a free-text
+`SupervisorProfile.designation` value (`AGENTS.md` §5), and the resident-supervisor link model is
+`ResidentSupervisorAssignment` (`sims.supervision`).
+
+## Two ways to onboard
+
+**One-by-one**, through `/users/new` — the universal identity creation screen for all four roles.
+Best for a handful of accounts or corrections.
+
+**In bulk**, through `/masters` — best for the initial pilot roster load. Supports standard-template
+CSV/Excel upload with dry-run preview, or a flexible column-mapping mode for spreadsheets that don't
+match the template (e.g. exported from Google Forms).
+
+## Bulk onboarding sequence
+
+The `/masters` bulk-import workspace enforces this order (each step's dry-run/apply, template
+download, and export live in its own panel):
 
 ```mermaid
 graph TD
-    A[Onboard Hospitals & Departments] --> B[Map Hospital-Department Matrix]
-    B --> C[Onboard Supervisors & HODs]
-    C --> D[Onboard Residents]
-    D --> E[Assign Supervisor-Resident Links]
+    A[1. Hospitals] --> B[2. Departments]
+    B --> C[3. Hospital-Department Matrix]
+    C --> D[4. Training Programs]
+    D --> E[5. Faculty & Supervisors]
+    E --> F[6. Residents]
+    F --> G[7. Supervision Assignments]
+    G --> H[8. Rotation / Placement Assignments]
 ```
 
-## Step 1: Base Configuration
-1. **Hospitals**: Added via Django Admin or Bulk CSV (contains hospital code, name, address).
-2. **Departments**: Added via Django Admin or Bulk CSV (contains code, name, head).
-3. **Hospital-Department Matrix**: Establish matrix rows matching canonical hospitals and departments.
+1. **Hospitals** — `hospital_code`, `hospital_name`, `address`, `phone`, `email`, `active`.
+2. **Departments** — `department_code`, `department_name`, `description`, `active`.
+3. **Hospital-Department Matrix** — `hospital_code`, `department_code`, `active`.
+4. **Training Programs** — `program_code`, `program_name`, `duration_months`, `active`.
+5. **Faculty & Supervisors** — `email`, `full_name`, `role` (`faculty`/`supervisor`), `specialty`,
+   `department_code`, `hospital_code`, `designation`, `registration_number`, `username`, `password`
+   (optional — a temporary password is generated if blank), `active`, `start_date`.
+6. **Residents** — `email`, `full_name`, `specialty`, `year`, `pgr_id`, `training_start`,
+   `training_end`, `training_level`, `department_code`, `hospital_code`, `supervisor_email`,
+   `username`, `password` (optional), `active`.
+7. **Supervision Assignments** — `supervisor_email`, `resident_email`, `department_code`,
+   `start_date`, `end_date`, `active`.
+8. **Rotation / Placement Assignments** — `resident_email`, `hospital_code`, `department_code`,
+   `start_date`, `end_date`, `status` (defaults to `DRAFT`), `notes`.
 
-## Step 2: Supervisor & HOD Onboarding
-1. **Create User Account**: Role is set to `supervisor` (or `faculty` / `admin`).
-2. **Create Staff Profile**: Associates designation, phone, and active status.
-3. **Department Membership**: Assign supervisor/faculty to their primary department.
-4. **HOD Assignment**: If the supervisor is a department head, create an active `HODAssignment` record.
-
-## Step 3: Resident Onboarding
-1. **Create User Account**: Role is set to `resident` (or `pg`).
-2. **Create Resident Profile**: Input `pgr_id`, training start date, level, and active status.
-3. **Primary Training Affiliation**: Define resident's `home_hospital` and `home_department`.
-4. **Resident Training Record**: Register the resident in their specific degree program (e.g. MS-UROLOGY).
-
-## Step 4: Supervisor-Resident Links
-- Create a `SupervisorResidentLink` to map the resident to their supervisor for monitoring and review workflows.
+Every bulk-created account gets a temporary password and `must_change_password = True`, exactly like
+one created through `/users/new` — the first-login flow (forced password change, then
+`/complete-profile` if required fields are still missing) applies the same way regardless of which
+path created the account.
 
 ## Flexible Column Mapping Import
-The Flexible Column Mapping Import feature allows administrators to upload CSV or Excel files from arbitrary sources (like Google Forms or third-party systems) that do not match the fixed PGSIMS template.
 
-### When to Use
-- **Standard Template (Recommended)**: Use for bulk imports when you can easily conform your data to the standard PGSIMS layout templates. This is the default and safest route.
-- **Custom File & Map Columns**: Use when you have a roster or sheet with non-standard column headers and want to map them on the fly.
+For spreadsheets that don't match the standard template (e.g. from Google Forms or a third-party
+system), use the **"Upload Custom File & Map Columns"** mode on `/masters` instead of the standard
+template mode.
 
-### Target Import Types & Required Fields
-- **Residents**: Requires mapping `email`, `full_name`, `specialty`, `year`, `training_start`.
-- **Supervisors**: Requires mapping `email`, `full_name`, `role` (must be `faculty` or `supervisor`).
-- **Resident Placement (Rotation Placements)**: Requires mapping `resident_email`, `hospital_code`, `department_code`, `start_date`, `end_date`.
-- **Supervisor Assignment (Supervision Links)**: Requires mapping `supervisor_email`, `resident_email`, `start_date`.
-
-### How to Use the Custom Flow
-1. **Upload & Parse**: Choose the target import type, upload your CSV or Excel file, and select the sheet if Excel has multiple sheets.
-2. **Column Mapping & Auto-Suggestions**:
-   - The interface auto-suggests matches based on normalized headers (e.g. `CustomEmail` -> `email`).
-   - Manually map any required fields that weren't auto-matched.
-   - Leave optional fields unmapped if not present in your file.
-   - (Optional) Save your mappings as a **Mapping Preset** for future uploads of the same format. You can also load existing presets.
-3. **Dry-Run & Preview**:
-   - Execute the Dry-Run. This transforms your custom rows in-memory and runs the standard validation engine.
-   - **No database records are created at this step.**
-   - Review the validation summary (total, valid, and error rows) and inspect the transformed preview grid.
-   - If there are errors, download the **Error Report CSV** to see detailed row-by-row error descriptions.
-4. **Final Import**:
-   - **Strict Mode (Default & Recommended)**: Rollback the entire transaction if any single row contains an error. This prevents importing partial/broken data.
-   - **Partial Mode**: Import only valid rows and skip/log the failed ones.
-
+1. **Upload & Parse**: choose the target import type, upload the CSV/Excel file, select a sheet if
+   the workbook has multiple sheets.
+2. **Column Mapping & Auto-Suggestions**: the interface suggests matches from normalized headers
+   (e.g. `CustomEmail` → `email`); map any required fields it missed; optionally save the mapping as
+   a **Mapping Preset** for future uploads of the same format.
+3. **Dry-Run & Preview**: runs the same validation engine as the standard import, in-memory only —
+   no database writes. Review the validation summary and download the error report CSV if needed.
+4. **Final Import**: **Strict mode** (default) rolls back the whole import if any row errors;
+   **Partial mode** imports valid rows and skips/logs the rest.

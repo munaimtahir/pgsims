@@ -1,5 +1,11 @@
 # PGSIMS Anti-Drift Guardrails for AI Agent Sessions
 
+> **SUPERSEDED (as of 2026-07-23).** Written specifically for the `docs/PROD_GATE_CLOSURE/` sprint,
+> which has itself been superseded by the numbered-"brick" delivery process (`AGENTS.md`,
+> `docs/implementation/`). Kept for historical reference only. The general spirit — stay scoped,
+> confirm before destructive/high-blast-radius actions, verify before claiming done — is still good
+> practice and is captured directly in `AGENTS.md` and `CLAUDE.md` for current work.
+
 **Purpose**: Keep AI agents focused on specific session window and prevent scope creep during production gate closure sprint.
 
 ---

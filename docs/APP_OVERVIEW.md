@@ -1,23 +1,55 @@
 # PGSIMS Application Overview
 
-PGSIMS (Postgraduate Student Information Management System) is the official system for training tracking, rotation management, logbook validation, and program monitoring under the postgraduate medical education department of the university.
+PGSIMS (Postgraduate SIMS / PGMS) is the system for training tracking, rotation management,
+logbook/evaluation review, and programme monitoring for postgraduate medical residents at UTRMC.
+
+**Superseded note**: an earlier version of this document described a different role model (Super
+Admin, HOD, Supervisor/Faculty, Resident/PG, Data Entry/Clerk) and listed digital logbook / clinical
+case features that predate the current clean-room rebuild. See `AGENTS.md` and
+`docs/CANONICAL_SOURCE_OF_TRUTH.md` for the model actually in the code today, summarized below.
 
 ## Scope of the Pilot Rollout
-The system is tailored for an initial pilot rollout comprising:
-- **Hospitals**: 1-2 university-affiliated training hospitals.
-- **Departments**: 2 pilot departments (e.g., Urology, Pathology).
-- **Users**: ~10 supervisors/faculty members and ~30 residents.
 
-## Core Features
-1. **User base Management**: Custom role-based accounts (Super Admin, Admin, HOD, Supervisor, Resident, Data Entry, Read-only Viewer).
-2. **Hospital-Department Matrix**: normalizes which clinical departments exist in which hospital sites.
-3. **Training Program Registrations**: Tracks resident enrollment in degree programs (MS, MD, FCPS, Diploma) with effective start and expected end dates.
-4. **Resident Rotation Assignments**: Manages clinical placements inside the Hospital-Department matrix with full state-machine workflows (Draft -> Submitted -> Returned/Approved).
-5. **Leave Management**: Trainees submit leaves which must be approved by supervisors.
-6. **Logbook Audit Trail**: Residents log clinical cases and procedures. Supervisors review and sign off or return entries with feedback.
-7. **Readiness Dashboard**: Tracks resident milestone eligibility (Intermediate Membership iMM, Final Exam) based on compliance requirements (synopsis submission, thesis, logbook thresholds, workshop hours).
+1-2 university-affiliated training hospitals, ~2 pilot departments, ~10 supervisors/faculty
+members, ~30 residents.
+
+## Roles
+
+Exactly four: `ADMIN`, `RESIDENT`, `SUPERVISOR`, `SUPPORT_STAFF` — see
+`docs/USER_ROLES_AND_PERMISSIONS.md` for the full matrix.
+
+## Core Features (active surface)
+
+1. **Universal identity & onboarding**: one creation flow (`/users/new`) for all four roles;
+   dynamic first-login state machine (`must_change_password` → `/change-password`, missing profile
+   fields → `/complete-profile`, otherwise → role dashboard).
+2. **Masters & bulk import** (`/masters`): hospitals, departments, hospital-department matrix, and
+   training programmes, plus bulk CSV/Excel import (with a flexible column-mapping mode) for
+   hospitals, departments, matrix, programmes, supervisors, residents, resident-supervisor links,
+   and rotation placements.
+3. **Supervision** (`/supervision`): resident-to-supervisor assignment, with CSV import and
+   data-quality checks.
+4. **Rotations**: placements into a hospital-department pairing, with inter-hospital
+   override/approval workflow when a resident is placed outside their home hospital.
+5. **Academic workflow** (`/academics`): logbook entries and evaluation submissions, each following
+   a draft → submit → supervisor review (approve/return/reject) cycle; training records, academic
+   periods, rotation/evaluation templates, logbook categories.
+6. **Dashboards, reports & exports** (`/academics/monitoring`, `/academics/reports/*`,
+   `/dashboard/{utrmc,resident,supervisor}`): role-scoped summaries with CSV export.
+7. **Backup & restore** (`/dashboard/utrmc/backup`): database backup/restore, including an optional
+   Google Drive connector, plus a `/api/health/` endpoint.
+8. **Audit trail**: `django-simple-history` on state-changing models plus an Activity Log API.
+
+## Deferred / not in the active surface
+
+Digital logbook, clinical case tracking, certificates, search, and legacy analytics dashboards exist
+as code under `backend/sims/_legacy/` but are **not installed** (not in `INSTALLED_APPS`) and are
+not reachable from the frontend. Resident thesis/research/workshop self-service pages and leave
+management have real backend support but limited or no current frontend — see
+`docs/truth-map/FRONTEND_BACKEND_TRUTH_MAP.md` §7 for the verified, current status of each.
 
 ## Technical Architecture
-- **Backend**: Django 4.2 REST Framework API with SimpleJWT authentication and PostgreSQL database. Celery task workers for background computing.
-- **Frontend**: Next.js 14 Web Application utilizing Tailwind CSS and Axios-based client-side state management.
-- **Deployment**: Dockerized services orchestrated via Docker Compose.
+
+- **Backend**: Django 4.2 REST Framework, SimpleJWT auth, PostgreSQL, Celery/Redis for async work.
+- **Frontend**: Next.js 14 (App Router), TypeScript, Tailwind CSS, React Query, Zustand.
+- **Deployment**: Docker Compose + a host Caddy reverse proxy.
