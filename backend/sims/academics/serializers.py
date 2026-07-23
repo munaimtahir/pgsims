@@ -11,6 +11,10 @@ from .models import (
     RotationTemplate,
     Specialty,
     SupervisorReviewQueueItem,
+    EvaluationSubmission,
+    EvaluationResponse,
+    LogbookEntry,
+    ProcedureRecord,
 )
 from sims.rotations.models import Hospital
 from sims.training.models import TrainingProgram
@@ -286,3 +290,91 @@ class AcademicOptionsSerializer(serializers.Serializer):
     training_sites = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
     departments = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
     periods = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
+
+
+class EvaluationResponseSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = EvaluationResponse
+        fields = ["id", "field_key", "field_label", "field_type", "value_text", "value_number", "value_json", "sort_order"]
+
+
+class EvaluationSubmissionSerializer(serializers.ModelSerializer):
+    resident_name = serializers.CharField(source="resident.user.get_full_name", read_only=True)
+    resident_username = serializers.CharField(source="resident.user.username", read_only=True)
+    supervisor_name = serializers.CharField(source="supervisor.user.get_full_name", read_only=True)
+    template_name = serializers.CharField(source="template.name", read_only=True)
+    responses = EvaluationResponseSerializer(many=True, required=False)
+
+    class Meta:
+        model = EvaluationSubmission
+        fields = [
+            "id",
+            "resident",
+            "resident_name",
+            "resident_username",
+            "training_record",
+            "template",
+            "template_name",
+            "supervisor",
+            "supervisor_name",
+            "academic_period",
+            "status",
+            "submitted_at",
+            "reviewed_at",
+            "approved_at",
+            "score",
+            "max_score",
+            "resident_comments",
+            "supervisor_comments",
+            "extra_data",
+            "responses",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = ["resident", "training_record", "submitted_at", "reviewed_at", "approved_at", "created_at", "updated_at"]
+
+
+class ProcedureRecordSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProcedureRecord
+        fields = ["id", "procedure_name", "procedure_code", "role_performed", "complexity", "outcome", "complications"]
+
+
+class LogbookEntrySerializer(serializers.ModelSerializer):
+    resident_name = serializers.CharField(source="resident.user.get_full_name", read_only=True)
+    resident_username = serializers.CharField(source="resident.user.username", read_only=True)
+    supervisor_name = serializers.CharField(source="supervisor.user.get_full_name", read_only=True)
+    category_name = serializers.CharField(source="category.name", read_only=True)
+    procedure_record = ProcedureRecordSerializer(required=False, allow_null=True)
+
+    class Meta:
+        model = LogbookEntry
+        fields = [
+            "id",
+            "resident",
+            "resident_name",
+            "resident_username",
+            "training_record",
+            "category",
+            "category_name",
+            "supervisor",
+            "supervisor_name",
+            "academic_period",
+            "entry_date",
+            "title",
+            "description",
+            "case_identifier",
+            "patient_age",
+            "patient_gender",
+            "status",
+            "submitted_at",
+            "verified_at",
+            "resident_reflection",
+            "supervisor_comments",
+            "extra_data",
+            "procedure_record",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = ["resident", "training_record", "submitted_at", "verified_at", "created_at", "updated_at"]
+

@@ -483,12 +483,16 @@ class SupervisorReviewQueueItem(models.Model):
     TYPE_TRAINING_RECORD_REVIEW = "TRAINING_RECORD_REVIEW"
     TYPE_PROGRESS_REVIEW = "PROGRESS_REVIEW"
     TYPE_FUTURE_EVALUATION = "FUTURE_EVALUATION"
+    TYPE_EVALUATION_REVIEW = "EVALUATION_REVIEW"
+    TYPE_LOGBOOK_REVIEW = "LOGBOOK_REVIEW"
 
     QUEUE_TYPE_CHOICES = [
         (TYPE_PROFILE_REVIEW, "Profile Review"),
         (TYPE_TRAINING_RECORD_REVIEW, "Training Record Review"),
         (TYPE_PROGRESS_REVIEW, "Progress Review"),
         (TYPE_FUTURE_EVALUATION, "Future Evaluation"),
+        (TYPE_EVALUATION_REVIEW, "Evaluation Review"),
+        (TYPE_LOGBOOK_REVIEW, "Logbook Review"),
     ]
 
     STATUS_PENDING = "PENDING"
@@ -547,3 +551,212 @@ class SupervisorReviewQueueItem(models.Model):
 
     def __str__(self):
         return f"{self.resident.user.get_full_name() or self.resident.user.username} / {self.queue_type}"
+
+
+class EvaluationSubmission(models.Model):
+    resident = models.ForeignKey(
+        "users.ResidentProfile",
+        on_delete=models.PROTECT,
+        related_name="evaluation_submissions",
+    )
+    training_record = models.ForeignKey(
+        "academics.ResidentTrainingRecord",
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="evaluation_submissions",
+    )
+    template = models.ForeignKey(
+        "academics.EvaluationFormTemplate",
+        on_delete=models.PROTECT,
+        related_name="submissions",
+    )
+    supervisor = models.ForeignKey(
+        "users.SupervisorProfile",
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="evaluation_reviews",
+    )
+    academic_period = models.ForeignKey(
+        "academics.AcademicPeriod",
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+    )
+    status = models.CharField(
+        max_length=32,
+        choices=[
+            ("DRAFT", "Draft"),
+            ("SUBMITTED", "Submitted"),
+            ("UNDER_REVIEW", "Under Review"),
+            ("RETURNED", "Returned for Revision"),
+            ("APPROVED", "Approved"),
+            ("REJECTED", "Rejected"),
+            ("CANCELLED", "Cancelled"),
+        ],
+        default="DRAFT",
+    )
+    submitted_at = models.DateTimeField(null=True, blank=True)
+    reviewed_at = models.DateTimeField(null=True, blank=True)
+    approved_at = models.DateTimeField(null=True, blank=True)
+    score = models.DecimalField(max_digits=6, decimal_places=2, null=True, blank=True)
+    max_score = models.DecimalField(max_digits=6, decimal_places=2, null=True, blank=True)
+    resident_comments = models.TextField(blank=True)
+    supervisor_comments = models.TextField(blank=True)
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        related_name="+",
+        on_delete=models.SET_NULL,
+    )
+    updated_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        related_name="+",
+        on_delete=models.SET_NULL,
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    extra_data = models.JSONField(default=dict, blank=True)
+    history = HistoricalRecords()
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"Evaluation {self.id} - {self.resident.user.username} ({self.status})"
+
+
+class EvaluationResponse(models.Model):
+    submission = models.ForeignKey(
+        EvaluationSubmission,
+        on_delete=models.CASCADE,
+        related_name="responses",
+    )
+    field_key = models.CharField(max_length=128)
+    field_label = models.CharField(max_length=255, blank=True)
+    field_type = models.CharField(max_length=64, blank=True)
+    value_text = models.TextField(blank=True)
+    value_number = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    value_json = models.JSONField(default=dict, blank=True)
+    sort_order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ["sort_order", "id"]
+
+
+class LogbookEntry(models.Model):
+    resident = models.ForeignKey(
+        "users.ResidentProfile",
+        on_delete=models.PROTECT,
+        related_name="logbook_entries",
+    )
+    training_record = models.ForeignKey(
+        "academics.ResidentTrainingRecord",
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="logbook_entries",
+    )
+    category = models.ForeignKey(
+        "academics.LogbookCategory",
+        on_delete=models.PROTECT,
+        related_name="entries",
+    )
+    supervisor = models.ForeignKey(
+        "users.SupervisorProfile",
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="logbook_reviews",
+    )
+    academic_period = models.ForeignKey(
+        "academics.AcademicPeriod",
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+    )
+    entry_date = models.DateField()
+    title = models.CharField(max_length=255)
+    description = models.TextField(blank=True)
+    case_identifier = models.CharField(max_length=128, blank=True)
+    patient_age = models.CharField(max_length=64, blank=True)
+    patient_gender = models.CharField(max_length=64, blank=True)
+    status = models.CharField(
+        max_length=32,
+        choices=[
+            ("DRAFT", "Draft"),
+            ("SUBMITTED", "Submitted"),
+            ("VERIFIED", "Verified"),
+            ("RETURNED", "Returned for Revision"),
+            ("REJECTED", "Rejected"),
+            ("CANCELLED", "Cancelled"),
+        ],
+        default="DRAFT",
+    )
+    submitted_at = models.DateTimeField(null=True, blank=True)
+    verified_at = models.DateTimeField(null=True, blank=True)
+    resident_reflection = models.TextField(blank=True)
+    supervisor_comments = models.TextField(blank=True)
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        related_name="+",
+        on_delete=models.SET_NULL,
+    )
+    updated_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        related_name="+",
+        on_delete=models.SET_NULL,
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    extra_data = models.JSONField(default=dict, blank=True)
+    history = HistoricalRecords()
+
+    class Meta:
+        ordering = ["-entry_date", "-created_at"]
+
+    def __str__(self):
+        return f"LogbookEntry {self.id} - {self.title} ({self.status})"
+
+
+class ProcedureRecord(models.Model):
+    logbook_entry = models.OneToOneField(
+        LogbookEntry,
+        on_delete=models.CASCADE,
+        related_name="procedure_record",
+    )
+    procedure_name = models.CharField(max_length=255)
+    procedure_code = models.CharField(max_length=64, blank=True)
+    role_performed = models.CharField(
+        max_length=64,
+        choices=[
+            ("OBSERVED", "Observed"),
+            ("ASSISTED", "Assisted"),
+            ("PERFORMED_UNDER_SUPERVISION", "Performed Under Supervision"),
+            ("PERFORMED_INDEPENDENTLY", "Performed Independently"),
+        ],
+    )
+    complexity = models.CharField(
+        max_length=64,
+        choices=[
+            ("LOW", "Low"),
+            ("MODERATE", "Moderate"),
+            ("HIGH", "High"),
+        ],
+        blank=True,
+    )
+    outcome = models.CharField(max_length=255, blank=True)
+    complications = models.TextField(blank=True)
+    history = HistoricalRecords()
+
+    def __str__(self):
+        return f"ProcedureRecord {self.id} - {self.procedure_name}"
+

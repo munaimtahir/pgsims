@@ -95,6 +95,22 @@ def health_check(request):
     return HttpResponse("OK", content_type="text/plain")
 
 
+def api_health_check(request):
+    """API health check endpoint for production verification."""
+    from django.db import connection
+    db_ok = "ok"
+    try:
+        connection.ensure_connection()
+    except Exception:
+        db_ok = "failed"
+    return JsonResponse({
+        "status": "ok",
+        "database": db_ok,
+        "app": "pgms",
+        "version": "v0.12"
+    })
+
+
 def robots_txt(request):
     """Robots.txt for SEO"""
     content = """User-agent: *
@@ -115,6 +131,7 @@ urlpatterns = [
     # Home and utility URLs
     path("", home_view, name="home"),
     path("health/", health_check, name="health_check"),
+    path("api/health/", api_health_check, name="api_health_check"),
     path("healthz/", healthz, name="healthz"),
     path("readiness/", readiness, name="readiness"),
     path("liveness/", liveness, name="liveness"),

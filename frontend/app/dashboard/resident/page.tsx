@@ -64,11 +64,11 @@ export default function ResidentHomePage() {
               <div className="pg-card">
                 <h2 className="pg-section-title">My Training</h2>
                 <div className="mt-3 space-y-2 text-sm text-slate-600">
-                  <p>Program: {trainingRecord?.program.name || 'Not linked yet'}</p>
-                  <p>Academic session: {trainingRecord?.academic_session.name || 'Not set'}</p>
+                  <p>Program: {trainingRecord?.program?.name || 'Not linked yet'}</p>
+                  <p>Academic session: {trainingRecord?.academic_session?.name || 'Not set'}</p>
                   <p>Training year: {trainingRecord?.training_year || 'Not set'}</p>
-                  <p>Department: {trainingRecord?.department.name || 'Not set'}</p>
-                  <p>Training site: {trainingRecord?.training_site.name || 'Not set'}</p>
+                  <p>Department: {trainingRecord?.department?.name || 'Not set'}</p>
+                  <p>Training site: {trainingRecord?.training_site?.name || 'Not set'}</p>
                   <p>Start date: {trainingRecord?.start_date || 'Not set'}</p>
                   <p>Expected end date: {trainingRecord?.expected_end_date || 'Not set'}</p>
                 </div>

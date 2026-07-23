@@ -78,7 +78,7 @@ describe('ResidentHomePage', () => {
     expect(screen.getByText('My Training')).toBeInTheDocument();
     expect(screen.getByText('My Supervisor')).toBeInTheDocument();
     expect(screen.getByText('My Academic Summary')).toBeInTheDocument();
-    expect(screen.getByText('Prof Supervisor')).toBeInTheDocument();
+    expect(screen.getByText(/Prof Supervisor/)).toBeInTheDocument();
     expect(screen.queryByRole('link', { name: /View Schedule/i })).not.toBeInTheDocument();
   });
 });

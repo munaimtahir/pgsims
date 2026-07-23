@@ -230,6 +230,76 @@ export interface AcademicOptions {
   periods: AcademicOptionRow[];
 }
 
+export interface EvaluationResponse {
+  id: number;
+  field_key: string;
+  field_label: string;
+  field_type: string;
+  value_text: string;
+  value_number: number | null;
+  value_json: Record<string, unknown>;
+  sort_order: number;
+}
+
+export interface EvaluationSubmission {
+  id: number;
+  resident: number;
+  resident_name: string;
+  resident_username: string;
+  training_record: number | null;
+  template: number;
+  template_name: string;
+  supervisor: number | null;
+  supervisor_name: string | null;
+  academic_period: number | null;
+  status: string;
+  submitted_at: string | null;
+  reviewed_at: string | null;
+  approved_at: string | null;
+  score: number | null;
+  max_score: number | null;
+  resident_comments: string;
+  supervisor_comments: string;
+  extra_data: Record<string, unknown>;
+  responses: EvaluationResponse[];
+}
+
+export interface ProcedureRecord {
+  id?: number;
+  procedure_name: string;
+  procedure_code: string;
+  role_performed: string;
+  complexity: string;
+  outcome: string;
+  complications: string;
+}
+
+export interface LogbookEntry {
+  id: number;
+  resident: number;
+  resident_name: string;
+  resident_username: string;
+  training_record: number | null;
+  category: number;
+  category_name: string;
+  supervisor: number | null;
+  supervisor_name: string | null;
+  academic_period: number | null;
+  entry_date: string;
+  title: string;
+  description: string;
+  case_identifier: string;
+  patient_age: string;
+  patient_gender: string;
+  status: string;
+  submitted_at: string | null;
+  verified_at: string | null;
+  resident_reflection: string;
+  supervisor_comments: string;
+  extra_data: Record<string, unknown>;
+  procedure_record?: ProcedureRecord | null;
+}
+
 export const academicsApi = {
   listTrainingRecords: async (params?: Record<string, string | number | boolean>) => {
     const response = await apiClient.get<ListResponse<AcademicTrainingRecord>>('/api/academics/training-records/', { params });
@@ -262,4 +332,49 @@ export const academicsApi = {
   getSupervisorSummary: async (supervisorId: number) => (await apiClient.get<AcademicSummary>(`/api/academics/supervisors/${supervisorId}/summary/`)).data,
   getMySupervisorSummary: async () => (await apiClient.get<AcademicSummary>('/api/academics/supervisors/me/summary/')).data,
   seedPilotAcademics: async () => (await apiClient.post<Record<string, number>>('/api/academics/seed/')).data,
+
+  listEvaluationSubmissions: async (params?: Record<string, string | number | boolean>) => unwrapList((await apiClient.get<ListResponse<EvaluationSubmission>>('/api/academics/evaluation-submissions/', { params })).data),
+  getEvaluationSubmission: async (id: number) => (await apiClient.get<EvaluationSubmission>(`/api/academics/evaluation-submissions/${id}/`)).data,
+  createEvaluationSubmission: async (payload: Record<string, unknown>) => (await apiClient.post<EvaluationSubmission>('/api/academics/evaluation-submissions/', payload)).data,
+  updateEvaluationSubmission: async (id: number, payload: Record<string, unknown>) => (await apiClient.patch<EvaluationSubmission>(`/api/academics/evaluation-submissions/${id}/`, payload)).data,
+  submitEvaluation: async (id: number) => (await apiClient.post<EvaluationSubmission>(`/api/academics/evaluation-submissions/${id}/submit/`)).data,
+  startEvaluationReview: async (id: number) => (await apiClient.post<EvaluationSubmission>(`/api/academics/evaluation-submissions/${id}/start_review/`)).data,
+  approveEvaluation: async (id: number, payload: Record<string, unknown>) => (await apiClient.post<EvaluationSubmission>(`/api/academics/evaluation-submissions/${id}/approve/`, payload)).data,
+  returnEvaluation: async (id: number, payload: Record<string, unknown>) => (await apiClient.post<EvaluationSubmission>(`/api/academics/evaluation-submissions/${id}/return_revision/`, payload)).data,
+  rejectEvaluation: async (id: number, payload: Record<string, unknown>) => (await apiClient.post<EvaluationSubmission>(`/api/academics/evaluation-submissions/${id}/reject/`, payload)).data,
+  cancelEvaluation: async (id: number) => (await apiClient.post<EvaluationSubmission>(`/api/academics/evaluation-submissions/${id}/cancel/`)).data,
+
+  listLogbookEntries: async (params?: Record<string, string | number | boolean>) => unwrapList((await apiClient.get<ListResponse<LogbookEntry>>('/api/academics/logbook-entries/', { params })).data),
+  getLogbookEntry: async (id: number) => (await apiClient.get<LogbookEntry>(`/api/academics/logbook-entries/${id}/`)).data,
+  createLogbookEntry: async (payload: Record<string, unknown>) => (await apiClient.post<LogbookEntry>('/api/academics/logbook-entries/', payload)).data,
+  updateLogbookEntry: async (id: number, payload: Record<string, unknown>) => (await apiClient.patch<LogbookEntry>(`/api/academics/logbook-entries/${id}/`, payload)).data,
+  submitLogbookEntry: async (id: number) => (await apiClient.post<LogbookEntry>(`/api/academics/logbook-entries/${id}/submit/`)).data,
+  verifyLogbookEntry: async (id: number, payload: Record<string, unknown>) => (await apiClient.post<LogbookEntry>(`/api/academics/logbook-entries/${id}/verify/`, payload)).data,
+  returnLogbookEntry: async (id: number, payload: Record<string, unknown>) => (await apiClient.post<LogbookEntry>(`/api/academics/logbook-entries/${id}/return_revision/`, payload)).data,
+  rejectLogbookEntry: async (id: number, payload: Record<string, unknown>) => (await apiClient.post<LogbookEntry>(`/api/academics/logbook-entries/${id}/reject/`, payload)).data,
+  cancelLogbookEntry: async (id: number) => (await apiClient.post<LogbookEntry>(`/api/academics/logbook-entries/${id}/cancel/`)).data,
+
+  getMyAcademicProgress: async () => (await apiClient.get<Record<string, unknown>>('/api/academics/my-progress/')).data,
+  getResidentAcademicProgress: async (id: number) => (await apiClient.get<Record<string, unknown>>(`/api/academics/residents/${id}/progress/`)).data,
+  getSupervisorAcademicWorkload: async () => (await apiClient.get<Record<string, unknown>>('/api/academics/supervisor-workload/')).data,
+  getAdminAcademicWorkflowOverview: async () => (await apiClient.get<Record<string, unknown>>('/api/academics/admin-workflow-overview/')).data,
+  getAcademicWorkflowDataQuality: async () => (await apiClient.get<Record<string, unknown>>('/api/academics/workflow-data-quality/')).data,
+  seedWorkflows: async () => (await apiClient.post<Record<string, number>>('/api/academics/seed-workflows/')).data,
+
+  // Brick 11 dashboards
+  getAdminDashboardMonitoring: async () => (await apiClient.get<Record<string, unknown>>('/api/academics/monitoring/admin-dashboard/')).data,
+  getSupervisorDashboardMonitoring: async () => (await apiClient.get<Record<string, unknown>>('/api/academics/monitoring/supervisor-dashboard/')).data,
+  getMyProgressMonitoring: async () => (await apiClient.get<Record<string, unknown>>('/api/academics/monitoring/my-progress/')).data,
+  getDepartmentMonitoringSummary: async () => unwrapList((await apiClient.get<ListResponse<Record<string, unknown>>>('/api/academics/monitoring/departments/')).data),
+  getProgramMonitoringSummary: async () => unwrapList((await apiClient.get<ListResponse<Record<string, unknown>>>('/api/academics/monitoring/programs/')).data),
+  getSessionMonitoringSummary: async () => unwrapList((await apiClient.get<ListResponse<Record<string, unknown>>>('/api/academics/monitoring/sessions/')).data),
+
+  // Brick 11 reports
+  getResidentProgressReportList: async () => unwrapList((await apiClient.get<ListResponse<Record<string, unknown>>>('/api/academics/reports/resident-progress/')).data),
+  getResidentProgressReportDetail: async (id: number) => (await apiClient.get<Record<string, unknown>>(`/api/academics/reports/resident-progress/${id}/`)).data,
+  getSupervisorWorkloadReportList: async () => unwrapList((await apiClient.get<ListResponse<Record<string, unknown>>>('/api/academics/reports/supervisor-workload/')).data),
+  getSupervisorWorkloadReportDetail: async (id: number) => (await apiClient.get<Record<string, unknown>>(`/api/academics/reports/supervisor-workload/${id}/`)).data,
+  getEvaluationReport: async (params?: Record<string, string | number | boolean>) => unwrapList((await apiClient.get<ListResponse<Record<string, unknown>>>('/api/academics/reports/evaluations/', { params })).data),
+  getLogbookReport: async (params?: Record<string, string | number | boolean>) => unwrapList((await apiClient.get<ListResponse<Record<string, unknown>>>('/api/academics/reports/logbook/', { params })).data),
+  getDataQualityReport: async () => (await apiClient.get<Record<string, unknown>>('/api/academics/reports/data-quality/')).data,
 };

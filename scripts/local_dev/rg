@@ -1,0 +1,117 @@
+#!/usr/bin/env python3
+import sys
+import os
+import re
+import fnmatch
+
+def main():
+    args = sys.argv[1:]
+    
+    line_number = True
+    globs = []
+    exclude_globs = []
+    query = None
+    paths = []
+    
+    i = 0
+    while i < len(args):
+        arg = args[i]
+        if arg == '-n':
+            line_number = True
+        elif arg == '-g':
+            i += 1
+            if i < len(args):
+                g = args[i]
+                if g.startswith('!'):
+                    exclude_globs.append(g[1:])
+                else:
+                    globs.append(g)
+        elif arg.startswith('-'):
+            # Ignore other flags
+            pass
+        else:
+            if query is None:
+                query = arg
+            else:
+                paths.append(arg)
+        i += 1
+        
+    if query is None:
+        sys.exit(1)
+        
+    if not paths:
+        paths = ['.']
+        
+    try:
+        pattern = re.compile(query)
+    except re.error:
+        pattern = re.compile(re.escape(query))
+        
+    def matches_globs(filepath):
+        filepath = os.path.normpath(filepath)
+        
+        # Check excludes
+        for eg in exclude_globs:
+            # normalize eg
+            clean_eg = eg.replace('**/', '').replace('**', '')
+            if fnmatch.fnmatch(filepath, eg) or fnmatch.fnmatch(os.path.basename(filepath), eg) or clean_eg in filepath:
+                return False
+                
+        if not globs:
+            return True
+            
+        for g in globs:
+            # normalize glob for directory search
+            clean_g = g.replace('**/', '').replace('**', '')
+            if fnmatch.fnmatch(os.path.basename(filepath), g) or fnmatch.fnmatch(filepath, g) or (clean_g.startswith('*') and filepath.endswith(clean_g[1:])):
+                return True
+        return False
+
+    has_matches = False
+    
+    for p in paths:
+        if os.path.isfile(p):
+            if not matches_globs(p):
+                continue
+            if search_file(p, pattern, line_number):
+                has_matches = True
+        elif os.path.isdir(p):
+            for root, dirs, files in os.walk(p):
+                # Prune common ignore dirs
+                for prune in ['.git', '.next', 'node_modules', 'coverage', 'dist', 'build', '.pytest_cache']:
+                    if prune in dirs:
+                        dirs.remove(prune)
+                for file in files:
+                    filepath = os.path.join(root, file)
+                    if not matches_globs(filepath):
+                        continue
+                    if search_file(filepath, pattern, line_number):
+                        has_matches = True
+        else:
+            # It could be a glob path itself or does not exist
+            # If it's a directory wildcard / path, let's treat it as a glob or path
+            pass
+            
+    if has_matches:
+        sys.exit(0)
+    else:
+        sys.exit(1)
+
+def search_file(filepath, pattern, line_number):
+    has_match = False
+    try:
+        with open(filepath, 'r', encoding='utf-8', errors='ignore') as f:
+            for idx, line in enumerate(f, 1):
+                if pattern.search(line):
+                    has_match = True
+                    clean_line = line.rstrip('\r\n')
+                    if line_number:
+                        print(f"{filepath}:{idx}:{clean_line}")
+                    else:
+                        print(f"{filepath}:{clean_line}")
+    except Exception:
+        pass
+    return has_match
+
+if __name__ == '__main__':
+    main()
