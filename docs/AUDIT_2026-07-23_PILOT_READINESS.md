@@ -346,6 +346,32 @@ itself, plus time to fix whatever it finds (§4.6's fix is already scoped separa
 treat any newly-found gaps the same way — scope and confirm before building, per the working pattern
 established in this audit).*
 
+**Step 0 — DONE.** Full results, endpoint-by-endpoint, are in
+`docs/truth-map/FRONTEND_BACKEND_TRUTH_MAP.md` (rewritten to replace the old self-reported version).
+Headline results:
+- Core identity, supervision, academic workflow, dashboards/reports, and backup/restore all confirmed
+  genuinely `WORKING` (real frontend page ↔ real backend endpoint, in both directions).
+- **One real, undecided product gap**: leave management (`LeaveRequestViewSet`, `MyLeavesView`,
+  `LeaveApprovalInboxView`) has a complete, tested backend and **zero** frontend — not even a stub
+  page. Unlike thesis/research/workshops (which have deliberate redirect stubs confirming they were
+  intentionally retired), leave management shows no acknowledgment anywhere in the frontend, which
+  reads as unfinished rather than deliberately deferred. **This needs your call**: is resident leave
+  request/approval in scope for this pilot? If yes it's a real missing feature (comparable size to
+  the bulk-import gap) that needs a frontend built. If no, it should be documented as deferred, the
+  same way thesis/research/workshops already are.
+- **Three confirmed-dead legacy code clusters**, all superseded by working replacements and none of
+  them risky to leave running as-is: a second, entirely unused "masters" API in
+  `sims/academics/urls.py`/`views.py` (mounted at two dead URL prefixes); a second, unused
+  "operational dashboard" + "logbook" implementation in `sims/training/`, still exercised only by
+  stale e2e specs that should be retired or repointed; and old class-based "stats" views in
+  `sims/users/views.py` sitting alongside the already-known `"coming soon"` stubs from §4.4. None of
+  these were relocated in this pass — each requires editing a live, shared `urls.py`/`views.py`
+  rather than moving an isolated file, so per the agreed handling of destructive/legacy findings,
+  they're documented for a batch decision rather than acted on unilaterally.
+- A handful of small, low-severity items (a few backup-center actions, a couple of parameterized
+  endpoints) flagged to confirm by hand during the Phase 7 smoke test rather than by further static
+  analysis.
+
 ## 6. Plan to reach pilot readiness
 
 This is scoped as short, sequential work windows — each independently shippable, matching the

@@ -1,5 +1,13 @@
 [
   {
+    "path": "api/health/",
+    "method": "ANY",
+    "view": "api_health_check",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
     "path": "admin/auth/group/",
     "method": "ANY",
     "view": "changelist_view",
@@ -1788,6 +1796,214 @@
     ]
   },
   {
+    "path": "api/supervision/change-primary/",
+    "method": "POST",
+    "view": "change_primary_view",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/supervision/options/",
+    "method": "GET",
+    "view": "supervision_options_view",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/supervision/data-quality/",
+    "method": "GET",
+    "view": "supervision_data_quality_view",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/supervision/import/",
+    "method": "POST",
+    "view": "supervision_import_view",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/supervision/^assignments/$",
+    "method": "ANY",
+    "view": "ResidentSupervisorAssignmentViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/supervision/^assignments\\.(?P<format>[a-z0-9]+)/?$",
+    "method": "ANY",
+    "view": "ResidentSupervisorAssignmentViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/supervision/^assignments/(?P<pk>[^/.]+)/$",
+    "method": "ANY",
+    "view": "ResidentSupervisorAssignmentViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/supervision/^assignments/(?P<pk>[^/.]+)\\.(?P<format>[a-z0-9]+)/?$",
+    "method": "ANY",
+    "view": "ResidentSupervisorAssignmentViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/supervision/^assignments/(?P<pk>[^/.]+)/end/$",
+    "method": "ANY",
+    "view": "ResidentSupervisorAssignmentViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/supervision/^assignments/(?P<pk>[^/.]+)/end\\.(?P<format>[a-z0-9]+)/?$",
+    "method": "ANY",
+    "view": "ResidentSupervisorAssignmentViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/supervision/",
+    "method": "GET",
+    "view": "APIRootView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/supervision/",
+    "method": "POST",
+    "view": "APIRootView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/supervision/",
+    "method": "PUT",
+    "view": "APIRootView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/supervision/",
+    "method": "PATCH",
+    "view": "APIRootView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/supervision/",
+    "method": "DELETE",
+    "view": "APIRootView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/supervision/",
+    "method": "TRACE",
+    "view": "APIRootView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/supervision/<drf_format_suffix:format>",
+    "method": "GET",
+    "view": "APIRootView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/supervision/<drf_format_suffix:format>",
+    "method": "POST",
+    "view": "APIRootView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/supervision/<drf_format_suffix:format>",
+    "method": "PUT",
+    "view": "APIRootView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/supervision/<drf_format_suffix:format>",
+    "method": "PATCH",
+    "view": "APIRootView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/supervision/<drf_format_suffix:format>",
+    "method": "DELETE",
+    "view": "APIRootView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/supervision/<drf_format_suffix:format>",
+    "method": "TRACE",
+    "view": "APIRootView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
     "path": "api/schema/",
     "method": "GET",
     "view": "SpectacularAPIView",
@@ -1976,6 +2192,38 @@
     "permissions": []
   },
   {
+    "path": "api/^admins/$",
+    "method": "ANY",
+    "view": "AdminProfileViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/^admins\\.(?P<format>[a-z0-9]+)/?$",
+    "method": "ANY",
+    "view": "AdminProfileViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/^admins/(?P<user_id>[^/.]+)/$",
+    "method": "ANY",
+    "view": "AdminProfileViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/^admins/(?P<user_id>[^/.]+)\\.(?P<format>[a-z0-9]+)/?$",
+    "method": "ANY",
+    "view": "AdminProfileViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
     "path": "api/^residents/$",
     "method": "ANY",
     "view": "ResidentProfileViewSet",
@@ -2003,6 +2251,70 @@
     "path": "api/^residents/(?P<user_id>[^/.]+)\\.(?P<format>[a-z0-9]+)/?$",
     "method": "ANY",
     "view": "ResidentProfileViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/^supervisors/$",
+    "method": "ANY",
+    "view": "SupervisorProfileViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/^supervisors\\.(?P<format>[a-z0-9]+)/?$",
+    "method": "ANY",
+    "view": "SupervisorProfileViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/^supervisors/(?P<user_id>[^/.]+)/$",
+    "method": "ANY",
+    "view": "SupervisorProfileViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/^supervisors/(?P<user_id>[^/.]+)\\.(?P<format>[a-z0-9]+)/?$",
+    "method": "ANY",
+    "view": "SupervisorProfileViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/^support-staff/$",
+    "method": "ANY",
+    "view": "SupportStaffProfileViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/^support-staff\\.(?P<format>[a-z0-9]+)/?$",
+    "method": "ANY",
+    "view": "SupportStaffProfileViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/^support-staff/(?P<user_id>[^/.]+)/$",
+    "method": "ANY",
+    "view": "SupportStaffProfileViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/^support-staff/(?P<user_id>[^/.]+)\\.(?P<format>[a-z0-9]+)/?$",
+    "method": "ANY",
+    "view": "SupportStaffProfileViewSet",
     "action": "func",
     "serializer": null,
     "permissions": []
@@ -2104,70 +2416,6 @@
     "permissions": []
   },
   {
-    "path": "api/^supervision-links/$",
-    "method": "ANY",
-    "view": "SupervisionLinkViewSet",
-    "action": "func",
-    "serializer": null,
-    "permissions": []
-  },
-  {
-    "path": "api/^supervision-links\\.(?P<format>[a-z0-9]+)/?$",
-    "method": "ANY",
-    "view": "SupervisionLinkViewSet",
-    "action": "func",
-    "serializer": null,
-    "permissions": []
-  },
-  {
-    "path": "api/^supervision-links/(?P<pk>[^/.]+)/$",
-    "method": "ANY",
-    "view": "SupervisionLinkViewSet",
-    "action": "func",
-    "serializer": null,
-    "permissions": []
-  },
-  {
-    "path": "api/^supervision-links/(?P<pk>[^/.]+)\\.(?P<format>[a-z0-9]+)/?$",
-    "method": "ANY",
-    "view": "SupervisionLinkViewSet",
-    "action": "func",
-    "serializer": null,
-    "permissions": []
-  },
-  {
-    "path": "api/^hod-assignments/$",
-    "method": "ANY",
-    "view": "HODAssignmentViewSet",
-    "action": "func",
-    "serializer": null,
-    "permissions": []
-  },
-  {
-    "path": "api/^hod-assignments\\.(?P<format>[a-z0-9]+)/?$",
-    "method": "ANY",
-    "view": "HODAssignmentViewSet",
-    "action": "func",
-    "serializer": null,
-    "permissions": []
-  },
-  {
-    "path": "api/^hod-assignments/(?P<pk>[^/.]+)/$",
-    "method": "ANY",
-    "view": "HODAssignmentViewSet",
-    "action": "func",
-    "serializer": null,
-    "permissions": []
-  },
-  {
-    "path": "api/^hod-assignments/(?P<pk>[^/.]+)\\.(?P<format>[a-z0-9]+)/?$",
-    "method": "ANY",
-    "view": "HODAssignmentViewSet",
-    "action": "func",
-    "serializer": null,
-    "permissions": []
-  },
-  {
     "path": "api/",
     "method": "GET",
     "view": "APIRootView",
@@ -2281,6 +2529,126 @@
     "path": "api/<drf_format_suffix:format>",
     "method": "TRACE",
     "view": "APIRootView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/identity/options/",
+    "method": "GET",
+    "view": "IdentityOptionsView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/identity/options/",
+    "method": "POST",
+    "view": "IdentityOptionsView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/identity/options/",
+    "method": "PUT",
+    "view": "IdentityOptionsView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/identity/options/",
+    "method": "PATCH",
+    "view": "IdentityOptionsView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/identity/options/",
+    "method": "DELETE",
+    "view": "IdentityOptionsView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/identity/options/",
+    "method": "TRACE",
+    "view": "IdentityOptionsView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/data-quality/",
+    "method": "GET",
+    "view": "DataQualityView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/data-quality/",
+    "method": "POST",
+    "view": "DataQualityView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/data-quality/",
+    "method": "PUT",
+    "view": "DataQualityView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/data-quality/",
+    "method": "PATCH",
+    "view": "DataQualityView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/data-quality/",
+    "method": "DELETE",
+    "view": "DataQualityView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/data-quality/",
+    "method": "TRACE",
+    "view": "DataQualityView",
     "action": "custom/standard",
     "serializer": null,
     "permissions": [
@@ -4758,66 +5126,6 @@
     ]
   },
   {
-    "path": "api/dashboard/hod/",
-    "method": "GET",
-    "view": "HODOperationalDashboardView",
-    "action": "custom/standard",
-    "serializer": null,
-    "permissions": [
-      "IsAuthenticated"
-    ]
-  },
-  {
-    "path": "api/dashboard/hod/",
-    "method": "POST",
-    "view": "HODOperationalDashboardView",
-    "action": "custom/standard",
-    "serializer": null,
-    "permissions": [
-      "IsAuthenticated"
-    ]
-  },
-  {
-    "path": "api/dashboard/hod/",
-    "method": "PUT",
-    "view": "HODOperationalDashboardView",
-    "action": "custom/standard",
-    "serializer": null,
-    "permissions": [
-      "IsAuthenticated"
-    ]
-  },
-  {
-    "path": "api/dashboard/hod/",
-    "method": "PATCH",
-    "view": "HODOperationalDashboardView",
-    "action": "custom/standard",
-    "serializer": null,
-    "permissions": [
-      "IsAuthenticated"
-    ]
-  },
-  {
-    "path": "api/dashboard/hod/",
-    "method": "DELETE",
-    "view": "HODOperationalDashboardView",
-    "action": "custom/standard",
-    "serializer": null,
-    "permissions": [
-      "IsAuthenticated"
-    ]
-  },
-  {
-    "path": "api/dashboard/hod/",
-    "method": "TRACE",
-    "view": "HODOperationalDashboardView",
-    "action": "custom/standard",
-    "serializer": null,
-    "permissions": [
-      "IsAuthenticated"
-    ]
-  },
-  {
     "path": "api/dashboard/utrmc/",
     "method": "GET",
     "view": "UTRMCOperationalDashboardView",
@@ -6014,6 +6322,2902 @@
     ]
   },
   {
+    "path": "api/masters/^institutions/$",
+    "method": "ANY",
+    "view": "InstitutionViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/masters/^institutions\\.(?P<format>[a-z0-9]+)/?$",
+    "method": "ANY",
+    "view": "InstitutionViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/masters/^institutions/(?P<pk>[^/.]+)/$",
+    "method": "ANY",
+    "view": "InstitutionViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/masters/^institutions/(?P<pk>[^/.]+)\\.(?P<format>[a-z0-9]+)/?$",
+    "method": "ANY",
+    "view": "InstitutionViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/masters/^training-sites/$",
+    "method": "ANY",
+    "view": "HospitalViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/masters/^training-sites\\.(?P<format>[a-z0-9]+)/?$",
+    "method": "ANY",
+    "view": "HospitalViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/masters/^training-sites/(?P<pk>[^/.]+)/$",
+    "method": "ANY",
+    "view": "HospitalViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/masters/^training-sites/(?P<pk>[^/.]+)\\.(?P<format>[a-z0-9]+)/?$",
+    "method": "ANY",
+    "view": "HospitalViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/masters/^departments/$",
+    "method": "ANY",
+    "view": "DepartmentViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/masters/^departments\\.(?P<format>[a-z0-9]+)/?$",
+    "method": "ANY",
+    "view": "DepartmentViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/masters/^departments/(?P<pk>[^/.]+)/$",
+    "method": "ANY",
+    "view": "DepartmentViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/masters/^departments/(?P<pk>[^/.]+)\\.(?P<format>[a-z0-9]+)/?$",
+    "method": "ANY",
+    "view": "DepartmentViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/masters/^programs/$",
+    "method": "ANY",
+    "view": "TrainingProgramViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/masters/^programs\\.(?P<format>[a-z0-9]+)/?$",
+    "method": "ANY",
+    "view": "TrainingProgramViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/masters/^programs/(?P<pk>[^/.]+)/$",
+    "method": "ANY",
+    "view": "TrainingProgramViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/masters/^programs/(?P<pk>[^/.]+)\\.(?P<format>[a-z0-9]+)/?$",
+    "method": "ANY",
+    "view": "TrainingProgramViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/masters/^specialties/$",
+    "method": "ANY",
+    "view": "SpecialtyViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/masters/^specialties\\.(?P<format>[a-z0-9]+)/?$",
+    "method": "ANY",
+    "view": "SpecialtyViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/masters/^specialties/(?P<pk>[^/.]+)/$",
+    "method": "ANY",
+    "view": "SpecialtyViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/masters/^specialties/(?P<pk>[^/.]+)\\.(?P<format>[a-z0-9]+)/?$",
+    "method": "ANY",
+    "view": "SpecialtyViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/masters/^designations/$",
+    "method": "ANY",
+    "view": "DesignationViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/masters/^designations\\.(?P<format>[a-z0-9]+)/?$",
+    "method": "ANY",
+    "view": "DesignationViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/masters/^designations/(?P<pk>[^/.]+)/$",
+    "method": "ANY",
+    "view": "DesignationViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/masters/^designations/(?P<pk>[^/.]+)\\.(?P<format>[a-z0-9]+)/?$",
+    "method": "ANY",
+    "view": "DesignationViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/masters/^academic-sessions/$",
+    "method": "ANY",
+    "view": "AcademicSessionViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/masters/^academic-sessions\\.(?P<format>[a-z0-9]+)/?$",
+    "method": "ANY",
+    "view": "AcademicSessionViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/masters/^academic-sessions/(?P<pk>[^/.]+)/$",
+    "method": "ANY",
+    "view": "AcademicSessionViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/masters/^academic-sessions/(?P<pk>[^/.]+)\\.(?P<format>[a-z0-9]+)/?$",
+    "method": "ANY",
+    "view": "AcademicSessionViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/masters/",
+    "method": "GET",
+    "view": "APIRootView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/masters/",
+    "method": "POST",
+    "view": "APIRootView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/masters/",
+    "method": "PUT",
+    "view": "APIRootView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/masters/",
+    "method": "PATCH",
+    "view": "APIRootView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/masters/",
+    "method": "DELETE",
+    "view": "APIRootView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/masters/",
+    "method": "TRACE",
+    "view": "APIRootView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/masters/<drf_format_suffix:format>",
+    "method": "GET",
+    "view": "APIRootView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/masters/<drf_format_suffix:format>",
+    "method": "POST",
+    "view": "APIRootView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/masters/<drf_format_suffix:format>",
+    "method": "PUT",
+    "view": "APIRootView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/masters/<drf_format_suffix:format>",
+    "method": "PATCH",
+    "view": "APIRootView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/masters/<drf_format_suffix:format>",
+    "method": "DELETE",
+    "view": "APIRootView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/masters/<drf_format_suffix:format>",
+    "method": "TRACE",
+    "view": "APIRootView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/overview/",
+    "method": "GET",
+    "view": "AcademicOverviewView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/overview/",
+    "method": "POST",
+    "view": "AcademicOverviewView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/overview/",
+    "method": "PUT",
+    "view": "AcademicOverviewView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/overview/",
+    "method": "PATCH",
+    "view": "AcademicOverviewView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/overview/",
+    "method": "DELETE",
+    "view": "AcademicOverviewView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/overview/",
+    "method": "TRACE",
+    "view": "AcademicOverviewView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/data-quality/",
+    "method": "GET",
+    "view": "AcademicDataQualityView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/data-quality/",
+    "method": "POST",
+    "view": "AcademicDataQualityView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/data-quality/",
+    "method": "PUT",
+    "view": "AcademicDataQualityView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/data-quality/",
+    "method": "PATCH",
+    "view": "AcademicDataQualityView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/data-quality/",
+    "method": "DELETE",
+    "view": "AcademicDataQualityView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/data-quality/",
+    "method": "TRACE",
+    "view": "AcademicDataQualityView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/options/",
+    "method": "GET",
+    "view": "AcademicOptionsView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/options/",
+    "method": "POST",
+    "view": "AcademicOptionsView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/options/",
+    "method": "PUT",
+    "view": "AcademicOptionsView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/options/",
+    "method": "PATCH",
+    "view": "AcademicOptionsView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/options/",
+    "method": "DELETE",
+    "view": "AcademicOptionsView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/options/",
+    "method": "TRACE",
+    "view": "AcademicOptionsView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/residents/<int:resident_id>/summary/",
+    "method": "GET",
+    "view": "ResidentAcademicSummaryView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/residents/<int:resident_id>/summary/",
+    "method": "POST",
+    "view": "ResidentAcademicSummaryView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/residents/<int:resident_id>/summary/",
+    "method": "PUT",
+    "view": "ResidentAcademicSummaryView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/residents/<int:resident_id>/summary/",
+    "method": "PATCH",
+    "view": "ResidentAcademicSummaryView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/residents/<int:resident_id>/summary/",
+    "method": "DELETE",
+    "view": "ResidentAcademicSummaryView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/residents/<int:resident_id>/summary/",
+    "method": "TRACE",
+    "view": "ResidentAcademicSummaryView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/residents/me/summary/",
+    "method": "GET",
+    "view": "MyResidentAcademicSummaryView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/residents/me/summary/",
+    "method": "POST",
+    "view": "MyResidentAcademicSummaryView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/residents/me/summary/",
+    "method": "PUT",
+    "view": "MyResidentAcademicSummaryView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/residents/me/summary/",
+    "method": "PATCH",
+    "view": "MyResidentAcademicSummaryView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/residents/me/summary/",
+    "method": "DELETE",
+    "view": "MyResidentAcademicSummaryView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/residents/me/summary/",
+    "method": "TRACE",
+    "view": "MyResidentAcademicSummaryView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/supervisors/<int:supervisor_id>/summary/",
+    "method": "GET",
+    "view": "SupervisorAcademicSummaryView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/supervisors/<int:supervisor_id>/summary/",
+    "method": "POST",
+    "view": "SupervisorAcademicSummaryView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/supervisors/<int:supervisor_id>/summary/",
+    "method": "PUT",
+    "view": "SupervisorAcademicSummaryView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/supervisors/<int:supervisor_id>/summary/",
+    "method": "PATCH",
+    "view": "SupervisorAcademicSummaryView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/supervisors/<int:supervisor_id>/summary/",
+    "method": "DELETE",
+    "view": "SupervisorAcademicSummaryView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/supervisors/<int:supervisor_id>/summary/",
+    "method": "TRACE",
+    "view": "SupervisorAcademicSummaryView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/supervisors/me/summary/",
+    "method": "GET",
+    "view": "MySupervisorAcademicSummaryView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/supervisors/me/summary/",
+    "method": "POST",
+    "view": "MySupervisorAcademicSummaryView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/supervisors/me/summary/",
+    "method": "PUT",
+    "view": "MySupervisorAcademicSummaryView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/supervisors/me/summary/",
+    "method": "PATCH",
+    "view": "MySupervisorAcademicSummaryView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/supervisors/me/summary/",
+    "method": "DELETE",
+    "view": "MySupervisorAcademicSummaryView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/supervisors/me/summary/",
+    "method": "TRACE",
+    "view": "MySupervisorAcademicSummaryView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/seed/",
+    "method": "GET",
+    "view": "AcademicSeedView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/seed/",
+    "method": "POST",
+    "view": "AcademicSeedView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/seed/",
+    "method": "PUT",
+    "view": "AcademicSeedView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/seed/",
+    "method": "PATCH",
+    "view": "AcademicSeedView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/seed/",
+    "method": "DELETE",
+    "view": "AcademicSeedView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/seed/",
+    "method": "TRACE",
+    "view": "AcademicSeedView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/my-progress/",
+    "method": "GET",
+    "view": "MyAcademicProgressView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/my-progress/",
+    "method": "POST",
+    "view": "MyAcademicProgressView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/my-progress/",
+    "method": "PUT",
+    "view": "MyAcademicProgressView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/my-progress/",
+    "method": "PATCH",
+    "view": "MyAcademicProgressView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/my-progress/",
+    "method": "DELETE",
+    "view": "MyAcademicProgressView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/my-progress/",
+    "method": "TRACE",
+    "view": "MyAcademicProgressView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/residents/<int:resident_id>/progress/",
+    "method": "GET",
+    "view": "ResidentAcademicProgressView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/residents/<int:resident_id>/progress/",
+    "method": "POST",
+    "view": "ResidentAcademicProgressView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/residents/<int:resident_id>/progress/",
+    "method": "PUT",
+    "view": "ResidentAcademicProgressView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/residents/<int:resident_id>/progress/",
+    "method": "PATCH",
+    "view": "ResidentAcademicProgressView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/residents/<int:resident_id>/progress/",
+    "method": "DELETE",
+    "view": "ResidentAcademicProgressView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/residents/<int:resident_id>/progress/",
+    "method": "TRACE",
+    "view": "ResidentAcademicProgressView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/supervisor-workload/",
+    "method": "GET",
+    "view": "SupervisorAcademicWorkloadView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/supervisor-workload/",
+    "method": "POST",
+    "view": "SupervisorAcademicWorkloadView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/supervisor-workload/",
+    "method": "PUT",
+    "view": "SupervisorAcademicWorkloadView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/supervisor-workload/",
+    "method": "PATCH",
+    "view": "SupervisorAcademicWorkloadView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/supervisor-workload/",
+    "method": "DELETE",
+    "view": "SupervisorAcademicWorkloadView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/supervisor-workload/",
+    "method": "TRACE",
+    "view": "SupervisorAcademicWorkloadView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/admin-workflow-overview/",
+    "method": "GET",
+    "view": "AdminAcademicWorkflowOverviewView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/admin-workflow-overview/",
+    "method": "POST",
+    "view": "AdminAcademicWorkflowOverviewView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/admin-workflow-overview/",
+    "method": "PUT",
+    "view": "AdminAcademicWorkflowOverviewView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/admin-workflow-overview/",
+    "method": "PATCH",
+    "view": "AdminAcademicWorkflowOverviewView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/admin-workflow-overview/",
+    "method": "DELETE",
+    "view": "AdminAcademicWorkflowOverviewView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/admin-workflow-overview/",
+    "method": "TRACE",
+    "view": "AdminAcademicWorkflowOverviewView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/workflow-data-quality/",
+    "method": "GET",
+    "view": "AcademicWorkflowDataQualityView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/workflow-data-quality/",
+    "method": "POST",
+    "view": "AcademicWorkflowDataQualityView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/workflow-data-quality/",
+    "method": "PUT",
+    "view": "AcademicWorkflowDataQualityView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/workflow-data-quality/",
+    "method": "PATCH",
+    "view": "AcademicWorkflowDataQualityView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/workflow-data-quality/",
+    "method": "DELETE",
+    "view": "AcademicWorkflowDataQualityView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/workflow-data-quality/",
+    "method": "TRACE",
+    "view": "AcademicWorkflowDataQualityView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/seed-workflows/",
+    "method": "GET",
+    "view": "AcademicWorkflowSeedView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/seed-workflows/",
+    "method": "POST",
+    "view": "AcademicWorkflowSeedView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/seed-workflows/",
+    "method": "PUT",
+    "view": "AcademicWorkflowSeedView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/seed-workflows/",
+    "method": "PATCH",
+    "view": "AcademicWorkflowSeedView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/seed-workflows/",
+    "method": "DELETE",
+    "view": "AcademicWorkflowSeedView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/seed-workflows/",
+    "method": "TRACE",
+    "view": "AcademicWorkflowSeedView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/monitoring/admin-dashboard/",
+    "method": "GET",
+    "view": "AdminDashboardMonitoringView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/monitoring/admin-dashboard/",
+    "method": "POST",
+    "view": "AdminDashboardMonitoringView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/monitoring/admin-dashboard/",
+    "method": "PUT",
+    "view": "AdminDashboardMonitoringView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/monitoring/admin-dashboard/",
+    "method": "PATCH",
+    "view": "AdminDashboardMonitoringView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/monitoring/admin-dashboard/",
+    "method": "DELETE",
+    "view": "AdminDashboardMonitoringView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/monitoring/admin-dashboard/",
+    "method": "TRACE",
+    "view": "AdminDashboardMonitoringView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/monitoring/supervisor-dashboard/",
+    "method": "GET",
+    "view": "SupervisorDashboardMonitoringView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/monitoring/supervisor-dashboard/",
+    "method": "POST",
+    "view": "SupervisorDashboardMonitoringView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/monitoring/supervisor-dashboard/",
+    "method": "PUT",
+    "view": "SupervisorDashboardMonitoringView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/monitoring/supervisor-dashboard/",
+    "method": "PATCH",
+    "view": "SupervisorDashboardMonitoringView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/monitoring/supervisor-dashboard/",
+    "method": "DELETE",
+    "view": "SupervisorDashboardMonitoringView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/monitoring/supervisor-dashboard/",
+    "method": "TRACE",
+    "view": "SupervisorDashboardMonitoringView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/monitoring/my-progress/",
+    "method": "GET",
+    "view": "MyProgressMonitoringView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/monitoring/my-progress/",
+    "method": "POST",
+    "view": "MyProgressMonitoringView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/monitoring/my-progress/",
+    "method": "PUT",
+    "view": "MyProgressMonitoringView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/monitoring/my-progress/",
+    "method": "PATCH",
+    "view": "MyProgressMonitoringView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/monitoring/my-progress/",
+    "method": "DELETE",
+    "view": "MyProgressMonitoringView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/monitoring/my-progress/",
+    "method": "TRACE",
+    "view": "MyProgressMonitoringView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/monitoring/departments/",
+    "method": "GET",
+    "view": "DepartmentMonitoringSummaryView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/monitoring/departments/",
+    "method": "POST",
+    "view": "DepartmentMonitoringSummaryView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/monitoring/departments/",
+    "method": "PUT",
+    "view": "DepartmentMonitoringSummaryView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/monitoring/departments/",
+    "method": "PATCH",
+    "view": "DepartmentMonitoringSummaryView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/monitoring/departments/",
+    "method": "DELETE",
+    "view": "DepartmentMonitoringSummaryView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/monitoring/departments/",
+    "method": "TRACE",
+    "view": "DepartmentMonitoringSummaryView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/monitoring/programs/",
+    "method": "GET",
+    "view": "ProgramMonitoringSummaryView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/monitoring/programs/",
+    "method": "POST",
+    "view": "ProgramMonitoringSummaryView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/monitoring/programs/",
+    "method": "PUT",
+    "view": "ProgramMonitoringSummaryView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/monitoring/programs/",
+    "method": "PATCH",
+    "view": "ProgramMonitoringSummaryView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/monitoring/programs/",
+    "method": "DELETE",
+    "view": "ProgramMonitoringSummaryView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/monitoring/programs/",
+    "method": "TRACE",
+    "view": "ProgramMonitoringSummaryView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/monitoring/sessions/",
+    "method": "GET",
+    "view": "SessionMonitoringSummaryView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/monitoring/sessions/",
+    "method": "POST",
+    "view": "SessionMonitoringSummaryView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/monitoring/sessions/",
+    "method": "PUT",
+    "view": "SessionMonitoringSummaryView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/monitoring/sessions/",
+    "method": "PATCH",
+    "view": "SessionMonitoringSummaryView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/monitoring/sessions/",
+    "method": "DELETE",
+    "view": "SessionMonitoringSummaryView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/monitoring/sessions/",
+    "method": "TRACE",
+    "view": "SessionMonitoringSummaryView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/reports/resident-progress/export.csv",
+    "method": "GET",
+    "view": "ResidentProgressExportCSVView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/reports/resident-progress/export.csv",
+    "method": "POST",
+    "view": "ResidentProgressExportCSVView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/reports/resident-progress/export.csv",
+    "method": "PUT",
+    "view": "ResidentProgressExportCSVView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/reports/resident-progress/export.csv",
+    "method": "PATCH",
+    "view": "ResidentProgressExportCSVView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/reports/resident-progress/export.csv",
+    "method": "DELETE",
+    "view": "ResidentProgressExportCSVView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/reports/resident-progress/export.csv",
+    "method": "TRACE",
+    "view": "ResidentProgressExportCSVView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/reports/resident-progress/",
+    "method": "GET",
+    "view": "ResidentProgressReportView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/reports/resident-progress/",
+    "method": "POST",
+    "view": "ResidentProgressReportView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/reports/resident-progress/",
+    "method": "PUT",
+    "view": "ResidentProgressReportView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/reports/resident-progress/",
+    "method": "PATCH",
+    "view": "ResidentProgressReportView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/reports/resident-progress/",
+    "method": "DELETE",
+    "view": "ResidentProgressReportView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/reports/resident-progress/",
+    "method": "TRACE",
+    "view": "ResidentProgressReportView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/reports/resident-progress/<int:resident_id>/",
+    "method": "GET",
+    "view": "ResidentProgressReportDetailView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/reports/resident-progress/<int:resident_id>/",
+    "method": "POST",
+    "view": "ResidentProgressReportDetailView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/reports/resident-progress/<int:resident_id>/",
+    "method": "PUT",
+    "view": "ResidentProgressReportDetailView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/reports/resident-progress/<int:resident_id>/",
+    "method": "PATCH",
+    "view": "ResidentProgressReportDetailView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/reports/resident-progress/<int:resident_id>/",
+    "method": "DELETE",
+    "view": "ResidentProgressReportDetailView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/reports/resident-progress/<int:resident_id>/",
+    "method": "TRACE",
+    "view": "ResidentProgressReportDetailView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/reports/supervisor-workload/export.csv",
+    "method": "GET",
+    "view": "SupervisorWorkloadExportCSVView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/reports/supervisor-workload/export.csv",
+    "method": "POST",
+    "view": "SupervisorWorkloadExportCSVView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/reports/supervisor-workload/export.csv",
+    "method": "PUT",
+    "view": "SupervisorWorkloadExportCSVView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/reports/supervisor-workload/export.csv",
+    "method": "PATCH",
+    "view": "SupervisorWorkloadExportCSVView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/reports/supervisor-workload/export.csv",
+    "method": "DELETE",
+    "view": "SupervisorWorkloadExportCSVView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/reports/supervisor-workload/export.csv",
+    "method": "TRACE",
+    "view": "SupervisorWorkloadExportCSVView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/reports/supervisor-workload/",
+    "method": "GET",
+    "view": "SupervisorWorkloadReportView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/reports/supervisor-workload/",
+    "method": "POST",
+    "view": "SupervisorWorkloadReportView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/reports/supervisor-workload/",
+    "method": "PUT",
+    "view": "SupervisorWorkloadReportView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/reports/supervisor-workload/",
+    "method": "PATCH",
+    "view": "SupervisorWorkloadReportView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/reports/supervisor-workload/",
+    "method": "DELETE",
+    "view": "SupervisorWorkloadReportView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/reports/supervisor-workload/",
+    "method": "TRACE",
+    "view": "SupervisorWorkloadReportView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/reports/supervisor-workload/<int:supervisor_id>/",
+    "method": "GET",
+    "view": "SupervisorWorkloadReportDetailView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/reports/supervisor-workload/<int:supervisor_id>/",
+    "method": "POST",
+    "view": "SupervisorWorkloadReportDetailView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/reports/supervisor-workload/<int:supervisor_id>/",
+    "method": "PUT",
+    "view": "SupervisorWorkloadReportDetailView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/reports/supervisor-workload/<int:supervisor_id>/",
+    "method": "PATCH",
+    "view": "SupervisorWorkloadReportDetailView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/reports/supervisor-workload/<int:supervisor_id>/",
+    "method": "DELETE",
+    "view": "SupervisorWorkloadReportDetailView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/reports/supervisor-workload/<int:supervisor_id>/",
+    "method": "TRACE",
+    "view": "SupervisorWorkloadReportDetailView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/reports/evaluations/export.csv",
+    "method": "GET",
+    "view": "EvaluationReportExportCSVView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/reports/evaluations/export.csv",
+    "method": "POST",
+    "view": "EvaluationReportExportCSVView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/reports/evaluations/export.csv",
+    "method": "PUT",
+    "view": "EvaluationReportExportCSVView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/reports/evaluations/export.csv",
+    "method": "PATCH",
+    "view": "EvaluationReportExportCSVView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/reports/evaluations/export.csv",
+    "method": "DELETE",
+    "view": "EvaluationReportExportCSVView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/reports/evaluations/export.csv",
+    "method": "TRACE",
+    "view": "EvaluationReportExportCSVView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/reports/evaluations/",
+    "method": "GET",
+    "view": "EvaluationReportView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/reports/evaluations/",
+    "method": "POST",
+    "view": "EvaluationReportView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/reports/evaluations/",
+    "method": "PUT",
+    "view": "EvaluationReportView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/reports/evaluations/",
+    "method": "PATCH",
+    "view": "EvaluationReportView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/reports/evaluations/",
+    "method": "DELETE",
+    "view": "EvaluationReportView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/reports/evaluations/",
+    "method": "TRACE",
+    "view": "EvaluationReportView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/reports/logbook/export.csv",
+    "method": "GET",
+    "view": "LogbookReportExportCSVView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/reports/logbook/export.csv",
+    "method": "POST",
+    "view": "LogbookReportExportCSVView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/reports/logbook/export.csv",
+    "method": "PUT",
+    "view": "LogbookReportExportCSVView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/reports/logbook/export.csv",
+    "method": "PATCH",
+    "view": "LogbookReportExportCSVView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/reports/logbook/export.csv",
+    "method": "DELETE",
+    "view": "LogbookReportExportCSVView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/reports/logbook/export.csv",
+    "method": "TRACE",
+    "view": "LogbookReportExportCSVView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/reports/logbook/",
+    "method": "GET",
+    "view": "LogbookReportView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/reports/logbook/",
+    "method": "POST",
+    "view": "LogbookReportView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/reports/logbook/",
+    "method": "PUT",
+    "view": "LogbookReportView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/reports/logbook/",
+    "method": "PATCH",
+    "view": "LogbookReportView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/reports/logbook/",
+    "method": "DELETE",
+    "view": "LogbookReportView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/reports/logbook/",
+    "method": "TRACE",
+    "view": "LogbookReportView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/reports/data-quality/export.csv",
+    "method": "GET",
+    "view": "DataQualityReportExportCSVView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/reports/data-quality/export.csv",
+    "method": "POST",
+    "view": "DataQualityReportExportCSVView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/reports/data-quality/export.csv",
+    "method": "PUT",
+    "view": "DataQualityReportExportCSVView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/reports/data-quality/export.csv",
+    "method": "PATCH",
+    "view": "DataQualityReportExportCSVView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/reports/data-quality/export.csv",
+    "method": "DELETE",
+    "view": "DataQualityReportExportCSVView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/reports/data-quality/export.csv",
+    "method": "TRACE",
+    "view": "DataQualityReportExportCSVView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/reports/data-quality/",
+    "method": "GET",
+    "view": "DataQualityReportView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/reports/data-quality/",
+    "method": "POST",
+    "view": "DataQualityReportView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/reports/data-quality/",
+    "method": "PUT",
+    "view": "DataQualityReportView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/reports/data-quality/",
+    "method": "PATCH",
+    "view": "DataQualityReportView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/reports/data-quality/",
+    "method": "DELETE",
+    "view": "DataQualityReportView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/reports/data-quality/",
+    "method": "TRACE",
+    "view": "DataQualityReportView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/^training-records/$",
+    "method": "ANY",
+    "view": "ResidentTrainingRecordViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/academics/^training-records\\.(?P<format>[a-z0-9]+)/?$",
+    "method": "ANY",
+    "view": "ResidentTrainingRecordViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/academics/^training-records/(?P<pk>[^/.]+)/$",
+    "method": "ANY",
+    "view": "ResidentTrainingRecordViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/academics/^training-records/(?P<pk>[^/.]+)\\.(?P<format>[a-z0-9]+)/?$",
+    "method": "ANY",
+    "view": "ResidentTrainingRecordViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/academics/^training-records/(?P<pk>[^/.]+)/close/$",
+    "method": "ANY",
+    "view": "ResidentTrainingRecordViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/academics/^training-records/(?P<pk>[^/.]+)/close\\.(?P<format>[a-z0-9]+)/?$",
+    "method": "ANY",
+    "view": "ResidentTrainingRecordViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/academics/^periods/$",
+    "method": "ANY",
+    "view": "AcademicPeriodViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/academics/^periods\\.(?P<format>[a-z0-9]+)/?$",
+    "method": "ANY",
+    "view": "AcademicPeriodViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/academics/^periods/(?P<pk>[^/.]+)/$",
+    "method": "ANY",
+    "view": "AcademicPeriodViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/academics/^periods/(?P<pk>[^/.]+)\\.(?P<format>[a-z0-9]+)/?$",
+    "method": "ANY",
+    "view": "AcademicPeriodViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/academics/^rotation-templates/$",
+    "method": "ANY",
+    "view": "RotationTemplateViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/academics/^rotation-templates\\.(?P<format>[a-z0-9]+)/?$",
+    "method": "ANY",
+    "view": "RotationTemplateViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/academics/^rotation-templates/(?P<pk>[^/.]+)/$",
+    "method": "ANY",
+    "view": "RotationTemplateViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/academics/^rotation-templates/(?P<pk>[^/.]+)\\.(?P<format>[a-z0-9]+)/?$",
+    "method": "ANY",
+    "view": "RotationTemplateViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/academics/^evaluation-templates/$",
+    "method": "ANY",
+    "view": "EvaluationFormTemplateViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/academics/^evaluation-templates\\.(?P<format>[a-z0-9]+)/?$",
+    "method": "ANY",
+    "view": "EvaluationFormTemplateViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/academics/^evaluation-templates/(?P<pk>[^/.]+)/$",
+    "method": "ANY",
+    "view": "EvaluationFormTemplateViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/academics/^evaluation-templates/(?P<pk>[^/.]+)\\.(?P<format>[a-z0-9]+)/?$",
+    "method": "ANY",
+    "view": "EvaluationFormTemplateViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/academics/^logbook-categories/$",
+    "method": "ANY",
+    "view": "LogbookCategoryViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/academics/^logbook-categories\\.(?P<format>[a-z0-9]+)/?$",
+    "method": "ANY",
+    "view": "LogbookCategoryViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/academics/^logbook-categories/(?P<pk>[^/.]+)/$",
+    "method": "ANY",
+    "view": "LogbookCategoryViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/academics/^logbook-categories/(?P<pk>[^/.]+)\\.(?P<format>[a-z0-9]+)/?$",
+    "method": "ANY",
+    "view": "LogbookCategoryViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/academics/^review-queue/$",
+    "method": "ANY",
+    "view": "SupervisorReviewQueueItemViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/academics/^review-queue\\.(?P<format>[a-z0-9]+)/?$",
+    "method": "ANY",
+    "view": "SupervisorReviewQueueItemViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/academics/^review-queue/(?P<pk>[^/.]+)/$",
+    "method": "ANY",
+    "view": "SupervisorReviewQueueItemViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/academics/^review-queue/(?P<pk>[^/.]+)\\.(?P<format>[a-z0-9]+)/?$",
+    "method": "ANY",
+    "view": "SupervisorReviewQueueItemViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/academics/^evaluation-submissions/$",
+    "method": "ANY",
+    "view": "EvaluationSubmissionViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/academics/^evaluation-submissions\\.(?P<format>[a-z0-9]+)/?$",
+    "method": "ANY",
+    "view": "EvaluationSubmissionViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/academics/^evaluation-submissions/(?P<pk>[^/.]+)/$",
+    "method": "ANY",
+    "view": "EvaluationSubmissionViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/academics/^evaluation-submissions/(?P<pk>[^/.]+)\\.(?P<format>[a-z0-9]+)/?$",
+    "method": "ANY",
+    "view": "EvaluationSubmissionViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/academics/^evaluation-submissions/(?P<pk>[^/.]+)/approve/$",
+    "method": "ANY",
+    "view": "EvaluationSubmissionViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/academics/^evaluation-submissions/(?P<pk>[^/.]+)/approve\\.(?P<format>[a-z0-9]+)/?$",
+    "method": "ANY",
+    "view": "EvaluationSubmissionViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/academics/^evaluation-submissions/(?P<pk>[^/.]+)/cancel/$",
+    "method": "ANY",
+    "view": "EvaluationSubmissionViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/academics/^evaluation-submissions/(?P<pk>[^/.]+)/cancel\\.(?P<format>[a-z0-9]+)/?$",
+    "method": "ANY",
+    "view": "EvaluationSubmissionViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/academics/^evaluation-submissions/(?P<pk>[^/.]+)/reject/$",
+    "method": "ANY",
+    "view": "EvaluationSubmissionViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/academics/^evaluation-submissions/(?P<pk>[^/.]+)/reject\\.(?P<format>[a-z0-9]+)/?$",
+    "method": "ANY",
+    "view": "EvaluationSubmissionViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/academics/^evaluation-submissions/(?P<pk>[^/.]+)/return_revision/$",
+    "method": "ANY",
+    "view": "EvaluationSubmissionViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/academics/^evaluation-submissions/(?P<pk>[^/.]+)/return_revision\\.(?P<format>[a-z0-9]+)/?$",
+    "method": "ANY",
+    "view": "EvaluationSubmissionViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/academics/^evaluation-submissions/(?P<pk>[^/.]+)/start_review/$",
+    "method": "ANY",
+    "view": "EvaluationSubmissionViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/academics/^evaluation-submissions/(?P<pk>[^/.]+)/start_review\\.(?P<format>[a-z0-9]+)/?$",
+    "method": "ANY",
+    "view": "EvaluationSubmissionViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/academics/^evaluation-submissions/(?P<pk>[^/.]+)/submit/$",
+    "method": "ANY",
+    "view": "EvaluationSubmissionViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/academics/^evaluation-submissions/(?P<pk>[^/.]+)/submit\\.(?P<format>[a-z0-9]+)/?$",
+    "method": "ANY",
+    "view": "EvaluationSubmissionViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/academics/^logbook-entries/$",
+    "method": "ANY",
+    "view": "LogbookEntryViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/academics/^logbook-entries\\.(?P<format>[a-z0-9]+)/?$",
+    "method": "ANY",
+    "view": "LogbookEntryViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/academics/^logbook-entries/(?P<pk>[^/.]+)/$",
+    "method": "ANY",
+    "view": "LogbookEntryViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/academics/^logbook-entries/(?P<pk>[^/.]+)\\.(?P<format>[a-z0-9]+)/?$",
+    "method": "ANY",
+    "view": "LogbookEntryViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/academics/^logbook-entries/(?P<pk>[^/.]+)/cancel/$",
+    "method": "ANY",
+    "view": "LogbookEntryViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/academics/^logbook-entries/(?P<pk>[^/.]+)/cancel\\.(?P<format>[a-z0-9]+)/?$",
+    "method": "ANY",
+    "view": "LogbookEntryViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/academics/^logbook-entries/(?P<pk>[^/.]+)/reject/$",
+    "method": "ANY",
+    "view": "LogbookEntryViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/academics/^logbook-entries/(?P<pk>[^/.]+)/reject\\.(?P<format>[a-z0-9]+)/?$",
+    "method": "ANY",
+    "view": "LogbookEntryViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/academics/^logbook-entries/(?P<pk>[^/.]+)/return_revision/$",
+    "method": "ANY",
+    "view": "LogbookEntryViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/academics/^logbook-entries/(?P<pk>[^/.]+)/return_revision\\.(?P<format>[a-z0-9]+)/?$",
+    "method": "ANY",
+    "view": "LogbookEntryViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/academics/^logbook-entries/(?P<pk>[^/.]+)/submit/$",
+    "method": "ANY",
+    "view": "LogbookEntryViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/academics/^logbook-entries/(?P<pk>[^/.]+)/submit\\.(?P<format>[a-z0-9]+)/?$",
+    "method": "ANY",
+    "view": "LogbookEntryViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/academics/^logbook-entries/(?P<pk>[^/.]+)/verify/$",
+    "method": "ANY",
+    "view": "LogbookEntryViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/academics/^logbook-entries/(?P<pk>[^/.]+)/verify\\.(?P<format>[a-z0-9]+)/?$",
+    "method": "ANY",
+    "view": "LogbookEntryViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/academics/",
+    "method": "GET",
+    "view": "APIRootView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/",
+    "method": "POST",
+    "view": "APIRootView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/",
+    "method": "PUT",
+    "view": "APIRootView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/",
+    "method": "PATCH",
+    "view": "APIRootView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/",
+    "method": "DELETE",
+    "view": "APIRootView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/",
+    "method": "TRACE",
+    "view": "APIRootView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/<drf_format_suffix:format>",
+    "method": "GET",
+    "view": "APIRootView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/<drf_format_suffix:format>",
+    "method": "POST",
+    "view": "APIRootView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/<drf_format_suffix:format>",
+    "method": "PUT",
+    "view": "APIRootView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/<drf_format_suffix:format>",
+    "method": "PATCH",
+    "view": "APIRootView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/<drf_format_suffix:format>",
+    "method": "DELETE",
+    "view": "APIRootView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/academics/<drf_format_suffix:format>",
+    "method": "TRACE",
+    "view": "APIRootView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "academics/api/^institutions/$",
+    "method": "ANY",
+    "view": "InstitutionViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "academics/api/^institutions\\.(?P<format>[a-z0-9]+)/?$",
+    "method": "ANY",
+    "view": "InstitutionViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "academics/api/^institutions/(?P<pk>[^/.]+)/$",
+    "method": "ANY",
+    "view": "InstitutionViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "academics/api/^institutions/(?P<pk>[^/.]+)\\.(?P<format>[a-z0-9]+)/?$",
+    "method": "ANY",
+    "view": "InstitutionViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "academics/api/^training-sites/$",
+    "method": "ANY",
+    "view": "HospitalViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "academics/api/^training-sites\\.(?P<format>[a-z0-9]+)/?$",
+    "method": "ANY",
+    "view": "HospitalViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "academics/api/^training-sites/(?P<pk>[^/.]+)/$",
+    "method": "ANY",
+    "view": "HospitalViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "academics/api/^training-sites/(?P<pk>[^/.]+)\\.(?P<format>[a-z0-9]+)/?$",
+    "method": "ANY",
+    "view": "HospitalViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
     "path": "academics/api/^departments/$",
     "method": "ANY",
     "view": "DepartmentViewSet",
@@ -6041,6 +9245,134 @@
     "path": "academics/api/^departments/(?P<pk>[^/.]+)\\.(?P<format>[a-z0-9]+)/?$",
     "method": "ANY",
     "view": "DepartmentViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "academics/api/^programs/$",
+    "method": "ANY",
+    "view": "TrainingProgramViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "academics/api/^programs\\.(?P<format>[a-z0-9]+)/?$",
+    "method": "ANY",
+    "view": "TrainingProgramViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "academics/api/^programs/(?P<pk>[^/.]+)/$",
+    "method": "ANY",
+    "view": "TrainingProgramViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "academics/api/^programs/(?P<pk>[^/.]+)\\.(?P<format>[a-z0-9]+)/?$",
+    "method": "ANY",
+    "view": "TrainingProgramViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "academics/api/^specialties/$",
+    "method": "ANY",
+    "view": "SpecialtyViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "academics/api/^specialties\\.(?P<format>[a-z0-9]+)/?$",
+    "method": "ANY",
+    "view": "SpecialtyViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "academics/api/^specialties/(?P<pk>[^/.]+)/$",
+    "method": "ANY",
+    "view": "SpecialtyViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "academics/api/^specialties/(?P<pk>[^/.]+)\\.(?P<format>[a-z0-9]+)/?$",
+    "method": "ANY",
+    "view": "SpecialtyViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "academics/api/^designations/$",
+    "method": "ANY",
+    "view": "DesignationViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "academics/api/^designations\\.(?P<format>[a-z0-9]+)/?$",
+    "method": "ANY",
+    "view": "DesignationViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "academics/api/^designations/(?P<pk>[^/.]+)/$",
+    "method": "ANY",
+    "view": "DesignationViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "academics/api/^designations/(?P<pk>[^/.]+)\\.(?P<format>[a-z0-9]+)/?$",
+    "method": "ANY",
+    "view": "DesignationViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "academics/api/^academic-sessions/$",
+    "method": "ANY",
+    "view": "AcademicSessionViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "academics/api/^academic-sessions\\.(?P<format>[a-z0-9]+)/?$",
+    "method": "ANY",
+    "view": "AcademicSessionViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "academics/api/^academic-sessions/(?P<pk>[^/.]+)/$",
+    "method": "ANY",
+    "view": "AcademicSessionViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "academics/api/^academic-sessions/(?P<pk>[^/.]+)\\.(?P<format>[a-z0-9]+)/?$",
+    "method": "ANY",
+    "view": "AcademicSessionViewSet",
     "action": "func",
     "serializer": null,
     "permissions": []
@@ -6286,7 +9618,7 @@
     "method": "GET",
     "view": "AuthMeView",
     "action": "custom/standard",
-    "serializer": "UserManagementSerializer",
+    "serializer": null,
     "permissions": [
       "IsAuthenticated"
     ]
@@ -6296,7 +9628,7 @@
     "method": "POST",
     "view": "AuthMeView",
     "action": "custom/standard",
-    "serializer": "UserManagementSerializer",
+    "serializer": null,
     "permissions": [
       "IsAuthenticated"
     ]
@@ -6306,7 +9638,7 @@
     "method": "PUT",
     "view": "AuthMeView",
     "action": "custom/standard",
-    "serializer": "UserManagementSerializer",
+    "serializer": null,
     "permissions": [
       "IsAuthenticated"
     ]
@@ -6316,7 +9648,7 @@
     "method": "PATCH",
     "view": "AuthMeView",
     "action": "custom/standard",
-    "serializer": "UserManagementSerializer",
+    "serializer": null,
     "permissions": [
       "IsAuthenticated"
     ]
@@ -6326,7 +9658,7 @@
     "method": "DELETE",
     "view": "AuthMeView",
     "action": "custom/standard",
-    "serializer": "UserManagementSerializer",
+    "serializer": null,
     "permissions": [
       "IsAuthenticated"
     ]
@@ -6336,7 +9668,67 @@
     "method": "TRACE",
     "view": "AuthMeView",
     "action": "custom/standard",
-    "serializer": "UserManagementSerializer",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/auth/complete-profile/",
+    "method": "GET",
+    "view": "CompleteProfileView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/auth/complete-profile/",
+    "method": "POST",
+    "view": "CompleteProfileView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/auth/complete-profile/",
+    "method": "PUT",
+    "view": "CompleteProfileView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/auth/complete-profile/",
+    "method": "PATCH",
+    "view": "CompleteProfileView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/auth/complete-profile/",
+    "method": "DELETE",
+    "view": "CompleteProfileView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/auth/complete-profile/",
+    "method": "TRACE",
+    "view": "CompleteProfileView",
+    "action": "custom/standard",
+    "serializer": null,
     "permissions": [
       "IsAuthenticated"
     ]
