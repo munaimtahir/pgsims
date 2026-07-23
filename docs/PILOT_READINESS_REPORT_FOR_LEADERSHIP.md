@@ -80,6 +80,25 @@ part of the plan below.
   live system. They should be removed so they don't confuse anyone in the future, but they pose no
   risk today since they aren't reachable.
 
+## An important addition: bulk roster import isn't usable yet
+
+While answering a follow-up question about how onboarding works, we found something that changes
+the priority order: **there is no working screen today for an administrator to upload a spreadsheet
+and bulk-create a whole roster of residents/supervisors/rotations/etc through the website.**
+
+The good news: almost everything needed for this already exists in the code — the backend logic to
+process hospitals, departments, the hospital-department matrix, supervisors, residents, rotation
+placements, and resident-supervisor links from a spreadsheet is built and tested, and so is the
+actual on-screen import tool (file upload, preview, error reporting, template download). It just
+isn't connected to any page yet — like having a fully wired appliance that was never plugged into
+the wall. Two small backend pieces (training-programme import's template/export) also need finishing
+to match everything else. Right now, the only way to bulk-load a roster is for someone with direct
+server access to run it manually, which isn't realistic for pilot-site staff.
+
+This has been added to the plan below as its own step, and — because bulk roster onboarding is
+central to how the pilot is meant to start — we'd treat it as equally urgent to the other steps, not
+something to defer until after them.
+
 ## Path to pilot — what's left, in plain terms
 
 | Step | What it means | Status / rough effort |
@@ -88,8 +107,9 @@ part of the plan below.
 | 2. Refresh the remaining stale automated checks | So the safety net actually catches problems like #1 in future | Half a day |
 | 3. Strengthen tests around bulk import and backup/restore | The two areas we'll lean on hardest during real onboarding | 2–4 days |
 | 4. Clean up outdated documentation and unused old pages | So the project is described accurately going forward | 1 day |
+| 5. Build the working bulk-import screen | Connects the already-built import tool to an actual page so admins can onboard a full roster (residents, supervisors, hospitals, rotations, resident-supervisor links) themselves, without needing a developer | 1–2 days |
 
-**Remaining estimated effort: 3-5 working days**, after which the system should be genuinely
+**Remaining estimated effort: roughly one working week**, after which the system should be genuinely
 ready for the planned pilot scope: 1–2 hospitals, a couple of departments, about 10 supervisors and
 30 residents.
 

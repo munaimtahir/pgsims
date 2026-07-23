@@ -191,6 +191,94 @@ will actively confuse anyone who starts here instead of at `AGENTS.md`:
 I did not rewrite these in this pass (out of scope for an audit), but they should be either updated
 or explicitly marked superseded before pilot, per the remediation plan below.
 
+## 4.6 Bulk-import frontend is built but not wired to any route (High priority, added 2026-07-23)
+
+Follow-up investigation (triggered by a question about the onboarding plan) found a second real gap
+beyond §4.1-§4.5: the system is missing a working, non-technical bulk-import screen, even though
+most of the pieces already exist in code.
+
+**What already exists and works, end to end, today:**
+- Backend unified import endpoint `POST /api/bulk/import/<entity>/<action>/` (`action` =
+  `dry-run`/`apply`), ADMIN-only, in `backend/sims/bulk/views.py` (`BulkImportEntityView`,
+  `_ENTITY_METHOD_MAP`). Confirmed working entities, each backed by real import logic in
+  `sims/bulk/userbase_engine.py` / `sims/bulk/services.py`:
+  `hospitals`, `departments`, `matrix`, `faculty-supervisors`, `residents`, `supervision-links`
+  (resident↔supervisor linkage), `rotation-assignments` (rotation/placement records).
+  `training-programs` is also import-capable via `_ENTITY_METHOD_MAP` →
+  `BulkService.import_training_programs`.
+- Template download (`/api/bulk/templates/<resource>/`) and export
+  (`/api/bulk/exports/<resource>/`) for all of the above **except** `training-programs`/
+  `rotation-templates`/`resident-training-records` — those three are export-capable
+  (`export_dataset()` in `sims/bulk/services.py` already has `elif resource ==
+  "training_programs":` etc. — note: **underscore**, not hyphen, inconsistent with the import
+  entity key `training-programs`) but **not** template-capable: `export_template()` only calls
+  `template_rows_for()` in `userbase_engine.py`, whose `TEMPLATE_ROWS` dict does not have a
+  `training_programs`/`training-programs` entry, so a template-download request for it will 400.
+- A complete, already-built, already-tested React UI for exactly this workflow:
+  `frontend/components/utrmc/BulkSetupWorkspace.tsx`, which renders one `ImportExportPanel`
+  (`frontend/components/ui/ImportExportPanel.tsx`) per entity — file picker, "Dry Run", "Apply
+  Import" (with confirm dialog), "Download Template", "Export CSV/Excel", and a row-by-row error
+  list — plus a second mode backed by `FlexibleMappingImport.tsx` for CSV/Excel files with
+  non-standard column headers (upload → auto-suggest column mapping → dry-run preview → strict or
+  partial apply). `BulkSetupWorkspace` currently only lists 6 panels: Hospitals, Departments,
+  Matrix, Faculty & Supervisors, Residents, Supervision Assignments. It does **not** yet include a
+  panel for Rotation/Placement Assignments or Training Programs, even though the backend supports
+  both.
+
+**The actual gap**: `BulkSetupWorkspace` is not imported or rendered by anything under
+`frontend/app/`. I grepped the entire frontend tree and found zero references outside its own file
+and tests. `docs/REAL_DATA_ENTRY_GUIDE.md` instructs admins to go to "`/dashboard/utrmc` → Bulk
+Setup workspace" — that workspace doesn't exist at that route (or any route) today. The closest
+candidate page, `/masters`, is a static description card grid with no import functionality or links
+(`frontend/app/masters/page.tsx`) despite `/masters` already being ADMIN-only, already listed as a
+canonical route in `docs/CANONICAL_SOURCE_OF_TRUTH.md`, and its own on-page copy already claiming
+data is "Managed through the canonical masters surface and backend registries" — it just isn't yet.
+
+The one non-bulk exception: `/supervision/import` (a real, reachable route) already lets an admin
+CSV-import resident↔supervisor links specifically — but not the underlying resident/supervisor
+accounts, hospitals, departments, matrix, or rotation placements.
+
+**Net effect**: right now, onboarding a full pilot roster (hospitals → departments → matrix →
+supervisors → residents → rotation placements → supervisor links) can only be done by someone with
+server/API access (direct API calls, or management commands like `import_pilot_bundle.py`,
+`import_trainees.py`, `seed_pilot_academic_workflows.py`) — not by pilot-site admin staff through
+the website, which is what the pilot actually needs.
+
+### Step 5 — Build the complete, non-technical bulk-import screen (recommended next scoped brick, ~1-2 days)
+
+Scope, in priority order:
+
+1. **Add the two missing panels** to `BulkSetupWorkspace.tsx`: Training Programs (`entity:
+   "training-programs"`) and Rotation/Placement Assignments (`entity: "rotation-assignments"`,
+   already fully backend-supported including template/export — this one is a pure frontend addition).
+   Sequence Programs before Residents in the step order (a resident's training record can reference
+   a program) and Rotation Assignments last (references residents + matrix, both loaded earlier).
+2. **Close the `training-programs` template gap** in the backend: add a `training_programs` (and,
+   while touching that code, `rotation_templates` / `resident_training_records` if worth it for
+   completeness) branch to `export_template()` in `sims/bulk/services.py`, mirroring the pattern
+   already used in `export_dataset()`. Keep the entity-key naming consistent between the import path
+   (hyphenated, `_ENTITY_METHOD_MAP`) and export/template path (underscored, `export_dataset`) by
+   handling both spellings, or by picking one and updating all three call sites (`_ENTITY_METHOD_MAP`,
+   `export_dataset`, `TEMPLATE_ROWS`) to match — small, contained, additive change; no existing
+   passing test exercises the mismatched pair today, so this is safe to do without regression risk to
+   what's already covered.
+3. **Wire `BulkSetupWorkspace` into `/masters`**, replacing the current static card grid with the
+   real workspace (import mode toggle: standard template vs. flexible column mapping), gated the same
+   way the backend already gates it (`ADMIN` only — matches `/masters`'s existing
+   `ProtectedRoute allowedRoles={['ADMIN']}`). This was judged the best placement over inventing a new
+   top-level route: `/masters` is already the canonical, admin-only, "this is where master/setup data
+   lives" destination in the route contract, and its current copy already promises this exact
+   capability — it just needs the real component mounted. If a new dedicated route is later preferred
+   instead (e.g. `/masters/bulk-import`), update `docs/contracts/ROUTES.md` accordingly per the
+   contract-first rule in `AGENTS.md`.
+4. **Do not touch** the must-change-password → complete-profile → dashboard onboarding state machine
+   (§2, "Login/onboarding state machine") — that flow is separate from bulk import, already verified
+   working, and out of scope for this step. Bulk-imported residents/supervisors still go through it
+   normally on their first login (bulk import only creates the row + temporary password, same as
+   `/users/new` does for a single user).
+5. Re-run `npm run build`, `npm test`, `npm run typecheck`, `npm run lint`, `pytest sims`, and
+   `bash scripts/check_all_pgms_gates.sh` before considering this step done.
+
 ## 5. What is remaining / not yet built
 
 - **Coverage enforcement**: the 80% backend coverage gate is defined but not actually running
@@ -208,6 +296,9 @@ or explicitly marked superseded before pilot, per the remediation plan below.
 - **No automated PDF export** — reports rely on browser print, documented and accepted as sufficient
   for pilot.
 - **Frontend test suite health** — 5 stale suites need updating to match current UI copy/nav (§4.3).
+- **Bulk-import UI is not reachable** (§4.6) — this is now the single most important pilot-readiness
+  gap: without it, roster onboarding depends on someone with server access, which doesn't match how
+  the pilot is meant to run.
 - **Documentation reconciliation** — README/copilot-instructions/APP_OVERVIEW/USER_ROLES docs need
   to be brought in line with the current 4-role model, or explicitly marked historical (§4.5).
 
@@ -244,7 +335,13 @@ enforced, or explicitly lower the documented target.
 - Delete or route away the four `"coming soon"` analytics stub endpoints in `sims/users/views.py`,
   confirming no live nav item still points at them.
 
-**After Steps 1–4**: run `bash scripts/check_all_pgms_gates.sh`, `pytest sims`, and
+**Step 5 is detailed above (§4.6)** — build the complete bulk-import screen (Programs + Rotation
+Assignments panels, the `training-programs` template fix, and wiring `BulkSetupWorkspace` into
+`/masters`). Given it's what actually unblocks real pilot-roster onboarding through the website
+rather than through server access, treat it as at least as high a priority as Steps 1-4, not
+strictly sequential after them.
+
+**After Steps 1–5**: run `bash scripts/check_all_pgms_gates.sh`, `pytest sims`, and
 `npm test && npm run build` one more time as a final go/no-go check, then this system is genuinely
 ready for the pilot scope described in §1 (1-2 hospitals, ~30 residents, ~10 supervisors) — the
 backend, data model, and workflow logic are already solid; what's missing is polish, not
