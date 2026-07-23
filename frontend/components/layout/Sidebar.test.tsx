@@ -29,20 +29,22 @@ describe('Sidebar', () => {
 
   it('renders resident specific items', () => {
     render(<Sidebar {...defaultProps} />);
-    expect(screen.getByText('My Schedule')).toBeInTheDocument();
-    expect(screen.getByText('Logbook')).toBeInTheDocument();
+    expect(screen.getByText('My Training')).toBeInTheDocument();
+    expect(screen.getByText('My Supervisor')).toBeInTheDocument();
+    expect(screen.getByText('My Academic Summary')).toBeInTheDocument();
   });
 
   it('renders supervisor specific items', () => {
     render(<Sidebar {...defaultProps} role="SUPERVISOR" />);
-    expect(screen.getByText('Overview')).toBeInTheDocument();
     expect(screen.getByText('My Residents')).toBeInTheDocument();
+    expect(screen.getByText('Supervision Ledger')).toBeInTheDocument();
+    expect(screen.getByText('Academic Review Queue')).toBeInTheDocument();
   });
 
   it('renders utrmc admin specific items', () => {
     render(<Sidebar {...defaultProps} role="ADMIN" />);
-    expect(screen.getByText('Hospitals')).toBeInTheDocument();
-    expect(screen.getByText('Programmes')).toBeInTheDocument();
-    expect(screen.getByText('Eligibility Monitor')).toBeInTheDocument();
+    expect(screen.getByText('Residents')).toBeInTheDocument();
+    expect(screen.getByText('Supervisors')).toBeInTheDocument();
+    expect(screen.getByText('Masters')).toBeInTheDocument();
   });
 });

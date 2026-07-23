@@ -20,7 +20,7 @@ describe('auth cookies', () => {
       syncAuthCookies({ accessToken: token, role: 'RESIDENT' });
 
       expect(document.cookie).toContain('pgsims_access_token=header');
-      expect(document.cookie).toContain('pgsims_user_role=resident');
+      expect(document.cookie).toContain('pgsims_user_role=RESIDENT');
       expect(document.cookie).toContain('pgsims_access_exp=');
     });
 

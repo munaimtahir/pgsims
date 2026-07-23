@@ -68,8 +68,8 @@ describe('UTRMCOverviewPage', () => {
   it('renders the canonical admin dashboard shell', async () => {
     render(<UTRMCOverviewPage />);
 
-    await waitFor(() => expect(screen.getByText('Admin Dashboard')).toBeInTheDocument());
-    expect(screen.getByText('Canonical Modules')).toBeInTheDocument();
+    expect(screen.getByText('Admin Dashboard')).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByText('Canonical Modules')).toBeInTheDocument());
     expect(screen.getByRole('link', { name: 'Users' })).toHaveAttribute('href', '/users');
     expect(screen.getByRole('link', { name: 'Supervision' })).toHaveAttribute('href', '/supervision');
     expect(screen.getByRole('link', { name: 'Academics' })).toHaveAttribute('href', '/academics');

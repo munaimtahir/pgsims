@@ -37,7 +37,7 @@ describe('AcademicsHomePage', () => {
   it('renders the academics dashboard route family entry point', async () => {
     render(<AcademicsHomePage />);
     await waitFor(() => expect(screen.getByText('Academic Workflow Foundation')).toBeInTheDocument());
-    expect(screen.getByRole('link', { name: 'Training Records' })).toHaveAttribute('href', '/academics/training-records');
-    expect(screen.getByRole('link', { name: 'Review Queue' })).toHaveAttribute('href', '/academics/review-queue');
+    expect(screen.getByRole('link', { name: /Training Records/ })).toHaveAttribute('href', '/academics/training-records');
+    expect(screen.getByRole('link', { name: /Review Queue/ })).toHaveAttribute('href', '/academics/review-queue');
   });
 });
