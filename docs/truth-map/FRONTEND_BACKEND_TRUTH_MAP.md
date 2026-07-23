@@ -93,29 +93,44 @@ this is a real missing frontend (list/submit form for residents, approval inbox 
 supervisors/admins) — comparable in size to the bulk-import gap. If no, it should be documented as
 explicitly deferred, the same way thesis/research/workshops were.
 
-### 7.3 LEGACY — A whole second "masters" API, parallel to the one actually used, with zero callers
+### 7.3 MIXED — a second "masters" API: two dead ViewSets, five with real (untested-by-frontend) test coverage
 `sims/academics/urls.py` registers a DRF router (`InstitutionViewSet`, `HospitalViewSet`,
 `DepartmentViewSet`, `TrainingProgramViewSet`, `SpecialtyViewSet`, `DesignationViewSet`,
-`AcademicSessionViewSet` — all from `sims/academics/views.py`) and that router is mounted **twice**
-in `sims_project/urls.py`: at `api/masters/` (line 156) and again at `academics/api/` (line 158).
-Neither prefix has a single frontend caller anywhere (not even in e2e specs). This is a **completely
-different set of view classes** from the ones the app actually uses for hospitals/departments —
-those live in `sims/users/userbase_views.py` and are mounted at the plain `/api/hospitals/`,
-`/api/departments/`, `/api/hospital-departments/` (confirmed working, §3 above). Grepped the whole
-backend: the `sims.academics` versions are referenced only by their own `urls.py`/`views.py` — no
-other backend code, no tests, imports them.
-**Assessment**: this looks like an earlier "masters" implementation that was superseded by the
-`userbase_views` one during a rebuild, and the old router registrations were never removed. Low risk
-to the running app (nothing calls it), but it's actively confusing — two different `DepartmentViewSet`
-classes, two different `HospitalViewSet` classes, is exactly the kind of duplication `AGENTS.md`
-tells agents to avoid, even though in this case it's dead rather than actively diverging data.
-**Recommendation, not yet executed**: remove the two `path(..., include("sims.academics.urls"))`
-lines from `sims_project/urls.py` and relocate `sims/academics/urls.py` plus the seven orphaned
-ViewSet classes out of `sims/academics/views.py` into a clearly-marked deprecated-candidates
-location. I did not do this yet in this pass — unlike moving a whole standalone file, this requires
-editing a live, shared `urls.py` and a large, actively-used `views.py`, which I judged as a
-"decide together" change rather than a purely mechanical relocation, consistent with the review
-process for destructive/legacy changes agreed for this audit. Flagging for the batch decision.
+`AcademicSessionViewSet` — all from `sims/academics/views.py`), mounted **twice** in
+`sims_project/urls.py`: at `api/masters/` (line 156) and again at `academics/api/` (line 158). No
+frontend page or component calls either prefix (confirmed by grep across `frontend/app`,
+`frontend/components`, `frontend/lib`, `frontend/e2e`).
+
+**Correction to an earlier version of this finding**: an initial pass classified this whole cluster
+as dead/legacy and attempted to relocate it out of the live app — that relocation was executed,
+tested, and then **reverted** in the same session, because `sims/tests/test_masters_brick6.py::
+test_master_apis_rbac` hits `/api/masters/institutions/` directly by URL string (not by importing
+the view class, which is why the initial grep-based dead-code check missed it) to verify admin-write
+/ resident-read-only RBAC on this exact endpoint. That test is real, intentional, and currently
+passing — this is not abandoned code by that measure.
+
+Breaking it down by model:
+- **`HospitalViewSet`, `DepartmentViewSet`** — genuinely redundant: `sims.users.userbase_views` (§3)
+  exposes the same canonical `Hospital`/`Department` models at `/api/hospitals/`/`/api/departments/`,
+  which **is** what the frontend and the bulk-import screen actually use. These two duplicate an
+  already-working path.
+- **`InstitutionViewSet`, `SpecialtyViewSet`, `DesignationViewSet`, `AcademicSessionViewSet`,
+  `TrainingProgramViewSet`** — **not** duplicated elsewhere. `Institution`/`Specialty`/
+  `Designation`/`AcademicSession` data is read (but not written) elsewhere, via
+  `IdentityOptionsView` (`/api/identity/options/`, confirmed working — powers the dropdown option
+  lists on `/complete-profile` and `/users/new`) and populated via the `seed_pilot_masters`
+  management command. The **write/CRUD path** for these five master-data types has real,
+  RBAC-tested backend support and genuinely **no frontend UI** — this reads more like the leave
+  management gap (§7.2: real capability, no way to reach it) than like confirmed-dead code.
+
+**Net assessment**: `HospitalViewSet`/`DepartmentViewSet` here are safe, low-priority cleanup
+candidates (relocate later, low risk, low value). The other five need a product-scope decision, the
+same way leave management does: is admin-managed CRUD for institutions/specialties/designations/
+academic-sessions/training-programs (beyond what bulk import and the seed command already cover)
+wanted for this pilot? Not touched further in this pass — this whole cluster is left exactly as it
+was before this audit, since the safe subset (2 of 7 ViewSets) isn't worth a partial, delicate
+edit to a shared `views.py`/`urls.py` on its own, and the other 5 need a decision before any code
+change makes sense.
 
 ### 7.4 LEGACY (confirmed intentional) — Thesis/research/workshops/postings self-service pages are deliberate redirect stubs
 `frontend/app/dashboard/resident/{thesis,research,workshops,postings,schedule,progress}/page.tsx`
@@ -131,27 +146,55 @@ just intentionally not reachable from the current UI. **No action needed** unles
 changes to include the fuller academic-lifecycle tracking (thesis/synopsis/research/workshops
 milestones) beyond rotations/logbook/evaluations.
 
-### 7.5 LEGACY (confirmed) — A second, older "operational dashboard" + "logbook" implementation in `sims/training`
+### 7.5 CORRECTED — not confirmed-dead: `sims/training`'s "operational dashboard" + "logbook" implementation has real backend test coverage
 `sims/training/urls.py` and `sims/training/views.py` contain a second, complete implementation of
 logbook entries (`LogbookEntryViewSet`, `LogbookThresholdConfigViewSet` at bare `/api/logbook/`) and
 role dashboards (`ResidentOperationalDashboardView`, `SupervisorOperationalDashboardView`,
-`UTRMCOperationalDashboardView` at `/api/dashboard/*`). These are referenced **only** by old e2e
-specs (`frontend/e2e/critical/admin_analytics_live_feed.spec.ts`,
-`frontend/e2e/smoke/ui_pilot_readiness.spec.ts`, `frontend/e2e/feature-layer/permissions.spec.ts`),
-never by production frontend code. The current, actually-used implementation is
-`sims.academics.views.LogbookEntryViewSet` at `/api/academics/logbook-entries/` (§4 above) and the
-academics-based dashboards at `/api/academics/residents/me/summary/` etc. (also §4). This is the
-same pattern as §7.3: an earlier implementation, superseded, never cleaned up — except this one is
-still exercised by e2e specs, which means **those specs are testing dead code and should be
-retired or repointed**, not treated as evidence the feature is live.
-**Recommendation, not yet executed**: same treatment as §7.3 — relocate, don't delete, decide later.
+`UTRMCOperationalDashboardView` at `/api/dashboard/*`). **No production frontend code calls it** —
+that part of the original finding holds. But an attempt to verify this as safe to relocate found it
+is exercised extensively by the **backend** test suite via direct URL strings (not by importing the
+view class, which is why the initial class-name-based check missed it): `sims/training/tests.py`,
+`sims/training/test_feature_layer_ops.py`, `sims/test_schema_gate.py`, and several files under
+`sims/tests/` collectively make dozens of calls to `/api/logbook/...` and `/api/dashboard/...`
+directly. This is real, substantial, currently-passing test coverage, not incidental.
+**Corrected assessment**: this is not "confirmed dead code" in the same sense as §7.6 below — it's a
+working, tested backend implementation with no current frontend consumer. Whether it's a genuinely
+superseded duplicate (in favor of `sims.academics`'s logbook/dashboards, §4) that the test suite
+just never got updated to stop testing, or something still relied on in a way not visible from
+static analysis, isn't resolvable by more grepping — it needs a human decision, and **no relocation
+was attempted or should be attempted without one**. Left completely untouched in this pass.
 
-### 7.6 LEGACY (confirmed, matches earlier §4.4 finding) — Old class-based "stats" views in `sims/users/views.py`
+### 7.6 CORRECTED (twice) — the "stats"/"analytics" views in `sims/users/views.py` also have real test coverage
 `UserSearchAPIView`, `SupervisorsBySpecialtyAPIView`, `UserStatsAPIView`, `UserStatisticsAPIView`,
-`UserPerformanceAPIView`, `admin_stats_api` (function view) sit in the same file and same
-pre-rebuild era as the four `"coming soon"` analytics stub views already flagged in the main audit
-(§4.4). Zero frontend callers found anywhere. Same recommendation as §4.4: extract into their own
-file, relocate to deprecated-candidates, decide later.
+`UserPerformanceAPIView`, `admin_stats_api`, and the four `"coming soon"` analytics stub views from
+§4.4 — all in `sims/users/views.py`/`sims/users/urls.py` under the `users:` namespace. First pass
+(class/function-name grep): flagged as confirmed dead. Second pass (literal URL-string grep, done
+after §7.3/§7.5 were caught): still showed zero hits and was reported here as "the one candidate
+that's actually safe to relocate." That was still wrong — a **third**, closer check (grepping for
+the actual `reverse("users:<url-name>")` calls, e.g. `reverse("users:admin_analytics")`,
+`reverse("users:user_stats_api", kwargs={"pk": ...})`) found real, passing test coverage for
+**every single view in this cluster**, in `sims/tests/test_users_views_final_push.py` and
+`sims/tests/test_users_views.py`. No relocation was attempted for this cluster — it was caught by
+this third check immediately before any file was touched, unlike §7.3 which had to be relocated,
+tested, found broken, and reverted.
+
+### 7.3/7.5/7.6 — a note on methodology (read before acting on anything in this document)
+The original Step 0 reverse-check searched for backend view **class and function names** across the
+frontend and backend. That method has a real, three-times-demonstrated blind spot:
+`django.urls.reverse("app:route_name")` calls and direct URL-string test/API calls reference the URL
+**name** or the literal **path**, neither of which contains the view class name. **Every single one**
+of the three clusters originally reported in this document as "confirmed dead legacy code" turned
+out, on progressively closer inspection, to have real, substantial, currently-passing test coverage.
+One (§7.3) was actually relocated, broke a test, and had to be reverted. Given that track record,
+**no other "zero references" claim in this document should be treated as verified for relocation
+purposes** without first checking for `reverse("<app>:<url-name>")` calls specifically — class-name
+and literal-path checks alone were not sufficient. §7.2 (leave management) and the frontend-facing
+findings (§4.6, §7.4, §7.8) are a different, more reliable category — they were checked by asking
+"does any frontend code call this," which doesn't have this particular blind spot, though it should
+still be treated as a strong signal rather than absolute proof.
+for literal URL-string usage, but a systematic re-check by URL *name* (every `name="..."` in every
+`urls.py`, cross-referenced against every `reverse(...)` call) has not been done end-to-end for
+every entry in this document, only for the specific clusters investigated in §7.3-§7.6.
 
 ### 7.7 BACKEND-ONLY (no action needed)
 - `api/health` — infrastructure health check, used by Docker/monitoring, not meant to have a UI.
@@ -172,13 +215,18 @@ findings.
 ## 8. Summary
 
 Of ~200 distinct backend resource groups checked: the large majority (core identity, supervision,
-academic workflow, dashboards/reports, backup/restore) are confirmed **WORKING**. Beyond the
-already-known bulk-import gap, this pass found **one real, undecided feature gap** (leave management,
-§7.2), **three confirmed-dead legacy clusters** left over from pre-rebuild implementations (§7.3,
-§7.5, §7.6 — none of them risky to leave as-is, all worth relocating out of the live app directories
-once there's time), **one deliberate, already-documented set of deferred features** (§7.4 — no
-action needed), and **a handful of small items** to confirm by hand during the pre-launch smoke test
-(§6 backup actions, §7.8). None of the legacy findings were relocated in this pass — they involve
-edits to shared, live files (`urls.py`, `views.py`) rather than moving an isolated file, so they're
-being surfaced for a batch decision rather than acted on unilaterally, consistent with how this audit
-has handled destructive/legacy changes throughout.
+academic workflow, dashboards/reports, backup/restore, and — as of the same-day fix — bulk import)
+are confirmed **WORKING**. Beyond the bulk-import gap (found and fixed, §4.6/Step 5), this pass
+found **one real, undecided feature gap** (leave management, §7.2 — real backend, no frontend at
+all), **one deliberately-retired feature set** confirmed intentional (§7.4 — thesis/research/
+workshops/postings, no action needed), and **three backend clusters that were investigated as
+possible dead code and, on progressively closer checking, all turned out to have real, currently
+passing backend test coverage despite having no frontend consumer** (§7.3, §7.5, §7.6 — see the
+methodology note at the end of §7.6 for what went wrong and why). **None of the three were
+relocated** — one was relocated, found to break a test, and reverted; the other two were caught by
+closer checking before any file was touched. All three are left exactly as they were before this
+audit, flagged for a human decision on each (product scope for §7.3's untested-by-frontend
+CRUD surface; whether §7.5/§7.6 are genuinely obsolete duplicates whose tests should be retired, or
+still meaningfully relied upon) rather than any further static-analysis-driven cleanup attempt. A
+handful of small items remain to confirm by hand during the pre-launch smoke test (§6 backup
+actions, §7.8).

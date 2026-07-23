@@ -359,15 +359,20 @@ Headline results:
   request/approval in scope for this pilot? If yes it's a real missing feature (comparable size to
   the bulk-import gap) that needs a frontend built. If no, it should be documented as deferred, the
   same way thesis/research/workshops already are.
-- **Three confirmed-dead legacy code clusters**, all superseded by working replacements and none of
-  them risky to leave running as-is: a second, entirely unused "masters" API in
-  `sims/academics/urls.py`/`views.py` (mounted at two dead URL prefixes); a second, unused
-  "operational dashboard" + "logbook" implementation in `sims/training/`, still exercised only by
-  stale e2e specs that should be retired or repointed; and old class-based "stats" views in
-  `sims/users/views.py` sitting alongside the already-known `"coming soon"` stubs from §4.4. None of
-  these were relocated in this pass — each requires editing a live, shared `urls.py`/`views.py`
-  rather than moving an isolated file, so per the agreed handling of destructive/legacy findings,
-  they're documented for a batch decision rather than acted on unilaterally.
+- **Three backend clusters initially suspected as dead legacy code, all of which turned out to have
+  real backend test coverage** on closer inspection — a second "masters" API in
+  `sims/academics/urls.py`/`views.py` (§7.3), a second "operational dashboard" + "logbook"
+  implementation in `sims/training/` (§7.5), and old class-based "stats" views in
+  `sims/users/views.py` (§7.6). One of these was actually relocated, found to break a passing test
+  (`test_masters_brick6.py::test_master_apis_rbac`), and reverted the same session; the other two
+  were caught by closer checking before any file was touched. **This is itself a real finding**:
+  the original reverse-check methodology (grepping for view class/function names) had a blind spot
+  around `django.urls.reverse("app:name")` calls, which don't reference the class name at all — see
+  the methodology note in `docs/truth-map/FRONTEND_BACKEND_TRUTH_MAP.md` §7.3/§7.5/§7.6 for the full
+  account. None of these three were relocated; all are left exactly as they were, flagged for a
+  human decision (is the untested-by-frontend CRUD surface in §7.3 a real feature gap or dead code;
+  are §7.5/§7.6 genuinely obsolete duplicates whose tests should be retired, or still relied upon)
+  rather than further static-analysis-driven cleanup.
 - A handful of small, low-severity items (a few backup-center actions, a couple of parameterized
   endpoints) flagged to confirm by hand during the Phase 7 smoke test rather than by further static
   analysis.
