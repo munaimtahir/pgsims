@@ -302,10 +302,55 @@ Scope, in priority order:
 - **Documentation reconciliation** — README/copilot-instructions/APP_OVERVIEW/USER_ROLES docs need
   to be brought in line with the current 4-role model, or explicitly marked historical (§4.5).
 
+## 4.7 Frontend-Backend Truth Map is self-reported, not independently verified (added 2026-07-23)
+
+`docs/truth-map/FRONTEND_BACKEND_TRUTH_MAP.md` exists and documents route→endpoint mappings for
+bricks 0, 6, 7, 8, 8.6, 9-10, and 11 — but it was written by the agents who built each brick, as a
+claim about their own work, not verified independently the way the rest of this audit was. It is
+also incomplete by its own scope: it doesn't cover `/users`, `/residents`, `/supervisors`,
+`/support-staff`, `/admins` directory CRUD, `/register`, `/change-password`, `/forgot-password`,
+`/reset-password`, backup/restore (`/dashboard/utrmc/backup`), notifications, audit-log views, or
+anything under `sims/bulk`, `sims/audit`, or `sims/notifications`. It is also one-directional
+(frontend page → backend endpoint); it does not check the reverse direction (does every backend
+endpoint have a real frontend caller, or are some unreachable — exactly the class of bug §4.6 found
+for bulk import).
+
+**Step 0 — Full bidirectional Frontend-Backend Truth Map audit (before the other steps, since it's
+the systematic version of what found §4.6; it will likely find more than one gap)**
+
+Methodology:
+1. **Enumerate every backend endpoint**: walk `sims_project/urls.py` and every app's `urls.py` /
+   `workflow_urls.py`, listing each route, HTTP method(s), view/action, and required role.
+2. **Enumerate every frontend surface**: every `page.tsx` under `frontend/app/`, every button/link/
+   form action on each page, and every function in `frontend/lib/api/*.ts` (the actual HTTP call
+   sites).
+3. **Forward check (frontend → backend)**: for every frontend API call, confirm the target URL +
+   method exists in step 1's list and isn't a mismatch that would 404/405 at runtime. For every
+   visible button/link, confirm it's wired to a real handler (not dead, not a "coming soon" stub like
+   the ones found in §4.4).
+4. **Reverse check (backend → frontend)**: for every backend endpoint from step 1, confirm at least
+   one real frontend caller exists. Flag orphaned endpoints — but judge each one rather than assuming
+   every orphan is a bug: some are legitimately backend/API-only (health checks, internal signals,
+   endpoints only called by management commands or Celery tasks) and don't need a UI. Endpoints that
+   represent a real user-facing capability with no way to reach it (like the bulk-import entities in
+   §4.6) are the real gaps.
+5. **Produce a verified truth-map table** replacing/superseding the current self-reported one, with
+   an explicit status per row (`WORKING`, `GAP — needs frontend`, `GAP — needs backend`,
+   `INTENTIONALLY BACKEND-ONLY`), and fix every genuine gap found (wire missing UI to existing
+   backend capability, or vice versa) until the table is 100% `WORKING`/`INTENTIONALLY BACKEND-ONLY`
+   with zero unresolved `GAP` rows.
+
+This is real, substantial audit work across ~90 frontend routes and 9 active backend apps — expect
+it to surface additional gaps beyond §4.6, not just confirm it. *Estimated 2-3 days for the audit
+itself, plus time to fix whatever it finds (§4.6's fix is already scoped separately as Step 5 below;
+treat any newly-found gaps the same way — scope and confirm before building, per the working pattern
+established in this audit).*
+
 ## 6. Plan to reach pilot readiness
 
-This is scoped as four short, sequential work windows — each independently shippable, matching the
-repo's own "brick" discipline (one focused window, gate script + doc at the end).
+This is scoped as short, sequential work windows — each independently shippable, matching the
+repo's own "brick" discipline (one focused window, gate script + doc at the end). Step 0 (§4.7) runs
+first since it's the systematic audit that already found Step 5's gap and will likely find more.
 
 **Step 1 — Fix the one real defect — DONE**
 Fixed the optional-chaining bug in `frontend/app/dashboard/resident/page.tsx` and the related stale

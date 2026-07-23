@@ -99,17 +99,30 @@ This has been added to the plan below as its own step, and — because bulk rost
 central to how the pilot is meant to start — we'd treat it as equally urgent to the other steps, not
 something to defer until after them.
 
+## A companion check: does every button actually lead somewhere real?
+
+You asked us to also verify, systematically, that every page, button, and option in the app
+actually connects to working functionality behind the scenes — and, the other direction, that
+nothing was built in the background with no way to reach it from the app (which is exactly what we
+found with bulk import). We do have a document that maps pages to backend functionality already,
+but it was written by the same people who built each feature, as a claim about their own work — not
+independently checked the way the rest of this review was. It's also incomplete and only checks one
+direction. We've added a proper, independent, two-way check of this as its own step (Step 0 below),
+ahead of everything else, since it's the systematic version of exactly what already caught the bulk
+import gap — it will likely turn up more findings like it.
+
 ## Path to pilot — what's left, in plain terms
 
 | Step | What it means | Status / rough effort |
 |---|---|---|
+| 0. Verify every page and button against the real backend, both directions | Systematic check that nothing in the app is a dead end, and nothing built behind the scenes is unreachable | 2–3 days, likely surfaces more findings |
 | 1. Fix the resident dashboard bug | Small code fix, so residents never see a blank error page | **Done** |
 | 2. Refresh the remaining stale automated checks | So the safety net actually catches problems like #1 in future | Half a day |
 | 3. Strengthen tests around bulk import and backup/restore | The two areas we'll lean on hardest during real onboarding | 2–4 days |
 | 4. Clean up outdated documentation and unused old pages | So the project is described accurately going forward | 1 day |
 | 5. Build the working bulk-import screen | Connects the already-built import tool to an actual page so admins can onboard a full roster (residents, supervisors, hospitals, rotations, resident-supervisor links) themselves, without needing a developer | 1–2 days |
 
-**Remaining estimated effort: roughly one working week**, after which the system should be genuinely
+**Remaining estimated effort: roughly one and a half to two working weeks**, after which the system should be genuinely
 ready for the planned pilot scope: 1–2 hospitals, a couple of departments, about 10 supervisors and
 30 residents.
 
