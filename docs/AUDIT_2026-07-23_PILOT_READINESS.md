@@ -394,13 +394,29 @@ end to end and can be trusted as a regression gate going forward. Left untouched
 deliberately — rewriting UI-copy assertions without confirming the intended current copy against
 design/product intent risks locking in the wrong text.
 
-**Step 3 — Close the coverage gap on the highest-risk pilot paths (2-4 days)**
-Not all of the 19-point coverage gap needs closing before pilot — but the bulk-import engine
-(`sims/bulk/services.py`, `userbase_engine.py`) is what onboards real resident/supervisor rosters,
-and backup/restore (`backup_center/providers.py`, `services.py`) is the safety net if pilot data
-goes wrong. Prioritize tests for those two areas specifically over chasing the 80% number
-everywhere. Then either fix the pytest.ini/pyproject.toml mismatch so the coverage gate is actually
-enforced, or explicitly lower the documented target.
+**Step 3 — PARTIALLY DONE.** Added 35 new tests targeting the two highest-risk areas identified:
+- `sims/backup_center/test_providers.py` (18 tests): full coverage of `LocalBackupStorageProvider`
+  (the provider actually active in this pilot deployment) and the `get_storage_provider()`
+  dispatcher/config-wiring logic, plus the pure `_get_keys()` path-building logic for the GCS/S3
+  providers. Deliberately did not attempt to cover the GCS/S3 client-call bodies themselves — they
+  require `boto3`/`google-cloud-storage`, neither of which is in `requirements.txt`, and neither
+  provider is enabled in this deployment (`BACKUP_CLOUD_ENABLED` defaults false). Coverage on
+  `providers.py`: 0% → 41%.
+- `sims/tests/test_bulk_import_untested_methods.py` (17 tests): full happy-path + validation-error
+  coverage for `import_hospital_departments`, `import_training_programs`,
+  `import_rotation_templates`, and `import_resident_training_records` — the four `BulkService`
+  import methods that had zero prior test coverage despite being exactly the entities wired into the
+  `/masters` bulk-import screen in Step 5.
+
+Verified: `pytest sims` now 441 passed / 8 skipped / 0 failed (up from 406), overall coverage
+61.13% → 62.66%, `check_all_pgms_gates.sh` still all-pass.
+
+**Not done in this pass** (explicitly deferred, not forgotten): the remaining coverage gaps in
+`sims/bulk/userbase_engine.py`, `sims/bulk/views.py`, and `sims/backup_center/services.py`/
+`views.py` are larger and would take longer than was reasonable to fold into this session; the
+`pytest.ini`/`pyproject.toml` coverage-enforcement mismatch (§4.2) also hasn't been fixed — the 80%
+gate is still effectively unenforced. Both remain real follow-up items, now with a smaller gap than
+before.
 
 **Step 4 — Documentation and dead-code reconciliation (1 day)**
 - Update or archive-and-flag `README.md`, `.github/copilot-instructions.md`,
