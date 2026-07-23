@@ -43,7 +43,7 @@ replacement).
 
 | Frontend Page | Backend Endpoint | Status |
 | :--- | :--- | :--- |
-| `/masters` (currently a static description page, no live data yet — see §4.6/Step 5) | `GET /api/hospitals/`, `/api/departments/`, `/api/hospital-departments/`, `/api/department-memberships/`, `/api/hospital-assignments/` (all `sims.users.userbase_views`) | WORKING at the API layer; **no frontend calls these yet** — tracked as Step 5 in the audit, not a new finding here. |
+| `/masters` (now the live `BulkSetupWorkspace` bulk import/export screen — was a static description page as of the initial 2026-07-23 pass, fixed same day, see audit §4.6/Step 5) | `POST /api/bulk/import/<entity>/<action>/`, `GET /api/bulk/templates/<resource>/`, `GET /api/bulk/exports/<resource>/`, plus `/api/bulk/flexible/*` for the custom column-mapping mode | WORKING — covers hospitals, departments, matrix, training-programs, faculty-supervisors, residents, supervision-links, and rotation-assignments. |
 
 ## 4. Academic Workflow Foundation (Brick 8) & Workflows/Submissions (Brick 9-10) — WORKING
 

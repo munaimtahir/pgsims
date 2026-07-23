@@ -1,3 +1,5 @@
+'use client';
+
 import { useState } from 'react';
 import ImportExportPanel from '@/components/ui/ImportExportPanel';
 import FlexibleMappingImport from './FlexibleMappingImport';
@@ -45,6 +47,19 @@ const PANELS = [
   },
   {
     step: 'Step 4',
+    title: 'Training Programs',
+    entity: 'training-programs',
+    exportResource: 'training_programs',
+    description: 'Load the training programme list (e.g. MS Medicine, FCPS Surgery) that residents are registered against.',
+    expectedColumns: [
+      { name: 'program_code', required: true, note: 'Stable programme code used by later imports.' },
+      { name: 'program_name', required: true },
+      { name: 'duration_months', required: true, note: 'Total programme duration in months.' },
+      { name: 'active' },
+    ],
+  },
+  {
+    step: 'Step 5',
     title: 'Faculty & Supervisors',
     entity: 'faculty-supervisors',
     exportResource: 'faculty-supervisors',
@@ -66,7 +81,7 @@ const PANELS = [
     ],
   },
   {
-    step: 'Step 5',
+    step: 'Step 6',
     title: 'Residents',
     entity: 'residents',
     exportResource: 'residents',
@@ -91,7 +106,7 @@ const PANELS = [
     ],
   },
   {
-    step: 'Step 6',
+    step: 'Step 7',
     title: 'Supervision Assignments',
     entity: 'supervision-links',
     exportResource: 'supervision-links',
@@ -103,6 +118,22 @@ const PANELS = [
       { name: 'start_date', required: true },
       { name: 'end_date' },
       { name: 'active' },
+    ],
+  },
+  {
+    step: 'Step 8',
+    title: 'Rotation / Placement Assignments',
+    entity: 'rotation-assignments',
+    exportResource: 'rotation-assignments',
+    description: 'Load rotation placements linking residents to a hospital-department for a date range. Apply last, after residents and the matrix are both loaded.',
+    expectedColumns: [
+      { name: 'resident_email', required: true },
+      { name: 'hospital_code', required: true },
+      { name: 'department_code', required: true },
+      { name: 'start_date', required: true },
+      { name: 'end_date', required: true },
+      { name: 'status', note: 'Defaults to DRAFT.' },
+      { name: 'notes' },
     ],
   },
 ];

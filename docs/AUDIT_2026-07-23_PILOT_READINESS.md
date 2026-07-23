@@ -406,11 +406,18 @@ enforced, or explicitly lower the documented target.
 - Delete or route away the four `"coming soon"` analytics stub endpoints in `sims/users/views.py`,
   confirming no live nav item still points at them.
 
-**Step 5 is detailed above (§4.6)** — build the complete bulk-import screen (Programs + Rotation
-Assignments panels, the `training-programs` template fix, and wiring `BulkSetupWorkspace` into
-`/masters`). Given it's what actually unblocks real pilot-roster onboarding through the website
-rather than through server access, treat it as at least as high a priority as Steps 1-4, not
-strictly sequential after them.
+**Step 5 — DONE.** Added the Training Programs and Rotation/Placement Assignments panels to
+`BulkSetupWorkspace.tsx` (renumbered to an 8-step sequence: Hospitals → Departments → Matrix →
+Training Programs → Faculty & Supervisors → Residents → Supervision Assignments → Rotation
+Assignments); fixed the `training-programs` template/export naming gap in
+`backend/sims/bulk/services.py` (added `_EXTRA_TEMPLATE_ROWS` for the template endpoint, normalized
+the hyphen/underscore key mismatch in `export_dataset`); and replaced `/masters`'s static card grid
+with the live `BulkSetupWorkspace`. Along the way found and fixed one more real, previously-latent
+bug: `BulkSetupWorkspace.tsx` used `useState` without a `'use client'` directive — harmless while
+unmounted, but would have broken the production build the moment anything imported it into a server
+component (exactly what mounting it into `/masters` did). `/masters` now ships 14.9kB of real
+content instead of 666B of static text. Verified: `pytest sims` 406/8/0 unchanged,
+`npm run build/typecheck/lint` clean, `npm test` 34/34 suites, `check_all_pgms_gates.sh` all pass.
 
 **After Steps 1–5**: run `bash scripts/check_all_pgms_gates.sh`, `pytest sims`, and
 `npm test && npm run build` one more time as a final go/no-go check, then this system is genuinely

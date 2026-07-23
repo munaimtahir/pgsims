@@ -49,6 +49,21 @@ class BulkExportFile:
     content_type: str
 
 
+# Template rows for resources not covered by userbase_engine.TEMPLATE_ROWS. Keyed by the
+# underscore form (matching export_dataset's resource keys); export_template() normalizes
+# hyphenated entity keys (matching _ENTITY_METHOD_MAP in views.py) to this form.
+_EXTRA_TEMPLATE_ROWS = {
+    "training_programs": [
+        {
+            "program_code": "MED",
+            "program_name": "MS Medicine",
+            "duration_months": "60",
+            "active": "true",
+        }
+    ],
+}
+
+
 class BulkProcessingError(Exception):
     """Raised when a bulk operation fails in transactional mode."""
 
@@ -111,7 +126,11 @@ class BulkService:
         return self._run_userbase_import("rotation-assignments", uploaded_file, dry_run=dry_run, allow_partial=allow_partial)
 
     def export_template(self, resource: str) -> BulkExportFile:
-        rows = userbase_template_rows(resource)
+        normalized = resource.replace("-", "_")
+        if normalized in _EXTRA_TEMPLATE_ROWS:
+            rows = _EXTRA_TEMPLATE_ROWS[normalized]
+        else:
+            rows = userbase_template_rows(resource)
         rendered = _render_export_rows(rows, f"{resource}_template", "csv")
         return BulkExportFile(
             filename=f"{resource}_template.csv",
@@ -1715,6 +1734,10 @@ class BulkService:
     def export_dataset(self, resource: str, export_format: str = "xlsx") -> BulkExportFile:
         if export_format not in {"xlsx", "csv"}:
             raise ValidationError("Unsupported export format. Use xlsx or csv.")
+
+        # Normalize hyphenated entity keys (as used by the unified import endpoint's
+        # _ENTITY_METHOD_MAP) to the underscore form this method's branches below use.
+        resource = {"training-programs": "training_programs"}.get(resource, resource)
 
         if resource in USERBASE_BULK_EXPORT_RESOURCES:
             return _render_export_rows(export_userbase_rows(resource), resource, export_format)
