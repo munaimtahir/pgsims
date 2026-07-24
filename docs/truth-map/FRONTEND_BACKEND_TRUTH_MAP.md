@@ -221,8 +221,7 @@ the actual `reverse("users:<url-name>")` calls, e.g. `reverse("users:admin_analy
 this third check immediately before any file was touched, unlike §7.3 which had to be relocated,
 tested, found broken, and reverted.
 
-**DECIDED 2026-07-24**: leave the old analytics stubs/stats views as-is (planned for a future
-version, not this pilot). The underlying real gap this cluster surfaced — the `/users`,
+**DECIDED 2026-07-24 (part 1)**: the underlying real gap this cluster surfaced — the `/users`,
 `/residents`, `/supervisors`, `/support-staff` directory pages have no search or filter of any kind
 — **has been built**: the backend already fully supported `search`/`active`/`department` query
 params on `UserViewSet` (`sims/users/userbase_views.py`), so this was a pure frontend addition — a
@@ -230,6 +229,33 @@ debounced search box (name/username/email) and an active/inactive status filter 
 `RoleDirectoryPage.tsx`, the shared component behind all four directory pages. New test coverage in
 `RoleDirectoryPage.test.tsx` (4 tests). Verified: `npm run build/typecheck/lint` clean, `npm test`
 35/35 suites (up from 34).
+
+**DECIDED AND EXECUTED 2026-07-24 (part 2)**: now that the real replacement exists, the old
+analytics stubs/stats views were removed. Deleted `UserSearchAPIView`,
+`SupervisorsBySpecialtyAPIView`, `UserStatsAPIView`, `UserStatisticsAPIView`,
+`UserPerformanceAPIView`, `UserListStatsAPIView`, `admin_analytics_view`, `supervisor_analytics_view`,
+`pg_analytics_view`, `admin_stats_api` from `sims/users/views.py`, and their routes from
+`sims/users/urls.py`. Retired the specific test methods that covered them across
+`sims/tests/test_users_views.py`, `sims/tests/test_users_views_final_push.py`, and
+`sims/tests/test_long_tail_coverage.py`, keeping every other test in those files untouched (they
+cover the legacy server-rendered login/dashboard/user-CRUD surface, a separate, larger, out-of-scope
+legacy system not part of this decision).
+
+**A fourth methodology gap found and fixed**: removing these views broke `manage.py check`/the test
+suite via `NoReverseMatch` in **Django templates that live outside `sims/`** —
+`backend/templates/users/{admin,supervisor,pg}_dashboard.html`, `pg_list.html`, and
+`user_reports.html` all had `{% url %}` references to the removed routes (nav buttons and AJAX
+widget calls). Earlier dependency checks in this document searched within `sims/` only and missed
+these. Fixed all five templates: removed the dead nav links, and replaced the AJAX calls that fetched
+now-removed stats endpoints with the pages' own existing mock-data/placeholder fallback paths
+(`user_reports.html` already had `showMockData()`/`showMockPerformanceData()` functions designed for
+exactly this failure case — now called directly instead of after a guaranteed-failing network
+request). These are legacy, pre-Next.js server-rendered pages; the real, current dashboard/reporting
+experience is the Next.js frontend referenced in each template's replacement comment.
+
+Verified: `pytest sims` 430 passed / 8 skipped / 0 failed, `manage.py check` clean,
+`check_all_pgms_gates.sh` all pass, zero remaining references to any removed view/route anywhere in
+the backend (checked `.py` **and** `.html`, backend-wide this time, not scoped to `sims/`).
 
 ### 7.3/7.5/7.6 — a note on methodology (read before acting on anything in this document)
 The original Step 0 reverse-check searched for backend view **class and function names** across the

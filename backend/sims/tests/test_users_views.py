@@ -1,4 +1,3 @@
-import json
 from django.test import TestCase, Client
 from django.urls import reverse
 from django.contrib.auth import get_user_model
@@ -109,36 +108,3 @@ class UsersViewsTests(TestCase):
         user.refresh_from_db()
         self.assertTrue(user.is_archived)
 
-    def test_user_search_api(self):
-        self.client.login(username="RESIDENT", password="password123")
-        response = self.client.get(reverse("users:user_search_api"), {"q": "ADMIN"})
-        self.assertEqual(response.status_code, 200)
-        data = json.loads(response.content)
-        self.assertTrue(any(u["name"] == self.admin.get_display_name() for u in data["results"]))
-
-    def test_supervisors_by_specialty_api(self):
-        self.client.login(username="RESIDENT", password="password123")
-        self.supervisor.specialty = "surgery"
-        self.supervisor.save()
-        response = self.client.get(reverse("users:supervisors_by_specialty", kwargs={"specialty": "surgery"}))
-        self.assertEqual(response.status_code, 200)
-        data = json.loads(response.content)
-        self.assertEqual(len(data["supervisors"]), 1)
-        self.assertEqual(data["supervisors"][0]["id"], self.supervisor.id)
-
-    def test_user_list_stats_api(self):
-        self.client.login(username="ADMIN", password="password123")
-        response = self.client.get(reverse("users:user_list_stats_api"))
-        self.assertEqual(response.status_code, 200)
-        data = json.loads(response.content)
-        self.assertIn("total_users", data)
-
-    def test_user_statistics_api(self):
-        self.client.login(username="ADMIN", password="password123")
-        response = self.client.get(reverse("users:api_user_statistics"))
-        self.assertEqual(response.status_code, 200)
-
-    def test_user_performance_api(self):
-        self.client.login(username="ADMIN", password="password123")
-        response = self.client.get(reverse("users:api_user_performance"))
-        self.assertEqual(response.status_code, 200)

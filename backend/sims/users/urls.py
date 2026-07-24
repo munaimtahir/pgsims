@@ -90,20 +90,4 @@ urlpatterns = [
     path("reports/", views.UserReportsView.as_view(), name="user_reports"),
     path("reports/export/", views.UserExportView.as_view(), name="user_export"),
     path("activity-log/", views.ActivityLogView.as_view(), name="activity_log"),
-    # Role-based Analytics
-    path("analytics/admin/", views.admin_analytics_view, name="admin_analytics"),
-    path("analytics/supervisor/", views.supervisor_analytics_view, name="supervisor_analytics"),
-    path("analytics/pg/", views.pg_analytics_view, name="pg_analytics"),
-    # AJAX/API endpoints
-    path("api/users/search/", views.UserSearchAPIView.as_view(), name="user_search_api"),
-    path(
-        "api/supervisors/specialty/<str:specialty>/",
-        views.SupervisorsBySpecialtyAPIView.as_view(),
-        name="supervisors_by_specialty",
-    ),
-    path("api/user/<int:pk>/stats/", views.UserStatsAPIView.as_view(), name="user_stats_api"),
-    path("api/stats/", views.UserListStatsAPIView.as_view(), name="user_list_stats_api"),
-    path("api/admin/stats/", views.admin_stats_api, name="admin_stats_api"),
-    path("api/user-statistics/", views.UserStatisticsAPIView.as_view(), name="api_user_statistics"),
-    path("api/user-performance/", views.UserPerformanceAPIView.as_view(), name="api_user_performance"),
 ]

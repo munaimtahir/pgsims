@@ -322,27 +322,12 @@
 {{ block.super }}
 <script id="django-data" type="application/json">
 {
-    "pg_ids": [{% if page_obj %}{% for pg in page_obj %}{{ pg.pk }}{% if not forloop.last %},{% endif %}{% endfor %}{% endif %}],
-    "urls": {
-        "user_list_stats_api": "{% url 'users:user_list_stats_api' %}",
-        "user_stats_api": "{% url 'users:user_stats_api' 0 %}"
-    }
+    "pg_ids": [{% if page_obj %}{% for pg in page_obj %}{{ pg.pk }}{% if not forloop.last %},{% endif %}{% endfor %}{% endif %}]
 }
 </script>
 
 <script>
 $(document).ready(function() {
-    // Get Django data
-    const djangoData = JSON.parse(document.getElementById('django-data').textContent);
-    
-    // Load statistics
-    loadStatistics();
-    
-    // Load progress for each PG
-    djangoData.pg_ids.forEach(function(pgId) {
-        loadPGProgress(pgId);
-    });
-    
     // Initialize tooltips
     var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
     var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
@@ -350,47 +335,9 @@ $(document).ready(function() {
     });
 });
 
-function loadStatistics() {
-    // Load general statistics
-    const djangoData = JSON.parse(document.getElementById('django-data').textContent);
-    $.get(djangoData.urls.user_list_stats_api)
-        .done(function(data) {
-            $('#specialtyCount').text(data.specialty_count || 0);
-            $('#newThisMonth').text(data.new_this_month || 0);
-        })
-        .fail(function() {
-            console.error('Failed to load statistics');
-        });
-}
-
-function loadPGProgress(pgId) {
-    // Load individual PG progress
-    const djangoData = JSON.parse(document.getElementById('django-data').textContent);
-    const url = djangoData.urls.user_stats_api.replace('0', pgId);
-    $.get(url)
-        .done(function(data) {
-            const progressPercent = data.overall_progress || 0;
-            $(`#progress-${pgId}`).text(`${progressPercent}%`);
-            $(`#progressBar-${pgId}`).css('width', `${progressPercent}%`);
-            
-            // Update progress bar color based on progress
-            const progressBar = $(`#progressBar-${pgId}`);
-            progressBar.removeClass('bg-primary bg-warning bg-danger bg-success');
-            
-            if (progressPercent >= 80) {
-                progressBar.addClass('bg-success');
-            } else if (progressPercent >= 60) {
-                progressBar.addClass('bg-primary');
-            } else if (progressPercent >= 40) {
-                progressBar.addClass('bg-warning');
-            } else {
-                progressBar.addClass('bg-danger');
-            }
-        })
-        .fail(function() {
-            $(`#progress-${pgId}`).text('N/A');
-        });
-}
+// Legacy stats/progress widgets removed 2026-07-24 (backed by now-removed
+// user_list_stats_api/user_stats_api endpoints). The active resident progress experience is the
+// Next.js frontend's /academics/reports/resident-progress page.
 
 // Filter form enhancements
 $('#specialty, #year, #supervisor').change(function() {

@@ -499,23 +499,10 @@ function initializeCharts() {
 }
 
 function loadReportData() {
-    // Load summary statistics
-    $.get('{% url "users:api_user_statistics" %}')
-        .done(function(data) {
-            $('#totalUsers').text(data.total_users || 0);
-            $('#totalPGs').text(data.total_pgs || 0);
-            $('#totalSupervisors').text(data.total_supervisors || 0);
-            $('#newThisMonth').text(data.new_this_month || 0);
-            
-            // Update charts
-            updateCharts(data);
-            updateHealthMetrics(data);
-        })
-        .fail(function() {
-            console.error('Failed to load report data');
-            showMockData();
-        });
-    
+    // Legacy statistics API removed 2026-07-24; the active reporting experience is the Next.js
+    // frontend's /academics/reports/* pages. Fall back directly to the existing mock-data display.
+    showMockData();
+
     // Load performance data
     loadPerformanceData();
 }
@@ -575,15 +562,8 @@ function updateHealthChart(chartId, percentId, value) {
 }
 
 function loadPerformanceData() {
-    // Load performance table data
-    $.get('{% url "users:api_user_performance" %}')
-        .done(function(data) {
-            updatePerformanceTable(data.users || []);
-        })
-        .fail(function() {
-            // Show mock data for demonstration
-            showMockPerformanceData();
-        });
+    // Legacy performance API removed 2026-07-24; fall back directly to the mock-data display.
+    showMockPerformanceData();
 }
 
 function updatePerformanceTable(users) {

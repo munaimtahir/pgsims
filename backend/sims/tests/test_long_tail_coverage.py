@@ -87,10 +87,4 @@ class LongTailCoverageTests(APITestCase):
         response = self.client.patch(url, 
                                    data=json.dumps({"email": "not-an-email"}),
                                    content_type="application/json")
-        self.assertIn(response.status_code, [200, 400]) 
-
-    def test_user_search_anonymous(self):
-        # Uses LoginRequiredMixin, redirects to login (302)
-        url = reverse("users:user_search_api")
-        response = self.client.get(url)
-        self.assertEqual(response.status_code, 302)
+        self.assertIn(response.status_code, [200, 400])

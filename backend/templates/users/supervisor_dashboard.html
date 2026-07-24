@@ -106,11 +106,6 @@
                             </button>
                         </div>
                         <div class="col-md-3 mb-2">
-                            <a href="{% url 'users:supervisor_analytics' %}" class="btn btn-success w-100">
-                                <i class="fas fa-chart-line me-2"></i>My Analytics
-                            </a>
-                        </div>
-                        <div class="col-md-3 mb-2">
                             <a href="{% url 'cases:case_list' %}" class="btn btn-info w-100">
                                 <i class="fas fa-stethoscope me-2"></i>Clinical Cases
                             </a>
@@ -324,50 +319,20 @@ $(document).ready(function() {
 });
 
 function loadDashboardStats() {
-    $.ajax({
-        url: '{% url "users:user_stats_api" user.pk %}',
-        method: 'GET',
-        success: function(data) {
-            $('#completedReviews').text(data.completed_reviews || 0);
-            $('#activePGs').text(data.active_pgs || 0);
-        },
-        error: function() {
-            console.error('Failed to load dashboard statistics');
-            // Show fallback data
-            $('#completedReviews').text('--');
-            $('#activePGs').text('--');
-        }
-    });
+    // Legacy stats API removed 2026-07-24; the active dashboard experience is the Next.js
+    // frontend's /academics/supervisor-workload page.
+    $('#completedReviews').text('--');
+    $('#activePGs').text('--');
 }
 
 function loadPendingReviews() {
-    // TODO: Replace with actual pending reviews API when logbook app is implemented
-    $.ajax({
-        url: '{% url "users:user_list_stats_api" %}',
-        method: 'GET',
-        success: function(data) {
-            const container = $('#pendingReviewsList');
-            container.empty();
-            
-            // Show placeholder message for now
-            container.html(`
-                <div class="text-center text-muted p-3">
-                    <i class="fas fa-clock fa-2x mb-2"></i>
-                    <p>Pending reviews will appear here when logbook functionality is implemented.</p>
-                </div>
-            `);
-        },
-        error: function() {
-            console.error('Failed to load pending reviews');
-            const container = $('#pendingReviewsList');
-            container.html(`
-                <div class="text-center text-muted p-3">
-                    <i class="fas fa-exclamation-triangle fa-2x mb-2"></i>
-                    <p>Unable to load pending reviews at this time.</p>
-                </div>
-            `);
-        }
-    });
+    const container = $('#pendingReviewsList');
+    container.html(`
+        <div class="text-center text-muted p-3">
+            <i class="fas fa-clock fa-2x mb-2"></i>
+            <p>Pending reviews will appear here when logbook functionality is implemented.</p>
+        </div>
+    `);
 }
 </script>
 {% endblock %}

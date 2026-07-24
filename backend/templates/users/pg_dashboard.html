@@ -122,14 +122,6 @@
                             </a>
                         </div>
                     </div>
-                    <div class="row">
-                        <div class="col-md-3 mb-3">
-                            <a href="{% url 'users:pg_analytics' %}" class="btn btn-secondary w-100 h-100 d-flex flex-column justify-content-center align-items-center">
-                                <i class="fas fa-chart-area fa-2x mb-2"></i>
-                                <span>My Analytics</span>
-                            </a>
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>
@@ -390,18 +382,8 @@ $(document).ready(function() {
 });
 
 function loadDashboardData() {
-    // Load upcoming events and deadlines
-    $.ajax({
-        url: '{% url "users:user_stats_api" pk=user.pk %}',
-        method: 'GET',
-        success: function(data) {
-            // Update any dynamic content here
-            console.log('Dashboard data loaded successfully');
-        },
-        error: function() {
-            console.warn('Failed to load dashboard data');
-        }
-    });
+    // Legacy stats API removed 2026-07-24; the active dashboard experience is the Next.js
+    // frontend's /dashboard/resident page.
 }
 </script>
 {% endblock %}
