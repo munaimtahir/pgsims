@@ -115,3 +115,4 @@ frontend/.next/
 *.pgsimsbak
 *.pgsimsdr
 backend/backups/
+.e2e_upload_tmp/
