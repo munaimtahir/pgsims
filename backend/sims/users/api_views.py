@@ -345,6 +345,8 @@ def change_password_view(request):
         return Response({"error": "New passwords do not match"}, status=status.HTTP_400_BAD_REQUEST)
 
     user.set_password(new_password)
+    if user.must_change_password:
+        user.must_change_password = False
     user.save()
 
     return Response({"message": "Password changed successfully"}, status=status.HTTP_200_OK)

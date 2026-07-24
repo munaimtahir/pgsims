@@ -83,6 +83,45 @@ class UserAPIAuthTests(TestCase):
         self.assertIn("If an account with that email exists", r.data["message"])
         mocked_send_mail.assert_called_once()
 
+    def test_change_password_clears_must_change_password_flag(self):
+        user = User.objects.create_user(
+            username="mustchange_user",
+            password="temp123",
+            role="RESIDENT",
+            must_change_password=True,
+        )
+        self.client.force_authenticate(user)
+
+        r = self.client.post(
+            "/api/auth/change-password/",
+            {"old_password": "temp123", "new_password": "newpass123", "new_password2": "newpass123"},
+            format="json",
+        )
+
+        self.assertEqual(r.status_code, 200)
+        user.refresh_from_db()
+        self.assertFalse(user.must_change_password)
+        self.assertTrue(user.check_password("newpass123"))
+
+    def test_change_password_wrong_old_password_leaves_flag_unchanged(self):
+        user = User.objects.create_user(
+            username="mustchange_user2",
+            password="temp123",
+            role="RESIDENT",
+            must_change_password=True,
+        )
+        self.client.force_authenticate(user)
+
+        r = self.client.post(
+            "/api/auth/change-password/",
+            {"old_password": "wrongpass", "new_password": "newpass123", "new_password2": "newpass123"},
+            format="json",
+        )
+
+        self.assertEqual(r.status_code, 400)
+        user.refresh_from_db()
+        self.assertTrue(user.must_change_password)
+
 
 class UserbaseReadOnlyScopeTests(TestCase):
     def setUp(self):
