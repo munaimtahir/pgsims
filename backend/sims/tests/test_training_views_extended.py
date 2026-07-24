@@ -2,7 +2,7 @@ from django.test import TestCase, Client
 from django.urls import reverse
 from django.contrib.auth import get_user_model
 from sims.training.models import (
-    LogbookEntry, TrainingProgram, ResidentTrainingRecord,
+    TrainingProgram, ResidentTrainingRecord,
     RotationAssignment, LeaveRequest
 )
 from sims.rotations.models import Hospital, HospitalDepartment
@@ -32,30 +32,6 @@ class TrainingViewsExtendedTests(TestCase):
         self.hospital = Hospital.objects.create(name="Hospital", code="H1", is_active=True)
         self.dept = Department.objects.create(name="Surgery", code="SURG")
         self.hdept = HospitalDepartment.objects.create(hospital=self.hospital, department=self.dept)
-
-    def test_logbook_entry_actions(self):
-        self.client.login(username="pg_view", password="password123")
-        entry = LogbookEntry.objects.create(
-            resident_training_record=self.rtr,
-            patient_id_number="P-ACTION",
-            patient_seen_at=timezone.now(),
-            status="DRAFT"
-        )
-        
-        # Test verify (should fail for PG)
-        response = self.client.post(f"/api/logbook/{entry.id}/review/", {"action": "approved"})
-        self.assertEqual(response.status_code, 403)
-        
-        # Test submit
-        response = self.client.post(f"/api/logbook/{entry.id}/submit/")
-        self.assertEqual(response.status_code, 200)
-        
-        # Test verify (admin)
-        self.client.login(username="admin_view", password="password123")
-        response = self.client.post(f"/api/logbook/{entry.id}/review/", 
-                                   data=json.dumps({"action": "approved", "feedback": "OK"}),
-                                   content_type="application/json")
-        self.assertEqual(response.status_code, 200)
 
     def test_rotation_assignment_actions(self):
         self.client.login(username="admin_view", password="password123")

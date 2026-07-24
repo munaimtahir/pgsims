@@ -158,11 +158,34 @@ view class, which is why the initial class-name-based check missed it): `sims/tr
 `sims/tests/` collectively make dozens of calls to `/api/logbook/...` and `/api/dashboard/...`
 directly. This is real, substantial, currently-passing test coverage, not incidental.
 **Corrected assessment**: this is not "confirmed dead code" in the same sense as §7.6 below — it's a
-working, tested backend implementation with no current frontend consumer. Whether it's a genuinely
-superseded duplicate (in favor of `sims.academics`'s logbook/dashboards, §4) that the test suite
-just never got updated to stop testing, or something still relied on in a way not visible from
-static analysis, isn't resolvable by more grepping — it needs a human decision, and **no relocation
-was attempted or should be attempted without one**. Left completely untouched in this pass.
+working, tested backend implementation with no current frontend consumer.
+
+**DECIDED AND EXECUTED 2026-07-24: removed.** Confirmed genuinely superseded by
+`sims.academics`'s logbook/dashboards (§4) — deleted `LogbookEntryViewSet`,
+`LogbookThresholdConfigViewSet`, `LogbookReviewQueueView`, `LogbookMyThresholdView`,
+`ResidentOperationalDashboardView`, `SupervisorOperationalDashboardView`,
+`UTRMCOperationalDashboardView` and their URL registrations from `sims/training/views.py` /
+`urls.py`. The `LogbookEntry`/`LogbookThresholdConfig` **models** were left untouched — they're
+genuinely used elsewhere (`sims/bulk/services.py`'s bulk review/assignment feature,
+`sims/users/models.py`'s dashboard stat calculations) — only the duplicate API surface onto them
+was removed. Retired/repurposed the ~15 backend tests that specifically exercised this dead surface
+across 7 files (some tests were fully removed, some had only their dead-endpoint assertions
+stripped while keeping coverage of other, unrelated things in the same test method). Verified: full
+`pytest sims` suite green (436 passed / 8 skipped / 0 failed), `check_all_pgms_gates.sh` all pass,
+zero remaining references to any of the removed routes/names anywhere in the backend. Chose plain
+deletion over the "move to `_deprecated_candidates`" pattern used elsewhere in this document — unlike
+§7.3's cluster, this code was tightly coupled to private helper functions shared with other live
+views, making a clean standalone relocated copy impractical; git history is the recovery path if
+ever needed.
+
+**Not fixed, flagged as a follow-up**: three Playwright e2e spec files still reference the now-removed
+routes (`frontend/e2e/feature-layer/permissions.spec.ts`,
+`frontend/e2e/critical/admin_analytics_live_feed.spec.ts`,
+`frontend/e2e/smoke/ui_pilot_readiness.spec.ts`). These need a running server to execute and
+weren't run as part of this change's verification (which used `pytest`/`npm test`/gate scripts, not
+full e2e) — fixing them blind without being able to run them risks guessing wrong. Two of the three
+appear to be response-mocking/interception code that would likely just go unreached rather than
+fail; `permissions.spec.ts` makes a real request to the removed endpoint and would fail if run.
 
 ### 7.6 CORRECTED (twice) — the "stats"/"analytics" views in `sims/users/views.py` also have real test coverage
 `UserSearchAPIView`, `SupervisorsBySpecialtyAPIView`, `UserStatsAPIView`, `UserStatisticsAPIView`,

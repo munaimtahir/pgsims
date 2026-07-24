@@ -32,10 +32,6 @@ from .views import (
     ResidentSummaryView,
     SupervisorSummaryView,
     SupervisorResidentProgressView,
-    LogbookEntryViewSet,
-    LogbookReviewQueueView,
-    LogbookThresholdConfigViewSet,
-    LogbookMyThresholdView,
     SubmissionRequirementTemplateViewSet,
     SynopsisSubmissionView,
     SynopsisSubmissionDocumentsView,
@@ -51,9 +47,6 @@ from .views import (
     ProgramRotationRequirementViewSet,
     RotationCompletionsView,
     RotationCompletionVerifyView,
-    ResidentOperationalDashboardView,
-    SupervisorOperationalDashboardView,
-    UTRMCOperationalDashboardView,
 )
 
 router = DefaultRouter()
@@ -64,8 +57,6 @@ router.register(r"rotations", RotationAssignmentViewSet, basename="rotation-assi
 router.register(r"leaves", LeaveRequestViewSet, basename="leave-request")
 router.register(r"postings", DeputationPostingViewSet, basename="deputation-posting")
 router.register(r"workshops", WorkshopViewSet, basename="workshop")
-router.register(r"logbook/config", LogbookThresholdConfigViewSet, basename="logbook-threshold-config")
-router.register(r"logbook", LogbookEntryViewSet, basename="logbook-entry")
 router.register(
     r"submissions/requirements",
     SubmissionRequirementTemplateViewSet,
@@ -101,8 +92,6 @@ urlpatterns = [
     path("my/workshops/", MyWorkshopCompletionsView.as_view(), name="my-workshops"),
     path("my/workshops/<int:pk>/", MyWorkshopCompletionDetailView.as_view(), name="my-workshop-detail"),
     path("my/eligibility/", MyEligibilityView.as_view(), name="my-eligibility"),
-    path("logbook/review-queue/", LogbookReviewQueueView.as_view(), name="logbook-review-queue"),
-    path("logbook/my-threshold/", LogbookMyThresholdView.as_view(), name="logbook-my-threshold"),
     # Synopsis/thesis submission completeness workflows
     path("submissions/synopsis/", SynopsisSubmissionView.as_view(), name="synopsis-submission"),
     path(
@@ -154,14 +143,6 @@ urlpatterns = [
         RotationCompletionVerifyView.as_view(),
         name="rotation-completion-verify",
     ),
-    # Operational dashboards and readiness views
-    path("dashboard/resident/", ResidentOperationalDashboardView.as_view(), name="dashboard-resident"),
-    path(
-        "dashboard/supervisor/",
-        SupervisorOperationalDashboardView.as_view(),
-        name="dashboard-supervisor",
-    ),
-    path("dashboard/utrmc/", UTRMCOperationalDashboardView.as_view(), name="dashboard-utrmc"),
     path("", include(router.urls)),
     # Supervisor routes
     path("supervisor/rotations/pending/", SupervisorPendingRotationsView.as_view(), name="supervisor-pending-rotations"),

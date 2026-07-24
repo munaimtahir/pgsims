@@ -12,8 +12,6 @@ from sims.rotations.models import Hospital, HospitalDepartment
 from sims.supervision.models import ResidentSupervisorAssignment
 from sims.training.models import (
     LeaveRequest,
-    LogbookEntry,
-    LogbookThresholdConfig,
     ResidentSubmission,
     RotationAssignment,
     RotationCompletion,
@@ -97,180 +95,6 @@ class FeatureLayerOperationalFlowTests(APITestCase):
             is_active=True,
             status=ResidentSupervisorAssignment.STATUS_ACTIVE,
         )
-
-    def test_logbook_submit_return_resubmit_approve_flow(self):
-        self.client.force_authenticate(self.resident)
-        create_resp = self.client.post(
-            "/api/logbook/",
-            {
-                "patient_id_number": "P-001",
-                "patient_name": "Jane Doe",
-                "age": 32,
-                "gender": "F",
-                "disease_area": "Medicine",
-                "diagnosis": "Hypertension",
-                "clinical_presentation": "Headache",
-                "management_plan": "Medication adjustment",
-                "resident_reflection": "Need tighter follow-up",
-                "patient_seen_at": "2026-01-10T10:30:00Z",
-            },
-            format="json",
-        )
-        self.assertEqual(create_resp.status_code, status.HTTP_201_CREATED)
-        entry_id = create_resp.data["id"]
-
-        submit_resp = self.client.post(f"/api/logbook/{entry_id}/submit/")
-        self.assertEqual(submit_resp.status_code, status.HTTP_200_OK)
-        self.assertEqual(submit_resp.data["status"], LogbookEntry.STATUS_SUBMITTED)
-
-        self.client.force_authenticate(self.supervisor)
-        return_resp = self.client.post(
-            f"/api/logbook/{entry_id}/review/",
-            {"action": "returned", "feedback": "Please clarify management rationale."},
-            format="json",
-        )
-        self.assertEqual(return_resp.status_code, status.HTTP_200_OK)
-        self.assertEqual(return_resp.data["status"], LogbookEntry.STATUS_RETURNED)
-
-        self.client.force_authenticate(self.resident)
-        patch_resp = self.client.patch(
-            f"/api/logbook/{entry_id}/",
-            {"management_plan": "Added guideline-based rationale."},
-            format="json",
-        )
-        self.assertEqual(patch_resp.status_code, status.HTTP_200_OK)
-
-        resubmit_resp = self.client.post(f"/api/logbook/{entry_id}/submit/")
-        self.assertEqual(resubmit_resp.status_code, status.HTTP_200_OK)
-        self.assertEqual(resubmit_resp.data["status"], LogbookEntry.STATUS_SUBMITTED)
-
-        self.client.force_authenticate(self.supervisor)
-        approve_resp = self.client.post(
-            f"/api/logbook/{entry_id}/review/",
-            {"action": "approved", "feedback": "Approved."},
-            format="json",
-        )
-        self.assertEqual(approve_resp.status_code, status.HTTP_200_OK)
-        self.assertEqual(approve_resp.data["status"], LogbookEntry.STATUS_APPROVED)
-        self.assertEqual(approve_resp.data["feedback"], "Approved.")
-
-    def test_logbook_invalid_transitions_and_wrong_reviewer_are_blocked(self):
-        self.client.force_authenticate(self.resident)
-        create_resp = self.client.post(
-            "/api/logbook/",
-            {
-                "patient_id_number": "P-INVALID-001",
-                "patient_seen_at": "2026-01-10T10:30:00Z",
-            },
-            format="json",
-        )
-        self.assertEqual(create_resp.status_code, status.HTTP_201_CREATED)
-        entry_id = create_resp.data["id"]
-
-        self.client.force_authenticate(self.supervisor)
-        draft_review = self.client.post(
-            f"/api/logbook/{entry_id}/review/",
-            {"action": "approved", "feedback": "Cannot approve draft."},
-            format="json",
-        )
-        self.assertEqual(draft_review.status_code, status.HTTP_400_BAD_REQUEST)
-
-        unrelated_supervisor = make_user("fl_unrelated_supervisor", "SUPERVISOR")
-        self.client.force_authenticate(unrelated_supervisor)
-        unrelated_review = self.client.post(
-            f"/api/logbook/{entry_id}/review/",
-            {"action": "approved", "feedback": "Not my resident."},
-            format="json",
-        )
-        self.assertEqual(unrelated_review.status_code, status.HTTP_404_NOT_FOUND)
-
-        self.client.force_authenticate(self.resident)
-        submitted = self.client.post(f"/api/logbook/{entry_id}/submit/")
-        self.assertEqual(submitted.status_code, status.HTTP_200_OK)
-
-        self.client.force_authenticate(unrelated_supervisor)
-        wrong_reviewer = self.client.post(
-            f"/api/logbook/{entry_id}/review/",
-            {"action": "approved", "feedback": "Not my resident."},
-            format="json",
-        )
-        self.assertEqual(wrong_reviewer.status_code, status.HTTP_404_NOT_FOUND)
-
-        self.client.force_authenticate(self.supervisor)
-        bad_action = self.client.post(
-            f"/api/logbook/{entry_id}/review/",
-            {"action": "invalid", "feedback": "Bad action."},
-            format="json",
-        )
-        self.assertEqual(bad_action.status_code, status.HTTP_400_BAD_REQUEST)
-
-        approved = self.client.post(
-            f"/api/logbook/{entry_id}/review/",
-            {"action": "approved", "feedback": "Approved."},
-            format="json",
-        )
-        self.assertEqual(approved.status_code, status.HTTP_200_OK)
-
-        self.client.force_authenticate(self.resident)
-        approved_resubmit = self.client.post(f"/api/logbook/{entry_id}/submit/")
-        self.assertEqual(approved_resubmit.status_code, status.HTTP_400_BAD_REQUEST)
-
-    def test_logbook_threshold_per_rotation_and_period(self):
-        rotation = RotationAssignment.objects.create(
-            resident_training=self.rtr,
-            hospital_department=self.hospital_department,
-            start_date=date.today() - timedelta(days=40),
-            end_date=date.today() + timedelta(days=5),
-            status=RotationAssignment.STATUS_COMPLETED,
-            requested_by=self.admin,
-        )
-        LogbookThresholdConfig.objects.create(
-            name="Per rotation",
-            mode=LogbookThresholdConfig.MODE_PER_ROTATION,
-            min_approved_entries=1,
-            program=self.program,
-            department=self.department,
-            configured_by=self.admin,
-            is_active=True,
-        )
-        LogbookThresholdConfig.objects.create(
-            name="Monthly minimum",
-            mode=LogbookThresholdConfig.MODE_PER_PERIOD,
-            min_approved_entries=2,
-            period_days=30,
-            program=self.program,
-            department=self.department,
-            configured_by=self.admin,
-            is_active=True,
-        )
-
-        LogbookEntry.objects.create(
-            resident_training_record=self.rtr,
-            rotation_assignment=rotation,
-            patient_id_number="P-100",
-            patient_seen_at=timezone.now(),
-            status=LogbookEntry.STATUS_APPROVED,
-            approved_at=timezone.now(),
-            created_by=self.resident,
-        )
-
-        self.client.force_authenticate(self.resident)
-        first = self.client.get("/api/logbook/my-threshold/")
-        self.assertEqual(first.status_code, status.HTTP_200_OK)
-        self.assertFalse(first.data["overall_met"])
-
-        LogbookEntry.objects.create(
-            resident_training_record=self.rtr,
-            rotation_assignment=rotation,
-            patient_id_number="P-101",
-            patient_seen_at=timezone.now(),
-            status=LogbookEntry.STATUS_APPROVED,
-            approved_at=timezone.now(),
-            created_by=self.resident,
-        )
-        second = self.client.get("/api/logbook/my-threshold/")
-        self.assertEqual(second.status_code, status.HTTP_200_OK)
-        self.assertTrue(second.data["overall_met"])
 
     def test_synopsis_and_thesis_submission_completeness_certificate_flow(self):
         synopsis_requirement = SubmissionRequirementTemplate.objects.create(
@@ -441,42 +265,21 @@ class FeatureLayerOperationalFlowTests(APITestCase):
         )
         self.assertEqual(reject_after_approval.status_code, status.HTTP_400_BAD_REQUEST)
 
-    def test_role_aware_dashboard_endpoints_and_permissions(self):
+    def test_rotation_completion_verify_denied_for_unauthorized_role(self):
         self.client.force_authenticate(self.resident)
-        resident_dashboard = self.client.get("/api/dashboard/resident/")
-        self.assertEqual(resident_dashboard.status_code, status.HTTP_200_OK)
-        self.assertIn("readiness", resident_dashboard.data)
-        resident_review_denied = self.client.get("/api/logbook/review-queue/")
-        self.assertEqual(resident_review_denied.status_code, status.HTTP_403_FORBIDDEN)
-
-        self.client.force_authenticate(self.supervisor)
-        supervisor_dashboard = self.client.get("/api/dashboard/supervisor/")
-        self.assertEqual(supervisor_dashboard.status_code, status.HTTP_200_OK)
-        self.assertIn("pending_logbook_reviews", supervisor_dashboard.data)
-
-
-        self.client.force_authenticate(self.utrmc_user)
-        utrmc_dashboard = self.client.get("/api/dashboard/utrmc/")
-        self.assertEqual(utrmc_dashboard.status_code, status.HTTP_200_OK)
-        self.assertIn("cross_department_overview", utrmc_dashboard.data)
-
         verify_denied = self.client.post("/api/rotations/completions/999999/verify/")
         self.assertEqual(verify_denied.status_code, status.HTTP_403_FORBIDDEN)
 
 
 class ActiveSurfaceBaselineTests(APITestCase):
-    def test_seeded_baseline_resident_dashboard_and_leave_create_work(self):
+    def test_seeded_baseline_resident_leave_create_works(self):
         call_command("seed_org_data", verbosity=0)
         call_command("seed_active_surface_baseline", verbosity=0)
         resident = User.objects.get(username="pilot_pg")
         self.client.force_authenticate(resident)
 
-        dashboard = self.client.get("/api/dashboard/resident/")
-        self.assertEqual(dashboard.status_code, status.HTTP_200_OK)
-        self.assertIn("training_record_id", dashboard.data)
-        training_record_id = dashboard.data["training_record_id"]
-        self.assertIsNotNone(training_record_id)
-        self.assertEqual(dashboard.data["logbook"]["total"], 0)
+        training_record = ResidentTrainingRecord.objects.get(resident_user=resident, active=True)
+        training_record_id = training_record.id
 
         leave = self.client.post(
             "/api/leaves/",

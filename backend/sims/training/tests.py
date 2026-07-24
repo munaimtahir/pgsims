@@ -330,12 +330,3 @@ class ResidentDashboardFallbackTest(APITestCase):
         self.assertEqual(response.data["leaves"]["active_count"], 0)
         self.assertEqual(response.data["eligibility"]["IMM"]["status"], None)
         self.assertEqual(response.data["thesis"]["status"], "NOT_STARTED")
-
-    def test_resident_dashboard_returns_empty_state_without_training_record(self):
-        self._auth()
-        response = self.client.get("/api/dashboard/resident/")
-
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertIsNone(response.data["training_record_id"])
-        self.assertEqual(response.data["logbook"]["total"], 0)
-        self.assertFalse(response.data["readiness"]["logbook_threshold_met"])

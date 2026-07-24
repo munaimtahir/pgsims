@@ -3,15 +3,12 @@ from django.urls import reverse
 from django.contrib.auth import get_user_model
 from sims.training.models import (
     TrainingProgram, ResidentTrainingRecord, ProgramMilestone,
-    ResidentResearchProject, LogbookEntry
+    ResidentResearchProject
 )
 from sims.rotations.models import Hospital, HospitalDepartment
 from sims.academics.models import Department
-from sims.supervision.models import ResidentSupervisorAssignment
 from sims.users.models import ResidentProfile, SupervisorProfile
 from datetime import date, timedelta
-from django.utils import timezone
-import json
 
 User = get_user_model()
 
@@ -42,61 +39,9 @@ class TrainingViewsTests(TestCase):
             department_ref=self.dept,
         )
 
-    def test_logbook_entry_workflow(self):
-        # Create draft
-        self.client.login(username="RESIDENT", password="password123")
-        entry = LogbookEntry.objects.create(
-            resident_training_record=self.rtr,
-            patient_id_number="P100",
-            patient_seen_at=timezone.now(),
-            status="DRAFT"
-        )
-        
-        # Submit
-        response = self.client.post(f"/api/logbook/{entry.id}/submit/")
-        self.assertEqual(response.status_code, 200)
-        entry.refresh_from_db()
-        self.assertEqual(entry.status, "SUBMITTED")
-        
-        # Review (Supervisor)
-        self.client.login(username="SUPERVISOR", password="password123")
-        ResidentSupervisorAssignment.objects.create(
-            resident=self.resident_profile,
-            supervisor=self.supervisor_profile,
-            assignment_type=ResidentSupervisorAssignment.ASSIGNMENT_PRIMARY,
-            start_date=date.today(),
-            is_active=True,
-            status=ResidentSupervisorAssignment.STATUS_ACTIVE,
-        )
-        
-        response = self.client.post(f"/api/logbook/{entry.id}/review/", 
-                                   data=json.dumps({"action": "approved", "feedback": "Good job"}),
-                                   content_type="application/json")
-        self.assertEqual(response.status_code, 200)
-        entry.refresh_from_db()
-        self.assertEqual(entry.status, "APPROVED")
-
     def test_resident_summary_api(self):
         self.client.login(username="RESIDENT", password="password123")
         response = self.client.get(reverse("resident-summary"))
-        self.assertEqual(response.status_code, 200)
-
-    def test_resident_operational_dashboard_api(self):
-        self.client.login(username="RESIDENT", password="password123")
-        response = self.client.get(reverse("dashboard-resident"))
-        self.assertEqual(response.status_code, 200)
-
-    def test_supervisor_operational_dashboard_api(self):
-        self.client.login(username="SUPERVISOR", password="password123")
-        response = self.client.get(reverse("dashboard-supervisor"))
-        self.assertEqual(response.status_code, 200)
-
-
-
-    def test_utrmc_operational_dashboard_api(self):
-        utrmc_admin = User.objects.create_user(username="utrmc", password="password123", role="ADMIN")
-        self.client.login(username="utrmc", password="password123")
-        response = self.client.get(reverse("dashboard-utrmc"))
         self.assertEqual(response.status_code, 200)
 
     def test_program_policy_api(self):
@@ -120,11 +65,6 @@ class TrainingViewsTests(TestCase):
         data = {"title": "My Research", "synopsis_status": "DRAFT"}
         response = self.client.post(reverse("my-research"), data=data)
         self.assertEqual(response.status_code, 201)
-
-    def test_logbook_my_threshold_api(self):
-        self.client.login(username="RESIDENT", password="password123")
-        response = self.client.get(reverse("logbook-my-threshold"))
-        self.assertEqual(response.status_code, 200)
 
     def test_my_workshop_completions_api(self):
         self.client.login(username="RESIDENT", password="password123")

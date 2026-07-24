@@ -13,4 +13,4 @@ def test_openapi_schema_endpoint_exposes_active_contract(db):
     assert payload["info"]["title"] == "PGSIMS API"
     assert "openapi" in payload
     assert "/api/auth/login/" in payload["paths"]
-    assert "/api/dashboard/resident/" in payload["paths"]
+    assert "/api/academics/residents/me/summary/" in payload["paths"]

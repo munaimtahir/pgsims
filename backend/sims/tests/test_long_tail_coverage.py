@@ -2,7 +2,7 @@ from django.urls import reverse
 from django.contrib.auth import get_user_model
 from rest_framework.test import APITestCase
 from sims.training.models import (
-    LogbookEntry, RotationAssignment, ResidentTrainingRecord, TrainingProgram,
+    RotationAssignment, ResidentTrainingRecord, TrainingProgram,
     LeaveRequest
 )
 from sims.rotations.models import Hospital, HospitalDepartment
@@ -69,18 +69,6 @@ class LongTailCoverageTests(APITestCase):
         url = reverse("rotation-assignment-utrmc-approve", kwargs={"pk": assignment.pk})
         response = self.client.post(url)
         self.assertEqual(response.status_code, 403)
-
-    def test_logbook_entry_review_invalid_action(self):
-        entry = LogbookEntry.objects.create(
-            resident_training_record=self.rtr, patient_id_number="X",
-            patient_seen_at=timezone.now(), status="SUBMITTED"
-        )
-        self.client.force_authenticate(user=self.admin)
-        url = reverse("logbook-entry-review", kwargs={"pk": entry.pk})
-        response = self.client.post(url, 
-                                   data=json.dumps({"action": "invalid"}),
-                                   content_type="application/json")
-        self.assertEqual(response.status_code, 400)
 
     def test_leave_request_approve_denied_for_pg(self):
         leave = LeaveRequest.objects.create(

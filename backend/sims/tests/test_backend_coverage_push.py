@@ -2,7 +2,7 @@ from django.test import TestCase, Client
 from django.urls import reverse
 from django.contrib.auth import get_user_model
 from sims.training.models import (
-    LogbookEntry, TrainingProgram, ResidentTrainingRecord,
+    TrainingProgram, ResidentTrainingRecord,
     RotationAssignment, LeaveRequest, ResidentSubmission,
     ResidentWorkshopCompletion, Workshop
 )
@@ -45,30 +45,6 @@ class BackendCoveragePushTests(TestCase):
             hospital=self.hospital,
             department_ref=self.dept,
         )
-
-    def test_logbook_entry_crud_actions(self):
-        self.client.login(username="pg_push", password="password123")
-        
-        # Create
-        response = self.client.post("/api/logbook/", {
-            "resident_training_record": self.rtr.id,
-            "patient_id_number": "P-101",
-            "patient_seen_at": timezone.now(),
-            "diagnosis": "Test Diagnosis",
-            "management_plan": "Test Plan"
-        })
-        self.assertEqual(response.status_code, 201)
-        entry_id = response.data["id"]
-        
-        # Partial update
-        response = self.client.patch(f"/api/logbook/{entry_id}/", 
-                                   data=json.dumps({"diagnosis": "Updated"}),
-                                   content_type="application/json")
-        self.assertEqual(response.status_code, 200)
-        
-        # Submit
-        response = self.client.post(f"/api/logbook/{entry_id}/submit/")
-        self.assertEqual(response.status_code, 200)
 
     def test_rotation_assignment_full_cycle(self):
         self.client.login(username="admin_push", password="password123")
@@ -124,13 +100,6 @@ class BackendCoveragePushTests(TestCase):
         )
         
         response = self.client.post(f"/api/leaves/{leave.id}/approve/")
-        self.assertEqual(response.status_code, 200)
-
-
-        
-    def test_dashboard_supervisor_stats(self):
-        self.client.login(username="sup_push", password="password123")
-        response = self.client.get("/api/dashboard/supervisor/")
         self.assertEqual(response.status_code, 200)
 
     def test_resident_summary_structure(self):
