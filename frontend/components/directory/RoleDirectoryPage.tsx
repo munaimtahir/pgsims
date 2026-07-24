@@ -15,6 +15,8 @@ interface RoleDirectoryPageProps {
   createHref?: string;
 }
 
+type ActiveFilter = 'all' | 'active' | 'inactive';
+
 export default function RoleDirectoryPage({
   title,
   description,
@@ -25,12 +27,28 @@ export default function RoleDirectoryPage({
   const [rows, setRows] = useState<UserbaseUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [searchInput, setSearchInput] = useState('');
+  const [search, setSearch] = useState('');
+  const [activeFilter, setActiveFilter] = useState<ActiveFilter>('all');
+
+  // Debounce the search box so it doesn't fire a request on every keystroke.
+  useEffect(() => {
+    const timer = setTimeout(() => setSearch(searchInput.trim()), 300);
+    return () => clearTimeout(timer);
+  }, [searchInput]);
 
   useEffect(() => {
     let active = true;
     setLoading(true);
+    const params: { role?: string; search?: string; active?: boolean } = role ? { role } : {};
+    if (search) {
+      params.search = search;
+    }
+    if (activeFilter !== 'all') {
+      params.active = activeFilter === 'active';
+    }
     userbaseApi.users
-      .list(role ? { role } : undefined)
+      .list(params)
       .then((data) => {
         if (active) {
           setRows(data);
@@ -49,7 +67,7 @@ export default function RoleDirectoryPage({
     return () => {
       active = false;
     };
-  }, [role]);
+  }, [role, search, activeFilter]);
 
   return (
     <ProtectedRoute allowedRoles={['ADMIN']}>
@@ -65,6 +83,32 @@ export default function RoleDirectoryPage({
             ) : undefined
           }
         />
+
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+          <input
+            type="search"
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+            placeholder="Search by name, username, or email..."
+            aria-label="Search directory"
+            className="w-full max-w-sm rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+          />
+          <select
+            value={activeFilter}
+            onChange={(e) => setActiveFilter(e.target.value as ActiveFilter)}
+            aria-label="Filter by status"
+            className="rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+          >
+            <option value="all">All statuses</option>
+            <option value="active">Active only</option>
+            <option value="inactive">Inactive only</option>
+          </select>
+          {(search || activeFilter !== 'all') && (
+            <span className="text-xs text-slate-500">
+              {loading ? 'Searching…' : `${rows.length} result${rows.length === 1 ? '' : 's'}`}
+            </span>
+          )}
+        </div>
 
         {error && <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">{error}</div>}
 

@@ -201,6 +201,16 @@ the actual `reverse("users:<url-name>")` calls, e.g. `reverse("users:admin_analy
 this third check immediately before any file was touched, unlike §7.3 which had to be relocated,
 tested, found broken, and reverted.
 
+**DECIDED 2026-07-24**: leave the old analytics stubs/stats views as-is (planned for a future
+version, not this pilot). The underlying real gap this cluster surfaced — the `/users`,
+`/residents`, `/supervisors`, `/support-staff` directory pages have no search or filter of any kind
+— **has been built**: the backend already fully supported `search`/`active`/`department` query
+params on `UserViewSet` (`sims/users/userbase_views.py`), so this was a pure frontend addition — a
+debounced search box (name/username/email) and an active/inactive status filter added to
+`RoleDirectoryPage.tsx`, the shared component behind all four directory pages. New test coverage in
+`RoleDirectoryPage.test.tsx` (4 tests). Verified: `npm run build/typecheck/lint` clean, `npm test`
+35/35 suites (up from 34).
+
 ### 7.3/7.5/7.6 — a note on methodology (read before acting on anything in this document)
 The original Step 0 reverse-check searched for backend view **class and function names** across the
 frontend and backend. That method has a real, three-times-demonstrated blind spot:
@@ -214,10 +224,15 @@ purposes** without first checking for `reverse("<app>:<url-name>")` calls specif
 and literal-path checks alone were not sufficient. §7.2 (leave management) and the frontend-facing
 findings (§4.6, §7.4, §7.8) are a different, more reliable category — they were checked by asking
 "does any frontend code call this," which doesn't have this particular blind spot, though it should
-still be treated as a strong signal rather than absolute proof.
-for literal URL-string usage, but a systematic re-check by URL *name* (every `name="..."` in every
-`urls.py`, cross-referenced against every `reverse(...)` call) has not been done end-to-end for
-every entry in this document, only for the specific clusters investigated in §7.3-§7.6.
+still be treated as a strong signal rather than absolute proof. A systematic re-check by URL *name*
+(every `name="..."` in every `urls.py`, cross-referenced against every `reverse(...)` call) has not
+been done end-to-end for every entry in this document, only for the specific clusters investigated
+in §7.3-§7.6.
+
+**Update 2026-07-24**: of the two dead-code clusters, one (§7.5) has been decided and removed; §7.3
+and §7.6 remain as documented above pending further decisions or are resolved as noted inline.
+Separately, the real gap this cluster's investigation surfaced — no search/filter on the user
+directory pages — has been built; see the note at the end of §7.6.
 
 ### 7.7 BACKEND-ONLY (no action needed)
 - `api/health` — infrastructure health check, used by Docker/monitoring, not meant to have a UI.
