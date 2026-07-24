@@ -567,12 +567,21 @@ if DEBUG:
 
 else:
     # Production settings
-    SECURE_SSL_REDIRECT = False  # Set to True when SSL is configured
+    # SECURE_SSL_REDIRECT, SESSION_COOKIE_SECURE, and CSRF_COOKIE_SECURE are already computed
+    # from environment variables above (with a `not DEBUG` default for the cookie flags) -
+    # deliberately not re-hardcoded here. This block used to force all three to False
+    # unconditionally with a "set to True when SSL is configured" comment, even though this
+    # deployment's Caddy config (deploy/Caddyfile.pgsims) has SSL/HSTS active - that silently
+    # defeated the env-driven values and left session/CSRF cookies without the Secure flag in
+    # production. Fixed 2026-07-23, see docs/AUDIT_2026-07-23_PILOT_READINESS.md.
+    # SECURE_SSL_REDIRECT is left False here deliberately: Caddy already redirects HTTP->HTTPS
+    # at the edge (verified), and Django's own redirect would also fire for internal
+    # Docker-network/healthcheck traffic that reaches this container directly over HTTP,
+    # which would break those checks without a matching USE_PROXY_HEADERS/reverse-proxy trust
+    # setup.
     SECURE_HSTS_SECONDS = 31536000
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True
-    SESSION_COOKIE_SECURE = False  # Set to True when SSL is configured
-    CSRF_COOKIE_SECURE = False  # Set to True when SSL is configured
 
     # Use environment variables for sensitive data
     SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", SECRET_KEY)

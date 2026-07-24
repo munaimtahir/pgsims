@@ -446,13 +446,66 @@ ready for the pilot scope described in §1 (1-2 hospitals, ~30 residents, ~10 su
 backend, data model, and workflow logic are already solid; what's missing is polish, not
 architecture.
 
-## 7. Bottom line
+## 7. Phase 5/7 — production environment hardening and smoke test, executed against the real pilot server
+
+The Docker stack on this machine (`pgsims_backend`/`pgsims_frontend`/`pgsims_db`/etc., serving
+`pg.fmu.edu.pk` / `pgsims.alshifalab.pk` via Caddy) was confirmed to be the actual pilot target,
+carrying no real data yet. Work done directly against it:
+
+**Real finding, fixed and verified live**: in production mode (`DEBUG=False`), `sims_project/
+settings.py` unconditionally hardcoded `SECURE_SSL_REDIRECT`, `SESSION_COOKIE_SECURE`, and
+`CSRF_COOKIE_SECURE` to `False`, with a comment reading "Set to True when SSL is configured" —
+despite SSL being fully configured (Caddy has HSTS/preload active, verified by curl). This silently
+overrode the environment-variable-driven values computed earlier in the same file (which already
+had a correct `not DEBUG` default), and `.env` also explicitly set the two cookie flags to `False`.
+Net effect: session and CSRF cookies were served without the `Secure` flag on a real HTTPS
+production deployment. Fixed both layers (removed the redundant hardcoded override in `settings.py`;
+flipped `.env`'s `SESSION_COOKIE_SECURE`/`CSRF_COOKIE_SECURE` to `True`) and left
+`SECURE_SSL_REDIRECT` at `False` deliberately — Caddy already redirects HTTP→HTTPS at the edge
+(verified), and enabling Django's own redirect without also trusting proxy headers (`.env` currently
+has `USE_PROXY_HEADERS=False`) would risk breaking internal Docker-network/healthcheck traffic that
+reaches the container directly over HTTP.
+
+Verification, not just a code change: rebuilt and redeployed both `pgsims_backend` and
+`pgsims_frontend` (bringing the live server up to date with every fix from this session, not just
+this one — it had been running week-old code throughout). Confirmed via `manage.py check --deploy`
+run inside the actual container that `security.W012` (insecure session cookie) and `security.W016`
+(insecure CSRF cookie) are gone; `security.W008` (SSL redirect) remains, as intended, for the reason
+above. Both containers came back healthy with clean logs. Migrations confirmed up to date (78
+applied, 0 pending) both before and after. Backup scripts (`backup_pgms_db.sh`,
+`verify_pgms_backup.sh`, `restore_pgms_db.sh`) confirmed executable.
+
+**Smoke test — unauthenticated layer only**: confirmed `/login`, `/masters`, and `/api/health/` all
+load cleanly (HTTP 200, no server errors, clean container logs) on the redeployed stack. **The
+authenticated portion of `SMOKE_TEST_CHECKLIST.md`** (login flow, `/masters` CRUD, evaluation/logbook
+submit-review cycles, dashboards) **was not run** — doing so needs real admin credentials for this
+deployment, which weren't available and shouldn't be guessed or created against a real system
+without explicit authorization. This is the one remaining checklist item that needs a human (or
+explicit credentials handed to a future session) to complete.
+
+**Not done, explicitly out of scope for this pass**: Phase 6 (loading the real pilot roster,
+`pilot_data/first_pilot_run/`) — prepared and confirmed column-compatible with the fixed
+bulk-import screen, but deliberately not executed, per explicit instruction to prepare only. Phase 8
+(distributing real credentials, go-live) — not started, needs explicit go-ahead.
+
+One environmental note worth recording: this host runs many unrelated production deployments for
+other projects (visible via `docker ps` — `fmu_backend_prod`, `rims_backend_prod`,
+`phc-accreditation`, etc.) and was under very high load during this session (load average ~19
+sustained), which made both container rebuilds unusually slow (the backend image took ~40 minutes,
+almost entirely in layer export, not actual compilation). Nothing outside the two `pgsims_*`
+containers already covered by this audit's scope was touched.
+
+## 8. Bottom line
 
 The core system is in materially better shape than the stale docs in this repo suggest, and no
 worse than the newest brick docs claim — **with one exception**: the brick verdicts never actually
 ran the frontend unit test suite, so they missed a real crash bug on the resident dashboard and a
 set of stale tests that would have caught it. Backend logic, gate discipline, and the overall
-architecture are sound and pass every check I could run. The path to pilot is short and concrete:
-one real bug fix, one test-suite cleanup, targeted coverage work on the two highest-risk pilot code
-paths, and a documentation pass so the next person (human or agent) doesn't start from a stale
-worldview.
+architecture are sound and pass every check I could run.
+
+As of this update, Steps 0-5 of §6's plan are done, Step 3 is meaningfully advanced (not
+exhaustive), and Phase 5/7 (§7) has been executed against the real pilot server, which is now
+running every fix from this session. What's left before pilot: the one open product-scope question
+(leave management, §7.2 of the truth map), a decision on the three backend clusters investigated in
+§7.3/7.5/7.6 of the truth map, the authenticated portion of the smoke test (needs real credentials),
+and, when you're ready, Phase 6 (real roster load — prepared, not executed) and Phase 8 (go-live).
