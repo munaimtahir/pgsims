@@ -378,7 +378,7 @@ class Command(BaseCommand):
             defaults={
                 "title": "E2E Baseline Research Project",
                 "topic_area": "Clinical Education",
-                "SUPERVISOR": supervisor,
+                "supervisor": supervisor,
                 "status": ResidentResearchProject.STATUS_SUBMITTED_SUPERVISOR,
                 "supervisor_feedback": "",
                 "submitted_to_supervisor_at": timezone.now(),

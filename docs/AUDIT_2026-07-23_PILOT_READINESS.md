@@ -495,7 +495,74 @@ sustained), which made both container rebuilds unusually slow (the backend image
 almost entirely in layer export, not actual compilation). Nothing outside the two `pgsims_*`
 containers already covered by this audit's scope was touched.
 
-## 8. Bottom line
+## 9. Live end-to-end runtime verification (2026-07-24)
+
+Following completion of the three architectural-cluster decisions (§4.6, and the truth map's §7.3/
+§7.5/§7.6), a real browser (Playwright, driving the live pilot server at ports 8082/8014, not a
+mock) was used to walk through the core workflows named explicitly by the product owner:
+onboarding, logbook, leave, and rotation. This is a genuinely different verification tier from
+everything before it in this document — prior sections verified code paths exist and unit/gate
+tests pass; this section verifies the actual user-facing behavior when clicked through for real.
+
+### 9.1 Logbook — WORKING end-to-end (resident submit → supervisor verify)
+
+A resident (`e2e_pg`) created a logbook entry, submitted it, and a supervisor (`e2e_supervisor`)
+opened `/academics/logbook/1/review`, entered remarks, and clicked **Verify Entry**. The entry's
+status correctly transitioned to `VERIFIED` and the remarks persisted. No defects found in this
+flow.
+
+### 9.2 Rotation — no scheduling/assignment feature exists (expected, not a regression)
+
+`/academics/rotation-templates` explicitly states "Scaffold only. Resident rotation scheduling will
+be added later." Confirmed the backend `sims.rotations` app has no real rotation-assignment API
+either — `sims/rotations/urls.py` only exposes one real endpoint
+(`department_by_hospital_api`, used for hospital-transfer overrides); every other route in that
+file is a `dummy_redirect` stub. This matches the UI's own disclosure and is a known, deferred gap,
+not a hidden one.
+
+### 9.3 Leave — no frontend at all (confirms §7.2 of the truth map, still open)
+
+No `/leave*` page, component, or API client exists anywhere in `frontend/`. The backend
+(`LeaveRequestViewSet`, `MyLeavesView`, `LeaveApprovalInboxView` in `sims/training/`) is real,
+tested, and untouched by this session's cluster removals. This is the one still-open product-scope
+decision flagged since §7.2 — build was explicitly deferred pending the cluster 1/2/3 decisions,
+which are now finalized. Whether to build the leave frontend now is a decision for the product
+owner, not something resolved by this audit pass.
+
+### 9.4 Onboarding — REAL BUG FOUND AND FIXED: the documented login state machine was not enforced
+
+CLAUDE.md/AGENTS.md document the onboarding state machine as: `must_change_password` →
+`/change-password`; missing required profile fields → `/complete-profile`; otherwise → dashboard,
+with `/api/auth/me/` as the source of truth. This was tested for real: created a brand-new resident
+user via `/users/new` (admin-only identity creation), then logged in as that user with the default
+temp password.
+
+**Finding:** the user landed directly on `/dashboard/resident`, fully bypassing both the forced
+password change and profile completion. `/api/auth/me/` correctly reported
+`"must_change_password": true` and `"allowed_next_route": "/change-password"` — the backend state
+machine was correct. The bug was entirely on the frontend: `frontend/app/login/page.tsx` routed
+unconditionally to `getDashboardPathForRole(role)` after login, never consulting `/api/auth/me/`,
+and `frontend/components/auth/ProtectedRoute.tsx` (the single wrapper used by every protected page)
+only checked role-based access — it had no onboarding-gate logic at all. The only place that *did*
+check `allowed_next_route` was `/complete-profile`'s own self-redirect, which nobody ever reached
+because nothing routed users there in the first place.
+
+**Impact:** every newly created user (all four roles) could skip the forced password change and
+profile completion simply by not navigating to `/change-password` manually — a real security/data-
+integrity gap for pilot, since it means residents/supervisors could operate indefinitely on a
+default temp password (`pgfmu123`, printed in the New User form's own placeholder text) with an
+incomplete profile.
+
+**Fix (this session):** `ProtectedRoute.tsx` now calls `authApi.me()` once per protected-page mount
+(skipped when already on `/change-password` or `/complete-profile` to avoid a redirect loop), and if
+the backend's `allowed_next_route` is one of those two onboarding routes and doesn't match the
+current path, it redirects there before rendering children. Verified: full frontend test suite
+(102 tests, 35 suites) passes, including 2 new/updated `ProtectedRoute.test.tsx` cases covering the
+new onboarding-redirect behavior. Rebuilt and redeployed to the live pilot frontend container;
+re-tested the exact same new-user login in a real browser and confirmed the fix (see commit for
+before/after).
+
+## 10. Bottom line
 
 The core system is in materially better shape than the stale docs in this repo suggest, and no
 worse than the newest brick docs claim — **with one exception**: the brick verdicts never actually

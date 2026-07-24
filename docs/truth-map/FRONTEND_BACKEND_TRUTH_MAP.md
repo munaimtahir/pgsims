@@ -294,6 +294,43 @@ enough that a manual click-through during Phase 7 (smoke test) will confirm or r
 than further static analysis — flagged here so they aren't forgotten, not treated as high-severity
 findings.
 
+### 7.9 REAL BUG (found via live browser e2e, fixed 2026-07-24) — the documented onboarding state machine was never enforced by the frontend
+
+Static analysis and unit tests could not have caught this one — it required actually logging in as
+a brand-new user in a real browser. Created a resident via `/users/new`, logged in with the default
+temp password. `/api/auth/me/` correctly returned `must_change_password: true` and
+`allowed_next_route: "/change-password"` (backend was correct), but the user landed on
+`/dashboard/resident` anyway. Root cause: `frontend/app/login/page.tsx` redirected unconditionally
+to the role dashboard without consulting `/api/auth/me/`, and `ProtectedRoute.tsx` (the shared
+wrapper for every protected page) only ever checked role-based access, never the onboarding gate.
+`/complete-profile`'s own self-redirect was the only code that read `allowed_next_route`, and it was
+unreachable because nothing routed users there.
+
+**Fix:** `ProtectedRoute.tsx` now calls `authApi.me()` on mount (skipped on `/change-password` and
+`/complete-profile` themselves) and redirects to `allowed_next_route` when it names one of those two
+onboarding routes and differs from the current path. Covered by updated `ProtectedRoute.test.tsx`.
+Full suite (102 tests/35 suites) green; rebuilt and redeployed to the live pilot frontend; re-tested
+the same new-user login flow in a real browser post-fix.
+
+**Why this matters beyond the one bug:** every prior "WORKING" verdict in §1-§6 of this document was
+based on API contracts, code paths existing, and automated tests passing — none of that surfaces a
+gap where two independently-correct pieces (a correct backend contract, a correct-looking
+`ProtectedRoute` component) fail to compose into correct end-to-end behavior. Treat this document's
+earlier WORKING verdicts as "the wiring exists and is exercised by tests," not as a guarantee that
+live click-through matches — see §9 of `docs/AUDIT_2026-07-23_PILOT_READINESS.md` for the full
+runtime verification pass this finding came from.
+
+### 7.10 Rotation and leave workflows — confirmed via live e2e, not new findings
+
+Live browser walkthrough (2026-07-24) confirms both are exactly as already documented here:
+rotation *scheduling/assignment* has no real implementation (`/academics/rotation-templates` is an
+explicit scaffold; `sims/rotations/urls.py` has exactly one real endpoint,
+`department_by_hospital_api`, everything else is a `dummy_redirect` stub) — this was already known,
+not a regression. Leave management (§7.2) still has zero frontend — confirmed by directly searching
+`frontend/` for any `leave`-related page or API client and finding none. No new action from this
+pass; both remain open product-scope decisions for the leave case, and an already-accepted deferred
+gap for rotation scheduling.
+
 ---
 
 ## 8. Summary
