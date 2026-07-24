@@ -88,10 +88,10 @@ acknowledging the feature was retired) — leave management looks like backend w
 followed up with any frontend at all, rather than a feature that was deliberately removed.
 `docs/APP_OVERVIEW.md` (itself a stale doc, see the main audit §4.5) lists "Leave Management" as a
 core pilot feature, which suggests this may genuinely be expected to work.
-**Needs a product decision**: is resident leave request/approval in scope for this pilot? If yes,
-this is a real missing frontend (list/submit form for residents, approval inbox for
-supervisors/admins) — comparable in size to the bulk-import gap. If no, it should be documented as
-explicitly deferred, the same way thesis/research/workshops were.
+**DECIDED 2026-07-24: in scope for this pilot.** Leave request/approval is confirmed a real,
+wanted feature — needs a resident-facing submit/list form and a supervisor/admin approval inbox,
+comparable in size to the bulk-import gap. **Not started yet, by explicit instruction**: build this
+after the remaining open decisions (§7.3/§7.5/§7.6 below) are finalized, not before.
 
 ### 7.3 MIXED — a second "masters" API: two dead ViewSets, five with real (untested-by-frontend) test coverage
 `sims/academics/urls.py` registers a DRF router (`InstitutionViewSet`, `HospitalViewSet`,
