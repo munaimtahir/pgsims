@@ -511,20 +511,28 @@ opened `/academics/logbook/1/review`, entered remarks, and clicked **Verify Entr
 status correctly transitioned to `VERIFIED` and the remarks persisted. No defects found in this
 flow.
 
-### 9.2 Rotation — CORRECTED: no frontend exists, but the backend gap is bigger and more real than first reported
+### 9.2 Rotation — CORRECTED, then BUILT: `sims.training.RotationAssignment` now has a real UI (2026-07-24)
 
 `/academics/rotation-templates` explicitly states "Scaffold only. Resident rotation scheduling will
 be added later," and the `sims.rotations` app has no real assignment API (`sims/rotations/urls.py`
 has exactly one real endpoint, `department_by_hospital_api`; everything else is a `dummy_redirect`
-stub) — that part of the original finding was correct. What was **missed**: a second, separate
-model in a different app, `sims.training.RotationAssignment`, is a complete, real, tested workflow
-(draft → submit → HOD approve → UTRMC approve → active → complete, with reject/return reasons and
-full audit history) exposed via five real routes in `sims/training/urls.py` — and it has **zero**
-frontend consumer, confirmed by grepping `frontend/` for each route path. So the corrected finding
-is: rotation scheduling has no UI (unchanged conclusion), but there is substantially more real,
-tested, currently-unused backend behind that gap than originally documented — see
-`docs/truth-map/FRONTEND_BACKEND_TRUTH_MAP.md` §7.10 for the full correction. Treat this the same
-way as the leave-management gap (§9.3/§7.2): a real product-scope decision, not dead code.
+stub) — that part of the original finding was correct. What was **missed** on the first pass: a
+second, separate model in a different app, `sims.training.RotationAssignment`, was a complete, real,
+tested backend workflow (draft → submit → HOD approve → UTRMC approve → active → complete, with
+reject/return reasons and full audit history) exposed via five real routes in
+`sims/training/urls.py`, with **zero** frontend consumer.
+
+**Built and shipped this session**: `/academics/rotation-assignments` (list + create + detail with
+role-scoped actions) — see `frontend/lib/api/rotations.ts` and the three pages under
+`frontend/app/academics/rotation-assignments/`. Live-verified the complete lifecycle across all
+three roles: admin created a DRAFT assignment, submitted it; supervisor approved it via the
+review-application action; admin UTRMC-approved, activated, then completed it; both supervisor and
+resident correctly saw the assignment scoped to their own view at every stage (matching the
+backend's own `get_queryset` scoping). Also fixed a real bug found during this build: the
+hospital/department and resident-training-record dropdowns silently truncated at 25 of 51+ results
+because the backend's DRF pagination has no `page_size` query param support — fixed with a
+page-following helper, covered by `rotations.test.ts`. Nav entries added for all three roles. Full
+frontend suite (104/104) and backend suite (432/432) green after this build.
 
 ### 9.3 Leave — no frontend at all (confirms §7.2 of the truth map, still open)
 
@@ -593,6 +601,52 @@ Python change — same pattern used earlier in this session for the `seed_e2e.py
 complete chain live end-to-end post-fix: `/login` → `/change-password` (change succeeds, flag
 clears) → `/complete-profile` (filled and saved) → `/dashboard/resident` (renders normally, no
 loop). All four onboarding stages now work correctly in one uninterrupted pass.
+
+### 9.6 Authenticated full-workflow smoke test with real admin/resident/supervisor credentials (2026-07-24)
+
+Following 9.1-9.5, ran a complete, credentialed, click-through workflow test end to end: created a
+new hospital, department, and hospital-department matrix link via `/masters`' bulk-import CSV flow;
+created a supervisor and a resident via the same flow, including the `supervisor_email` auto-link;
+ran the Supervision Assignments import to create the formal `ResidentSupervisorAssignment`; created
+the resident's `sims.academics.ResidentTrainingRecord` via `/academics/training-records`; then, as
+the resident, completed onboarding, submitted a logbook entry, and had the supervisor verify it; and
+separately built and exercised the full RotationAssignment lifecycle described in §9.2. Every step
+was done through the real UI with real role-based logins (`admin`/`resident`/`supervisor` test
+accounts), not API calls or fixtures.
+
+**Real findings from this pass, all fixed:**
+- §9.2's RotationAssignment UI gap and the pagination bug found while building it.
+- **`_normalize_specialty` validates against a hardcoded 18-value legacy enum
+  (`sims/users/models.py`'s `SPECIALTY_CHOICES`)**, completely disconnected from the DB-driven
+  `sims.academics.Specialty` master-data model shown elsewhere in the app. Entering a real specialty
+  name from the `Specialty` table (e.g. "GI Surgery") into the Faculty & Supervisors bulk-import
+  fails with "Unknown specialty" unless it happens to match the legacy enum's fixed labels
+  (`medicine`, `surgery`, `pediatrics`, etc.). **Not fixed this pass** — this is a data-model
+  reconciliation question (which of the two "specialty" concepts should the CSV import actually
+  validate against?) for product/architecture decision, not a one-line bug fix. Flagged here so it
+  isn't silently hit during a real pilot roster load.
+- Bulk-imported supervisors/residents (with `department_code`/`hospital_code` columns) still get
+  routed through `/complete-profile` asking for Hospital/Department again on first login, because
+  the profile-completion gate checks `User.home_department`/`User.home_hospital` while the bulk
+  import writes to `DepartmentMembership`/`HospitalAssignment` instead. Not a bug — both paths lead
+  to correct end state — but mildly redundant UX worth a note for anyone building a "skip
+  complete-profile if bulk-imported" shortcut later.
+- Confirmed (not a bug): `sims.training.ResidentTrainingRecord` (used by `RotationAssignment`) and
+  `sims.academics.ResidentTrainingRecord` (used by the resident dashboard and logbook) are two
+  independent per-resident containers that must each be established separately — a resident can have
+  one without the other, and logbook submission specifically requires the `academics` one
+  (`"Resident does not have an active training record."` if missing). This tripped the logbook
+  submission test until the record was created via `/academics/training-records`; documented here so
+  a real pilot rollout knows both need setting up per resident, not just one.
+
+**Not touched, explicitly out of scope for this pass:** the `SPECIALTY_CHOICES`/`Specialty` model
+reconciliation above, and any further schema unification between the two `ResidentTrainingRecord`
+models — both are real architectural questions for a human decision, not something to silently
+"fix" mid-smoke-test.
+
+Full verification: backend suite 432 passed / 8 skipped / 0 failed (no regressions from any of this
+session's changes); frontend suite 104/104; all work committed and pushed to `main`; all container
+rebuilds redeployed to the live pilot stack and re-tested post-deploy.
 
 ## 10. Bottom line
 

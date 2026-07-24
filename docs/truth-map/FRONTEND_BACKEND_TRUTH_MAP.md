@@ -339,6 +339,24 @@ This pair (7.9/7.9b) is the strongest evidence in this document for why "verify,
 fix live" is not optional — a plausible, unit-tested frontend fix combined with a pre-existing,
 previously-harmless backend bug to produce a worse failure mode than either bug alone.
 
+### 7.10a UPDATE — RotationAssignment now has a real, verified UI (2026-07-24)
+
+§7.10 below documented `sims.training.RotationAssignment` as real, tested backend with zero
+frontend. That gap is now closed: `/academics/rotation-assignments` (list/create/detail, role-scoped
+actions) was built and live-verified through the complete lifecycle — draft → submit → supervisor
+approve → UTRMC approve → activate → complete — across admin, supervisor, and resident logins in a
+real browser against the live pilot server. See `docs/AUDIT_2026-07-23_PILOT_READINESS.md` §9.2/§9.6
+for the full build and test record, including a real pagination bug found and fixed along the way
+(hospital/department dropdown silently truncated at 25 of 51+ results — DRF's default pagination has
+no `page_size` query param support).
+
+Also found and documented during the same pass (not fixed, needs a product decision): `User.specialty`
+validates bulk-import rows against a hardcoded 18-value legacy enum
+(`sims/users/models.py::SPECIALTY_CHOICES`) that is entirely disconnected from the DB-driven
+`sims.academics.Specialty` master-data model used elsewhere in the app. A real specialty name from
+the `Specialty` table will fail Faculty & Supervisors bulk-import with "Unknown specialty" unless it
+happens to match the legacy enum's fixed labels.
+
 ### 7.10 Rotation and leave workflows — CORRECTED (rotation) via live e2e + closer backend check
 
 Live browser walkthrough (2026-07-24) initially concluded rotation *scheduling/assignment* had no
