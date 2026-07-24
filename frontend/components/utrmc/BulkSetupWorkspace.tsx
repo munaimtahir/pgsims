@@ -60,6 +60,19 @@ const PANELS = [
   },
   {
     step: 'Step 5',
+    title: 'Academic Sessions',
+    entity: 'academic-sessions',
+    exportResource: 'academic_sessions',
+    description: 'Load academic session/intake years (e.g. 2026). Residents pick one of these when completing their profile.',
+    expectedColumns: [
+      { name: 'session_code', required: true, note: 'Stable session code, e.g. 2026.' },
+      { name: 'session_name', required: true },
+      { name: 'description' },
+      { name: 'active' },
+    ],
+  },
+  {
+    step: 'Step 6',
     title: 'Faculty & Supervisors',
     entity: 'faculty-supervisors',
     exportResource: 'faculty-supervisors',
@@ -81,7 +94,7 @@ const PANELS = [
     ],
   },
   {
-    step: 'Step 6',
+    step: 'Step 7',
     title: 'Residents',
     entity: 'residents',
     exportResource: 'residents',
@@ -106,7 +119,7 @@ const PANELS = [
     ],
   },
   {
-    step: 'Step 7',
+    step: 'Step 8',
     title: 'Supervision Assignments',
     entity: 'supervision-links',
     exportResource: 'supervision-links',
@@ -121,7 +134,7 @@ const PANELS = [
     ],
   },
   {
-    step: 'Step 8',
+    step: 'Step 9',
     title: 'Rotation / Placement Assignments',
     entity: 'rotation-assignments',
     exportResource: 'rotation-assignments',

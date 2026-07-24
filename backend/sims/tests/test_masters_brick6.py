@@ -66,33 +66,6 @@ def test_seed_pilot_masters_command():
 
 
 @pytest.mark.django_db
-def test_master_apis_rbac(api_client, admin_user, resident_user):
-    """Test RBAC on master CRUD API endpoints."""
-    # Seed data
-    call_command("seed_pilot_masters")
-    inst = Institution.objects.first()
-
-    # 1. Unauthenticated gets 401
-    url = f"/api/masters/institutions/{inst.id}/"
-    response = api_client.get(url)
-    assert response.status_code == status.HTTP_401_UNAUTHORIZED
-
-    # 2. Resident can READ but NOT write
-    api_client.force_authenticate(user=resident_user)
-    response = api_client.get("/api/masters/institutions/")
-    assert response.status_code == status.HTTP_200_OK
-
-    response = api_client.post("/api/masters/institutions/", {"code": "NEW", "name": "New University"})
-    assert response.status_code == status.HTTP_403_FORBIDDEN
-
-    # 3. Admin can write
-    api_client.force_authenticate(user=admin_user)
-    response = api_client.post("/api/masters/institutions/", {"code": "NEW", "name": "New University"})
-    assert response.status_code == status.HTTP_201_CREATED
-    assert Institution.objects.filter(code="NEW").exists()
-
-
-@pytest.mark.django_db
 def test_identity_options_endpoint(api_client, resident_user):
     """Test that /api/identity/options/ returns all master option lists."""
     call_command("seed_pilot_masters")

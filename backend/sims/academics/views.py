@@ -15,13 +15,10 @@ from .models import (
     AcademicPeriod,
     AcademicSession,
     Department,
-    Designation,
     EvaluationFormTemplate,
-    Institution,
     LogbookCategory,
     ResidentTrainingRecord,
     RotationTemplate,
-    Specialty,
     SupervisorReviewQueueItem,
     EvaluationSubmission,
     EvaluationResponse,
@@ -35,13 +32,6 @@ from sims.supervision.models import ResidentSupervisorAssignment
 
 from .serializers import (
     AcademicPeriodSerializer,
-    DepartmentSerializer,
-    InstitutionSerializer,
-    HospitalSerializer,
-    TrainingProgramSerializer,
-    SpecialtySerializer,
-    DesignationSerializer,
-    AcademicSessionSerializer,
     EvaluationFormTemplateSerializer,
     LogbookCategorySerializer,
     ResidentTrainingRecordSerializer,
@@ -89,132 +79,6 @@ from .services import (
     seed_pilot_academic_workflows,
 )
 
-
-
-class InstitutionViewSet(viewsets.ModelViewSet):
-    """ViewSet for Institution CRUD operations."""
-
-    queryset = Institution.objects.all()
-    serializer_class = InstitutionSerializer
-    permission_classes = [ReadAnyWriteAdminOnly]
-    filterset_fields = ["active", "code"]
-    search_fields = ["name", "code", "description"]
-    ordering_fields = ["name", "code", "created_at"]
-
-    def get_queryset(self):
-        queryset = super().get_queryset()
-        user = self.request.user
-        if getattr(user, "is_superuser", False) or getattr(user, "role", None) == "ADMIN":
-            return queryset
-        return queryset.filter(active=True)
-
-
-class HospitalViewSet(viewsets.ModelViewSet):
-    """ViewSet for Hospital CRUD operations."""
-
-    queryset = Hospital.objects.all().order_by("name")
-    serializer_class = HospitalSerializer
-    permission_classes = [ReadAnyWriteAdminOnly]
-    filterset_fields = ["is_active", "code"]
-    search_fields = ["name", "code"]
-    ordering_fields = ["name", "created_at"]
-
-    def get_queryset(self):
-        queryset = super().get_queryset()
-        user = self.request.user
-        if getattr(user, "is_superuser", False) or getattr(user, "role", None) == "ADMIN":
-            return queryset
-        return queryset.filter(is_active=True)
-
-
-class DepartmentViewSet(viewsets.ModelViewSet):
-    """ViewSet for Department CRUD operations."""
-
-    queryset = Department.objects.all()
-    serializer_class = DepartmentSerializer
-    permission_classes = [ReadAnyWriteAdminOnly]
-    filterset_fields = ["active", "code"]
-    search_fields = ["name", "code", "description"]
-    ordering_fields = ["name", "code", "created_at"]
-
-    def get_queryset(self):
-        queryset = super().get_queryset()
-        user = self.request.user
-        if getattr(user, "is_superuser", False) or getattr(user, "role", None) == "ADMIN":
-            return queryset
-        return queryset.filter(active=True)
-
-
-class TrainingProgramViewSet(viewsets.ModelViewSet):
-    """ViewSet for TrainingProgram CRUD operations."""
-
-    queryset = TrainingProgram.objects.all()
-    serializer_class = TrainingProgramSerializer
-    permission_classes = [ReadAnyWriteAdminOnly]
-    filterset_fields = ["active", "code", "degree_type"]
-    search_fields = ["name", "code", "description"]
-    ordering_fields = ["name", "code", "created_at"]
-
-    def get_queryset(self):
-        queryset = super().get_queryset()
-        user = self.request.user
-        if getattr(user, "is_superuser", False) or getattr(user, "role", None) == "ADMIN":
-            return queryset
-        return queryset.filter(active=True)
-
-
-class SpecialtyViewSet(viewsets.ModelViewSet):
-    """ViewSet for Specialty CRUD operations."""
-
-    queryset = Specialty.objects.all()
-    serializer_class = SpecialtySerializer
-    permission_classes = [ReadAnyWriteAdminOnly]
-    filterset_fields = ["active", "code"]
-    search_fields = ["name", "code", "description"]
-    ordering_fields = ["name", "code", "created_at"]
-
-    def get_queryset(self):
-        queryset = super().get_queryset()
-        user = self.request.user
-        if getattr(user, "is_superuser", False) or getattr(user, "role", None) == "ADMIN":
-            return queryset
-        return queryset.filter(active=True)
-
-
-class DesignationViewSet(viewsets.ModelViewSet):
-    """ViewSet for Designation CRUD operations."""
-
-    queryset = Designation.objects.all()
-    serializer_class = DesignationSerializer
-    permission_classes = [ReadAnyWriteAdminOnly]
-    filterset_fields = ["active", "code"]
-    search_fields = ["name", "code", "description"]
-    ordering_fields = ["name", "code", "created_at"]
-
-    def get_queryset(self):
-        queryset = super().get_queryset()
-        user = self.request.user
-        if getattr(user, "is_superuser", False) or getattr(user, "role", None) == "ADMIN":
-            return queryset
-        return queryset.filter(active=True)
-
-
-class AcademicSessionViewSet(viewsets.ModelViewSet):
-    """ViewSet for AcademicSession CRUD operations."""
-
-    queryset = AcademicSession.objects.all()
-    serializer_class = AcademicSessionSerializer
-    permission_classes = [ReadAnyWriteAdminOnly]
-    filterset_fields = ["active", "code"]
-    search_fields = ["name", "code", "description"]
-    ordering_fields = ["name", "code", "created_at"]
-
-    def get_queryset(self):
-        queryset = super().get_queryset()
-        user = self.request.user
-        if getattr(user, "is_superuser", False) or getattr(user, "role", None) == "ADMIN":
-            return queryset
-        return queryset.filter(active=True)
 
 
 class ResidentTrainingRecordViewSet(viewsets.ModelViewSet):

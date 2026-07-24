@@ -123,14 +123,34 @@ Breaking it down by model:
   RBAC-tested backend support and genuinely **no frontend UI** — this reads more like the leave
   management gap (§7.2: real capability, no way to reach it) than like confirmed-dead code.
 
-**Net assessment**: `HospitalViewSet`/`DepartmentViewSet` here are safe, low-priority cleanup
-candidates (relocate later, low risk, low value). The other five need a product-scope decision, the
-same way leave management does: is admin-managed CRUD for institutions/specialties/designations/
-academic-sessions/training-programs (beyond what bulk import and the seed command already cover)
-wanted for this pilot? Not touched further in this pass — this whole cluster is left exactly as it
-was before this audit, since the safe subset (2 of 7 ViewSets) isn't worth a partial, delicate
-edit to a shared `views.py`/`urls.py` on its own, and the other 5 need a decision before any code
-change makes sense.
+**DECIDED AND EXECUTED 2026-07-24**: given the choice per model —
+- **Academic Session**: real, structurally required (`ResidentProfile.academic_session_ref` is a
+  live foreign key set during profile completion, alongside `hospital`/`department_ref`/
+  `program_ref`, all of which already had a working admin path). Built via the same pattern as
+  Training Program (§4.6/Step 5): a new `import_academic_sessions` bulk-import method
+  (`sims/bulk/services.py`), wired into the unified import endpoint, template, and export; a new
+  "Academic Sessions" panel added to `BulkSetupWorkspace.tsx` at `/masters` (Step 5 of 9 in that
+  workflow now). 4 new backend tests.
+- **Institution, Specialty, Designation**: confirmed not structurally needed (not real foreign keys
+  anywhere — `User.specialty` and `*Profile.designation` are free-text fields, not FKs to these
+  tables) — no UI built, per the decision.
+- **The entire dead cluster removed**: `sims/academics/urls.py` (all 7 ViewSets:
+  `InstitutionViewSet`, `HospitalViewSet`, `DepartmentViewSet`, `TrainingProgramViewSet`,
+  `SpecialtyViewSet`, `DesignationViewSet`, `AcademicSessionViewSet`) deleted along with the two
+  dead URL mounts in `sims_project/urls.py`. The `Institution`/`Specialty`/`Designation`/
+  `AcademicSession` **models** were kept — still used by Django admin, `IdentityOptionsView` (the
+  read-only dropdown source for `/complete-profile`/`/users/new`), the `seed_pilot_masters`
+  management command, and (for `Institution`) a foreign key in `sims/rotations/models.py`. Only the
+  duplicate REST API onto them was removed.
+- Retired `sims/tests/test_masters_brick6.py::test_master_apis_rbac` (the only test depending on the
+  removed routes, found this time by checking both `reverse()` names and literal URL strings before
+  touching anything — no surprises, unlike §7.3's first attempt). Its sibling tests in the same file
+  (`test_identity_options_endpoint`, `test_onboarding_profile_completion_resolves_master_foreign_keys`,
+  `test_data_quality_endpoint`, `test_seed_pilot_masters_command`) all still pass unchanged.
+
+Verified: `pytest sims` 439 passed / 8 skipped / 0 failed, `manage.py check` clean,
+`check_all_pgms_gates.sh` all pass, zero remaining references to any removed class/route anywhere in
+the backend.
 
 ### 7.4 LEGACY (confirmed intentional) — Thesis/research/workshops/postings self-service pages are deliberate redirect stubs
 `frontend/app/dashboard/resident/{thesis,research,workshops,postings,schedule,progress}/page.tsx`

@@ -11,7 +11,7 @@ from datetime import date, timedelta
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 
-from sims.academics.models import Department
+from sims.academics.models import AcademicSession, Department
 from sims.bulk.services import BulkService
 from sims.rotations.models import Hospital, HospitalDepartment
 from sims.training.models import ProgramRotationTemplate, ResidentTrainingRecord, TrainingProgram
@@ -188,4 +188,38 @@ class BulkImportResidentTrainingRecordsTests(TestCase):
             ",MED-FCPS,2026-01-01\n"
         )
         operation = self.service.import_resident_training_records(file, dry_run=False)
+        self.assertEqual(operation.failure_count, 1)
+
+
+class BulkImportAcademicSessionsTests(TestCase):
+    def setUp(self):
+        self.admin = User.objects.create_superuser(username="admin_as", password="pw", role="ADMIN")
+        self.service = BulkService(self.admin)
+
+    def test_apply_creates_session(self):
+        file = _csv_file("session_code,session_name,description,active\n2026,Academic Session 2026,,true\n")
+        operation = self.service.import_academic_sessions(file, dry_run=False)
+        self.assertEqual(operation.success_count, 1)
+        session = AcademicSession.objects.get(code="2026")
+        self.assertEqual(session.name, "Academic Session 2026")
+        self.assertTrue(session.active)
+
+    def test_dry_run_does_not_create_session(self):
+        file = _csv_file("session_code,session_name,description,active\n2026,Academic Session 2026,,true\n")
+        operation = self.service.import_academic_sessions(file, dry_run=True)
+        self.assertEqual(operation.success_count, 1)
+        self.assertFalse(AcademicSession.objects.filter(code="2026").exists())
+
+    def test_apply_is_idempotent_update_or_create(self):
+        file = _csv_file("session_code,session_name,description,active\n2026,Session 2026,,true\n")
+        self.service.import_academic_sessions(file, dry_run=False)
+        file2 = _csv_file("session_code,session_name,description,active\n2026,Session 2026 Updated,,true\n")
+        self.service.import_academic_sessions(file2, dry_run=False)
+        self.assertEqual(AcademicSession.objects.filter(code="2026").count(), 1)
+        self.assertEqual(AcademicSession.objects.get(code="2026").name, "Session 2026 Updated")
+
+    def test_missing_required_fields_fails_row(self):
+        file = _csv_file("session_code,session_name,description,active\n,Academic Session 2026,,true\n")
+        operation = self.service.import_academic_sessions(file, dry_run=False)
+        self.assertEqual(operation.success_count, 0)
         self.assertEqual(operation.failure_count, 1)

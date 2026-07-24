@@ -153,9 +153,13 @@ urlpatterns = [
     path("api/", include("sims.users.userbase_urls")),
     path("api/users/", include("sims.users.api_user_urls")),
     path("api/", include("sims.training.urls")),
-    path("api/masters/", include("sims.academics.urls")),
     path("api/academics/", include("sims.academics.workflow_urls")),
-    path("academics/api/", include("sims.academics.urls")),
+    # api/masters/ and academics/api/ formerly mounted sims.academics.urls (a second, unreachable
+    # "masters" API onto the same canonical Department/Hospital/TrainingProgram models already
+    # served at api/hospitals/, api/departments/, etc via sims.users.userbase_urls above, plus
+    # Institution/Specialty/Designation/AcademicSession CRUD that was decided not needed for this
+    # pilot beyond Academic Session, which is now managed via the /masters bulk-import screen).
+    # Removed 2026-07-24 - see docs/truth-map/FRONTEND_BACKEND_TRUTH_MAP.md §7.3.
     path("api/auth/", include("sims.users.api_urls")),
     path("api/backup_center/", include("sims.backup_center.urls")),
 ]

@@ -61,6 +61,14 @@ _EXTRA_TEMPLATE_ROWS = {
             "active": "true",
         }
     ],
+    "academic_sessions": [
+        {
+            "session_code": "2026",
+            "session_name": "Academic Session 2026",
+            "description": "",
+            "active": "true",
+        }
+    ],
 }
 
 
@@ -1619,6 +1627,48 @@ class BulkService:
         operation.mark_completed(len(successes), len(failures), {"successes": successes, "failures": failures})
         return operation
 
+    def import_academic_sessions(
+        self,
+        uploaded_file,
+        *,
+        dry_run: bool = True,
+        allow_partial: bool = False,
+    ) -> BulkOperation:
+        from sims.academics.models import AcademicSession
+
+        operation = BulkOperation.objects.create(user=self.actor, operation=BulkOperation.OP_IMPORT)
+        try:
+            rows = list(_parse_csv_rows(uploaded_file, required_columns=None))
+        except ValidationError as exc:
+            operation.mark_failed({"error": str(exc)})
+            return operation
+
+        successes: List[dict] = []
+        failures: List[dict] = []
+
+        for row in rows:
+            row_num = row.get("_row_number", "?")
+            code = (row.get("session_code") or row.get("code") or "").strip().upper()
+            name = (row.get("session_name") or row.get("name") or "").strip()
+            description = (row.get("description") or "").strip()
+            active_raw = (row.get("active") or "true").strip().lower()
+            active = active_raw not in {"false", "0", "no"}
+
+            if not code or not name:
+                failures.append({"row": row_num, "error": "Missing required fields (session_code, session_name)"})
+                continue
+            try:
+                if not dry_run:
+                    AcademicSession.objects.update_or_create(
+                        code=code, defaults={"name": name, "description": description, "active": active}
+                    )
+                successes.append({"row": row_num, "code": code})
+            except Exception as exc:
+                failures.append({"row": row_num, "error": str(exc)})
+
+        operation.mark_completed(len(successes), len(failures), {"successes": successes, "failures": failures})
+        return operation
+
     def import_rotation_templates(
         self,
         uploaded_file,
@@ -1737,7 +1787,10 @@ class BulkService:
 
         # Normalize hyphenated entity keys (as used by the unified import endpoint's
         # _ENTITY_METHOD_MAP) to the underscore form this method's branches below use.
-        resource = {"training-programs": "training_programs"}.get(resource, resource)
+        resource = {
+            "training-programs": "training_programs",
+            "academic-sessions": "academic_sessions",
+        }.get(resource, resource)
 
         if resource in USERBASE_BULK_EXPORT_RESOURCES:
             return _render_export_rows(export_userbase_rows(resource), resource, export_format)
@@ -1833,6 +1886,12 @@ class BulkService:
             rows = [
                 {"program_code": p.code, "program_name": p.name, "duration_months": p.duration_months, "active": p.active}
                 for p in TrainingProgram.objects.all().order_by("code")
+            ]
+        elif resource == "academic_sessions":
+            from sims.academics.models import AcademicSession
+            rows = [
+                {"session_code": s.code, "session_name": s.name, "description": s.description, "active": s.active}
+                for s in AcademicSession.objects.all().order_by("code")
             ]
         elif resource == "rotation_templates":
             from sims.training.models import ProgramRotationTemplate

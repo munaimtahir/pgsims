@@ -420,6 +420,8 @@ _ENTITY_METHOD_MAP = {
     "training-programs": "import_training_programs",
     "rotation-templates": "import_rotation_templates",
     "resident-training-records": "import_resident_training_records",
+    # Academics module
+    "academic-sessions": "import_academic_sessions",
 }
 
 _ALLOWED_ROLES = {"ADMIN", "ADMIN"}

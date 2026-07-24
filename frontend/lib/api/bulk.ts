@@ -8,7 +8,8 @@ export type BulkUserbaseEntity =
   | 'residents'
   | 'supervision-links'
   | 'rotation-assignments'
-  | 'training-programs';
+  | 'training-programs'
+  | 'academic-sessions';
 
 export type BulkImportAction = 'dry-run' | 'apply';
 export type BulkExportFormat = 'csv' | 'xlsx';
