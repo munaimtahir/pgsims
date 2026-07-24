@@ -75,9 +75,13 @@ anything nontrivial in that area.
 - Exactly one `Hospital` model: `sims.rotations.Hospital`, linked to departments via
   `sims.rotations.HospitalDepartment` (a hospital ↔ department matrix, not a duplicate Department
   model). Never create things like `RotationDepartment` or `AcademicDepartment`.
-- A resident's stable affiliation is `User.home_department` / `User.home_hospital`. Rotations to a
-  different hospital require either an unavailable destination department at the home hospital, or
-  an `override_reason` + UTRMC admin approval via the rotation's approve endpoint.
+- A resident's stable affiliation is `User.home_department` / `User.home_hospital`. Rotation
+  placements are tracked by `sims.training.RotationAssignment` (draft → submit → HOD/UTRMC approve
+  → active → complete, with `return_reason`/`reject_reason`, exposed via `sims/training/urls.py`'s
+  `rotations`, `my/rotations/`, `utrmc/approvals/rotations/`, and `supervisor/rotations/pending/`
+  routes) — this is real, tested backend with **no frontend consumer** as of 2026-07-24 (see
+  `docs/truth-map/FRONTEND_BACKEND_TRUTH_MAP.md` §7.10). There is no `override_reason` field
+  anywhere in the codebase; don't invent one.
 - Notifications always go through `NotificationService` (`backend/sims/notifications/services.py`)
   using the canonical field names `recipient`, `verb`, `body`, `metadata`. Never construct
   `Notification` objects with legacy keys (`user=`, `message=`, `type=`, `related_object_id=`).

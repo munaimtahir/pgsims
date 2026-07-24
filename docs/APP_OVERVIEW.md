@@ -29,8 +29,10 @@ Exactly four: `ADMIN`, `RESIDENT`, `SUPERVISOR`, `SUPPORT_STAFF` — see
    and rotation placements.
 3. **Supervision** (`/supervision`): resident-to-supervisor assignment, with CSV import and
    data-quality checks.
-4. **Rotations**: placements into a hospital-department pairing, with inter-hospital
-   override/approval workflow when a resident is placed outside their home hospital.
+4. **Rotations**: real backend (`sims.training.RotationAssignment`, draft → submit → HOD/UTRMC
+   approve → active → complete) exists but has **no frontend** as of 2026-07-24 — the only
+   rotation-facing UI (`/academics/rotation-templates`) is an explicit scaffold. See
+   `docs/truth-map/FRONTEND_BACKEND_TRUTH_MAP.md` §7.10.
 5. **Academic workflow** (`/academics`): logbook entries and evaluation submissions, each following
    a draft → submit → supervisor review (approve/return/reject) cycle; training records, academic
    periods, rotation/evaluation templates, logbook categories.

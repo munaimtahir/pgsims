@@ -339,16 +339,30 @@ This pair (7.9/7.9b) is the strongest evidence in this document for why "verify,
 fix live" is not optional — a plausible, unit-tested frontend fix combined with a pre-existing,
 previously-harmless backend bug to produce a worse failure mode than either bug alone.
 
-### 7.10 Rotation and leave workflows — confirmed via live e2e, not new findings
+### 7.10 Rotation and leave workflows — CORRECTED (rotation) via live e2e + closer backend check
 
-Live browser walkthrough (2026-07-24) confirms both are exactly as already documented here:
-rotation *scheduling/assignment* has no real implementation (`/academics/rotation-templates` is an
-explicit scaffold; `sims/rotations/urls.py` has exactly one real endpoint,
-`department_by_hospital_api`, everything else is a `dummy_redirect` stub) — this was already known,
-not a regression. Leave management (§7.2) still has zero frontend — confirmed by directly searching
-`frontend/` for any `leave`-related page or API client and finding none. No new action from this
-pass; both remain open product-scope decisions for the leave case, and an already-accepted deferred
-gap for rotation scheduling.
+Live browser walkthrough (2026-07-24) initially concluded rotation *scheduling/assignment* had no
+real implementation, based on `/academics/rotation-templates` being an explicit scaffold and
+`sims/rotations/urls.py` having exactly one real endpoint (`department_by_hospital_api`, everything
+else a `dummy_redirect` stub). That conclusion was **incomplete** — a closer check during docs
+reconciliation (2026-07-24) found a second, separate, and substantially more real rotation feature
+that the initial pass missed by scoping to the wrong app: `sims.training.RotationAssignment`, a full
+draft → submit → HOD-approve → UTRMC-approve → active → complete model with `return_reason`/
+`reject_reason` fields and `django-simple-history` audit trail, backed by a real `ViewSet` and five
+dedicated routes in `sims/training/urls.py` (`rotations`, `my/rotations/`,
+`utrmc/approvals/rotations/`, `rotations/completions/` (+ `<id>/verify/`),
+`supervisor/rotations/pending/`). Confirmed **zero frontend consumer** for any of these five routes
+(`grep` across `frontend/` for each path found nothing) — so the corrected finding is: rotation
+*scheduling* genuinely has no frontend (as before), but the reason is not "the backend barely has
+anything either" — it's "the backend has a complete, real, tested workflow and nobody built the UI
+for it." This is a materially bigger gap than the original 7.10 suggested, and should be weighed
+accordingly if/when rotation UI work is prioritized. `/academics/rotation-templates` (the scaffold)
+and `RotationAssignment` (the real, unused backend workflow) are two different things — don't
+conflate them.
+
+Leave management (§7.2) still has zero frontend — confirmed by directly searching `frontend/` for
+any `leave`-related page or API client and finding none. Both rotation-assignment UI and leave UI
+are now open product-scope decisions of the same shape: real, tested backend, zero frontend.
 
 ---
 

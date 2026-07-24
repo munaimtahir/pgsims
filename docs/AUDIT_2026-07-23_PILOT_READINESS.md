@@ -511,14 +511,20 @@ opened `/academics/logbook/1/review`, entered remarks, and clicked **Verify Entr
 status correctly transitioned to `VERIFIED` and the remarks persisted. No defects found in this
 flow.
 
-### 9.2 Rotation — no scheduling/assignment feature exists (expected, not a regression)
+### 9.2 Rotation — CORRECTED: no frontend exists, but the backend gap is bigger and more real than first reported
 
 `/academics/rotation-templates` explicitly states "Scaffold only. Resident rotation scheduling will
-be added later." Confirmed the backend `sims.rotations` app has no real rotation-assignment API
-either — `sims/rotations/urls.py` only exposes one real endpoint
-(`department_by_hospital_api`, used for hospital-transfer overrides); every other route in that
-file is a `dummy_redirect` stub. This matches the UI's own disclosure and is a known, deferred gap,
-not a hidden one.
+be added later," and the `sims.rotations` app has no real assignment API (`sims/rotations/urls.py`
+has exactly one real endpoint, `department_by_hospital_api`; everything else is a `dummy_redirect`
+stub) — that part of the original finding was correct. What was **missed**: a second, separate
+model in a different app, `sims.training.RotationAssignment`, is a complete, real, tested workflow
+(draft → submit → HOD approve → UTRMC approve → active → complete, with reject/return reasons and
+full audit history) exposed via five real routes in `sims/training/urls.py` — and it has **zero**
+frontend consumer, confirmed by grepping `frontend/` for each route path. So the corrected finding
+is: rotation scheduling has no UI (unchanged conclusion), but there is substantially more real,
+tested, currently-unused backend behind that gap than originally documented — see
+`docs/truth-map/FRONTEND_BACKEND_TRUTH_MAP.md` §7.10 for the full correction. Treat this the same
+way as the leave-management gap (§9.3/§7.2): a real product-scope decision, not dead code.
 
 ### 9.3 Leave — no frontend at all (confirms §7.2 of the truth map, still open)
 
