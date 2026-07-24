@@ -320,6 +320,25 @@ earlier WORKING verdicts as "the wiring exists and is exercised by tests," not a
 live click-through matches — see §9 of `docs/AUDIT_2026-07-23_PILOT_READINESS.md` for the full
 runtime verification pass this finding came from.
 
+### 7.9b SECOND REAL BUG (found only by re-testing 7.9's own fix) — `change_password_view` never cleared `must_change_password`
+
+Re-testing 7.9's fix live (rather than trusting it in isolation) surfaced a second, independent bug
+that made the first fix dangerous on its own: `backend/sims/users/api_views.py`'s
+`change_password_view` calls `set_password()` and `save()` but never clears
+`must_change_password`. Before 7.9's fix this was silently harmless (nothing enforced the flag).
+After 7.9 started enforcing `allowed_next_route`, it became a hard infinite loop: a user forced to
+`/change-password` would successfully change their password and get redirected right back to
+`/change-password` forever, with no escape.
+
+**Fix:** `change_password_view` now sets `must_change_password = False` on success. Two new backend
+tests in `sims/users/tests.py` cover the success and wrong-old-password cases. Deployed via
+`docker cp` + container restart (fast path for a single-file backend change). Live-verified the full
+four-stage chain post-fix: login → change-password → complete-profile → dashboard, no loop.
+
+This pair (7.9/7.9b) is the strongest evidence in this document for why "verify, then re-verify the
+fix live" is not optional — a plausible, unit-tested frontend fix combined with a pre-existing,
+previously-harmless backend bug to produce a worse failure mode than either bug alone.
+
 ### 7.10 Rotation and leave workflows — confirmed via live e2e, not new findings
 
 Live browser walkthrough (2026-07-24) confirms both are exactly as already documented here:

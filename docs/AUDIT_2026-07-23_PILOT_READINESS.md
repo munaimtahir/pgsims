@@ -562,6 +562,32 @@ new onboarding-redirect behavior. Rebuilt and redeployed to the live pilot front
 re-tested the exact same new-user login in a real browser and confirmed the fix (see commit for
 before/after).
 
+### 9.5 SECOND REAL BUG FOUND AND FIXED (found only by re-testing after 9.4's fix): change-password never cleared the flag it's supposed to clear
+
+Re-testing the fixed onboarding flow (9.4) live surfaced a second, independent bug that the frontend
+fix alone would have turned into a much worse problem: the user successfully changed their password
+at `/change-password` (200 response, "Your password has been changed successfully"), but
+`/api/auth/me/` still reported `"must_change_password": true` and `"allowed_next_route":
+"/change-password"` afterward. `backend/sims/users/api_views.py`'s `change_password_view` calls
+`user.set_password(...)` and `user.save()` but never touches `must_change_password`.
+
+**Why this is worse than it looks:** before 9.4's frontend fix, this bug was silently harmless
+(nothing enforced the flag, so nobody ever got stuck). After 9.4's fix correctly started enforcing
+`allowed_next_route`, this became a hard infinite loop — a real user forced to change their
+password on first login would change it successfully and then be redirected straight back to
+`/change-password` with no way out, ever. This is the clearest example in this whole audit of why
+each fix needs to be re-tested live end-to-end rather than trusted in isolation.
+
+**Fix (this session):** `change_password_view` now sets `user.must_change_password = False` when
+the change succeeds. Added two backend tests (`test_change_password_clears_must_change_password_flag`,
+`test_change_password_wrong_old_password_leaves_flag_unchanged`) to
+`sims/users/tests.py`. Full `sims/users/tests.py` suite (13 tests) passes. Deployed via `docker cp`
++ container restart to the live pilot backend (fast path, no full rebuild needed for a single-file
+Python change — same pattern used earlier in this session for the `seed_e2e.py` fix). Re-tested the
+complete chain live end-to-end post-fix: `/login` → `/change-password` (change succeeds, flag
+clears) → `/complete-profile` (filled and saved) → `/dashboard/resident` (renders normally, no
+loop). All four onboarding stages now work correctly in one uninterrupted pass.
+
 ## 10. Bottom line
 
 The core system is in materially better shape than the stale docs in this repo suggest, and no
