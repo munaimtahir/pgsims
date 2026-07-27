@@ -3,6 +3,8 @@ from django.contrib.auth import authenticate
 from django.contrib.auth.forms import UserChangeForm, UserCreationForm
 from django.core.exceptions import ValidationError
 
+from sims.academics.models import Specialty
+
 from .models import SPECIALTY_CHOICES, USER_ROLES, YEAR_CHOICES, User
 
 
@@ -38,8 +40,9 @@ class CustomUserCreationForm(UserCreationForm):
         widget=forms.Select(attrs={"class": "form-control", "onchange": "toggleRoleFields()"}),
     )
 
-    specialty = forms.ChoiceField(
-        choices=[("", "Select Specialty")] + list(SPECIALTY_CHOICES),
+    specialty = forms.ModelChoiceField(
+        queryset=Specialty.objects.filter(active=True),
+        empty_label="Select Specialty",
         required=False,
         widget=forms.Select(attrs={"class": "form-control"}),
     )
@@ -253,8 +256,9 @@ class UserSearchForm(forms.Form):
         widget=forms.Select(attrs={"class": "form-control"}),
     )
 
-    specialty = forms.ChoiceField(
-        choices=[("", "All Specialties")] + list(SPECIALTY_CHOICES),
+    specialty = forms.ModelChoiceField(
+        queryset=Specialty.objects.filter(active=True),
+        empty_label="All Specialties",
         required=False,
         widget=forms.Select(attrs={"class": "form-control"}),
     )
@@ -454,8 +458,9 @@ class PGSearchForm(forms.Form):
         ),
     )
 
-    specialty = forms.ChoiceField(
-        choices=[("", "All Specialties")] + list(SPECIALTY_CHOICES),
+    specialty = forms.ModelChoiceField(
+        queryset=Specialty.objects.filter(active=True),
+        empty_label="All Specialties",
         required=False,
         widget=forms.Select(attrs={"class": "form-control"}),
     )

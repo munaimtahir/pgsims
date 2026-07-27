@@ -24,15 +24,44 @@ from sims.bulk.userbase_engine import (
     import_entity as import_userbase_entity,
     template_rows_for as userbase_template_rows,
 )
+from django.db.models import Q
+
 from sims.users.models import SPECIALTY_CHOICES, YEAR_CHOICES, User
 from sims.training.models import LogbookEntry
 
 try:
-    from sims.academics.models import Department
+    from sims.academics.models import Department, Specialty
     from sims.rotations.models import Hospital, HospitalDepartment
 except ImportError:
     Department = None
+    Specialty = None
     Hospital = None
+
+
+def _match_specialty(raw_specialty: str):
+    """Resolve free-text specialty input against the Specialty master-data
+    table, falling back to legacy SPECIALTY_CHOICES codes/labels for older
+    rosters (those resolve to a real Specialty row via the same lookup,
+    since the legacy codes were seeded as real rows by
+    users/migrations/0011_backfill_specialty_ref.py). Returns a Specialty
+    instance, or None if nothing matches.
+    """
+    specialty = (raw_specialty or "").strip()
+    if not specialty:
+        return None
+    match = Specialty.objects.filter(Q(code__iexact=specialty) | Q(name__iexact=specialty)).first()
+    if match:
+        return match
+    specialty_lower = specialty.lower().replace(" ", "_")
+    for spec_code, spec_name in SPECIALTY_CHOICES:
+        if (
+            specialty_lower == spec_code.lower()
+            or specialty.lower() == spec_name.lower()
+            or specialty_lower in spec_name.lower()
+            or spec_name.lower() in specialty_lower
+        ):
+            return Specialty.objects.filter(code=spec_code).first()
+    return None
     HospitalDepartment = None
 
 
@@ -368,18 +397,7 @@ class BulkService:
                 return
 
             # Validate specialty
-            specialty_lower = specialty.lower().replace(" ", "_")
-            # Try to match specialty
-            matched_specialty = None
-            for spec_code, spec_name in SPECIALTY_CHOICES:
-                if (
-                    specialty_lower == spec_code.lower() or
-                    specialty.lower() == spec_name.lower() or
-                    specialty_lower in spec_name.lower() or
-                    spec_name.lower() in specialty_lower
-                ):
-                    matched_specialty = spec_code
-                    break
+            matched_specialty = _match_specialty(specialty)
 
             if not matched_specialty:
                 failures.append({
@@ -514,7 +532,7 @@ class BulkService:
                     "username": username,
                     "name": f"{first_name} {last_name}".strip(),
                     "email": email,
-                    "specialty": matched_specialty,
+                    "specialty": matched_specialty.code,
                     "password": password if not dry_run else "***",  # Don't expose passwords in dry run
                     "department": department_name if department_name else None,
                 })
@@ -663,17 +681,7 @@ class BulkService:
                 return
 
             # Validate specialty
-            specialty_lower = specialty.lower().replace(" ", "_")
-            matched_specialty = None
-            for spec_code, spec_name in SPECIALTY_CHOICES:
-                if (
-                    specialty_lower == spec_code.lower() or
-                    specialty.lower() == spec_name.lower() or
-                    specialty_lower in spec_name.lower() or
-                    spec_name.lower() in specialty_lower
-                ):
-                    matched_specialty = spec_code
-                    break
+            matched_specialty = _match_specialty(specialty)
 
             if not matched_specialty:
                 failures.append({
@@ -753,7 +761,7 @@ class BulkService:
                     supervisor = _get_or_create_supervisor(
                         supervisor_name,
                         self.actor,
-                        specialty=matched_specialty,
+                        specialty=matched_specialty.code if matched_specialty else None,
                         generate_password=generate_passwords
                     )
                     if not supervisor:
@@ -905,7 +913,7 @@ class BulkService:
                     "username": username,
                     "name": f"{first_name} {last_name}".strip(),
                     "email": email,
-                    "specialty": matched_specialty,
+                    "specialty": matched_specialty.code,
                     "year": year,
                     "password": password if not dry_run else "***",
                     "SUPERVISOR": supervisor.username if supervisor else None,
@@ -1803,7 +1811,7 @@ class BulkService:
                     "first_name": user.first_name,
                     "last_name": user.last_name,
                     "email": user.email,
-                    "specialty": user.specialty or "",
+                    "specialty": user.specialty.code if user.specialty else "",
                     "year": user.year or "",
                     "supervisor": user.supervisor.username if user.supervisor else "",
                     "department": user.home_department.name if user.home_department else "",
@@ -1818,7 +1826,7 @@ class BulkService:
                     "first_name": user.first_name,
                     "last_name": user.last_name,
                     "email": user.email,
-                    "specialty": user.specialty or "",
+                    "specialty": user.specialty.code if user.specialty else "",
                     "phone_number": user.phone_number or "",
                     "registration_number": user.registration_number or "",
                 }
@@ -2125,14 +2133,11 @@ def _get_or_create_supervisor(
 
     supervisor_name = supervisor_name.strip()
 
-    # Default specialty if not provided
-    if not specialty:
+    # Default specialty if not provided, or if it doesn't resolve to a real
+    # Specialty row (legacy enum code/name or master-data code/name both
+    # accepted - see _match_specialty).
+    if not specialty or not _match_specialty(specialty):
         specialty = "urology"
-
-    # Validate specialty
-    valid_specialties = [choice[0] for choice in SPECIALTY_CHOICES]
-    if specialty not in valid_specialties:
-        specialty = "urology"  # Default fallback
 
     # Try to find existing supervisor by name
     # Search by first_name + last_name or full name match

@@ -4,6 +4,7 @@ Serializers for User model and authentication.
 
 from rest_framework import serializers
 from django.contrib.auth.password_validation import validate_password
+from sims.academics.models import Specialty
 from .models import User
 
 
@@ -12,6 +13,9 @@ class UserSerializer(serializers.ModelSerializer):
 
     full_name = serializers.CharField(source="get_full_name", read_only=True)
     display_name = serializers.CharField(source="get_display_name", read_only=True)
+    specialty = serializers.SlugRelatedField(
+        slug_field="code", queryset=Specialty.objects.all(), required=False, allow_null=True
+    )
 
     class Meta:
         model = User
@@ -39,6 +43,9 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
 
     password = serializers.CharField(write_only=True, required=True, validators=[validate_password])
     password2 = serializers.CharField(write_only=True, required=True)
+    specialty = serializers.SlugRelatedField(
+        slug_field="code", queryset=Specialty.objects.all(), required=False, allow_null=True
+    )
 
     class Meta:
         model = User
@@ -128,6 +135,7 @@ class AssignedPGSerializer(serializers.ModelSerializer):
     """Minimal serializer for supervisor-assigned PGs."""
 
     full_name = serializers.CharField(source="get_full_name", read_only=True)
+    specialty = serializers.SlugRelatedField(slug_field="code", read_only=True)
 
     class Meta:
         model = User

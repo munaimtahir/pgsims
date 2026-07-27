@@ -202,7 +202,10 @@ class StaffProfileSerializer(SupervisorProfileSerializer):
 class UserManagementSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, required=False, min_length=8)
     full_name = serializers.CharField(source="get_full_name", read_only=True)
-    
+    specialty = serializers.SlugRelatedField(
+        slug_field="code", queryset=Specialty.objects.all(), required=False, allow_null=True
+    )
+
     admin_profile = AdminProfileSerializer(read_only=True)
     resident_profile = ResidentProfileSerializer(read_only=True)
     supervisor_profile = SupervisorProfileSerializer(read_only=True)

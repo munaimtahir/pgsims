@@ -15,7 +15,9 @@ from django.core.exceptions import ValidationError
 from django.db import transaction
 from openpyxl import load_workbook
 
-from sims.academics.models import Department
+from django.db.models import Q
+
+from sims.academics.models import Department, Specialty
 from sims.rotations.models import Hospital, HospitalDepartment
 from sims.users.models import (
     DepartmentMembership,
@@ -1030,17 +1032,27 @@ def _normalize_year(raw_year: str | None) -> str:
     return year
 
 
-def _normalize_specialty(raw_specialty: str | None) -> str | None:
+def _normalize_specialty(raw_specialty: str | None) -> Specialty | None:
+    """Resolve a free-text specialty cell against the Specialty master-data table.
+
+    Accepts either a Specialty code or name (case-insensitive), or one of the
+    legacy SPECIALTY_CHOICES codes/labels for backward compatibility with
+    older rosters - those resolve to a Specialty row via the same
+    code/name lookup, since the legacy codes were seeded as real Specialty
+    rows by the 0011_backfill_specialty_ref migration.
+    """
     specialty = (raw_specialty or "").strip()
     if not specialty:
         return None
+    match = Specialty.objects.filter(Q(code__iexact=specialty) | Q(name__iexact=specialty)).first()
+    if match:
+        return match
     normalized = specialty.lower().replace(" ", "_")
-    valid = {choice[0] for choice in SPECIALTY_CHOICES}
-    if normalized in valid:
-        return normalized
     for code, label in SPECIALTY_CHOICES:
-        if specialty.lower() == label.lower():
-            return code
+        if normalized == code or specialty.lower() == label.lower():
+            match = Specialty.objects.filter(code=code).first()
+            if match:
+                return match
     raise ValidationError({"specialty": f"Unknown specialty '{specialty}'."})
 
 

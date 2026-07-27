@@ -63,12 +63,16 @@ class User(AbstractUser):
         help_text="User role determines access permissions in SIMS",
     )
 
-    specialty = models.CharField(
-        max_length=100,
-        choices=SPECIALTY_CHOICES,
-        blank=True,
+    specialty = models.ForeignKey(
+        "academics.Specialty",
+        to_field="code",
+        on_delete=models.SET_NULL,
         null=True,
-        help_text="Medical specialty (required for PGs and Supervisors)",
+        blank=True,
+        related_name="users",
+        help_text="Medical specialty (required for PGs and Supervisors). Plain-string assignment is "
+        "supported via SafeForeignKeyDescriptor below, for backward compatibility with the legacy "
+        "SPECIALTY_CHOICES-keyed call sites.",
     )
 
     year = models.CharField(
@@ -933,6 +937,7 @@ ResidentProfile.specialty_ref = SafeForeignKeyDescriptor(
 SupervisorProfile.designation_ref = SafeForeignKeyDescriptor(
     SupervisorProfile.designation_ref, Designation
 )
+User.specialty = SafeForeignKeyDescriptor(User.specialty, Specialty)
 SupervisorProfile.specialty_ref = SafeForeignKeyDescriptor(
     SupervisorProfile.specialty_ref, Specialty
 )
