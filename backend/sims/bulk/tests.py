@@ -166,6 +166,16 @@ class ActiveUserbaseBulkEngineTests(TestCase):
         self.assertEqual(response.status_code, 200)
         user = User.objects.get(email="supervisor@example.com")
         self.assertEqual(user.role, "SUPERVISOR")
+        # Bulk-imported supervisors must get the same home_hospital/
+        # home_department + profile.hospital/department_ref sync that
+        # Resident import already does - otherwise they fail the
+        # profile-completion gate and rotation-eligibility checks despite
+        # having a fully-specified roster row.
+        self.assertEqual(user.home_hospital, hospital)
+        self.assertEqual(user.home_department, department)
+        supervisor_profile = SupervisorProfile.objects.get(user=user)
+        self.assertEqual(supervisor_profile.hospital, hospital)
+        self.assertEqual(supervisor_profile.department_ref, department)
         self.assertTrue(SupervisorProfile.objects.filter(user=user, designation_ref="Consultant").exists())
         self.assertTrue(
             DepartmentMembership.objects.filter(

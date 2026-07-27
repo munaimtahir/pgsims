@@ -488,6 +488,8 @@ def _import_faculty_supervisors(actor: User, rows: List[dict], *, dry_run: bool,
                         designation=(row.get("designation") or "").strip(),
                         password=(row.get("password") or "").strip(),
                         active=active,
+                        department=department,
+                        hospital_department=hospital_department,
                     )
                     if department:
                         _sync_primary_membership(
@@ -687,6 +689,8 @@ def _upsert_staff_user(
     designation: str,
     password: str,
     active: bool,
+    department: Department | None = None,
+    hospital_department: HospitalDepartment | None = None,
 ) -> Tuple[User, str | None]:
     generated_password = None
     user = existing or User(username=username)
@@ -694,15 +698,27 @@ def _upsert_staff_user(
     user.username = username
     user.first_name = first_name
     user.last_name = last_name
-    
+
     # Map raw role inputs to final User.role choices
     db_role = "SUPERVISOR" if role.upper() in {"FACULTY", "SUPERVISOR"} else role.upper()
     user.role = db_role
-    
+
     user.specialty = specialty
     user.phone_number = phone_number or None
     user.registration_number = registration_number or None
     user.is_active = active
+    # Bring Faculty/Supervisor bulk-import in line with what
+    # _upsert_resident_user already does for Residents: set the stable
+    # User.home_* affiliation directly, not just the DepartmentMembership/
+    # HospitalAssignment audit rows the caller creates separately. Without
+    # this, imported supervisors kept failing the profile-completion gate
+    # (which checks SupervisorProfile.hospital/department_ref) and silently
+    # broke rotation-eligibility logic (which reads User.home_hospital/
+    # home_department) despite their roster row looking complete.
+    if department:
+        user.home_department = department
+    if hospital_department:
+        user.home_hospital = hospital_department.hospital
     if existing:
         user.modified_by = actor
     else:
@@ -715,13 +731,15 @@ def _upsert_staff_user(
         user.set_password(generated_password)
     user.full_clean()
     user.save()
-    
+
     if db_role == "SUPERVISOR":
         SupervisorProfile.objects.update_or_create(
             user=user,
             defaults={
                 "designation_ref": designation,
                 "phone": phone_number,
+                **({"department_ref": department} if department else {}),
+                **({"hospital": hospital_department.hospital} if hospital_department else {}),
             },
         )
     elif db_role == "SUPPORT_STAFF":

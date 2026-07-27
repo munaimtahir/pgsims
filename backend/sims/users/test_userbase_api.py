@@ -517,3 +517,151 @@ class ImportCorrectionsCommandTests(TestCase):
         finally:
             if sample.exists():
                 sample.unlink()
+
+
+class CreateUserWithProfileHomeAffiliationTests(TestCase):
+    """POST /api/users/ (create_user_with_profile) must keep
+    User.home_hospital/home_department in sync with the profile-level
+    hospital/department_ref fields it's given - matching what the bulk
+    Resident-import path already does. See sims/users/services.py.
+    """
+
+    def setUp(self):
+        self.client = APIClient()
+        self.admin = User.objects.create_user(
+            username="admin_home_sync",
+            password="pass12345",
+            role="ADMIN",
+            email="admin_home_sync@example.com",
+        )
+        self.department = Department.objects.create(name="Home Sync Dept", code="HSD")
+        self.hospital = Hospital.objects.create(name="Home Sync Hospital", code="HSH")
+        HospitalDepartment.objects.create(hospital=self.hospital, department=self.department, is_active=True)
+        self.client.force_authenticate(self.admin)
+
+    def test_new_resident_gets_home_affiliation_synced(self):
+        response = self.client.post(
+            "/api/users/",
+            {
+                "role": "RESIDENT",
+                "full_name": "Home Sync Resident",
+                "email": "home.sync.resident@example.com",
+                "profile": {
+                    "hospital": self.hospital.id,
+                    "department_ref": self.department.id,
+                },
+            },
+            format="json",
+        )
+        self.assertEqual(response.status_code, 201, response.data)
+        user = User.objects.get(email="home.sync.resident@example.com")
+        self.assertEqual(user.home_hospital, self.hospital)
+        self.assertEqual(user.home_department, self.department)
+
+    def test_new_supervisor_gets_home_affiliation_synced(self):
+        response = self.client.post(
+            "/api/users/",
+            {
+                "role": "SUPERVISOR",
+                "full_name": "Home Sync Supervisor",
+                "email": "home.sync.supervisor@example.com",
+                "profile": {
+                    "hospital": self.hospital.id,
+                    "department_ref": self.department.id,
+                },
+            },
+            format="json",
+        )
+        self.assertEqual(response.status_code, 201, response.data)
+        user = User.objects.get(email="home.sync.supervisor@example.com")
+        self.assertEqual(user.home_hospital, self.hospital)
+        self.assertEqual(user.home_department, self.department)
+
+    def test_user_without_profile_hospital_department_has_no_home_affiliation(self):
+        response = self.client.post(
+            "/api/users/",
+            {
+                "role": "SUPPORT_STAFF",
+                "full_name": "No Affiliation Staff",
+                "email": "no.affiliation@example.com",
+            },
+            format="json",
+        )
+        self.assertEqual(response.status_code, 201, response.data)
+        user = User.objects.get(email="no.affiliation@example.com")
+        self.assertIsNone(user.home_hospital)
+        self.assertIsNone(user.home_department)
+
+
+class BackfillHomeAffiliationCommandTests(TestCase):
+    """python manage.py backfill_home_affiliation - reconciles pre-fix
+    accounts whose profile.hospital/department_ref is set but
+    User.home_hospital/home_department is still null.
+    """
+
+    def setUp(self):
+        self.department = Department.objects.create(name="Backfill Dept", code="BFD")
+        self.hospital = Hospital.objects.create(name="Backfill Hospital", code="BFH")
+
+    def test_backfills_supervisor_missing_home_fields(self):
+        user = User.objects.create_user(
+            username="backfill_supervisor",
+            password="pass12345",
+            role="SUPERVISOR",
+            specialty="medicine",
+            email="backfill_supervisor@example.com",
+        )
+        SupervisorProfile.objects.create(
+            user=user,
+            hospital=self.hospital,
+            department_ref=self.department,
+        )
+        self.assertIsNone(user.home_hospital)
+        self.assertIsNone(user.home_department)
+
+        call_command("backfill_home_affiliation")
+
+        user.refresh_from_db()
+        self.assertEqual(user.home_hospital, self.hospital)
+        self.assertEqual(user.home_department, self.department)
+
+    def test_dry_run_makes_no_changes(self):
+        user = User.objects.create_user(
+            username="backfill_dry_run",
+            password="pass12345",
+            role="SUPERVISOR",
+            specialty="medicine",
+            email="backfill_dry_run@example.com",
+        )
+        SupervisorProfile.objects.create(
+            user=user,
+            hospital=self.hospital,
+            department_ref=self.department,
+        )
+
+        call_command("backfill_home_affiliation", "--dry-run")
+
+        user.refresh_from_db()
+        self.assertIsNone(user.home_hospital)
+        self.assertIsNone(user.home_department)
+
+    def test_does_not_overwrite_existing_home_fields(self):
+        other_hospital = Hospital.objects.create(name="Other Hospital", code="OTH")
+        user = User.objects.create_user(
+            username="backfill_existing",
+            password="pass12345",
+            role="SUPERVISOR",
+            specialty="medicine",
+            email="backfill_existing@example.com",
+            home_hospital=other_hospital,
+        )
+        SupervisorProfile.objects.create(
+            user=user,
+            hospital=self.hospital,
+            department_ref=self.department,
+        )
+
+        call_command("backfill_home_affiliation")
+
+        user.refresh_from_db()
+        self.assertEqual(user.home_hospital, other_hospital)

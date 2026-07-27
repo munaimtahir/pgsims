@@ -356,6 +356,15 @@ def create_user_with_profile(
                 profile_status="INCOMPLETE",
                 created_by=actor,
             )
+            # Keep User.home_hospital/home_department in sync with the
+            # profile-level fields set above, matching what the bulk-import
+            # Resident path already does - otherwise rotation-eligibility
+            # and legacy reporting (which read User.home_* directly) stay
+            # silently blank for /users/new-created residents.
+            if profile_payload.get("hospital") or profile_payload.get("department_ref"):
+                user.home_hospital = profile_payload.get("hospital")
+                user.home_department = profile_payload.get("department_ref")
+                user.save(update_fields=["home_hospital", "home_department"])
         elif role == "SUPERVISOR":
             designation_val = profile_payload.get("designation_ref")
             if isinstance(designation_val, str) and designation_val:
@@ -385,6 +394,11 @@ def create_user_with_profile(
                 profile_status="INCOMPLETE",
                 created_by=actor,
             )
+            # See matching comment in the RESIDENT branch above.
+            if profile_payload.get("hospital") or profile_payload.get("department_ref"):
+                user.home_hospital = profile_payload.get("hospital")
+                user.home_department = profile_payload.get("department_ref")
+                user.save(update_fields=["home_hospital", "home_department"])
         elif role == "SUPPORT_STAFF":
             profile = SupportStaffProfile.objects.create(
                 user=user,
