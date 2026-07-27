@@ -162,8 +162,8 @@ class BulkService:
                         failures.append({"id": missing_id, "error": "not-found"})
                     for entry in entries:
                         entry.status = status
-                        entry.supervisor_action_at = timezone.now()
-                        entry.save(update_fields=["status", "supervisor_action_at"])
+                        entry.verified_at = timezone.now()
+                        entry.save(update_fields=["status", "verified_at"])
                         successes.append({"id": entry.pk, "status": status})
             except ValidationError as exc:
                 failures.append({"ids": list(chunk), "error": str(exc)})

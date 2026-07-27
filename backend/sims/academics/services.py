@@ -38,9 +38,9 @@ def _serialize_training_record(record: ResidentTrainingRecord | None) -> dict[st
         "status": record.status,
         "is_active": record.is_active,
         "training_year": record.training_year,
-        "start_date": record.start_date,
-        "expected_end_date": record.expected_end_date,
-        "actual_end_date": record.actual_end_date,
+        "start_date": record.start_date.isoformat() if record.start_date else None,
+        "expected_end_date": record.expected_end_date.isoformat() if record.expected_end_date else None,
+        "actual_end_date": record.actual_end_date.isoformat() if record.actual_end_date else None,
         "program": {
             "id": record.program_id,
             "name": record.program.name if record.program else None,
