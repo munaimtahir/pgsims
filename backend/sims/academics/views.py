@@ -17,7 +17,6 @@ from .models import (
     Department,
     EvaluationFormTemplate,
     LogbookCategory,
-    ResidentTrainingRecord,
     RotationTemplate,
     SupervisorReviewQueueItem,
     EvaluationSubmission,
@@ -26,7 +25,7 @@ from .models import (
     ProcedureRecord,
 )
 from sims.rotations.models import Hospital
-from sims.training.models import TrainingProgram
+from sims.training.models import ResidentTrainingRecord, TrainingProgram
 from sims.users.models import ResidentProfile, SupervisorProfile
 from sims.supervision.models import ResidentSupervisorAssignment
 
@@ -83,29 +82,39 @@ from .services import (
 
 class ResidentTrainingRecordViewSet(viewsets.ModelViewSet):
     queryset = ResidentTrainingRecord.objects.select_related(
-        "resident__user",
+        "resident_user__resident_profile",
         "program",
         "academic_session",
         "training_site",
         "department",
-    ).order_by("-is_active", "-created_at")
+    ).order_by("-active", "-created_at")
     serializer_class = ResidentTrainingRecordSerializer
     permission_classes = [IsAcademicAdminOrReadOnly]
-    filterset_fields = ["resident", "program", "academic_session", "department", "status", "is_active"]
-    search_fields = ["resident__user__username", "resident__user__first_name", "resident__user__last_name"]
+    filterset_fields = ["program", "academic_session", "department", "status", "active"]
+    search_fields = [
+        "resident_user__username",
+        "resident_user__first_name",
+        "resident_user__last_name",
+    ]
     ordering_fields = ["created_at", "start_date", "training_year"]
 
     def get_queryset(self):
         queryset = super().get_queryset()
+        resident_id = self.request.query_params.get("resident")
+        if resident_id:
+            queryset = queryset.filter(resident_user__resident_profile__id=resident_id)
+        is_active_param = self.request.query_params.get("is_active")
+        if is_active_param is not None:
+            queryset = queryset.filter(active=is_active_param.lower() in ("true", "1"))
         user = self.request.user
         if getattr(user, "is_superuser", False) or getattr(user, "role", None) == "ADMIN":
             return queryset
         if getattr(user, "role", None) == "RESIDENT" and hasattr(user, "resident_profile"):
-            return queryset.filter(resident=user.resident_profile)
+            return queryset.filter(resident_user=user)
         if getattr(user, "role", None) == "SUPERVISOR" and hasattr(user, "supervisor_profile"):
             return queryset.filter(
-                resident__supervisor_assignments__supervisor=user.supervisor_profile,
-                resident__supervisor_assignments__is_active=True,
+                resident_user__resident_profile__supervisor_assignments__supervisor=user.supervisor_profile,
+                resident_user__resident_profile__supervisor_assignments__is_active=True,
             ).distinct()
         if getattr(user, "role", None) == "SUPPORT_STAFF":
             return queryset

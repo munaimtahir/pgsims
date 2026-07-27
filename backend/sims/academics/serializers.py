@@ -7,7 +7,6 @@ from .models import (
     EvaluationFormTemplate,
     Institution,
     LogbookCategory,
-    ResidentTrainingRecord,
     RotationTemplate,
     Specialty,
     SupervisorReviewQueueItem,
@@ -17,7 +16,7 @@ from .models import (
     ProcedureRecord,
 )
 from sims.rotations.models import Hospital
-from sims.training.models import TrainingProgram
+from sims.training.models import ResidentTrainingRecord, TrainingProgram
 from sims.users.models import ResidentProfile, SupervisorProfile
 
 
@@ -115,6 +114,11 @@ class AcademicSessionSerializer(serializers.ModelSerializer):
 
 
 class ResidentTrainingRecordSerializer(serializers.ModelSerializer):
+    # `resident` and `is_active` are properties on training.ResidentTrainingRecord (back-compat
+    # for the now-unified academics.ResidentTrainingRecord naming), not real model fields, so
+    # ModelSerializer would otherwise auto-build them as read-only. Declare explicitly instead.
+    resident = serializers.PrimaryKeyRelatedField(queryset=ResidentProfile.objects.all())
+    is_active = serializers.BooleanField(required=False, default=True)
     resident_name = serializers.CharField(source="resident.user.get_full_name", read_only=True)
     resident_username = serializers.CharField(source="resident.user.username", read_only=True)
     program_name = serializers.CharField(source="program.name", read_only=True)

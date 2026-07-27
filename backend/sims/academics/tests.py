@@ -9,7 +9,6 @@ from sims.academics.models import (
     AcademicPeriod,
     AcademicSession,
     Department,
-    ResidentTrainingRecord,
     SupervisorReviewQueueItem,
     EvaluationFormTemplate,
     LogbookCategory,
@@ -19,7 +18,7 @@ from sims.academics.models import (
 from sims.academics.services import create_training_record
 from sims.rotations.models import Hospital
 from sims.supervision.services import create_supervisor_assignment
-from sims.training.models import TrainingProgram
+from sims.training.models import ResidentTrainingRecord, TrainingProgram
 from sims.users.models import ResidentProfile, SupervisorProfile, SupportStaffProfile
 
 User = get_user_model()

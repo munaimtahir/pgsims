@@ -2,7 +2,6 @@ from datetime import date
 from django.db.models import Count
 from django.utils import timezone
 from sims.academics.models import (
-    ResidentTrainingRecord,
     SupervisorReviewQueueItem,
     EvaluationSubmission,
     LogbookEntry,
@@ -11,7 +10,7 @@ from sims.academics.models import (
     Department,
     LogbookCategory,
 )
-from sims.training.models import TrainingProgram
+from sims.training.models import ResidentTrainingRecord, TrainingProgram
 from sims.users.models import ResidentProfile, SupervisorProfile
 from sims.supervision.models import ResidentSupervisorAssignment
 from sims.academics.services import get_academic_data_quality
@@ -21,7 +20,9 @@ def get_admin_monitoring_dashboard() -> dict:
     total_residents = ResidentProfile.objects.filter(is_archived=False).count()
     active_residents = ResidentProfile.objects.filter(is_archived=False, user__is_active=True).count()
     
-    residents_with_record = ResidentTrainingRecord.objects.filter(is_active=True).values_list("resident_id", flat=True).distinct()
+    residents_with_record = ResidentTrainingRecord.objects.filter(active=True).values_list(
+        "resident_user__resident_profile__id", flat=True
+    ).distinct()
     residents_with_record_count = len(residents_with_record)
     residents_without_record_count = total_residents - residents_with_record_count
     
@@ -57,7 +58,9 @@ def get_admin_monitoring_dashboard() -> dict:
     dept_breakdown = []
     for dept in Department.objects.filter(active=True):
         dept_residents = ResidentProfile.objects.filter(department_ref=dept, is_archived=False).values_list("id", flat=True)
-        active_records = ResidentTrainingRecord.objects.filter(resident_id__in=dept_residents, is_active=True).count()
+        active_records = ResidentTrainingRecord.objects.filter(
+            resident_user__resident_profile__id__in=dept_residents, active=True
+        ).count()
         dept_breakdown.append({
             "id": dept.id,
             "name": dept.name,
@@ -68,7 +71,9 @@ def get_admin_monitoring_dashboard() -> dict:
     prog_breakdown = []
     for prog in TrainingProgram.objects.filter(active=True):
         prog_residents = ResidentProfile.objects.filter(program_ref=prog, is_archived=False).values_list("id", flat=True)
-        active_records = ResidentTrainingRecord.objects.filter(resident_id__in=prog_residents, is_active=True).count()
+        active_records = ResidentTrainingRecord.objects.filter(
+            resident_user__resident_profile__id__in=prog_residents, active=True
+        ).count()
         prog_breakdown.append({
             "id": prog.id,
             "name": prog.name,
@@ -168,7 +173,7 @@ def get_supervisor_monitoring_dashboard(supervisor: SupervisorProfile) -> dict:
     residents_list = []
     for res_id in assigned_residents_ids:
         resident = ResidentProfile.objects.select_related("user", "program_ref").get(id=res_id)
-        tr = ResidentTrainingRecord.objects.filter(resident=resident, is_active=True).first()
+        tr = ResidentTrainingRecord.objects.filter(resident_user=resident.user, active=True).first()
         residents_list.append({
             "resident_id": resident.id,
             "name": resident.user.get_full_name() or resident.user.username,
@@ -213,7 +218,7 @@ def get_supervisor_monitoring_dashboard(supervisor: SupervisorProfile) -> dict:
 
 
 def get_resident_monitoring_my_progress(resident: ResidentProfile) -> dict:
-    tr = ResidentTrainingRecord.objects.filter(resident=resident, is_active=True).first()
+    tr = ResidentTrainingRecord.objects.filter(resident_user=resident.user, active=True).first()
     
     primary_assignment = ResidentSupervisorAssignment.objects.filter(
         resident=resident,
@@ -426,7 +431,9 @@ def get_department_monitoring_summary() -> list:
     res = []
     for dept in Department.objects.filter(active=True):
         residents = ResidentProfile.objects.filter(department_ref=dept, is_archived=False).values_list("id", flat=True)
-        active_records = ResidentTrainingRecord.objects.filter(resident_id__in=residents, is_active=True).count()
+        active_records = ResidentTrainingRecord.objects.filter(
+            resident_user__resident_profile__id__in=residents, active=True
+        ).count()
         supervisors = SupervisorProfile.objects.filter(department_ref=dept, is_archived=False).count()
         pending_evals = EvaluationSubmission.objects.filter(resident_id__in=residents, status="SUBMITTED").count()
         pending_logbooks = LogbookEntry.objects.filter(resident_id__in=residents, status="SUBMITTED").count()
@@ -451,7 +458,9 @@ def get_program_monitoring_summary() -> list:
     res = []
     for prog in TrainingProgram.objects.filter(active=True):
         residents = ResidentProfile.objects.filter(program_ref=prog, is_archived=False).values_list("id", flat=True)
-        active_records = ResidentTrainingRecord.objects.filter(resident_id__in=residents, is_active=True).count()
+        active_records = ResidentTrainingRecord.objects.filter(
+            resident_user__resident_profile__id__in=residents, active=True
+        ).count()
         pending_evals = EvaluationSubmission.objects.filter(resident_id__in=residents, status="SUBMITTED").count()
         pending_logbooks = LogbookEntry.objects.filter(resident_id__in=residents, status="SUBMITTED").count()
         approved_evals = EvaluationSubmission.objects.filter(resident_id__in=residents, status="APPROVED").count()
@@ -474,7 +483,9 @@ def get_session_monitoring_summary() -> list:
     res = []
     for session in AcademicSession.objects.filter(active=True):
         residents = ResidentProfile.objects.filter(academic_session_ref=session, is_archived=False).values_list("id", flat=True)
-        active_records = ResidentTrainingRecord.objects.filter(resident_id__in=residents, is_active=True).count()
+        active_records = ResidentTrainingRecord.objects.filter(
+            resident_user__resident_profile__id__in=residents, active=True
+        ).count()
         pending_evals = EvaluationSubmission.objects.filter(resident_id__in=residents, status="SUBMITTED").count()
         pending_logbooks = LogbookEntry.objects.filter(resident_id__in=residents, status="SUBMITTED").count()
         res.append({

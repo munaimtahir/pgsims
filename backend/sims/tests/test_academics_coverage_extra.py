@@ -24,7 +24,6 @@ from sims.academics.models import (
     EvaluationSubmission,
     LogbookCategory,
     LogbookEntry,
-    ResidentTrainingRecord,
     RotationTemplate,
     SupervisorReviewQueueItem,
 )
@@ -50,7 +49,7 @@ from sims.academics.services import (
 )
 from sims.rotations.models import Hospital
 from sims.supervision.services import create_supervisor_assignment
-from sims.training.models import TrainingProgram
+from sims.training.models import ResidentTrainingRecord, TrainingProgram
 from sims.users.models import ResidentProfile, SupervisorProfile, SupportStaffProfile
 
 User = get_user_model()
@@ -1013,14 +1012,14 @@ class DataQualityEdgeCaseTests(AcademicsCoverageBase):
     def test_data_quality_flags_department_and_program_mismatch(self):
         # Bypass service-layer consistency validation to simulate historical drift.
         record = ResidentTrainingRecord.objects.create(
-            resident=self.resident,
+            resident_user=self.resident.user,
             program=self.other_program,
             department=self.other_department,
             academic_session=self.session,
             training_site=self.hospital,
             start_date=date(2026, 7, 1),
             status=ResidentTrainingRecord.STATUS_ACTIVE,
-            is_active=True,
+            active=True,
         )
         response_data = self.client
         self.client.force_authenticate(self.admin)
@@ -1031,20 +1030,22 @@ class DataQualityEdgeCaseTests(AcademicsCoverageBase):
         self.assertEqual(summary["training_record_program_mismatch"], 1)
 
     def test_data_quality_flags_missing_program_session_department_site(self):
+        # program is required (NOT NULL) on the unified training.ResidentTrainingRecord, unlike
+        # the retired academics-side model, so only session/department/site can be missing here.
         ResidentTrainingRecord.objects.create(
-            resident=self.resident,
-            program=None,
+            resident_user=self.resident.user,
+            program=self.program,
             department=None,
             academic_session=None,
             training_site=None,
             start_date=date(2026, 7, 1),
             status=ResidentTrainingRecord.STATUS_ACTIVE,
-            is_active=True,
+            active=True,
         )
         self.client.force_authenticate(self.admin)
         response = self.client.get("/api/academics/data-quality/")
         summary = response.data["summary"]
-        self.assertEqual(summary["training_records_missing_program"], 1)
+        self.assertEqual(summary["training_records_missing_program"], 0)
         self.assertEqual(summary["training_records_missing_academic_session"], 1)
         self.assertEqual(summary["training_records_missing_department"], 1)
         self.assertEqual(summary["training_records_missing_training_site"], 1)
@@ -1052,18 +1053,20 @@ class DataQualityEdgeCaseTests(AcademicsCoverageBase):
 
     def test_data_quality_flags_active_with_actual_end_and_completed_without(self):
         ResidentTrainingRecord.objects.create(
-            resident=self.resident,
+            resident_user=self.resident.user,
+            program=self.program,
             start_date=date(2026, 7, 1),
             actual_end_date=date(2027, 1, 1),
             status=ResidentTrainingRecord.STATUS_ACTIVE,
-            is_active=True,
+            active=True,
         )
         ResidentTrainingRecord.objects.create(
-            resident=self.other_resident,
+            resident_user=self.other_resident.user,
+            program=self.program,
             start_date=date(2026, 7, 1),
             actual_end_date=None,
             status=ResidentTrainingRecord.STATUS_COMPLETED,
-            is_active=False,
+            active=False,
         )
         self.client.force_authenticate(self.admin)
         response = self.client.get("/api/academics/data-quality/")

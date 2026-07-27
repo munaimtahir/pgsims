@@ -12,7 +12,6 @@ from sims.academics.models import (
     AcademicPeriod,
     EvaluationFormTemplate,
     LogbookCategory,
-    ResidentTrainingRecord,
     RotationTemplate,
     SupervisorReviewQueueItem,
     EvaluationSubmission,
@@ -20,6 +19,7 @@ from sims.academics.models import (
     LogbookEntry,
     ProcedureRecord,
 )
+from sims.training.models import ResidentTrainingRecord
 from sims.audit.models import ActivityLog
 from sims.supervision.models import ResidentSupervisorAssignment
 from sims.supervision.services import (
@@ -155,7 +155,7 @@ def create_training_record(
     if resident.user.role != "RESIDENT":
         raise ValidationError({"resident": "Training records can only be created for resident profiles."})
 
-    if ResidentTrainingRecord.objects.filter(resident=resident, is_active=True).exists():
+    if ResidentTrainingRecord.objects.filter(resident_user=resident.user, active=True).exists():
         raise ValidationError({"resident": "Resident already has an active training record."})
 
     fields = _prefill_training_record_fields(
@@ -168,17 +168,17 @@ def create_training_record(
     _validate_training_record_consistency(resident=resident, **fields)
 
     record = ResidentTrainingRecord.objects.create(
-        resident=resident,
+        resident_user=resident.user,
         program=fields["program"],
         academic_session=fields["academic_session"],
         training_site=fields["training_site"],
         department=fields["department"],
-        start_date=start_date,
+        start_date=start_date or date.today(),
         expected_end_date=expected_end_date,
         training_year=training_year,
         notes=notes,
         status=ResidentTrainingRecord.STATUS_ACTIVE,
-        is_active=True,
+        active=True,
         created_by=actor,
         updated_by=actor,
     )
@@ -253,7 +253,7 @@ def close_training_record(*, record: ResidentTrainingRecord, actual_end_date: da
 def get_resident_academic_summary(*, resident: ResidentProfile) -> dict[str, Any]:
     record = (
         ResidentTrainingRecord.objects.select_related("program", "academic_session", "training_site", "department")
-        .filter(resident=resident, is_active=True)
+        .filter(resident_user=resident.user, active=True)
         .first()
     )
     supervision = get_resident_supervision_summary(resident=resident)
@@ -291,8 +291,9 @@ def get_supervisor_academic_summary(*, supervisor: SupervisorProfile) -> dict[st
     resident_ids = sorted(set(resident_ids))
     active_records = {
         row.resident_id: row
-        for row in ResidentTrainingRecord.objects.select_related("resident__user", "program", "department", "academic_session")
-        .filter(resident_id__in=resident_ids, is_active=True)
+        for row in ResidentTrainingRecord.objects.select_related(
+            "resident_user__resident_profile", "program", "department", "academic_session"
+        ).filter(resident_user__resident_profile__id__in=resident_ids, active=True)
     }
     pending_queue = SupervisorReviewQueueItem.objects.filter(
         supervisor=supervisor,
@@ -334,7 +335,7 @@ def get_supervisor_academic_summary(*, supervisor: SupervisorProfile) -> dict[st
 
 
 def get_admin_academic_overview() -> dict[str, Any]:
-    active_records = ResidentTrainingRecord.objects.filter(is_active=True).count()
+    active_records = ResidentTrainingRecord.objects.filter(active=True).count()
     pending_review_items = SupervisorReviewQueueItem.objects.filter(status=SupervisorReviewQueueItem.STATUS_PENDING).count()
     data_quality = get_academic_data_quality()
     return {
@@ -355,11 +356,14 @@ def get_academic_data_quality() -> dict[str, Any]:
     today = date.today()
     residents = ResidentProfile.objects.select_related("user", "department_ref", "program_ref", "hospital")
     active_records = list(
-        ResidentTrainingRecord.objects.select_related("resident__user", "program", "academic_session", "department", "training_site")
+        ResidentTrainingRecord.objects.select_related(
+            "resident_user__resident_profile", "program", "academic_session", "department", "training_site"
+        )
     )
     record_map: dict[int, list[ResidentTrainingRecord]] = {}
     for record in active_records:
-        record_map.setdefault(record.resident_id, []).append(record)
+        if record.resident_id is not None:
+            record_map.setdefault(record.resident_id, []).append(record)
 
     def resident_item(profile: ResidentProfile) -> dict[str, Any]:
         return {
@@ -471,7 +475,12 @@ def get_academic_data_quality() -> dict[str, Any]:
     )
 
     # Combined Brick 9/10 Extra Data Quality checks
-    active_res_with_record_ids = ResidentTrainingRecord.objects.filter(is_active=True).values_list("resident_id", flat=True)
+    active_res_with_record_ids = set(
+        ResidentTrainingRecord.objects.filter(active=True).values_list(
+            "resident_user__resident_profile__id", flat=True
+        )
+    )
+    active_res_with_record_ids.discard(None)
     res_with_evals_ids = EvaluationSubmission.objects.values_list("resident_id", flat=True).distinct()
     res_no_evals = [
         resident_item(r) for r in residents 
@@ -711,7 +720,7 @@ def create_evaluation_submission(
     responses: list[dict] | None = None,
     actor=None,
 ) -> EvaluationSubmission:
-    training_record = ResidentTrainingRecord.objects.filter(resident=resident, is_active=True).first()
+    training_record = ResidentTrainingRecord.objects.filter(resident_user=resident.user, active=True).first()
     if not training_record:
         raise ValidationError({"resident": "Resident does not have an active training record."})
 
@@ -1094,7 +1103,7 @@ def create_logbook_entry(
     procedure_data: dict | None = None,
     actor=None,
 ) -> LogbookEntry:
-    training_record = ResidentTrainingRecord.objects.filter(resident=resident, is_active=True).first()
+    training_record = ResidentTrainingRecord.objects.filter(resident_user=resident.user, active=True).first()
     if not training_record:
         raise ValidationError({"resident": "Resident does not have an active training record."})
 
@@ -1439,7 +1448,7 @@ def cancel_logbook_entry(*, entry: LogbookEntry, actor=None) -> LogbookEntry:
 
 
 def get_resident_academic_progress(*, resident: ResidentProfile) -> dict[str, Any]:
-    record = ResidentTrainingRecord.objects.filter(resident=resident, is_active=True).first()
+    record = ResidentTrainingRecord.objects.filter(resident_user=resident.user, active=True).first()
     supervision = get_resident_supervision_summary(resident=resident)
     primary_supervisor = supervision["active_primary"]
 
@@ -1533,7 +1542,12 @@ def get_supervisor_academic_workload(*, supervisor: SupervisorProfile) -> dict[s
 
 def get_admin_academic_workflow_overview() -> dict[str, Any]:
     total_active_residents = ResidentProfile.objects.filter(user__is_active=True).count()
-    residents_with_training_record = ResidentTrainingRecord.objects.filter(is_active=True).values_list("resident_id", flat=True).distinct().count()
+    residents_with_training_record = (
+        ResidentTrainingRecord.objects.filter(active=True)
+        .values_list("resident_user__resident_profile__id", flat=True)
+        .distinct()
+        .count()
+    )
     residents_without_training_record = total_active_residents - residents_with_training_record
 
     pending_evals = EvaluationSubmission.objects.filter(status__in=["SUBMITTED", "UNDER_REVIEW"]).count()
@@ -1671,10 +1685,10 @@ def seed_pilot_academic_workflows(*, actor=None) -> dict[str, int]:
         resident = residents.first()
         supervisor = supervisors.first()
         
-        training_record = ResidentTrainingRecord.objects.filter(resident=resident, is_active=True).first()
+        training_record = ResidentTrainingRecord.objects.filter(resident_user=resident.user, active=True).first()
         if not training_record:
             training_record = ResidentTrainingRecord.objects.create(
-                resident=resident,
+                resident_user=resident.user,
                 program=resident.program_ref,
                 academic_session=resident.academic_session_ref,
                 training_site=resident.hospital,
@@ -1683,7 +1697,7 @@ def seed_pilot_academic_workflows(*, actor=None) -> dict[str, int]:
                 expected_end_date=date(2027, 6, 30),
                 training_year=1,
                 status=ResidentTrainingRecord.STATUS_ACTIVE,
-                is_active=True,
+                active=True,
                 created_by=actor,
                 updated_by=actor,
             )

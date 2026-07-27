@@ -164,94 +164,6 @@ class AcademicSession(models.Model):
         return super().__hash__()
 
 
-class ResidentTrainingRecord(models.Model):
-    STATUS_ACTIVE = "ACTIVE"
-    STATUS_COMPLETED = "COMPLETED"
-    STATUS_PAUSED = "PAUSED"
-    STATUS_WITHDRAWN = "WITHDRAWN"
-    STATUS_TRANSFERRED = "TRANSFERRED"
-
-    STATUS_CHOICES = [
-        (STATUS_ACTIVE, "Active"),
-        (STATUS_COMPLETED, "Completed"),
-        (STATUS_PAUSED, "Paused"),
-        (STATUS_WITHDRAWN, "Withdrawn"),
-        (STATUS_TRANSFERRED, "Transferred"),
-    ]
-
-    resident = models.ForeignKey(
-        "users.ResidentProfile",
-        on_delete=models.PROTECT,
-        related_name="academic_training_records",
-    )
-    program = models.ForeignKey(
-        "training.TrainingProgram",
-        on_delete=models.PROTECT,
-        null=True,
-        blank=True,
-        related_name="academic_training_records",
-    )
-    academic_session = models.ForeignKey(
-        "academics.AcademicSession",
-        on_delete=models.PROTECT,
-        null=True,
-        blank=True,
-        related_name="training_records",
-    )
-    training_site = models.ForeignKey(
-        "rotations.Hospital",
-        on_delete=models.PROTECT,
-        null=True,
-        blank=True,
-        related_name="academic_training_records",
-    )
-    department = models.ForeignKey(
-        "academics.Department",
-        on_delete=models.PROTECT,
-        null=True,
-        blank=True,
-        related_name="academic_training_records",
-    )
-    start_date = models.DateField(null=True, blank=True)
-    expected_end_date = models.DateField(null=True, blank=True)
-    actual_end_date = models.DateField(null=True, blank=True)
-    training_year = models.PositiveIntegerField(null=True, blank=True)
-    status = models.CharField(max_length=32, choices=STATUS_CHOICES, default=STATUS_ACTIVE)
-    is_active = models.BooleanField(default=True)
-    notes = models.TextField(blank=True)
-    extra_data = models.JSONField(default=dict, blank=True)
-    created_by = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        null=True,
-        blank=True,
-        related_name="+",
-        on_delete=models.SET_NULL,
-    )
-    updated_by = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        null=True,
-        blank=True,
-        related_name="+",
-        on_delete=models.SET_NULL,
-    )
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-    history = HistoricalRecords()
-
-    class Meta:
-        ordering = ["-is_active", "-start_date", "-created_at"]
-        constraints = [
-            models.UniqueConstraint(
-                fields=["resident"],
-                condition=models.Q(is_active=True),
-                name="uniq_active_academic_training_record_per_resident",
-            )
-        ]
-
-    def __str__(self):
-        return f"{self.resident.user.get_full_name() or self.resident.user.username} training record"
-
-
 class AcademicPeriod(models.Model):
     TYPE_YEAR = "YEAR"
     TYPE_TERM = "TERM"
@@ -518,7 +430,7 @@ class SupervisorReviewQueueItem(models.Model):
         related_name="review_queue_items",
     )
     training_record = models.ForeignKey(
-        "academics.ResidentTrainingRecord",
+        "training.ResidentTrainingRecord",
         on_delete=models.PROTECT,
         null=True,
         blank=True,
@@ -560,7 +472,7 @@ class EvaluationSubmission(models.Model):
         related_name="evaluation_submissions",
     )
     training_record = models.ForeignKey(
-        "academics.ResidentTrainingRecord",
+        "training.ResidentTrainingRecord",
         on_delete=models.PROTECT,
         null=True,
         blank=True,
@@ -655,11 +567,11 @@ class LogbookEntry(models.Model):
         related_name="logbook_entries",
     )
     training_record = models.ForeignKey(
-        "academics.ResidentTrainingRecord",
+        "training.ResidentTrainingRecord",
         on_delete=models.PROTECT,
         null=True,
         blank=True,
-        related_name="logbook_entries",
+        related_name="academics_logbook_entries",
     )
     category = models.ForeignKey(
         "academics.LogbookCategory",

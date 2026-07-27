@@ -118,12 +118,18 @@ class ResidentTrainingRecord(models.Model):
     STATUS_PAUSED = "PAUSED"
     STATUS_COMPLETED = "COMPLETED"
     STATUS_CANCELLED = "CANCELLED"
+    STATUS_WITHDRAWN = "WITHDRAWN"
+    STATUS_TRANSFERRED = "TRANSFERRED"
 
     STATUS_CHOICES = [
         (STATUS_ACTIVE, "Active"),
         (STATUS_PAUSED, "Paused"),
         (STATUS_COMPLETED, "Completed"),
         (STATUS_CANCELLED, "Cancelled"),
+        # Added when sims.academics.ResidentTrainingRecord (which had these
+        # two extra statuses but not CANCELLED) was unified onto this model.
+        (STATUS_WITHDRAWN, "Withdrawn"),
+        (STATUS_TRANSFERRED, "Transferred"),
     ]
 
     resident_user = models.ForeignKey(
@@ -158,9 +164,43 @@ class ResidentTrainingRecord(models.Model):
         default=False,
         help_text="Computed flag set when record uses default/synthetic dates.",
     )
+    # The following four fields were added when sims.academics.
+    # ResidentTrainingRecord was unified onto this model - they back the
+    # academics-workflow dependents (SupervisorReviewQueueItem,
+    # EvaluationSubmission, academics.LogbookEntry) that previously pointed
+    # at the now-removed academics-side model.
+    academic_session = models.ForeignKey(
+        "academics.AcademicSession",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="resident_training_records",
+    )
+    training_site = models.ForeignKey(
+        "rotations.Hospital",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="resident_training_records",
+    )
+    department = models.ForeignKey(
+        "academics.Department",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="resident_training_records",
+    )
+    extra_data = models.JSONField(default=dict, blank=True)
+    training_year = models.PositiveIntegerField(null=True, blank=True)
+    actual_end_date = models.DateField(null=True, blank=True)
+    notes = models.TextField(blank=True)
     created_by = models.ForeignKey(
         User, on_delete=models.SET_NULL, null=True, blank=True,
         related_name="training_records_created",
+    )
+    updated_by = models.ForeignKey(
+        User, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name="+",
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -195,6 +235,28 @@ class ResidentTrainingRecord(models.Model):
     def __str__(self):
         name = self.resident_user.get_full_name() or self.resident_user.username
         return f"{name} – {self.program.code}"
+
+    @property
+    def resident(self):
+        """Back-compat accessor for academics-side call sites unified onto this model.
+
+        Instance-only (not queryable) — filters/values_list must use
+        resident_user__resident_profile instead."""
+        return getattr(self.resident_user, "resident_profile", None)
+
+    @property
+    def resident_id(self):
+        resident_profile = self.resident
+        return resident_profile.id if resident_profile else None
+
+    @property
+    def is_active(self):
+        """Back-compat alias for `active`, the name academics.ResidentTrainingRecord used."""
+        return self.active
+
+    @is_active.setter
+    def is_active(self, value):
+        self.active = value
 
 
 # ---------------------------------------------------------------------------

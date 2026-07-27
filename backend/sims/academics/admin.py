@@ -7,7 +7,6 @@ from .models import (
     EvaluationFormTemplate,
     Institution,
     LogbookCategory,
-    ResidentTrainingRecord,
     RotationTemplate,
     Specialty,
     SupervisorReviewQueueItem,
@@ -52,13 +51,6 @@ class AcademicSessionAdmin(admin.ModelAdmin):
     list_filter = ["active", "created_at"]
     search_fields = ["name", "code", "description"]
     ordering = ["name"]
-
-
-@admin.register(ResidentTrainingRecord)
-class ResidentTrainingRecordAdmin(admin.ModelAdmin):
-    list_display = ["resident", "program", "academic_session", "training_year", "status", "is_active"]
-    list_filter = ["status", "is_active", "academic_session", "department"]
-    search_fields = ["resident__user__username", "resident__user__first_name", "resident__user__last_name"]
 
 
 @admin.register(AcademicPeriod)
