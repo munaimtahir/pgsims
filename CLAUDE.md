@@ -79,9 +79,15 @@ anything nontrivial in that area.
   placements are tracked by `sims.training.RotationAssignment` (draft → submit → HOD/UTRMC approve
   → active → complete, with `return_reason`/`reject_reason`, exposed via `sims/training/urls.py`'s
   `rotations`, `my/rotations/`, `utrmc/approvals/rotations/`, and `supervisor/rotations/pending/`
-  routes) — this is real, tested backend with **no frontend consumer** as of 2026-07-24 (see
-  `docs/truth-map/FRONTEND_BACKEND_TRUTH_MAP.md` §7.10). There is no `override_reason` field
-  anywhere in the codebase; don't invent one.
+  routes, with a real frontend at `/academics/rotation-assignments` as of 2026-07-25). Leave requests
+  (`sims.training.LeaveRequest`) follow the same pattern at `/academics/leave-requests`. There is no
+  `override_reason` field anywhere in the codebase; don't invent one.
+- **Two independent `ResidentTrainingRecord` models exist and must each be set up separately per
+  resident**: `sims.academics.ResidentTrainingRecord` (drives the resident dashboard, logbook,
+  evaluations) and `sims.training.ResidentTrainingRecord` (drives `RotationAssignment`,
+  `LeaveRequest`, thesis/research/workshops). A resident can have one without the other — this is
+  confirmed current behavior, not yet resolved as intentional-by-design vs. worth unifying (see
+  `docs/AUDIT_2026-07-23_PILOT_READINESS.md` §12, item 3, for the open decision).
 - Notifications always go through `NotificationService` (`backend/sims/notifications/services.py`)
   using the canonical field names `recipient`, `verb`, `body`, `metadata`. Never construct
   `Notification` objects with legacy keys (`user=`, `message=`, `type=`, `related_object_id=`).

@@ -648,7 +648,99 @@ Full verification: backend suite 432 passed / 8 skipped / 0 failed (no regressio
 session's changes); frontend suite 104/104; all work committed and pushed to `main`; all container
 rebuilds redeployed to the live pilot stack and re-tested post-deploy.
 
-## 10. Bottom line
+## 11. Leave management build + backend coverage push (2026-07-25/27)
+
+Following §9.6, the two remaining phases from the reordered priority list were completed.
+
+### 11.1 Leave management UI built and live-verified
+
+`sims.training.LeaveRequest` had a complete, tested backend (draft → submit → approve/reject) with
+no frontend, matching the same pattern as the RotationAssignment gap closed in §9.2. Built
+`/academics/leave-requests` (list/create/detail, role-scoped actions) mirroring the
+rotation-assignment UI's structure exactly. Live-verified end to end: resident created and submitted
+two leave requests; supervisor rejected one (with a reason) and approved the other. Nav entries added
+for all three roles. Verified: typecheck, lint, `npm test` (107/107), production build all clean;
+deployed to the live pilot frontend and re-tested post-deploy.
+
+### 11.2 Backend test coverage: 62.15% → 72.18%, two real production bugs found and fixed
+
+Five parallel background agents (each in an isolated git worktree) were tasked with raising coverage
+on the highest-value, lowest-coverage files: bulk import/export, `sims.training.views`,
+`sims.academics` (services + views), `backup_center`, and `sims.users` (userbase_views + views). Four
+succeeded; the users-app one failed twice (first attempt produced no output at all; the retry hit the
+assistant's own session usage limit mid-work) and was not completed — flagged as a follow-up, not
+silently dropped.
+
+Result: **~450 new tests added**, full suite **821 passed / 8 skipped / 0 failed**, overall coverage
+**62.15% → 72.18%**. This falls short of the 90%+ target — see §12 below for why, and what's left.
+`backend/pytest.ini` (which previously had no coverage gate at all — the `--cov-fail-under=80` in
+`pyproject.toml` was silently unenforced because `pytest.ini` takes precedence) now enforces a 70%
+floor, a few points below what's actually achieved as a safety margin.
+
+**Two genuine, previously-unknown production bugs were found by the new tests and fixed, not
+papered over:**
+
+1. **`/api/bulk/review/` was completely broken** — `sims/bulk/services.py`'s `review_entries()`
+   (backing the bulk logbook-review endpoint) set `entry.supervisor_action_at`, a field that does not
+   exist on `LogbookEntry`. Every call crashed with a 500. Fixed to use the real field, `verified_at`
+   — the same field the per-entry verify action (live-tested working in §9.1) already uses correctly.
+2. **The training-record update endpoint crashed for any record with dates set** — i.e. almost always.
+   `sims/academics/services.py`'s `_serialize_training_record()` embedded raw Python `date` objects
+   into `ActivityLog.metadata`, a plain Django `JSONField` with no `DjangoJSONEncoder`. Any call to
+   `update_training_record()` (the PATCH path behind `/api/academics/training-records/<id>/`) threw
+   `TypeError: Object of type date is not JSON serializable`. Fixed by calling `.isoformat()` on the
+   three date fields before they're written into the audit-log snapshot. Live-verified post-fix: PATCH
+   against a real record with `start_date` set now returns 200 instead of crashing.
+
+Both fixes committed, pushed, and deployed to the live pilot backend via `docker cp` + restart (no
+rebuild needed for a two-file Python change); both re-verified live post-deploy.
+
+## 12. Pending decisions — everything left for a human call, as of 2026-07-27
+
+Nothing below is silently unresolved; each is flagged here specifically because it needs a product or
+architecture decision this audit process shouldn't make unilaterally.
+
+1. **`User.specialty` hardcoded enum vs. the real `Specialty` database model.** Bulk-imported
+   supervisor/resident rows validate `specialty` against a fixed 18-value legacy enum
+   (`sims/users/models.py::SPECIALTY_CHOICES` — `medicine`, `surgery`, `pediatrics`, etc.), completely
+   disconnected from the DB-driven `sims.academics.Specialty` master-data model used elsewhere in the
+   app. A real specialty name from the `Specialty` table (e.g. "GI Surgery") fails import with "Unknown
+   specialty" unless it happens to match the legacy enum's fixed labels. **Decision needed:** should
+   `User.specialty` be migrated to reference the `Specialty` model, or is the enum intentional and the
+   `Specialty` model is for a different purpose? (§9.6, §7.10a of the truth map)
+2. **Bulk-imported users re-asked for Hospital/Department at first login.** The `/complete-profile`
+   onboarding gate checks `User.home_department`/`User.home_hospital`, while the Faculty & Supervisors /
+   Residents bulk imports write to `DepartmentMembership`/`HospitalAssignment` instead. Both paths reach
+   a correct end state, but a bulk-imported user still gets asked for info already supplied in their
+   CSV row. **Decision needed:** worth reconciling so bulk-imported users skip this, or leave as
+   harmless redundancy? (§9.6)
+3. **Two independent `ResidentTrainingRecord` models** — `sims.academics.ResidentTrainingRecord`
+   (used by the resident dashboard, logbook, evaluations) and `sims.training.ResidentTrainingRecord`
+   (used by `RotationAssignment`, `LeaveRequest`, thesis/research/workshops). A resident can have one
+   without the other; both had to be created separately during this session's live testing.
+   **Decision needed:** intentional separation by design (two different training "containers" for
+   different feature sets), or should they be unified? This is a real architectural question, not a
+   bug — flagged in CLAUDE.md now so future sessions don't rediscover it from scratch. (§9.6)
+4. **`sims/users/userbase_views.py` and `views.py` coverage (66.29%/58.44%) not raised this session.**
+   Two attempts both failed for reasons unrelated to the code (tooling/session issues, not code
+   defects). Straightforward follow-up whenever the next coverage push happens — no blocker, just
+   unfinished.
+5. **Overall coverage is 72.18%, not the 90%+ aimed for.** What's left to close the gap: `views.py`
+   above; ~1400 statements across one-off management commands (`import_demo_cases.py`,
+   `import_pilot_bundle.py`, `cleanup_pilot_runtime.py`, `preview_trainees.py`, etc.) that are
+   low-value CLI tools rather than user-facing surface; and `backup_center/google_drive.py` +
+   GCS/S3 provider code paths, which need `boto3`/`google-cloud-storage` (not in `requirements.txt`,
+   not enabled in this deployment) to test meaningfully. **Decision needed:** is 72% (real, verified,
+   no padding) acceptable for pilot, or is further investment in the management-command/cloud-provider
+   surface worth prioritizing before launch?
+6. **Phase 6 — real pilot roster load.** Prepared and confirmed column-compatible with the fixed
+   bulk-import screen (per §7 of this doc), but deliberately not executed — needs your explicit
+   go-ahead.
+7. **Phase 8 — distributing real credentials and go-live.** Not started — needs your explicit
+   go-ahead, and should happen only after items 1-3 above are resolved (they affect real data quality
+   during roster load).
+
+## 13. Bottom line
 
 The core system is in materially better shape than the stale docs in this repo suggest, and no
 worse than the newest brick docs claim — **with one exception**: the brick verdicts never actually
