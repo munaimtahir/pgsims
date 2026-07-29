@@ -405,6 +405,10 @@ def get_academic_data_quality() -> dict[str, Any]:
 
     for record in active_records:
         profile = record.resident
+        if profile is None:
+            # training.ResidentTrainingRecord.resident_user has no linked ResidentProfile
+            # (e.g. a stale/synthetic record) - nothing resident-shaped to report here.
+            continue
         if record.is_active and not record.program:
             missing_program.append(resident_item(profile))
         if record.is_active and not record.academic_session:
