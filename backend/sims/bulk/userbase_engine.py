@@ -729,6 +729,7 @@ def _upsert_staff_user(
     elif not existing:
         generated_password = _generate_secure_password()
         user.set_password(generated_password)
+        user.must_change_password = True
     user.full_clean()
     user.save()
 
@@ -807,6 +808,7 @@ def _upsert_resident_user(
     elif not existing:
         generated_password = _generate_secure_password()
         user.set_password(generated_password)
+        user.must_change_password = True
     user.full_clean()
     user.save()
     ResidentProfile.objects.update_or_create(
