@@ -10,6 +10,10 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
+        migrations.RemoveConstraint(
+            model_name='residenttrainingrecord',
+            name='uniq_active_academic_training_record_per_resident',
+        ),
         migrations.RemoveField(
             model_name='residenttrainingrecord',
             name='academic_session',

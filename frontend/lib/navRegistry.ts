@@ -37,6 +37,7 @@ export const NAV_SECTIONS: NavSection[] = [
       { label: 'Admins', href: '/admins', icon: 'shield-check' },
       { label: 'Masters', href: '/masters', icon: 'collection' },
       { label: 'Data Quality', href: '/dashboard/utrmc/data-quality', icon: 'chart-bar' },
+      { label: 'Backup Center', href: '/dashboard/utrmc/backup', icon: 'folder' },
       {
         label: 'Supervision',
         icon: 'link',

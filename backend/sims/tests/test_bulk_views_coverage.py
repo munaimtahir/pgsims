@@ -48,19 +48,17 @@ class BulkReviewAssignmentViewTests(TestCase):
             status="DRAFT",
         )
 
-    def test_review_view_crashes_on_service_bug(self):
-        # BulkService.review_entries() has a real bug (see test_bulk_services_coverage.py for
-        # full detail: sims/bulk/services.py:166 saves a `supervisor_action_at` field that does
-        # not exist on LogbookEntry). BulkReviewView only catches DjangoValidationError, so the
-        # resulting ValueError propagates out of the view uncaught. Documented here as a
-        # regression test of the current (broken) behavior; flagged in the task report rather
-        # than fixed.
-        with self.assertRaises(ValueError):
-            self.client.post(
-                "/api/bulk/review/",
-                data=json.dumps({"entry_ids": [self.entry.id], "status": "approved"}),
-                content_type="application/json",
-            )
+    def test_review_view_success(self):
+        # BulkService.review_entries() previously crashed with ValueError on every call (see
+        # test_bulk_services_coverage.py for full detail: it saved a nonexistent `verified_at`
+        # field on sims.training.LogbookEntry). Now fixed to only update `status`.
+        response = self.client.post(
+            "/api/bulk/review/",
+            data=json.dumps({"entry_ids": [self.entry.id], "status": "approved"}),
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["success_count"], 1)
 
     def test_review_view_invalid_status_rejected_by_serializer(self):
         response = self.client.post(

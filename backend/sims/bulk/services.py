@@ -191,8 +191,7 @@ class BulkService:
                         failures.append({"id": missing_id, "error": "not-found"})
                     for entry in entries:
                         entry.status = status
-                        entry.verified_at = timezone.now()
-                        entry.save(update_fields=["status", "verified_at"])
+                        entry.save(update_fields=["status"])
                         successes.append({"id": entry.pk, "status": status})
             except ValidationError as exc:
                 failures.append({"ids": list(chunk), "error": str(exc)})
@@ -502,6 +501,7 @@ class BulkService:
                 if dry_run:
                     # Validate without creating
                     user = User(**user_data)
+                    user.set_password(password)
                     user.full_clean()
                 else:
                     # Check if user already exists
@@ -873,6 +873,7 @@ class BulkService:
                             return
 
                     user = User(**validation_data)
+                    user.set_password(password)
                     user.full_clean()
                 else:
                     # Check if user already exists

@@ -70,16 +70,17 @@ class BulkServiceReviewAssignTests(TestCase):
             status="DRAFT",
         )
 
-    def test_review_entries_crashes_on_nonexistent_field(self):
-        # BulkService.review_entries() (sims/bulk/services.py:166) does
-        # entry.save(update_fields=["status", "supervisor_action_at"]), but LogbookEntry has no
-        # `supervisor_action_at` field (see sims/training/models.py's LogbookEntry, which only
-        # defines submitted_at/returned_at/approved_at). This is a real bug: every call to
-        # review_entries() raises ValueError instead of completing, so bulk logbook review is
-        # currently broken end-to-end. Documented here rather than fixed (out of scope for a
-        # coverage-only change) -- flagged in the task report.
-        with self.assertRaises(ValueError):
-            self.service.review_entries([self.entry.id], "approved")
+    def test_review_entries_updates_status(self):
+        # BulkService.review_entries() (sims/bulk/services.py) used to do
+        # entry.save(update_fields=["status", "verified_at"]), but sims.training.LogbookEntry has
+        # no `verified_at` field (it only defines submitted_at/returned_at/approved_at -- that
+        # field exists on the unrelated sims.academics.LogbookEntry model). Every call crashed
+        # with ValueError instead of completing, so bulk logbook review was broken end-to-end.
+        # Fixed by only updating the `status` field, which does exist.
+        operation = self.service.review_entries([self.entry.id], "approved")
+        self.assertEqual(operation.success_count, 1)
+        self.entry.refresh_from_db()
+        self.assertEqual(self.entry.status, "approved")
 
     def test_assign_supervisor_success_and_missing_id(self):
         operation = self.service.assign_supervisor([self.entry.id, 424242], self.supervisor)
@@ -347,16 +348,18 @@ class BulkServiceExportDatasetTests(TestCase):
         with self.assertRaises(ValidationError):
             self.service.export_dataset(resource="not-a-real-resource", export_format="csv")
 
-    def test_export_residents_csv_crashes_on_missing_profile_fields(self):
-        # sims/bulk/userbase_engine.py export_rows_for("residents") (~line 265) reads
+    def test_export_residents_csv(self):
+        # sims/bulk/userbase_engine.py export_rows_for("residents") used to read
         # profile.pgr_id / profile.training_start / profile.training_end / profile.training_level
         # off ResidentProfile, but that model (sims/users/models.py) has no such fields (it only
         # has registration_no, hospital, department_ref, etc). Any resident with a resident_profile
-        # therefore crashes the residents export with AttributeError instead of producing a file.
-        # This is a real, pre-existing bug -- documented here rather than fixed, and flagged in
-        # the task report.
-        with self.assertRaises(AttributeError):
-            self.service.export_dataset(resource="residents", export_format="csv")
+        # crashed the residents export with AttributeError. Fixed to read pgr_id from
+        # ResidentProfile.registration_no and training_start/training_end/training_level from the
+        # resident's sims.training.ResidentTrainingRecord (the same places the import path writes
+        # them to).
+        result = self.service.export_dataset(resource="residents", export_format="csv")
+        self.assertIn(b"res_exp@test.com", result.content)
+        self.assertIn(str(self.rtr.start_date), result.content.decode("utf-8"))
 
     def test_export_supervisors_xlsx(self):
         result = self.service.export_dataset(resource="supervisors", export_format="xlsx")

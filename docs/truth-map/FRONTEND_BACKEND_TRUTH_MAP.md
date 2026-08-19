@@ -1,404 +1,246 @@
 # Frontend-Backend Truth Map — PGMS Clean-Room Foundation
 
-**Last independently verified**: 2026-07-23, as part of the pilot-readiness audit
-(`docs/AUDIT_2026-07-23_PILOT_READINESS.md`, §4.6-§4.8). Method: enumerated every backend URL
-pattern via `backend/sims/_devtools/truthmap_extract.py` (1183 raw route/method rows → 223 distinct
-resource groups after collapsing HTTP-method/format-suffix variants), then cross-referenced each
-against every frontend page (`frontend/app/**/page.tsx`), component, and `frontend/lib/api/*.ts` API
-client file — in **both directions**: does every frontend call reach a real backend route (forward),
-and does every backend route have a real frontend caller, or is it deliberately backend-only
-(reverse)? This supersedes the previous version of this document, which was self-reported by each
-brick's own implementing agent, one-directional, and covered only bricks 0/6/7/8/8.6/9-10/11 — it
-never checked `/users`/`/residents`/`/supervisors`/`/support-staff`/`/admins` directory CRUD, auth
-flows beyond login, `sims/bulk`, `sims/audit`, `sims/notifications`, or `sims/backup_center`, and
-never checked for orphaned backend code.
+**Last independently verified**: 2026-08-02, a fresh from-scratch bidirectional audit (this
+document supersedes the 2026-07-23 version in full — every claim below was re-checked against
+current code, not carried over). Method: enumerated every `urlpatterns`/router registration in
+`backend/sims/{users,academics,rotations,training,supervision,bulk,notifications,backup_center,audit}`
+(the apps actually in `INSTALLED_APPS` — `sims/_legacy/` excluded), then for each one grepped for
+the **literal URL path or api-client function name actually invoked** from a page/component under
+`frontend/app/`, not merely defined in `frontend/lib/api/*.ts` — the api-client-file-exists check is
+exactly the false-positive class that hid the 2026-07-23 bulk-import bug, so it was deliberately not
+trusted here. Frontend→backend direction: every page under `frontend/app/` that performs an action
+was checked against a real, non-stub backend route.
 
-Status legend: **WORKING** (real frontend↔backend pair, verified) · **GAP** (real capability, no
-way to reach it — needs a decision) · **BACKEND-ONLY** (deliberately no UI needed) · **LEGACY**
-(dead code from a superseded implementation, confirmed unreachable and superseded by a working
-replacement).
+Status legend: **WORKING** (real frontend↔backend pair, actually invoked, verified) · **GAP** (real
+backend capability, no frontend caller anywhere — a genuine hole) · **GAP-LOW** (real backend
+capability with no frontend caller, but low severity — either functionally superseded by another
+path the UI does use, or a narrow parameterized helper) · **BACKEND-ONLY** (deliberately no UI
+needed) · **LEGACY** (dead/superseded code, confirmed unreachable, kept only for git history or
+model reuse elsewhere).
 
 ---
 
-## 1. Universal Identity & Profile Sync (Update 0) — WORKING
+## 1. Universal Identity & Profile Sync — WORKING
 
 | Frontend Page | Backend Endpoint | Status |
 | :--- | :--- | :--- |
 | `/login` | `POST /api/auth/login/` | WORKING |
 | `/change-password` | `POST /api/auth/change-password/` | WORKING |
-| `/complete-profile` | `GET /api/auth/complete-profile/` (form spec), `GET /api/auth/me/` | WORKING |
-| `/users/new` | `POST /api/users/` (→ `create_user_with_profile`) | WORKING |
+| `/complete-profile` | `GET /api/auth/complete-profile/`, `GET /api/auth/me/` | WORKING |
+| `/users/new` | `POST /api/users/` → `create_user_with_profile` | WORKING |
 | `/register`, `/forgot-password`, `/reset-password/[uid]/[token]` | `/api/auth/register/`, `/api/auth/password-reset/`, `/api/auth/password-reset/confirm/` | WORKING |
-| `/users`, `/residents`, `/supervisors`, `/support-staff`, `/admins` (shared `RoleDirectoryPage`) | `GET /api/users/` (role-filtered via `userbaseApi.users`) | WORKING |
+| `/users`, `/residents`, `/supervisors`, `/support-staff`, `/admins` (shared `RoleDirectoryPage`, with search/active-filter added 2026-07-24) | `GET /api/users/` (role-filtered, `search`/`active`/`department` query params) | WORKING |
+| `ProtectedRoute` onboarding gate (calls `authApi.me()` on every protected mount except `/change-password`/`/complete-profile`, redirects on `allowed_next_route`) | `GET /api/auth/me/` | WORKING — confirmed the 2026-07-24 fix (§7.9/7.9b of the prior version) is still in place; `must_change_password` is cleared by `change_password_view` on success. |
 
-## 2. Supervision Spine (Brick 7) — WORKING
+**Confirmed resolved since 2026-07-23**: Phase A (`User.specialty` → real `Specialty` FK, via
+`SafeForeignKeyDescriptor` in `backend/sims/users/models.py`), Phase B (home-affiliation
+reconciliation), and Phase C (unification of the two independent `ResidentTrainingRecord` models
+onto `sims.training.ResidentTrainingRecord`, with `sims.academics.ResidentTrainingRecord` dropped
+entirely — `backend/sims/academics/models.py` no longer defines this class) are all verified present
+in current code, not just in commit messages. The `docs/CANONICAL_SOURCE_OF_TRUTH.md` /
+`CLAUDE.md` prose describing "two independent `ResidentTrainingRecord` models" is now **stale** —
+trust `backend/sims/academics/models.py` (no `ResidentTrainingRecord` class) and
+`backend/sims/training/models.py:111` (the sole survivor) over that prose.
+
+## 2. Supervision Spine — WORKING
 
 | Frontend Page | Backend Endpoint | Status |
 | :--- | :--- | :--- |
-| `/supervision`, `/supervision/assignments[, /new, /[id]]` | `/api/supervision/assignments/`, `/api/supervision/options/` | WORKING |
+| `/supervision`, `/supervision/assignments[, /new, /[id]]` | `/api/supervision/assignments/` (list/create/detail/`end`) | WORKING |
 | `/supervision/import` | `POST /api/supervision/import/` | WORKING |
 | `/supervision/data-quality` | `GET /api/supervision/data-quality/` | WORKING |
+| n/a | `POST /api/supervision/change-primary/` | **GAP** — real, RBAC-checked (`ADMIN`-only), atomic "rotate primary supervisor" endpoint (`change_primary_supervisor`, `backend/sims/supervision/views.py:148`) with a working api-client wrapper (`supervisionApi.changePrimary` in `frontend/lib/api/supervision.ts:93`) that is never called from any page or component. No UI exposes a "change primary supervisor" action anywhere under `/supervision/*`. See §9 open decisions. |
 
-## 3. Core Masters & Directory (Brick 6) — WORKING (via a different endpoint than originally documented)
-
-| Frontend Page | Backend Endpoint | Status |
-| :--- | :--- | :--- |
-| `/masters` (now the live `BulkSetupWorkspace` bulk import/export screen — was a static description page as of the initial 2026-07-23 pass, fixed same day, see audit §4.6/Step 5) | `POST /api/bulk/import/<entity>/<action>/`, `GET /api/bulk/templates/<resource>/`, `GET /api/bulk/exports/<resource>/`, plus `/api/bulk/flexible/*` for the custom column-mapping mode | WORKING — covers hospitals, departments, matrix, training-programs, faculty-supervisors, residents, supervision-links, and rotation-assignments. |
-
-## 4. Academic Workflow Foundation (Brick 8) & Workflows/Submissions (Brick 9-10) — WORKING
-
-Unchanged from the previous version of this document — independently spot-checked and confirmed
-still accurate: `/academics`, `/academics/training-records[/[id]]`, `/academics/periods`,
-`/academics/rotation-templates`, `/academics/evaluation-templates`, `/academics/logbook-categories`,
-`/academics/review-queue`, `/academics/data-quality`, `/academics/evaluations[/new, /[id],
-/[id]/review]`, `/academics/logbook[/new, /[id], /[id]/review]`, `/dashboard/resident`,
-`/dashboard/supervisor`, `/residents/[id]`, `/supervisors/[id]` all map to real, working
-`/api/academics/*` endpoints.
-
-## 5. Dashboards, Reports & Exports (Brick 11) — WORKING
-
-Unchanged from the previous version — confirmed still accurate: `/academics/monitoring`,
-`/academics/supervisor-workload`, `/academics/my-progress`, `/academics/reports/*` (resident
-progress, supervisor workload, evaluations, logbook, data-quality, each with CSV export) all map to
-real `/api/academics/monitoring/*` and `/api/academics/reports/*` endpoints.
-
-## 6. Backup & Restore (Brick 12) — WORKING
+## 3. Core Masters & Bulk Import — WORKING
 
 | Frontend Page | Backend Endpoint | Status |
 | :--- | :--- | :--- |
-| `/dashboard/utrmc/backup` (`components/backup/*`) | `/api/backup_center/backups/`, `/restores/`, `create-routine`, `create-disaster`, `upload`, and the Google Drive connect/status/list endpoints | WORKING for the core flows exercised by `components/backup/BackupList.tsx`, `CreateBackupModal.tsx`, `RestoreModal.tsx`, `GoogleDrivePanel.tsx` (all have passing tests). |
-| n/a | `DELETE /api/backup_center/backups/<pk>/delete/`, `GET .../download/`, `POST .../validate/`, `POST .../restores/<pk>/{confirm,dry-run,validate}/`, `.../google-drive/{download,upload,verify}/`, `.../google-drive/oauth/callback/` | **GAP-LOW** — no direct frontend caller found for these specific actions. Likely reachable through UI flows I didn't fully trace (e.g. a confirm step inside `RestoreModal`), but worth a manual click-through to confirm during Phase 7 (smoke test) rather than assuming. |
+| `/masters` (`BulkSetupWorkspace.tsx`, 9-step workflow: hospitals, departments, matrix, training-programs, academic-sessions, faculty-supervisors, residents, supervision-links, rotation-assignments) | `POST /api/bulk/import/<entity>/<action>/`, `GET /api/bulk/templates/<resource>/`, `GET /api/bulk/exports/<resource>/`, plus `/api/bulk/flexible/{schemas,detect-headers,validate-mapping,dry-run,apply,presets}/` (custom column-mapping mode, called directly via `apiClient` from `FlexibleMappingImport.tsx`, not through `frontend/lib/api/bulk.ts`) | WORKING — confirmed all 9 steps wired, all flexible-mapping sub-endpoints have a real caller. |
+| n/a | `POST /api/bulk/review/`, `/assignment/`, `/import/`, `/import-trainees/`, `/import-supervisors/`, `/import-residents/`, `/import-departments/` | **LEGACY** — the pre-unified-import view set, confirmed zero frontend references (checked `frontend/app`, `frontend/lib`, `frontend/components`, `frontend/e2e`). Fully superseded by the unified `import/<entity>/<action>/` endpoint the workspace actually uses. Per the prior version's own methodology note (class/path checks alone don't prove backend-test-safety for removal — `reverse()`-name checks are also needed), **left in place, not removed**; flagged for a human decision only if backend cleanup is ever prioritized. |
+| n/a | `sims/academics`'s duplicate masters ViewSets (`InstitutionViewSet`, `HospitalViewSet`, `DepartmentViewSet`, `TrainingProgramViewSet`, `SpecialtyViewSet`, `DesignationViewSet`, `AcademicSessionViewSet`) at `api/masters/`/`academics/api/` | **RESOLVED (already executed as of 2026-07-24, reconfirmed now)** — `backend/sims/academics/urls.py` no longer exists; `sims_project/urls.py` lines 157-161 are a comment recording the removal. Academic Session CRUD lives in the bulk-import workflow instead (§3 row above); Institution/Specialty/Designation confirmed not structurally needed (free-text fields, not FKs) and were not rebuilt. |
+
+## 4. Academic Workflow (Rotations, Evaluations, Logbook) — WORKING
+
+`/academics`, `/academics/training-records[/[id]]`, `/academics/periods`,
+`/academics/rotation-templates` (scaffold), `/academics/evaluation-templates`,
+`/academics/logbook-categories`, `/academics/review-queue`, `/academics/data-quality`,
+`/academics/evaluations[/new, /[id], /[id]/review]`, `/academics/logbook[/new, /[id], /[id]/review]`,
+`/dashboard/resident`, `/dashboard/supervisor`, `/residents/[id]`, `/supervisors/[id]` — spot-checked
+against `sims/academics/workflow_urls.py`, all map to real, called `/api/academics/*` endpoints.
+`ResidentTrainingRecord`-backed views now read/write the unified `sims.training` model (§1) — no
+regression found from the Phase C migration.
+
+### 4.1 Rotation Assignments — WORKING (new since 2026-07-23)
+`/academics/rotation-assignments[, /new, /[id]]` calls `rotationsApi` (`frontend/lib/api/rotations.ts`)
+against `POST/GET /api/rotations/` (create/list/detail), `.../submit/`, `.../hod-approve/`
+(exposed in the UI as `reviewApplication` with `action: approve|defer|reject`),
+`.../utrmc-approve/`, `.../activate/`, `.../complete/`, plus `/api/hospital-departments/`,
+`/api/resident-training/`, `/api/programs/` for the create form's dropdowns. Confirmed real usage by
+grepping `rotationsApi.*` call sites in `frontend/app/academics/rotation-assignments/**/*.tsx`, not
+just the client file. Full draft → submit → HOD-approve → UTRMC-approve → activate → complete
+lifecycle is reachable from the UI for admin/supervisor/resident roles per `ProtectedRoute`.
+
+The dedicated "mine"/"inbox" endpoints (`GET /api/my/rotations/`, `/api/utrmc/approvals/rotations/`,
+`/api/supervisor/rotations/pending/`) are **not** called — the list page instead calls the generic
+`GET /api/rotations/` and relies on `RotationAssignmentViewSet.get_queryset()`'s own role-based
+filtering (residents see only their own, supervisors see supervised + own-department, admins see
+all), which produces materially the same result set. **GAP-LOW** — real, tested backend, genuinely
+unreached, but not a functional hole since the UI achieves the same outcome another way.
+
+### 4.2 Leave Requests — WORKING (new since 2026-07-23, closes the old §7.2 gap)
+`/academics/leave-requests[, /new, /[id]]` calls `leaveApi` (`frontend/lib/api/leave.ts`) against
+`POST/GET /api/leaves/` (create/list/detail), `.../submit/`, `.../approve/`, `.../reject/`.
+Confirmed real usage in `frontend/app/academics/leave-requests/**/*.tsx`. Same pattern as rotations:
+the list page uses the generic RBAC-filtered `GET /api/leaves/`, so `leaveApi.myLeaves()`
+(`/api/my/leaves/`) and `leaveApi.approvalInbox()` (`/api/utrmc/approvals/leaves/`) are defined but
+never called — **GAP-LOW**, same "superseded by an equivalent generic path" reasoning as §4.1.
+
+**Prior open item (§7.2) formally resolved**: leave management now has a complete resident
+submit/list/detail UI and a supervisor/admin approve-or-reject flow, live and reachable.
+
+## 5. Dashboards, Reports & Exports — WORKING
+
+`/academics/monitoring`, `/academics/supervisor-workload`, `/academics/my-progress`,
+`/academics/reports/*` (resident progress, supervisor workload, evaluations, logbook, data-quality,
+each with CSV export) — spot-checked, still map to real `/api/academics/monitoring/*` and
+`/api/academics/reports/*` endpoints, unchanged from the prior audit.
+
+`frontend/app/dashboard/supervisor/residents/[id]/progress/page.tsx` is a 3-line
+`redirect('/dashboard/supervisor')` stub — confirmed deliberate (matches the same Brick 8.6
+redirect-stub pattern as §6 below), backed by a real, unreached
+`GET /api/supervisors/residents/<id>/progress/` (`SupervisorResidentProgressView`,
+`sims/training/views.py`). **GAP-LOW**, same bucket as §6, not a new finding.
+
+## 6. Backup & Restore — WORKING (regression found and fixed this pass)
+
+**Regression found**: `frontend/app/dashboard/utrmc/backup/page.tsx` had been replaced with a 6-line
+`redirect('/dashboard/utrmc')` stub in commit `129abaa` ("Update 0 through Brick 8.6 foundation and
+cleanup", 2026-07-15) — **before** the 2026-07-23 audit that then reported this route as WORKING.
+That prior WORKING verdict was a false positive: it was based on `components/backup/*.tsx` having
+passing unit tests (true, but those tests render the components directly, not through the page
+route) and never checked that the actual `/dashboard/utrmc/backup` route rendered them. There was
+also no nav-registry link to the page. Net effect: the entire backup/restore/Google-Drive UI was
+live in the codebase, fully tested, and completely unreachable by any real user for at least three
+weeks.
+
+**Fixed this pass**: restored `frontend/app/dashboard/utrmc/backup/page.tsx` to the full
+`BackupCenterPage` implementation (git history at `129abaa~1`) — verified all four child components
+(`BackupList`, `CreateBackupModal`, `RestoreModal`, `GoogleDrivePanel`) and UI primitives
+(`MetricCard`, `SectionCard`, `ErrorBanner`, `SuccessBanner`) it depends on still exist with matching
+prop signatures before restoring (no drift since the commit that disabled it). Added a "Backup
+Center" entry to the Admin section of `frontend/lib/navRegistry.ts` (previously missing) so the page
+is actually discoverable via the sidebar, not just directly-navigable by URL. Verified: `npm run
+typecheck` clean, `npm run lint` clean, `npx jest frontend/components/backup` (3 suites / 6 tests)
+passing.
+
+| Frontend Page | Backend Endpoint | Status |
+| :--- | :--- | :--- |
+| `/dashboard/utrmc/backup` (now nav-linked) | `/api/backup_center/backups/` (list/detail/create-routine/create-disaster/delete/download/validate), `/restores/` (list/upload/validate/dry-run/confirm), `/audit-logs/`, and the full `google-drive/*` set (status/connect/disconnect/health-check/create-folder/list, plus per-backup upload/verify/download) | WORKING — every one of these paths has a real, invoked caller in `components/backup/{BackupList,CreateBackupModal,RestoreModal,GoogleDrivePanel}.tsx`, confirmed by literal-path grep, not just component test coverage. This resolves the prior version's GAP-LOW list for this section in full. |
+| n/a | `GET /api/backup_center/google-drive/oauth/callback/` | BACKEND-ONLY — a server-side OAuth redirect target opened by Google's consent flow, not something frontend JS calls directly; the page's `?googleDrive=connected\|error` query-param handling is the frontend-side half of this flow. No action needed. |
+
+## 7. Notifications — GAP (real backend, api-client wrapper exists, zero UI)
+
+`sims/notifications/urls.py` exposes `GET /api/notifications/` (list, with `is_read`/
+`notification_type`/`ordering` filters), `POST /api/notifications/mark-read/`,
+`GET/PATCH /api/notifications/preferences/`, `GET /api/notifications/unread-count/`. A full,
+reasonably careful api-client wrapper exists at `frontend/lib/api/notifications.ts`
+(`notificationsApi`, including field-shape adapters like unwrapping backend's `{unread: n}` into
+`{count: n}`), but **zero** page or component under `frontend/app`/`frontend/components` imports or
+calls it — no notification bell, no dropdown, no preferences page, nothing. This is exactly the
+"backend + api-client-file exists, but never actually wired to a UI" pattern the task brief warns
+about — the api-client layer alone does not establish reachability. See §9 open decisions.
+
+## 8. Audit Log Viewer — GAP (real backend, api-client wrapper exists, zero UI)
+
+`sims/audit/urls.py` registers `ActivityLogViewSet` (`/api/audit/activity/`) and `AuditReportViewSet`
+(`/api/audit/reports/`, list + create). `frontend/lib/api/audit.ts` wraps both. No page or component
+calls either. This is a **different** audit surface from the backup-center's own audit log
+(`/api/backup_center/audit-logs/`, §6 above, which **is** wired) — don't conflate the two; this
+finding is specifically about the general-purpose `ActivityLog`/`AuditReport` models having no
+viewer anywhere. See §9 open decisions.
+
+## 9. Open product-scope decisions (not built this pass — genuinely non-trivial, needs a call)
+
+Each item below is a real, currently-passing backend capability with **no** frontend path to reach
+it, where either (a) no frontend UI exists at all today (not even a stub/redirect) so building one
+is a real feature, not a wiring fix, or (b) closing it would require a product decision about
+whether the capability is still wanted. None of these were built, per the instruction to leave
+larger/decision-requiring gaps documented rather than guessed at.
+
+1. **Notifications (§7)** — a notification bell/dropdown + preferences page would need: unread-count
+   polling, a read/unread list view, mark-as-read interaction, and a preferences form, wired into
+   `DashboardLayout.tsx` (which currently has no header region at all, only a sidebar) for all four
+   roles. The api-client layer is ready; the UI is a genuine net-new feature, not a small wire-up —
+   left undecided/unbuilt.
+2. **Audit log viewer (§8)** — `ActivityLogViewSet`/`AuditReportViewSet` have no admin-facing page.
+   Same shape as #1: api client exists, UI does not, and scope (which roles see it, what filters
+   matter) needs a decision before building.
+3. **Change primary supervisor (§2)** — `POST /api/supervision/change-primary/` is a real,
+   admin-only, atomic "rotate a resident's primary supervisor with a reason and effective date"
+   workflow with no UI trigger anywhere under `/supervision/*`. Needs a small form/modal (resident
+   picker, new-supervisor picker, start date, reason) — plausible to build quickly, but it's a new
+   interaction, not a toggle on an existing screen, so left as a documented decision rather than
+   guessed at without the ability to click-test it live.
+4. **Rotation completion / certificate verification (`sims.training.RotationCompletion`,
+   `RotationCompletionsView`, `RotationCompletionVerifyView`)** — confirmed (via
+   `grep -rn "RotationCompletion.objects.create\|RotationCompletion("` across `backend/sims`,
+   production code only) that **no production code path ever creates a `RotationCompletion` row** —
+   the model, list view, and admin-verify-with-certificate-issuance action are only ever exercised by
+   tests constructing rows directly via the ORM. This is a bigger gap than a missing UI: even if a
+   frontend were built today, there is no backend trigger (e.g. "mark rotation complete → create a
+   completion record pending certificate verification") to make it meaningful. This needs a product
+   decision on whether rotation completion/certificate issuance is in scope at all before any code
+   (frontend or backend) is written — not something to guess at.
+5. **`sims/training`'s thesis/research/workshops/postings/milestones cluster** — unchanged from the
+   prior audit's §7.4: `frontend/app/dashboard/resident/{thesis,research,workshops,postings,schedule,progress}/page.tsx`
+   and `.../dashboard/supervisor/research-approvals/page.tsx` remain deliberate
+   `redirect(...)` stubs. Confirmed still true this pass (`grep` for `redirect(` in each). Backing
+   endpoints (thesis/synopsis submission+review, research projects, workshop completions, deputation
+   postings, program milestones, eligibility) remain real and tested but intentionally unreached.
+   `SupervisorResidentProgressView` (§5) and `MilestoneResearchRequirementView` belong to this same
+   deliberately-deferred cluster. No action needed unless pilot scope changes.
+
+## 10. GAP-LOW — isolated parameterized endpoints, low severity
+
+- `rotations/api/departments/<hospital_id>/` (`department_by_hospital_api`, hospital→department
+  cascading-dropdown helper) — confirmed zero references anywhere in `frontend/` (previously also
+  used by an e2e spec; that reference is gone too). Superseded by `/api/hospital-departments/`
+  (the matrix endpoint `rotationsApi.listHospitalDepartments()` actually uses on the rotation-
+  assignment create form). Harmless, no action.
+- `GET /api/my/rotations/`, `/api/utrmc/approvals/rotations/`, `/api/supervisor/rotations/pending/`,
+  `/api/my/leaves/`, `/api/utrmc/approvals/leaves/` — see §4.1/§4.2, functionally superseded by the
+  generic RBAC-filtered list endpoints the actual UI calls.
+- Pre-unified bulk-import endpoints (§3) — superseded by `import/<entity>/<action>/`.
 
 ---
 
-## 7. NEW FINDINGS — genuine gaps and dead code (2026-07-23 audit)
+## 11. Summary
 
-### 7.1 GAP — Bulk-import UI not wired to any route
-Already fully documented in `docs/AUDIT_2026-07-23_PILOT_READINESS.md` §4.6 / Step 5. Backend fully
-supports hospitals/departments/matrix/supervisors/residents/supervision-links/rotation-assignments/
-training-programs import; frontend component (`BulkSetupWorkspace.tsx`) exists and is tested but
-unmounted. Not re-detailed here — see the audit doc.
+Of the backend resource groups checked across `users`, `academics`, `rotations`, `training`,
+`supervision`, `bulk`, `notifications`, `backup_center`, and `audit`: the large majority — core
+identity, supervision assignments, masters/bulk-import, academic workflow (evaluations/logbook/
+rotation-templates), rotation assignments, leave requests, dashboards/reports, and backup/restore —
+are confirmed **WORKING** with a real, invoked frontend caller (not just an api-client definition).
 
-### 7.2 GAP — Leave management has a complete backend and *zero* frontend
-`LeaveRequestViewSet` (`/api/leaves/`), `MyLeavesView` (`/api/my/leaves/`), and
-`LeaveApprovalInboxView` (`/api/utrmc/approvals/leaves/`) are fully implemented, tested backend
-endpoints. I found **zero** references to "leave" anywhere under `frontend/app/` — not a page, not
-a stub, not a redirect. This is different from §7.4 below (which has deliberate redirect stubs
-acknowledging the feature was retired) — leave management looks like backend work that was never
-followed up with any frontend at all, rather than a feature that was deliberately removed.
-`docs/APP_OVERVIEW.md` (itself a stale doc, see the main audit §4.5) lists "Leave Management" as a
-core pilot feature, which suggests this may genuinely be expected to work.
-**DECIDED 2026-07-24: in scope for this pilot.** Leave request/approval is confirmed a real,
-wanted feature — needs a resident-facing submit/list form and a supervisor/admin approval inbox,
-comparable in size to the bulk-import gap. **Not started yet, by explicit instruction**: build this
-after the remaining open decisions (§7.3/§7.5/§7.6 below) are finalized, not before.
+**Newly confirmed WORKING that the prior document had as GAP**: leave management (§4.2, prior §7.2)
+and rotation-assignment scheduling (§4.1, prior §7.10/§7.10a) both now have complete, wired,
+end-to-end UIs. The prior document's §7.3 (duplicate masters ViewSets) is confirmed fully resolved
+(code deleted, not just decided).
 
-### 7.3 MIXED — a second "masters" API: two dead ViewSets, five with real (untested-by-frontend) test coverage
-`sims/academics/urls.py` registers a DRF router (`InstitutionViewSet`, `HospitalViewSet`,
-`DepartmentViewSet`, `TrainingProgramViewSet`, `SpecialtyViewSet`, `DesignationViewSet`,
-`AcademicSessionViewSet` — all from `sims/academics/views.py`), mounted **twice** in
-`sims_project/urls.py`: at `api/masters/` (line 156) and again at `academics/api/` (line 158). No
-frontend page or component calls either prefix (confirmed by grep across `frontend/app`,
-`frontend/components`, `frontend/lib`, `frontend/e2e`).
+**Newly found regression, fixed this pass**: the Backup Center page (§6) had silently regressed to a
+redirect stub three weeks before the prior audit ran, making its 2026-07-23 "WORKING" verdict a false
+positive based on component-level test coverage rather than actual route behavior. Restored and
+nav-linked; this is the single code fix made in this pass.
 
-**Correction to an earlier version of this finding**: an initial pass classified this whole cluster
-as dead/legacy and attempted to relocate it out of the live app — that relocation was executed,
-tested, and then **reverted** in the same session, because `sims/tests/test_masters_brick6.py::
-test_master_apis_rbac` hits `/api/masters/institutions/` directly by URL string (not by importing
-the view class, which is why the initial grep-based dead-code check missed it) to verify admin-write
-/ resident-read-only RBAC on this exact endpoint. That test is real, intentional, and currently
-passing — this is not abandoned code by that measure.
+**Newly found gaps, not previously documented**: `sims/notifications` (§7) and the general-purpose
+`sims/audit` activity-log/report viewer (§8) both have complete backend + api-client-wrapper layers
+and precisely zero frontend UI — the same "wrapper exists, nothing calls it" shape the bulk-import
+bug taught this project to check for explicitly, just not caught until this pass because no one had
+previously grepped for real call sites of `notificationsApi`/`auditApi`. Also newly found: the
+`change-primary` supervisor-rotation endpoint (§2) has the same shape.
 
-Breaking it down by model:
-- **`HospitalViewSet`, `DepartmentViewSet`** — genuinely redundant: `sims.users.userbase_views` (§3)
-  exposes the same canonical `Hospital`/`Department` models at `/api/hospitals/`/`/api/departments/`,
-  which **is** what the frontend and the bulk-import screen actually use. These two duplicate an
-  already-working path.
-- **`InstitutionViewSet`, `SpecialtyViewSet`, `DesignationViewSet`, `AcademicSessionViewSet`,
-  `TrainingProgramViewSet`** — **not** duplicated elsewhere. `Institution`/`Specialty`/
-  `Designation`/`AcademicSession` data is read (but not written) elsewhere, via
-  `IdentityOptionsView` (`/api/identity/options/`, confirmed working — powers the dropdown option
-  lists on `/complete-profile` and `/users/new`) and populated via the `seed_pilot_masters`
-  management command. The **write/CRUD path** for these five master-data types has real,
-  RBAC-tested backend support and genuinely **no frontend UI** — this reads more like the leave
-  management gap (§7.2: real capability, no way to reach it) than like confirmed-dead code.
-
-**DECIDED AND EXECUTED 2026-07-24**: given the choice per model —
-- **Academic Session**: real, structurally required (`ResidentProfile.academic_session_ref` is a
-  live foreign key set during profile completion, alongside `hospital`/`department_ref`/
-  `program_ref`, all of which already had a working admin path). Built via the same pattern as
-  Training Program (§4.6/Step 5): a new `import_academic_sessions` bulk-import method
-  (`sims/bulk/services.py`), wired into the unified import endpoint, template, and export; a new
-  "Academic Sessions" panel added to `BulkSetupWorkspace.tsx` at `/masters` (Step 5 of 9 in that
-  workflow now). 4 new backend tests.
-- **Institution, Specialty, Designation**: confirmed not structurally needed (not real foreign keys
-  anywhere — `User.specialty` and `*Profile.designation` are free-text fields, not FKs to these
-  tables) — no UI built, per the decision.
-- **The entire dead cluster removed**: `sims/academics/urls.py` (all 7 ViewSets:
-  `InstitutionViewSet`, `HospitalViewSet`, `DepartmentViewSet`, `TrainingProgramViewSet`,
-  `SpecialtyViewSet`, `DesignationViewSet`, `AcademicSessionViewSet`) deleted along with the two
-  dead URL mounts in `sims_project/urls.py`. The `Institution`/`Specialty`/`Designation`/
-  `AcademicSession` **models** were kept — still used by Django admin, `IdentityOptionsView` (the
-  read-only dropdown source for `/complete-profile`/`/users/new`), the `seed_pilot_masters`
-  management command, and (for `Institution`) a foreign key in `sims/rotations/models.py`. Only the
-  duplicate REST API onto them was removed.
-- Retired `sims/tests/test_masters_brick6.py::test_master_apis_rbac` (the only test depending on the
-  removed routes, found this time by checking both `reverse()` names and literal URL strings before
-  touching anything — no surprises, unlike §7.3's first attempt). Its sibling tests in the same file
-  (`test_identity_options_endpoint`, `test_onboarding_profile_completion_resolves_master_foreign_keys`,
-  `test_data_quality_endpoint`, `test_seed_pilot_masters_command`) all still pass unchanged.
-
-Verified: `pytest sims` 439 passed / 8 skipped / 0 failed, `manage.py check` clean,
-`check_all_pgms_gates.sh` all pass, zero remaining references to any removed class/route anywhere in
-the backend.
-
-### 7.4 LEGACY (confirmed intentional) — Thesis/research/workshops/postings self-service pages are deliberate redirect stubs
-`frontend/app/dashboard/resident/{thesis,research,workshops,postings,schedule,progress}/page.tsx`
-and `frontend/app/dashboard/supervisor/research-approvals/page.tsx` are each a 6-line
-`redirect('/dashboard/resident')` (or `/dashboard/supervisor`) stub — this matches the documented
-"Brick 8.6 Cleanup Rule" (§5 of the old version of this doc: "Old `/dashboard/pg*` ... subpages are
-redirect-only compatibility routes"), so this is a **confirmed deliberate decision**, not an
-oversight. The backing endpoints (`ThesisSubmissionView`/`SynopsisSubmissionView` + review-queue +
-review-action + documents, `ResidentResearchProjectView` + `ResearchProjectActionView`,
-`MyWorkshopCompletionsView`, `DeputationPostingViewSet`, `SupervisorResearchApprovalsView`,
-`ProgramMilestoneViewSet`, `MilestoneResearchRequirementView`) are real, tested, and fully built —
-just intentionally not reachable from the current UI. **No action needed** unless this pilot's scope
-changes to include the fuller academic-lifecycle tracking (thesis/synopsis/research/workshops
-milestones) beyond rotations/logbook/evaluations.
-
-### 7.5 CORRECTED — not confirmed-dead: `sims/training`'s "operational dashboard" + "logbook" implementation has real backend test coverage
-`sims/training/urls.py` and `sims/training/views.py` contain a second, complete implementation of
-logbook entries (`LogbookEntryViewSet`, `LogbookThresholdConfigViewSet` at bare `/api/logbook/`) and
-role dashboards (`ResidentOperationalDashboardView`, `SupervisorOperationalDashboardView`,
-`UTRMCOperationalDashboardView` at `/api/dashboard/*`). **No production frontend code calls it** —
-that part of the original finding holds. But an attempt to verify this as safe to relocate found it
-is exercised extensively by the **backend** test suite via direct URL strings (not by importing the
-view class, which is why the initial class-name-based check missed it): `sims/training/tests.py`,
-`sims/training/test_feature_layer_ops.py`, `sims/test_schema_gate.py`, and several files under
-`sims/tests/` collectively make dozens of calls to `/api/logbook/...` and `/api/dashboard/...`
-directly. This is real, substantial, currently-passing test coverage, not incidental.
-**Corrected assessment**: this is not "confirmed dead code" in the same sense as §7.6 below — it's a
-working, tested backend implementation with no current frontend consumer.
-
-**DECIDED AND EXECUTED 2026-07-24: removed.** Confirmed genuinely superseded by
-`sims.academics`'s logbook/dashboards (§4) — deleted `LogbookEntryViewSet`,
-`LogbookThresholdConfigViewSet`, `LogbookReviewQueueView`, `LogbookMyThresholdView`,
-`ResidentOperationalDashboardView`, `SupervisorOperationalDashboardView`,
-`UTRMCOperationalDashboardView` and their URL registrations from `sims/training/views.py` /
-`urls.py`. The `LogbookEntry`/`LogbookThresholdConfig` **models** were left untouched — they're
-genuinely used elsewhere (`sims/bulk/services.py`'s bulk review/assignment feature,
-`sims/users/models.py`'s dashboard stat calculations) — only the duplicate API surface onto them
-was removed. Retired/repurposed the ~15 backend tests that specifically exercised this dead surface
-across 7 files (some tests were fully removed, some had only their dead-endpoint assertions
-stripped while keeping coverage of other, unrelated things in the same test method). Verified: full
-`pytest sims` suite green (436 passed / 8 skipped / 0 failed), `check_all_pgms_gates.sh` all pass,
-zero remaining references to any of the removed routes/names anywhere in the backend. Chose plain
-deletion over the "move to `_deprecated_candidates`" pattern used elsewhere in this document — unlike
-§7.3's cluster, this code was tightly coupled to private helper functions shared with other live
-views, making a clean standalone relocated copy impractical; git history is the recovery path if
-ever needed.
-
-**Not fixed, flagged as a follow-up**: three Playwright e2e spec files still reference the now-removed
-routes (`frontend/e2e/feature-layer/permissions.spec.ts`,
-`frontend/e2e/critical/admin_analytics_live_feed.spec.ts`,
-`frontend/e2e/smoke/ui_pilot_readiness.spec.ts`). These need a running server to execute and
-weren't run as part of this change's verification (which used `pytest`/`npm test`/gate scripts, not
-full e2e) — fixing them blind without being able to run them risks guessing wrong. Two of the three
-appear to be response-mocking/interception code that would likely just go unreached rather than
-fail; `permissions.spec.ts` makes a real request to the removed endpoint and would fail if run.
-
-### 7.6 CORRECTED (twice) — the "stats"/"analytics" views in `sims/users/views.py` also have real test coverage
-`UserSearchAPIView`, `SupervisorsBySpecialtyAPIView`, `UserStatsAPIView`, `UserStatisticsAPIView`,
-`UserPerformanceAPIView`, `admin_stats_api`, and the four `"coming soon"` analytics stub views from
-§4.4 — all in `sims/users/views.py`/`sims/users/urls.py` under the `users:` namespace. First pass
-(class/function-name grep): flagged as confirmed dead. Second pass (literal URL-string grep, done
-after §7.3/§7.5 were caught): still showed zero hits and was reported here as "the one candidate
-that's actually safe to relocate." That was still wrong — a **third**, closer check (grepping for
-the actual `reverse("users:<url-name>")` calls, e.g. `reverse("users:admin_analytics")`,
-`reverse("users:user_stats_api", kwargs={"pk": ...})`) found real, passing test coverage for
-**every single view in this cluster**, in `sims/tests/test_users_views_final_push.py` and
-`sims/tests/test_users_views.py`. No relocation was attempted for this cluster — it was caught by
-this third check immediately before any file was touched, unlike §7.3 which had to be relocated,
-tested, found broken, and reverted.
-
-**DECIDED 2026-07-24 (part 1)**: the underlying real gap this cluster surfaced — the `/users`,
-`/residents`, `/supervisors`, `/support-staff` directory pages have no search or filter of any kind
-— **has been built**: the backend already fully supported `search`/`active`/`department` query
-params on `UserViewSet` (`sims/users/userbase_views.py`), so this was a pure frontend addition — a
-debounced search box (name/username/email) and an active/inactive status filter added to
-`RoleDirectoryPage.tsx`, the shared component behind all four directory pages. New test coverage in
-`RoleDirectoryPage.test.tsx` (4 tests). Verified: `npm run build/typecheck/lint` clean, `npm test`
-35/35 suites (up from 34).
-
-**DECIDED AND EXECUTED 2026-07-24 (part 2)**: now that the real replacement exists, the old
-analytics stubs/stats views were removed. Deleted `UserSearchAPIView`,
-`SupervisorsBySpecialtyAPIView`, `UserStatsAPIView`, `UserStatisticsAPIView`,
-`UserPerformanceAPIView`, `UserListStatsAPIView`, `admin_analytics_view`, `supervisor_analytics_view`,
-`pg_analytics_view`, `admin_stats_api` from `sims/users/views.py`, and their routes from
-`sims/users/urls.py`. Retired the specific test methods that covered them across
-`sims/tests/test_users_views.py`, `sims/tests/test_users_views_final_push.py`, and
-`sims/tests/test_long_tail_coverage.py`, keeping every other test in those files untouched (they
-cover the legacy server-rendered login/dashboard/user-CRUD surface, a separate, larger, out-of-scope
-legacy system not part of this decision).
-
-**A fourth methodology gap found and fixed**: removing these views broke `manage.py check`/the test
-suite via `NoReverseMatch` in **Django templates that live outside `sims/`** —
-`backend/templates/users/{admin,supervisor,pg}_dashboard.html`, `pg_list.html`, and
-`user_reports.html` all had `{% url %}` references to the removed routes (nav buttons and AJAX
-widget calls). Earlier dependency checks in this document searched within `sims/` only and missed
-these. Fixed all five templates: removed the dead nav links, and replaced the AJAX calls that fetched
-now-removed stats endpoints with the pages' own existing mock-data/placeholder fallback paths
-(`user_reports.html` already had `showMockData()`/`showMockPerformanceData()` functions designed for
-exactly this failure case — now called directly instead of after a guaranteed-failing network
-request). These are legacy, pre-Next.js server-rendered pages; the real, current dashboard/reporting
-experience is the Next.js frontend referenced in each template's replacement comment.
-
-Verified: `pytest sims` 430 passed / 8 skipped / 0 failed, `manage.py check` clean,
-`check_all_pgms_gates.sh` all pass, zero remaining references to any removed view/route anywhere in
-the backend (checked `.py` **and** `.html`, backend-wide this time, not scoped to `sims/`).
-
-### 7.3/7.5/7.6 — a note on methodology (read before acting on anything in this document)
-The original Step 0 reverse-check searched for backend view **class and function names** across the
-frontend and backend. That method has a real, three-times-demonstrated blind spot:
-`django.urls.reverse("app:route_name")` calls and direct URL-string test/API calls reference the URL
-**name** or the literal **path**, neither of which contains the view class name. **Every single one**
-of the three clusters originally reported in this document as "confirmed dead legacy code" turned
-out, on progressively closer inspection, to have real, substantial, currently-passing test coverage.
-One (§7.3) was actually relocated, broke a test, and had to be reverted. Given that track record,
-**no other "zero references" claim in this document should be treated as verified for relocation
-purposes** without first checking for `reverse("<app>:<url-name>")` calls specifically — class-name
-and literal-path checks alone were not sufficient. §7.2 (leave management) and the frontend-facing
-findings (§4.6, §7.4, §7.8) are a different, more reliable category — they were checked by asking
-"does any frontend code call this," which doesn't have this particular blind spot, though it should
-still be treated as a strong signal rather than absolute proof. A systematic re-check by URL *name*
-(every `name="..."` in every `urls.py`, cross-referenced against every `reverse(...)` call) has not
-been done end-to-end for every entry in this document, only for the specific clusters investigated
-in §7.3-§7.6.
-
-**Update 2026-07-24**: of the two dead-code clusters, one (§7.5) has been decided and removed; §7.3
-and §7.6 remain as documented above pending further decisions or are resolved as noted inline.
-Separately, the real gap this cluster's investigation surfaced — no search/filter on the user
-directory pages — has been built; see the note at the end of §7.6.
-
-### 7.7 BACKEND-ONLY (no action needed)
-- `api/health` — infrastructure health check, used by Docker/monitoring, not meant to have a UI.
-- `api/schema` — OpenAPI schema endpoint (drf-spectacular), tooling-only.
-- The `cases/`, `logbook/`, `certificates/` dummy-redirect routes (`sims/users/{cases,logbook,certificates}_dummy_urls.py`) — deliberate backward-compatibility redirects for old bookmarked URLs, already documented, working as designed.
-- `rotations/api/quick-stats` — same dummy-redirect pattern.
-
-### 7.8 GAP-LOW — a few isolated parameterized endpoints without a confirmed caller
-`api/rotations/completions/<id>/verify`, `api/supervisors/residents/<id>/progress`,
-`api/milestones/<id>/requirements/research`, `rotations/api/departments/<hospital_id>` (a
-hospital→departments cascading-dropdown helper, referenced only in an e2e spec). These are small
-enough that a manual click-through during Phase 7 (smoke test) will confirm or refute them faster
-than further static analysis — flagged here so they aren't forgotten, not treated as high-severity
-findings.
-
-### 7.9 REAL BUG (found via live browser e2e, fixed 2026-07-24) — the documented onboarding state machine was never enforced by the frontend
-
-Static analysis and unit tests could not have caught this one — it required actually logging in as
-a brand-new user in a real browser. Created a resident via `/users/new`, logged in with the default
-temp password. `/api/auth/me/` correctly returned `must_change_password: true` and
-`allowed_next_route: "/change-password"` (backend was correct), but the user landed on
-`/dashboard/resident` anyway. Root cause: `frontend/app/login/page.tsx` redirected unconditionally
-to the role dashboard without consulting `/api/auth/me/`, and `ProtectedRoute.tsx` (the shared
-wrapper for every protected page) only ever checked role-based access, never the onboarding gate.
-`/complete-profile`'s own self-redirect was the only code that read `allowed_next_route`, and it was
-unreachable because nothing routed users there.
-
-**Fix:** `ProtectedRoute.tsx` now calls `authApi.me()` on mount (skipped on `/change-password` and
-`/complete-profile` themselves) and redirects to `allowed_next_route` when it names one of those two
-onboarding routes and differs from the current path. Covered by updated `ProtectedRoute.test.tsx`.
-Full suite (102 tests/35 suites) green; rebuilt and redeployed to the live pilot frontend; re-tested
-the same new-user login flow in a real browser post-fix.
-
-**Why this matters beyond the one bug:** every prior "WORKING" verdict in §1-§6 of this document was
-based on API contracts, code paths existing, and automated tests passing — none of that surfaces a
-gap where two independently-correct pieces (a correct backend contract, a correct-looking
-`ProtectedRoute` component) fail to compose into correct end-to-end behavior. Treat this document's
-earlier WORKING verdicts as "the wiring exists and is exercised by tests," not as a guarantee that
-live click-through matches — see §9 of `docs/AUDIT_2026-07-23_PILOT_READINESS.md` for the full
-runtime verification pass this finding came from.
-
-### 7.9b SECOND REAL BUG (found only by re-testing 7.9's own fix) — `change_password_view` never cleared `must_change_password`
-
-Re-testing 7.9's fix live (rather than trusting it in isolation) surfaced a second, independent bug
-that made the first fix dangerous on its own: `backend/sims/users/api_views.py`'s
-`change_password_view` calls `set_password()` and `save()` but never clears
-`must_change_password`. Before 7.9's fix this was silently harmless (nothing enforced the flag).
-After 7.9 started enforcing `allowed_next_route`, it became a hard infinite loop: a user forced to
-`/change-password` would successfully change their password and get redirected right back to
-`/change-password` forever, with no escape.
-
-**Fix:** `change_password_view` now sets `must_change_password = False` on success. Two new backend
-tests in `sims/users/tests.py` cover the success and wrong-old-password cases. Deployed via
-`docker cp` + container restart (fast path for a single-file backend change). Live-verified the full
-four-stage chain post-fix: login → change-password → complete-profile → dashboard, no loop.
-
-This pair (7.9/7.9b) is the strongest evidence in this document for why "verify, then re-verify the
-fix live" is not optional — a plausible, unit-tested frontend fix combined with a pre-existing,
-previously-harmless backend bug to produce a worse failure mode than either bug alone.
-
-### 7.10a UPDATE — RotationAssignment now has a real, verified UI (2026-07-24)
-
-§7.10 below documented `sims.training.RotationAssignment` as real, tested backend with zero
-frontend. That gap is now closed: `/academics/rotation-assignments` (list/create/detail, role-scoped
-actions) was built and live-verified through the complete lifecycle — draft → submit → supervisor
-approve → UTRMC approve → activate → complete — across admin, supervisor, and resident logins in a
-real browser against the live pilot server. See `docs/AUDIT_2026-07-23_PILOT_READINESS.md` §9.2/§9.6
-for the full build and test record, including a real pagination bug found and fixed along the way
-(hospital/department dropdown silently truncated at 25 of 51+ results — DRF's default pagination has
-no `page_size` query param support).
-
-Also found and documented during the same pass (not fixed, needs a product decision): `User.specialty`
-validates bulk-import rows against a hardcoded 18-value legacy enum
-(`sims/users/models.py::SPECIALTY_CHOICES`) that is entirely disconnected from the DB-driven
-`sims.academics.Specialty` master-data model used elsewhere in the app. A real specialty name from
-the `Specialty` table will fail Faculty & Supervisors bulk-import with "Unknown specialty" unless it
-happens to match the legacy enum's fixed labels.
-
-### 7.10 Rotation and leave workflows — CORRECTED (rotation) via live e2e + closer backend check
-
-Live browser walkthrough (2026-07-24) initially concluded rotation *scheduling/assignment* had no
-real implementation, based on `/academics/rotation-templates` being an explicit scaffold and
-`sims/rotations/urls.py` having exactly one real endpoint (`department_by_hospital_api`, everything
-else a `dummy_redirect` stub). That conclusion was **incomplete** — a closer check during docs
-reconciliation (2026-07-24) found a second, separate, and substantially more real rotation feature
-that the initial pass missed by scoping to the wrong app: `sims.training.RotationAssignment`, a full
-draft → submit → HOD-approve → UTRMC-approve → active → complete model with `return_reason`/
-`reject_reason` fields and `django-simple-history` audit trail, backed by a real `ViewSet` and five
-dedicated routes in `sims/training/urls.py` (`rotations`, `my/rotations/`,
-`utrmc/approvals/rotations/`, `rotations/completions/` (+ `<id>/verify/`),
-`supervisor/rotations/pending/`). Confirmed **zero frontend consumer** for any of these five routes
-(`grep` across `frontend/` for each path found nothing) — so the corrected finding is: rotation
-*scheduling* genuinely has no frontend (as before), but the reason is not "the backend barely has
-anything either" — it's "the backend has a complete, real, tested workflow and nobody built the UI
-for it." This is a materially bigger gap than the original 7.10 suggested, and should be weighed
-accordingly if/when rotation UI work is prioritized. `/academics/rotation-templates` (the scaffold)
-and `RotationAssignment` (the real, unused backend workflow) are two different things — don't
-conflate them.
-
-Leave management (§7.2) still has zero frontend — confirmed by directly searching `frontend/` for
-any `leave`-related page or API client and finding none. Both rotation-assignment UI and leave UI
-are now open product-scope decisions of the same shape: real, tested backend, zero frontend.
-
----
-
-## 8. Summary
-
-Of ~200 distinct backend resource groups checked: the large majority (core identity, supervision,
-academic workflow, dashboards/reports, backup/restore, and — as of the same-day fix — bulk import)
-are confirmed **WORKING**. Beyond the bulk-import gap (found and fixed, §4.6/Step 5), this pass
-found **one real, undecided feature gap** (leave management, §7.2 — real backend, no frontend at
-all), **one deliberately-retired feature set** confirmed intentional (§7.4 — thesis/research/
-workshops/postings, no action needed), and **three backend clusters that were investigated as
-possible dead code and, on progressively closer checking, all turned out to have real, currently
-passing backend test coverage despite having no frontend consumer** (§7.3, §7.5, §7.6 — see the
-methodology note at the end of §7.6 for what went wrong and why). **None of the three were
-relocated** — one was relocated, found to break a test, and reverted; the other two were caught by
-closer checking before any file was touched. All three are left exactly as they were before this
-audit, flagged for a human decision on each (product scope for §7.3's untested-by-frontend
-CRUD surface; whether §7.5/§7.6 are genuinely obsolete duplicates whose tests should be retired, or
-still meaningfully relied upon) rather than any further static-analysis-driven cleanup attempt. A
-handful of small items remain to confirm by hand during the pre-launch smoke test (§6 backup
-actions, §7.8).
+**Left as open decisions** (§9): notifications UI, audit-log-viewer UI, change-primary-supervisor UI,
+and — the most consequential — rotation completion/certificate issuance, which turns out to have no
+production trigger at all (not just no UI), meaning it needs a scope decision before either backend
+or frontend work continues. The thesis/research/workshops/milestones cluster remains confirmed
+intentional dead UI (real backend, deliberate stub), unchanged from the prior audit.

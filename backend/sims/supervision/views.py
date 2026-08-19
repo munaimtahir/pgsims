@@ -346,7 +346,7 @@ def supervision_import_view(request):
                 res_user = User.objects.filter(username=res_username).first()
             if not res_user and res_reg:
                 resident_profile = ResidentProfile.objects.filter(
-                    registration_number=res_reg
+                    registration_no=res_reg
                 ).first()
                 if resident_profile:
                     res_user = resident_profile.user
@@ -372,7 +372,7 @@ def supervision_import_view(request):
                 sup_user = User.objects.filter(username=sup_username).first()
             if not sup_user and sup_pmdc:
                 supervisor_profile = SupervisorProfile.objects.filter(
-                    pmdc_number=sup_pmdc
+                    pmdc_no=sup_pmdc
                 ).first()
                 if supervisor_profile:
                     sup_user = supervisor_profile.user

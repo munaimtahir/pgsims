@@ -29,13 +29,13 @@ class Command(BaseCommand):
                 # Convert old role strings to final four choices
                 if role not in ["ADMIN", "RESIDENT", "SUPERVISOR", "SUPPORT_STAFF"]:
                     role_lower = str(role).lower()
-                    if role_lower in ["ADMIN", "ADMIN", "ADMIN", "ADMIN"]:
+                    if role_lower in ["utrmc_admin", "super_admin", "system_admin"]:
                         user.role = "ADMIN"
-                    elif role_lower in ["SUPERVISOR", "SUPERVISOR", "SUPERVISOR"]:
+                    elif role_lower in ["teacher", "faculty"]:
                         user.role = "SUPERVISOR"
-                    elif role_lower in ["student", "RESIDENT", "RESIDENT", "RESIDENT", "RESIDENT"]:
+                    elif role_lower in ["student", "pgr", "trainee"]:
                         user.role = "RESIDENT"
-                    elif role_lower in ["SUPPORT_STAFF", "SUPPORT_STAFF", "SUPPORT_STAFF", "SUPPORT_STAFF"]:
+                    elif role_lower in ["clerk", "office_staff", "data_entry"]:
                         user.role = "SUPPORT_STAFF"
                     else:
                         self.stdout.write(self.style.WARNING(f"User {user.username} has invalid/unknown role: {role}"))

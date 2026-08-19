@@ -250,12 +250,25 @@ def export_rows_for(resource: str) -> List[dict]:
         return rows
 
     if resource == "residents":
+        from sims.training.models import ResidentTrainingRecord
+
         rows: List[dict] = []
         resident_users = User.objects.filter(role__in=["RESIDENT", "RESIDENT"]).order_by("last_name", "first_name")
         for user in resident_users:
             membership = _primary_membership_for(user, {"RESIDENT"})
             assignment = _active_assignment_for(user, HospitalAssignment.ASSIGNMENT_PRIMARY_TRAINING)
             profile = getattr(user, "resident_profile", None)
+            # pgr_id/training_start/training_end/training_level are round-tripped through
+            # ResidentProfile.registration_no and sims.training.ResidentTrainingRecord by
+            # _upsert_resident_user() below, not stored as attributes on ResidentProfile itself
+            # (which has no such fields). Reading profile.pgr_id / profile.training_start etc.
+            # directly crashed every "residents" export with AttributeError -- fixed to read from
+            # the same places the import path writes to.
+            rtr = (
+                ResidentTrainingRecord.objects.filter(resident_user=user)
+                .order_by("-active", "-start_date")
+                .first()
+            )
             rows.append(
                 {
                     "email": user.email,
@@ -264,10 +277,10 @@ def export_rows_for(resource: str) -> List[dict]:
                     "role": user.role,
                     "specialty": user.specialty or "",
                     "year": user.year or "",
-                    "pgr_id": profile.pgr_id if profile else "",
-                    "training_start": profile.training_start.isoformat() if profile else "",
-                    "training_end": profile.training_end.isoformat() if profile and profile.training_end else "",
-                    "training_level": profile.training_level if profile else "",
+                    "pgr_id": profile.registration_no if profile else "",
+                    "training_start": rtr.start_date.isoformat() if rtr else "",
+                    "training_end": rtr.expected_end_date.isoformat() if rtr and rtr.expected_end_date else "",
+                    "training_level": rtr.current_level if rtr else "",
                     "department_code": membership.department.code if membership else "",
                     "hospital_code": assignment.hospital_department.hospital.code if assignment else "",
                     "supervisor_email": user.supervisor.email if user.supervisor else "",
