@@ -75,13 +75,6 @@ def _get_supervised_resident_ids(user):
     except Exception:
         pass
 
-    # 2. Legacy direct User.supervisor FK is retained only as a narrow compatibility fallback.
-    direct_ids = SIMSUser.objects.filter(
-        supervisor=user,
-        role="RESIDENT"
-    ).values_list("id", flat=True)
-    resident_ids.update(direct_ids)
-
     return resident_ids
 
 
@@ -94,7 +87,7 @@ def _get_rotation_scope(user):
         profile = user.supervisor_profile
         if profile.designation_ref == "HOD" and profile.department_ref_id:
             hod_dept_ids = [profile.department_ref_id]
-    except SupervisorProfile.DoesNotExist:
+    except (SupervisorProfile.DoesNotExist, AttributeError):
         pass
     member_dept_ids = DepartmentMembership.objects.filter(
         user=user, active=True
@@ -1420,7 +1413,8 @@ class SupervisorResearchApprovalsView(APIView):
         else:
             qs = ResidentResearchProject.objects.filter(
                 status=ResidentResearchProject.STATUS_SUBMITTED_SUPERVISOR,
-                resident_training_record__resident_user__supervisor=request.user,
+                resident_training_record__resident_user__resident_profile__supervisor_assignments__supervisor=request.user.supervisor_profile,
+                resident_training_record__resident_user__resident_profile__supervisor_assignments__is_active=True,
             )
 
         qs = qs.select_related(
@@ -2625,5 +2619,3 @@ class RotationCompletionVerifyView(APIView):
         certificate.save()
 
         return Response(RotationCompletionSerializer(completion, context={"request": request}).data)
-
-

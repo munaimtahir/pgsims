@@ -229,7 +229,10 @@ class ActiveUserbaseBulkEngineTests(TestCase):
         self.assertEqual(user.role, "RESIDENT")
         self.assertEqual(user.home_department, department)
         self.assertEqual(user.home_hospital, hospital)
-        self.assertEqual(user.supervisor, supervisor)
+        assignment = ResidentSupervisorAssignment.objects.get(
+            resident__user=user, supervisor__user=supervisor, is_active=True
+        )
+        self.assertEqual(assignment.assignment_type, ResidentSupervisorAssignment.ASSIGNMENT_PRIMARY)
         self.assertTrue(
             ResidentProfile.objects.filter(
                 user=user,

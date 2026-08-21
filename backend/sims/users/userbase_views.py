@@ -21,6 +21,7 @@ from sims.users.models import (
     ResidentProfile,
     SupervisorProfile,
     SupportStaffProfile,
+    ResidentDocumentRequirement,
 )
 from sims.supervision.models import ResidentSupervisorAssignment
 from sims.supervision.serializers import ResidentSupervisorAssignmentSerializer
@@ -228,7 +229,7 @@ class HospitalDepartmentViewSet(viewsets.ModelViewSet):
 
 
 class UserViewSet(viewsets.ModelViewSet):
-    queryset = User.objects.select_related("home_department", "home_hospital", "supervisor")
+    queryset = User.objects.select_related("home_department", "home_hospital", "resident_profile")
     serializer_class = UserManagementSerializer
     permission_classes = [permissions.IsAuthenticated]
     filterset_fields = ["role", "is_active"]
@@ -292,6 +293,23 @@ class UserViewSet(viewsets.ModelViewSet):
         ]:
             if field in profile_payload:
                 svc_profile[field] = profile_payload[field]
+
+        # Resident bootstrap fields are institution-controlled and remain outside User.
+        if role == "RESIDENT":
+            from sims.training.models import TrainingProgram
+            supervisor_id = profile_payload.get("supervisor_profile_id") or profile_payload.get("supervisor_id")
+            if supervisor_id:
+                try:
+                    svc_profile["supervisor_profile"] = SupervisorProfile.objects.get(pk=supervisor_id, user__role="SUPERVISOR")
+                except SupervisorProfile.DoesNotExist:
+                    return Response({"detail": "Selected supervisor does not exist."}, status=status.HTTP_400_BAD_REQUEST)
+            for field in [
+                "supervisor_name", "supervisor_department", "supervisor_institution", "supervisor_pmdc_number",
+                "supervisor_email", "supervisor_phone", "supervisor_notes", "training_start_date",
+                "expected_end_date", "current_level",
+            ]:
+                if field in profile_payload:
+                    svc_profile[field] = profile_payload[field]
 
         # Resolve ForeignKey relations
         hospital_id = profile_payload.get("hospital") or profile_payload.get("training_site_ref") or profile_payload.get("hospital_id")
@@ -357,6 +375,13 @@ class UserViewSet(viewsets.ModelViewSet):
             "missing_required_fields": missing_fields,
             "allowed_next_route": allowed_next_route
         }
+        resident_profile = getattr(user, "resident_profile", None)
+        pending = resident_profile.pending_supervisor_assignments.filter(status="PENDING").first() if resident_profile else None
+        resp_data["pending_supervisor"] = {
+            "id": pending.id,
+            "name": pending.supervisor_name_text,
+            "status": pending.status,
+        } if pending else None
         return Response(resp_data, status=status.HTTP_201_CREATED)
 
     def update(self, request, *args, **kwargs):
@@ -611,6 +636,8 @@ class AuthMeView(APIView):
                 profile_schema_version = profile.profile_schema_version
                 completed_schema_version = profile.completed_schema_version
 
+        from sims.users.onboarding_api import get_resident_onboarding_state
+        onboarding = get_resident_onboarding_state(user) if user.role == "RESIDENT" else {}
         if user.must_change_password:
             allowed_next_route = "/change-password"
         elif missing:
@@ -631,6 +658,10 @@ class AuthMeView(APIView):
             "completed_schema_version": completed_schema_version,
             "missing_required_fields": missing_fields,
             "allowed_next_route": allowed_next_route,
+            "pending_upload_count": onboarding.get("pending_upload_count", 0),
+            "pending_uploads": onboarding.get("pending_uploads", []),
+            "pending_supervisor_link": onboarding.get("pending_supervisor_link"),
+            "onboarding_complete": onboarding.get("onboarding_complete", user.is_profile_complete),
         }
         return Response(data, status=status.HTTP_200_OK)
 
@@ -896,7 +927,7 @@ class DataQualityUsersView(APIView):
             return Response({"detail": "Data correction layer is disabled."}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
         filter_value = (request.query_params.get("filter") or "").strip().lower()
-        queryset = User.objects.filter(role="RESIDENT").select_related("supervisor").order_by(
+        queryset = User.objects.filter(role="RESIDENT").select_related("resident_profile").order_by(
             "last_name", "first_name"
         )
         if filter_value == "placeholder_email":
@@ -935,7 +966,7 @@ class DataQualityUsersView(APIView):
                     "name": user.get_full_name() or user.username,
                     "email": user.email,
                     "year": user.year,
-                    "supervisor": user.supervisor.get_full_name() if user.supervisor else "",
+                    "supervisor": user.get_supervisor_name(),
                     "issues": user.data_issues or [],
                     "is_complete_profile": user.is_profile_complete,
                     "has_placeholder_email": user.has_placeholder_email,

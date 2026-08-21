@@ -37,21 +37,22 @@ def _make_supervisor(username="supervisor_default"):
     try:
         return User.objects.get(username=username)
     except User.DoesNotExist:
-        return User.objects.create_user(
+        supervisor = User.objects.create_user(
             username=username,
             password="Test1234!",
             role="SUPERVISOR",
             email=f"{username}@test.com",
             specialty="urology",
         )
+        SupervisorProfile.objects.get_or_create(user=supervisor)
+        return supervisor
 
 
 def _make_user(username, role, **kwargs):
+    assigned_supervisor = kwargs.pop("supervisor", None)
     if role == "RESIDENT":
         kwargs.setdefault("specialty", "urology")
         kwargs.setdefault("year", "1")
-        if "supervisor" not in kwargs:
-            kwargs["supervisor"] = _make_supervisor(f"sup_{username}")
     elif role == "SUPERVISOR":
         kwargs.setdefault("specialty", "urology")
     user = User.objects.create_user(
@@ -61,6 +62,18 @@ def _make_user(username, role, **kwargs):
         email=f"{username}@test.com",
         **kwargs,
     )
+    if role == "RESIDENT":
+        resident_profile, _ = ResidentProfile.objects.get_or_create(user=user)
+        if assigned_supervisor:
+            supervisor_profile, _ = SupervisorProfile.objects.get_or_create(user=assigned_supervisor)
+            ResidentSupervisorAssignment.objects.get_or_create(
+                resident=resident_profile,
+                supervisor=supervisor_profile,
+                assignment_type=ResidentSupervisorAssignment.ASSIGNMENT_PRIMARY,
+                defaults={"is_active": True, "status": ResidentSupervisorAssignment.STATUS_ACTIVE, "start_date": date.today()},
+            )
+    elif role == "SUPERVISOR":
+        SupervisorProfile.objects.get_or_create(user=user)
     return user
 
 
@@ -604,20 +617,17 @@ class SupervisorSummaryTests(APITestCase):
         self.resident2 = _make_user("res_sup_sum2", "RESIDENT")
         self.client.force_authenticate(user=self.supervisor)
 
-        self.supervisor_profile = SupervisorProfile.objects.create(
+        self.supervisor_profile, _ = SupervisorProfile.objects.update_or_create(
             user=self.supervisor,
-            hospital=hospital,
-            department_ref=dept,
+            defaults={"hospital": hospital, "department_ref": dept},
         )
-        self.resident1_profile = ResidentProfile.objects.create(
+        self.resident1_profile, _ = ResidentProfile.objects.update_or_create(
             user=self.resident1,
-            hospital=hospital,
-            department_ref=dept,
+            defaults={"hospital": hospital, "department_ref": dept},
         )
-        ResidentProfile.objects.create(
+        ResidentProfile.objects.update_or_create(
             user=self.resident2,
-            hospital=hospital,
-            department_ref=dept,
+            defaults={"hospital": hospital, "department_ref": dept},
         )
         ResidentSupervisorAssignment.objects.create(
             resident=self.resident1_profile,
@@ -656,8 +666,15 @@ class SupervisorSummaryTests(APITestCase):
 
     def test_scoping_includes_direct_supervisor_assignment(self):
         resident = _make_user("res_direct_sup", "RESIDENT")
-        resident.supervisor = self.supervisor
-        resident.save()
+        resident_profile = ResidentProfile.objects.get(user=resident)
+        ResidentSupervisorAssignment.objects.create(
+            resident=resident_profile,
+            supervisor=self.supervisor_profile,
+            assignment_type=ResidentSupervisorAssignment.ASSIGNMENT_PRIMARY,
+            is_active=True,
+            status=ResidentSupervisorAssignment.STATUS_ACTIVE,
+            start_date=date.today(),
+        )
         ResidentTrainingRecord.objects.create(
             resident_user=resident,
             program=self.prog,
@@ -678,10 +695,9 @@ class SupervisorSummaryTests(APITestCase):
         res_z.last_name = "Zebra"; res_z.save()
 
         for res in [res_a, res_z]:
-            res_profile = ResidentProfile.objects.create(
+            res_profile, _ = ResidentProfile.objects.update_or_create(
                 user=res,
-                hospital=self.hd.hospital,
-                department_ref=self.hd.department,
+                defaults={"hospital": self.hd.hospital, "department_ref": self.hd.department},
             )
             ResidentSupervisorAssignment.objects.create(
                 resident=res_profile,

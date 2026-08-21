@@ -241,7 +241,7 @@ class UserManagementSerializer(serializers.ModelSerializer):
             "must_change_password",
             "is_profile_complete",
         ]
-        read_only_fields = ["date_joined"]
+        read_only_fields = ["date_joined", "supervisor"]
 
     def get_departments(self, obj) -> list[dict]:
         memberships = (

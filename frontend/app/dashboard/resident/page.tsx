@@ -6,10 +6,12 @@ import ProtectedRoute from '@/components/auth/ProtectedRoute';
 import PageHeader from '@/components/ui/PageHeader';
 import MetricCard from '@/components/ui/MetricCard';
 import { academicsApi, AcademicSummary } from '@/lib/api/academics';
+import authApi, { AuthMeResponse } from '@/lib/api/auth';
 
 export default function ResidentHomePage() {
   const [summary, setSummary] = useState<AcademicSummary | null>(null);
   const [loading, setLoading] = useState(true);
+  const [authState, setAuthState] = useState<AuthMeResponse | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -30,6 +32,7 @@ export default function ResidentHomePage() {
           setLoading(false);
         }
       });
+    authApi.me().then(setAuthState).catch(() => setAuthState(null));
     return () => {
       active = false;
     };
@@ -77,7 +80,8 @@ export default function ResidentHomePage() {
               <div className="pg-card">
                 <h2 className="pg-section-title">My Supervisor</h2>
                 <div className="mt-3 space-y-2 text-sm text-slate-600">
-                  <p>Primary supervisor: {primarySupervisor?.name || 'Not assigned'}</p>
+                  <p>Primary supervisor: {primarySupervisor?.name || authState?.pending_supervisor_link?.name || 'Not assigned'}</p>
+                  {!primarySupervisor && authState?.pending_supervisor_link && <p className="text-amber-700">Awaiting administrative setup</p>}
                   <p>Designation: {primarySupervisor?.designation || 'Not set'}</p>
                   <p>Department: {primarySupervisor?.department || 'Not set'}</p>
                   <p>Contact email: {primarySupervisor?.email || 'Not available'}</p>

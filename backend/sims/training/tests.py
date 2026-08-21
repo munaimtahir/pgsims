@@ -15,6 +15,8 @@ from .models import (
     LeaveRequest,
     DeputationPosting,
 )
+from sims.users.models import ResidentProfile, SupervisorProfile
+from sims.supervision.models import ResidentSupervisorAssignment
 
 User = get_user_model()
 
@@ -35,6 +37,10 @@ def make_user(username, role, **kwargs):
         email=f"{username}@test.com", first_name=username.capitalize(),
         **kwargs
     )
+    if role == "RESIDENT":
+        ResidentProfile.objects.get_or_create(user=u)
+    elif role == "SUPERVISOR":
+        SupervisorProfile.objects.get_or_create(user=u)
     return u
 
 
@@ -169,8 +175,16 @@ class RotationAssignmentAPITest(APITestCase):
         self.utrmc = make_user("utrmc2", "ADMIN")
         self.supervisor = make_user("sup1", "SUPERVISOR")
         self.resident_user = make_user("res4", "RESIDENT")
-        self.resident_user.supervisor = self.supervisor
-        self.resident_user.save(update_fields=["supervisor"])
+        resident_profile = ResidentProfile.objects.get(user=self.resident_user)
+        supervisor_profile = SupervisorProfile.objects.get(user=self.supervisor)
+        ResidentSupervisorAssignment.objects.create(
+            resident=resident_profile,
+            supervisor=supervisor_profile,
+            assignment_type=ResidentSupervisorAssignment.ASSIGNMENT_PRIMARY,
+            is_active=True,
+            status=ResidentSupervisorAssignment.STATUS_ACTIVE,
+            start_date=TODAY,
+        )
 
         prog = TrainingProgram.objects.create(name="Medicine", code="MED2", duration_months=36)
         self.rec = ResidentTrainingRecord.objects.create(

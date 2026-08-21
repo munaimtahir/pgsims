@@ -2,6 +2,7 @@ from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
 from sims.users import userbase_views
+from sims.users import onboarding_api
 
 router = DefaultRouter()
 router.register(r"hospitals", userbase_views.HospitalViewSet, basename="userbase-hospitals")
@@ -11,6 +12,9 @@ router.register(
     userbase_views.HospitalDepartmentViewSet,
     basename="userbase-hospital-departments",
 )
+router.register(r"resident-document-requirements", onboarding_api.ResidentDocumentRequirementViewSet, basename="resident-document-requirements")
+router.register(r"resident-documents", onboarding_api.ResidentDocumentViewSet, basename="resident-documents")
+router.register(r"pending-supervisor-links", onboarding_api.PendingSupervisorViewSet, basename="pending-supervisor-links")
 router.register(r"admins", userbase_views.AdminProfileViewSet, basename="userbase-admins")
 router.register(r"residents", userbase_views.ResidentProfileViewSet, basename="userbase-residents")
 router.register(r"supervisors", userbase_views.SupervisorProfileViewSet, basename="userbase-supervisors")
@@ -30,6 +34,7 @@ router.register(
 urlpatterns = [path("", include(router.urls))]
 
 urlpatterns += [
+    path("resident-onboarding/state/", onboarding_api.ResidentOnboardingStateView.as_view(), name="resident-onboarding-state"),
     path("identity/options/", userbase_views.IdentityOptionsView.as_view(), name="identity_options"),
     path("data-quality/", userbase_views.DataQualityView.as_view(), name="data-quality"),
     path("admin/data-quality/summary", userbase_views.DataQualitySummaryView.as_view(), name="data-quality-summary"),

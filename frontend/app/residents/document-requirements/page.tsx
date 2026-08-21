@@ -1,0 +1,38 @@
+'use client';
+
+import { FormEvent, useEffect, useState } from 'react';
+import ProtectedRoute from '@/components/auth/ProtectedRoute';
+import PageHeader from '@/components/ui/PageHeader';
+import apiClient from '@/lib/api/client';
+import authApi, { IdentityOption, IdentityOptions } from '@/lib/api/auth';
+
+type Stage = 'ONBOARDING' | 'DURING_TRAINING' | 'OPTIONAL';
+type Requirement = { id: number; document_type: string; display_name: string; description: string; stage: Stage; program: number | null; department: number | null; is_required: boolean; is_active: boolean; display_order: number };
+type FormState = Omit<Requirement, 'id'>;
+const EMPTY: FormState = { document_type: '', display_name: '', description: '', stage: 'ONBOARDING', program: null, department: null, is_required: true, is_active: true, display_order: 0 };
+
+export default function DocumentRequirementsPage() {
+  const [rows, setRows] = useState<Requirement[]>([]);
+  const [options, setOptions] = useState<IdentityOptions | null>(null);
+  const [form, setForm] = useState<FormState>(EMPTY);
+  const [editing, setEditing] = useState<number | null>(null);
+  const [error, setError] = useState('');
+  const [saving, setSaving] = useState(false);
+  const load = () => apiClient.get<Requirement[]>('/api/resident-document-requirements/').then((r) => setRows(Array.isArray(r.data) ? r.data : (r.data as unknown as { results: Requirement[] }).results || []));
+  useEffect(() => { load(); authApi.getIdentityOptions().then(setOptions).catch(() => setError('Unable to load program and department options.')); }, []);
+  const set = <K extends keyof FormState>(key: K, value: FormState[K]) => setForm((current) => ({ ...current, [key]: value }));
+  const submit = async (event: FormEvent) => {
+    event.preventDefault(); setSaving(true); setError('');
+    try {
+      if (!form.document_type.trim() || !form.display_name.trim()) throw new Error('Document type and display name are required.');
+      if (editing) await apiClient.patch(`/api/resident-document-requirements/${editing}/`, form);
+      else await apiClient.post('/api/resident-document-requirements/', form);
+      setForm(EMPTY); setEditing(null); await load();
+    } catch (err: unknown) { setError(err instanceof Error ? err.message : 'Unable to save requirement.'); }
+    finally { setSaving(false); }
+  };
+  const edit = (row: Requirement) => { setEditing(row.id); setForm({ document_type: row.document_type, display_name: row.display_name, description: row.description || '', stage: row.stage, program: row.program, department: row.department, is_required: row.is_required, is_active: row.is_active, display_order: row.display_order }); window.scrollTo({ top: 0, behavior: 'smooth' }); };
+  const toggle = async (row: Requirement) => { setError(''); try { await apiClient.patch(`/api/resident-document-requirements/${row.id}/`, { is_active: !row.is_active }); await load(); } catch { setError('Unable to change requirement status.'); } };
+  const optionsFor = (items: IdentityOption[] | undefined) => items || [];
+  return <ProtectedRoute allowedRoles={['ADMIN']}><div className="pg-page space-y-6"><PageHeader title="Document Requirements" description="Configure resident documents without changing existing fulfillment records." />{error && <div className="rounded border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</div>}<form onSubmit={submit} className="pg-card grid gap-4 md:grid-cols-2"><div><label className="pg-form-label" htmlFor="document_type">Document type</label><input id="document_type" className="pg-form-input" value={form.document_type} onChange={(e) => set('document_type', e.target.value.toUpperCase().replaceAll(' ', '_'))} placeholder="PMDC_REGISTRATION" required /></div><div><label className="pg-form-label" htmlFor="display_name">Display name</label><input id="display_name" className="pg-form-input" value={form.display_name} onChange={(e) => set('display_name', e.target.value)} required /></div><div><label className="pg-form-label" htmlFor="stage">Stage</label><select id="stage" className="pg-form-input bg-white" value={form.stage} onChange={(e) => set('stage', e.target.value as Stage)}><option value="ONBOARDING">Required for Onboarding</option><option value="DURING_TRAINING">Required Later</option><option value="OPTIONAL">Optional</option></select></div><div><label className="pg-form-label" htmlFor="display_order">Display order</label><input id="display_order" type="number" min="0" className="pg-form-input" value={form.display_order} onChange={(e) => set('display_order', Number(e.target.value))} /></div><div><label className="pg-form-label" htmlFor="program">Program scope</label><select id="program" className="pg-form-input bg-white" value={form.program ?? ''} onChange={(e) => set('program', e.target.value ? Number(e.target.value) : null)}><option value="">All programs</option>{optionsFor(options?.programs).map((item) => <option key={String(item.id)} value={String(item.id)}>{item.name}</option>)}</select></div><div><label className="pg-form-label" htmlFor="department">Department scope</label><select id="department" className="pg-form-input bg-white" value={form.department ?? ''} onChange={(e) => set('department', e.target.value ? Number(e.target.value) : null)}><option value="">All departments</option>{optionsFor(options?.departments).map((item) => <option key={String(item.id)} value={String(item.id)}>{item.name}</option>)}</select></div><div className="md:col-span-2"><label className="pg-form-label" htmlFor="description">Description / help text</label><textarea id="description" className="pg-form-input" value={form.description} onChange={(e) => set('description', e.target.value)} /></div><label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={form.is_required} onChange={(e) => set('is_required', e.target.checked)} /> Required requirement</label><div className="flex gap-2"><button className="pg-btn-primary" disabled={saving}>{saving ? 'Saving…' : editing ? 'Save Changes' : 'Create Requirement'}</button>{editing && <button type="button" className="pg-button-secondary" onClick={() => { setEditing(null); setForm(EMPTY); }}>Cancel</button>}</div></form><section className="pg-card overflow-x-auto"><h2 className="pg-section-title">Configured requirements</h2><table className="mt-4 min-w-full text-sm"><thead><tr className="text-left"><th className="p-2">Document</th><th className="p-2">Stage</th><th className="p-2">Scope</th><th className="p-2">Required</th><th className="p-2">Active</th><th className="p-2">Actions</th></tr></thead><tbody>{rows.map((row) => <tr className="border-t" key={row.id}><td className="p-2"><div className="font-medium">{row.display_name}</div><div className="text-xs text-slate-500">{row.document_type}</div></td><td className="p-2">{row.stage === 'ONBOARDING' ? 'Required for Onboarding' : row.stage === 'DURING_TRAINING' ? 'Required Later' : 'Optional'}</td><td className="p-2">{row.program || row.department ? `${row.program ? `Program #${row.program}` : ''}${row.program && row.department ? ' · ' : ''}${row.department ? `Department #${row.department}` : ''}` : 'All residents'}</td><td className="p-2">{row.is_required ? 'Yes' : 'No'}</td><td className="p-2">{row.is_active ? 'Active' : 'Disabled'}</td><td className="p-2"><button className="mr-2 underline" onClick={() => edit(row)}>Edit</button><button className="underline" onClick={() => toggle(row)}>{row.is_active ? 'Disable' : 'Enable'}</button></td></tr>)}</tbody></table>{rows.length === 0 && <p className="py-6 text-sm text-slate-500">No document requirements configured.</p>}</section></div></ProtectedRoute>;
+}

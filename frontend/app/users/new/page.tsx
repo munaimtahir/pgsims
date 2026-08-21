@@ -21,6 +21,9 @@ interface IdentityForm {
   program_ref: string;
   academic_session_ref: string;
   designation_ref: string;
+  supervisor_id: string;
+  supervisor_name: string;
+  training_start_date: string;
 }
 
 function readInitialRole(): Role {
@@ -43,17 +46,22 @@ export default function NewUserPage() {
     program_ref: '',
     academic_session_ref: '',
     designation_ref: '',
+    supervisor_id: '',
+    supervisor_name: '',
+    training_start_date: '',
   });
   const [options, setOptions] = useState<IdentityOptions | null>(null);
+  const [supervisors, setSupervisors] = useState<Array<{ id: number; full_name?: string; username: string }>>([]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
-  const [created, setCreated] = useState('');
+  const [created, setCreated] = useState<{ name: string; username: string } | null>(null);
 
   useEffect(() => {
     setForm((current) => ({ ...current, role: readInitialRole() }));
     authApi.getIdentityOptions()
       .then(setOptions)
       .catch(() => setError('Failed to load master dropdown data'));
+    userbaseApi.users.list({ role: 'SUPERVISOR' }).then(setSupervisors).catch(() => undefined);
   }, []);
 
   const canSave = useMemo(() => form.full_name.trim().length > 0, [form.full_name]);
@@ -62,7 +70,7 @@ export default function NewUserPage() {
     event.preventDefault();
     setSaving(true);
     setError('');
-    setCreated('');
+    setCreated(null);
     try {
       const [first_name, ...rest] = form.full_name.trim().split(/\s+/);
       const payload: UserbaseUserUpsert = {
@@ -82,11 +90,14 @@ export default function NewUserPage() {
           program_ref: form.program_ref ? Number(form.program_ref) : undefined,
           academic_session_ref: form.academic_session_ref || undefined,
           designation_ref: form.designation_ref || undefined,
+          supervisor_profile_id: form.supervisor_id ? Number(form.supervisor_id) : undefined,
+          supervisor_name: form.supervisor_name.trim() || undefined,
+          training_start_date: form.training_start_date || undefined,
         },
       };
 
       const user = await userbaseApi.users.create(payload);
-      setCreated(`${user.username} (${user.role})`);
+      setCreated({ name: form.full_name.trim(), username: user.username });
       setForm({
         full_name: '',
         email: '',
@@ -99,6 +110,9 @@ export default function NewUserPage() {
         program_ref: '',
         academic_session_ref: '',
         designation_ref: '',
+        supervisor_id: '',
+        supervisor_name: '',
+        training_start_date: '',
       });
       router.refresh();
     } catch (err: unknown) {
@@ -221,6 +235,7 @@ export default function NewUserPage() {
               </div>
 
               {form.role === 'RESIDENT' && (
+                <div className="space-y-4">
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div>
                     <label className="pg-form-label" htmlFor="program_ref">Training Program</label>
@@ -251,6 +266,12 @@ export default function NewUserPage() {
                     </select>
                   </div>
                 </div>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div><label className="pg-form-label" htmlFor="training_start_date">Training Start Date</label><input id="training_start_date" type="date" className="pg-form-input" value={form.training_start_date} onChange={(event) => setForm({ ...form, training_start_date: event.target.value })} /></div>
+                  <div><label className="pg-form-label" htmlFor="supervisor_id">Supervisor</label><select id="supervisor_id" className="pg-form-input bg-white" value={form.supervisor_id} onChange={(event) => setForm({ ...form, supervisor_id: event.target.value, supervisor_name: '' })}><option value="">Supervisor not yet available</option>{supervisors.map((s) => <option key={s.id} value={s.id}>{s.full_name || s.username}</option>)}</select></div>
+                </div>
+                {!form.supervisor_id && <div><label className="pg-form-label" htmlFor="supervisor_name">Unavailable Supervisor Name</label><input id="supervisor_name" className="pg-form-input" value={form.supervisor_name} onChange={(event) => setForm({ ...form, supervisor_name: event.target.value })} placeholder="Optional — can be resolved later" /></div>}
+                </div>
               )}
 
               {form.role === 'SUPERVISOR' && (
@@ -273,7 +294,7 @@ export default function NewUserPage() {
           )}
 
           {error && <div className="rounded border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</div>}
-          {created && <div className="rounded border border-green-200 bg-green-50 p-3 text-sm text-green-700">Created {created}</div>}
+          {created && <div className="rounded border border-green-200 bg-green-50 p-4 text-sm text-green-700"><p className="font-semibold">Resident created successfully</p><p>Name: {created.name}</p><p>Username: {created.username}</p><p>Temporary Password: pgfmu123</p><p>Portal: /login</p><div className="mt-3 flex gap-2"><button type="button" className="pg-btn-primary" onClick={() => navigator.clipboard?.writeText(`${created.username}\npgfmu123`)}>Copy Credentials</button><button type="button" className="pg-button-secondary" onClick={() => window.print()}>Print Credentials</button></div></div>}
           <button className="pg-btn-primary" disabled={saving || !canSave} type="submit">
             {saving ? 'Creating...' : 'Create User'}
           </button>

@@ -244,3 +244,13 @@ and — the most consequential — rotation completion/certificate issuance, whi
 production trigger at all (not just no UI), meaning it needs a scope decision before either backend
 or frontend work continues. The thesis/research/workshops/milestones cluster remains confirmed
 intentional dead UI (real backend, deliberate stub), unchanged from the prior audit.
+
+## Resident onboarding consolidation (2026-08-21)
+
+Resident creation remains `/users/new` → `POST /api/users/` → `create_user_with_profile`. The
+service now bootstraps `ResidentTrainingRecord` and either canonical
+`ResidentSupervisorAssignment` or `PendingSupervisorAssignment`. Generic onboarding requirements
+use `ResidentDocumentRequirement` and `ResidentDocument`; synopsis/thesis submission models remain
+separate. `/api/auth/me/` exposes specific deferred/re-upload reminders, and the resident document
+center is `/dashboard/resident/documents`. The admin pending supervisor queue is
+`/admin/pending-supervisor-links`.

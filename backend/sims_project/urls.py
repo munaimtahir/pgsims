@@ -19,6 +19,9 @@ from django.shortcuts import redirect
 from django.template.response import TemplateResponse
 from django.urls import include, path
 from drf_spectacular.views import SpectacularAPIView
+from rest_framework.views import APIView
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
 
 # Import health check views
 from sims_project.health import healthz, liveness, readiness
@@ -111,6 +114,20 @@ def api_health_check(request):
     })
 
 
+class ResidentDashboardAPI(APIView):
+    """Compatibility JSON surface for the historical resident dashboard URL.
+
+    The frontend uses the authenticated state/dashboard APIs; this endpoint is
+    retained so existing API consumers and the schema contract do not lose the
+    documented resident dashboard path.
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        return Response({"user_id": request.user.id, "role": request.user.role})
+
+
 def robots_txt(request):
     """Robots.txt for SEO"""
     content = """User-agent: *
@@ -149,6 +166,7 @@ urlpatterns = [
     path("api/bulk/", include("sims.bulk.urls")),
     path("api/notifications/", include("sims.notifications.urls")),
     path("api/supervision/", include("sims.supervision.urls")),
+    path("api/dashboard/resident/", ResidentDashboardAPI.as_view(), name="resident-dashboard-api"),
     path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
     path("api/", include("sims.users.userbase_urls")),
     path("api/users/", include("sims.users.api_user_urls")),

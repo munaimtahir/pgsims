@@ -283,7 +283,12 @@ def export_rows_for(resource: str) -> List[dict]:
                     "training_level": rtr.current_level if rtr else "",
                     "department_code": membership.department.code if membership else "",
                     "hospital_code": assignment.hospital_department.hospital.code if assignment else "",
-                    "supervisor_email": user.supervisor.email if user.supervisor else "",
+                    "supervisor_email": (
+                        user.resident_profile.supervisor_assignments.filter(is_active=True, assignment_type="PRIMARY")
+                        .select_related("supervisor__user").first().supervisor.user.email
+                        if hasattr(user, "resident_profile") and user.resident_profile.supervisor_assignments.filter(is_active=True, assignment_type="PRIMARY").exists()
+                        else ""
+                    ),
                     "username": user.username,
                     "password": "",
                     "active": _bool_str(user.is_active),
@@ -577,7 +582,6 @@ def _import_residents(actor: User, rows: List[dict], *, dry_run: bool, allow_par
                     candidate.is_active = active
                     candidate.home_department = department
                     candidate.home_hospital = hospital_department.hospital if hospital_department else None
-                    candidate.supervisor = supervisor
                     candidate.full_clean(exclude=["password"])
                 else:
                     user, generated_password = _upsert_resident_user(
@@ -599,6 +603,7 @@ def _import_residents(actor: User, rows: List[dict], *, dry_run: bool, allow_par
                         department=department,
                         hospital_department=hospital_department,
                         supervisor=supervisor,
+                        supervisor_name=(row.get("supervisor_name") or row.get("supervisor") or row.get("supervisor_email") or "").strip(),
                         password=(row.get("password") or "").strip(),
                         active=active,
                     )
@@ -793,6 +798,7 @@ def _upsert_resident_user(
     department: Department | None,
     hospital_department: HospitalDepartment | None,
     supervisor: User | None,
+    supervisor_name: str = "",
     password: str,
     active: bool,
 ) -> Tuple[User, str | None]:
@@ -809,7 +815,6 @@ def _upsert_resident_user(
     user.registration_number = registration_number or None
     user.home_department = department
     user.home_hospital = hospital_department.hospital if hospital_department else None
-    user.supervisor = supervisor
     user.is_active = active
     if existing:
         user.modified_by = actor
@@ -835,6 +840,41 @@ def _upsert_resident_user(
             "specialty_ref": specialty or None,
         },
     )
+    # New resident imports converge on canonical supervision.
+    from sims.supervision.models import PendingSupervisorAssignment
+    from sims.supervision.services import create_supervisor_assignment
+    resident_profile = user.resident_profile
+    supervisor_profile = None
+    if supervisor:
+        supervisor_profile, _ = SupervisorProfile.objects.get_or_create(user=supervisor)
+        # Older imported supervisor accounts may predate SupervisorProfile or
+        # have an incomplete profile. Preserve populated values, but safely
+        # enrich missing institution scope from the resident import row so the
+        # canonical assignment can be created without using User.supervisor.
+        changed = False
+        if not supervisor_profile.hospital and hospital_department:
+            supervisor_profile.hospital = hospital_department.hospital
+            changed = True
+        if not supervisor_profile.department_ref and department:
+            supervisor_profile.department_ref = department
+            changed = True
+        if changed:
+            supervisor_profile.save(update_fields=["hospital", "department_ref", "updated_at"])
+    if supervisor_profile:
+        create_supervisor_assignment(
+            resident=resident_profile,
+            supervisor=supervisor_profile,
+            assignment_type="PRIMARY",
+            start_date=training_start,
+            actor=actor,
+            notes="Imported via canonical resident import",
+        )
+    elif supervisor_name:
+        PendingSupervisorAssignment.objects.update_or_create(
+            resident=resident_profile,
+            status=PendingSupervisorAssignment.STATUS_PENDING,
+            defaults={"supervisor_name_text": supervisor_name},
+        )
     try:
         from sims.training.models import ResidentTrainingRecord, TrainingProgram
 

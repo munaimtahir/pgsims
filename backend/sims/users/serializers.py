@@ -109,7 +109,7 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
 class UserDetailSerializer(UserSerializer):
     """Extended user serializer with more details."""
 
-    supervisor_name = serializers.CharField(source="supervisor.get_full_name", read_only=True)
+    supervisor_name = serializers.SerializerMethodField()
     assigned_pgs_count = serializers.SerializerMethodField()
 
     class Meta(UserSerializer.Meta):
@@ -129,6 +129,9 @@ class UserDetailSerializer(UserSerializer):
         if obj.role == "SUPERVISOR":
             return obj.assigned_pgs.filter(is_active=True, is_archived=False).count()
         return 0
+
+    def get_supervisor_name(self, obj):
+        return obj.get_supervisor_name()
 
 
 class AssignedPGSerializer(serializers.ModelSerializer):

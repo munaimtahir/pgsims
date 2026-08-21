@@ -23,6 +23,8 @@ from sims.training.models import (
     TrainingProgram,
     Workshop,
 )
+from sims.users.models import ResidentProfile, SupervisorProfile
+from sims.supervision.models import ResidentSupervisorAssignment
 
 User = get_user_model()
 
@@ -30,18 +32,32 @@ TODAY = date.today()
 
 
 def make_user(username, role, **kwargs):
+    assigned_supervisor = kwargs.pop("supervisor", None)
     if role == "RESIDENT":
         kwargs.setdefault("specialty", "medicine")
         kwargs.setdefault("year", "1")
     if role == "SUPERVISOR":
         kwargs.setdefault("specialty", "medicine")
-    return User.objects.create_user(
+    user = User.objects.create_user(
         username=username,
         password="Test1234!",
         role=role,
         email=f"{username}@example.com",
         **kwargs,
     )
+    if role == "RESIDENT":
+        resident_profile, _ = ResidentProfile.objects.get_or_create(user=user)
+    if assigned_supervisor and role == "RESIDENT":
+        supervisor_profile, _ = SupervisorProfile.objects.get_or_create(user=assigned_supervisor)
+        ResidentSupervisorAssignment.objects.get_or_create(
+            resident=resident_profile,
+            supervisor=supervisor_profile,
+            assignment_type=ResidentSupervisorAssignment.ASSIGNMENT_PRIMARY,
+            defaults={"is_active": True, "status": ResidentSupervisorAssignment.STATUS_ACTIVE, "start_date": TODAY},
+        )
+    elif role == "SUPERVISOR":
+        SupervisorProfile.objects.get_or_create(user=user)
+    return user
 
 
 class RotationAssignmentActionGapsTests(APITestCase):

@@ -93,6 +93,11 @@ export type UserbaseUserUpsert = Partial<
     program_ref?: number;
     academic_session_ref?: string;
     designation_ref?: string;
+    supervisor_profile_id?: number;
+    supervisor_name?: string;
+    training_start_date?: string;
+    expected_end_date?: string;
+    current_level?: string;
   };
 };
 

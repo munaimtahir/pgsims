@@ -248,13 +248,25 @@ class User(AbstractUser):
     def get_assigned_pgs(self):
         """Get all PGs assigned to this supervisor"""
         if self.is_supervisor():
-            return self.assigned_pgs.filter(is_active=True, is_archived=False)
+            from sims.supervision.models import ResidentSupervisorAssignment
+            return User.objects.filter(
+                resident_profile__supervisor_assignments__supervisor__user=self,
+                resident_profile__supervisor_assignments__is_active=True,
+                is_archived=False,
+            ).distinct()
         return User.objects.none()
 
     def get_supervisor_name(self):
         """Get supervisor's full name or username"""
-        if self.supervisor:
-            return self.supervisor.get_full_name() or self.supervisor.username
+        assignment = self.resident_profile.supervisor_assignments.filter(
+            is_active=True, assignment_type="PRIMARY"
+        ).select_related("supervisor__user").first() if hasattr(self, "resident_profile") else None
+        if assignment:
+            supervisor = assignment.supervisor.user
+            return supervisor.get_full_name() or supervisor.username
+        pending = self.resident_profile.pending_supervisor_assignments.filter(status="PENDING").first() if hasattr(self, "resident_profile") else None
+        if pending:
+            return f"{pending.supervisor_name_text} (Awaiting administrative setup)"
         return "No Supervisor Assigned"
 
     # Dashboard URLs
@@ -525,6 +537,8 @@ class ResidentProfile(models.Model):
         on_delete=models.SET_NULL,
     )
     is_archived = models.BooleanField(default=False)
+    declaration_accepted = models.BooleanField(default=False)
+    declaration_accepted_at = models.DateTimeField(null=True, blank=True)
     history = HistoricalRecords()
 
     class Meta:
@@ -542,6 +556,81 @@ class ResidentProfile(models.Model):
     def save(self, *args, **kwargs):
         self.full_clean()
         return super().save(*args, **kwargs)
+
+
+class ResidentDocumentRequirement(models.Model):
+    """Administrator-configured generic resident document requirement."""
+
+    STAGE_ONBOARDING = "ONBOARDING"
+    STAGE_DURING_TRAINING = "DURING_TRAINING"
+    STAGE_OPTIONAL = "OPTIONAL"
+    STAGE_CHOICES = [
+        (STAGE_ONBOARDING, "Required Now"),
+        (STAGE_DURING_TRAINING, "Required Later"),
+        (STAGE_OPTIONAL, "Optional"),
+    ]
+
+    document_type = models.CharField(max_length=80)
+    display_name = models.CharField(max_length=200)
+    description = models.TextField(blank=True)
+    stage = models.CharField(max_length=30, choices=STAGE_CHOICES, default=STAGE_ONBOARDING)
+    program = models.ForeignKey("training.TrainingProgram", null=True, blank=True, on_delete=models.CASCADE, related_name="resident_document_requirements")
+    department = models.ForeignKey("academics.Department", null=True, blank=True, on_delete=models.CASCADE, related_name="resident_document_requirements")
+    is_required = models.BooleanField(default=True)
+    is_active = models.BooleanField(default=True)
+    display_order = models.PositiveIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["display_order", "display_name"]
+        constraints = [models.UniqueConstraint(fields=["document_type", "program", "department"], name="unique_resident_document_requirement_scope")]
+
+
+class ResidentDocument(models.Model):
+    """Generic resident-owned document; synopsis/thesis documents remain separate."""
+
+    STATUS_NOT_STARTED = "NOT_STARTED"
+    STATUS_DEFERRED = "DEFERRED"
+    STATUS_UPLOADED = "UPLOADED"
+    STATUS_PENDING_REVIEW = "PENDING_REVIEW"
+    STATUS_VERIFIED = "VERIFIED"
+    STATUS_REJECTED = "REJECTED"
+    STATUS_REUPLOAD_REQUIRED = "REUPLOAD_REQUIRED"
+    STATUS_CHOICES = [(value, value.replace("_", " ").title()) for value in (
+        STATUS_NOT_STARTED, STATUS_DEFERRED, STATUS_UPLOADED, STATUS_PENDING_REVIEW,
+        STATUS_VERIFIED, STATUS_REJECTED, STATUS_REUPLOAD_REQUIRED,
+    )]
+
+    resident = models.ForeignKey(ResidentProfile, on_delete=models.CASCADE, related_name="documents")
+    requirement = models.ForeignKey(ResidentDocumentRequirement, null=True, blank=True, on_delete=models.SET_NULL, related_name="fulfillments")
+    document_type = models.CharField(max_length=80)
+    title = models.CharField(max_length=200)
+    file = models.FileField(upload_to="resident_documents/%Y/%m/", null=True, blank=True)
+    original_filename = models.CharField(max_length=255, blank=True)
+    issue_date = models.DateField(null=True, blank=True)
+    expiry_date = models.DateField(null=True, blank=True)
+    status = models.CharField(max_length=30, choices=STATUS_CHOICES, default=STATUS_NOT_STARTED)
+    uploaded_at = models.DateTimeField(null=True, blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    verified_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name="verified_resident_documents")
+    verified_at = models.DateTimeField(null=True, blank=True)
+    verification_remarks = models.TextField(blank=True)
+    is_archived = models.BooleanField(default=False)
+    archived_at = models.DateTimeField(null=True, blank=True)
+    extra_data = models.JSONField(default=dict, blank=True)
+
+    class Meta:
+        ordering = ["requirement__display_order", "title"]
+        constraints = [models.UniqueConstraint(fields=["resident", "requirement"], name="unique_resident_requirement_fulfillment")]
+
+
+class ResidentOnboardingDeclaration(models.Model):
+    """Immutable acknowledgement of the resident onboarding declaration."""
+    resident = models.OneToOneField(ResidentProfile, on_delete=models.CASCADE, related_name="onboarding_declaration")
+    accepted = models.BooleanField(default=False)
+    accepted_at = models.DateTimeField(null=True, blank=True)
+    declaration_text = models.TextField()
 
 
 class SupervisorProfile(models.Model):
@@ -941,4 +1030,3 @@ User.specialty = SafeForeignKeyDescriptor(User.specialty, Specialty)
 SupervisorProfile.specialty_ref = SafeForeignKeyDescriptor(
     SupervisorProfile.specialty_ref, Specialty
 )
-

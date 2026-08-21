@@ -50,6 +50,10 @@ export interface AuthMeResponse {
   completed_schema_version: number;
   missing_required_fields: string[];
   allowed_next_route: string;
+  pending_upload_count?: number;
+  pending_uploads?: Array<{ requirement_id: number; document_id: number; document_type: string; display_name: string; stage: string; status: string; verification_remarks?: string }>;
+  pending_supervisor_link?: { id: number; name: string; status: string } | null;
+  onboarding_complete?: boolean;
 }
 
 export interface MissingProfileField {

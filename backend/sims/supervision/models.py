@@ -117,3 +117,29 @@ class ResidentSupervisorAssignment(models.Model):
     def save(self, *args, **kwargs):
         self.clean()
         super().save(*args, **kwargs)
+
+
+class PendingSupervisorAssignment(models.Model):
+    """An unresolved supervisor name, never a substitute supervisor identity."""
+    STATUS_PENDING = "PENDING"
+    STATUS_RESOLVED = "RESOLVED"
+    STATUS_CANCELLED = "CANCELLED"
+    STATUS_CHOICES = [(x, x.title()) for x in (STATUS_PENDING, STATUS_RESOLVED, STATUS_CANCELLED)]
+
+    resident = models.ForeignKey(ResidentProfile, on_delete=models.CASCADE, related_name="pending_supervisor_assignments")
+    supervisor_name_text = models.CharField(max_length=200)
+    department_text = models.CharField(max_length=200, blank=True)
+    institution_text = models.CharField(max_length=200, blank=True)
+    pmdc_number_text = models.CharField(max_length=80, blank=True)
+    email_text = models.EmailField(blank=True)
+    phone_text = models.CharField(max_length=30, blank=True)
+    notes = models.TextField(blank=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=STATUS_PENDING)
+    resolved_supervisor = models.ForeignKey(SupervisorProfile, null=True, blank=True, on_delete=models.SET_NULL, related_name="resolved_pending_supervisor_requests")
+    resolved_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name="resolved_pending_supervisor_requests")
+    resolved_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["status", "-created_at"]

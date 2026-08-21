@@ -739,14 +739,7 @@ class BulkService:
                         role="SUPERVISOR"
                     ).first()
                     if not supervisor:
-                        failures.append({
-                            "row": row_num,
-                            "error": f"Supervisor with username '{supervisor_username}' not found",
-                            "data": row
-                        })
-                        if not allow_partial:
-                            errors_triggered = True
-                            return
+                        supervisor_name = supervisor_username
                 except Exception as e:
                     failures.append({
                         "row": row_num,
@@ -758,21 +751,11 @@ class BulkService:
                         return
             elif supervisor_name:
                 try:
-                    supervisor = _get_or_create_supervisor(
-                        supervisor_name,
-                        self.actor,
-                        specialty=matched_specialty.code if matched_specialty else None,
-                        generate_password=generate_passwords
-                    )
+                    supervisor = _find_existing_supervisor(supervisor_name)
                     if not supervisor:
-                        failures.append({
-                            "row": row_num,
-                            "error": f"Could not create/find supervisor '{supervisor_name}'",
-                            "data": row
-                        })
-                        if not allow_partial:
-                            errors_triggered = True
-                            return
+                        # Preserve the supplied name as a pending link; absence
+                        # of an account must not block resident creation.
+                        pass
                 except Exception as e:
                     failures.append({
                         "row": row_num,
@@ -783,15 +766,8 @@ class BulkService:
                         errors_triggered = True
                         return
             else:
-                # No supervisor provided
-                failures.append({
-                    "row": row_num,
-                    "error": "Missing 'Supervisor Name' or 'Supervisor Username'",
-                    "data": row
-                })
-                if not allow_partial:
-                    errors_triggered = True
-                    return
+                # No supervisor provided; resident creation remains valid.
+                pass
 
             # Generate username if not provided
             if not username:
@@ -839,8 +815,6 @@ class BulkService:
                 "created_by": self.actor,
             }
 
-            if supervisor:
-                user_data["supervisor"] = supervisor
 
             # Generate password
             password = None
@@ -894,20 +868,19 @@ class BulkService:
 
                         user = existing_user
                     else:
-                        # Create new user
-                        if not supervisor:
-                            # Cannot create PG without supervisor (validation will fail)
-                            failures.append({
-                                "row": row_num,
-                                "error": "Cannot create PG user without supervisor",
-                                "data": row
-                            })
-                            errors_triggered = True
-                            return
-
                         user = User(**user_data)
                         user.set_password(password)
                         user.save()
+
+                if not dry_run:
+                    _ensure_canonical_resident_records(
+                        user=user,
+                        supervisor=supervisor,
+                        supervisor_name=supervisor_name,
+                        actor=self.actor,
+                        training_start=date_joined,
+                        department=department,
+                    )
 
                 success_entry = {
                     "row": row_num,
@@ -1805,7 +1778,7 @@ class BulkService:
             return _render_export_rows(export_userbase_rows(resource), resource, export_format)
 
         if resource == "residents":
-            queryset = User.objects.filter(role="RESIDENT").select_related("supervisor", "home_department")
+            queryset = User.objects.filter(role="RESIDENT").select_related("home_department", "resident_profile")
             rows = [
                 {
                     "username": user.username,
@@ -1814,7 +1787,12 @@ class BulkService:
                     "email": user.email,
                     "specialty": user.specialty.code if user.specialty else "",
                     "year": user.year or "",
-                    "supervisor": user.supervisor.username if user.supervisor else "",
+                    "supervisor": (
+                        user.resident_profile.supervisor_assignments.filter(is_active=True, assignment_type="PRIMARY")
+                        .select_related("supervisor__user").first().supervisor.user.username
+                        if hasattr(user, "resident_profile") and user.resident_profile.supervisor_assignments.filter(is_active=True, assignment_type="PRIMARY").exists()
+                        else ""
+                    ),
                     "department": user.home_department.name if user.home_department else "",
                 }
                 for user in queryset
@@ -2107,6 +2085,52 @@ def _infer_training_year(date_joined: date) -> str:
         return "4"
 
 
+def _find_existing_supervisor(supervisor_name):
+    """Resolve only an existing supervisor for resident imports."""
+    first_name, last_name = _parse_name(supervisor_name.strip())
+    if first_name and last_name:
+        return User.objects.filter(first_name__iexact=first_name, last_name__iexact=last_name, role="SUPERVISOR").first()
+    return User.objects.filter(username__iexact=supervisor_name.strip(), role="SUPERVISOR").first()
+
+
+def _ensure_canonical_resident_records(*, user, supervisor, supervisor_name, actor, training_start, department=None):
+    """Backstop for the legacy upload endpoint; converge it on canonical models."""
+    from sims.training.models import ResidentTrainingRecord, TrainingProgram
+    from sims.users.models import ResidentProfile, SupervisorProfile
+    from sims.supervision.models import PendingSupervisorAssignment
+
+    resident_profile, _ = ResidentProfile.objects.get_or_create(
+        user=user,
+        defaults={"department_ref": department, "phone": user.phone_number or "", "email": user.email or ""},
+    )
+    program = TrainingProgram.objects.order_by("id").first()
+    if program:
+        ResidentTrainingRecord.objects.update_or_create(
+            resident_user=user,
+            defaults={"program": program, "department": department, "start_date": training_start, "created_by": actor},
+        )
+    supervisor_profile = None
+    if supervisor:
+        supervisor_profile, _ = SupervisorProfile.objects.get_or_create(user=supervisor)
+    if supervisor_profile:
+        try:
+            from sims.supervision.services import create_supervisor_assignment
+            create_supervisor_assignment(
+                resident=resident_profile, supervisor=supervisor_profile,
+                assignment_type="PRIMARY", start_date=training_start, actor=actor,
+                notes="Imported via retained compatibility endpoint",
+            )
+            return
+        except ValidationError:
+            pass
+    if supervisor_name:
+        PendingSupervisorAssignment.objects.update_or_create(
+            resident=resident_profile,
+            status=PendingSupervisorAssignment.STATUS_PENDING,
+            defaults={"supervisor_name_text": supervisor_name},
+        )
+
+
 def _get_or_create_supervisor(
     supervisor_name: str,
     actor: User,
@@ -2173,7 +2197,7 @@ def _get_or_create_supervisor(
         if supervisor:
             return supervisor
 
-    # Create new supervisor
+    # Create supervisor for the retained trainee-import compatibility path.
     try:
         username = _generate_username(first_name, last_name)
         email = f"{username}.supervisor@pmc.edu.pk"

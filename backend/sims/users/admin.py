@@ -145,7 +145,10 @@ class UserAdmin(BaseUserAdmin, ImportExportModelAdmin):
             return qs
         elif request.user.role == "SUPERVISOR":
             # Supervisors can only view their assigned PGs
-            return qs.filter(supervisor=request.user)
+            return qs.filter(
+                resident_profile__supervisor_assignments__supervisor__user=request.user,
+                resident_profile__supervisor_assignments__is_active=True,
+            ).distinct()
         else:
             # PGs can only view their own profile
             return qs.filter(id=request.user.id)
@@ -183,7 +186,9 @@ class UserAdmin(BaseUserAdmin, ImportExportModelAdmin):
         if request.user.is_superuser or request.user.role == "ADMIN":
             return True
         if request.user.role == "SUPERVISOR" and obj:
-            return obj.supervisor == request.user
+            return obj.resident_profile.supervisor_assignments.filter(
+                supervisor__user=request.user, is_active=True
+            ).exists()
         if obj:
             return obj == request.user
         return False
@@ -270,4 +275,3 @@ class HospitalAssignmentAdmin(admin.ModelAdmin):
         "hospital_department__hospital__name",
         "hospital_department__department__name",
     )
-

@@ -25,7 +25,7 @@ from .decorators import (
     supervisor_required,
 )
 from .forms import PGSearchForm, SupervisorAssignmentForm, UserProfileForm
-from .models import User
+from .models import User, ResidentProfile, SupervisorProfile
 
 
 # Authentication Views
@@ -120,7 +120,14 @@ def pg_dashboard(request):
     """Resident dashboard with personal progress overview"""
 
     # Get supervisor info
-    supervisor = request.user.supervisor
+    supervisor = None
+    if request.user.role == "RESIDENT":
+        resident_profile = getattr(request.user, "resident_profile", None)
+        if resident_profile:
+            assignment = resident_profile.supervisor_assignments.filter(
+                is_active=True, assignment_type="PRIMARY"
+            ).select_related("supervisor__user").first()
+            supervisor = assignment.supervisor.user if assignment else None
 
     # Get recent submissions
     recent_submissions = []
@@ -423,17 +430,28 @@ class UserCreateView(AdminRequiredMixin, View):
                 is_active=True,
             )
 
-            # Set supervisor for PG users
+            # Resolve the legacy form's supervisor choice through the canonical
+            # supervision assignment; User.supervisor is no longer written.
+            selected_supervisor = None
             if role == "RESIDENT" and supervisor_id:
                 try:
-                    supervisor = User.objects.get(id=supervisor_id, role="SUPERVISOR")
-                    user.supervisor = supervisor
+                    selected_supervisor = User.objects.get(id=supervisor_id, role="SUPERVISOR")
                 except User.DoesNotExist:
                     messages.error(request, "Selected supervisor not found")
                     return render(request, "users/user_create.html")
 
             user.set_password(password1)
             user.save()
+            if role == "RESIDENT":
+                resident_profile, _ = ResidentProfile.objects.get_or_create(user=user)
+                if selected_supervisor:
+                    supervisor_profile, _ = SupervisorProfile.objects.get_or_create(user=selected_supervisor)
+                    from sims.supervision.services import create_supervisor_assignment
+                    create_supervisor_assignment(
+                        resident=resident_profile, supervisor=supervisor_profile,
+                        assignment_type="PRIMARY", start_date=timezone.now().date(), actor=request.user,
+                        notes="Created through retained legacy form",
+                    )
 
             messages.success(request, f"User {user.get_display_name()} created successfully!")
             return redirect("users:user_list")

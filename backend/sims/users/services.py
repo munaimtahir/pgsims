@@ -365,6 +365,49 @@ def create_user_with_profile(
                 user.home_hospital = profile_payload.get("hospital")
                 user.home_department = profile_payload.get("department_ref")
                 user.save(update_fields=["home_hospital", "home_department"])
+
+            # Resident bootstrap is completed in the same transaction as identity/profile.
+            from sims.training.models import ResidentTrainingRecord
+            from sims.supervision.models import PendingSupervisorAssignment
+            training_program = profile_payload.get("program_ref")
+            if training_program:
+                start_date = profile_payload.get("training_start_date") or timezone.now().date()
+                ResidentTrainingRecord.objects.update_or_create(
+                    resident_user=user,
+                    defaults={
+                        "program": training_program,
+                        "department": profile_payload.get("department_ref"),
+                        "training_site": profile_payload.get("hospital"),
+                        "academic_session": profile_payload.get("academic_session_ref"),
+                        "start_date": start_date,
+                        "expected_end_date": profile_payload.get("expected_end_date"),
+                        "current_level": profile_payload.get("current_level", ""),
+                        "created_by": actor,
+                    },
+                )
+            supervisor_profile = profile_payload.get("supervisor_profile")
+            supervisor_name = (profile_payload.get("supervisor_name") or "").strip()
+            if supervisor_profile:
+                from sims.supervision.services import create_supervisor_assignment
+                create_supervisor_assignment(
+                    resident=profile,
+                    supervisor=supervisor_profile,
+                    assignment_type="PRIMARY",
+                    start_date=profile_payload.get("training_start_date") or timezone.now().date(),
+                    actor=actor,
+                    notes="Created during resident onboarding",
+                )
+            elif supervisor_name:
+                PendingSupervisorAssignment.objects.create(
+                    resident=profile,
+                    supervisor_name_text=supervisor_name,
+                    department_text=profile_payload.get("supervisor_department", ""),
+                    institution_text=profile_payload.get("supervisor_institution", ""),
+                    pmdc_number_text=profile_payload.get("supervisor_pmdc_number", ""),
+                    email_text=profile_payload.get("supervisor_email", ""),
+                    phone_text=profile_payload.get("supervisor_phone", ""),
+                    notes=profile_payload.get("supervisor_notes", ""),
+                )
         elif role == "SUPERVISOR":
             designation_val = profile_payload.get("designation_ref")
             if isinstance(designation_val, str) and designation_val:
