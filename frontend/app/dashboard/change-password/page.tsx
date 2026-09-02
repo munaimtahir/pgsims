@@ -1,11 +1,13 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import PageHeader from '@/components/ui/PageHeader';
 import SectionCard from '@/components/ui/SectionCard';
 import authApi from '@/lib/api/auth';
 
 export default function ChangePasswordPage() {
+  const router = useRouter();
   const [formData, setFormData] = useState({
     oldPassword: '',
     newPassword: '',
@@ -46,7 +48,7 @@ export default function ChangePasswordPage() {
     setLoading(true);
 
     try {
-      await authApi.changePassword({
+      const response = await authApi.changePassword({
         old_password: formData.oldPassword,
         new_password: formData.newPassword,
         new_password2: formData.confirmPassword,
@@ -57,6 +59,7 @@ export default function ChangePasswordPage() {
         newPassword: '',
         confirmPassword: '',
       });
+      window.setTimeout(() => router.push(response.allowed_next_route || '/dashboard'), 350);
     } catch (err: unknown) {
       if (err && typeof err === 'object' && 'response' in err) {
         const axiosErr = err as { response?: { data?: { error?: string; detail?: string; message?: string } } };

@@ -91,6 +91,28 @@ export interface IdentityOptions {
   specialties: IdentityOption[];
 }
 
+export interface ResidentOnboardingField {
+  field: string;
+  label: string;
+  value: string | number | null;
+  required: boolean;
+}
+
+export interface ResidentOnboardingState {
+  profile_complete: boolean;
+  onboarding_complete: boolean;
+  required_onboarding_fields: string[];
+  supervisor_status: string;
+  declaration_accepted: boolean;
+  documents: Array<{ id: number; requirement_id: number; title: string; status: string; stage: string }>;
+  workshops: Array<{ id: number; name: string; code: string; completed_at: string | null; completion_id: number | null }>;
+  baseline: {
+    research: { title: string; topic_area: string; status: string };
+    thesis: { status: string; notes: string };
+  };
+  sections: Array<{ key: string; title: string; fields: ResidentOnboardingField[] }>;
+}
+
 export interface LoginResponse {
   user: User;
   access: string;
@@ -242,8 +264,28 @@ export const authApi = {
     old_password: string;
     new_password: string;
     new_password2: string;
-  }): Promise<{ message: string }> {
-    const response = await apiClient.post<{ message: string }>('/api/auth/change-password/', data);
+  }): Promise<{ message: string; allowed_next_route?: string }> {
+    const response = await apiClient.post<{ message: string; allowed_next_route?: string }>('/api/auth/change-password/', data);
+    return response.data;
+  },
+
+  async onboarding(): Promise<ResidentOnboardingState> {
+    const response = await apiClient.get<ResidentOnboardingState>('/api/auth/onboarding/');
+    return response.data;
+  },
+
+  async saveOnboardingField(field: string, value: string | number | null): Promise<ResidentOnboardingState> {
+    const response = await apiClient.patch<ResidentOnboardingState>('/api/auth/onboarding/', { field, value });
+    return response.data;
+  },
+
+  async saveOnboardingDraft(fields: Record<string, string | number | null>): Promise<ResidentOnboardingState> {
+    const response = await apiClient.patch<ResidentOnboardingState>('/api/auth/onboarding/', { fields });
+    return response.data;
+  },
+
+  async acceptResidentDeclaration(): Promise<ResidentOnboardingState> {
+    const response = await apiClient.post<ResidentOnboardingState>('/api/resident-onboarding/state/', { accepted: true });
     return response.data;
   },
 };

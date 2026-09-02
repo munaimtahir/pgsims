@@ -640,7 +640,7 @@ class AuthMeView(APIView):
         onboarding = get_resident_onboarding_state(user) if user.role == "RESIDENT" else {}
         if user.must_change_password:
             allowed_next_route = "/change-password"
-        elif missing:
+        elif missing or onboarding.get("required_onboarding_fields"):
             allowed_next_route = "/complete-profile"
         else:
             allowed_next_route = user.get_dashboard_url()
@@ -658,6 +658,7 @@ class AuthMeView(APIView):
             "completed_schema_version": completed_schema_version,
             "missing_required_fields": missing_fields,
             "allowed_next_route": allowed_next_route,
+            "required_onboarding_fields": onboarding.get("required_onboarding_fields", []),
             "pending_upload_count": onboarding.get("pending_upload_count", 0),
             "pending_uploads": onboarding.get("pending_uploads", []),
             "pending_supervisor_link": onboarding.get("pending_supervisor_link"),

@@ -21,7 +21,7 @@ class Migration(migrations.Migration):
                     reverse_sql=migrations.RunSQL.noop,
                 ),
                 migrations.RunSQL(
-                    "ALTER TABLE users_historicalresidentprofile ADD COLUMN declaration_accepted_at datetime NULL",
+                    "ALTER TABLE users_historicalresidentprofile ADD COLUMN declaration_accepted_at timestamp with time zone NULL",
                     reverse_sql=migrations.RunSQL.noop,
                 ),
                 migrations.RunSQL(
@@ -29,7 +29,7 @@ class Migration(migrations.Migration):
                     reverse_sql=migrations.RunSQL.noop,
                 ),
                 migrations.RunSQL(
-                    "ALTER TABLE users_residentprofile ADD COLUMN declaration_accepted_at datetime NULL",
+                    "ALTER TABLE users_residentprofile ADD COLUMN declaration_accepted_at timestamp with time zone NULL",
                     reverse_sql=migrations.RunSQL.noop,
                 ),
             ],

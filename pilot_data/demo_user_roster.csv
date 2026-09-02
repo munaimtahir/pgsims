@@ -1,0 +1,6 @@
+username,email,full_name,role,phone_number,active,status,notes
+admin,admin@pgsims.local,System Administrator,ADMIN,,true,testing,Retained baseline admin account
+pilot_utrmc_admin,pilot_utrmc_admin@pgsims.local,Pilot UTRMC Admin,ADMIN,,true,testing,Retained admin test account
+pilot_supervisor,pilot_supervisor@pgsims.local,Pilot Supervisor,SUPERVISOR,,true,testing,Retained supervisor test account
+pilot_utrmc_user,pilot_utrmc_user@pgsims.local,Pilot Support Staff,SUPPORT_STAFF,,true,testing,Retained support-staff test account
+pilot_resident,pilot_resident@pgsims.local,Pilot Resident,RESIDENT,,true,testing,Retained resident test account
