@@ -252,6 +252,8 @@ class ResidentOnboardingView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
+        if request.user.role != "RESIDENT":
+            raise PermissionDenied("Resident onboarding is only available to residents.")
         return Response(get_resident_onboarding_state(request.user))
 
     def patch(self, request):
@@ -272,9 +274,13 @@ class ResidentOnboardingStateView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
+        if request.user.role != "RESIDENT":
+            raise PermissionDenied("Resident onboarding is only available to residents.")
         return Response(get_resident_onboarding_state(request.user))
 
     def post(self, request):
+        if request.user.role != "RESIDENT":
+            raise PermissionDenied("Resident onboarding is only available to residents.")
         profile = _resident_profile(request.user)
         if not request.data.get("accepted"):
             return Response({"detail": "Declaration must be accepted."}, status=400)

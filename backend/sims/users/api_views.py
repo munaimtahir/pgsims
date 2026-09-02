@@ -353,7 +353,9 @@ def change_password_view(request):
     from sims.users.onboarding_api import get_resident_onboarding_state
     missing = get_missing_profile_fields(user)
     onboarding = get_resident_onboarding_state(user) if user.role == "RESIDENT" else {}
-    if missing or onboarding.get("required_onboarding_fields"):
+    if missing or onboarding.get("required_onboarding_fields") or (
+        user.role == "RESIDENT" and not onboarding.get("onboarding_complete", False)
+    ):
         next_route = "/complete-profile"
     else:
         next_route = user.get_dashboard_url()

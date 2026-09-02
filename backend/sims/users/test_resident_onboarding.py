@@ -1,3 +1,5 @@
+from unittest.mock import patch
+
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 from rest_framework.test import APIClient
@@ -58,3 +60,37 @@ class ResidentOnboardingConsolidationTests(TestCase):
         client = APIClient(); client.force_authenticate(resident)
         response = client.post(f"/api/resident-documents/{document.id}/review/", {"status": "VERIFIED"})
         self.assertIn(response.status_code, (403, 404))
+
+    def test_non_resident_cannot_access_resident_onboarding_api(self):
+        client = APIClient()
+        client.force_authenticate(self.admin)
+
+        self.assertEqual(client.get("/api/auth/onboarding/").status_code, 403)
+        self.assertEqual(client.get("/api/resident-onboarding/state/").status_code, 403)
+        self.assertEqual(
+            client.post("/api/resident-onboarding/state/", {"accepted": True}, format="json").status_code,
+            403,
+        )
+
+    def test_auth_me_requires_declaration_before_dashboard(self):
+        resident = create_user_with_profile(
+            role="RESIDENT",
+            full_name="Dr Declaration Pending",
+            actor=self.admin,
+            profile_payload={"program_ref": self.program},
+        )
+        resident.must_change_password = False
+        resident.save(update_fields=["must_change_password"])
+        client = APIClient()
+        client.force_authenticate(resident)
+
+        onboarding_state = {"required_onboarding_fields": [], "onboarding_complete": False}
+        with (
+            patch("sims.users.userbase_views.recalculate_profile_completion"),
+            patch("sims.users.userbase_views.get_missing_profile_fields", return_value=[]),
+            patch("sims.users.onboarding_api.get_resident_onboarding_state", return_value=onboarding_state),
+        ):
+            response = client.get("/api/auth/me/")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["allowed_next_route"], "/complete-profile")

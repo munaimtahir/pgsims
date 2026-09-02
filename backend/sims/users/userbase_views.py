@@ -640,7 +640,9 @@ class AuthMeView(APIView):
         onboarding = get_resident_onboarding_state(user) if user.role == "RESIDENT" else {}
         if user.must_change_password:
             allowed_next_route = "/change-password"
-        elif missing or onboarding.get("required_onboarding_fields"):
+        elif missing or onboarding.get("required_onboarding_fields") or (
+            role == "RESIDENT" and not onboarding.get("onboarding_complete", False)
+        ):
             allowed_next_route = "/complete-profile"
         else:
             allowed_next_route = user.get_dashboard_url()
@@ -797,7 +799,22 @@ class CompleteProfileView(APIView):
 
         missing = get_missing_profile_fields(user)
         missing_fields = [m["field"] for m in missing]
-        allowed_next_route = "/change-password" if user.must_change_password else ("/complete-profile" if missing else user.get_dashboard_url())
+        resident_onboarding_incomplete = False
+        if user.role == "RESIDENT":
+            from sims.users.onboarding_api import get_resident_onboarding_state
+
+            resident_onboarding_incomplete = not get_resident_onboarding_state(user).get(
+                "onboarding_complete", False
+            )
+        allowed_next_route = (
+            "/change-password"
+            if user.must_change_password
+            else (
+                "/complete-profile"
+                if missing or resident_onboarding_incomplete
+                else user.get_dashboard_url()
+            )
+        )
 
         return Response({
             "id": user.id,
