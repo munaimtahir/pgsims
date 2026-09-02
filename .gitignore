@@ -116,3 +116,15 @@ frontend/.next/
 *.pgsimsdr
 backend/backups/
 .e2e_upload_tmp/
+
+# Android
+android/**/build/
+android/.gradle/
+android/local.properties
+android/**/*.iml
+android/.idea/
+android/captures/
+android/**/.cxx/
+android/*.keystore
+android/*.jks
+android/**/google-services.json
