@@ -80,6 +80,7 @@ INSTALLED_APPS = [
     "import_export",  # For CSV/Excel import/export
     "rest_framework",  # For API endpoints
     "rest_framework_simplejwt",  # For JWT authentication
+    "rest_framework_simplejwt.token_blacklist",  # For JWT token revocation on logout
     "django_filters",  # For Advanced filtering
     "drf_spectacular",  # OpenAPI schema generation
     "widget_tweaks",  # For form widget customization
@@ -699,7 +700,7 @@ SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=int(os.environ.get("JWT_ACCESS_TOKEN_MINUTES", "60"))),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=int(os.environ.get("JWT_REFRESH_TOKEN_DAYS", "7"))),
     "ROTATE_REFRESH_TOKENS": True,
-    "BLACKLIST_AFTER_ROTATION": False,
+    "BLACKLIST_AFTER_ROTATION": True,
     "UPDATE_LAST_LOGIN": True,
     "ALGORITHM": "HS256",
     "SIGNING_KEY": SECRET_KEY,

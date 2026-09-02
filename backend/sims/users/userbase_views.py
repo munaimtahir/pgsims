@@ -417,60 +417,195 @@ class AdminProfileViewSet(viewsets.ModelViewSet):
     queryset = AdminProfile.objects.select_related("user").order_by("user__last_name")
     serializer_class = AdminProfileSerializer
     lookup_field = "user_id"
+    permission_classes = [permissions.IsAuthenticated]
     filterset_fields = ["profile_status"]
     search_fields = ["user__username", "user__first_name", "user__last_name", "designation"]
+
+    def get_queryset(self):
+        user = self.request.user
+        if not user or not user.is_authenticated:
+            return AdminProfile.objects.none()
+        if _is_manager(user):
+            return super().get_queryset()
+        if user.role == "ADMIN":
+            return super().get_queryset().filter(user=user)
+        return AdminProfile.objects.none()
 
     def retrieve(self, request, *args, **kwargs):
         if _is_manager(request.user):
             return super().retrieve(request, *args, **kwargs)
         if str(request.user.id) != str(kwargs.get("user_id")):
             raise PermissionDenied("You may only view your own profile.")
-        return viewsets.ModelViewSet.retrieve(self, request, *args, **kwargs)
+        return super().retrieve(request, *args, **kwargs)
+
+    def create(self, request, *args, **kwargs):
+        if not _is_manager(request.user):
+            raise PermissionDenied("Only administrators can create admin profiles.")
+        return super().create(request, *args, **kwargs)
+
+    def update(self, request, *args, **kwargs):
+        if not _is_manager(request.user) and str(request.user.id) != str(kwargs.get("user_id")):
+            raise PermissionDenied("You may only edit your own profile.")
+        return super().update(request, *args, **kwargs)
+
+    def partial_update(self, request, *args, **kwargs):
+        if not _is_manager(request.user) and str(request.user.id) != str(kwargs.get("user_id")):
+            raise PermissionDenied("You may only edit your own profile.")
+        return super().partial_update(request, *args, **kwargs)
+
+    def destroy(self, request, *args, **kwargs):
+        if not _is_manager(request.user):
+            raise PermissionDenied("Only administrators can delete admin profiles.")
+        return super().destroy(request, *args, **kwargs)
 
 
 class ResidentProfileViewSet(viewsets.ModelViewSet):
     queryset = ResidentProfile.objects.select_related("user").order_by("user__last_name")
     serializer_class = ResidentProfileSerializer
     lookup_field = "user_id"
+    permission_classes = [permissions.IsAuthenticated]
     filterset_fields = ["is_archived", "profile_status"]
     search_fields = ["user__username", "user__first_name", "user__last_name", "registration_no", "cnic"]
 
+    def get_queryset(self):
+        user = self.request.user
+        if not user or not user.is_authenticated:
+            return ResidentProfile.objects.none()
+        if _is_manager(user) or user.role == "SUPPORT_STAFF":
+            return super().get_queryset()
+        if user.role == "RESIDENT":
+            return super().get_queryset().filter(user=user)
+        if user.role == "SUPERVISOR" and hasattr(user, "supervisor_profile"):
+            return super().get_queryset().filter(
+                supervisor_assignments__supervisor=user.supervisor_profile,
+                supervisor_assignments__is_active=True,
+            ).distinct()
+        return ResidentProfile.objects.none()
+
     def retrieve(self, request, *args, **kwargs):
-        if _is_manager(request.user):
+        user = request.user
+        target_user_id = str(kwargs.get("user_id"))
+        if _is_manager(user) or user.role == "SUPPORT_STAFF":
             return super().retrieve(request, *args, **kwargs)
-        if str(request.user.id) != str(kwargs.get("user_id")):
-            raise PermissionDenied("You may only view your own profile.")
-        return viewsets.ModelViewSet.retrieve(self, request, *args, **kwargs)
+        if user.role == "RESIDENT" and str(user.id) == target_user_id:
+            return super().retrieve(request, *args, **kwargs)
+        if user.role == "SUPERVISOR" and hasattr(user, "supervisor_profile"):
+            if ResidentSupervisorAssignment.objects.filter(
+                resident__user_id=target_user_id,
+                supervisor=user.supervisor_profile,
+                is_active=True,
+            ).exists():
+                return super().retrieve(request, *args, **kwargs)
+        raise PermissionDenied("You are not allowed to view this resident profile.")
+
+    def create(self, request, *args, **kwargs):
+        if not _is_manager(request.user):
+            raise PermissionDenied("Only administrators can create resident profiles.")
+        return super().create(request, *args, **kwargs)
+
+    def update(self, request, *args, **kwargs):
+        if not _is_manager(request.user) and str(request.user.id) != str(kwargs.get("user_id")):
+            raise PermissionDenied("You may only edit your own profile.")
+        return super().update(request, *args, **kwargs)
+
+    def partial_update(self, request, *args, **kwargs):
+        if not _is_manager(request.user) and str(request.user.id) != str(kwargs.get("user_id")):
+            raise PermissionDenied("You may only edit your own profile.")
+        return super().partial_update(request, *args, **kwargs)
+
+    def destroy(self, request, *args, **kwargs):
+        if not _is_manager(request.user):
+            raise PermissionDenied("Only administrators can delete resident profiles.")
+        return super().destroy(request, *args, **kwargs)
 
 
 class SupervisorProfileViewSet(viewsets.ModelViewSet):
     queryset = SupervisorProfile.objects.select_related("user").order_by("user__last_name")
     serializer_class = SupervisorProfileSerializer
     lookup_field = "user_id"
+    permission_classes = [permissions.IsAuthenticated]
     filterset_fields = ["is_archived", "profile_status"]
     search_fields = ["user__username", "user__first_name", "user__last_name", "pmdc_no"]
 
+    def get_queryset(self):
+        user = self.request.user
+        if not user or not user.is_authenticated:
+            return SupervisorProfile.objects.none()
+        if _is_manager(user) or user.role in ("ADMIN", "SUPPORT_STAFF", "RESIDENT", "SUPERVISOR"):
+            return super().get_queryset().filter(is_archived=False) if not _is_manager(user) else super().get_queryset()
+        return SupervisorProfile.objects.none()
+
     def retrieve(self, request, *args, **kwargs):
-        if _is_manager(request.user):
+        user = request.user
+        if _is_manager(user) or user.role in ("ADMIN", "SUPPORT_STAFF", "RESIDENT", "SUPERVISOR"):
             return super().retrieve(request, *args, **kwargs)
-        if str(request.user.id) != str(kwargs.get("user_id")):
-            raise PermissionDenied("You may only view your own profile.")
-        return viewsets.ModelViewSet.retrieve(self, request, *args, **kwargs)
+        raise PermissionDenied("You are not allowed to view this supervisor profile.")
+
+    def create(self, request, *args, **kwargs):
+        if not _is_manager(request.user):
+            raise PermissionDenied("Only administrators can create supervisor profiles.")
+        return super().create(request, *args, **kwargs)
+
+    def update(self, request, *args, **kwargs):
+        if not _is_manager(request.user) and str(request.user.id) != str(kwargs.get("user_id")):
+            raise PermissionDenied("You may only edit your own profile.")
+        return super().update(request, *args, **kwargs)
+
+    def partial_update(self, request, *args, **kwargs):
+        if not _is_manager(request.user) and str(request.user.id) != str(kwargs.get("user_id")):
+            raise PermissionDenied("You may only edit your own profile.")
+        return super().partial_update(request, *args, **kwargs)
+
+    def destroy(self, request, *args, **kwargs):
+        if not _is_manager(request.user):
+            raise PermissionDenied("Only administrators can delete supervisor profiles.")
+        return super().destroy(request, *args, **kwargs)
 
 
 class SupportStaffProfileViewSet(viewsets.ModelViewSet):
     queryset = SupportStaffProfile.objects.select_related("user").order_by("user__last_name")
     serializer_class = SupportStaffProfileSerializer
     lookup_field = "user_id"
+    permission_classes = [permissions.IsAuthenticated]
     filterset_fields = ["is_archived", "profile_status"]
     search_fields = ["user__username", "user__first_name", "user__last_name", "designation"]
+
+    def get_queryset(self):
+        user = self.request.user
+        if not user or not user.is_authenticated:
+            return SupportStaffProfile.objects.none()
+        if _is_manager(user):
+            return super().get_queryset()
+        if user.role == "SUPPORT_STAFF":
+            return super().get_queryset().filter(user=user)
+        return SupportStaffProfile.objects.none()
 
     def retrieve(self, request, *args, **kwargs):
         if _is_manager(request.user):
             return super().retrieve(request, *args, **kwargs)
         if str(request.user.id) != str(kwargs.get("user_id")):
             raise PermissionDenied("You may only view your own profile.")
-        return viewsets.ModelViewSet.retrieve(self, request, *args, **kwargs)
+        return super().retrieve(request, *args, **kwargs)
+
+    def create(self, request, *args, **kwargs):
+        if not _is_manager(request.user):
+            raise PermissionDenied("Only administrators can create support staff profiles.")
+        return super().create(request, *args, **kwargs)
+
+    def update(self, request, *args, **kwargs):
+        if not _is_manager(request.user) and str(request.user.id) != str(kwargs.get("user_id")):
+            raise PermissionDenied("You may only edit your own profile.")
+        return super().update(request, *args, **kwargs)
+
+    def partial_update(self, request, *args, **kwargs):
+        if not _is_manager(request.user) and str(request.user.id) != str(kwargs.get("user_id")):
+            raise PermissionDenied("You may only edit your own profile.")
+        return super().partial_update(request, *args, **kwargs)
+
+    def destroy(self, request, *args, **kwargs):
+        if not _is_manager(request.user):
+            raise PermissionDenied("Only administrators can delete support staff profiles.")
+        return super().destroy(request, *args, **kwargs)
 
 
 class StaffProfileViewSet(SupervisorProfileViewSet):

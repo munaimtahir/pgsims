@@ -18,17 +18,16 @@ pg.fmu.edu.pk, pgsims.alshifalab.pk {
 		-Server
 	}
 
-	# Django static and media from host paths written by docker compose bind mounts.
+	# Django static files (public, immutable)
 	handle_path /static/* {
 		root * /home/munaim/srv/apps/pgsims/backend/staticfiles
 		file_server
 		header Cache-Control "public, max-age=31536000, immutable"
 	}
 
-	handle_path /media/* {
-		root * /home/munaim/srv/apps/pgsims/backend/media
-		file_server
-		header Cache-Control "public, max-age=604800"
+	# Protected media: route through Django backend for authorization
+	handle /media/* {
+		reverse_proxy 127.0.0.1:8014
 	}
 
 	handle /api/* {

@@ -35,7 +35,60 @@ class UserSerializer(serializers.ModelSerializer):
             "date_joined",
             "is_active",
         ]
-        read_only_fields = ["id", "date_joined", "full_name", "display_name"]
+        read_only_fields = [
+            "id",
+            "username",
+            "role",
+            "is_active",
+            "date_joined",
+            "full_name",
+            "display_name",
+        ]
+
+
+class SelfProfileUpdateSerializer(serializers.ModelSerializer):
+    """Serializer for self-profile updates by authenticated users.
+
+    Explicitly allowlists safe self-editable fields and strictly forbids mutating
+    role, is_active, username, is_staff, is_superuser, is_profile_complete,
+    must_change_password, is_archived, or other administrative state.
+    """
+
+    class Meta:
+        model = User
+        fields = [
+            "first_name",
+            "last_name",
+            "phone_number",
+            "email",
+        ]
+
+    def validate(self, attrs):
+        disallowed_fields = [
+            "role",
+            "is_active",
+            "username",
+            "is_staff",
+            "is_superuser",
+            "is_profile_complete",
+            "must_change_password",
+            "is_archived",
+            "date_joined",
+            "specialty",
+            "year",
+            "registration_number",
+            "supervisor",
+            "id",
+            "pk",
+        ]
+        request = self.context.get("request")
+        if request and hasattr(request, "data"):
+            attempted = set(request.data.keys()).intersection(disallowed_fields)
+            if attempted:
+                raise serializers.ValidationError(
+                    {field: f"Modifying '{field}' via self-profile update is forbidden." for field in attempted}
+                )
+        return attrs
 
 
 class UserRegistrationSerializer(serializers.ModelSerializer):

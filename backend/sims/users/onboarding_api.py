@@ -297,25 +297,118 @@ class ResidentDocumentViewSet(viewsets.ModelViewSet):
     parser_classes = [MultiPartParser, FormParser, JSONParser]
     permission_classes = [permissions.IsAuthenticated]
 
+    ALLOWED_EXTENSIONS = {".pdf", ".jpg", ".jpeg", ".png", ".doc", ".docx"}
+
     def get_queryset(self):
+        user = self.request.user
+        if not user or not user.is_authenticated:
+            return ResidentDocument.objects.none()
         qs = ResidentDocument.objects.select_related("resident__user", "requirement")
-        if _admin(self.request.user):
+        if _admin(user) or user.role == "SUPPORT_STAFF":
             resident_id = self.request.query_params.get("resident")
             return qs.filter(resident_id=resident_id) if resident_id else qs
-        return qs.filter(resident__user=self.request.user)
+        if user.role == "SUPERVISOR" and hasattr(user, "supervisor_profile"):
+            from sims.supervision.models import ResidentSupervisorAssignment
+            assigned_residents = ResidentSupervisorAssignment.objects.filter(
+                supervisor=user.supervisor_profile,
+                is_active=True,
+            ).values_list("resident_id", flat=True)
+            resident_id = self.request.query_params.get("resident")
+            if resident_id:
+                try:
+                    if int(resident_id) in assigned_residents:
+                        return qs.filter(resident_id=int(resident_id))
+                except (ValueError, TypeError):
+                    return qs.none()
+                return qs.none()
+            return qs.filter(resident_id__in=assigned_residents)
+        if user.role == "RESIDENT":
+            return qs.filter(resident__user=user)
+        return qs.none()
+
+    def retrieve(self, request, *args, **kwargs):
+        document = self.get_object()
+        self._check_object_permission(request.user, document)
+        return Response(self._data(document))
 
     def list(self, request, *args, **kwargs):
         documents = list(self.get_queryset().order_by("requirement__stage", "requirement__display_order", "title"))
         return Response([self._data(d) for d in documents])
 
+    def _check_object_permission(self, user, document):
+        if _admin(user) or user.role == "SUPPORT_STAFF":
+            return True
+        if document.resident.user_id == user.id:
+            return True
+        if user.role == "SUPERVISOR" and hasattr(user, "supervisor_profile"):
+            from sims.supervision.models import ResidentSupervisorAssignment
+            if ResidentSupervisorAssignment.objects.filter(
+                resident=document.resident,
+                supervisor=user.supervisor_profile,
+                is_active=True,
+            ).exists():
+                return True
+        raise PermissionDenied("You are not authorized to access this document.")
+
     def _data(self, d):
-        return {"id": d.id, "resident_id": d.resident_id, "requirement_id": d.requirement_id, "document_type": d.document_type, "title": d.title, "stage": d.requirement.stage if d.requirement else "OPTIONAL", "status": d.status, "original_filename": d.original_filename, "verification_remarks": d.verification_remarks, "file": d.file.url if d.file else None}
+        file_url = f"/api/resident-documents/{d.id}/file/" if d.file else None
+        return {
+            "id": d.id,
+            "resident_id": d.resident_id,
+            "requirement_id": d.requirement_id,
+            "document_type": d.document_type,
+            "title": d.title,
+            "stage": d.requirement.stage if d.requirement else "OPTIONAL",
+            "status": d.status,
+            "original_filename": d.original_filename,
+            "verification_remarks": d.verification_remarks,
+            "file": file_url,
+            "file_url": file_url,
+        }
+
+    @action(detail=True, methods=["get"], url_path="file")
+    def file(self, request, pk=None):
+        return self._serve_file(request, as_attachment=False)
+
+    @action(detail=True, methods=["get"], url_path="download")
+    def download(self, request, pk=None):
+        return self._serve_file(request, as_attachment=True)
+
+    def _serve_file(self, request, as_attachment=False):
+        document = self.get_object()
+        self._check_object_permission(request.user, document)
+
+        if not document.file:
+            return Response({"detail": "No file uploaded for this document."}, status=status.HTTP_404_NOT_FOUND)
+
+        try:
+            file_handle = document.file.open("rb")
+        except (FileNotFoundError, OSError):
+            return Response({"detail": "File not found on storage."}, status=status.HTTP_404_NOT_FOUND)
+
+        import mimetypes
+        from django.http import FileResponse
+        content_type, _ = mimetypes.guess_type(document.file.name)
+        content_type = content_type or "application/octet-stream"
+
+        filename = document.original_filename or document.file.name.split("/")[-1]
+        response = FileResponse(
+            file_handle,
+            content_type=content_type,
+            as_attachment=as_attachment,
+            filename=filename,
+        )
+        response["Cache-Control"] = "private, no-cache, no-store, must-revalidate"
+        response["Pragma"] = "no-cache"
+        response["Expires"] = "0"
+        response["X-Content-Type-Options"] = "nosniff"
+        return response
 
     @action(detail=True, methods=["post"])
     def defer(self, request, pk=None):
         document = self.get_object()
-        if _admin(request.user) or document.resident.user_id != request.user.id:
-            if not _admin(request.user): raise PermissionDenied()
+        if not _admin(request.user) and document.resident.user_id != request.user.id:
+            raise PermissionDenied("You are not allowed to defer this document.")
         document.status = ResidentDocument.STATUS_DEFERRED
         document.save(update_fields=["status", "updated_at"])
         ActivityLog.log(actor=request.user, action="update", verb="ATTACHMENT_DEFERRED", target=document, metadata={"requirement_id": document.requirement_id})
@@ -325,12 +418,25 @@ class ResidentDocumentViewSet(viewsets.ModelViewSet):
     def upload(self, request, pk=None):
         document = self.get_object()
         if not _admin(request.user) and document.resident.user_id != request.user.id:
-            raise PermissionDenied()
+            raise PermissionDenied("You are not allowed to upload files for this document.")
         uploaded = request.FILES.get("file")
-        if not uploaded: return Response({"detail": "file is required"}, status=400)
-        if uploaded.size > 10 * 1024 * 1024: return Response({"detail": "File must be 10MB or smaller."}, status=400)
+        if not uploaded:
+            return Response({"detail": "file is required"}, status=400)
+        if uploaded.size > 10 * 1024 * 1024:
+            return Response({"detail": "File must be 10MB or smaller."}, status=400)
+
+        import os
+        ext = os.path.splitext(uploaded.name)[1].lower()
+        if ext not in self.ALLOWED_EXTENSIONS:
+            return Response(
+                {"detail": f"File extension '{ext}' is not allowed. Allowed: {', '.join(sorted(self.ALLOWED_EXTENSIONS))}"},
+                status=400,
+            )
+
+        # Sanitize original filename
+        safe_name = os.path.basename(uploaded.name)[:255]
         document.file = uploaded
-        document.original_filename = uploaded.name[:255]
+        document.original_filename = safe_name
         document.status = ResidentDocument.STATUS_PENDING_REVIEW
         document.uploaded_at = timezone.now()
         document.save()
@@ -339,7 +445,8 @@ class ResidentDocumentViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=["post"])
     def review(self, request, pk=None):
-        if not _admin(request.user): raise PermissionDenied()
+        if not _admin(request.user):
+            raise PermissionDenied("Only administrators can review documents.")
         document = self.get_object()
         status_value = request.data.get("status")
         if status_value not in {ResidentDocument.STATUS_VERIFIED, ResidentDocument.STATUS_REUPLOAD_REQUIRED}:

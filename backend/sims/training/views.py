@@ -1834,7 +1834,24 @@ class SupervisorResidentProgressView(APIView):
 
         from django.shortcuts import get_object_or_404
         from sims.users.models import User as SIMSUser
+        from sims.supervision.models import ResidentSupervisorAssignment
+
         resident = get_object_or_404(SIMSUser, pk=resident_id)
+
+        if not _is_admin_or_utrmc_admin(user):
+            if not (
+                hasattr(user, "supervisor_profile")
+                and ResidentSupervisorAssignment.objects.filter(
+                    resident__user=resident,
+                    supervisor=user.supervisor_profile,
+                    is_active=True,
+                ).exists()
+            ):
+                return Response(
+                    {"detail": "You do not have an active supervision assignment for this resident."},
+                    status=403,
+                )
+
         rtr = get_object_or_404(ResidentTrainingRecord, resident_user=resident, active=True)
 
         from django.utils import timezone

@@ -26,7 +26,12 @@ from django.conf import settings
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from .models import User
-from .serializers import AssignedPGSerializer, UserSerializer, UserRegistrationSerializer
+from .serializers import (
+    AssignedPGSerializer,
+    UserSerializer,
+    UserRegistrationSerializer,
+    SelfProfileUpdateSerializer,
+)
 from .permissions import IsSupervisor
 
 
@@ -144,7 +149,7 @@ def register_view(request):
 @permission_classes([IsAuthenticated])
 def logout_view(request):
     """
-    Logout (blacklist refresh token if implemented).
+    Logout (blacklist refresh token).
 
     POST /api/auth/logout/
     {
@@ -155,9 +160,7 @@ def logout_view(request):
         refresh_token = request.data.get("refresh")
         if refresh_token:
             token = RefreshToken(refresh_token)
-            # Note: Blacklisting requires rest_framework_simplejwt.token_blacklist
-            # which is not enabled by default
-            # token.blacklist()
+            token.blacklist()
 
         return Response({"message": "Successfully logged out"}, status=status.HTTP_200_OK)
     except Exception as e:
@@ -177,20 +180,22 @@ def user_profile_view(request):
     return Response(serializer.data)
 
 
-@extend_schema(request=UserSerializer, responses={200: UserSerializer})
+@extend_schema(request=SelfProfileUpdateSerializer, responses={200: UserSerializer})
 @api_view(["PUT", "PATCH"])
 @permission_classes([IsAuthenticated])
 def update_profile_view(request):
     """
     Update current user's profile.
 
-    PUT/PATCH /api/auth/profile/
+    PUT/PATCH /api/auth/profile/update/
     """
-    serializer = UserSerializer(request.user, data=request.data, partial=True)
+    serializer = SelfProfileUpdateSerializer(
+        request.user, data=request.data, partial=True, context={"request": request}
+    )
 
     if serializer.is_valid():
         serializer.save()
-        return Response(serializer.data)
+        return Response(UserSerializer(request.user).data)
 
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -304,6 +309,13 @@ def password_reset_confirm_view(request):
                 {"error": "Invalid or expired reset token"}, status=status.HTTP_400_BAD_REQUEST
             )
 
+        from django.core.exceptions import ValidationError as DjangoValidationError
+        from django.contrib.auth.password_validation import validate_password
+        try:
+            validate_password(new_password, user=user)
+        except DjangoValidationError as e:
+            return Response({"error": list(e.messages)}, status=status.HTTP_400_BAD_REQUEST)
+
         # Set new password
         user.set_password(new_password)
         user.save()
@@ -343,6 +355,13 @@ def change_password_view(request):
 
     if new_password != new_password2:
         return Response({"error": "New passwords do not match"}, status=status.HTTP_400_BAD_REQUEST)
+
+    from django.core.exceptions import ValidationError as DjangoValidationError
+    from django.contrib.auth.password_validation import validate_password
+    try:
+        validate_password(new_password, user=user)
+    except DjangoValidationError as e:
+        return Response({"error": list(e.messages)}, status=status.HTTP_400_BAD_REQUEST)
 
     user.set_password(new_password)
     if user.must_change_password:
