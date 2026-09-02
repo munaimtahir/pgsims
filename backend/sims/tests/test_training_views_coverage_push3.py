@@ -15,6 +15,7 @@ from sims.training.models import (
     TrainingProgram,
 )
 from sims.users.models import ResidentProfile, SupervisorProfile
+from sims.supervision.models import ResidentSupervisorAssignment
 
 User = get_user_model()
 
@@ -46,6 +47,14 @@ class TrainingDashboardEndpointCoverageTests(TestCase):
         )
         SupervisorProfile.objects.create(
             user=self.supervisor, hospital=self.hospital, department_ref=self.department,
+        )
+        ResidentSupervisorAssignment.objects.create(
+            resident=ResidentProfile.objects.get(user=self.resident),
+            supervisor=SupervisorProfile.objects.get(user=self.supervisor),
+            assignment_type=ResidentSupervisorAssignment.ASSIGNMENT_PRIMARY,
+            is_active=True,
+            status=ResidentSupervisorAssignment.STATUS_ACTIVE,
+            start_date=date.today(),
         )
         self.rtr = ResidentTrainingRecord.objects.create(
             resident_user=self.resident, program=self.program,

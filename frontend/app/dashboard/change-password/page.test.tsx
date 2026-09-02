@@ -3,6 +3,10 @@ import userEvent from '@testing-library/user-event';
 import ChangePasswordPage from './page';
 import authApi from '@/lib/api/auth';
 
+jest.mock('next/navigation', () => ({
+  useRouter: () => ({ push: jest.fn() }),
+}));
+
 jest.mock('@/lib/api/auth', () => ({
   __esModule: true,
   default: {

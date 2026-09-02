@@ -13,17 +13,18 @@ separate system.
 - Android must consume the backend's APIs/services rather than recreate business logic locally.
   Local storage (`core/database/`) is a cache/client facility, not a competing source of truth.
 
-## MVP focus
+## Current foundation release
 
-The initial MVP focuses primarily on resident onboarding. Longer-term, the goal is progressive
-functional parity with the web application — expanding into training, documents, supervision,
-notifications, and supervisor workflows as those areas mature on the Android side.
+The current deliverable is a minimal branded, launchable foundation shell. It uses the canonical
+backend contract for health/auth primitives and deliberately does not include resident onboarding
+or other substantive feature UI. The production application identity is `fmu.pg.sims` and the
+store-facing name is **FMU Postgraduate Residency Portal**.
 
 ## Status of this scaffold
 
-This is an initial, intentionally implementation-light structural scaffold. It establishes module
-boundaries only — no networking, persistence, dependency injection, or UI framework decisions have
-been made yet, and no features are implemented.
+The project contains the Android `app` module with Compose/Material 3, Retrofit/OkHttp,
+serialization, encrypted token storage, navigation/auth foundations, and the minimal shell. Feature
+directories listed below remain planned architecture rather than implemented feature modules.
 
 Before substantial Android feature implementation begins, a **Phase M0 — Android Mobile
 Architecture & API Readiness Discovery** pass must occur to confirm current backend API surface,

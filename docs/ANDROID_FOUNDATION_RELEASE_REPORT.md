@@ -1,4 +1,12 @@
 # PGR SIMS ANDROID — FOUNDATION TO INTERNAL-TESTING RELEASE REPORT
+
+> **SUPERSEDED:** This is the previous sprint's report and is retained for
+> historical comparison. The independent September 2026 acceptance review
+> found that its old package ID, SDK values, signing configuration, and GO
+> verdict are no longer authoritative. See the independent release evidence
+> and current Play upload checklist for the release prepared from the current
+> checkout.
+
 **Phase M1 + M2 Foundation Closure**
 *Date: September 2, 2026*
 *Platform: PGR SIMS / Faisalabad Medical University (FMU)*

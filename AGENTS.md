@@ -10,15 +10,37 @@ All agents must treat this file as a binding instruction file before making code
 
 ## 1. Active Workspace Boundary
 
-The active codebase is:
+This project is actively maintained on two machines/environments. Both paths
+are valid checkouts of the same repository and must be treated as the same
+PGMS codebase:
 
 ```text
+Machine A (server/production environment):
 /home/munaim/srv/apps/pgsims/
+
+Machine B (development workspace):
+/home/munaim/Documents/github/pgsims/
 ```
+
+The path visible to an agent depends on the machine/environment in which the
+agent is running. Agents must determine the repository root from the current
+environment and work in that existing checkout. Do not assume that the other
+machine's absolute path exists locally, and do not create a new `pgms/`,
+`pgsims-workspace/`, or `pgsims-legacy/` subfolder.
+
+Both checkouts must use the same Git remote and branch workflow. Changes made
+on either machine must be committed and pushed to the shared remote, then
+pulled/fetched and verified on the other machine before being treated as
+available there. Machine-specific runtime, deployment, or production files
+must not be confused with a separate legacy codebase.
 
 ### Mandatory rule
 
-Agents must work directly in this project (fixing and updating it rather than making a new `pgms/` subfolder). All references to `pgms/` in the guides or scripts logically refer to this active project directory `/home/munaim/srv/apps/pgsims/`.
+Agents must work directly in the current machine's checkout (fixing and
+updating it rather than making a new project folder). When reporting a path,
+report the absolute path actually used by the current environment. All
+references to `pgms/` in guides or scripts logically refer to this shared
+project, regardless of which of the two paths is active locally.
 
 There is no `pgms-workspace/` or `pgsims-legacy/` folder anymore.
 

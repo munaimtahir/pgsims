@@ -742,6 +742,14 @@ class ResidentProgressViewTests(APITestCase):
             start_date=date.today() - timedelta(days=90),
             active=True,
         )
+        ResidentSupervisorAssignment.objects.create(
+            resident=ResidentProfile.objects.get(user=self.resident),
+            supervisor=SupervisorProfile.objects.get(user=self.supervisor),
+            assignment_type=ResidentSupervisorAssignment.ASSIGNMENT_PRIMARY,
+            is_active=True,
+            status=ResidentSupervisorAssignment.STATUS_ACTIVE,
+            start_date=date.today(),
+        )
 
     def test_supervisor_can_view_progress(self):
         self.client.force_authenticate(user=self.supervisor)

@@ -1,3 +1,6 @@
+import java.util.Properties
+import java.io.File
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -6,13 +9,13 @@ plugins {
 }
 
 android {
-    namespace = "pk.edu.fmu.pgsims"
-    compileSdk = 35
+    namespace = "fmu.pg.sims"
+    compileSdk = 36
 
     defaultConfig {
-        applicationId = "pk.edu.fmu.pgsims"
+        applicationId = "fmu.pg.sims"
         minSdk = 26
-        targetSdk = 35
+        targetSdk = 36
         versionCode = 1
         versionName = "0.1.0"
 
@@ -26,10 +29,38 @@ android {
 
     signingConfigs {
         create("release") {
-            storeFile = file("release.keystore")
-            storePassword = "pgsimsRelease2026"
-            keyAlias = "pgsims-key"
-            keyPassword = "pgsimsRelease2026"
+            val releaseSigningRequested = gradle.startParameter.taskNames.any { taskName ->
+                taskName.substringAfterLast(':').lowercase() in setOf(
+                    "assemblerelease", "bundlerelease", "signingreport"
+                )
+            }
+            val propertiesPath = providers.gradleProperty("fmuSigningPropertiesFile").orNull
+            val signingProperties = propertiesPath?.let { path ->
+                file(path).takeIf(File::isFile)?.let { propertiesFile ->
+                    Properties().also { properties ->
+                        propertiesFile.inputStream().use(properties::load)
+                    }
+                }
+            }
+            val requiredKeys = listOf("storeFile", "storePassword", "keyAlias", "keyPassword")
+            val missingKeys = requiredKeys.filter { signingProperties?.getProperty(it).isNullOrBlank() }
+            if (releaseSigningRequested && missingKeys.isNotEmpty()) {
+                error(
+                    "Release signing requires -PfmuSigningPropertiesFile=<owner-readable properties file> " +
+                        "with keys: ${requiredKeys.joinToString()}. Missing: ${missingKeys.joinToString()}"
+                )
+            }
+            val keystorePath = signingProperties?.getProperty("storeFile")
+            if (keystorePath != null) {
+                val keystore = file(keystorePath)
+                if (releaseSigningRequested && !keystore.isFile) {
+                    error("Release signing keystore does not exist: $keystorePath")
+                }
+                storeFile = keystore
+            }
+            signingProperties?.getProperty("storePassword")?.let { storePassword = it }
+            signingProperties?.getProperty("keyAlias")?.let { keyAlias = it }
+            signingProperties?.getProperty("keyPassword")?.let { keyPassword = it }
         }
     }
 

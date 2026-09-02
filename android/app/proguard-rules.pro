@@ -31,4 +31,4 @@
 -dontwarn org.checkerframework.**
 
 # Application Models
--keep class pk.edu.fmu.pgsims.core.model.** { *; }
+-keep class fmu.pg.sims.core.model.** { *; }
