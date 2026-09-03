@@ -169,9 +169,13 @@ def _set_resident_onboarding_field(user, field, value):
             user.first_name, user.last_name = names[0] if names else "", names[1] if len(names) > 1 else ""
         elif field == "phone":
             user.phone_number = value or ""
+            profile.phone = value or ""
+            profile.save(update_fields=["phone", "updated_at"])
         else:
             user.email = value or ""
-        user.save(update_fields=["first_name", "last_name", "phone_number", "email", "updated_at"])
+            profile.email = value or ""
+            profile.save(update_fields=["email", "updated_at"])
+        user.save(update_fields=["first_name", "last_name", "phone_number", "email"])
         return
     profile_fields = {"registration_no", "cnic"}
     if field in profile_fields:
@@ -514,13 +518,17 @@ class PendingSupervisorViewSet(viewsets.ModelViewSet):
         supervisor_id = request.data.get("supervisor_id")
         supervisor = SupervisorProfile.objects.filter(pk=supervisor_id, user__role="SUPERVISOR").first()
         if not supervisor: return Response({"detail": "Supervisor not found."}, status=400)
-        with transaction.atomic():
-            assignment = create_supervisor_assignment(resident=pending.resident, supervisor=supervisor, assignment_type="PRIMARY", start_date=date.today(), actor=request.user, notes="Resolved from pending supervisor request")
-            pending.status = PendingSupervisorAssignment.STATUS_RESOLVED
-            pending.resolved_supervisor = supervisor
-            pending.resolved_by = request.user
-            pending.resolved_at = timezone.now()
-            pending.save()
+        from django.core.exceptions import ValidationError
+        try:
+            with transaction.atomic():
+                assignment = create_supervisor_assignment(resident=pending.resident, supervisor=supervisor, assignment_type="PRIMARY", start_date=date.today(), actor=request.user, notes="Resolved from pending supervisor request")
+                pending.status = PendingSupervisorAssignment.STATUS_RESOLVED
+                pending.resolved_supervisor = supervisor
+                pending.resolved_by = request.user
+                pending.resolved_at = timezone.now()
+                pending.save()
+        except ValidationError as exc:
+            return Response({"detail": exc.messages if hasattr(exc, "messages") else str(exc)}, status=400)
         return Response({"pending_id": pending.id, "assignment_id": assignment.id, "status": pending.status})
 
     @action(detail=True, methods=["post"], url_path="create-supervisor")

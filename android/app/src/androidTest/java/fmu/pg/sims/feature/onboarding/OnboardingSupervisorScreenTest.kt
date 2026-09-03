@@ -4,6 +4,7 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTextInput
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import fmu.pg.sims.core.auth.AuthRepository
@@ -35,7 +36,7 @@ class OnboardingSupervisorScreenTest {
             SupervisionRepository(apiService),
             DocumentsRepository(apiService),
             authRepository,
-        )
+        ).also { it.load() }
     }
 
     @Test
@@ -71,9 +72,9 @@ class OnboardingSupervisorScreenTest {
         }
 
         composeTestRule.waitUntil(timeoutMillis = 5_000) { !viewModel.uiState.value.loading }
-        composeTestRule.onNodeWithTag(TestTags.ONBOARDING_SUPERVISOR_NOT_LISTED_TOGGLE).performClick()
-        composeTestRule.onNodeWithTag(TestTags.ONBOARDING_SUPERVISOR_MANUAL_NAME_FIELD).performTextInput("Dr. Off-Roster Person")
-        composeTestRule.onNodeWithTag(TestTags.ONBOARDING_SUPERVISOR_SUBMIT_REQUEST_BUTTON).performClick()
+        composeTestRule.onNodeWithTag(TestTags.ONBOARDING_SUPERVISOR_NOT_LISTED_TOGGLE).performScrollTo().performClick()
+        composeTestRule.onNodeWithTag(TestTags.ONBOARDING_SUPERVISOR_MANUAL_NAME_FIELD).performScrollTo().performTextInput("Dr. Off-Roster Person")
+        composeTestRule.onNodeWithTag(TestTags.ONBOARDING_SUPERVISOR_SUBMIT_REQUEST_BUTTON).performScrollTo().performClick()
 
         composeTestRule.waitUntil(timeoutMillis = 5_000) { viewModel.uiState.value.supervisorRequestSuccess }
         assertEquals("Dr. Off-Roster Person", pendingLinkRequestedName)
@@ -91,8 +92,8 @@ class OnboardingSupervisorScreenTest {
         }
 
         composeTestRule.waitUntil(timeoutMillis = 5_000) { !viewModel.uiState.value.loading }
-        composeTestRule.onNodeWithTag(TestTags.ONBOARDING_SUPERVISOR_NOT_LISTED_TOGGLE).performClick()
-        composeTestRule.onNodeWithTag(TestTags.ONBOARDING_SUPERVISOR_SUBMIT_REQUEST_BUTTON).performClick()
+        composeTestRule.onNodeWithTag(TestTags.ONBOARDING_SUPERVISOR_NOT_LISTED_TOGGLE).performScrollTo().performClick()
+        composeTestRule.onNodeWithTag(TestTags.ONBOARDING_SUPERVISOR_SUBMIT_REQUEST_BUTTON).performScrollTo().performClick()
 
         composeTestRule.onNodeWithText("Supervisor name is required.", substring = true).assertExists()
         assertTrue(!serverCalled)

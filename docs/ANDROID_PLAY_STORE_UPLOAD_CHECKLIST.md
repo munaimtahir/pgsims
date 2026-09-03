@@ -6,33 +6,36 @@
 - Developer: Vexel Consultants
 - Support email: contact@vexel.pk
 - Final package/application ID: `fmu.pg.sims`
-- Release artifact: locally signed Android App Bundle
-- Play App Signing: enroll the new application and retain the local upload key
+- Version Code: 2
+- Version Name: `0.2.0`
+- Target SDK: 36 (Android 16)
+- Min SDK: 26 (Android 8.0)
+- Release artifact: locally signed Android App Bundle (`android/app/build/outputs/bundle/release/app-release.aab`)
+- AAB SHA-256: `d336461153a0e06707598a25cb05ff5d0e6117297d255a3634d81aa7a936c20d`
+- APK SHA-256: `4d3934b7bebf44b9dc32ef9e4848f4545cc9a108a100bced20fb282d71702bc1`
+- Upload Key Fingerprint (SHA-256): `35:16:7F:22:5F:FF:61:55:54:80:07:07:EA:F1:54:F1:E6:55:B4:8F:0A:FE:0E:0A:68:48:E4:CC:EB:DD:44:B9`
+- Upload Certificate: `/home/munaim/.config/fmu-pg-sims/signing/fmu-pg-sims-upload-certificate.pem`
+- Play App Signing: enroll the application and retain the local upload key
 
 ## Play Console items to complete
 
-- Provide and verify the privacy policy URL; no URL is inferred by this repository.
-- Complete the Data Safety declaration from the final data flows and backend policy.
-- Complete App Access instructions when the functional login flow exists. Do not use
-  production resident credentials in source control.
-- Complete the content rating questionnaire.
-- Declare the target audience and age groups.
-- Declare whether the app contains ads.
-- Supply store listing assets and descriptions required by Play Console.
-- Configure internal-testing testers and release notes.
-- Complete any account-deletion declaration/page requirement applicable to the actual
-  account model.
-- Review and declare any permission-specific requirements shown by Play Console.
+- [ ] Provide and verify the privacy policy URL (external web host required).
+- [ ] Complete the Data Safety declaration (Network calls to `android.pgsims.alshifalab.pk`, personal info, documents uploaded).
+- [ ] Complete App Access instructions (Dedicated demo account credentials provided to Play Reviewers).
+- [ ] Complete the content rating questionnaire.
+- [ ] Declare target audience and age groups (18+ healthcare professionals).
+- [ ] Declare whether the app contains ads (No ads).
+- [ ] Supply store listing assets and descriptions (Hi-res icon 512x512, feature graphic 1024x500, phone screenshots).
+- [ ] Configure internal testing track and upload `app-release.aab`.
+- [ ] Complete account-deletion declaration/page URL requirement.
+- [ ] Declare declared permissions (`INTERNET`, `ACCESS_NETWORK_STATE`).
 
 ## Review-access preparation
 
-This foundation shell does not yet implement the functional login experience. Before
-review or broader testing, create a dedicated non-sensitive review account if App
-Access instructions require one, and manage its credentials outside Git.
+A functional login and resident onboarding experience is fully verified against the live production backend (`android.pgsims.alshifalab.pk`). For Play Console App Access review:
+- Create a dedicated non-sensitive review resident account using `seed_android_e2e_demo` or universal user creation (`/users/new`).
+- Provide instructions explaining the 4-role residency model, credential format, and temporary-to-new password change requirement on initial login.
 
 ## Signing distinction
 
-The locally retained key is the Google Play **upload key**. Google Play App Signing
-should manage the distribution **app-signing key** for this new application. The
-private upload keystore and its passwords are stored outside the repository and are
-not recorded here.
+The locally retained key is the Google Play **upload key** stored at `/home/munaim/.config/fmu-pg-sims/signing/fmu-pg-sims-upload.jks`. Google Play App Signing manages the distribution **app-signing key** in Google infrastructure.

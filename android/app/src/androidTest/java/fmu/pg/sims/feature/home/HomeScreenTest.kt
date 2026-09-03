@@ -37,7 +37,7 @@ class HomeScreenTest {
         ViewModelFactory(AppContainer(InstrumentationRegistry.getInstrumentation().targetContext))
 
     private fun buildHomeViewModel(apiService: FakeApiService): HomeViewModel {
-        val authRepository = AuthRepository(apiService, FakeTokenStorage())
+        val authRepository = AuthRepository(apiService, FakeTokenStorage(accessToken = "fake-access", refreshToken = "fake-refresh"))
         return HomeViewModel(authRepository, OnboardingRepository(apiService), TrainingRepository(apiService))
     }
 

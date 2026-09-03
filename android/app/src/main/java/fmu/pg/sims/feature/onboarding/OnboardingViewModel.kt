@@ -50,10 +50,6 @@ class OnboardingViewModel(
     private val _uiState = MutableStateFlow(OnboardingUiState())
     val uiState: StateFlow<OnboardingUiState> = _uiState.asStateFlow()
 
-    init {
-        load()
-    }
-
     fun load() {
         viewModelScope.launch {
             _uiState.update { it.copy(loading = true, loadError = null) }

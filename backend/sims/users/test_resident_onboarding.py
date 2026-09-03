@@ -257,3 +257,22 @@ class ResidentOnboardingReviewGateTests(TestCase):
         supervisor_client.force_authenticate(supervisor)
         response = supervisor_client.post(self._correction_url(resident), {"reason": "x"}, format="json")
         self.assertEqual(response.status_code, 403)
+
+    def test_patch_personal_info_updates_user_and_profile(self):
+        resident = self._make_resident(complete=False)
+        client = APIClient()
+        client.force_authenticate(resident)
+        response = client.patch(
+            "/api/auth/onboarding/",
+            {"fields": {"phone": "03009876543", "email": "updated@example.com", "full_name": "Updated Resident"}},
+            format="json",
+        )
+        self.assertEqual(response.status_code, 200)
+        resident.refresh_from_db()
+        resident.resident_profile.refresh_from_db()
+        self.assertEqual(resident.phone_number, "03009876543")
+        self.assertEqual(resident.email, "updated@example.com")
+        self.assertEqual(resident.first_name, "Updated")
+        self.assertEqual(resident.last_name, "Resident")
+        self.assertEqual(resident.resident_profile.phone, "03009876543")
+        self.assertEqual(resident.resident_profile.email, "updated@example.com")

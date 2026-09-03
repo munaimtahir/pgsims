@@ -73,6 +73,9 @@ fun PgsimsNavHost(viewModelFactory: ViewModelFactory) {
                 launchSingleTop = true
             }
         }
+        if (destination == SessionDestination.Onboarding) {
+            onboardingViewModel.load()
+        }
     }
 
     NavHost(navController = navController, startDestination = routeFor(destination)) {

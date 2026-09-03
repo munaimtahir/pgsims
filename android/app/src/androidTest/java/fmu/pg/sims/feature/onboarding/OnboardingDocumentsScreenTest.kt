@@ -39,7 +39,7 @@ class OnboardingDocumentsScreenTest {
             SupervisionRepository(apiService),
             DocumentsRepository(apiService),
             authRepository,
-        )
+        ).also { it.load() }
     }
 
     @Test

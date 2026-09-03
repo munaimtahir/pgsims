@@ -101,7 +101,7 @@ class OnboardingStatusScreensTest {
             SupervisionRepository(apiService),
             DocumentsRepository(apiService),
             authRepository,
-        )
+        ).also { it.load() }
         var resubmitted = false
 
         composeTestRule.setContent {

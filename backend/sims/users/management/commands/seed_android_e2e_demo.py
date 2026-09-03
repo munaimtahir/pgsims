@@ -16,7 +16,7 @@ from django.db import transaction
 from sims.academics.models import Department
 from sims.rotations.models import Hospital
 from sims.training.models import TrainingProgram
-from sims.users.models import SupervisorProfile, User
+from sims.users.models import ResidentDocumentRequirement, SupervisorProfile, User
 from sims.users.services import create_user_with_profile
 
 DEMO_PASSWORD = "AndroidDemo123!"
@@ -91,10 +91,35 @@ class Command(BaseCommand):
                     u.save(update_fields=["must_change_password"])
                 self.stdout.write(self.style.SUCCESS(f"  created: {spec['username']}"))
 
+            ResidentDocumentRequirement.objects.get_or_create(
+                document_type="CNIC",
+                defaults={
+                    "display_name": "CNIC Copy",
+                    "stage": ResidentDocumentRequirement.STAGE_ONBOARDING,
+                    "is_required": True,
+                    "is_active": True,
+                    "display_order": 1,
+                },
+            )
+            ResidentDocumentRequirement.objects.get_or_create(
+                document_type="PMDC_CERTIFICATE",
+                defaults={
+                    "display_name": "PMDC Registration Certificate",
+                    "stage": ResidentDocumentRequirement.STAGE_ONBOARDING,
+                    "is_required": True,
+                    "is_active": True,
+                    "display_order": 2,
+                },
+            )
+
         hospital = Hospital.objects.first()
         department = Department.objects.first()
         program = TrainingProgram.objects.first()
         supervisor_profile = SupervisorProfile.objects.filter(user__username="android.demo.supervisor").first()
+        if supervisor_profile and (not supervisor_profile.hospital or not supervisor_profile.department_ref):
+            supervisor_profile.hospital = hospital
+            supervisor_profile.department_ref = department
+            supervisor_profile.save(update_fields=["hospital", "department_ref", "updated_at"])
 
         self.stdout.write("")
         self.stdout.write(self.style.SUCCESS("Android E2E demo accounts ready:"))

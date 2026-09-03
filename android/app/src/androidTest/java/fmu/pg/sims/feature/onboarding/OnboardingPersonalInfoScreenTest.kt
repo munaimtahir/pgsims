@@ -35,7 +35,7 @@ class OnboardingPersonalInfoScreenTest {
             SupervisionRepository(apiService),
             DocumentsRepository(apiService),
             authRepository,
-        )
+        ).also { it.load() }
     }
 
     @Test

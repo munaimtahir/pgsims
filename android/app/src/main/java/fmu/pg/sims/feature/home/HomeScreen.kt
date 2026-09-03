@@ -45,7 +45,7 @@ fun HomeScreen(
         else -> {
             val me = uiState.me
             val onboarding = uiState.onboarding
-            val outstandingCount = onboarding?.pendingUploadCount ?: 0
+            val outstandingCount = maxOf(me?.pendingUploadCount ?: 0, onboarding?.pendingUploadCount ?: 0)
 
             Column(
                 modifier = Modifier

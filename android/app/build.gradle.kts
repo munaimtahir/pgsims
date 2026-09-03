@@ -24,7 +24,7 @@ android {
             useSupportLibrary = true
         }
 
-        buildConfigField("String", "DEFAULT_API_BASE_URL", "\"https://api.pgsims.alshifalab.pk/\"")
+        buildConfigField("String", "DEFAULT_API_BASE_URL", "\"https://android.pgsims.alshifalab.pk/\"")
     }
 
     signingConfigs {

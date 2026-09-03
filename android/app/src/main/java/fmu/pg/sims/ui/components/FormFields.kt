@@ -60,10 +60,17 @@ fun DropdownField(
             onValueChange = {},
             readOnly = true,
             label = { Text(if (required) "$label *" else label) },
-            trailingIcon = { Icon(Icons.Default.ArrowDropDown, contentDescription = null) },
+            trailingIcon = {
+                IconButton(onClick = { expanded = true }) {
+                    Icon(Icons.Default.ArrowDropDown, contentDescription = "Select $label")
+                }
+            },
+            modifier = Modifier.fillMaxWidth(),
+        )
+        Box(
             modifier = Modifier
-                .fillMaxWidth()
-                .clickable { expanded = true },
+                .matchParentSize()
+                .clickable { expanded = true }
         )
         DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
             if (options.isEmpty()) {
@@ -92,36 +99,43 @@ fun DateField(
 ) {
     val context = LocalContext.current
     val calendar = remember { Calendar.getInstance() }
-
-    OutlinedTextField(
-        value = value,
-        onValueChange = {},
-        readOnly = true,
-        label = { Text(if (required) "$label *" else label) },
-        placeholder = { Text("YYYY-MM-DD") },
-        trailingIcon = {
-            IconButton(onClick = {
-                if (value.length == 10) {
-                    runCatching {
-                        val (y, m, d) = value.split("-").map { it.toInt() }
-                        calendar.set(y, m - 1, d)
-                    }
-                }
-                DatePickerDialog(
-                    context,
-                    { _, year, month, dayOfMonth ->
-                        onValueChange("%04d-%02d-%02d".format(year, month + 1, dayOfMonth))
-                    },
-                    calendar.get(Calendar.YEAR),
-                    calendar.get(Calendar.MONTH),
-                    calendar.get(Calendar.DAY_OF_MONTH),
-                ).show()
-            }) {
-                Icon(Icons.Default.CalendarToday, contentDescription = "Pick date")
+    val openPicker = {
+        if (value.length == 10) {
+            runCatching {
+                val (y, m, d) = value.split("-").map { it.toInt() }
+                calendar.set(y, m - 1, d)
             }
-        },
-        modifier = modifier
-            .fillMaxWidth()
-            .clickable { },
-    )
+        }
+        DatePickerDialog(
+            context,
+            { _, year, month, dayOfMonth ->
+                onValueChange("%04d-%02d-%02d".format(year, month + 1, dayOfMonth))
+            },
+            calendar.get(Calendar.YEAR),
+            calendar.get(Calendar.MONTH),
+            calendar.get(Calendar.DAY_OF_MONTH),
+        ).show()
+    }
+
+    Box(modifier = modifier.fillMaxWidth()) {
+        OutlinedTextField(
+            value = value,
+            onValueChange = {},
+            readOnly = true,
+            label = { Text(if (required) "$label *" else label) },
+            placeholder = { Text("YYYY-MM-DD") },
+            trailingIcon = {
+                IconButton(onClick = openPicker) {
+                    Icon(Icons.Default.CalendarToday, contentDescription = "Pick date")
+                }
+            },
+            modifier = Modifier.fillMaxWidth(),
+        )
+        Box(
+            modifier = Modifier
+                .matchParentSize()
+                .clickable(onClick = openPicker)
+        )
+    }
 }
+
