@@ -64,3 +64,63 @@ The final cleanup retains `User.supervisor` as deprecated compatibility data; no
 or supervision business logic reads or writes it. `User.home_hospital`, `User.home_department`,
 `User.registration_number`, and `User.phone_number` are likewise retained compatibility fields.
 The repository has no `compose.yml`, so the requested Docker compose validation is not applicable.
+
+## Profile-level review gate (added 2026-09-02, Resident Onboarding MVP / Android)
+
+Before this addition, `ResidentProfile.profile_status` (`INCOMPLETE`/`COMPLETE`) was purely a
+computed required-field-completeness flag with no administrative review step: a resident's
+`onboarding_complete` flag (`is_profile_complete AND declaration_accepted`) became true entirely
+from the resident's own actions, with no admin "approve" or "request correction" gate on the
+profile as a whole (per-document review via `ResidentDocument.status` already existed and is
+unchanged). This is now closed additively:
+
+- New fields on `ResidentProfile`: `review_status` (`NOT_SUBMITTED` / `PENDING_REVIEW` /
+  `APPROVED` / `CORRECTION_REQUIRED`, migration `users.0015`), `review_note`, `submitted_at`,
+  `reviewed_by`, `reviewed_at`. Tracked by the existing `HistoricalRecords()` on `ResidentProfile`
+  — no parallel audit system was introduced.
+- `POST /api/resident-onboarding/state/` (the existing declaration-accept "submit" action) now
+  requires `user.is_profile_complete` (400 if not) and rejects re-submission once
+  `review_status == APPROVED` (409). On success it sets `review_status = PENDING_REVIEW` and
+  `submitted_at`; an `ActivityLog` verb of `ONBOARDING_RESUBMITTED` (vs. `ONBOARDING_COMPLETED` for
+  a first submission) is recorded when resubmitting from `CORRECTION_REQUIRED`.
+- New admin-only actions on the existing `ResidentProfileViewSet`
+  (`permission: _is_manager`, i.e. superuser or `role=ADMIN` — same check already used for
+  create/update/destroy on this viewset):
+  - `POST /api/residents/<user_id>/approve-onboarding/` — requires `review_status == PENDING_REVIEW`
+    (409 otherwise), sets `APPROVED` + `reviewed_by`/`reviewed_at`.
+  - `POST /api/residents/<user_id>/request-onboarding-correction/` — requires a non-empty `reason`
+    (400 otherwise) and `review_status` currently `PENDING_REVIEW` or `CORRECTION_REQUIRED` (409
+    otherwise); sets `CORRECTION_REQUIRED`, stores `reason` in `review_note`, resets
+    `declaration_accepted = False` (so the existing `onboarding_complete`/`allowed_next_route`
+    routing logic remains unchanged and correctly sends the resident back through onboarding
+    without needing its own edit).
+  - Both actions record an `ActivityLog` entry (`ONBOARDING_APPROVED` /
+    `ONBOARDING_CORRECTION_REQUESTED`) and are covered by
+    `sims/users/test_resident_onboarding.py::ResidentOnboardingReviewGateTests` (resident
+    self-approval, cross-resident approval, unassigned-supervisor correction requests, and
+    incomplete/duplicate submission are all explicitly denied).
+- `get_resident_onboarding_state()` (`sims/users/onboarding_api.py`) now returns `review_status`,
+  `review_note`, `submitted_at`, `reviewed_at`; `AuthMeView` surfaces the same as
+  `onboarding_review_status`, `onboarding_review_note`, `onboarding_submitted_at`,
+  `onboarding_reviewed_at`. `ResidentProfileSerializer` exposes all five new fields read-only.
+- Deliberately unchanged: `onboarding_complete` and `allowed_next_route` keep their existing
+  meaning (profile-complete + declaration-accepted), so existing web behavior is not gated on
+  admin approval — a resident still reaches the dashboard as soon as they complete and declare,
+  exactly as before. `review_status` is an additive signal for the Android resident-onboarding MVP
+  to show Pending Review / Correction Required / Approved screens distinctly from that existing
+  boolean; it does not currently gate web dashboard access. Revisit if web onboarding UX is later
+  changed to require admin approval before dashboard access.
+
+Also fixed in this pass: `sims_project/wsgi.py` previously wrapped the production WSGI app with
+`WhiteNoise(...).add_files(BASE_DIR / 'media', prefix='/media/')`, which serves files straight from
+the WSGI layer with no authentication — bypassing Django's URL routing and therefore
+`ResidentDocumentViewSet`'s ownership/role checks entirely. The trigger condition
+(`os.environ.get('DJANGO_DEBUG', 'True')`) also referenced the wrong environment variable (the
+actual settings flag is `DEBUG`), so the vulnerable branch happened to never fire under the current
+deployment's real env (`DEBUG=False`, `DJANGO_DEBUG` unset) — but it is live and exploitable the
+moment anyone sets the more conventional `DJANGO_DEBUG` name, and the mismatch made the code's own
+intent (skip WhiteNoise costs only in real dev) silently not work either. Fixed by removing the
+`add_files` call for `media/` entirely and switching the check to the real `DEBUG` variable, with a
+regression test at `sims_project/tests.py::WsgiMediaExposureTests` that loads the WSGI app under a
+simulated production environment and asserts a resident-document path is neither registered with
+WhiteNoise nor servable.

@@ -66,8 +66,19 @@ The backend remains authoritative for:
 11. M8 — notifications/compliance
 12. M9 — hardening/release
 
-## Immediate next action
+## Status as of 2026-09-03
 
-Run the Phase M0 discovery prompt after the scaffold and docs are established.
+M0 (API readiness discovery) through M6 (resident post-onboarding experience) are implemented —
+see `docs/implementation/20260903_resident_onboarding_android_mvp/FINAL_IMPLEMENTATION_REPORT.md`
+for the full account. Login, the complete onboarding wizard (personal info, training/enrollment,
+supervisor, documents, review & submit), the pending-review/correction-required/approved states,
+and a 4-tab post-approval Home (Home/Training/Documents/Profile) are all real, wired to the
+canonical backend — no mock data, no Android-only state machine. `versionCode` is now 2 /
+`0.2.0`. A **debug** APK was built and its data flows verified live against the real backend
+(login, save/resume, document upload, submit, admin correction, resubmit, admin approval, all
+authorization boundaries); on-device/emulator UI verification is still outstanding because this
+build environment has no working Android emulator (no KVM) — that must happen on a machine with
+a real device or working emulator before a signed release build.
 
-Do not begin broad Android implementation before M0 reports the existing API architecture and produces a GO / CONDITIONAL GO / NO-GO verdict.
+M7 (minimal supervisor/staff views), M8 (notifications), and M9 (release hardening/signed AAB) are
+still outstanding — signing happens on a separate machine that holds the release keystore.
