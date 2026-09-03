@@ -9,22 +9,21 @@ plugins {
 }
 
 android {
-    namespace = "fmu.pg.sims"
+    namespace = "pk.vexel.pgrcompanion"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "fmu.pg.sims"
+        applicationId = "pk.vexel.pgrcompanion"
         minSdk = 26
         targetSdk = 36
-        versionCode = 2
-        versionName = "0.2.0"
+        versionCode = 1
+        versionName = "1.0.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
             useSupportLibrary = true
         }
 
-        buildConfigField("String", "DEFAULT_API_BASE_URL", "\"https://android.pgsims.alshifalab.pk/\"")
     }
 
     signingConfigs {
@@ -108,7 +107,6 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.navigation.compose)
-    implementation(libs.androidx.security.crypto)
 
     implementation(platform(libs.compose.bom))
     implementation(libs.compose.ui)
@@ -117,10 +115,6 @@ dependencies {
     implementation(libs.compose.material3)
     implementation(libs.compose.material.icons)
 
-    implementation(libs.retrofit.core)
-    implementation(libs.retrofit.kotlinx.serialization)
-    implementation(libs.okhttp.core)
-    implementation(libs.okhttp.logging)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.coroutines.android)
@@ -134,3 +128,8 @@ dependencies {
     debugImplementation(libs.compose.ui.tooling)
     debugImplementation(libs.compose.ui.test.manifest)
 }
+
+// The institutional foundation remains in Git history, but is not part of this
+// independent offline product or its APK/AAB.
+android.sourceSets["main"].java.exclude("fmu/pg/sims/**")
+android.sourceSets["androidTest"].java.exclude("fmu/pg/sims/**")
