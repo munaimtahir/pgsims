@@ -19,11 +19,13 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import fmu.pg.sims.core.designsystem.FmuStatusAmber
 import fmu.pg.sims.core.designsystem.FmuStatusRed
 import fmu.pg.sims.core.designsystem.FmuStatusRedBg
+import fmu.pg.sims.ui.TestTags
 
 @Composable
 fun OnboardingPendingReviewScreen(onLogout: () -> Unit, onRefresh: () -> Unit) {
@@ -45,9 +47,15 @@ fun OnboardingPendingReviewScreen(onLogout: () -> Unit, onRefresh: () -> Unit) {
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         Spacer(modifier = Modifier.height(32.dp))
-        Button(onClick = onRefresh, modifier = Modifier.fillMaxWidth()) { Text("Check Status") }
+        Button(
+            onClick = onRefresh,
+            modifier = Modifier.fillMaxWidth().testTag(TestTags.PENDING_REVIEW_REFRESH_BUTTON),
+        ) { Text("Check Status") }
         Spacer(modifier = Modifier.height(8.dp))
-        Button(onClick = onLogout, modifier = Modifier.fillMaxWidth()) { Text("Sign Out") }
+        Button(
+            onClick = onLogout,
+            modifier = Modifier.fillMaxWidth().testTag(TestTags.PENDING_REVIEW_SIGN_OUT_BUTTON),
+        ) { Text("Sign Out") }
     }
 }
 
@@ -78,12 +86,18 @@ fun OnboardingCorrectionRequiredScreen(
             Text(
                 text = reviewNote.ifBlank { "No reason was provided." },
                 color = FmuStatusRed,
-                modifier = Modifier.padding(16.dp),
+                modifier = Modifier.padding(16.dp).testTag(TestTags.CORRECTION_REQUIRED_REVIEW_NOTE),
             )
         }
         Spacer(modifier = Modifier.height(32.dp))
-        Button(onClick = onFixNow, modifier = Modifier.fillMaxWidth()) { Text("Review & Fix") }
+        Button(
+            onClick = onFixNow,
+            modifier = Modifier.fillMaxWidth().testTag(TestTags.CORRECTION_REQUIRED_FIX_NOW_BUTTON),
+        ) { Text("Review & Fix") }
         Spacer(modifier = Modifier.height(8.dp))
-        Button(onClick = onLogout, modifier = Modifier.fillMaxWidth()) { Text("Sign Out") }
+        Button(
+            onClick = onLogout,
+            modifier = Modifier.fillMaxWidth().testTag(TestTags.CORRECTION_REQUIRED_SIGN_OUT_BUTTON),
+        ) { Text("Sign Out") }
     }
 }

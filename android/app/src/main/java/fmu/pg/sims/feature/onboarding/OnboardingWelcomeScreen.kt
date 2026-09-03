@@ -15,8 +15,10 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import fmu.pg.sims.ui.TestTags
 import fmu.pg.sims.ui.components.ErrorRetryView
 import fmu.pg.sims.ui.components.FullScreenLoading
 
@@ -56,7 +58,10 @@ fun OnboardingWelcomeScreen(
                     )
                 }
                 Spacer(modifier = Modifier.height(32.dp))
-                Button(onClick = onStart, modifier = Modifier.fillMaxWidth()) {
+                Button(
+                    onClick = onStart,
+                    modifier = Modifier.fillMaxWidth().testTag(TestTags.ONBOARDING_WELCOME_START_BUTTON),
+                ) {
                     Text(if (missing.isEmpty()) "Continue" else "Get Started")
                 }
             }

@@ -21,6 +21,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -34,6 +35,7 @@ fun OnboardingStepScaffold(
     primaryEnabled: Boolean,
     primaryLoading: Boolean,
     onPrimaryClick: () -> Unit,
+    primaryTestTag: String? = null,
     content: @Composable () -> Unit,
 ) {
     Scaffold(
@@ -68,7 +70,9 @@ fun OnboardingStepScaffold(
                 Button(
                     onClick = onPrimaryClick,
                     enabled = primaryEnabled && !primaryLoading,
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth().let { m ->
+                        if (primaryTestTag != null) m.testTag(primaryTestTag) else m
+                    },
                 ) {
                     if (primaryLoading) {
                         CircularProgressIndicator(modifier = Modifier.padding(2.dp), strokeWidth = 2.dp)

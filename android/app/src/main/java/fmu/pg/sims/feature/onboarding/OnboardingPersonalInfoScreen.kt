@@ -3,6 +3,9 @@ package fmu.pg.sims.feature.onboarding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
+import fmu.pg.sims.ui.TestTags
 import fmu.pg.sims.ui.components.ErrorRetryView
 import fmu.pg.sims.ui.components.FullScreenLoading
 import fmu.pg.sims.ui.components.InlineErrorBanner
@@ -35,24 +38,28 @@ fun OnboardingPersonalInfoScreen(
                 primaryEnabled = true,
                 primaryLoading = uiState.saving,
                 onPrimaryClick = { viewModel.saveFields(PERSONAL_FIELDS) { success -> if (success) onNext() } },
+                primaryTestTag = TestTags.ONBOARDING_PERSONAL_PRIMARY_BUTTON,
             ) {
                 LabeledTextField(
                     label = fieldMeta["full_name"]?.label ?: "Full name",
                     value = uiState.fieldValues["full_name"] ?: "",
                     onValueChange = { viewModel.setFieldValue("full_name", it) },
                     required = fieldMeta["full_name"]?.required ?: true,
+                    modifier = Modifier.testTag(TestTags.ONBOARDING_PERSONAL_FULL_NAME_FIELD),
                 )
                 LabeledTextField(
                     label = fieldMeta["phone"]?.label ?: "Contact number",
                     value = uiState.fieldValues["phone"] ?: "",
                     onValueChange = { viewModel.setFieldValue("phone", it) },
                     required = fieldMeta["phone"]?.required ?: true,
+                    modifier = Modifier.testTag(TestTags.ONBOARDING_PERSONAL_PHONE_FIELD),
                 )
                 LabeledTextField(
                     label = fieldMeta["email"]?.label ?: "Email",
                     value = uiState.fieldValues["email"] ?: "",
                     onValueChange = { viewModel.setFieldValue("email", it) },
                     required = fieldMeta["email"]?.required ?: true,
+                    modifier = Modifier.testTag(TestTags.ONBOARDING_PERSONAL_EMAIL_FIELD),
                 )
                 LabeledTextField(
                     label = fieldMeta["registration_no"]?.label ?: "Registration number",

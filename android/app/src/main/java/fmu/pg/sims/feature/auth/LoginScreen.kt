@@ -31,6 +31,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -39,6 +40,7 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import fmu.pg.sims.R
 import fmu.pg.sims.core.model.AuthMeResponse
+import fmu.pg.sims.ui.TestTags
 import fmu.pg.sims.ui.components.InlineErrorBanner
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -85,7 +87,7 @@ fun LoginScreen(
             label = { Text("Username") },
             singleLine = true,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth().testTag(TestTags.LOGIN_USERNAME_FIELD),
             enabled = !isLoading,
         )
         Spacer(modifier = Modifier.height(12.dp))
@@ -104,7 +106,7 @@ fun LoginScreen(
                     )
                 }
             },
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth().testTag(TestTags.LOGIN_PASSWORD_FIELD),
             enabled = !isLoading,
         )
 
@@ -118,7 +120,7 @@ fun LoginScreen(
         Button(
             onClick = { viewModel.login(username, password, onLoginSuccess) },
             enabled = !isLoading,
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth().testTag(TestTags.LOGIN_SUBMIT_BUTTON),
         ) {
             if (isLoading) {
                 CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)

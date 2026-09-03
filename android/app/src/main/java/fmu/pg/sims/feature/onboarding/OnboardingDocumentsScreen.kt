@@ -8,6 +8,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.unit.dp
+import fmu.pg.sims.ui.TestTags
 import fmu.pg.sims.ui.components.DocumentRow
 import fmu.pg.sims.ui.components.ErrorRetryView
 import fmu.pg.sims.ui.components.FullScreenLoading
@@ -35,6 +36,7 @@ fun OnboardingDocumentsScreen(
                 primaryEnabled = true,
                 primaryLoading = false,
                 onPrimaryClick = onNext,
+                primaryTestTag = TestTags.ONBOARDING_DOCUMENTS_PRIMARY_BUTTON,
             ) {
                 if (uiState.documents.isEmpty()) {
                     Text(

@@ -18,6 +18,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -26,6 +27,7 @@ import fmu.pg.sims.core.designsystem.FmuStatusAmber
 import fmu.pg.sims.core.designsystem.FmuStatusAmberBg
 import fmu.pg.sims.core.designsystem.FmuStatusGreen
 import fmu.pg.sims.core.designsystem.FmuStatusGreenBg
+import fmu.pg.sims.ui.TestTags
 import fmu.pg.sims.ui.components.ErrorRetryView
 import fmu.pg.sims.ui.components.FullScreenLoading
 
@@ -55,7 +57,11 @@ fun HomeScreen(
                 Text(text = "Welcome back, ${me?.username ?: ""}", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
 
                 if (outstandingCount > 0) {
-                    Surface(shape = RoundedCornerShape(12.dp), color = FmuStatusAmberBg, modifier = Modifier.fillMaxWidth()) {
+                    Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = FmuStatusAmberBg,
+                        modifier = Modifier.fillMaxWidth().testTag(TestTags.HOME_OUTSTANDING_BANNER),
+                    ) {
                         Column(modifier = Modifier.padding(16.dp)) {
                             Text(text = "ACTION REQUIRED", color = FmuStatusAmber, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelLarge)
                             Text(
@@ -63,13 +69,20 @@ fun HomeScreen(
                                 color = FmuStatusAmber,
                                 style = MaterialTheme.typography.bodyMedium,
                             )
-                            Button(onClick = onGoToDocuments, modifier = Modifier.padding(top = 8.dp)) {
+                            Button(
+                                onClick = onGoToDocuments,
+                                modifier = Modifier.padding(top = 8.dp).testTag(TestTags.HOME_UPLOAD_DOCUMENTS_BUTTON),
+                            ) {
                                 Text("Upload Documents")
                             }
                         }
                     }
                 } else {
-                    Surface(shape = RoundedCornerShape(12.dp), color = FmuStatusGreenBg, modifier = Modifier.fillMaxWidth()) {
+                    Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = FmuStatusGreenBg,
+                        modifier = Modifier.fillMaxWidth().testTag(TestTags.HOME_ALL_COMPLETE_BANNER),
+                    ) {
                         Text(
                             text = "All required documents are complete.",
                             color = FmuStatusGreen,

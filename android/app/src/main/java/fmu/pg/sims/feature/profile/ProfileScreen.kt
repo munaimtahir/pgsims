@@ -16,11 +16,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import fmu.pg.sims.core.ViewModelFactory
 import fmu.pg.sims.feature.home.HomeViewModel
+import fmu.pg.sims.ui.TestTags
 import fmu.pg.sims.ui.components.ErrorRetryView
 import fmu.pg.sims.ui.components.FullScreenLoading
 
@@ -52,7 +54,10 @@ fun ProfileScreen(
                         ProfileRow(label = "Onboarding status", value = me?.effectiveReviewStatus ?: "")
                     }
                 }
-                Button(onClick = onLogout, modifier = Modifier.fillMaxWidth()) { Text("Sign Out") }
+                Button(
+                    onClick = onLogout,
+                    modifier = Modifier.fillMaxWidth().testTag(TestTags.PROFILE_SIGN_OUT_BUTTON),
+                ) { Text("Sign Out") }
             }
         }
     }

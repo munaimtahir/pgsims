@@ -3,7 +3,10 @@ package fmu.pg.sims.feature.onboarding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import fmu.pg.sims.core.model.IdentityOptionsResponse
+import fmu.pg.sims.ui.TestTags
 import fmu.pg.sims.ui.components.DateField
 import fmu.pg.sims.ui.components.DropdownField
 import fmu.pg.sims.ui.components.ErrorRetryView
@@ -42,6 +45,7 @@ fun OnboardingTrainingScreen(
                 primaryEnabled = true,
                 primaryLoading = uiState.saving,
                 onPrimaryClick = { viewModel.saveFields(TRAINING_FIELDS) { success -> if (success) onNext() } },
+                primaryTestTag = TestTags.ONBOARDING_TRAINING_PRIMARY_BUTTON,
             ) {
                 DropdownField(
                     label = fieldMeta["hospital"]?.label ?: "Hospital / training site",
@@ -49,6 +53,7 @@ fun OnboardingTrainingScreen(
                     selectedId = uiState.fieldValues["hospital"] ?: "",
                     onSelect = { viewModel.setFieldValue("hospital", it.id) },
                     required = fieldMeta["hospital"]?.required ?: true,
+                    modifier = Modifier.testTag(TestTags.ONBOARDING_TRAINING_HOSPITAL_DROPDOWN),
                 )
                 DropdownField(
                     label = fieldMeta["department_ref"]?.label ?: "Department",
@@ -95,6 +100,7 @@ fun OnboardingTrainingScreen(
                     value = uiState.fieldValues["current_level"] ?: "",
                     onValueChange = { viewModel.setFieldValue("current_level", it) },
                     required = fieldMeta["current_level"]?.required ?: true,
+                    modifier = Modifier.testTag(TestTags.ONBOARDING_TRAINING_CURRENT_LEVEL_FIELD),
                 )
                 LabeledTextField(
                     label = fieldMeta["notes"]?.label ?: "Training notes",

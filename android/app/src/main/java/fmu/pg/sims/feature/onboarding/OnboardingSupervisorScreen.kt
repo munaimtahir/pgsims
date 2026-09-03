@@ -22,11 +22,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import fmu.pg.sims.core.designsystem.FmuStatusGreen
 import fmu.pg.sims.core.designsystem.FmuStatusGreenBg
 import fmu.pg.sims.core.model.SupervisorOption
+import fmu.pg.sims.ui.TestTags
 import fmu.pg.sims.ui.components.ErrorRetryView
 import fmu.pg.sims.ui.components.FullScreenLoading
 import fmu.pg.sims.ui.components.InlineErrorBanner
@@ -68,6 +70,7 @@ fun OnboardingSupervisorScreen(
                 primaryEnabled = true,
                 primaryLoading = false,
                 onPrimaryClick = onNext,
+                primaryTestTag = TestTags.ONBOARDING_SUPERVISOR_PRIMARY_BUTTON,
             ) {
                 when {
                     supervisorStatus == "ASSIGNED" -> Surface(
@@ -97,7 +100,12 @@ fun OnboardingSupervisorScreen(
                             text = "Search for your supervisor by name, department, or training site.",
                             style = MaterialTheme.typography.bodyMedium,
                         )
-                        LabeledTextField(label = "Search supervisors", value = query, onValueChange = { query = it })
+                        LabeledTextField(
+                            label = "Search supervisors",
+                            value = query,
+                            onValueChange = { query = it },
+                            modifier = Modifier.testTag(TestTags.ONBOARDING_SUPERVISOR_SEARCH_FIELD),
+                        )
 
                         val filtered = uiState.allSupervisors.filter {
                             query.isBlank() ||
@@ -125,12 +133,21 @@ fun OnboardingSupervisorScreen(
                             }
                         }
 
-                        TextButton(onClick = { showNotListedForm = !showNotListedForm }) {
+                        TextButton(
+                            onClick = { showNotListedForm = !showNotListedForm },
+                            modifier = Modifier.testTag(TestTags.ONBOARDING_SUPERVISOR_NOT_LISTED_TOGGLE),
+                        ) {
                             Text(if (showNotListedForm) "Cancel" else "My supervisor is not listed")
                         }
 
                         if (showNotListedForm) {
-                            LabeledTextField(label = "Supervisor's full name", value = manualName, onValueChange = { manualName = it }, required = true)
+                            LabeledTextField(
+                                label = "Supervisor's full name",
+                                value = manualName,
+                                onValueChange = { manualName = it },
+                                required = true,
+                                modifier = Modifier.testTag(TestTags.ONBOARDING_SUPERVISOR_MANUAL_NAME_FIELD),
+                            )
                             LabeledTextField(label = "Department", value = manualDepartment, onValueChange = { manualDepartment = it })
                             LabeledTextField(label = "Institution", value = manualInstitution, onValueChange = { manualInstitution = it })
                             LabeledTextField(label = "PMDC number", value = manualPmdc, onValueChange = { manualPmdc = it })
@@ -146,7 +163,7 @@ fun OnboardingSupervisorScreen(
                                     }
                                 },
                                 enabled = !uiState.supervisorRequestSubmitting,
-                                modifier = Modifier.fillMaxWidth(),
+                                modifier = Modifier.fillMaxWidth().testTag(TestTags.ONBOARDING_SUPERVISOR_SUBMIT_REQUEST_BUTTON),
                             ) { Text("Submit Request") }
                         }
 
@@ -180,7 +197,11 @@ private fun SupervisorCard(option: SupervisorOption, submitting: Boolean, onSele
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
-            OutlinedButton(onClick = onSelect, enabled = !submitting) { Text("Select") }
+            OutlinedButton(
+                onClick = onSelect,
+                enabled = !submitting,
+                modifier = Modifier.testTag(TestTags.supervisorSelectButton(option.id)),
+            ) { Text("Select") }
         }
     }
 }

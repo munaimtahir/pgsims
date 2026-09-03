@@ -19,6 +19,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import fmu.pg.sims.core.copyUriToCacheFile
@@ -33,6 +34,7 @@ import fmu.pg.sims.core.designsystem.FmuTextSecondary
 import fmu.pg.sims.core.mimeTypeFor
 import fmu.pg.sims.core.model.DocumentStatus
 import fmu.pg.sims.core.model.ResidentDocumentDto
+import fmu.pg.sims.ui.TestTags
 
 @Composable
 fun DocumentRow(
@@ -76,12 +78,16 @@ fun DocumentRow(
                     CircularProgressIndicator(modifier = Modifier.padding(4.dp))
                 } else {
                     if (document.status != DocumentStatus.VERIFIED) {
-                        OutlinedButton(onClick = {
-                            launcher.launch(arrayOf("image/*", "application/pdf"))
-                        }) { Text("Upload") }
+                        OutlinedButton(
+                            onClick = { launcher.launch(arrayOf("image/*", "application/pdf")) },
+                            modifier = Modifier.testTag(TestTags.documentUploadButton(document.id)),
+                        ) { Text("Upload") }
                     }
                     if (document.status == DocumentStatus.NOT_STARTED) {
-                        TextButton(onClick = onDefer) { Text("Complete Later") }
+                        TextButton(
+                            onClick = onDefer,
+                            modifier = Modifier.testTag(TestTags.documentDeferButton(document.id)),
+                        ) { Text("Complete Later") }
                     }
                 }
             }

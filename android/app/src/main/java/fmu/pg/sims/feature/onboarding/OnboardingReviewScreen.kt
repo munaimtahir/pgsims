@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import fmu.pg.sims.core.designsystem.FmuStatusAmber
 import fmu.pg.sims.core.designsystem.FmuStatusGreen
 import fmu.pg.sims.core.model.ReviewStatus
+import fmu.pg.sims.ui.TestTags
 import fmu.pg.sims.ui.components.ErrorRetryView
 import fmu.pg.sims.ui.components.FullScreenLoading
 import fmu.pg.sims.ui.components.InlineErrorBanner
@@ -59,6 +60,7 @@ fun OnboardingReviewScreen(
                 primaryEnabled = profileComplete,
                 primaryLoading = uiState.submitting,
                 onPrimaryClick = viewModel::submit,
+                primaryTestTag = TestTags.ONBOARDING_REVIEW_SUBMIT_BUTTON,
             ) {
                 ReviewRow(
                     ok = profileComplete,
