@@ -20,12 +20,19 @@
 ## Play Console items to complete
 
 - [ ] Provide and verify the privacy policy URL (external web host required).
-- [ ] Complete the Data Safety declaration (Network calls to `android.pgsims.alshifalab.pk`, personal info, documents uploaded).
+- [x] Complete the Data Safety declaration — filled and ready to import: `docs/ANDROID_DATA_SAFETY_FILLED.csv`
+      (Play Console → App content → Data safety → Import). Human-readable rationale and a
+      suggested privacy-policy data paragraph in `docs/ANDROID_DATA_SAFETY_POLICY.md`. **Open
+      item within that doc**: the app currently has no self-service data-deletion path — decide
+      whether to leave the honest "No" answer or add an admin-contact process before publishing.
 - [ ] Complete App Access instructions (Dedicated demo account credentials provided to Play Reviewers).
 - [ ] Complete the content rating questionnaire.
 - [ ] Declare target audience and age groups (18+ healthcare professionals).
 - [ ] Declare whether the app contains ads (No ads).
-- [ ] Supply store listing assets and descriptions (Hi-res icon 512x512, feature graphic 1024x500, phone screenshots).
+- [x] Phone screenshots captured: `store_listing_screenshots/01_login.png`, `02_home.png`,
+      `03_documents.png` (1080×1920, taken from the actual signed release build against the live
+      production backend).
+- [ ] Supply remaining store listing assets and descriptions (hi-res icon 512×512, feature graphic 1024×500).
 - [ ] Configure internal testing track and upload `app-release.aab`.
 - [ ] Complete account-deletion declaration/page URL requirement.
 - [ ] Declare declared permissions (`INTERNET`, `ACCESS_NETWORK_STATE`).
