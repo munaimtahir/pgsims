@@ -197,20 +197,30 @@ def change_primary_view(request):
 @api_view(["GET"])
 @permission_classes([permissions.IsAuthenticated])
 def supervision_options_view(request):
-    """Lists eligible residents and supervisors filtered dynamically for assignment forms."""
+    """Lists eligible residents and supervisors filtered dynamically for assignment forms.
+
+    The `residents` list carries cross-resident PII (name, username, department, programme,
+    session, supervision status) and is only needed by the admin assignment-form UI
+    (`/supervision/assignments/*`). Non-admin callers (residents searching for their own
+    supervisor, e.g. the Android onboarding flow) only ever need `supervisors` — so `residents`
+    is only populated for ADMIN, never handed to a resident/supervisor caller.
+    """
     qp = request.query_params
     training_site_id = qp.get("training_site_id")
     department_id = qp.get("department_id")
     only_unassigned = qp.get("only_unassigned_residents") in ["true", "1"]
+    include_residents = request.user.role == "ADMIN"
 
-    # Filter residents
-    residents = ResidentProfile.objects.select_related(
-        "user", "hospital", "department_ref", "program_ref", "academic_session_ref"
-    )
-    if training_site_id:
-        residents = residents.filter(hospital_id=training_site_id)
-    if department_id:
-        residents = residents.filter(department_ref_id=department_id)
+    # Filter residents (admin callers only — see docstring)
+    residents = ResidentProfile.objects.none()
+    if include_residents:
+        residents = ResidentProfile.objects.select_related(
+            "user", "hospital", "department_ref", "program_ref", "academic_session_ref"
+        )
+        if training_site_id:
+            residents = residents.filter(hospital_id=training_site_id)
+        if department_id:
+            residents = residents.filter(department_ref_id=department_id)
 
     # Filter supervisors
     supervisors = SupervisorProfile.objects.select_related(

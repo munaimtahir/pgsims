@@ -279,6 +279,25 @@ class TestSupervisionSpine:
         assert response.status_code == status.HTTP_200_OK
         assert "residents" in response.data
         assert "supervisors" in response.data
+        assert len(response.data["residents"]) >= 1
+
+    def test_supervision_options_api_hides_cross_resident_pii_from_non_admin_callers(
+        self, api_client, resident_user, supervisor_user
+    ):
+        """A resident searching for their own supervisor (e.g. the Android onboarding flow) must
+        never receive the roster of other residents' names/usernames/departments/supervision
+        status — only ADMIN needs `residents` for the assignment-form UI."""
+        api_client.force_authenticate(user=resident_user)
+        url = reverse("supervision:options")
+        response = api_client.get(url)
+        assert response.status_code == status.HTTP_200_OK
+        assert response.data["residents"] == []
+        assert len(response.data["supervisors"]) >= 1
+
+        api_client.force_authenticate(user=supervisor_user)
+        response = api_client.get(url)
+        assert response.status_code == status.HTTP_200_OK
+        assert response.data["residents"] == []
 
     def test_data_quality_endpoint(self, api_client, admin_user):
         api_client.force_authenticate(user=admin_user)
