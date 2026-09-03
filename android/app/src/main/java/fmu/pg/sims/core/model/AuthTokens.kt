@@ -47,3 +47,10 @@ data class SimpleMessageResponse(
     @SerialName("allowed_next_route") val allowedNextRoute: String? = null,
     @SerialName("error") val error: String? = null,
 )
+
+@Serializable
+data class ChangePasswordRequest(
+    @SerialName("old_password") val oldPassword: String,
+    @SerialName("new_password") val newPassword: String,
+    @SerialName("new_password2") val newPassword2: String,
+)

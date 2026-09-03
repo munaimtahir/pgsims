@@ -4,12 +4,16 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import fmu.pg.sims.core.model.AuthMeResponse
+import fmu.pg.sims.core.model.ChangePasswordRequest
 import fmu.pg.sims.core.model.HealthStatus
 import fmu.pg.sims.core.model.LoginRequest
 import fmu.pg.sims.core.model.LogoutRequest
 import fmu.pg.sims.core.model.NetworkResult
 import fmu.pg.sims.core.model.RefreshTokenRequest
+import fmu.pg.sims.core.model.SimpleMessageResponse
 import fmu.pg.sims.core.network.ApiService
+import fmu.pg.sims.core.network.extractErrorDetail
+import fmu.pg.sims.core.network.safeCall
 
 sealed class AuthState {
     data object Initial : AuthState()
@@ -46,8 +50,11 @@ class AuthRepository(
             if (loginResp.isSuccessful && loginResp.body() != null) {
                 val tokens = loginResp.body()!!
                 tokenStorage.saveTokens(tokens.access, tokens.refresh)
-                if (tokens.role != null) {
-                    tokenStorage.saveUserRole(tokens.role)
+                // The login response nests role under "user"; the top-level "role" field the
+                // backend never actually sends is kept only for forward/backward tolerance.
+                val role = tokens.role ?: tokens.user?.role
+                if (role != null) {
+                    tokenStorage.saveUserRole(role)
                 }
 
                 // Fetch current user onboarding / profile state
@@ -61,7 +68,7 @@ class AuthRepository(
                     NetworkResult.Error(meResp.code(), "Failed to fetch identity profile")
                 }
             } else {
-                val errorMsg = loginResp.errorBody()?.string() ?: "Invalid credentials"
+                val errorMsg = extractErrorDetail(loginResp.errorBody()?.string())
                 _authState.value = AuthState.Error(errorMsg)
                 NetworkResult.Error(loginResp.code(), errorMsg)
             }
@@ -71,6 +78,34 @@ class AuthRepository(
             NetworkResult.Error(message = msg, cause = e)
         }
     }
+
+    /** Bootstrap check on app launch: is the stored token (if any) still a valid session? */
+    suspend fun fetchCurrentUser(): NetworkResult<AuthMeResponse> {
+        if (tokenStorage.getAccessToken().isNullOrBlank()) {
+            _authState.value = AuthState.Unauthenticated
+            return NetworkResult.Error(401, "Not signed in")
+        }
+        _authState.value = AuthState.Loading
+        val result = safeCall { apiService.getAuthMe() }
+        _authState.value = when (result) {
+            is NetworkResult.Success -> AuthState.Authenticated(result.data)
+            is NetworkResult.Error -> {
+                if (result.code == 401) {
+                    tokenStorage.clear()
+                }
+                AuthState.Unauthenticated
+            }
+            is NetworkResult.Loading -> AuthState.Loading
+        }
+        return result
+    }
+
+    suspend fun changePassword(oldPassword: String, newPassword: String): NetworkResult<SimpleMessageResponse> =
+        safeCall {
+            apiService.changePassword(
+                ChangePasswordRequest(oldPassword = oldPassword, newPassword = newPassword, newPassword2 = newPassword)
+            )
+        }
 
     suspend fun logout(): NetworkResult<Unit> {
         val refreshToken = tokenStorage.getRefreshToken()

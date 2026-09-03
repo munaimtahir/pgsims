@@ -4,10 +4,10 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import fmu.pg.sims.core.auth.AuthRepository
-import fmu.pg.sims.core.auth.SecureTokenStorage
+import fmu.pg.sims.PgsimsApplication
+import fmu.pg.sims.core.ViewModelFactory
 import fmu.pg.sims.core.designsystem.PgsimsTheme
-import fmu.pg.sims.core.network.ApiClient
+import fmu.pg.sims.ui.navigation.PgsimsNavHost
 
 class MainActivity : ComponentActivity() {
 
@@ -15,13 +15,12 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
-        val tokenStorage = SecureTokenStorage(applicationContext)
-        val apiService = ApiClient.create(tokenStorage = tokenStorage)
-        val authRepository = AuthRepository(apiService, tokenStorage)
+        val appContainer = (application as PgsimsApplication).appContainer
+        val viewModelFactory = ViewModelFactory(appContainer)
 
         setContent {
             PgsimsTheme {
-                FoundationScreen(authRepository = authRepository)
+                PgsimsNavHost(viewModelFactory = viewModelFactory)
             }
         }
     }

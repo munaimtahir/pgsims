@@ -37,4 +37,17 @@ data class AuthMeResponse(
     @SerialName("completed_schema_version") val completedSchemaVersion: Int = 0,
     @SerialName("missing_required_fields") val missingRequiredFields: List<String> = emptyList(),
     @SerialName("allowed_next_route") val allowedNextRoute: String = "/users/dashboard/",
-)
+    @SerialName("required_onboarding_fields") val requiredOnboardingFields: List<String> = emptyList(),
+    @SerialName("pending_upload_count") val pendingUploadCount: Int = 0,
+    @SerialName("pending_uploads") val pendingUploads: List<OnboardingPendingUpload> = emptyList(),
+    @SerialName("pending_supervisor_link") val pendingSupervisorLink: OnboardingPendingSupervisorLink? = null,
+    @SerialName("onboarding_complete") val onboardingComplete: Boolean = false,
+    @SerialName("onboarding_review_status") val onboardingReviewStatus: String? = null,
+    @SerialName("onboarding_review_note") val onboardingReviewNote: String? = null,
+    @SerialName("onboarding_submitted_at") val onboardingSubmittedAt: String? = null,
+    @SerialName("onboarding_reviewed_at") val onboardingReviewedAt: String? = null,
+) {
+    /** Effective review state for routing; residents with no profile yet read as NOT_SUBMITTED. */
+    val effectiveReviewStatus: String
+        get() = onboardingReviewStatus ?: ReviewStatus.NOT_SUBMITTED
+}
