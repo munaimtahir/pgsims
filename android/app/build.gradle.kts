@@ -33,7 +33,7 @@ android {
                     "assemblerelease", "bundlerelease", "signingreport"
                 )
             }
-            val propertiesPath = providers.gradleProperty("fmuSigningPropertiesFile").orNull
+            val propertiesPath = providers.gradleProperty("pgrCompanionSigningPropertiesFile").orNull
             val signingProperties = propertiesPath?.let { path ->
                 file(path).takeIf(File::isFile)?.let { propertiesFile ->
                     Properties().also { properties ->
@@ -45,7 +45,7 @@ android {
             val missingKeys = requiredKeys.filter { signingProperties?.getProperty(it).isNullOrBlank() }
             if (releaseSigningRequested && missingKeys.isNotEmpty()) {
                 error(
-                    "Release signing requires -PfmuSigningPropertiesFile=<owner-readable properties file> " +
+                    "Release signing requires -PpgrCompanionSigningPropertiesFile=<owner-readable properties file> " +
                         "with keys: ${requiredKeys.joinToString()}. Missing: ${missingKeys.joinToString()}"
                 )
             }

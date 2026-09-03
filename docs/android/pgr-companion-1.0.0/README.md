@@ -8,4 +8,4 @@ Independent, login-free Android portfolio for postgraduate medical trainees. The
 - No account, authentication, Internet permission, analytics, advertising, location, patient workflow, institutional branding, or institutional connectivity.
 - Delete All App Data clears the JSON store and app-owned document directory.
 
-The release build is blocked until the owner supplies the secure release signing properties; no signing secret or keystore was created or logged by this change.
+The independent upload key is stored outside Git at `/home/munaim/.config/pgr-companion/signing/pgr-companion-upload.jks`; the signing properties file is owner-only and neither is committed.
