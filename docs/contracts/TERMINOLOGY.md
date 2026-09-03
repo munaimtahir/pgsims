@@ -31,6 +31,9 @@ These are user-facing terms. Do not change once pilot begins.
 - **Rotation Completion Verification**: post-rotation check where department confirms and UTRMC verifies completion
 - **Logbook**: active resident page for logbook draft/submission and threshold state; replaces the previous active navigation label "Academic Progress" as of 2026-04-21
 - **Deferred Workflow**: implemented or partially implemented route/API that is intentionally hidden from active navigation and excluded from the release gate
+- **Onboarding Pending Review**: resident has submitted their onboarding profile for administrative review; backend `ResidentProfile.review_status=PENDING_REVIEW`
+- **Onboarding Correction Required**: an administrator requested changes to a submitted onboarding profile before it can be approved; backend `review_status=CORRECTION_REQUIRED`, with the reason shown from `review_note`
+- **Onboarding Approved**: an administrator approved the submitted onboarding profile; backend `review_status=APPROVED`. Distinct from `profile_status=COMPLETE` (required-field completeness) and from per-document `ResidentDocument.status` (document verification) — see `docs/contracts/DATA_MODEL.md`.
 
 Notes:
 - UI displays **Submitted** even if backend enum is `pending`.
@@ -39,3 +42,4 @@ Notes:
 - 2026-05-30 terminology lock update: Backup Center operator terms added for pilot operations.
 - 2026-06-01 terminology lock update: additive Google Drive Backup connector terms added (no renames of existing terms).
 - 2026-06-06 approved change (UX/UI Debug & Update): Added terminology and screen elements for "Supervisors" management and deletion of hospitals/departments under UTRMC admin dashboard. Unlocked terminology locks to support active debugging and updates to the user interface.
+- 2026-09-02 additive terminology lock update (Resident Onboarding MVP, Android): added `review_status` terms (Pending Review / Correction Required / Approved) for the new admin approve / request-correction workflow on `ResidentProfile`; no renames of existing terms.

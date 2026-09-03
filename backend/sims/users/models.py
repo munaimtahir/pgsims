@@ -539,6 +539,37 @@ class ResidentProfile(models.Model):
     is_archived = models.BooleanField(default=False)
     declaration_accepted = models.BooleanField(default=False)
     declaration_accepted_at = models.DateTimeField(null=True, blank=True)
+
+    REVIEW_NOT_SUBMITTED = "NOT_SUBMITTED"
+    REVIEW_PENDING_REVIEW = "PENDING_REVIEW"
+    REVIEW_APPROVED = "APPROVED"
+    REVIEW_CORRECTION_REQUIRED = "CORRECTION_REQUIRED"
+    REVIEW_STATUS_CHOICES = [
+        (REVIEW_NOT_SUBMITTED, "Not Submitted"),
+        (REVIEW_PENDING_REVIEW, "Pending Review"),
+        (REVIEW_APPROVED, "Approved"),
+        (REVIEW_CORRECTION_REQUIRED, "Correction Required"),
+    ]
+    review_status = models.CharField(
+        max_length=20,
+        choices=REVIEW_STATUS_CHOICES,
+        default=REVIEW_NOT_SUBMITTED,
+        help_text="Administrative review state of the submitted onboarding profile "
+        "(distinct from profile_status, which only tracks required-field completeness).",
+    )
+    review_note = models.TextField(
+        blank=True, help_text="Reviewer-supplied reason, set when review_status is CORRECTION_REQUIRED."
+    )
+    submitted_at = models.DateTimeField(null=True, blank=True)
+    reviewed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        related_name="+",
+        on_delete=models.SET_NULL,
+    )
+    reviewed_at = models.DateTimeField(null=True, blank=True)
+
     history = HistoricalRecords()
 
     class Meta:

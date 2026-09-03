@@ -2,6 +2,7 @@ from datetime import date
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db.models import Q
+from django.utils import timezone
 from rest_framework import permissions, serializers, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
@@ -518,6 +519,70 @@ class ResidentProfileViewSet(viewsets.ModelViewSet):
             raise PermissionDenied("Only administrators can delete resident profiles.")
         return super().destroy(request, *args, **kwargs)
 
+    @action(detail=True, methods=["post"], url_path="approve-onboarding")
+    def approve_onboarding(self, request, user_id=None):
+        if not _is_manager(request.user):
+            raise PermissionDenied("Only administrators can approve resident onboarding.")
+        profile = self.get_object()
+        if profile.review_status != ResidentProfile.REVIEW_PENDING_REVIEW:
+            return Response(
+                {"detail": "Only a profile pending review can be approved."},
+                status=status.HTTP_409_CONFLICT,
+            )
+        profile.review_status = ResidentProfile.REVIEW_APPROVED
+        profile.review_note = ""
+        profile.reviewed_by = request.user
+        profile.reviewed_at = timezone.now()
+        profile.save(update_fields=["review_status", "review_note", "reviewed_by", "reviewed_at", "updated_at"])
+        ActivityLog.log(
+            actor=request.user,
+            action="update",
+            verb="ONBOARDING_APPROVED",
+            target=profile,
+            metadata={"resident_user_id": profile.user_id},
+        )
+        return Response(ResidentProfileSerializer(profile).data)
+
+    @action(detail=True, methods=["post"], url_path="request-onboarding-correction")
+    def request_onboarding_correction(self, request, user_id=None):
+        if not _is_manager(request.user):
+            raise PermissionDenied("Only administrators can request onboarding corrections.")
+        reason = (request.data.get("reason") or "").strip()
+        if not reason:
+            return Response({"detail": "A correction reason is required."}, status=status.HTTP_400_BAD_REQUEST)
+        profile = self.get_object()
+        if profile.review_status not in (
+            ResidentProfile.REVIEW_PENDING_REVIEW,
+            ResidentProfile.REVIEW_CORRECTION_REQUIRED,
+        ):
+            return Response(
+                {"detail": "Only a profile pending review can have a correction requested."},
+                status=status.HTTP_409_CONFLICT,
+            )
+        profile.review_status = ResidentProfile.REVIEW_CORRECTION_REQUIRED
+        profile.review_note = reason
+        profile.reviewed_by = request.user
+        profile.reviewed_at = timezone.now()
+        profile.declaration_accepted = False
+        profile.save(
+            update_fields=[
+                "review_status",
+                "review_note",
+                "reviewed_by",
+                "reviewed_at",
+                "declaration_accepted",
+                "updated_at",
+            ]
+        )
+        ActivityLog.log(
+            actor=request.user,
+            action="update",
+            verb="ONBOARDING_CORRECTION_REQUESTED",
+            target=profile,
+            metadata={"resident_user_id": profile.user_id, "reason": reason},
+        )
+        return Response(ResidentProfileSerializer(profile).data)
+
 
 class SupervisorProfileViewSet(viewsets.ModelViewSet):
     queryset = SupervisorProfile.objects.select_related("user").order_by("user__last_name")
@@ -800,6 +865,10 @@ class AuthMeView(APIView):
             "pending_uploads": onboarding.get("pending_uploads", []),
             "pending_supervisor_link": onboarding.get("pending_supervisor_link"),
             "onboarding_complete": onboarding.get("onboarding_complete", user.is_profile_complete),
+            "onboarding_review_status": onboarding.get("review_status"),
+            "onboarding_review_note": onboarding.get("review_note"),
+            "onboarding_submitted_at": onboarding.get("submitted_at"),
+            "onboarding_reviewed_at": onboarding.get("reviewed_at"),
         }
         return Response(data, status=status.HTTP_200_OK)
 

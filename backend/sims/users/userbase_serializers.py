@@ -129,8 +129,22 @@ class ResidentProfileSerializer(serializers.ModelSerializer):
             "profile_completed_at",
             "extra_data",
             "is_archived",
+            "review_status",
+            "review_note",
+            "submitted_at",
+            "reviewed_at",
         ]
-        read_only_fields = ["id", "profile_status", "profile_schema_version", "completed_schema_version", "profile_completed_at"]
+        read_only_fields = [
+            "id",
+            "profile_status",
+            "profile_schema_version",
+            "completed_schema_version",
+            "profile_completed_at",
+            "review_status",
+            "review_note",
+            "submitted_at",
+            "reviewed_at",
+        ]
 
 
 class SupervisorProfileSerializer(serializers.ModelSerializer):

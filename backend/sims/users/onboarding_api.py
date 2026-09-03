@@ -113,6 +113,10 @@ def get_resident_onboarding_state(user):
         "training_record_id": training.id if training else None,
         "supervisor_status": "ASSIGNED" if assignment else ("PENDING" if pending_link else profile.extra_data.get("supervisor_status", "NOT_STARTED")),
         "declaration_accepted": profile.declaration_accepted,
+        "review_status": profile.review_status,
+        "review_note": profile.review_note,
+        "submitted_at": profile.submitted_at.isoformat() if profile.submitted_at else None,
+        "reviewed_at": profile.reviewed_at.isoformat() if profile.reviewed_at else None,
         "documents": [{"id": d.id, "requirement_id": d.requirement_id, "title": d.title, "status": d.status, "stage": d.requirement.stage if d.requirement else "OPTIONAL"} for d in required_documents],
         "baseline": {
             "research": {"title": research.title, "topic_area": research.topic_area, "status": research.status} if research else {"title": "", "topic_area": "", "status": ResidentResearchProject.STATUS_DRAFT},
@@ -282,12 +286,37 @@ class ResidentOnboardingStateView(APIView):
         if request.user.role != "RESIDENT":
             raise PermissionDenied("Resident onboarding is only available to residents.")
         profile = _resident_profile(request.user)
+        profile.refresh_from_db()
         if not request.data.get("accepted"):
             return Response({"detail": "Declaration must be accepted."}, status=400)
+        if profile.review_status == ResidentProfile.REVIEW_APPROVED:
+            return Response({"detail": "Profile has already been approved."}, status=409)
+        request.user.refresh_from_db(fields=["is_profile_complete"])
+        if not request.user.is_profile_complete:
+            return Response(
+                {"detail": "Complete all required onboarding fields before submitting."}, status=400
+            )
+        was_correction = profile.review_status == ResidentProfile.REVIEW_CORRECTION_REQUIRED
         profile.declaration_accepted = True
         profile.declaration_accepted_at = timezone.now()
-        profile.save(update_fields=["declaration_accepted", "declaration_accepted_at", "updated_at"])
-        ActivityLog.log(actor=request.user, action="update", verb="ONBOARDING_COMPLETED", target=profile, metadata={"source": "resident_onboarding"})
+        profile.review_status = ResidentProfile.REVIEW_PENDING_REVIEW
+        profile.submitted_at = timezone.now()
+        profile.save(
+            update_fields=[
+                "declaration_accepted",
+                "declaration_accepted_at",
+                "review_status",
+                "submitted_at",
+                "updated_at",
+            ]
+        )
+        ActivityLog.log(
+            actor=request.user,
+            action="update",
+            verb="ONBOARDING_RESUBMITTED" if was_correction else "ONBOARDING_COMPLETED",
+            target=profile,
+            metadata={"source": "resident_onboarding"},
+        )
         return Response(get_resident_onboarding_state(request.user))
 
 

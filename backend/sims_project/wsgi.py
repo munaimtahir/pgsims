@@ -31,13 +31,18 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'sims_project.settings')
 application = get_wsgi_application()
 
 # Production-specific WSGI configuration
-if not os.environ.get('DJANGO_DEBUG', 'True').lower() == 'true':
+if not os.environ.get('DEBUG', 'False').lower() in ('true', '1', 'yes'):
     # Production optimizations
     try:
-        # Enable compression and static file serving optimizations
+        # Enable compression and static file serving optimizations.
+        # NOTE: media/ is deliberately NOT registered here. Every FileField under
+        # MEDIA_ROOT (resident_documents/, research/, workshops/certificates/,
+        # backup_center restore_uploads/) is access-controlled application-side
+        # (e.g. ResidentDocumentViewSet.file/.download). Whitenoise's add_files()
+        # would serve those paths unauthenticated straight from the WSGI layer,
+        # bypassing Django entirely - do not add media here even for convenience.
         from whitenoise import WhiteNoise
         application = WhiteNoise(application, root=BASE_DIR / 'staticfiles')
-        application.add_files(BASE_DIR / 'media', prefix='/media/')
     except ImportError:
         # WhiteNoise not available, continue without it
         pass
