@@ -25,7 +25,7 @@
       suggested privacy-policy data paragraph in `docs/ANDROID_DATA_SAFETY_POLICY.md`. **Open
       item within that doc**: the app currently has no self-service data-deletion path — decide
       whether to leave the honest "No" answer or add an admin-contact process before publishing.
-- [ ] Complete App Access instructions (Dedicated demo account credentials provided to Play Reviewers).
+- [x] Complete App Access instructions — dedicated reviewer credentials created and verified below.
 - [ ] Complete the content rating questionnaire.
 - [ ] Declare target audience and age groups (18+ healthcare professionals).
 - [ ] Declare whether the app contains ads (No ads).
@@ -39,9 +39,24 @@
 
 ## Review-access preparation
 
-A functional login and resident onboarding experience is fully verified against the live production backend (`android.pgsims.alshifalab.pk`). For Play Console App Access review:
-- Create a dedicated non-sensitive review resident account using `seed_android_e2e_demo` or universal user creation (`/users/new`).
-- Provide instructions explaining the 4-role residency model, credential format, and temporary-to-new password change requirement on initial login.
+A functional login and resident onboarding experience is fully verified against the live production backend (`android.pgsims.alshifalab.pk`).
+
+**Play Console → App content → App access** — select "All or some functionality is restricted"
+and paste these details:
+
+- Username: `playstore.reviewer`
+- Password: `PlayReview2026!`
+- Instructions: "This app requires a residency-program account, provisioned by an institutional
+  administrator — there is no self-registration. Use the credentials above at the sign-in screen.
+  No further steps or 2FA are required. The account is a fully onboarded and approved resident, so
+  all four tabs (Home, Training, Documents, Profile) are immediately accessible after login."
+
+This is a **dedicated reviewer account**, separate from the `android.demo.*` accounts used during
+development/testing, created directly in the production DB and independently verified end-to-end
+on the actual signed release build (login → approved Home dashboard, `review_status=APPROVED`).
+It intentionally has 2 deferred documents outstanding, so the reviewer also sees the
+outstanding-document reminder banner. If this account's password ever needs to change, update it
+via Django admin/shell on the production backend and update this doc + Console together.
 
 ## Signing distinction
 
