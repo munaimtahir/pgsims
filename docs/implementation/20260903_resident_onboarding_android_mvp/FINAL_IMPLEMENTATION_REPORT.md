@@ -161,12 +161,13 @@ into `OptionItem.id: String`. **8/8 passed.**
 ```
 Backend:  manage.py check                        PASS (0 issues)
           manage.py makemigrations --check        PASS (no changes detected)
-          pytest sims -v (plain, as documented)   1187 passed, 8 skipped, 0 failed (84.16% cov)
+          pytest sims -v (plain, as documented)   1188 passed, 8 skipped, 0 failed (84.00% cov)
 Web:      npm run typecheck                       PASS
           npm run lint                             PASS (no warnings/errors)
           npm test                                 PASS (38 suites, 114 tests)
           npm run build                            PASS
 Android:  ./gradlew compileDebugKotlin             PASS
+          ./gradlew compileDebugAndroidTestKotlin  PASS (see §4.6 — cannot run, no emulator)
           ./gradlew testDebugUnitTest              PASS (8/8, SerializationContractTest)
           ./gradlew lintDebug                      PASS (0 errors, 66 pre-existing warnings)
           ./gradlew assembleDebug                  PASS
@@ -174,12 +175,64 @@ Android:  ./gradlew compileDebugKotlin             PASS
 
 ### 4.5 Not verified in this pass (explicit)
 
-- On-device/emulator UI flow (login tap-through, screen rendering, Compose UI tests,
-  instrumentation tests) — blocked by the KVM/emulator limitation above. The debug APK installs
-  cleanly per `assembleDebug`'s packaging step but has not been launched on a real device or
-  working emulator.
+- On-device/emulator UI flow (login tap-through, screen rendering, running the instrumentation
+  suite written in §4.6, actual TalkBack/rotation/process-recreation behavior) — blocked by the
+  KVM/emulator limitation above. The debug APK installs cleanly per `assembleDebug`'s packaging
+  step but has not been launched on a real device or working emulator. §8 below is the complete,
+  ready-to-execute plan for this on the next machine, including seeded demo accounts.
 - Signed release AAB, bundletool validation, Play Console upload — explicitly out of scope for this
-  pass; the machine with keystore access will do this after pulling this branch.
+  pass; the machine with keystore access will do this after pulling this branch (§9).
+
+### 4.6 Pre-handoff hardening pass (2026-09-03, same day, before handoff)
+
+Everything achievable in this sandbox *without* an emulator or keystore was pushed further before
+handoff, rather than leaving it all for the next machine:
+
+- **Instrumentation/Compose UI test suite written** — `android/app/src/androidTest/java/fmu/pg/sims/`:
+  `testutil/FakeApiService.kt` + `FakeTokenStorage.kt` + `TestFixtures.kt` (deterministic in-memory
+  `ApiService`/`TokenStorage` doubles, no real network, matching real captured backend payload
+  shapes), plus `LoginScreenTest`, `ChangePasswordScreenTest`, `OnboardingPersonalInfoScreenTest`
+  (save/resume), `OnboardingSupervisorScreenTest` (search+select, not-listed, blank-name
+  validation), `OnboardingDocumentsScreenTest` (defer + upload-affordance presence),
+  `OnboardingReviewScreenTest` (submit gating + real transition), `OnboardingStatusScreensTest`
+  (correction display + resubmit), `HomeScreenTest` (outstanding vs. all-complete banner), and
+  `SessionViewModelTest` (full routing matrix + logout→login re-derivation from server state only).
+  `ui/TestTags.kt` plus `Modifier.testTag(...)` added to the interactive elements these target (14
+  screen files, low-risk, no behavior change). Compiles clean
+  (`./gradlew compileDebugAndroidTestKotlin`); cannot run without an emulator — ready for a single
+  `./gradlew connectedDebugAndroidTest` on the next machine, in addition to (not instead of) the
+  manual walkthrough in §8, since these are fast deterministic regression tests against a fake
+  backend while §8 is the real end-to-end proof against the live one.
+- **Static release-manifest audit** — the on-disk release merged manifest was stale (an old build's
+  `pk.edu.fmu.pgsims`/versionCode 1/targetSdk 35 artifact); regenerated fresh via
+  `./gradlew :app:processReleaseMainManifest` (no keystore needed — manifest processing doesn't
+  require signing). Confirmed: package `fmu.pg.sims`, versionCode 2/versionName 0.2.0, targetSdk
+  36, `PgsimsApplication` correctly registered, only `MainActivity` exported (single entry point),
+  no `debuggable` flag, debug-only tooling components (`ComponentActivity`,
+  `PreviewActivity`, from `debugImplementation(compose.ui.tooling)`) correctly excluded from
+  release, only `INTERNET`/`ACCESS_NETWORK_STATE` permissions, `allowBackup="false"`, cleartext
+  disabled with system-only trust anchors (the debug-only cleartext-to-`10.0.2.2` override lives
+  solely in `app/src/debug/`, confirmed no release counterpart). **No P0/P1 manifest issue found.**
+- **Privacy/Data Safety alignment check** — full `releaseRuntimeClasspath` enumerated (~80 unique
+  artifacts): AndroidX/Compose, Retrofit/OkHttp, kotlinx.serialization/coroutines, and
+  `tink-android`/`gson` (both pulled in by `androidx.security:security-crypto` for
+  `EncryptedSharedPreferences` — a security mechanism, not tracking). Zero analytics/ads/crash-
+  telemetry SDKs, no advertising ID, no unexpected identifiers. Confirms
+  `docs/ANDROID_PLAY_STORE_UPLOAD_CHECKLIST.md`'s existing privacy claims still hold against the
+  actual shipped dependency set.
+- **Real backend fix found and made: cross-resident PII exposure in `/api/supervision/options/`.**
+  This endpoint had no role scoping — *any* authenticated user, including a resident using
+  Android's new supervisor-search screen, received the full `residents` roster (other residents'
+  names, usernames, department, programme, academic session, and supervision status). Not merely
+  "broader than necessary" as first flagged in an earlier pass of this work — a real, if moderate,
+  cross-resident PII disclosure, and Android just became the first *resident-facing* consumer of a
+  previously admin-tooling-only endpoint. Fixed in `sims/supervision/views.py::supervision_options_view`:
+  `residents` is now only populated for `request.user.role == "ADMIN"` (same convention as
+  `IsSupervisionAdminOrReadOnly`); non-admin callers get `residents: []`, `supervisors` unchanged.
+  Confirmed no web caller depends on `residents` for non-admin roles. Regression test added:
+  `test_supervision_options_api_hides_cross_resident_pii_from_non_admin_callers` in
+  `sims/supervision/tests/test_supervision.py`. Full suite reconfirmed clean after this change
+  (§4.4's 1188-passed count includes it).
 
 ## 5. Release identity (debug)
 
@@ -196,21 +249,227 @@ Signing:         debug keystore only — no release signing in this pass
 
 ## 6. Known limitations / deferred scope
 
-- On-device UI verification pending a working emulator or physical device (next machine).
+- On-device UI verification pending a working emulator or physical device (next machine) — see §8
+  for the exact, ready-to-run plan, including seeded demo accounts.
 - Minimal supervisor mobile view, push notifications: not attempted — resident onboarding was the
   gate per the approved plan, and these are explicitly deferred, not silently dropped.
-- `/api/supervision/options/` returns both `residents` and `supervisors`; Android only consumes
-  `supervisors`. Narrowing that endpoint's response for resident callers would be a minor backend
-  cleanup, not a security issue (already `IsAuthenticated`-scoped) — flagged, not fixed, to keep
-  this pass additive.
 - Web `docs/contracts/API_CONTRACT.md` and `DATA_MODEL.md` were found to already be stale
   (pre-clean-room role model) independent of this work; not touched, to avoid conflating an
   unrelated docs debt with this change.
+- (`/api/supervision/options/`'s cross-resident PII exposure, previously listed here as a
+  low-priority "broader than necessary" item, turned out to be a real fix worth making now — done,
+  see §4.6.)
 
 ## 7. Verdict
 
-Backend, web, and Android automated gates are green; the full resident-onboarding lifecycle
+Backend, web, and Android automated gates are green (1188 backend tests, 38 web suites/114 tests,
+Android unit + instrumentation-compile all passing); the full resident-onboarding lifecycle
 (submit → correction → resubmit → approve) and its authorization boundaries are verified live
-against the real backend. The debug APK is built, checksummed, and ready to hand off to the
-machine with keystore access for signed release build, on-device verification, and Play upload —
-it is **not** itself Play-upload-ready (no signing, no on-device run performed here).
+against the real backend; a real cross-resident PII exposure was found and fixed in the same pass
+that made Android the first resident-facing consumer of the affected endpoint. The debug APK is
+built, checksummed, and ready to hand off to the machine with keystore access for signed release
+build, on-device verification, and Play upload — it is **not** itself Play-upload-ready (no
+signing, no on-device run performed here). §8 is the complete on-device test plan for that
+machine; §9 covers the release-build steps it still needs to run.
+
+## 8. Demo accounts & full emulator/device E2E test plan (for the next machine)
+
+### 8.1 Demo accounts
+
+A dedicated, disposable account set exists specifically for on-device testing — separate from
+`seed_demo_data`'s platform-demo residents (which start already fully onboarded) and from the
+throwaway `pgr001`/`pgr002`/`admin001` accounts used for the live API verification in §4.2. Seed
+(or reseed — idempotent, safe to rerun any time) with:
+
+```bash
+cd backend && python3 manage.py seed_android_e2e_demo
+```
+
+This creates/resets:
+
+| Username | Password | Role | Starting state | Purpose |
+|---|---|---|---|---|
+| `android.demo.admin` | `AndroidDemo123!` | ADMIN | ready to act immediately | approve / request-correction actions, web-side admin verification |
+| `android.demo.supervisor` | `AndroidDemo123!` | SUPERVISOR | real `SupervisorProfile`, name "Ayesha Malik" | the "select existing supervisor" target during resident1's onboarding |
+| `android.demo.resident1` | `AndroidDemo123!` | RESIDENT | blank profile, `must_change_password=True` | **primary walkthrough** — carries Scenarios A → B → C end-to-end (§8.4–8.16) |
+| `android.demo.resident2` | `AndroidDemo123!` | RESIDENT | blank profile, `must_change_password=True` | **secondary** — isolated run of just the "supervisor not listed" branch (§8.17) |
+
+Both residents start with an empty `ResidentProfile` (no hospital/department/program/supervisor)
+so the onboarding wizard has real required fields to fill — matching the "resident has never used
+PGR SIMS" precondition exactly. The command prints suggested onboarding answers (hospital/
+department/program names, and the exact supervisor-search term) pulled from whatever canonical org
+data exists in the target database — re-run it after `migrate` on a fresh database and read its
+output before starting, since exact names can differ from what's shown above once seeded
+elsewhere. It's a plain Python list in
+`backend/sims/users/management/commands/seed_android_e2e_demo.py` — trivial to extend with more
+throwaway residents if a scenario needs a truly fresh account after resident2 has been carried
+past the point you need.
+
+### 8.2 Getting the backend live and reachable for the emulator
+
+Verified working end-to-end in this sandbox against a fresh seed (login → `/api/auth/me/`
+returned the expected blank-onboarding state for both a resident and the admin account) — same
+sequence should work unchanged on the target machine:
+
+1. `cd backend && python3 manage.py migrate` — use plain `python3`, not `.venv/bin/python`; in
+   this repo's checkouts `.venv` has been observed empty while the real dependency set lives on
+   the system/user Python install (confirm which is true on the target machine rather than
+   assuming either way).
+2. `python3 manage.py seed_android_e2e_demo` — read its printed output for the exact
+   hospital/department/program names and supervisor-search term to use.
+3. `python3 manage.py runserver 0.0.0.0:8000` — bind `0.0.0.0`, not `127.0.0.1`, so an emulator
+   (via `10.0.2.2`) or physical device (via the host's LAN IP) can reach it. Confirm first with:
+   ```bash
+   curl -s -X POST http://127.0.0.1:8000/api/auth/login/ -H "Content-Type: application/json" \
+     -d '{"username":"android.demo.resident1","password":"AndroidDemo123!"}'
+   ```
+   A clean JWT response confirms the backend is genuinely ready — debug Android network issues
+   only after confirming this, or you'll chase the wrong layer.
+4. Android's debug build already allows cleartext to `10.0.2.2`
+   (`android/app/src/debug/res/xml/network_security_config.xml`); a **physical device** needs its
+   own IP added there instead, or tunnel via `adb reverse tcp:8000 tcp:8000` and point the app at
+   `127.0.0.1:8000`.
+5. Keep the dev server running for the entire test pass — every step below depends on it staying
+   live and on `android.demo.admin`'s actions (a second terminal, the Django admin, or the web
+   frontend) reaching the same database the emulator's app is talking to. Don't restart the server
+   or rerun `migrate --run-syncdb`/`flush` mid-walkthrough.
+
+### 8.3 Install
+
+`./gradlew assembleDebug` (or reuse this sandbox's APK only if the target machine will run the
+backend on the exact same reachable address), `adb install -r
+android/app/build/outputs/apk/debug/app-debug.apk`. Fresh launch should show the real login
+screen, not the old foundation/health-check screen, and should not crash cold with no stored
+session.
+
+### 8.4 Login screen
+Bad password for `android.demo.resident1` → clear inline error, no crash, stays on login. Correct
+credentials → proceeds to change-password (since `must_change_password=True`). Loading state shows
+during the network call; error state is retryable.
+
+### 8.5 Change-password screen
+Submit a new password → success → routes into onboarding. Log out, log back in with the **new**
+password → confirms it persisted server-side, not just client state. A weak/mismatched-confirmation
+password should be rejected with a clear message (check what the backend's `change-password`
+endpoint actually validates, don't assume).
+
+### 8.6 Onboarding — Welcome/status
+Confirms it reflects `NOT_SUBMITTED` state, not a stale cached status.
+
+### 8.7 Onboarding — Personal Information
+Fill phone/email/etc. per `/api/auth/me/`'s live `required_onboarding_fields` for this account
+(backend-declared — re-check live, don't assume it matches this document verbatim). Navigate away
+and back (or kill/relaunch) → confirms progress saved server-side via `PATCH
+/api/auth/onboarding/` and reloads correctly (save/resume).
+
+### 8.8 Onboarding — Training / Programme / Department
+Select the hospital/department/program/session/specialty/training-start-date/current-level printed
+by the seed command. Confirm at least one dropdown's options match real backend data (e.g. against
+`GET /api/identity/options/` or equivalent), not a hardcoded list.
+
+### 8.9 Onboarding — Supervisor (resident1: existing supervisor)
+Search "Malik" or "Ayesha" → `android.demo.supervisor` appears → select. Confirm server-side this
+created a `PendingSupervisorAssignment` (not a direct `ResidentSupervisorAssignment` — residents
+cannot self-link even to a real, listed supervisor; see §3) pointing at the real
+`SupervisorProfile`, not free-text.
+
+### 8.10 Onboarding — Documents
+Upload one required document via the system picker. Defer a second eligible document ("Complete
+Later") → stays visibly outstanding, never silently marked done. Try an unsupported file type
+and/or an oversized file if the requirement list allows it → clear rejection, not a silent failure
+or false success.
+
+### 8.11 Onboarding — Review & Submit
+Review screen shows real aggregated state (completed sections, the deferred document, supervisor
+pending-link state), not a locally-recomputed guess. Submit → confirm the app calls `POST
+/api/resident-onboarding/state/` (backend request log or `adb logcat`) and transitions to Pending
+Review, not a local-only flag. Double-tap submit → no duplicate-submission crash; a 409 should be
+handled gracefully.
+
+### 8.12 Admin: request correction (Scenario B start)
+From a second terminal:
+```bash
+TOKEN=$(curl -s -X POST http://127.0.0.1:8000/api/auth/login/ -H "Content-Type: application/json" \
+  -d '{"username":"android.demo.admin","password":"AndroidDemo123!"}' | python3 -c "import sys,json;print(json.load(sys.stdin)['access'])")
+curl -s -X POST http://127.0.0.1:8000/api/residents/<resident1_user_id>/request-onboarding-correction/ \
+  -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
+  -d '{"reason":"Please re-check your phone number - it looks incomplete."}'
+```
+(Get `resident1`'s real `user_id` via `GET /api/auth/me/` first — it will differ from any ID seen
+in this sandbox's own testing.) Or do this through the web frontend/Django admin instead — same
+effect.
+
+### 8.13 Android: correction display + resubmit
+Refresh/relaunch → "Correction Required" screen shows the exact reason text verbatim. Navigate to
+the flagged section, fix it, resubmit → same submit endpoint, back to Pending Review. Confirm the
+correction history isn't silently erased (`ActivityLog`/`HistoricalRecords` should show both
+`ONBOARDING_CORRECTION_REQUESTED` and `ONBOARDING_RESUBMITTED`).
+
+### 8.14 Admin: approve (Scenario B finish)
+```bash
+curl -s -X POST http://127.0.0.1:8000/api/residents/<resident1_user_id>/approve-onboarding/ \
+  -H "Authorization: Bearer $TOKEN"
+```
+Android refresh/relaunch → routes to the approved 4-tab Home, not stuck on Pending Review.
+
+### 8.15 Post-approval Home tabs
+**Home**: onboarding-approved status, training summary, supervisor (still pending-link unless
+resolved — §8.17), the one outstanding deferred document from §8.10. **Training**: read-only,
+matches §8.8. **Documents**: both documents, correct per-document status. **Profile**: current
+data, respects backend-declared read-only vs. editable fields.
+
+### 8.16 Persistent outstanding-document reminder (Scenario C)
+With the deferred document still outstanding: logout → login → reminder still shows. Force-kill
+the app (not just background) → relaunch → reminder still shows (server-derived every time, never
+a one-time locally dismissed flag). Upload the deferred document from Documents → status updates
+in-app → confirm via web (or `GET /api/resident-documents/`) that the same document/status is
+visible there too.
+
+### 8.17 Supervisor-not-listed branch (use `android.demo.resident2`)
+Repeat §8.4–§8.8 with `resident2`, then at the Supervisor step: search a name that doesn't exist →
+"Supervisor not listed" → enter a made-up name (e.g. "Dr. Test Notlisted") + any other requested
+info. Confirm server-side a `PendingSupervisorAssignment` was created with that free text and
+**zero** new `SupervisorProfile` rows exist (`python3 manage.py shell -c "from sims.users.models
+import SupervisorProfile; print(SupervisorProfile.objects.count())"` before/after — must be
+unchanged). Confirm what "continue" actually means per the live backend (proceed with supervisor
+pending, or block — either is fine as long as it matches actual backend behavior, not an
+assumption). As `android.demo.admin`, resolve the pending link (`resolve`/`create-supervisor` on
+`/api/pending-supervisor-links/`) → confirm a real `ResidentSupervisorAssignment` results with no
+duplicate active PRIMARY possible.
+
+### 8.18 Negative paths
+Wrong password (done in §8.4). Expired/invalidated token (revoke server-side, confirm return to
+login, not a crash). Airplane mode during a save/submit → no false "success", a retry affordance
+exists. Interrupted upload (toggle airplane mode mid-upload) → clear failure state, not a stuck
+spinner or false success. Unauthorized document access (resident2's token fetching resident1's
+document by ID) → 404, matching the pattern already verified in §4.2. Server error (stop the
+backend mid-session) → clear network/server-error state, not a crash.
+
+### 8.19 Configuration/process survival
+Rotate the device/emulator mid-form-entry (if supported) → no data loss. Background then return →
+session/state still correct. `adb shell am force-stop fmu.pg.sims.debug`, relaunch → confirm
+`SessionViewModel` correctly re-fetches `/api/auth/me/` and routes to the right destination (same
+server-derived-routing logic as §8.16, worth reconfirming after a hard kill).
+
+### 8.20 Accessibility spot-check
+Enable TalkBack, navigate Login and the onboarding wizard's first two screens at minimum — form
+fields announced with usable labels, tap targets not so small TalkBack focus becomes unusable.
+
+## 9. Release build verification (needs keystore — the next machine only)
+
+```bash
+./gradlew assembleRelease bundleRelease
+bundletool build-apks --bundle=app/build/outputs/bundle/release/app-release.aab \
+  --output=app-release.apks --local-testing-mode
+bundletool install-apks --apks=app-release.apks
+```
+
+Launch the AAB-derived install specifically (not a separately-assembled debug APK), repeat at
+least §8.3–§8.11 (through first submission) against it to prove the release build type (R8-
+minified, no debug logging) behaves identically to debug — a manifest audit (§4.6) can't catch
+everything R8 can break (reflection, missing keep rules). Record versionCode, versionName, AAB
+path, size, SHA-256, and the upload/signing certificate fingerprint (`keytool -list -v -keystore
+<path> -alias <alias>` — never paste the password anywhere). Then complete
+`docs/ANDROID_PLAY_STORE_UPLOAD_CHECKLIST.md`'s remaining Play Console items and fill in a final
+GO/CONDITIONAL GO/NO-GO verdict here once §8 and this section are both complete, referencing
+actual observed results.
