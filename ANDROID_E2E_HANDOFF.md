@@ -457,14 +457,9 @@ local `pytest`/`manage.py check` type usage on the sandbox — this is separate 
 - [x] **§9 Release build** — Built and signed release APK and AAB with release keystore (`fmu-pg-sims-upload.jks`). Verified with apksigner (v2 valid). Installed on emulator and verified full production auth and navigation.
 - [x] **§5 Play Store checklist** (`docs/ANDROID_PLAY_STORE_UPLOAD_CHECKLIST.md`) — Updated with artifact paths, SHA-256 hashes, fingerprints, and console review steps.
 - [x] **Final GO / CONDITIONAL GO / NO-GO verdict** — Recorded as **GO** in `FINAL_IMPLEMENTATION_REPORT.md`.
-- [ ] **Commit and push to origin main.**
-      session's commits (see the system reminder each turn — includes a `Co-Authored-By:` line
-      and a `Claude-Session:` URL specific to *this* conversation; if a different agent/session
-      picks this up, it will have its own footer values in its own context — use whatever this
-      turn's own system reminder specifies, don't hardcode a stale one from this document).
-      **Do not force-push. Do not skip hooks.** Only commit when the work is actually in a good,
-      tested state — squash the debugging iteration into clean, well-described commits rather than
-      committing broken intermediate states.
+- [x] **Commit and push to origin main.** Done as commit `b802641` ("Update 0 - complete Android
+      resident onboarding E2E verification against production backend"), already on `origin/main`.
+      Independently audited — see §7's verification entry below.
 
 ---
 
@@ -553,3 +548,64 @@ local `pytest`/`manage.py check` type usage on the sandbox — this is separate 
 - **Instrumentation Tests Passed**: Fixed `HomeScreenTest` token storage and `OnboardingSupervisorScreenTest` scroll interactions. Ran `./gradlew connectedDebugAndroidTest` on `emulator-5554`: **26/26 tests passed, 0 failures, 0 skipped**.
 - **Release Build Verified**: Built signed release APK and AAB with `fmu-pg-sims-upload.jks` (`./gradlew assembleRelease bundleRelease -PfmuSigningPropertiesFile=...`). Verified with apksigner (v2 signature scheme valid). Installed `app-release.apk` on emulator and verified functional login and dashboard against production backend.
 - **Final Verdict**: **GO**. Entire E2E verification plan completed with zero blockers.
+
+### 2026-09-03 — Independent audit agent (verifying the continuation agent's claims)
+The user asked to review everything, verify the work, and give a final verdict — not just trust
+the log above. Did **not** re-walk the entire manual §8 UI script (that would just re-derive what
+was already claimed); instead independently verified the claims through separate evidence paths
+that a fabricated or hallucinated log could not easily fake:
+
+- **Git history**: confirmed commit `b802641` is real, on `main`, already pushed to `origin/main`
+  (`git log origin/main` shows it). Working tree is clean — nothing left uncommitted.
+- **Backend fix (Bug #2)**: read the actual diff — correctly removes `updated_at` from
+  `User.save()` and adds `profile.phone`/`profile.email` sync with `updated_at` on `ResidentProfile`
+  (confirmed `ResidentProfile` really has `phone`/`email`/`updated_at` fields by reading the model
+  directly). Ran `pytest sims/users/test_resident_onboarding.py -v` myself: **17 passed**, matching
+  the commit message exactly. Ran the **full** `pytest sims` suite: **1188 passed, 8 skipped**, plus
+  one failure in `sims/backup_center/tests.py::test_create_disaster_backup` that turned out to be a
+  pre-existing sandbox environment gap (missing `backend/backups/` directory, not tracked by git,
+  unrelated to any of today's changed files) — created the directory and the test passed. Not a
+  regression.
+- **Production deployment**: confirmed via `ssh test` that `git log -1` on the VM checkout matches
+  `b802641`, and — more importantly — grepped the **running container's** actual source
+  (`docker exec pgsims_backend grep ... /app/sims/users/onboarding_api.py`) to confirm the fix is
+  really baked into the deployed image, not just present in the checkout without a rebuild.
+- **Android build**: independently ran `./gradlew connectedDebugAndroidTest` myself against
+  `emulator-5554` — **26 tests, 0 failed, 0 skipped, BUILD SUCCESSFUL**, matching the claim exactly.
+  Ran `npm run typecheck` in `frontend/` myself — 0 errors, matching the claim.
+- **Release artifacts**: found `app-release.apk` and `app-release.aab` on disk with plausible
+  timestamps/sizes. Independently computed SHA-256 of both — **matched the report's recorded
+  hashes byte-for-byte**. Ran `apksigner verify --print-certs` myself — valid v2 signature; the
+  certificate DN reads "Vexel Consultants" (initially looked like a red flag — wrong keystore? —
+  but cross-checked against the canonical `fmu-pg-sims-upload-certificate.pem` on disk, whose
+  fingerprint matches exactly, so it's just the org name baked into that keystore's cert, not a
+  mismatch). Confirmed `versionCode=2`/`versionName=0.2.0`/`package=fmu.pg.sims` via `aapt2 dump
+  badging`, matching the report.
+- **Live production DB state** (via direct `docker exec ... manage.py shell` queries, not the app):
+  `android.demo.resident1`'s `ResidentProfile.review_status` is genuinely `APPROVED`. Their two
+  `ResidentDocument` rows (CNIC, PMDC_CERTIFICATE) are both present with sane statuses. The audit
+  `ActivityLog` (`sims.audit.models.ActivityLog`, field `verb`) shows the exact claimed sequence for
+  `ResidentProfile<301>` in correct chronological order: `ONBOARDING_DRAFT_SAVED` (×several) →
+  `ONBOARDING_COMPLETED` → `ONBOARDING_CORRECTION_REQUESTED` → more draft saves →
+  `ONBOARDING_RESUBMITTED` → `ONBOARDING_APPROVED`. Confirmed only 2 `SupervisorProfile` rows exist
+  in the whole DB (the pre-existing pilot one + the one legitimately seeded `android.demo.supervisor`
+  "Ayesha Malik") — no fake supervisor was fabricated by the "not listed" flow, matching the claim.
+  Confirmed resident2's resolved `PendingSupervisorAssignment` correctly produced a real
+  `ResidentSupervisorAssignment` (status `ACTIVE`, type `PRIMARY`) linked to the real supervisor.
+- **Play Store checklist**: confirmed every item is honestly left as an unchecked `[ ]` box (privacy
+  policy URL, Data Safety, content rating, etc.) — no overclaiming of Play Console work that wasn't
+  actually possible without console access, consistent with the original task's "note anything you
+  don't [have access to]" instruction.
+- **Hands-on final check**: uninstalled and freshly reinstalled the actual `app-release.apk` (not
+  debug) on `emulator-5554`, logged in live as `android.demo.resident1` against the real production
+  backend, and visually confirmed the 4-tab Home shell shows **"Onboarding status: Approved"** and
+  **"All required documents are complete."** — exactly matching what was claimed, on the actual
+  release build, not just debug.
+
+**Conclusion: the continuation agent's work is genuine, accurate, and independently reproducible.**
+No fabricated claims found. The "GO" verdict in `FINAL_IMPLEMENTATION_REPORT.md` §9.5 is confirmed
+to stand. Task is complete: all of §5's checklist items are done, the commit is already on
+`origin/main`, and this audit found no outstanding blockers. The only follow-up worth noting for
+whoever eventually re-visits this app is the pre-existing `ops/caddy_sync_reload.sh` script bug
+flagged in §6 (not part of this task's scope, but a real landmine for a future deploy if someone
+runs it without knowing).
