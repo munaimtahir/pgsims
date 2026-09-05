@@ -35,7 +35,14 @@ class MainActivity : ComponentActivity() {
             val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             manager.createNotificationChannel(NotificationChannel("reminders", "Residency reminders", NotificationManager.IMPORTANCE_DEFAULT))
         }
-        setContent { CompanionTheme { CompanionApp((application as CompanionApplication).store) } }
+        setContent {
+            CompanionTheme {
+                val app = application as CompanionApplication
+                // The store is resolved eagerly; the institutional repository stays lazy so an
+                // offline user never pays for (or can be broken by) the network boundary.
+                CompanionApp(app.store) { app.institutional }
+            }
+        }
     }
 }
 
@@ -43,17 +50,38 @@ class MainActivity : ComponentActivity() {
     MaterialTheme(colorScheme = lightColorScheme(primary = Teal, secondary = Color(0xFF4B6584), background = Color(0xFFF7FAF9), surface = Color.White, onSurface = Navy, onBackground = Navy), content = content)
 }
 
-private enum class Page { HOME, TRAINING, DOCUMENTS, PROFILE }
+private enum class Page(val label: String, val icon: androidx.compose.ui.graphics.vector.ImageVector) {
+    HOME("Home", Icons.Default.Home),
+    TRAINING("Training", Icons.Default.Timeline),
+    DOCUMENTS("Documents", Icons.Default.Folder),
+    PROFILE("Profile", Icons.Default.Person),
+    INSTITUTION("Institution", Icons.Default.AccountBalance),
+}
 
-@Composable private fun CompanionApp(store: LocalStore) {
+@Composable private fun CompanionApp(store: LocalStore, institutional: () -> InstitutionalRepository) {
     var data by remember { mutableStateOf(store.read()) }
     var page by remember { mutableStateOf(Page.HOME) }
     fun save(next: AppData) { store.save(next); data = next }
+    // The personal profile gate is unchanged: the app opens straight into the offline flow and
+    // never asks for an institutional account to get past this point.
     if (data.profile == null) Welcome { save(AppData(profile = it)) } else Scaffold(bottomBar = {
-        NavigationBar { listOf(Page.HOME to "Home", Page.TRAINING to "Training", Page.DOCUMENTS to "Documents", Page.PROFILE to "Profile").forEach { (item, label) ->
-            NavigationBarItem(page == item, { page = item }, { Icon(if (item == Page.HOME) Icons.Default.Home else if (item == Page.TRAINING) Icons.Default.Timeline else if (item == Page.DOCUMENTS) Icons.Default.Folder else Icons.Default.Person, label) }, label = { Text(label) })
-        } }
-    }) { padding -> Box(Modifier.padding(padding)) { when (page) { Page.HOME -> Home(data, { page = it }, ::save); Page.TRAINING -> Training(data, ::save); Page.DOCUMENTS -> Documents(data, ::save); Page.PROFILE -> Profile(data, store) { next -> save(next); page = if (next.profile == null) Page.HOME else Page.PROFILE } } } }
+        NavigationBar {
+            Page.entries.forEach { item ->
+                NavigationBarItem(
+                    selected = page == item,
+                    onClick = { page = item },
+                    icon = { Icon(item.icon, item.label) },
+                    label = { Text(item.label) },
+                )
+            }
+        }
+    }) { padding -> Box(Modifier.padding(padding)) { when (page) {
+        Page.HOME -> Home(data, { page = it }, ::save)
+        Page.TRAINING -> Training(data, ::save)
+        Page.DOCUMENTS -> Documents(data, ::save)
+        Page.PROFILE -> Profile(data, store) { next -> save(next); page = if (next.profile == null) Page.HOME else Page.PROFILE }
+        Page.INSTITUTION -> InstitutionalWorkspace(institutional())
+    } } }
 }
 
 @Composable private fun Welcome(onSave: (ResidentProfile) -> Unit) {
@@ -62,13 +90,14 @@ private enum class Page { HOME, TRAINING, DOCUMENTS, PROFILE }
         Text("PGR Companion", style = MaterialTheme.typography.displaySmall, color = Teal, fontWeight = FontWeight.Bold)
         Text("Residency Portfolio", style = MaterialTheme.typography.headlineSmall, color = Navy)
         Spacer(Modifier.height(20.dp)); Text("Organize your postgraduate training, milestones, activities, documents and reminders in one private place.")
-        Spacer(Modifier.height(12.dp)); Text("Works offline. Your information stays on this device. No account, institution or cloud connection is required.", color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Spacer(Modifier.height(12.dp)); Text("Works offline. Your information stays on this device. No account, institution or cloud connection is required to use it.", color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Spacer(Modifier.height(6.dp)); Text("If your institution issues you a PGR SIMS account, you can optionally connect to it later from the Institution tab. That is never required.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         Spacer(Modifier.height(28.dp)); Button({ form = true }, Modifier.fillMaxWidth()) { Text("Create residency profile") }
         Spacer(Modifier.height(18.dp)); Disclaimer()
     } else ProfileForm(onSave)
 }
 
-@Composable private fun Disclaimer() { Text("PGR Companion is an independent productivity tool for postgraduate medical trainees. It is not affiliated with, endorsed by, or an official application of any university, regulatory authority, examination body, or government institution.", style = MaterialTheme.typography.bodySmall) }
+@Composable internal fun Disclaimer() { Text("PGR Companion is an independent productivity tool for postgraduate medical trainees. It is not affiliated with, endorsed by, or an official application of any university, regulatory authority, examination body, or government institution.", style = MaterialTheme.typography.bodySmall) }
 
 @Composable private fun ProfileForm(onSave: (ResidentProfile) -> Unit) {
     var name by remember { mutableStateOf("") }; var institution by remember { mutableStateOf("") }; var programme by remember { mutableStateOf("") }; var specialty by remember { mutableStateOf("") }; var year by remember { mutableStateOf("") }; var supervisor by remember { mutableStateOf("") }
@@ -117,7 +146,7 @@ private enum class Page { HOME, TRAINING, DOCUMENTS, PROFILE }
     Column(Modifier.fillMaxSize().padding(16.dp)) { Row(verticalAlignment = Alignment.CenterVertically) { Text("Document vault", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f)); FilledTonalButton({ picker.launch(arrayOf("application/pdf", "image/*")) }) { Icon(Icons.Default.Add, null); Text(" Add") } }; Text("Keep certificates, training letters and other residency documents organized here.", color = MaterialTheme.colorScheme.onSurfaceVariant); OutlinedTextField(query, { query = it }, Modifier.fillMaxWidth().padding(vertical = 10.dp), label = { Text("Search documents") }, singleLine = true); val docs = data.documents.filter { it.title.contains(query, true) || it.category.contains(query, true) }; if (docs.isEmpty()) Empty("No documents stored yet.") else LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) { items(docs) { d -> Record(d.title, "${d.category} · ${d.addedDate}") { java.io.File(d.path).delete(); save(data.copy(documents = data.documents - d)) } } } }
 }
 
-@Composable private fun Profile(data: AppData, store: LocalStore, save: (AppData) -> Unit) { val context = LocalContext.current; var confirm by remember { mutableStateOf(false) }; if (confirm) AlertDialog(onDismissRequest = { confirm = false }, title = { Text("Delete all app data?") }, text = { Text("This permanently removes your profile, records, documents and reminders from this device.") }, confirmButton = { TextButton(onClick = { store.clear(context); save(AppData()); confirm = false }) { Text("Delete everything") } }, dismissButton = { TextButton(onClick = { confirm = false }) { Text("Cancel") } }); Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) { Text("Profile", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold); Text(data.profile!!.fullName, style = MaterialTheme.typography.titleLarge); Text(listOf(data.profile.institution, data.profile.programme, data.profile.specialty).filter(String::isNotBlank).joinToString(" · ")); Text("Your information is stored locally on this device. PGR Companion has no account, advertising, analytics, cloud sync, or institutional connection.", color = MaterialTheme.colorScheme.onSurfaceVariant); Disclaimer(); OutlinedButton(onClick = { confirm = true }, modifier = Modifier.fillMaxWidth()) { Icon(Icons.Default.DeleteForever, null); Spacer(Modifier.width(8.dp)); Text("Delete All App Data") }; Text("PGR Companion 1.0.0 · Vexel Consultants", style = MaterialTheme.typography.bodySmall) } }
+@Composable private fun Profile(data: AppData, store: LocalStore, save: (AppData) -> Unit) { val context = LocalContext.current; var confirm by remember { mutableStateOf(false) }; if (confirm) AlertDialog(onDismissRequest = { confirm = false }, title = { Text("Delete all app data?") }, text = { Text("This permanently removes your profile, records, documents and reminders from this device.") }, confirmButton = { TextButton(onClick = { store.clear(context); save(AppData()); confirm = false }) { Text("Delete everything") } }, dismissButton = { TextButton(onClick = { confirm = false }) { Text("Cancel") } }); Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) { Text("Profile", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold); Text(data.profile!!.fullName, style = MaterialTheme.typography.titleLarge); Text(listOf(data.profile.institution, data.profile.programme, data.profile.specialty).filter(String::isNotBlank).joinToString(" · ")); Text("The records in Home, Training, Documents and Profile are stored locally on this device. PGR Companion has no advertising and no analytics, and it never syncs these personal records to any server.", color = MaterialTheme.colorScheme.onSurfaceVariant); Text("The Institution tab is optional and separate. If you choose to sign in there, PGR Companion contacts your institution's PGR SIMS server over an encrypted connection to show information they hold about you. Signing out removes that session and leaves everything above untouched.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant); Disclaimer(); OutlinedButton(onClick = { confirm = true }, modifier = Modifier.fillMaxWidth()) { Icon(Icons.Default.DeleteForever, null); Spacer(Modifier.width(8.dp)); Text("Delete All App Data") }; Text("PGR Companion 1.1.0 · Vexel Consultants", style = MaterialTheme.typography.bodySmall) } }
 
 @Composable private fun Field(label: String, value: String, change: (String) -> Unit) { OutlinedTextField(value, change, Modifier.fillMaxWidth(), label = { Text(label) }, singleLine = true) }
 @Composable private fun AddTraining(kind: String, save: (Rotation?, ActivityRecord?, Milestone?) -> Unit, cancel: () -> Unit) { var title by remember { mutableStateOf("") }; var detail by remember { mutableStateOf("") }; var date by remember { mutableStateOf("") }; AlertDialog(onDismissRequest = cancel, title = { Text("Add $kind") }, text = { Column(verticalArrangement = Arrangement.spacedBy(8.dp)) { Field("Title", title) { title = it }; Field(if (kind == "Rotation") "Department / unit" else if (kind == "Activity") "Activity type" else "Category", detail) { detail = it }; Field("Date or due date", date) { date = it } } }, confirmButton = { TextButton(onClick = { if (title.isNotBlank()) when (kind) { "Rotation" -> save(Rotation(title = title, unit = detail, startDate = date), null, null); "Activity" -> save(null, ActivityRecord(type = detail.ifBlank { "Academic" }, title = title, date = date), null); else -> save(null, null, Milestone(title = title, category = detail.ifBlank { "General" }, dueDate = date)) } }) { Text("Save") } }, dismissButton = { TextButton(onClick = cancel) { Text("Cancel") } }) }
