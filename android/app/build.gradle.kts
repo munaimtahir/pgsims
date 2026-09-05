@@ -16,8 +16,15 @@ android {
         applicationId = "pk.vexel.pgrcompanion"
         minSdk = 26
         targetSdk = 36
-        versionCode = 1
-        versionName = "1.0.0"
+        versionCode = 2
+        versionName = "1.1.0"
+
+        // Institutional Workspace endpoint. HTTPS only — see the cleartext ban below.
+        buildConfigField(
+            "String",
+            "INSTITUTIONAL_API_BASE_URL",
+            "\"https://android.pgsims.alshifalab.pk/\"",
+        )
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -119,7 +126,15 @@ dependencies {
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.coroutines.android)
 
+    // Institutional Workspace only. The Personal Workspace uses none of these.
+    implementation(libs.androidx.security.crypto)
+    implementation(libs.retrofit.core)
+    implementation(libs.retrofit.kotlinx.serialization)
+    implementation(libs.okhttp.core)
+
     testImplementation(libs.junit)
+    testImplementation(libs.okhttp.mockwebserver)
+    testImplementation(libs.kotlinx.coroutines.test)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.compose.bom))
@@ -128,8 +143,3 @@ dependencies {
     debugImplementation(libs.compose.ui.tooling)
     debugImplementation(libs.compose.ui.test.manifest)
 }
-
-// The institutional foundation remains in Git history, but is not part of this
-// independent offline product or its APK/AAB.
-android.sourceSets["main"].java.exclude("fmu/pg/sims/**")
-android.sourceSets["androidTest"].java.exclude("fmu/pg/sims/**")
