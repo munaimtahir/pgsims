@@ -1,80 +1,64 @@
-# PGR SIMS — Android
+# PGR Companion — Android
 
-PGR SIMS Android is a client of the canonical PGR SIMS backend (Django REST API under
-`backend/`). It is a second first-class frontend of the same platform — it does not become a
-separate system.
+`pk.vexel.pgrcompanion`, store name **PGR Companion: Residency**. Single Gradle module (`:app`),
+Kotlin + Compose + Material 3, `minSdk 26` / `target & compileSdk 36`.
 
-## Relationship to the rest of the repository
+## What this app is
 
-- The Django backend (`backend/`) is the single source of truth for data, business rules,
-  permissions, and validation.
-- The existing Next.js web frontend (`frontend/`) and this Android app are both clients of that
-  same backend. They read and write the same data through the same API surface.
-- Android must consume the backend's APIs/services rather than recreate business logic locally.
-  Local storage (`core/database/`) is a cache/client facility, not a competing source of truth.
+Two things, in this order, and the order is load-bearing:
 
-## Current foundation release
+1. A **standalone offline residency portfolio** for postgraduate trainees. No account, no network,
+   no institution. This is what Google Play reviewed and approved, and it is currently in closed
+   testing. It must keep working on its own and must never be put behind a login.
+2. An **optional Institutional Workspace** that connects to the canonical PGR SIMS backend
+   (`backend/`) when — and only when — a trainee's institution has issued them an account.
 
-The current deliverable is a minimal branded, launchable foundation shell. It uses the canonical
-backend contract for health/auth primitives and deliberately does not include resident onboarding
-or other substantive feature UI. The production application identity is `fmu.pg.sims` and the
-store-facing name is **FMU Postgraduate Residency Portal**.
+For workspace 2 the backend is the single source of truth for data, business rules, permissions and
+validation; the app consumes its API rather than recreating logic locally, and never presents local
+personal records as an institutional submission. Workspace 1 has no server and answers to nothing.
 
-## Status of this scaffold
+See the repository-root `INSTITUTIONAL_WORKSPACE_ARCHITECTURE.md` for the boundary,
+`PGR_SIMS_ANDROID_API_INTEGRATION.md` for the verified API contracts, and
+`ANDROID_RELEASE_VERIFICATION.md` for build and device verification.
 
-The project contains the Android `app` module with Compose/Material 3, Retrofit/OkHttp,
-serialization, encrypted token storage, navigation/auth foundations, and the minimal shell. Feature
-directories listed below remain planned architecture rather than implemented feature modules.
-
-Before substantial Android feature implementation begins, a **Phase M0 — Android Mobile
-Architecture & API Readiness Discovery** pass must occur to confirm current backend API surface,
-auth flow, and contract alignment against `docs/contracts/` (see the repository root `CLAUDE.md`
-and `AGENTS.md` for the canonical backend/contract model). Note: prior mobile discovery notes exist
-under `docs/ARCHIVE/_mobile_android/` but predate the current 4-role clean-room identity model
-(`ADMIN` / `RESIDENT` / `SUPERVISOR` / `SUPPORT_STAFF`) — treat them as historical background only,
-not as a current spec.
-
-## Directory layout
+## Layout
 
 ```
 android/
-├── app/                    Application composition: entry point, root DI wiring,
-│                           top-level navigation host, global session/app lifecycle,
-│                           role-aware entry routing. No feature business logic here.
-├── core/
-│   ├── common/             Cross-cutting utilities.
-│   ├── model/              Shared Android-side representations of backend API contracts.
-│   ├── network/            HTTP/API infrastructure (client, serialization, auth
-│   │                       interceptors, error parsing).
-│   ├── auth/               Session/authentication infrastructure.
-│   ├── data/                Repository/data orchestration shared across features.
-│   ├── database/           Local caching/persistence infrastructure (cache, not source
-│   │                       of truth).
-│   ├── designsystem/       Reusable UI primitives, typography, dimensions, theme.
-│   ├── navigation/         Shared navigation contracts and destinations.
-│   └── testing/            Shared test helpers, fixtures, fakes.
-└── feature/
-    ├── authentication/
-    ├── onboarding/         MVP focus.
-    ├── home/
-    ├── profile/
-    ├── training/
-    ├── documents/
-    ├── supervision/
-    ├── notifications/
-    └── supervisor/
+├── app/src/main/java/pk/vexel/pgrcompanion/
+│   ├── CompanionApplication.kt      LocalStore eagerly; institutional repository lazily
+│   ├── LocalStore.kt                Personal Workspace persistence (offline, no network)
+│   ├── MainActivity.kt              Theme, five-tab shell, personal screens
+│   ├── InstitutionalRepository.kt   Optional PGR SIMS client: API, tokens, error mapping
+│   └── InstitutionalScreen.kt       Optional Institution tab and its four states
+├── app/src/debug/AndroidManifest.xml  Cleartext to emulator loopback, debug only
+└── app/src/test/                    JVM unit tests, incl. MockWebServer coverage
 ```
 
-Each `feature/*` module owns its own UI/state/use cases and consumes canonical services through
-the shared `core/data` and `core/network` abstractions — it must not duplicate backend business
-rules.
+`core/` and `feature/` are empty `.gitkeep` directories left over from an abandoned multi-module
+architecture built under a different application id. They contain no code and are not in
+`settings.gradle.kts`. Do not treat them as a spec.
 
-Future feature families that are reserved but not yet scaffolded as modules: logbook, workshops,
-research, assessments, rotations, attendance, leave, and admin/staff operational functionality.
-These will be added as modules only when their implementation phase begins.
+## Build
 
-## Build tooling
+```bash
+cd android
+./gradlew :app:testDebugUnitTest :app:lintDebug :app:assembleDebug
+./gradlew :app:assembleRelease :app:bundleRelease \
+  -PpgrCompanionSigningPropertiesFile=/owner/controlled/path/signing.properties
+```
 
-No Gradle build files are included in this scaffold. Gradle module wiring, Kotlin/AGP/Compose BOM
-versions, SDK levels, application ID, and the dependency injection / networking / persistence
-library choices are deliberately deferred to the next implementation phase (Phase M0 and beyond).
+Release signing comes from an owner-readable properties file
+(`storeFile`, `storePassword`, `keyAlias`, `keyPassword`) passed by Gradle property. No keystore and
+no password is committed; a release build fails loudly if the property is missing rather than
+quietly producing an unsigned artifact.
+
+## House rules for this module
+
+- The Personal Workspace must render before, and independently of, any institutional session.
+  A network or institution failure belongs inside the Institution tab and nowhere else.
+- Never log request bodies, tokens or passwords — in any build type.
+- Institutional payload shapes are verified against the live backend before use, not inferred.
+  When you change one, update `PGR_SIMS_ANDROID_API_INTEGRATION.md` in the same change.
+- In-app privacy copy, the store listing and the Play Data Safety form have to keep agreeing with
+  each other. If you add a data flow, all three move together.
