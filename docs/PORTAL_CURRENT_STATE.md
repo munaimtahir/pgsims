@@ -7,8 +7,11 @@ onboarding/profile updates, programme/training, supervisor assignment, documents
 resubmission. Server records, validation, RBAC, and completion state remain canonical.
 
 `release` uses production; `staging` is configured as `https://staging.pgsims.alshifalab.pk/`.
-On 2026-09-06 the hostname had no DNS record, so staging is configured but not deployed/reachable.
-Live staging verification needs a DNS/TLS-backed isolated service and dedicated resident account.
+An isolated VM staging stack is now live on loopback port 18014 with dedicated Postgres/Redis/media
+volumes and `android.demo.*` staging-only accounts. The API 36 Portal staging variant completed
+live login and rendered canonical onboarding data through an SSH tunnel. The public hostname still
+has no DNS record, so public HTTPS staging and full upload/resubmission workflow verification remain
+open. See `docs/ANDROID_STAGING_E2E_VERIFICATION.md` and `docs/STAGING_ENVIRONMENT.md`.
 
 The rebuilt development artifacts are `builds/portal/PGR-Portal-0.1.1-dev.aab` (SHA-256
 `f5d06bc2d9dba4a6d7bc63c6fac4b27788ec4294fca61f930858d6bfd0b69cfc`) and

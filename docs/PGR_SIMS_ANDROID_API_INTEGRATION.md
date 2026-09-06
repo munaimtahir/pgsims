@@ -16,6 +16,12 @@ No credentials, tokens, or production secrets are committed or logged.
 
 Production `https://android.pgsims.alshifalab.pk/healthz/` returned `200` with healthy database,
 cache, and Celery checks. Its login route returned `405 Allow: POST` to a safe unauthenticated GET,
-confirming the deployed route/method boundary. The configured staging hostname
-`staging.pgsims.alshifalab.pk` did not resolve in DNS, so no credentials or production data were
-used to test write endpoints. Staging endpoint contracts are source-verified, not live-verified.
+confirming the deployed route/method boundary.
+
+An isolated VM staging service now verifies live `POST` login (including invalid credentials),
+refresh, authenticated logout/revocation, and authenticated `GET` calls to `me`, onboarding,
+documents, training, and supervisor assignments. The probe found that backend logout correctly
+requires a bearer token in addition to the refresh payload; Portal now sends it and its logout
+test asserts the header. The configured public staging hostname still does not resolve, so this
+local isolated endpoint is reached only through an SSH tunnel/emulator loopback override. Profile
+PATCH and document upload/resubmission are not yet live-verified.
