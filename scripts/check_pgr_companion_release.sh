@@ -12,8 +12,8 @@ grep -q 'POST_NOTIFICATIONS' "$manifest"
 grep -q 'android.permission.INTERNET' "$manifest"
 grep -q 'INSTITUTIONAL_API_BASE_URL' "$build"
 grep -q 'https://android.pgsims.alshifalab.pk/' "$root/android/app/src/main/java/pk/vexel/pgrcompanion/InstitutionalRepository.kt" "$build"
-grep -q 'Institutional Workspace' "$root/android/app/src/main/java/pk/vexel/pgrcompanion/MainActivity.kt"
-! find "$root/android/app/src/main" -type f -print0 | xargs -0 rg -n 'localhost|10\.0\.2\.2|example\.com|TODO endpoint|fake|mock' >/dev/null
+grep -q 'InstitutionalWorkspace' "$root/android/app/src/main/java/pk/vexel/pgrcompanion/MainActivity.kt"
+! grep -rn -E 'localhost|10\.0\.2\.2|example\.com|TODO endpoint|fake|mock' "$root/android/app/src/main" >/dev/null
 test -f "$root/docs/android/pgr-companion-1.0.0/VERIFICATION.md"
 test -f "$root/ANDROID_CURRENT_STATE.md"
 test -f "$root/INSTITUTIONAL_WORKSPACE_ARCHITECTURE.md"
