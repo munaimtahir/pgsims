@@ -63,6 +63,9 @@ services:
       EMAIL_BACKEND: django.core.mail.backends.locmem.EmailBackend
       ENABLE_FILE_LOGGING: "False"
       GOOGLE_DRIVE_BACKUP_ENABLED: "false"
+      # Used exclusively by the staging-only Android E2E seed command. The
+      # value lives in the ignored staging env file and is never logged.
+      PGSIMS_STAGING_ANDROID_DEMO_PASSWORD: ${PGSIMS_STAGING_ANDROID_DEMO_PASSWORD:?set a staging-only Android demo password}
     ports:
       - "127.0.0.1:${STAGING_BACKEND_PORT:-18014}:8014"
     volumes:
