@@ -2,6 +2,30 @@
 
 As of 2026-09-06.
 
+## Closed-testing baseline (Milestone A)
+
+The Play-approved closed-testing build is preserved by the tag **`play-closed-testing-baseline-1.0.0`**.
+That tag already existed when this pass began and was **not** moved or recreated.
+
+| | |
+|---|---|
+| Commit | `f37469a0697dd07107e3283da6320eb5f84c1808` — *Correct release symbol handoff* |
+| Package ID | `pk.vexel.pgrcompanion` |
+| versionName / versionCode | `1.0.0` / `1` |
+| compileSdk / targetSdk / minSdk | 36 / 36 / 26 |
+| Build variant | `release` (R8 + resource shrinking, `signingConfigs.release`) |
+| Release artifact status | Signed AAB + APK produced and verified from this source state; `apksigner` reported v2, one signer, RSA 4096 Vexel Consultants certificate. See `docs/android/pgr-companion-1.0.0/VERIFICATION.md`. |
+
+**Provenance and its limit.** The tagged commit is the last commit that touches the Android module
+before this work, and the build metadata in its `app/build.gradle.kts` (`versionCode 1`,
+`versionName 1.0.0`, package `pk.vexel.pgrcompanion`) matches the artifact recorded in
+`docs/android/pgr-companion-1.0.0/VERIFICATION.md`. That is a *source-state* match, not proof of
+byte-identity with the AAB in Play Console — no upload receipt or Play-side artifact hash is held in
+this repository, and the AAB itself is not committed. Treat the tag as "the verified source state
+that produced a 1.0.0 release artifact", which is what it is, and not as a Play upload receipt.
+
+Nothing in this pass rewrites, reverts or re-points that tag, and no commit before it was amended.
+
 ## What shipped before this change
 
 The Play baseline is `pk.vexel.pgrcompanion`, `1.0.0`, `versionCode 1` — a standalone, fully
