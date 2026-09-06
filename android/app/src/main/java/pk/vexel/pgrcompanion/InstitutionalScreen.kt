@@ -2,7 +2,6 @@ package pk.vexel.pgrcompanion
 
 import android.content.Context
 import android.net.Uri
-import android.provider.OpenableColumns
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
@@ -24,7 +23,6 @@ import kotlinx.coroutines.launch
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.booleanOrNull
 import kotlinx.serialization.json.intOrNull
-import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import java.io.File
@@ -35,28 +33,24 @@ import java.io.File
  */
 enum class InstitutionalState { DISCONNECTED, SIGNING_IN, CONNECTED, ERROR }
 
+/** Mirrors [InstitutionalRepository.ALLOWED_UPLOAD_EXTENSIONS] so the picker cannot offer a reject. */
+private val UPLOAD_MIME_TYPES = arrayOf(
+    "application/pdf",
+    "image/jpeg",
+    "image/png",
+    "application/msword",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+)
+
 private fun JsonObject.text(key: String): String = string(key).orEmpty()
 private fun JsonObject.number(key: String): Int? =
     runCatching { this[key]?.jsonPrimitive?.intOrNull }.getOrNull()
 private fun JsonObject.flag(key: String): Boolean =
     runCatching { this[key]?.jsonPrimitive?.booleanOrNull }.getOrNull() ?: false
-private fun JsonObject.objects(key: String): List<JsonObject> =
-    runCatching { this[key]?.jsonArray?.map { it.jsonObject } }.getOrNull().orEmpty()
 private fun JsonObject.child(key: String): JsonObject? =
     runCatching { this[key]?.jsonObject }.getOrNull()
 
-private fun humanize(value: String): String =
-    value.replace('_', ' ').lowercase().replaceFirstChar { it.uppercase() }
-
-/** The picker hands back a content Uri; the backend validates on the *filename*, so resolve it. */
-internal fun displayNameOf(context: Context, uri: Uri): String {
-    val resolved = runCatching {
-        context.contentResolver.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)
-            ?.use { cursor -> if (cursor.moveToFirst()) cursor.getString(0) else null }
-    }.getOrNull()
-    return resolved?.takeIf { it.isNotBlank() }
-        ?: uri.lastPathSegment?.substringAfterLast('/').orEmpty().ifBlank { "document" }
-}
+private fun humanize(value: String): String = InstitutionalLabels.humanize(value)
 
 @Composable
 fun InstitutionalWorkspace(repository: InstitutionalRepository) {
@@ -72,7 +66,7 @@ fun InstitutionalWorkspace(repository: InstitutionalRepository) {
     var error by remember { mutableStateOf<String?>(null) }
     var notice by remember { mutableStateOf<String?>(null) }
     var busy by remember { mutableStateOf(false) }
-    var reloadKey by remember { mutableStateOf(0) }
+    var reloadKey by remember { mutableIntStateOf(0) }
 
     suspend fun reload() {
         busy = true
@@ -249,6 +243,7 @@ private fun ConnectedPane(
 ) {
     val context = LocalContext.current
     var targetDocument by remember { mutableStateOf<Int?>(null) }
+    var confirmReplace by remember { mutableStateOf<Pair<Int, String>?>(null) }
     val picker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? ->
         val id = targetDocument
         targetDocument = null
@@ -284,14 +279,11 @@ private fun ConnectedPane(
         }
 
         val me = data.me
+        val summary = remember(data) { OnboardingSummary.from(data.onboarding, data.documents) }
         Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = Color(0xFFE2F3F0))) {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text(me.text("username"), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
                 Text("Role: ${humanize(me.text("role").ifBlank { "unknown" })}")
-                val review = me.text("onboarding_review_status").ifBlank { data.onboarding?.text("review_status").orEmpty() }
-                if (review.isNotBlank()) Text("Institutional review: ${humanize(review)}")
-                val pending = me.number("pending_upload_count") ?: 0
-                if (pending > 0) Text("$pending document(s) awaiting your upload")
                 if (me.flag("must_change_password")) {
                     Text(
                         "Your institution requires a password change. Please sign in on the PGR SIMS web portal to set a new password.",
@@ -301,12 +293,40 @@ private fun ConnectedPane(
             }
         }
 
+        // Spec 11.8: derived from the institution's own onboarding payload, never from local records.
+        if (data.onboarding != null) {
+            Text("Onboarding status", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+            Card(Modifier.fillMaxWidth()) {
+                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    val review = summary.reviewStatus.ifBlank { me.text("onboarding_review_status") }
+                    Text("Review: ${InstitutionalLabels.reviewStatus(review)}", fontWeight = FontWeight.SemiBold)
+                    summary.reviewNote.takeIf { it.isNotBlank() }?.let {
+                        Text("Reviewer note: $it", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
+                    }
+                    Text("Profile: ${if (summary.profileComplete) "Complete" else "Incomplete"}")
+                    Text("Declaration: ${if (summary.declarationAccepted) "Accepted" else "Not accepted"}")
+                    Text("Supervisor: ${InstitutionalLabels.supervisorStatus(summary.supervisorStatus)}")
+                    if (summary.onboardingComplete && !summary.hasOutstanding) {
+                        Text("Your institution has everything it asked for.")
+                    } else {
+                        Text("Outstanding requirements", fontWeight = FontWeight.SemiBold)
+                        if (summary.outstanding.isEmpty()) {
+                            Text("Nothing outstanding.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        } else {
+                            summary.outstanding.forEach { Text("• $it", style = MaterialTheme.typography.bodySmall) }
+                        }
+                    }
+                }
+            }
+        }
+
         data.onboarding?.let { onboarding ->
-            val sections = onboarding.objects("sections")
+            val sections = onboarding.objectList("sections")
             if (sections.isNotEmpty()) {
                 Text("Institutional profile", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
                 Text(
-                    "These fields are defined and validated by your institution.",
+                    "These fields are defined and validated by your institution. Only the details " +
+                        "your institution lets a resident edit are editable here.",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -340,7 +360,10 @@ private fun ConnectedPane(
 
         Text("Supervisor", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
         if (data.assignments.isEmpty()) {
-            InstitutionalEmpty("No supervisor assignment is currently recorded at this institution.")
+            InstitutionalEmpty(
+                "No supervisor assignment is currently recorded at this institution. " +
+                    "Status: ${InstitutionalLabels.supervisorStatus(summary.supervisorStatus)}."
+            )
         } else {
             data.assignments.forEach { assignment ->
                 val supervisor = assignment.child("supervisor")
@@ -366,39 +389,65 @@ private fun ConnectedPane(
         } else {
             data.documents.forEach { document ->
                 val id = document.number("id")
+                val status = document.text("status")
+                val needsAction = InstitutionalLabels.documentNeedsAction(status)
                 Card(Modifier.fillMaxWidth()) {
                     Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
                         Column(Modifier.weight(1f)) {
                             Text(document.text("title").ifBlank { "Required document" }, fontWeight = FontWeight.SemiBold)
                             Text(
-                                humanize(document.text("status")),
+                                InstitutionalLabels.documentStatus(status),
                                 style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                color = if (needsAction) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
                             )
+                            document.text("original_filename").takeIf { it.isNotBlank() }?.let {
+                                Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
+                            // Spec 11.7: the reviewer's own words, shown against the requirement
+                            // they belong to, are what makes a correction actionable.
                             document.text("verification_remarks").takeIf { it.isNotBlank() }?.let {
-                                Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
+                                Text("Reviewer: $it", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
                             }
                         }
                         if (id != null) {
                             TextButton(
                                 enabled = !busy,
                                 onClick = {
-                                    targetDocument = id
-                                    picker.launch(
-                                        arrayOf(
-                                            "application/pdf",
-                                            "image/jpeg",
-                                            "image/png",
-                                            "application/msword",
-                                            "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                                        )
-                                    )
+                                    // Replacing something already submitted or approved is an
+                                    // explicit resubmission, never a silent overwrite.
+                                    if (InstitutionalLabels.replacementNeedsConfirmation(status)) {
+                                        confirmReplace = id to document.text("title").ifBlank { "this document" }
+                                    } else {
+                                        targetDocument = id
+                                        picker.launch(UPLOAD_MIME_TYPES)
+                                    }
                                 },
-                            ) { Text("Upload") }
+                            ) { Text(InstitutionalLabels.documentAction(status)) }
                         }
                     }
                 }
             }
+        }
+
+        confirmReplace?.let { (id, title) ->
+            AlertDialog(
+                onDismissRequest = { confirmReplace = null },
+                title = { Text("Replace $title?") },
+                text = {
+                    Text(
+                        "Your institution already has a copy of this document. Uploading a new file " +
+                            "replaces it and sends it back for review."
+                    )
+                },
+                confirmButton = {
+                    TextButton(onClick = {
+                        confirmReplace = null
+                        targetDocument = id
+                        picker.launch(UPLOAD_MIME_TYPES)
+                    }) { Text("Choose a replacement") }
+                },
+                dismissButton = { TextButton(onClick = { confirmReplace = null }) { Text("Cancel") } },
+            )
         }
 
         if (data.unavailable.isNotEmpty()) {
@@ -422,7 +471,7 @@ private fun ConnectedPane(
 
 @Composable
 private fun OnboardingSection(section: JsonObject, busy: Boolean, onSave: (String, String) -> Unit) {
-    val fields = section.objects("fields")
+    val fields = section.objectList("fields")
     if (fields.isEmpty()) return
     Card(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -431,22 +480,37 @@ private fun OnboardingSection(section: JsonObject, busy: Boolean, onSave: (Strin
                 val key = field.text("field")
                 val label = field.text("label").ifBlank { humanize(key) }
                 val required = field.flag("required")
-                var value by remember(key, field.text("value")) { mutableStateOf(field.text("value")) }
                 val original = field.text("value")
-                OutlinedTextField(
-                    value = value,
-                    onValueChange = { value = it },
-                    modifier = Modifier.fillMaxWidth(),
-                    label = { Text(if (required) "$label *" else label) },
-                    singleLine = true,
-                    enabled = !busy,
-                    isError = required && value.isBlank(),
-                    trailingIcon = {
-                        if (value != original) {
-                            TextButton(onClick = { onSave(key, value) }, enabled = !busy) { Text("Save") }
-                        }
-                    },
-                )
+                val readOnlyReason = OnboardingFieldPolicy.readOnlyReason(key)
+                if (readOnlyReason != null) {
+                    // Rendered, not editable: these resolve server-side to a row id or an ISO date,
+                    // so a text box here would show a database id and invite a damaging typo.
+                    Column {
+                        Text(if (required) "$label *" else label, style = MaterialTheme.typography.labelMedium)
+                        Text(
+                            OnboardingFieldPolicy.displayValue(key, original),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = if (required && original.isBlank()) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface,
+                        )
+                        Text(readOnlyReason, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                } else {
+                    var value by remember(key, original) { mutableStateOf(original) }
+                    OutlinedTextField(
+                        value = value,
+                        onValueChange = { value = it },
+                        modifier = Modifier.fillMaxWidth(),
+                        label = { Text(if (required) "$label *" else label) },
+                        singleLine = true,
+                        enabled = !busy,
+                        isError = required && value.isBlank(),
+                        trailingIcon = {
+                            if (value != original) {
+                                TextButton(onClick = { onSave(key, value) }, enabled = !busy) { Text("Save") }
+                            }
+                        },
+                    )
+                }
             }
         }
     }
