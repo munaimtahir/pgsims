@@ -27,13 +27,36 @@ Two shape details are easy to get wrong and are both covered by tests: `/api/res
 overrides `list()` and returns a bare array while the other two collections are paginated at
 `PAGE_SIZE=25`, and the onboarding PATCH takes a `{"fields": ...}` envelope, not a bare map.
 
+### Live probes run on 2026-09-06 (non-mutating by construction)
+
+Each of these was issued against production with a seeded demo resident and is designed to be
+rejected *before* the backend changes anything, so the route, auth, parser and error contract are
+proven without touching a record. The document list was re-read afterwards and was byte-identical.
+
+| Probe | Result |
+|---|---|
+| `POST .../1/upload/` multipart with no `file` part | `400 {"detail":"file is required"}` — part name confirmed |
+| `POST .../1/upload/` multipart with `notes.txt` | `400` listing `.doc .docx .jpeg .jpg .pdf .png` — matches the client allowlist exactly |
+| `POST .../999999/upload/` (someone else's document) | `404`, not `403` — the queryset is scoped, so nothing leaks |
+| `PATCH /api/auth/onboarding/` `{"fields":{"not_a_real_field":…}}` | `400 {"not_a_real_field":"Unsupported onboarding field."}`, rolled back inside `transaction.atomic()` |
+| `PATCH /api/auth/onboarding/` with a **bare map** | `200` — and nothing is written |
+| `GET /api/auth/me/` with no token | `401` |
+
+The bare-map result is the important one. `patch()` falls back to
+`{request.data.get("field"): request.data.get("value")}`, which filters to `{}`, so a client that
+sent a bare map would get a cheerful `200` while saving nothing. The client sends the
+`{"fields": …}` envelope and a unit test asserts the wire shape, precisely because the failure mode
+is silent.
+
 ### Fields the client actually reads
 
 - `me`: `username`, `role`, `must_change_password`, `onboarding_review_status`,
   `pending_upload_count`. **`/api/auth/me/` does not return `full_name`** — only the login response
   does — so the header uses `username`.
-- `onboarding`: `sections[{key, title, fields[{field, label, value, required}]}]`, `review_status`.
-- `documents`: `id`, `title`, `status`, `verification_remarks`.
+- `onboarding`: `sections[{key, title, fields[{field, label, value, required}]}]`, `review_status`,
+  `review_note`, `supervisor_status`, `profile_complete`, `declaration_accepted`,
+  `onboarding_complete`, `required_onboarding_fields`, `documents`.
+- `documents`: `id`, `title`, `status`, `original_filename`, `verification_remarks`.
 - `resident-training` results: `program_name`, `program_code`, `current_level`, `start_date`,
   `expected_end_date`.
 - `supervision/assignments` results: `supervisor{name, designation, department}`,
@@ -44,6 +67,15 @@ overrides `list()` and returns a bare array while the other two collections are 
 Upload: 10 MB maximum, extensions `.pdf .jpg .jpeg .png .doc .docx`. The client validates both
 before sending so the user gets a sentence instead of a 400. The backend remains authoritative for
 field permissions, review states and validation.
+
+Editable fields: `_set_resident_onboarding_field` accepts free text for `full_name`, `phone`,
+`email`, `registration_no`, `cnic` and `notes` only. `hospital`, `department_ref` and `program_ref`
+resolve by **primary key**; `academic_session_ref` and `specialty_ref` resolve by **code**;
+`training_start_date` and `expected_end_date` want ISO-8601 and 400 otherwise. Live values observed
+for the demo resident were `hospital=9`, `department_ref=31`, `program_ref=15`,
+`academic_session_ref="JAN-2026"`, `specialty_ref="anesthesia"`. The client renders all of those
+read-only rather than as text boxes holding a row id — see
+`INSTITUTIONAL_WORKSPACE_ARCHITECTURE.md`.
 
 ## Auth behaviour
 

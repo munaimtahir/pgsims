@@ -49,6 +49,33 @@ is one of five peers in the bottom bar. No institutional account is required to 
 using any part of the approved baseline. This was verified on a device, offline, from the signed
 release build — see `ANDROID_RELEASE_VERIFICATION.md`.
 
+## Generic-workspace stabilization in this version
+
+- **Reminders are real.** 1.0.0 declared `POST_NOTIFICATIONS`, created a notification channel, and
+  then never requested the permission or delivered anything — a declared permission the app could
+  not use. Reminders now take a due date from a date picker, schedule an inexact `RTC_WAKEUP` alarm
+  for 09:00 that morning, and deliver through a non-exported `ReminderReceiver`. The runtime
+  permission is requested the first time the user adds a reminder, never at launch; refusing it
+  disables nothing else. `RECEIVE_BOOT_COMPLETED` was added solely to re-arm pending reminders,
+  which the platform drops across a reboot, and the app also re-arms on launch.
+- Reminders were previously write-only; they can now be completed and deleted, and both actions
+  cancel the pending alarm, as does Delete All App Data.
+- The selected tab is `rememberSaveable`, so a rotation or process death no longer silently returns
+  the user to Home.
+- The document vault stored each file as `doc_<millis>` with the extension stripped, leaving every
+  copy unopenable and indistinguishable. It now keeps the real filename and extension, titles the
+  record from it, and surfaces a copy failure instead of silently doing nothing.
+- Delete buttons name what they delete, for screen readers.
+- `android:fullBackupContent` now excludes the institutional session on pre-Android-12 devices too,
+  matching the Android 12+ extraction rules.
+
+## Known limitation
+
+The app is deliberately light-only: `CompanionTheme` uses a fixed light scheme and the activity
+theme matches it, so it renders identically regardless of system dark mode. Adding a dark palette
+would mean revisiting the hardcoded card colours throughout, which is a design change rather than
+stabilization, so it is deferred rather than half-done.
+
 ## Data boundaries
 
 | | Personal Workspace | Institutional Workspace |

@@ -5,9 +5,16 @@ generic offline product is what Google Play approved and it must keep standing o
 
 ## The two workspaces
 
-**Personal Workspace** — `LocalStore.kt`, `MainActivity.kt`. Plain `SharedPreferences` plus
-app-private files. No network, no account, useful with the radio off. This is the approved
-baseline and it is reachable before, during and after any institutional failure.
+**Personal Workspace** — `LocalStore.kt`, `Reminders.kt`, `MainActivity.kt`. Plain
+`SharedPreferences` plus app-private files, and local alarms for reminders. No network, no account,
+useful with the radio off. This is the approved baseline and it is reachable before, during and
+after any institutional failure.
+
+`LocalStore` takes a `LocalStorage` seam rather than a `Context` directly. That is not decoration:
+it is what lets `WorkspaceIsolationTest` run the real store and the real repository side by side in
+a plain JVM test and assert that an institutional failure, outage or sign-out leaves every personal
+record readable — and that wiping personal data does not sign the user out of their institution.
+The claim in this document is therefore enforced, not just asserted.
 
 **Institutional Workspace** — `InstitutionalRepository.kt`, `InstitutionalScreen.kt`. Calls the
 canonical PGR SIMS backend. Its state is server-derived and is never written into the personal
@@ -65,6 +72,33 @@ arrives as `{key, title, fields[{field, label, value, required}]}` and is render
 mirroring the rule that the web client's `/complete-profile` is built from backend-declared fields.
 Editing one field PATCHes that field alone and re-reads the server's state; the backend stays
 authoritative for permissions, validation and review status.
+
+**Backend-declared does not mean backend-editable.** `_set_resident_onboarding_field` accepts free
+text for six fields only — `full_name`, `phone`, `email`, `registration_no`, `cnic`, `notes`. The
+five reference fields resolve to a row: `hospital`, `department_ref` and `program_ref` by primary
+key, `academic_session_ref` and `specialty_ref` by code. Their declared `value` is therefore a bare
+id (`9`, `31`, `15`), and the training dates demand ISO-8601. Rendering those as text boxes showed
+the resident a database id and let a typo repoint their institutional record at another
+department's row, so `OnboardingFieldPolicy` renders them read-only, states why, and never prints
+the raw id — "Recorded" or "Not set". A resident changes them through their institution, which is
+where the backend already treats them as administrative.
+
+## Onboarding status and corrections
+
+`OnboardingSummary` derives review status, reviewer note, profile completeness, declaration state,
+supervisor state and the outstanding-requirement list purely from the institution's onboarding
+payload — `required_onboarding_fields` labelled from the institution's own declared sections, plus
+the documents whose status still needs action. Nothing in it is recomputed from personal records.
+
+`InstitutionalLabels` maps `ResidentDocument.STATUS_*` to readable text (`PENDING_REVIEW` → "Under
+review", `REUPLOAD_REQUIRED` → "Correction required") and humanises anything it does not recognise
+rather than dropping it, so a backend that grows a status still renders.
+
+Resubmission is explicit. A requirement needing action carries the reviewer's own remarks in the
+error colour, and the action button reads Upload or Replace to match the state. Because the
+backend's upload action overwrites in place, replacing a document the institution has already
+accepted or is reviewing goes through a confirmation dialog first — the deliberateness the
+workflow expects has to live on this side.
 
 Uploads are validated against the backend's own limits before the request is made (10 MB;
 `pdf`/`jpg`/`jpeg`/`png`/`doc`/`docx`), so an oversized or wrong-typed file produces a legible
