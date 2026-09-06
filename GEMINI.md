@@ -153,3 +153,13 @@ Validation:
 - Tests passing
 - Repair command output verified
 ```
+
+## 19) Live Sprint Ledger — `SPRINT_STATE.md`
+
+Every sprint must keep `SPRINT_STATE.md` (repo root) current: full sprint scope, completed work,
+and step-wise pending work — so a fresh agent can resume mid-sprint after a usage limit or crash
+with no other context. Live, self-pruning document, not a history log: update it as work finishes
+(not after), delete completed detail once it's no longer load-bearing, keep pending items concrete
+enough for a memoryless agent to act on, and replace the whole file's content (don't append) once
+a sprint's scope is fully satisfied. Full binding rules in `AGENTS.md` §26 — that file is
+authoritative; this is a pointer.

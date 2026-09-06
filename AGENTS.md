@@ -755,3 +755,35 @@ commit hash
 ```
 
 Do not proceed to the next brick until Update 0 is GO.
+
+---
+
+## 26. Live Sprint Ledger — `SPRINT_STATE.md` (Permanent, Every Sprint)
+
+Every sprint (Update 0, a numbered brick, the Android app work, or any other multi-step effort)
+**must maintain `SPRINT_STATE.md` at the repo root** as a live, resumable snapshot of that sprint —
+so that if the working agent/session is cut off (usage limit, crash, context exhaustion), the next
+agent can read that one file and continue without re-discovering context from scratch.
+
+Rules, binding for every agent (Claude, Gemini, Copilot, or otherwise) working in this repo:
+
+1. **Update `SPRINT_STATE.md` as part of the work, not after it.** The moment a pending item is
+   finished, move it out of "Pending Work" and collapse it to a one-line entry under
+   "Completed Work" in the same pass — never leave the file describing a task as both done and
+   still pending.
+2. **Prune aggressively.** This file is not a history log. Once a completed line is no longer
+   load-bearing context for what's left, delete it outright — permanent history belongs in git log
+   and `docs/implementation/<date>_brick_.../` or `docs/_audit/` (per §21 / the Definition of Done
+   in `CLAUDE.md`), not in this file. Keep `SPRINT_STATE.md` short enough to read in full for free.
+3. **Pending Work must be step-wise and concrete** — each item must be actionable by a fresh agent
+   with zero memory of the current conversation: name the file/branch/command/endpoint, not just a
+   goal. "Finish onboarding" is not acceptable; "run upload against staging resident X, see
+   `docs/...` for the request shape" is.
+4. **One sprint, one file.** When a sprint's scope is fully satisfied and Pending Work is empty,
+   replace the file's entire content with the next sprint's scope — do not append across sprints.
+5. **This exists specifically to avoid excessive commit/push churn.** Edit it freely without
+   forcing a commit for every update; commit it alongside whatever code change it's tracking.
+
+See `SPRINT_STATE.md` itself for its current content and the same maintenance rules restated in
+context. `CLAUDE.md` and `GEMINI.md` carry a pointer to this section — this file (`AGENTS.md`) is
+the authoritative statement of the rule.

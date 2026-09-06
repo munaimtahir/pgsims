@@ -193,3 +193,11 @@ touches integration, no forbidden pattern is introduced (duplicate Department/Ho
 legacy notification keys, legacy roles, unauthorized route/terminology changes), and the work is
 documented (brick work under `docs/implementation/<date>_brick_.../`, other work under
 `docs/_audit/`).
+
+## Live sprint ledger — `SPRINT_STATE.md`
+
+Every sprint must keep `SPRINT_STATE.md` (repo root) up to date: full sprint scope, completed work,
+and step-wise pending work, so a fresh agent can resume mid-sprint after a usage limit or crash with
+no other context. This is a live, self-pruning document, not a history log — see `AGENTS.md` §26
+for the full binding rules (update-as-you-go, prune completed detail, one file per sprint, avoid
+extra commits just to update it) and `SPRINT_STATE.md` itself for the current sprint.
