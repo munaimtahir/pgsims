@@ -20,4 +20,6 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "pgsims"
-include(":app")
+include(":core:common")
+include(":app-companion")
+include(":app-portal")
