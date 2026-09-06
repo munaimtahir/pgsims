@@ -1,0 +1,107 @@
+# Isolated PGR SIMS staging stack.
+#
+# Start only with `docker/.env.staging.local` (ignored by Git) and an explicit
+# project name, for example:
+#   docker compose --project-name pgsims-staging --env-file docker/.env.staging.local \
+#     -f docker/docker-compose.staging.yml up -d --build
+#
+# This file intentionally has no production container names, ports, volumes,
+# database name, Redis database, or secret defaults.  The backend is exposed on
+# loopback only; a deployment operator must add the DNS/Caddy/TLS edge described
+# in docs/STAGING_ENVIRONMENT.md before making it public.
+services:
+  db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: ${STAGING_DB_NAME:?set STAGING_DB_NAME in docker/.env.staging.local}
+      POSTGRES_USER: ${STAGING_DB_USER:?set STAGING_DB_USER in docker/.env.staging.local}
+      POSTGRES_PASSWORD: ${STAGING_DB_PASSWORD:?set STAGING_DB_PASSWORD in docker/.env.staging.local}
+    volumes:
+      - staging_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    networks: [staging]
+
+  redis:
+    image: redis:7-alpine
+    command: redis-server --appendonly yes
+    volumes:
+      - staging_redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    networks: [staging]
+
+  backend:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+    command: >
+      sh -c "python manage.py migrate --noinput &&
+             python manage.py collectstatic --noinput &&
+             gunicorn sims_project.wsgi:application --bind 0.0.0.0:8014 --workers 2 --timeout 60"
+    environment: &backend_environment
+      PGSIMS_ENVIRONMENT: staging
+      DEBUG: "False"
+      SECRET_KEY: ${STAGING_SECRET_KEY:?set STAGING_SECRET_KEY in docker/.env.staging.local}
+      ALLOWED_HOSTS: ${STAGING_ALLOWED_HOSTS:-staging.pgsims.alshifalab.pk,localhost,127.0.0.1,10.0.2.2}
+      DATABASE_URL: postgresql://${STAGING_DB_USER}:${STAGING_DB_PASSWORD}@db:5432/${STAGING_DB_NAME}
+      REDIS_URL: redis://redis:6379/2
+      CELERY_BROKER_URL: redis://redis:6379/3
+      CELERY_RESULT_BACKEND: redis://redis:6379/3
+      USE_PROXY_HEADERS: ${STAGING_USE_PROXY_HEADERS:-False}
+      SECURE_SSL_REDIRECT: ${STAGING_SECURE_SSL_REDIRECT:-False}
+      SESSION_COOKIE_SECURE: ${STAGING_SESSION_COOKIE_SECURE:-False}
+      CSRF_COOKIE_SECURE: ${STAGING_CSRF_COOKIE_SECURE:-False}
+      CSRF_TRUSTED_ORIGINS: ${STAGING_CSRF_TRUSTED_ORIGINS:-}
+      CORS_ALLOWED_ORIGINS: ${STAGING_CORS_ALLOWED_ORIGINS:-}
+      EMAIL_BACKEND: django.core.mail.backends.locmem.EmailBackend
+      ENABLE_FILE_LOGGING: "False"
+      GOOGLE_DRIVE_BACKUP_ENABLED: "false"
+    ports:
+      - "127.0.0.1:${STAGING_BACKEND_PORT:-18014}:8014"
+    volumes:
+      - staging_static:/app/staticfiles
+      - staging_media:/app/media
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8014/healthz/"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 45s
+    networks: [staging]
+
+  worker:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+    command: celery -A sims_project worker -l warning --concurrency=1
+    environment: *backend_environment
+    volumes:
+      - staging_media:/app/media
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks: [staging]
+
+volumes:
+  staging_postgres_data:
+  staging_redis_data:
+  staging_static:
+  staging_media:
+
+networks:
+  staging:
+    driver: bridge

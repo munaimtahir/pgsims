@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- This exception is limited to the staging package for the local isolated
+         emulator stack. Main/release traffic remains HTTPS-only. -->
+    <application android:networkSecurityConfig="@xml/staging_network_security_config" />
+</manifest>

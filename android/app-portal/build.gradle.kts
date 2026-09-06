@@ -21,7 +21,16 @@ android {
     }
     buildTypes {
         debug { applicationIdSuffix = ".debug"; isDebuggable = true }
-        create("staging") { initWith(getByName("debug")); applicationIdSuffix = ".staging"; buildConfigField("String", "INSTITUTIONAL_API_BASE_URL", "\"https://staging.pgsims.alshifalab.pk/\"") }
+        create("staging") {
+            initWith(getByName("debug"))
+            applicationIdSuffix = ".staging"
+            // CI and normal staging builds retain the canonical HTTPS URL. A local, isolated
+            // emulator stack may override this with -PpgrPortalStagingBaseUrl=http://10.0.2.2:18014/
+            // without changing the release build or committing an environment-specific URL.
+            val stagingBaseUrl = providers.gradleProperty("pgrPortalStagingBaseUrl")
+                .getOrElse("https://staging.pgsims.alshifalab.pk/")
+            buildConfigField("String", "INSTITUTIONAL_API_BASE_URL", "\"$stagingBaseUrl\"")
+        }
         release {
             isMinifyEnabled = true
             isShrinkResources = true

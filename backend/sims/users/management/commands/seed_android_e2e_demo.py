@@ -6,11 +6,14 @@ profiles, for platform demos) and from any ad-hoc accounts created during live A
 hospital/department/program/supervisor pre-filled — so the Android onboarding wizard has real
 required fields to walk through, matching the "resident has never used PGR SIMS" starting state.
 
-Idempotent: safe to rerun. Existing accounts have their password reset to the documented value
-rather than being recreated, so credentials stay predictable across reseeds.
+Idempotent: safe to rerun. It is deliberately guarded to staging and obtains the
+dedicated test password from the process environment, so test credentials never
+become source code or command output.
 """
 
-from django.core.management.base import BaseCommand
+import os
+
+from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 
 from sims.academics.models import Department
@@ -19,7 +22,7 @@ from sims.training.models import TrainingProgram
 from sims.users.models import ResidentDocumentRequirement, SupervisorProfile, User
 from sims.users.services import create_user_with_profile
 
-DEMO_PASSWORD = "AndroidDemo123!"
+PASSWORD_ENVIRONMENT_VARIABLE = "PGSIMS_STAGING_ANDROID_DEMO_PASSWORD"
 
 ACCOUNTS = [
     {
@@ -53,11 +56,22 @@ class Command(BaseCommand):
     help = "Seed/reset the fixed demo-account set used by the Android emulator E2E test plan."
 
     def handle(self, *args, **options):
+        environment = os.environ.get("PGSIMS_ENVIRONMENT", "").strip().lower()
+        if environment != "staging":
+            raise CommandError(
+                "seed_android_e2e_demo refuses to run unless PGSIMS_ENVIRONMENT=staging."
+            )
+        demo_password = os.environ.get(PASSWORD_ENVIRONMENT_VARIABLE)
+        if not demo_password or len(demo_password) < 12:
+            raise CommandError(
+                f"Set a 12+ character staging-only password in {PASSWORD_ENVIRONMENT_VARIABLE}."
+            )
+
         with transaction.atomic():
             for spec in ACCOUNTS:
                 user = User.objects.filter(username=spec["username"]).first()
                 if user:
-                    user.set_password(DEMO_PASSWORD)
+                    user.set_password(demo_password)
                     user.is_active = True
                     update_fields = ["password", "is_active"]
                     # Only force-clear the password-change gate for admin/supervisor (they need
@@ -75,7 +89,7 @@ class Command(BaseCommand):
                 create_user_with_profile(
                     role=spec["role"],
                     username=spec["username"],
-                    password=DEMO_PASSWORD,
+                    password=demo_password,
                     full_name=spec["full_name"],
                     profile_payload=spec["profile_payload"],
                     source="android_e2e_seed",
@@ -124,7 +138,10 @@ class Command(BaseCommand):
         self.stdout.write("")
         self.stdout.write(self.style.SUCCESS("Android E2E demo accounts ready:"))
         for spec in ACCOUNTS:
-            self.stdout.write(f"  {spec['username']:28s} / {DEMO_PASSWORD}  ({spec['role']})")
+            self.stdout.write(f"  {spec['username']:28s}  ({spec['role']})")
+        self.stdout.write(
+            f"  Password source: environment variable {PASSWORD_ENVIRONMENT_VARIABLE} (not displayed)."
+        )
         self.stdout.write("")
         self.stdout.write("Suggested onboarding answers for android.demo.resident1/resident2:")
         self.stdout.write(f"  Hospital:   {hospital.name if hospital else '<none seeded - pick any>'}")

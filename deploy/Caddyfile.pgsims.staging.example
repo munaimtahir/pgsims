@@ -1,0 +1,10 @@
+# Add this site block to the real multi-tenant Caddy configuration only after
+# DNS for staging.pgsims.alshifalab.pk points at this host. Do not overwrite the
+# host Caddyfile with this fragment.
+staging.pgsims.alshifalab.pk {
+	encode zstd gzip
+	request_body {
+		max_size 25MB
+	}
+	reverse_proxy 127.0.0.1:18014
+}
