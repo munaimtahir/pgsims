@@ -30,5 +30,14 @@
 -dontwarn javax.annotation.**
 -dontwarn org.checkerframework.**
 
-# Application Models
--keep class fmu.pg.sims.core.model.** { *; }
+# Retrofit 2.11 keeps generic signatures of suspend service methods via these:
+-keep,allowobfuscation,allowshrinking interface retrofit2.Call
+-keep,allowobfuscation,allowshrinking class retrofit2.Response
+-keep,allowobfuscation,allowshrinking class kotlin.coroutines.Continuation
+
+# Application models. Both workspaces' @Serializable payloads must survive R8.
+-keep class pk.vexel.pgrcompanion.**$$serializer { *; }
+-keepclassmembers class pk.vexel.pgrcompanion.** {
+    *** Companion;
+    kotlinx.serialization.KSerializer serializer(...);
+}
