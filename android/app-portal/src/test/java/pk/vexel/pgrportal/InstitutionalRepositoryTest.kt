@@ -119,6 +119,7 @@ class InstitutionalRepositoryTest {
         assertFalse(repository.isConnected())
         assertNull(tokens.access)
         assertNull(tokens.refresh)
+        assertEquals("Bearer access-1", bearerOf(server.takeRequest()))
     }
 
     // --- snapshot --------------------------------------------------------------------------

@@ -98,6 +98,10 @@ services:
       redis:
         condition: service_healthy
     networks: [staging]
+    # The backend health endpoint verifies Celery with a broker ping. The image's
+    # HTTP healthcheck is inappropriate for a worker process with no web server.
+    healthcheck:
+      disable: true
 
 volumes:
   staging_postgres_data:

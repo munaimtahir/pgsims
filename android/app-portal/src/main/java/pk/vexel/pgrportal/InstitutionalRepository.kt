@@ -238,7 +238,10 @@ class InstitutionalRepository internal constructor(
     suspend fun logout() = withContext(Dispatchers.IO) {
         tokens.refresh?.let { token ->
             // Best-effort blacklist; a failure here must still sign the user out locally.
-            runCatching { anonymousApi.logout(LogoutPayload(token)) }
+            // PGR SIMS intentionally protects the blacklist endpoint with the current
+            // bearer token. Use the authorized path so server-side revocation succeeds;
+            // local clearing below remains guaranteed if the network/session has expired.
+            runCatching { authorized { authorizedApi.logout(LogoutPayload(token)) } }
         }
         tokens.clear()
     }
