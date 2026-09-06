@@ -310,6 +310,19 @@ class InstitutionalValidationTest {
     }
 }
 
+class CredentialRedactionTest {
+
+    /** These generated strings ship in the release binary; they must not carry the secret. */
+    @Test fun `credential payloads never stringify their secret`() {
+        val login = LoginPayload("demo.resident", "sup3rSecret!").toString()
+        assertTrue(login, login.contains("demo.resident")) // identifying the account is still useful
+        assertFalse(login, login.contains("sup3rSecret!"))
+
+        assertFalse(RefreshPayload("refresh-token-value").toString().contains("refresh-token-value"))
+        assertFalse(LogoutPayload("refresh-token-value").toString().contains("refresh-token-value"))
+    }
+}
+
 class InstitutionalTokenStoreTest {
     @Test fun `in-memory store round-trips and clears`() {
         val store = InMemoryTokenStore()

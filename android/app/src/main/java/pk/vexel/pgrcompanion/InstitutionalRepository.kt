@@ -42,9 +42,27 @@ import java.util.concurrent.TimeUnit
  * PGR_SIMS_ANDROID_API_INTEGRATION.md for the verified request/response shapes.
  */
 
-@Serializable data class LoginPayload(val username: String, val password: String)
-@Serializable data class RefreshPayload(val refresh: String)
-@Serializable data class LogoutPayload(val refresh: String)
+/**
+ * The credential-carrying payloads redact themselves.
+ *
+ * A Kotlin data class generates a `toString()` that prints every property, and that generated
+ * string survives into the release binary. Nothing logs these today, but one future log line,
+ * exception message or crash report that stringifies one of them would put a plaintext password or
+ * a live refresh token where it must never be. Redacting at the type removes the possibility rather
+ * than relying on nobody ever doing it.
+ */
+@Serializable data class LoginPayload(val username: String, val password: String) {
+    override fun toString() = "LoginPayload(username=$username, password=***)"
+}
+
+@Serializable data class RefreshPayload(val refresh: String) {
+    override fun toString() = "RefreshPayload(refresh=***)"
+}
+
+@Serializable data class LogoutPayload(val refresh: String) {
+    override fun toString() = "LogoutPayload(refresh=***)"
+}
+
 @Serializable data class FieldPatch(val fields: Map<String, String?>)
 
 interface InstitutionalApi {
