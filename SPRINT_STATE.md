@@ -1,30 +1,26 @@
-# SPRINT_STATE.md — Dual-track Android architecture
+# SPRINT_STATE.md — Android release and staging verification
 
 ## Scope
 
-Separate the Play-listed offline Companion from a separately-installable PGR SIMS Portal, verify
-both builds, generate non-versioned release artifacts, and document the integration boundary.
+Freeze/audit Companion 1.1.0 and close Portal staging/onboarding verification without using
+production resident data or credentials.
 
-## Initial completed work
+## Completed work
 
-- Identified baseline tag `play-closed-testing-baseline-1.0.0` and current `main` had the
-  institutional client embedded in the Companion Play package.
-- Created `:app-companion`, `:app-portal`, and `:core:common`; moved offline Companion and the
-  PGR SIMS client into their respective product modules.
-- Removed Companion's `INTERNET`, Retrofit, encrypted-token storage, and institutional UI.
-- Portal is `pk.vexel.pgrportal.dev` with separate encrypted session storage and debug/staging/release builds.
-
-## Final completed work
-
-- Both modules compile. `:app-companion:testDebugUnitTest`, `:app-portal:testDebugUnitTest`,
-  both debug lint tasks, both signed release APK tasks, and both release bundle tasks passed.
-- Portal release R8 was repaired by adding Tink's Error Prone annotation runtime dependency.
-- Generated untracked APK/AAB plus metadata/reports under `builds/companion/` and `builds/portal/`.
-- Added architecture, current-state, API-contract, parity, release, and Play-policy documentation.
+- Confirmed `main` at `05451a9` baseline and preserved the unrelated untracked `.claude/` directory.
+- Validated Companion AAB, generated connected-device APKs with bundletool, installed them on the
+  API 36 emulator, and verified cold launch, local profile persistence, and offline restart.
+- Audited Companion package/version/permissions/dependencies/signature and recorded SHA-256.
+- Confirmed production health (`200`) and login method contract (`GET` → `405 Allow: POST`).
+- Classified `https://staging.pgsims.alshifalab.pk/` as configured-but-not-deployed: DNS resolution
+  fails. No staging service, database, or dedicated account can safely be exercised.
+- Installed Companion and Portal together on API 36; both packages coexist and Portal launch is sound.
+- Corrected stale Companion wording in the separate Portal login UI; rebuilt Portal `0.1.1-dev`/
+  code `2`, then reran both Android unit/lint/release APK/AAB task sets successfully.
 
 ## Pending work
 
-1. Before a Portal institutional release, verify live coexistence, staging authentication, and a
-   real staging upload using a provisioned staging resident/service.
-2. Before any Companion Play upload, confirm its upload certificate in Play Console. The pre-existing
-   untracked `.claude/` directory remains intentionally untouched.
+1. Commit/push verification evidence without artifacts or credentials.
+2. External: deploy DNS/TLS-backed staging with isolated database/secrets, seed a dedicated resident,
+   then run live Portal login/onboarding/upload/resubmission and uninstall-isolation tests.
+4. External: compare Companion SHA-256 signing certificate with the Play Console upload key.

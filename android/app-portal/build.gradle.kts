@@ -12,8 +12,8 @@ android {
         applicationId = "pk.vexel.pgrportal.dev"
         minSdk = 26
         targetSdk = 36
-        versionCode = 1
-        versionName = "0.1.0-dev"
+        versionCode = 2
+        versionName = "0.1.1-dev"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables { useSupportLibrary = true }
         buildConfigField("String", "INSTITUTIONAL_API_BASE_URL", "\"https://android.pgsims.alshifalab.pk/\"")

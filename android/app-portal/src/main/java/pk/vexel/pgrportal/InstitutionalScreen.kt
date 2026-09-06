@@ -166,8 +166,8 @@ private fun SignInPane(signingIn: Boolean, error: String?, onSignIn: (String, St
     ) {
         Text("Institutional Workspace", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
         Text(
-            "Optional. Connect to your institution only if it issues you a PGR SIMS account. " +
-                "Everything else in PGR Companion keeps working offline whether or not you sign in here.",
+            "Sign in with the PGR SIMS account issued by your institution. Institutional records, " +
+                "permissions, and completion status come from the server.",
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         Card(Modifier.fillMaxWidth()) {
@@ -196,8 +196,7 @@ private fun SignInPane(signingIn: Boolean, error: String?, onSignIn: (String, St
         error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
         Text(
             "Your username and password are sent only to your institution over an encrypted " +
-                "connection. They are never stored on this device and never written into your " +
-                "personal records.",
+                "connection. They are never stored on this device; only an encrypted session is retained.",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
@@ -460,9 +459,8 @@ private fun ConnectedPane(
 
         OutlinedButton(onClick = onRefresh, enabled = !busy, modifier = Modifier.fillMaxWidth()) { Text("Refresh from institution") }
         Text(
-            "Everything on this tab comes from your institution and is stored on their server, " +
-                "not on this device. Your personal records in the other tabs are separate and are " +
-                "never sent to your institution.",
+            "Everything in Portal comes from your institution and is stored on their server. " +
+                "Signing out removes only this device's encrypted Portal session.",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )

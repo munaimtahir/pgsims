@@ -15,3 +15,12 @@ production key.
 
 Manual device checks: install both APKs at once, create and restart a Companion profile, sign in
 and out of Portal, then remove Portal and relaunch Companion. Confirm Companion records remain.
+
+## 2026-09-06 evidence
+
+Companion AAB validation and connected-device installation passed via bundletool 1.18.1 on the
+available API 36 emulator (`emulator-5554`). The derived APK launched, persisted a local profile
+across force-stop/restart, and rendered correctly with Wi-Fi and cellular data disabled. The Portal
+APK installed alongside it under its distinct package and launched to its login screen. Portal live
+login and uninstall-isolation remain blocked by the absent staging environment; no production
+resident credentials were used.
