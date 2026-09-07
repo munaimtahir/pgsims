@@ -2,11 +2,11 @@
 
 | Domain | Web | Portal | Backend verified | Status |
 |---|---:|---:|---:|---|
-| Authentication | Yes | Yes | Yes | Implemented |
-| Resident profile / onboarding | Yes | Yes | Yes | Implemented for permitted fields |
-| Programme / training | Yes | Yes | Yes | Read-only summary |
-| Supervisor assignment | Yes | Yes | Yes | Active/pending/missing states |
-| Documents / correction | Yes | Yes | Yes | List, feedback, upload, replacement |
+| Authentication | Yes | Yes | Yes | Live staging verified |
+| Resident profile / onboarding | Yes | Yes | Yes | Live staging GET/PATCH verified for permitted fields |
+| Programme / training | Yes | Yes | Yes | Live staging verified, read-only summary |
+| Supervisor assignment | Yes | Yes | Yes | Live staging active assignment verified |
+| Documents / correction | Yes | Yes | Yes | Live staging list, review feedback, upload and resubmission verified |
 | Rotations | Yes | No | Yes | Deferred |
 | Logbook | Yes | No | Yes | Deferred |
 | Assessments | Yes | No | Yes | Deferred |

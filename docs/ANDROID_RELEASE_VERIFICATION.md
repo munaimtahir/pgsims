@@ -24,3 +24,10 @@ across force-stop/restart, and rendered correctly with Wi-Fi and cellular data d
 APK installed alongside it under its distinct package and launched to its login screen. Portal live
 login and uninstall-isolation remain blocked by the absent staging environment; no production
 resident credentials were used.
+
+## 2026-09-07 Portal staging closure
+
+Public isolated staging is now available at `https://staging.pgsims.alshifalab.pk/` and passed its
+health check. Portal `0.1.2-dev` / code `3` passed debug unit tests, debug lint, release APK/AAB,
+and staging APK assembly. Targeted backend authentication/onboarding/security tests passed 38
+tests. The frozen Companion AAB was not replaced.

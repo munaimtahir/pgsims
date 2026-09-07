@@ -18,6 +18,6 @@ build_track() {
 }
 
 build_track app-companion PGR-Companion companion pk.vexel.pgrcompanion 1.1.0
-build_track app-portal PGR-Portal portal pk.vexel.pgrportal.dev 0.1.0-dev
+build_track app-portal PGR-Portal portal pk.vexel.pgrportal.dev 0.1.2-dev
 cp "$repo_root/docs/PORTAL_WEB_PARITY_MATRIX.md" "$repo_root/builds/portal/parity-report.md"
 cp "$repo_root/docs/PGR_SIMS_ANDROID_API_INTEGRATION.md" "$repo_root/builds/portal/api-verification.md"
