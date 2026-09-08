@@ -1,6 +1,7 @@
 # Android test report
 
-Debug and staging unit tests passed after the repository contract expansion. The mock contract now
-covers rotations, logbook entries/categories, assessments, research, workshops, current-rotation
-summary, and token-refresh replay. Presentation tests cover resident-friendly workflow status
-mapping. Release/lint/device evidence is recorded only after final gates.
+Debug and staging unit suites both passed: 24 tests per variant, 48 total, with zero failures,
+errors or skips. The mock contract covers rotations, logbook entries/categories, assessments,
+research, workshops, the production `rotation.current` summary shape and token-refresh replay.
+Presentation tests cover resident-friendly workflow status mapping. `lintDebug` passed with zero
+errors and 16 pre-existing warnings. Debug and signed release builds passed.

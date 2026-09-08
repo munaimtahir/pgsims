@@ -27,11 +27,11 @@ resident, production state, migrations, and rollback path are verified. Preserve
 
 ## Pending work
 
-1. Finish API-36 production regression: Requirements/Documents/Profile, release-candidate login,
-   training/detail and logbook create/submit, session restore, logout/re-login, uninstall
-   isolation, and crash-buffer review. Use only `android.demo.resident1` and no patient data.
-2. Commit the final production-contract/UI/test-placement corrections; pull/rebuild only if the
-   backend test move changes deployed code, then run `PrepareAndroidProductionE2ECommandTests` in
-   an ephemeral SQLite-backed container (never the production database).
-3. Run signed release APK/AAB gates, certificate/hash verification and final security scan; finish
-   evidence documents, update `android/README.md`, push, and verify remote and production SHAs.
+1. Commit the final evidence, generic internal terminology cleanup and sprint ledger; push and
+   verify `origin/main` plus the production checkout SHA. Preserve unrelated `.claude/`.
+
+## Closure state
+
+- Signed release/API-36 production E2E, certificate/hash checks and security review are complete.
+- P1 follow-up: test a server-returned logbook correction/resubmission state with a synthetic
+  supervisor workflow, and verify Play Console version-code availability before any upload.

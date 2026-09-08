@@ -32,7 +32,7 @@ import java.io.IOException
 import java.util.concurrent.TimeUnit
 
 /**
- * Institutional Workspace networking boundary.
+ * PGR SIMS networking boundary.
  *
  * Everything in this file is optional to the product: the Personal Workspace (see [LocalStore])
  * renders and functions with no session, no network and no institution. Nothing here writes into
