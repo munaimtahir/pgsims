@@ -34,11 +34,14 @@ provided.
 ## Runtime boundary
 
 PGR Companion is login-gated and consumes the PGR SIMS backend over HTTPS. Its authenticated
-resident experience is organised as **Home**, **Profile**, **Training**, and **Documents**. It
-supports sign-in, secure session restore/refresh/logout, backend-defined onboarding/profile display
-and permitted edits, programme/training and supervisor summaries, requested-document upload, and
-correction/resubmission status. The backend remains authoritative for roles, permissions,
-validation, and workflow status.
+resident experience is organised as **Home**, **Training**, **Logbook**, **Requirements**, and
+**Profile**. Training shows the backend-selected current posting, history, detail and supervisor;
+Logbook supports the backend's draft/edit/submit lifecycle; Requirements combines assessments,
+research/workshop status and the existing document upload workflow. It supports sign-in, secure
+session restore/refresh/logout, backend-defined onboarding/profile display and permitted edits.
+The backend remains authoritative for roles, permissions, validation, workflow status and all
+resident data. Release uses the production base URL; staging remains available only for non-final
+diagnostics.
 
 Use the `staging` variant for end-to-end work. It has a distinct package ID and accepts an owner
 provided staging base URL via `-PpgrPortalStagingBaseUrl=...`; never point a debug test workflow at

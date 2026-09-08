@@ -4,7 +4,9 @@ Legacy HTML view tests removed; only model-level and API tests remain.
 """
 from unittest.mock import patch
 
-from django.test import TestCase
+from django.core.management import call_command
+from django.core.management.base import CommandError
+from django.test import SimpleTestCase, TestCase
 from rest_framework.test import APIClient
 
 from django.contrib.auth import get_user_model
@@ -14,6 +16,20 @@ from sims.training.models import ResidentTrainingRecord
 from sims.users.models import ResidentProfile, SupervisorProfile
 
 User = get_user_model()
+
+
+class PrepareAndroidProductionE2ECommandTests(SimpleTestCase):
+    """Safety guards must remain testable without touching production data."""
+
+    @patch.dict("os.environ", {"PGSIMS_ENVIRONMENT": "staging"}, clear=False)
+    def test_refuses_any_non_production_environment(self):
+        with self.assertRaisesMessage(CommandError, "refuses to run outside"):
+            call_command("prepare_android_production_e2e")
+
+    @patch.dict("os.environ", {"PGSIMS_ENVIRONMENT": "production"}, clear=False)
+    def test_requires_an_external_strong_password(self):
+        with self.assertRaisesMessage(CommandError, "16+ character password"):
+            call_command("prepare_android_production_e2e")
 
 
 class UserModelBasicTests(TestCase):

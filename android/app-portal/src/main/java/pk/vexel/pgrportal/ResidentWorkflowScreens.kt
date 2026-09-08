@@ -9,6 +9,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -50,7 +52,7 @@ internal fun residentStatus(value: String): String = when (value.uppercase()) {
 
 @Composable
 internal fun CurrentTrainingCard(data: InstitutionalSnapshot, onOpenTraining: () -> Unit) {
-    val rotation = data.residentSummary?.objectValue("current_rotation")
+    val rotation = data.residentSummary?.objectValue("rotation")?.objectValue("current")
     Card(Modifier.fillMaxWidth().clickable(onClick = onOpenTraining)) {
         Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Text("Current training", fontWeight = FontWeight.SemiBold)
@@ -60,7 +62,7 @@ internal fun CurrentTrainingCard(data: InstitutionalSnapshot, onOpenTraining: ()
             if (rotation == null) {
                 Text("No active rotation is currently assigned to your training record.", color = MaterialTheme.colorScheme.onSurfaceVariant)
             } else {
-                Text(rotation.value("department").ifBlank { "Current rotation" }, style = MaterialTheme.typography.titleMedium)
+                Text(rotation.value("department").ifBlank { rotation.value("department_name").ifBlank { "Current rotation" } }, style = MaterialTheme.typography.titleMedium)
                 val period = listOf(rotation.value("start_date"), rotation.value("end_date")).filter { it.isNotBlank() }.joinToString(" – ")
                 if (period.isNotBlank()) Text(period, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Text(residentStatus(rotation.value("status")), color = MaterialTheme.colorScheme.primary)
@@ -89,7 +91,7 @@ internal fun TrainingDashboard(data: InstitutionalSnapshot) {
     } ?: ResidentEmpty("No training record is currently available for your account.")
 
     Text("Current rotation", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-    val current = data.residentSummary?.objectValue("current_rotation")
+    val current = data.residentSummary?.objectValue("rotation")?.objectValue("current")
     if (current == null) ResidentEmpty("No active rotation is currently assigned to your training record.")
     else RotationCard(current, true) { detail = current }
 
@@ -119,9 +121,9 @@ internal fun TrainingDashboard(data: InstitutionalSnapshot) {
 private fun RotationCard(rotation: JsonObject, current: Boolean, onOpen: () -> Unit) {
     Card(Modifier.fillMaxWidth().clickable(onClick = onOpen)) {
         Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(3.dp)) {
-            Text(rotation.value("department").ifBlank { rotation.value("template_name").ifBlank { "Rotation" } }, fontWeight = FontWeight.SemiBold)
+            Text(rotation.value("department").ifBlank { rotation.value("department_name").ifBlank { rotation.value("template_name").ifBlank { "Rotation" } } }, fontWeight = FontWeight.SemiBold)
             detailLines(
-                "Training site" to rotation.value("hospital"),
+                "Training site" to rotation.value("hospital").ifBlank { rotation.value("hospital_name") },
                 "Period" to listOf(rotation.value("start_date"), rotation.value("end_date")).filter { it.isNotBlank() }.joinToString(" – "),
             )
             Text(if (current) "Current · ${residentStatus(rotation.value("status"))}" else residentStatus(rotation.value("status")), color = MaterialTheme.colorScheme.primary)
@@ -139,7 +141,7 @@ private fun RotationDetail(rotation: JsonObject, onDismiss: () -> Unit) {
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 detailLines(
-                    "Department" to rotation.value("department"), "Training site" to rotation.value("hospital"),
+                    "Department" to rotation.value("department").ifBlank { rotation.value("department_name") }, "Training site" to rotation.value("hospital").ifBlank { rotation.value("hospital_name") },
                     "Posting" to rotation.value("template_name"), "Start" to rotation.value("start_date"),
                     "End" to rotation.value("end_date"), "Status" to residentStatus(rotation.value("status")),
                     "Notes" to rotation.value("notes"), "Feedback" to rotation.value("return_reason").ifBlank { rotation.value("reject_reason") },
@@ -185,6 +187,7 @@ internal fun LogbookScreen(
 @Composable
 private fun LogbookEntryDialog(categories: List<JsonObject>, busy: Boolean, onDismiss: () -> Unit, onCreate: (AcademicLogbookPayload) -> Unit) {
     var category by remember { mutableStateOf(categories.firstOrNull()?.idValue()?.toString().orEmpty()) }
+    var categoryMenuExpanded by remember { mutableStateOf(false) }
     var date by remember { mutableStateOf("") }
     var title by remember { mutableStateOf("") }
     var reflection by remember { mutableStateOf("") }
@@ -193,9 +196,24 @@ private fun LogbookEntryDialog(categories: List<JsonObject>, busy: Boolean, onDi
         title = { Text("New logbook entry") },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                if (categories.isEmpty()) Text("No logbook categories are currently available.", color = MaterialTheme.colorScheme.error)
-                else Text("Category: ${categories.firstOrNull { it.idValue()?.toString() == category }?.value("name").orEmpty()}")
-                OutlinedTextField(category, { category = it }, label = { Text("Category ID") }, enabled = !busy, modifier = Modifier.fillMaxWidth())
+                if (categories.isEmpty()) {
+                    Text("No logbook categories are currently available.", color = MaterialTheme.colorScheme.error)
+                } else {
+                    TextButton(onClick = { categoryMenuExpanded = true }, enabled = !busy) {
+                        Text("Category: ${categories.firstOrNull { it.idValue()?.toString() == category }?.value("name").orEmpty()}")
+                    }
+                    DropdownMenu(expanded = categoryMenuExpanded, onDismissRequest = { categoryMenuExpanded = false }) {
+                        categories.forEach { option ->
+                            DropdownMenuItem(
+                                text = { Text(option.value("name").ifBlank { "Logbook category" }) },
+                                onClick = {
+                                    category = option.idValue()?.toString().orEmpty()
+                                    categoryMenuExpanded = false
+                                },
+                            )
+                        }
+                    }
+                }
                 OutlinedTextField(date, { date = it }, label = { Text("Entry date (YYYY-MM-DD)") }, enabled = !busy, modifier = Modifier.fillMaxWidth())
                 OutlinedTextField(title, { title = it }, label = { Text("Activity title") }, enabled = !busy, modifier = Modifier.fillMaxWidth())
                 OutlinedTextField(reflection, { reflection = it }, label = { Text("Reflection (optional)") }, enabled = !busy, modifier = Modifier.fillMaxWidth())

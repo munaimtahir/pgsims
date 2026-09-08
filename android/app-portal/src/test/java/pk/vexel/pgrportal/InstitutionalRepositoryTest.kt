@@ -3,6 +3,7 @@ package pk.vexel.pgrportal
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.jsonObject
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
 import okhttp3.mockwebserver.RecordedRequest
@@ -57,7 +58,7 @@ private const val CATEGORIES_BODY = """{"count":1,"results":[{"id":2,"name":"Cli
 private const val ASSESSMENTS_BODY = """{"count":0,"results":[]}"""
 private const val RESEARCH_BODY = """{"status":"DRAFT"}"""
 private const val WORKSHOPS_BODY = """{"count":0,"results":[]}"""
-private const val RESIDENT_SUMMARY_BODY = """{"current_rotation":{"id":8,"department":"Medicine","status":"ACTIVE"}}"""
+private const val RESIDENT_SUMMARY_BODY = """{"rotation":{"current":{"id":8,"department":"Medicine","status":"ACTIVE"}}}"""
 
 class InstitutionalRepositoryTest {
     private lateinit var server: MockWebServer
@@ -151,6 +152,10 @@ class InstitutionalRepositoryTest {
         assertEquals(1, snapshot.rotations.size)
         assertEquals(1, snapshot.logbook.size)
         assertEquals("DRAFT", snapshot.research?.string("status"))
+        assertEquals(
+            "Medicine",
+            snapshot.residentSummary?.get("rotation")?.jsonObject?.get("current")?.jsonObject?.string("department"),
+        )
         assertTrue(snapshot.unavailable.isEmpty())
         assertEquals("Bearer access-1", bearerOf(server.takeRequest()))
     }

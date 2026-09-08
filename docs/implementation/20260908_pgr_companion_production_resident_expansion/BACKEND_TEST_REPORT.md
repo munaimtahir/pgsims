@@ -1,6 +1,7 @@
 # Backend test report
 
-The new fixture command is syntactically compiled locally. The development shell has no Django
-installation, so Django checks/tests are not claimed locally. Before production fixture use, the
-rebuilt production image must pass `check`, `makemigrations --check --dry-run`, migration plan, and
-the targeted command guard tests. No migration is included.
+The development shell has no Django installation, so Django checks/tests are not claimed locally.
+The rebuilt production image passed `python manage.py check`, `makemigrations --check --dry-run`,
+and `migrate --plan`; all reported no issues or planned migrations. The command-guard test is run
+only in an ephemeral SQLite-backed container, never against the production database. No migration
+is included.
