@@ -53,10 +53,14 @@ class Command(BaseCommand):
             if not hospital_department:
                 raise CommandError("No canonical hospital/department placement exists for a synthetic rotation.")
 
-            resident.set_password(password)
-            resident.must_change_password = False
-            resident.is_active = True
-            resident.save(update_fields=["password", "must_change_password", "is_active"])
+            # All three fixed accounts are synthetic. A single externally supplied ephemeral
+            # password permits the supervisor-only returned-for-revision E2E step without ever
+            # exposing or changing a real user's credentials.
+            for account in (resident, admin, supervisor.user):
+                account.set_password(password)
+                account.must_change_password = False
+                account.is_active = True
+                account.save(update_fields=["password", "must_change_password", "is_active"])
 
             # The synthetic account may predate the current supervision spine. Keep real accounts
             # untouched and use the same audited service as the web assignment workflow.
