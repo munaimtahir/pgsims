@@ -10,7 +10,8 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Description
+import androidx.compose.material.icons.automirrored.filled.MenuBook
+import androidx.compose.material.icons.filled.Checklist
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.School
@@ -60,9 +61,10 @@ private fun humanize(value: String): String = InstitutionalLabels.humanize(value
 
 private enum class ResidentDestination(val label: String, val icon: androidx.compose.ui.graphics.vector.ImageVector) {
     HOME("Home", Icons.Default.Home),
-    PROFILE("Profile", Icons.Default.Person),
     TRAINING("Training", Icons.Default.School),
-    DOCUMENTS("Documents", Icons.Default.Description),
+    LOGBOOK("Logbook", Icons.AutoMirrored.Filled.MenuBook),
+    REQUIREMENTS("Requirements", Icons.Default.Checklist),
+    PROFILE("Profile", Icons.Default.Person),
 }
 
 @Composable
@@ -165,6 +167,33 @@ fun InstitutionalWorkspace(repository: InstitutionalRepository) {
                     )
                 }
             },
+            onCreateLogbook = { payload ->
+                scope.launch {
+                    busy = true; notice = null
+                    repository.createLogbook(payload).fold(
+                        { notice = "Logbook draft saved to PGR SIMS."; reloadKey++ },
+                        { notice = it.message ?: "Could not save the logbook entry."; busy = false },
+                    )
+                }
+            },
+            onSubmitLogbook = { entryId ->
+                scope.launch {
+                    busy = true; notice = null
+                    repository.submitLogbook(entryId).fold(
+                        { notice = "Logbook entry submitted to PGR SIMS."; reloadKey++ },
+                        { notice = it.message ?: "Could not submit the logbook entry."; busy = false },
+                    )
+                }
+            },
+            onUpdateLogbook = { entryId, payload ->
+                scope.launch {
+                    busy = true; notice = null
+                    repository.updateLogbook(entryId, payload).fold(
+                        { notice = "Logbook entry updated in PGR SIMS."; reloadKey++ },
+                        { notice = it.message ?: "Could not update the logbook entry."; busy = false },
+                    )
+                }
+            },
         )
     }
 }
@@ -251,6 +280,9 @@ private fun ConnectedPane(
     onNotice: (String) -> Unit,
     onUpload: (Int, Uri) -> Unit,
     onSaveField: (String, String) -> Unit,
+    onCreateLogbook: (AcademicLogbookPayload) -> Unit,
+    onSubmitLogbook: (Int) -> Unit,
+    onUpdateLogbook: (Int, AcademicLogbookPayload) -> Unit,
 ) {
     val context = LocalContext.current
     var destination by rememberSaveable { mutableStateOf(ResidentDestination.HOME) }
@@ -349,7 +381,7 @@ private fun ConnectedPane(
             }
         }
 
-        DashboardSummary(data, summary)
+        DashboardSummary(data, summary, onOpenTraining = { destination = ResidentDestination.TRAINING })
         }
 
         if (destination == ResidentDestination.PROFILE) data.onboarding?.let { onboarding ->
@@ -366,59 +398,11 @@ private fun ConnectedPane(
             }
         }
 
-        if (destination == ResidentDestination.TRAINING) {
-        Text("Programme and training", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-        if (data.training.isEmpty()) {
-            InstitutionalEmpty("No training record is currently available for your account.")
-        } else {
-            data.training.forEach { record ->
-                Card(Modifier.fillMaxWidth()) {
-                    Column(Modifier.padding(14.dp)) {
-                        Text(
-                            record.text("program_name").ifBlank { record.text("program_code").ifBlank { "Training record" } },
-                            fontWeight = FontWeight.SemiBold,
-                        )
-                        val detail = listOf(
-                            record.text("current_level"),
-                            record.text("start_date"),
-                            record.text("expected_end_date").let { if (it.isBlank()) "" else "to $it" },
-                        ).filter { it.isNotBlank() }.joinToString(" · ")
-                        if (detail.isNotBlank()) {
-                            Text(detail, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        }
-                    }
-                }
-            }
-        }
+        if (destination == ResidentDestination.TRAINING) TrainingDashboard(data)
 
-        Text("Supervisor", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-        if (data.assignments.isEmpty()) {
-            InstitutionalEmpty(
-                "No supervisor assignment is currently recorded for your account. " +
-                    "Status: ${InstitutionalLabels.supervisorStatus(summary.supervisorStatus)}."
-            )
-        } else {
-            data.assignments.forEach { assignment ->
-                val supervisor = assignment.child("supervisor")
-                Card(Modifier.fillMaxWidth()) {
-                    Column(Modifier.padding(14.dp)) {
-                        Text(supervisor?.text("name").orEmpty().ifBlank { "Supervisor" }, fontWeight = FontWeight.SemiBold)
-                        val detail = listOfNotNull(
-                            supervisor?.text("designation"),
-                            supervisor?.text("department"),
-                            humanize(assignment.text("assignment_type")),
-                        ).filter { it.isNotBlank() }.joinToString(" · ")
-                        if (detail.isNotBlank()) {
-                            Text(detail, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        }
-                    }
-                }
-            }
-        }
+        if (destination == ResidentDestination.LOGBOOK) LogbookScreen(data, busy, onCreateLogbook, onSubmitLogbook, onUpdateLogbook)
 
-        }
-
-        if (destination == ResidentDestination.DOCUMENTS) {
+        if (destination == ResidentDestination.REQUIREMENTS) RequirementsScreen(data) {
         Text("Documents", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
         Text("Upload requested documents and follow review feedback.", color = MaterialTheme.colorScheme.onSurfaceVariant)
         if (data.documents.isEmpty()) {
@@ -465,7 +449,6 @@ private fun ConnectedPane(
                 }
             }
         }
-
         confirmReplace?.let { (id, title) ->
             AlertDialog(
                 onDismissRequest = { confirmReplace = null },
@@ -509,7 +492,7 @@ private fun ConnectedPane(
 }
 
 @Composable
-private fun DashboardSummary(data: InstitutionalSnapshot, summary: OnboardingSummary) {
+private fun DashboardSummary(data: InstitutionalSnapshot, summary: OnboardingSummary, onOpenTraining: () -> Unit) {
     val approved = data.documents.count { it.text("status").uppercase() == "VERIFIED" }
     val underReview = data.documents.count { it.text("status").uppercase() in setOf("UPLOADED", "PENDING_REVIEW") }
     val actionNeeded = data.documents.count { InstitutionalLabels.documentNeedsAction(it.text("status")) }
@@ -526,6 +509,7 @@ private fun DashboardSummary(data: InstitutionalSnapshot, summary: OnboardingSum
             Text("Documents: ${data.documents.size} required · $approved approved · $underReview under review · $actionNeeded action required")
         }
     }
+    CurrentTrainingCard(data, onOpenTraining)
 }
 
 @Composable

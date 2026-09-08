@@ -65,6 +65,18 @@ import java.util.concurrent.TimeUnit
 
 @Serializable data class FieldPatch(val fields: Map<String, String?>)
 
+/** Active academics-logbook contract. The server assigns resident/training ownership. */
+@Serializable data class AcademicLogbookPayload(
+    val category: Int,
+    val entry_date: String,
+    val title: String,
+    val description: String = "",
+    val case_identifier: String = "",
+    val patient_age: String = "",
+    val patient_gender: String = "",
+    val resident_reflection: String = "",
+)
+
 interface InstitutionalApi {
     @POST("api/auth/login/") suspend fun login(@Body body: LoginPayload): Response<JsonObject>
     @POST("api/auth/refresh/") suspend fun refresh(@Body body: RefreshPayload): Response<JsonObject>
@@ -75,6 +87,16 @@ interface InstitutionalApi {
     @GET("api/resident-documents/") suspend fun documents(): Response<JsonArray>
     @GET("api/resident-training/") suspend fun training(): Response<JsonObject>
     @GET("api/supervision/assignments/") suspend fun assignments(): Response<JsonObject>
+    @GET("api/my/rotations/") suspend fun rotations(): Response<JsonObject>
+    @GET("api/academics/logbook-entries/") suspend fun logbook(): Response<JsonObject>
+    @GET("api/academics/logbook-categories/") suspend fun logbookCategories(): Response<JsonObject>
+    @POST("api/academics/logbook-entries/") suspend fun createLogbook(@Body body: AcademicLogbookPayload): Response<JsonObject>
+    @PATCH("api/academics/logbook-entries/{id}/") suspend fun updateLogbook(@Path("id") id: Int, @Body body: AcademicLogbookPayload): Response<JsonObject>
+    @POST("api/academics/logbook-entries/{id}/submit/") suspend fun submitLogbook(@Path("id") id: Int): Response<JsonObject>
+    @GET("api/academics/evaluation-submissions/") suspend fun assessments(): Response<JsonObject>
+    @GET("api/my/research/") suspend fun research(): Response<JsonObject>
+    @GET("api/my/workshops/") suspend fun workshops(): Response<JsonObject>
+    @GET("api/residents/me/summary/") suspend fun residentSummary(): Response<JsonObject>
     @Multipart @POST("api/resident-documents/{id}/upload/")
     suspend fun upload(@Path("id") id: Int, @Part file: MultipartBody.Part): Response<JsonObject>
 }
@@ -140,6 +162,13 @@ data class InstitutionalSnapshot(
     val documents: List<JsonObject> = emptyList(),
     val training: List<JsonObject> = emptyList(),
     val assignments: List<JsonObject> = emptyList(),
+    val rotations: List<JsonObject> = emptyList(),
+    val logbook: List<JsonObject> = emptyList(),
+    val logbookCategories: List<JsonObject> = emptyList(),
+    val assessments: List<JsonObject> = emptyList(),
+    val research: JsonObject? = null,
+    val workshops: List<JsonObject> = emptyList(),
+    val residentSummary: JsonObject? = null,
     /** Human-readable names of sections this account may not read. Shown, not treated as failure. */
     val unavailable: List<String> = emptyList(),
 )
@@ -209,8 +238,30 @@ class InstitutionalRepository internal constructor(
             val documents = optionalArray(authorized { authorizedApi.documents() }, "Documents", unavailable)
             val training = optional(authorized { authorizedApi.training() }, "Training", unavailable).paged()
             val assignments = optional(authorized { authorizedApi.assignments() }, "Supervisor", unavailable).paged()
-            InstitutionalSnapshot(me, onboarding, documents, training, assignments, unavailable)
+            val rotations = optional(authorized { authorizedApi.rotations() }, "Rotations", unavailable).paged()
+            val logbook = optional(authorized { authorizedApi.logbook() }, "Logbook", unavailable).paged()
+            val logbookCategories = optional(authorized { authorizedApi.logbookCategories() }, "Logbook categories", unavailable).paged()
+            val assessments = optional(authorized { authorizedApi.assessments() }, "Assessments", unavailable).paged()
+            val research = optional(authorized { authorizedApi.research() }, "Research", unavailable)
+            val workshops = optional(authorized { authorizedApi.workshops() }, "Workshops", unavailable).paged()
+            val residentSummary = optional(authorized { authorizedApi.residentSummary() }, "Resident summary", unavailable)
+            InstitutionalSnapshot(
+                me, onboarding, documents, training, assignments, rotations, logbook, logbookCategories,
+                assessments, research, workshops, residentSummary, unavailable,
+            )
         }
+    }
+
+    suspend fun createLogbook(payload: AcademicLogbookPayload): Result<JsonObject> = withContext(Dispatchers.IO) {
+        runCatching { required(authorized { authorizedApi.createLogbook(payload) }, "your logbook entry") }
+    }
+
+    suspend fun submitLogbook(entryId: Int): Result<JsonObject> = withContext(Dispatchers.IO) {
+        runCatching { required(authorized { authorizedApi.submitLogbook(entryId) }, "your logbook entry") }
+    }
+
+    suspend fun updateLogbook(entryId: Int, payload: AcademicLogbookPayload): Result<JsonObject> = withContext(Dispatchers.IO) {
+        runCatching { required(authorized { authorizedApi.updateLogbook(entryId, payload) }, "your logbook entry") }
     }
 
     suspend fun update(fields: Map<String, String?>): Result<JsonObject> =

@@ -40,4 +40,11 @@ class ResidentPresentationTest {
         assertFalse(InstitutionalLabels.documentNeedsAction("VERIFIED"))
         assertTrue(InstitutionalLabels.replacementNeedsConfirmation("PENDING_REVIEW"))
     }
+
+    @Test fun `workflow statuses use resident language rather than backend enum names`() {
+        assertEquals("Correction required", residentStatus("RETURNED"))
+        assertEquals("Under review", residentStatus("UNDER_REVIEW"))
+        assertEquals("Approved", residentStatus("VERIFIED"))
+        assertEquals("In progress", residentStatus("IN_PROGRESS"))
+    }
 }

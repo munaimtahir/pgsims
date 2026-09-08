@@ -51,6 +51,13 @@ private const val ASSIGNMENTS_BODY = """
  {"id":7,"assignment_type":"PRIMARY","status":"ACTIVE","is_active":true,
   "supervisor":{"id":2,"name":"Ayesha Malik","department":"Medicine","training_site":"Allied","designation":"HOD"}}]}
 """
+private const val ROTATIONS_BODY = """{"count":1,"results":[{"id":8,"department":"Medicine","hospital":"Allied","start_date":"2026-01-01","end_date":"2026-03-31","status":"ACTIVE"}]}"""
+private const val LOGBOOK_BODY = """{"count":1,"results":[{"id":4,"title":"Synthetic activity","entry_date":"2026-09-01","status":"DRAFT"}]}"""
+private const val CATEGORIES_BODY = """{"count":1,"results":[{"id":2,"name":"Clinical activity"}]}"""
+private const val ASSESSMENTS_BODY = """{"count":0,"results":[]}"""
+private const val RESEARCH_BODY = """{"status":"DRAFT"}"""
+private const val WORKSHOPS_BODY = """{"count":0,"results":[]}"""
+private const val RESIDENT_SUMMARY_BODY = """{"current_rotation":{"id":8,"department":"Medicine","status":"ACTIVE"}}"""
 
 class InstitutionalRepositoryTest {
     private lateinit var server: MockWebServer
@@ -131,6 +138,7 @@ class InstitutionalRepositoryTest {
         server.enqueue(json(DOCUMENTS_BODY))
         server.enqueue(json(TRAINING_BODY))
         server.enqueue(json(ASSIGNMENTS_BODY))
+        enqueueResidentWorkflowBodies()
 
         val snapshot = repository.snapshot().getOrThrow()
 
@@ -140,6 +148,9 @@ class InstitutionalRepositoryTest {
         assertEquals(1, snapshot.training.size)
         assertEquals("Active Surface Baseline Programme", snapshot.training.first().string("program_name"))
         assertEquals(1, snapshot.assignments.size)
+        assertEquals(1, snapshot.rotations.size)
+        assertEquals(1, snapshot.logbook.size)
+        assertEquals("DRAFT", snapshot.research?.string("status"))
         assertTrue(snapshot.unavailable.isEmpty())
         assertEquals("Bearer access-1", bearerOf(server.takeRequest()))
     }
@@ -152,6 +163,7 @@ class InstitutionalRepositoryTest {
         server.enqueue(json("""[]"""))
         server.enqueue(json("""{"count":0,"results":[]}"""))
         server.enqueue(json("""{"count":0,"results":[]}"""))
+        enqueueResidentWorkflowBodies()
 
         val snapshot = repository.snapshot().getOrThrow()
 
@@ -192,6 +204,7 @@ class InstitutionalRepositoryTest {
         server.enqueue(json(DOCUMENTS_BODY))
         server.enqueue(json(TRAINING_BODY))
         server.enqueue(json(ASSIGNMENTS_BODY))
+        enqueueResidentWorkflowBodies()
 
         val snapshot = repository.snapshot().getOrThrow()
 
@@ -245,6 +258,16 @@ class InstitutionalRepositoryTest {
         assertTrue(body.contains("cnic.pdf"))
         file.delete()
         Unit
+    }
+
+    private fun enqueueResidentWorkflowBodies() {
+        server.enqueue(json(ROTATIONS_BODY))
+        server.enqueue(json(LOGBOOK_BODY))
+        server.enqueue(json(CATEGORIES_BODY))
+        server.enqueue(json(ASSESSMENTS_BODY))
+        server.enqueue(json(RESEARCH_BODY))
+        server.enqueue(json(WORKSHOPS_BODY))
+        server.enqueue(json(RESIDENT_SUMMARY_BODY))
     }
 
     @Test fun `upload is rejected client-side before any request when the file is unusable`() = runBlocking {
