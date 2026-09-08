@@ -29,7 +29,7 @@ internal fun displayNameOf(context: Context, uri: Uri): String {
 
 @Composable
 internal fun Disclaimer() = Text(
-    "PGR Portal is an institutional PGR SIMS client. Access is subject to your institution's authorization and privacy rules.",
+    "PGR Companion is a login-gated postgraduate management client. Access is subject to your institution's authorization and privacy rules.",
     style = MaterialTheme.typography.bodySmall,
     fontSize = 12.sp,
 )

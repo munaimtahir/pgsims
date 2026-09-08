@@ -1,64 +1,43 @@
-# PGR Companion — Android
+# PGR SIMS Android
 
-`pk.vexel.pgrcompanion`, store name **PGR Companion: Residency**. Single Gradle module (`:app`),
-Kotlin + Compose + Material 3, `minSdk 26` / `target & compileSdk 36`.
+The Gradle project has two application modules and one shared theme module:
 
-## What this app is
+| Module | Role | Application ID | Status |
+| --- | --- | --- | --- |
+| `:app-portal` | Login-gated PGR SIMS client and current `PGR Companion` Play candidate | `pk.vexel.pgrcompanion` (`1.1.3`, code `3`) | Canonical |
+| `:app-companion` | Offline residency portfolio | `pk.vexel.pgrcompanion` (`1.0.2`, code `2`) | Frozen historical track |
+| `:core:common` | Shared Compose theme | N/A | Active shared library |
 
-Two things, in this order, and the order is load-bearing:
+`app-portal` intentionally supersedes the historical Companion listing under the same package ID.
+Do not install or release both tracks as competing production artifacts. The Companion module remains
+only to preserve the prior offline release source and artifact provenance.
 
-1. A **standalone offline residency portfolio** for postgraduate trainees. No account, no network,
-   no institution. This is what Google Play reviewed and approved, and it is currently in closed
-   testing. It must keep working on its own and must never be put behind a login.
-2. An **optional Institutional Workspace** that connects to the canonical PGR SIMS backend
-   (`backend/`) when — and only when — a trainee's institution has issued them an account.
+## Technology
 
-For workspace 2 the backend is the single source of truth for data, business rules, permissions and
-validation; the app consumes its API rather than recreating logic locally, and never presents local
-personal records as an institutional submission. Workspace 1 has no server and answers to nothing.
+Kotlin, Jetpack Compose, Material 3, Retrofit/OkHttp, Kotlin serialization, and encrypted
+SharedPreferences for Portal session tokens. The project uses Gradle 8.7, AGP 8.5.2, Kotlin 2.0.0,
+Java 17 bytecode, `minSdk 26`, and `compileSdk`/`targetSdk 36`.
 
-See the repository-root `INSTITUTIONAL_WORKSPACE_ARCHITECTURE.md` for the boundary,
-`PGR_SIMS_ANDROID_API_INTEGRATION.md` for the verified API contracts, and
-`ANDROID_RELEASE_VERIFICATION.md` for build and device verification.
-
-## Layout
-
-```
-android/
-├── app/src/main/java/pk/vexel/pgrcompanion/
-│   ├── CompanionApplication.kt      LocalStore eagerly; institutional repository lazily
-│   ├── LocalStore.kt                Personal Workspace persistence (offline, no network)
-│   ├── MainActivity.kt              Theme, five-tab shell, personal screens
-│   ├── InstitutionalRepository.kt   Optional PGR SIMS client: API, tokens, error mapping
-│   └── InstitutionalScreen.kt       Optional Institution tab and its four states
-├── app/src/debug/AndroidManifest.xml  Cleartext to emulator loopback, debug only
-└── app/src/test/                    JVM unit tests, incl. MockWebServer coverage
-```
-
-`core/` and `feature/` are empty `.gitkeep` directories left over from an abandoned multi-module
-architecture built under a different application id. They contain no code and are not in
-`settings.gradle.kts`. Do not treat them as a spec.
-
-## Build
+## Build the canonical application
 
 ```bash
 cd android
-./gradlew :app:testDebugUnitTest :app:lintDebug :app:assembleDebug
-./gradlew :app:assembleRelease :app:bundleRelease \
+./gradlew :app-portal:testDebugUnitTest :app-portal:lintDebug :app-portal:assembleDebug
+./gradlew :app-portal:assembleRelease :app-portal:bundleRelease \
   -PpgrCompanionSigningPropertiesFile=/owner/controlled/path/signing.properties
 ```
 
-Release signing comes from an owner-readable properties file
-(`storeFile`, `storePassword`, `keyAlias`, `keyPassword`) passed by Gradle property. No keystore and
-no password is committed; a release build fails loudly if the property is missing rather than
-quietly producing an unsigned artifact.
+Release signing properties are external and must provide `storeFile`, `storePassword`, `keyAlias`,
+and `keyPassword`. The release task fails rather than silently using a debug key when they are not
+provided.
 
-## House rules for this module
+## Runtime boundary
 
-- The Personal Workspace must render before, and independently of, any institutional session.
-  A network or institution failure belongs inside the Institution tab and nowhere else.
-- Never log request bodies, tokens or passwords — in any build type.
-- Institutional payload shapes are verified against the live backend before use, not inferred.
-  When you change one, update `PGR_SIMS_ANDROID_API_INTEGRATION.md` in the same change.
-- In-app privacy copy, the store listing and the Play Data Safety form have to keep agreeing with
-  each other. If you add a data flow, all three move together.
+Portal is login-gated and consumes the PGR SIMS backend over HTTPS. It supports sign-in, session
+refresh/logout, resident onboarding/profile display and permitted edits, programme/training and
+supervisor summaries, and requested-document upload. The backend remains authoritative for roles,
+permissions, validation, and workflow status.
+
+See `../PGR_SIMS_ANDROID_API_INTEGRATION.md` for endpoint contracts,
+`../ANDROID_RELEASE_VERIFICATION.md` for release evidence, and `../SPRINT_STATE.md` for the live
+release/rollout state.

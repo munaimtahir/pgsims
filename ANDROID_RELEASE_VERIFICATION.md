@@ -1,7 +1,12 @@
 # Android release verification
 
+> Historical 1.0.2 companion-track verification. The current canonical candidate is
+> `:app-portal` packaged as `pk.vexel.pgrcompanion` version `1.1.3`/code `3`. Commands below that
+> reference the removed `:app` module are retained as provenance only; use `android/README.md` for
+> current build commands.
+
 Baseline: `play-closed-testing-baseline-1.0.0` (`pk.vexel.pgrcompanion`, `1.0.0`, `versionCode 1`).
-Candidate: `1.1.0`, `versionCode 2`.
+Candidate: `1.0.2`, `versionCode 2`.
 
 ## Commands
 
@@ -42,7 +47,7 @@ mismatch. This was hit and caught during this pass. Always confirm with
 | `:app:assembleRelease` (R8 + resource shrinking) | pass, 1.83 MB APK |
 | `:app:bundleRelease` | pass, 3.68 MB AAB |
 | `apksigner verify` | Verifies; v2 scheme; 1 signer; certificate SHA-256 `a858f42c…` (correct key) |
-| `aapt2 dump badging` | `pk.vexel.pgrcompanion`, `versionCode=2`, `versionName=1.1.0`, `targetSdk=36` |
+| `aapt2 dump badging` | `pk.vexel.pgrcompanion`, `versionCode=2`, `versionName=1.0.2`, `targetSdk=36` |
 
 Declared permissions in the release APK: `POST_NOTIFICATIONS`, `RECEIVE_BOOT_COMPLETED`,
 `INTERNET`, plus the AndroidX dynamic-receiver permission. No dangerous storage permission — the
@@ -96,9 +101,14 @@ started or touched.
   staging resident before rollout.
   - One side effect to be aware of: the bare-map PATCH probe writes an `ONBOARDING_DRAFT_SAVED`
     activity-log row with an empty field list. No institutional record changed.
-- **The signing certificate was not compared against Play Console.** The correct
-  `pk.vexel.pgrcompanion` key was used and its digest is recorded above; confirm it matches the
-  registered upload key before uploading.
+- **Signing-key continuity: PASS, verified against the actual last-accepted artifact.** No binary
+  of the Play-accepted `1.0.0`/`versionCode 1` upload exists locally or in git history, so it was
+  rebuilt from tag `play-closed-testing-baseline-1.0.0` (`f37469a`) with the same documented
+  keystore and its embedded certificate extracted with `apksigner verify --print-certs` and
+  `keytool -printcert -jarfile` (APK and AAB, both tools agree) — not inferred from keystore
+  filename/alias alone. Digest `a858f42c…b61f010` matches this candidate's exactly, byte-for-byte.
+  What remains open is only Google's own registered-upload-key record, which this environment has
+  no Play Console access to query.
 - Physical hardware, and Android versions other than API 36. Only the `AdForge_API_36` AVD was
   permitted in this environment.
 

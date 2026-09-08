@@ -72,7 +72,7 @@ fun InstitutionalWorkspace(repository: InstitutionalRepository) {
         busy = true
         repository.snapshot().fold(
             { snapshot = it; error = null; state = InstitutionalState.CONNECTED },
-            { error = it.message ?: "Could not load institutional information."; state = InstitutionalState.ERROR },
+            { error = it.message ?: "Could not load your PGR SIMS information."; state = InstitutionalState.ERROR },
         )
         busy = false
     }
@@ -164,15 +164,14 @@ private fun SignInPane(signingIn: Boolean, error: String?, onSignIn: (String, St
         Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
-        Text("Institutional Workspace", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+        Text("PGR Companion", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
         Text(
-            "Sign in with the PGR SIMS account issued by your institution. Institutional records, " +
+            "Sign in with the PGR SIMS account issued by your institution. Your records, " +
                 "permissions, and completion status come from the server.",
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         Card(Modifier.fillMaxWidth()) {
             Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                Text("Faisalabad Medical University", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
                 Text("PGR SIMS resident services", color = MaterialTheme.colorScheme.onSurfaceVariant)
                 OutlinedTextField(
                     username, { username = it }, Modifier.fillMaxWidth(),
@@ -210,16 +209,15 @@ private fun ErrorPane(message: String, busy: Boolean, onRetry: () -> Unit, onSig
         Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
-        Text("Institutional Workspace", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+        Text("PGR Companion", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
         Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = Color(0xFFFDECEA))) {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                Text("Institution unavailable", fontWeight = FontWeight.Bold)
-                Text(message.ifBlank { "Could not load institutional information." })
+                Text("Server unavailable", fontWeight = FontWeight.Bold)
+                Text(message.ifBlank { "Could not load your PGR SIMS information." })
             }
         }
         Text(
-            "This affects the Institutional Workspace only. Your Home, Training, Documents and " +
-                "Profile tabs are stored on this device and are unaffected.",
+            "Check your connection and try again, or sign out and sign back in.",
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -261,7 +259,7 @@ private fun ConnectedPane(
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
-                Text("Institutional Workspace", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+                Text("PGR Companion", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
                 Text("Faisalabad Medical University · PGR SIMS", color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
             TextButton(onClick = onSignOut, enabled = !busy) { Text("Sign out") }
@@ -273,7 +271,7 @@ private fun ConnectedPane(
 
         val data = snapshot
         if (data == null) {
-            Text("Loading your institutional record…", color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text("Loading your PGR SIMS record…", color = MaterialTheme.colorScheme.onSurfaceVariant)
             return@Column
         }
 
@@ -322,7 +320,7 @@ private fun ConnectedPane(
         data.onboarding?.let { onboarding ->
             val sections = onboarding.objectList("sections")
             if (sections.isNotEmpty()) {
-                Text("Institutional profile", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                Text("Profile", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
                 Text(
                     "These fields are defined and validated by your institution. Only the details " +
                         "your institution lets a resident edit are editable here.",
@@ -459,8 +457,8 @@ private fun ConnectedPane(
 
         OutlinedButton(onClick = onRefresh, enabled = !busy, modifier = Modifier.fillMaxWidth()) { Text("Refresh from institution") }
         Text(
-            "Everything in Portal comes from your institution and is stored on their server. " +
-                "Signing out removes only this device's encrypted Portal session.",
+            "Everything in PGR Companion comes from your institution and is stored on their server. " +
+                "Signing out removes only this device's encrypted session.",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )

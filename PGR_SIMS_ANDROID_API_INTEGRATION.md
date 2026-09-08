@@ -87,17 +87,22 @@ user-facing string contains a token, a bearer header or the submitted password.
 
 ## Play Data Safety consequence
 
-Version 1.0.0 collected and transmitted nothing. Version 1.1.0 does, **but only for users who
-choose to sign in on the Institution tab**. The declaration must be updated before rollout:
+**As of `versionCode 3` / `1.1.3`, the `pk.vexel.pgrcompanion` listing is built from
+`android/app-portal` — a login-gated PGR SIMS client, not the offline-only `1.0.2` build.** This
+was an explicit repository-level decision (see `builds/companion/build-info.json` and
+`SPRINT_STATE.md`): there is no offline Personal Workspace in this listing any more, and login is
+required to use the app at all. The declaration reflects that:
 
-- **Personal info (name, email, phone, user ID)** — transmitted to the institution, and displayed
-  from it. Optional; user-initiated; not shared with third parties.
-- **Files and docs** — uploaded to the institution only when the user picks a file for a document
-  the institution has requested. Optional; user-initiated.
-- **App activity / credentials** — username and password are transmitted to the institution to
-  authenticate. **Not stored on the device**; only the resulting session tokens are, encrypted.
+- **Personal info (name, email, phone, user ID)** — transmitted on login and displayed back from
+  the server. **Required** — the app cannot be used without signing in. Not shared with third
+  parties.
+- **Files and docs** — uploaded only when the user picks a file for a document the SIMS deployment
+  has requested. Optional; user-initiated.
+- **App activity / credentials** — username and password are transmitted to authenticate.
+  **Not stored on the device**; only the resulting session tokens are, encrypted.
 - Data is encrypted in transit (HTTPS enforced; cleartext disabled in release).
-- No advertising, no analytics, no third-party sharing, in either workspace.
+- No advertising, no analytics, no third-party sharing.
 
-The offline Personal Workspace still collects and transmits nothing, which is why the in-app copy
-now distinguishes the two rather than claiming the app has no connection at all.
+The prior `1.0.2` offline-only build (`android/app-companion`) collected and transmitted nothing;
+it is now superseded and frozen. See `data_safety_export.csv` for the full machine-readable
+declaration matching this build.

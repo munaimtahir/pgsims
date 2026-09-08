@@ -1,5 +1,10 @@
 # Android current state
 
+> Historical 1.0.2 companion-track record. The current canonical candidate is now
+> `android/app-portal` as `pk.vexel.pgrcompanion` version `1.1.3`/code `3`; see
+> `SPRINT_STATE.md` and `android/README.md`. Statements below about a single `:app` module and an
+> optional institutional tab describe the retired architecture, not the current release track.
+
 As of 2026-09-06.
 
 ## Closed-testing baseline (Milestone A)
@@ -40,7 +45,7 @@ to resurrect.
 
 ## What this change adds
 
-`versionName 1.1.0`, `versionCode 2`. The app keeps the offline **Personal Workspace** (profile,
+`versionName 1.0.2`, `versionCode 2`. The app keeps the offline **Personal Workspace** (profile,
 training records, documents, milestones, reminders) exactly as approved, and adds an **optional
 Institutional Workspace** on a fifth tab.
 
@@ -96,7 +101,7 @@ The repository contains no signing key and no production credential. Release sig
 externally through `-PpgrCompanionSigningPropertiesFile`; see `ANDROID_RELEASE_VERIFICATION.md` for
 the fingerprint of the key used and what still needs owner confirmation.
 
-## Store-listing consequence of 1.1.0
+## Store-listing consequence of 1.0.2
 
 1.0.0's in-app copy stated the app has "no account, advertising, analytics, cloud sync, or
 institutional connection". With an optional institutional connection present that sentence would be
