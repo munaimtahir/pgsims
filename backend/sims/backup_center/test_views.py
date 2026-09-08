@@ -348,6 +348,16 @@ class ConfirmRestoreViewTests(BackupCenterViewTestBase):
 
 
 class GoogleDriveStatusAndConfigViewTests(BackupCenterViewTestBase):
+    def setUp(self):
+        super().setUp()
+        # These assertions cover the disabled configuration. The production Compose environment
+        # enables Drive, so pin the intended test configuration rather than inheriting host state.
+        self._drive_env_patch = mock.patch.dict(
+            os.environ, {"GOOGLE_DRIVE_BACKUP_ENABLED": "false"}
+        )
+        self._drive_env_patch.start()
+        self.addCleanup(self._drive_env_patch.stop)
+
     def test_status_reports_not_connected_when_no_connection_row(self):
         self.client.force_authenticate(self.admin)
         resp = self.client.get("/api/backup_center/google-drive/status/")

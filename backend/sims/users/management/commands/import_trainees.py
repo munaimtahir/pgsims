@@ -69,7 +69,7 @@ class Command(BaseCommand):
                 service = BulkService(admin_user)
                 
                 self.stdout.write(
-                    self.style.SUCCESS(f'\n{'='*60}')
+                    self.style.SUCCESS(f"\n{'=' * 60}")
                 )
                 self.stdout.write(f'Importing trainees from: {file_path}')
                 self.stdout.write(f'Dry run: {dry_run}')
@@ -85,7 +85,7 @@ class Command(BaseCommand):
                 # Display results
                 self.stdout.write(f'\n{"="*60}')
                 self.stdout.write(self.style.SUCCESS('IMPORT RESULTS'))
-                self.stdout.write(f'{'='*60}')
+                self.stdout.write("=" * 60)
                 self.stdout.write(f'Status: {operation.status}')
                 self.stdout.write(f'Total items: {operation.total_items}')
                 self.stdout.write(
