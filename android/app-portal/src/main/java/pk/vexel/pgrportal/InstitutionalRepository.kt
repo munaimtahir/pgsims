@@ -191,11 +191,11 @@ class InstitutionalRepository internal constructor(
                 val response = call { anonymousApi.login(LoginPayload(username.trim(), password)) }
                 if (!response.isSuccessful) throw InstitutionalException(loginErrorFor(response.code()))
                 val body = response.body()
-                    ?: throw InstitutionalException("The institution's server returned an empty sign-in response.")
+                    ?: throw InstitutionalException("PGR SIMS returned an empty sign-in response.")
                 val access = body.string("access")
-                    ?: throw InstitutionalException("The institution's server did not return a session token.")
+                    ?: throw InstitutionalException("PGR SIMS did not return a session token.")
                 val refresh = body.string("refresh")
-                    ?: throw InstitutionalException("The institution's server did not return a refresh token.")
+                    ?: throw InstitutionalException("PGR SIMS did not return a refresh token.")
                 tokens.save(access, refresh)
                 body["user"]?.jsonObject ?: JsonObject(emptyMap())
             }
@@ -258,7 +258,7 @@ class InstitutionalRepository internal constructor(
         request()
     } catch (io: IOException) {
         throw InstitutionalException(
-            "Cannot reach the institution's server. Check your connection and try again."
+            "Cannot reach PGR SIMS. Check your connection and try again."
         )
     }
 
@@ -279,7 +279,7 @@ class InstitutionalRepository internal constructor(
 
     private fun required(response: Response<JsonObject>, what: String): JsonObject =
         if (response.isSuccessful) {
-            response.body() ?: throw InstitutionalException("The institution's server returned no $what.")
+            response.body() ?: throw InstitutionalException("PGR SIMS returned no $what.")
         } else {
             throw InstitutionalException(errorFor(response.code(), what))
         }
@@ -313,7 +313,7 @@ class InstitutionalRepository internal constructor(
         fun validateUpload(displayName: String, sizeBytes: Long): String? {
             val extension = displayName.substringAfterLast('.', "").lowercase()
             if (extension.isBlank() || extension !in ALLOWED_UPLOAD_EXTENSIONS) {
-                return "This institution accepts ${ALLOWED_UPLOAD_EXTENSIONS.sorted().joinToString(", ")} files only."
+                return "PGR SIMS accepts ${ALLOWED_UPLOAD_EXTENSIONS.sorted().joinToString(", ")} files only."
             }
             if (sizeBytes <= 0L) return "The selected file is empty."
             if (sizeBytes > MAX_UPLOAD_BYTES) return "The selected file is larger than 10 MB."
@@ -334,16 +334,16 @@ class InstitutionalRepository internal constructor(
             400, 401 -> "Incorrect username or password."
             403 -> "This account is not permitted to sign in from the mobile app."
             429 -> "Too many sign-in attempts. Please wait a few minutes and try again."
-            in 500..599 -> "The institution's server is unavailable right now. Please try again later."
+            in 500..599 -> "PGR SIMS is unavailable right now. Please try again later."
             else -> "Sign in failed (HTTP $code)."
         }
 
         fun errorFor(code: Int, what: String): String = when (code) {
-            401 -> "Your institutional session has expired. Please sign in again."
+            401 -> "Your session has expired. Please sign in again."
             403 -> "This account is not permitted to view $what."
-            404 -> "$what is not available on this institution's server."
+            404 -> "$what is not available in PGR SIMS."
             429 -> "Too many requests. Please wait a few minutes and try again."
-            in 500..599 -> "The institution's server is unavailable right now. Please try again later."
+            in 500..599 -> "PGR SIMS is unavailable right now. Please try again later."
             else -> "Could not load $what (HTTP $code)."
         }
     }

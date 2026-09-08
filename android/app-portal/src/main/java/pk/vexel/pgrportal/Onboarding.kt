@@ -54,7 +54,7 @@ object InstitutionalLabels {
 
     fun supervisorStatus(raw: String): String = when (raw.uppercase()) {
         "ASSIGNED" -> "Assigned"
-        "PENDING" -> "Awaiting the institution's confirmation"
+        "PENDING" -> "Awaiting confirmation"
         "NOT_STARTED", "NOT_ASSIGNED", "" -> "Not assigned yet"
         else -> humanize(raw)
     }
@@ -80,9 +80,9 @@ object OnboardingFieldPolicy {
     /** @return null when the field is editable, otherwise why it is not. */
     fun readOnlyReason(field: String): String? = when (field) {
         in RESIDENT_EDITABLE -> null
-        in REFERENCE -> "Set by your institution."
-        in ADMINISTRATIVE_DATE -> "Part of your training record, maintained by your institution."
-        else -> "Maintained by your institution."
+        in REFERENCE -> "Maintained in PGR SIMS."
+        in ADMINISTRATIVE_DATE -> "Part of your training record, maintained in PGR SIMS."
+        else -> "Maintained in PGR SIMS."
     }
 
     /**
@@ -135,7 +135,7 @@ data class OnboardingSummary(
             if (supervisor.uppercase() != "ASSIGNED") outstanding += "Supervisor assignment: ${InstitutionalLabels.supervisorStatus(supervisor)}"
 
             val declaration = body.boolean("declaration_accepted")
-            if (!declaration) outstanding += "Accept your institution's declaration to submit for review"
+            if (!declaration) outstanding += "Accept the required declaration to submit for review"
 
             return OnboardingSummary(
                 reviewStatus = body.string("review_status").orEmpty(),

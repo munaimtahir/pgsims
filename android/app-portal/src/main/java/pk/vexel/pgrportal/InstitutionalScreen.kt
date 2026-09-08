@@ -9,7 +9,13 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Description
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.School
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -51,6 +57,13 @@ private fun JsonObject.child(key: String): JsonObject? =
     runCatching { this[key]?.jsonObject }.getOrNull()
 
 private fun humanize(value: String): String = InstitutionalLabels.humanize(value)
+
+private enum class ResidentDestination(val label: String, val icon: androidx.compose.ui.graphics.vector.ImageVector) {
+    HOME("Home", Icons.Default.Home),
+    PROFILE("Profile", Icons.Default.Person),
+    TRAINING("Training", Icons.Default.School),
+    DOCUMENTS("Documents", Icons.Default.Description),
+}
 
 @Composable
 fun InstitutionalWorkspace(repository: InstitutionalRepository) {
@@ -138,7 +151,7 @@ fun InstitutionalWorkspace(repository: InstitutionalRepository) {
                     }
                     busy = false
                     result.fold(
-                        { notice = "Uploaded \"$name\". The institution will review it."; reloadKey++ },
+                        { notice = "Uploaded \"$name\". PGR SIMS will review it."; reloadKey++ },
                         { notice = it.message ?: "Upload failed." },
                     )
                 }
@@ -147,7 +160,7 @@ fun InstitutionalWorkspace(repository: InstitutionalRepository) {
                 scope.launch {
                     busy = true; notice = null
                     repository.update(mapOf(field to value)).fold(
-                        { notice = "Saved to the institution."; reloadKey++ },
+                        { notice = "Saved to PGR SIMS."; reloadKey++ },
                         { notice = it.message ?: "Could not save that change."; busy = false },
                     )
                 }
@@ -166,13 +179,13 @@ private fun SignInPane(signingIn: Boolean, error: String?, onSignIn: (String, St
     ) {
         Text("PGR Companion", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
         Text(
-            "Sign in with the PGR SIMS account issued by your institution. Your records, " +
+            "Sign in with the PGR SIMS credentials provided for your residency account. Your records, " +
                 "permissions, and completion status come from the server.",
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         Card(Modifier.fillMaxWidth()) {
             Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                Text("PGR SIMS resident services", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text("Your postgraduate residency workspace", color = MaterialTheme.colorScheme.onSurfaceVariant)
                 OutlinedTextField(
                     username, { username = it }, Modifier.fillMaxWidth(),
                     label = { Text("Username") }, singleLine = true, enabled = !signingIn,
@@ -194,7 +207,7 @@ private fun SignInPane(signingIn: Boolean, error: String?, onSignIn: (String, St
         }
         error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
         Text(
-            "Your username and password are sent only to your institution over an encrypted " +
+            "Your username and password are sent only to PGR SIMS over an encrypted " +
                 "connection. They are never stored on this device; only an encrypted session is retained.",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -228,6 +241,7 @@ private fun ErrorPane(message: String, busy: Boolean, onRetry: () -> Unit, onSig
 }
 
 @Composable
+@OptIn(ExperimentalMaterial3Api::class)
 private fun ConnectedPane(
     snapshot: InstitutionalSnapshot?,
     busy: Boolean,
@@ -239,6 +253,7 @@ private fun ConnectedPane(
     onSaveField: (String, String) -> Unit,
 ) {
     val context = LocalContext.current
+    var destination by rememberSaveable { mutableStateOf(ResidentDestination.HOME) }
     var targetDocument by remember { mutableStateOf<Int?>(null) }
     var confirmReplace by remember { mutableStateOf<Pair<Int, String>?>(null) }
     val picker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? ->
@@ -253,17 +268,31 @@ private fun ConnectedPane(
         if (problem != null) onNotice(problem) else onUpload(id, uri)
     }
 
-    Column(
-        Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Column(Modifier.weight(1f)) {
-                Text("PGR Companion", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
-                Text("Faisalabad Medical University · PGR SIMS", color = MaterialTheme.colorScheme.onSurfaceVariant)
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("PGR Companion") },
+                actions = { TextButton(onClick = onSignOut, enabled = !busy) { Text("Sign out") } },
+            )
+        },
+        bottomBar = {
+            NavigationBar {
+                ResidentDestination.entries.forEach { item ->
+                    NavigationBarItem(
+                        selected = destination == item,
+                        onClick = { destination = item },
+                        icon = { Icon(item.icon, contentDescription = item.label) },
+                        label = { Text(item.label) },
+                    )
+                }
             }
-            TextButton(onClick = onSignOut, enabled = !busy) { Text("Sign out") }
-        }
+        },
+    ) { padding ->
+        Column(
+            Modifier.fillMaxSize().verticalScroll(rememberScrollState())
+                .padding(padding).padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
         if (busy) LinearProgressIndicator(Modifier.fillMaxWidth())
         notice?.let {
             Card(Modifier.fillMaxWidth()) { Text(it, Modifier.padding(12.dp), style = MaterialTheme.typography.bodyMedium) }
@@ -277,13 +306,16 @@ private fun ConnectedPane(
 
         val me = data.me
         val summary = remember(data) { OnboardingSummary.from(data.onboarding, data.documents) }
+        if (destination == ResidentDestination.HOME) {
+        Text("Welcome, ${me.text("username").ifBlank { "Resident" }}", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+        Text("Your residency at a glance", color = MaterialTheme.colorScheme.onSurfaceVariant)
         Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = Color(0xFFE2F3F0))) {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text(me.text("username"), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
                 Text("Role: ${humanize(me.text("role").ifBlank { "unknown" })}")
                 if (me.flag("must_change_password")) {
                     Text(
-                        "Your institution requires a password change. Please sign in on the PGR SIMS web portal to set a new password.",
+                        "A password change is required. Please use PGR SIMS on the web to set a new password.",
                         color = MaterialTheme.colorScheme.error,
                     )
                 }
@@ -304,7 +336,7 @@ private fun ConnectedPane(
                     Text("Declaration: ${if (summary.declarationAccepted) "Accepted" else "Not accepted"}")
                     Text("Supervisor: ${InstitutionalLabels.supervisorStatus(summary.supervisorStatus)}")
                     if (summary.onboardingComplete && !summary.hasOutstanding) {
-                        Text("Your institution has everything it asked for.")
+                        Text("Your onboarding requirements are complete.")
                     } else {
                         Text("Outstanding requirements", fontWeight = FontWeight.SemiBold)
                         if (summary.outstanding.isEmpty()) {
@@ -317,13 +349,16 @@ private fun ConnectedPane(
             }
         }
 
-        data.onboarding?.let { onboarding ->
+        DashboardSummary(data, summary)
+        }
+
+        if (destination == ResidentDestination.PROFILE) data.onboarding?.let { onboarding ->
             val sections = onboarding.objectList("sections")
             if (sections.isNotEmpty()) {
                 Text("Profile", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
                 Text(
-                    "These fields are defined and validated by your institution. Only the details " +
-                        "your institution lets a resident edit are editable here.",
+                    "These fields are defined and validated by PGR SIMS. Only details available " +
+                        "for resident editing can be changed here.",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -331,9 +366,10 @@ private fun ConnectedPane(
             }
         }
 
+        if (destination == ResidentDestination.TRAINING) {
         Text("Programme and training", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
         if (data.training.isEmpty()) {
-            InstitutionalEmpty("No training record is recorded for you at this institution.")
+            InstitutionalEmpty("No training record is currently available for your account.")
         } else {
             data.training.forEach { record ->
                 Card(Modifier.fillMaxWidth()) {
@@ -358,7 +394,7 @@ private fun ConnectedPane(
         Text("Supervisor", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
         if (data.assignments.isEmpty()) {
             InstitutionalEmpty(
-                "No supervisor assignment is currently recorded at this institution. " +
+                "No supervisor assignment is currently recorded for your account. " +
                     "Status: ${InstitutionalLabels.supervisorStatus(summary.supervisorStatus)}."
             )
         } else {
@@ -380,9 +416,13 @@ private fun ConnectedPane(
             }
         }
 
-        Text("Required documents", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+        }
+
+        if (destination == ResidentDestination.DOCUMENTS) {
+        Text("Documents", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+        Text("Upload requested documents and follow review feedback.", color = MaterialTheme.colorScheme.onSurfaceVariant)
         if (data.documents.isEmpty()) {
-            InstitutionalEmpty("Your institution has not requested any documents.")
+            InstitutionalEmpty("No document requirements are currently assigned to your account.")
         } else {
             data.documents.forEach { document ->
                 val id = document.number("id")
@@ -432,7 +472,7 @@ private fun ConnectedPane(
                 title = { Text("Replace $title?") },
                 text = {
                     Text(
-                        "Your institution already has a copy of this document. Uploading a new file " +
+                        "A copy of this document is already on record. Uploading a new file " +
                             "replaces it and sends it back for review."
                     )
                 },
@@ -447,6 +487,8 @@ private fun ConnectedPane(
             )
         }
 
+        }
+
         if (data.unavailable.isNotEmpty()) {
             Text(
                 "Not available to this account: ${data.unavailable.joinToString(", ")}.",
@@ -455,13 +497,34 @@ private fun ConnectedPane(
             )
         }
 
-        OutlinedButton(onClick = onRefresh, enabled = !busy, modifier = Modifier.fillMaxWidth()) { Text("Refresh from institution") }
+        OutlinedButton(onClick = onRefresh, enabled = !busy, modifier = Modifier.fillMaxWidth()) { Text("Refresh") }
         Text(
-            "Everything in PGR Companion comes from your institution and is stored on their server. " +
-                "Signing out removes only this device's encrypted session.",
+            "Your residency information is securely managed by PGR SIMS. Signing out removes only " +
+                "this device's encrypted session.",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
+    }
+    }
+}
+
+@Composable
+private fun DashboardSummary(data: InstitutionalSnapshot, summary: OnboardingSummary) {
+    val approved = data.documents.count { it.text("status").uppercase() == "VERIFIED" }
+    val underReview = data.documents.count { it.text("status").uppercase() in setOf("UPLOADED", "PENDING_REVIEW") }
+    val actionNeeded = data.documents.count { InstitutionalLabels.documentNeedsAction(it.text("status")) }
+    Text("Your progress", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+    Card(Modifier.fillMaxWidth()) {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            val actions = summary.outstanding.size
+            Text(if (actions == 0) "Onboarding complete" else "$actions action${if (actions == 1) "" else "s"} remaining", fontWeight = FontWeight.SemiBold)
+            Text(if (summary.profileComplete) "Profile complete" else "Profile needs attention")
+            data.training.firstOrNull()?.let { training ->
+                Text("Training: ${training.text("program_name").ifBlank { training.text("program_code").ifBlank { "Recorded" } }}")
+            } ?: Text("Training: no active record")
+            Text("Supervisor: ${InstitutionalLabels.supervisorStatus(summary.supervisorStatus)}")
+            Text("Documents: ${data.documents.size} required · $approved approved · $underReview under review · $actionNeeded action required")
+        }
     }
 }
 

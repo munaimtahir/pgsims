@@ -176,7 +176,7 @@ class InstitutionalRepositoryTest {
 
         assertTrue(result.isFailure)
         assertEquals(
-            "Cannot reach the institution's server. Check your connection and try again.",
+            "Cannot reach PGR SIMS. Check your connection and try again.",
             result.exceptionOrNull()?.message,
         )
     }

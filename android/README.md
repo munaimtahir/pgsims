@@ -33,10 +33,17 @@ provided.
 
 ## Runtime boundary
 
-Portal is login-gated and consumes the PGR SIMS backend over HTTPS. It supports sign-in, session
-refresh/logout, resident onboarding/profile display and permitted edits, programme/training and
-supervisor summaries, and requested-document upload. The backend remains authoritative for roles,
-permissions, validation, and workflow status.
+PGR Companion is login-gated and consumes the PGR SIMS backend over HTTPS. Its authenticated
+resident experience is organised as **Home**, **Profile**, **Training**, and **Documents**. It
+supports sign-in, secure session restore/refresh/logout, backend-defined onboarding/profile display
+and permitted edits, programme/training and supervisor summaries, requested-document upload, and
+correction/resubmission status. The backend remains authoritative for roles, permissions,
+validation, and workflow status.
+
+Use the `staging` variant for end-to-end work. It has a distinct package ID and accepts an owner
+provided staging base URL via `-PpgrPortalStagingBaseUrl=...`; never point a debug test workflow at
+the production reviewer account. The API-36 staging verification and endpoint audit are recorded in
+`../docs/implementation/20260908_pgr_companion_resident_foundation/`.
 
 See `../PGR_SIMS_ANDROID_API_INTEGRATION.md` for endpoint contracts,
 `../ANDROID_RELEASE_VERIFICATION.md` for release evidence, and `../SPRINT_STATE.md` for the live
