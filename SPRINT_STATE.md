@@ -36,3 +36,6 @@ resident, production state, migrations, and rollback path are verified. Preserve
 - Correction/resubmission is verified end-to-end on API 36 against production with the synthetic
   supervisor and resident. Release versionCode 4/versionName 1.1.4 is built and signed; only the
   external Play Console availability check remains before upload.
+- Final release freeze completed: clean Gradle test/lint, signed APK/AAB, API-36 smoke test,
+  signing continuity, production-host verification, and a corrected release gate with a working
+  no-`rg` fallback. Release record: `ANDROID_RELEASE_1.1.4.md`.

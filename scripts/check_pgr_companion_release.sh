@@ -10,15 +10,26 @@ build="$root/android/app-portal/build.gradle.kts"
 manifest="$root/android/app-portal/src/main/AndroidManifest.xml"
 strings="$root/android/app-portal/src/main/res/values/strings.xml"
 grep -q 'applicationId = "pk.vexel.pgrcompanion"' "$build"
-grep -q 'versionCode = 3' "$build"
-grep -q 'versionName = "1.1.3"' "$build"
+grep -q 'versionCode = 4' "$build"
+grep -q 'versionName = "1.1.4"' "$build"
 grep -q 'PGR Companion' "$strings"
 grep -q 'android.permission.INTERNET' "$manifest"
 grep -q 'INSTITUTIONAL_API_BASE_URL' "$build"
 grep -q 'https://android.pgsims.alshifalab.pk/' "$build"
 # Release must be signed with the actual Companion upload key, not the debug/staging key.
 grep -q 'signingConfig = signingConfigs.getByName("release")' "$build"
-! grep -rn -E 'localhost|10\.0\.2\.2|example\.com|TODO endpoint|fake|mock' "$root/android/app-portal/src/main" >/dev/null
+forbidden='localhost|10\.0\.2\.2|example\.com|TODO endpoint|fake|mock'
+if command -v rg >/dev/null 2>&1; then
+    if rg -n -i "$forbidden" "$root/android/app-portal/src/main" >/dev/null; then
+        echo "Forbidden release pattern found in app-portal main source." >&2
+        exit 1
+    fi
+else
+    if grep -RniE "$forbidden" "$root/android/app-portal/src/main" >/dev/null; then
+        echo "Forbidden release pattern found in app-portal main source." >&2
+        exit 1
+    fi
+fi
 test -f "$root/docs/android/pgr-companion-1.0.0/VERIFICATION.md"
 test -f "$root/ANDROID_CURRENT_STATE.md"
 test -f "$root/PGR_SIMS_ANDROID_API_INTEGRATION.md"
