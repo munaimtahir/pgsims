@@ -8,5 +8,7 @@ empty/unavailable research state without failing other sections.
 
 Safe production writes were verified: a synthetic logbook entry was created, edited and submitted
 through the API; the signed Android release created/submitted a separate synthetic logbook entry;
-and the signed Android release replaced a synthetic resident's CNIC document with a tiny synthetic
-PDF. No real resident, patient or reviewer account was accessed or mutated.
+the synthetic supervisor returned an entry for correction; the signed Android release displayed the
+feedback, edited the returned entry and resubmitted it; and the signed Android release replaced a
+synthetic resident's CNIC document with a tiny synthetic PDF. No real resident, patient or reviewer
+account was accessed or mutated.

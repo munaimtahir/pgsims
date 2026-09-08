@@ -11,6 +11,7 @@ the source commit under test and used the production release base URL.
 | Requirements, assessments/workshops empty state and Documents | PASS |
 | Production document replacement | PASS |
 | Logbook list, detail and submit | PASS |
+| Returned-for-correction feedback, edit and resubmit | PASS — production status returned to `SUBMITTED` |
 | Profile display and permitted full-name update | PASS |
 | Background/force-stop/relaunch encrypted-session restore | PASS |
 | Logout and re-login | PASS |

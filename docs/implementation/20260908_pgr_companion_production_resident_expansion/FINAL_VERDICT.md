@@ -5,6 +5,6 @@
 The canonical Android client is production-connected and its signed release was exercised on API
 36 using a dedicated synthetic resident. Training/rotations, supervision, logbook submission,
 documents, session lifecycle and resident presentation operate against authoritative PGR SIMS
-production APIs. No P0 issue remains. P1 follow-up is to exercise a server-returned
-correction/resubmission logbook state when a synthetic supervisor test workflow is available, and
-to confirm Play Console version-code sequencing before upload.
+production APIs. No P0 issue remains. The returned-for-correction and resubmission path is now
+verified end-to-end. The owner-confirmed next release is versionCode 4/versionName 1.1.4; Play
+Console availability still requires external confirmation before upload.

@@ -33,5 +33,6 @@ resident, production state, migrations, and rollback path are verified. Preserve
 ## Closure state
 
 - Signed release/API-36 production E2E, certificate/hash checks and security review are complete.
-- P1 follow-up: test a server-returned logbook correction/resubmission state with a synthetic
-  supervisor workflow, and verify Play Console version-code availability before any upload.
+- Correction/resubmission is verified end-to-end on API 36 against production with the synthetic
+  supervisor and resident. Release versionCode 4/versionName 1.1.4 is built and signed; only the
+  external Play Console availability check remains before upload.
