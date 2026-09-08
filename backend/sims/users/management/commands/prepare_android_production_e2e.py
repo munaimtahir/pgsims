@@ -13,13 +13,16 @@ from django.db import transaction
 from django.utils import timezone
 
 from sims.rotations.models import HospitalDepartment
+from sims.supervision.models import ResidentSupervisorAssignment
+from sims.supervision.services import create_supervisor_assignment
 from sims.training.models import ResidentTrainingRecord, RotationAssignment
-from sims.users.models import User
+from sims.users.models import SupervisorProfile, User
 
 
 PASSWORD_ENVIRONMENT_VARIABLE = "PGSIMS_PRODUCTION_ANDROID_TEST_PASSWORD"
 RESIDENT_USERNAME = "android.demo.resident1"
 ADMIN_USERNAME = "android.demo.admin"
+SUPERVISOR_USERNAME = "android.demo.supervisor"
 
 
 class Command(BaseCommand):
@@ -40,6 +43,9 @@ class Command(BaseCommand):
             record = ResidentTrainingRecord.objects.filter(resident_user=resident, active=True).first()
             if not record:
                 raise CommandError("The synthetic resident has no active canonical training record.")
+            supervisor = SupervisorProfile.objects.filter(user__username=SUPERVISOR_USERNAME).first()
+            if not supervisor:
+                raise CommandError("The required synthetic supervisor is missing; refusing to create a substitute.")
 
             hospital_department = HospitalDepartment.objects.filter(
                 hospital=record.training_site, department=record.department
@@ -51,6 +57,22 @@ class Command(BaseCommand):
             resident.must_change_password = False
             resident.is_active = True
             resident.save(update_fields=["password", "must_change_password", "is_active"])
+
+            # The synthetic account may predate the current supervision spine. Keep real accounts
+            # untouched and use the same audited service as the web assignment workflow.
+            if not ResidentSupervisorAssignment.objects.filter(
+                resident=resident.resident_profile,
+                assignment_type=ResidentSupervisorAssignment.ASSIGNMENT_PRIMARY,
+                is_active=True,
+            ).exists():
+                create_supervisor_assignment(
+                    resident=resident.resident_profile,
+                    supervisor=supervisor,
+                    assignment_type=ResidentSupervisorAssignment.ASSIGNMENT_PRIMARY,
+                    start_date=timezone.localdate(),
+                    actor=admin,
+                    notes="Synthetic Android production E2E supervision fixture.",
+                )
 
             today = timezone.localdate()
             fixtures = (
