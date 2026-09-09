@@ -103,6 +103,8 @@ class Command(BaseCommand):
             "research_approved": 0,
             "research_returned": 0,
             "leave_records": 0,
+            "rotation_pending": 0,
+            "rotation_approved": 0,
             "deputation_records": 0,
             "documents_available": ResidentDocumentRequirement.objects.filter(is_active=True).count(),
             "dry_run": dry_run,
@@ -245,6 +247,40 @@ class Command(BaseCommand):
                     )
             result["leave_records"] += 1
 
+        rotation_specs = (("SUBMITTED", 9), ("APPROVED", 10))
+        template_names = ("Part II — General Surgery", "Renal Transplantation")
+        for index, (desired, resident_index) in enumerate(rotation_specs):
+            resident = residents[resident_index]
+            result_key = "rotation_pending" if desired == "SUBMITTED" else "rotation_approved"
+            if dry_run:
+                result[result_key] += 1
+                continue
+            training = ResidentTrainingRecord.objects.filter(resident_user=resident.user, active=True).first()
+            hospital_department = HospitalDepartment.objects.filter(
+                hospital=resident.hospital,
+                department__name__icontains="General Surgery" if index == 0 else "Urology",
+            ).first()
+            template = resident.program_ref.rotation_templates.filter(name=template_names[index], active=True).first()
+            if not training or not hospital_department or not template:
+                continue
+            if not RotationAssignment.objects.filter(notes__contains=MARKER, resident_training=training).exists():
+                assignment = self.assignment(resident)
+                start = date(2026, 10, 1) + timedelta(days=index * 70)
+                RotationAssignment.objects.create(
+                    resident_training=training,
+                    hospital_department=hospital_department,
+                    template=template,
+                    start_date=start,
+                    end_date=start + timedelta(days=template.duration_weeks * 7),
+                    status=desired,
+                    notes=f"Curriculum rotation approval demonstration. {MARKER}",
+                    requested_by=resident.user,
+                    approved_by_hod=assignment.supervisor.user if desired == "APPROVED" else None,
+                    approved_at=timezone.now() if desired == "APPROVED" else None,
+                    submitted_at=timezone.now(),
+                )
+            result[result_key] += 1
+
         return result
 
     def get_category(self, dry_run):
@@ -286,6 +322,7 @@ class Command(BaseCommand):
         result["evaluation_submissions"] = EvaluationSubmission.objects.filter(extra_data__demo_seed=True).delete()[0]
         result["research_projects"] = ResidentResearchProject.objects.filter(title__endswith=MARKER).delete()[0]
         result["leave_requests"] = LeaveRequest.objects.filter(reason__contains=MARKER).delete()[0]
+        result["rotation_assignments"] = RotationAssignment.objects.filter(notes__contains=MARKER).delete()[0]
         result["deputation_postings"] = DeputationPosting.objects.filter(notes__contains=MARKER).delete()[0]
         result["documents"] = ResidentDocument.objects.filter(extra_data__demo_seed=True).delete()[0]
         result["demo_category"] = LogbookCategory.objects.filter(code="DEMO-UROLOGY-PROCEDURES").delete()[0]
