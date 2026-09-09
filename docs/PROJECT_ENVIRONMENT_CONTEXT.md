@@ -78,13 +78,13 @@ ssh test
 Maintained source configuration:
 
 ```text
-/home/munaim/config/caddy/CaddyFile
+/home/munaim/srv/proxy/caddy/Caddyfile
 ```
 
 Active system configuration:
 
 ```text
-/etc/caddy/CaddyFile
+/etc/caddy/Caddyfile
 ```
 
 The maintained configuration is synchronised to the system configuration. Treat Caddy as shared
@@ -133,7 +133,7 @@ defaults; it does not authorize production changes by itself.
 
 ## Verification note
 
-On 2026-09-10, read-only checks through `ssh test` confirmed the VPS repository path and SSH
-access. The supplied Caddy paths require manual review: `/home/munaim/config/caddy` was not found,
-and `/etc/caddy/CaddyFile` was not found. The VPS currently has an active-looking file at
-`/etc/caddy/Caddyfile` (lowercase `f`). No Caddy configuration was changed during this verification.
+On 2026-09-10, read-only checks through `ssh test` confirmed the VPS repository path, SSH access,
+and the maintained Caddy configuration at `/home/munaim/srv/proxy/caddy/Caddyfile`. The active
+system configuration is `/etc/caddy/Caddyfile`. No Caddy configuration was changed during this
+verification.
