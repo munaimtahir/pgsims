@@ -18,8 +18,8 @@ android {
         applicationId = "pk.vexel.pgrcompanion"
         minSdk = 26
         targetSdk = 36
-        versionCode = 4
-        versionName = "1.1.4"
+        versionCode = 5
+        versionName = "1.1.5"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables { useSupportLibrary = true }
         buildConfigField("String", "INSTITUTIONAL_API_BASE_URL", "\"https://android.pgsims.alshifalab.pk/\"")
@@ -63,19 +63,6 @@ android {
     }
     buildTypes {
         debug { applicationIdSuffix = ".debug"; isDebuggable = true }
-        create("staging") {
-            initWith(getByName("debug"))
-            applicationIdSuffix = ".staging"
-            // Shared core publishes debug/release variants, not a separate staging variant.
-            // Staging is debug-derived, so resolve its shared dependencies from debug.
-            matchingFallbacks += listOf("debug")
-            // CI and normal staging builds retain the canonical HTTPS URL. A local, isolated
-            // emulator stack may override this with -PpgrPortalStagingBaseUrl=http://10.0.2.2:18014/
-            // without changing the release build or committing an environment-specific URL.
-            val stagingBaseUrl = providers.gradleProperty("pgrPortalStagingBaseUrl")
-                .getOrElse("https://staging.pgsims.alshifalab.pk/")
-            buildConfigField("String", "INSTITUTIONAL_API_BASE_URL", "\"$stagingBaseUrl\"")
-        }
         release {
             isMinifyEnabled = true
             isShrinkResources = true

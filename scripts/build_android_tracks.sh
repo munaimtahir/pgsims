@@ -23,6 +23,6 @@ build_track() {
 # record. android/app-companion is kept building for reference but is frozen/historical and has
 # no Play listing of its own.
 build_track app-companion PGR-Companion companion pk.vexel.pgrcompanion 1.0.2
-build_track app-portal PGR-Companion companion pk.vexel.pgrcompanion 1.1.3
+build_track app-portal PGR-Companion companion pk.vexel.pgrcompanion 1.1.5
 cp "$repo_root/docs/PORTAL_WEB_PARITY_MATRIX.md" "$repo_root/builds/portal/parity-report.md" 2>/dev/null || true
 cp "$repo_root/docs/PGR_SIMS_ANDROID_API_INTEGRATION.md" "$repo_root/builds/portal/api-verification.md" 2>/dev/null || true
