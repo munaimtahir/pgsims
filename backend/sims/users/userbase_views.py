@@ -840,12 +840,6 @@ class AuthMeView(APIView):
         onboarding = get_resident_onboarding_state(user) if user.role == "RESIDENT" else {}
         if user.must_change_password:
             allowed_next_route = "/change-password"
-        elif role == "RESIDENT" and (
-            missing
-            or onboarding.get("required_onboarding_fields")
-            or not onboarding.get("onboarding_complete", False)
-        ):
-            allowed_next_route = "/complete-profile"
         else:
             allowed_next_route = user.get_dashboard_url()
 

@@ -302,13 +302,13 @@ class UserbaseAuthMeAndCompleteProfileTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data["allowed_next_route"], "/change-password")
 
-    def test_auth_me_missing_fields_routes_to_complete_profile(self):
+    def test_auth_me_missing_fields_still_allows_resident_dashboard(self):
         self.resident.must_change_password = False
         self.resident.save()
         self.client.force_authenticate(self.resident)
         response = self.client.get(reverse("auth_api:me"))
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.data["allowed_next_route"], "/complete-profile")
+        self.assertEqual(response.data["allowed_next_route"], "/dashboard/resident")
         self.assertIn("hospital", response.data["missing_required_fields"])
 
     def test_auth_me_no_profile_relation_role(self):

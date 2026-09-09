@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
 import PageHeader from '@/components/ui/PageHeader';
@@ -50,6 +51,14 @@ export default function ResidentHomePage() {
           title="Resident Dashboard"
           description="Canonical resident shell for training, supervision, and academic readiness."
         />
+
+        {authState && !authState.onboarding_complete && (
+          <section className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+            <p className="font-semibold">Your onboarding is still incomplete.</p>
+            <p className="mt-1">You can continue using the dashboard. Please finish your required profile information when convenient.</p>
+            <Link href="/complete-profile" className="mt-3 inline-block font-semibold underline">Continue onboarding</Link>
+          </section>
+        )}
 
         {loading ? (
           <div className="rounded-2xl border border-slate-200 bg-white p-6 text-sm text-slate-500">

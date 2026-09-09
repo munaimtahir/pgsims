@@ -74,7 +74,7 @@ class ResidentOnboardingConsolidationTests(TestCase):
             403,
         )
 
-    def test_auth_me_requires_declaration_before_dashboard(self):
+    def test_auth_me_allows_incomplete_resident_to_reach_dashboard(self):
         resident = create_user_with_profile(
             role="RESIDENT",
             full_name="Dr Declaration Pending",
@@ -95,7 +95,8 @@ class ResidentOnboardingConsolidationTests(TestCase):
             response = client.get("/api/auth/me/")
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.data["allowed_next_route"], "/complete-profile")
+        self.assertEqual(response.data["allowed_next_route"], "/dashboard/resident")
+        self.assertFalse(response.data["onboarding_complete"])
 
     def test_auth_me_does_not_force_non_resident_onboarding(self):
         expected_routes = {

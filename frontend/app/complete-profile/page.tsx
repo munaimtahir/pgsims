@@ -86,11 +86,6 @@ export default function CompleteProfilePage() {
           router.push(me.allowed_next_route);
           return;
         }
-        if (me.allowed_next_route !== '/complete-profile') {
-          router.push(me.allowed_next_route);
-          return;
-        }
-
         const nextOptions = await authApi.getIdentityOptions();
         if (!active) return;
         setOptions(nextOptions);
