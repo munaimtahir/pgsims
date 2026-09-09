@@ -9,6 +9,7 @@ from rest_framework.views import APIView
 from sims.common_permissions import ReadAnyWriteAdminOnly
 
 from django.db.models import Q
+from django.shortcuts import get_object_or_404
 from rest_framework.exceptions import ValidationError
 
 from .models import (
@@ -306,7 +307,12 @@ class ResidentAcademicSummaryView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, resident_id: int):
-        resident = ResidentProfile.objects.select_related("user", "department_ref", "program_ref", "academic_session_ref").get(pk=resident_id)
+        # resident_id is the resident's User id, matching ResidentProfileViewSet's
+        # lookup_field="user_id" convention (and what the frontend directory passes).
+        resident = get_object_or_404(
+            ResidentProfile.objects.select_related("user", "department_ref", "program_ref", "academic_session_ref"),
+            user_id=resident_id,
+        )
         if not can_view_resident_profile(request.user, resident):
             raise PermissionDenied("You are not allowed to view this resident academic summary.")
         return Response(get_resident_academic_summary(resident=resident))
@@ -325,7 +331,11 @@ class SupervisorAcademicSummaryView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, supervisor_id: int):
-        supervisor = SupervisorProfile.objects.select_related("user").get(pk=supervisor_id)
+        # supervisor_id is the supervisor's User id, matching SupervisorProfileViewSet's
+        # lookup_field="user_id" convention (and what the frontend directory passes).
+        supervisor = get_object_or_404(
+            SupervisorProfile.objects.select_related("user"), user_id=supervisor_id
+        )
         if not can_view_supervisor_profile(request.user, supervisor):
             raise PermissionDenied("You are not allowed to view this supervisor academic summary.")
         return Response(get_supervisor_academic_summary(supervisor=supervisor))

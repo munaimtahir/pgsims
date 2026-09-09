@@ -430,9 +430,32 @@ class ViewSetQuerysetAndPermissionTests(AcademicsCoverageBase):
 
 
 class SummaryPermissionTests(AcademicsCoverageBase):
+    def test_resident_summary_url_uses_user_id_not_profile_pk(self):
+        # Regression: /supervisors/{id} and /residents/{id} in the frontend directory
+        # always pass the User id (ResidentProfileViewSet/SupervisorProfileViewSet use
+        # lookup_field="user_id"), which is not the same as ResidentProfile/
+        # SupervisorProfile's own pk in real data. Looking the summary up by pk instead
+        # of user_id returned a 500 for any resident/supervisor whose profile pk
+        # differed from their user id.
+        self.assertNotEqual(self.resident.pk, self.resident.user_id)
+        self.client.force_authenticate(self.resident_user)
+        response = self.client.get(f"/api/academics/residents/{self.resident.user_id}/summary/")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        response = self.client.get(f"/api/academics/residents/{self.resident.pk}/summary/")
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_supervisor_summary_url_uses_user_id_not_profile_pk(self):
+        self.assertNotEqual(self.supervisor.pk, self.supervisor.user_id)
+        self._make_primary_assignment()
+        self.client.force_authenticate(self.resident_user)
+        response = self.client.get(f"/api/academics/supervisors/{self.supervisor.user_id}/summary/")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        response = self.client.get(f"/api/academics/supervisors/{self.supervisor.pk}/summary/")
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
     def test_resident_summary_denied_for_unrelated_supervisor(self):
         self.client.force_authenticate(self.other_supervisor_user)
-        response = self.client.get(f"/api/academics/residents/{self.resident.id}/summary/")
+        response = self.client.get(f"/api/academics/residents/{self.resident.user_id}/summary/")
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_my_resident_summary_requires_resident_profile(self):
@@ -447,13 +470,13 @@ class SummaryPermissionTests(AcademicsCoverageBase):
 
     def test_supervisor_summary_denied_for_unrelated_resident(self):
         self.client.force_authenticate(self.other_resident_user)
-        response = self.client.get(f"/api/academics/supervisors/{self.supervisor.id}/summary/")
+        response = self.client.get(f"/api/academics/supervisors/{self.supervisor.user_id}/summary/")
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_supervisor_summary_allowed_for_assigned_resident(self):
         self._make_primary_assignment()
         self.client.force_authenticate(self.resident_user)
-        response = self.client.get(f"/api/academics/supervisors/{self.supervisor.id}/summary/")
+        response = self.client.get(f"/api/academics/supervisors/{self.supervisor.user_id}/summary/")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_my_supervisor_summary_requires_supervisor_profile(self):

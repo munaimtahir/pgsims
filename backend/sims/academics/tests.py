@@ -107,7 +107,7 @@ class AcademicsFoundationTests(TestCase):
             actor=self.admin,
         )
         self.client.force_authenticate(self.resident_user)
-        response = self.client.get(f"/api/academics/residents/{self.resident.id}/summary/")
+        response = self.client.get(f"/api/academics/residents/{self.resident.user_id}/summary/")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertTrue(response.data["readiness"]["has_active_training_record"])
         self.assertTrue(response.data["readiness"]["has_primary_supervisor"])
@@ -116,7 +116,7 @@ class AcademicsFoundationTests(TestCase):
         other_user = User.objects.create_user(username="pgr002", password="pass12345", role="RESIDENT")
         other_resident = ResidentProfile.objects.create(user=other_user, hospital=self.hospital, department_ref=self.department)
         self.client.force_authenticate(self.supervisor_user)
-        denied = self.client.get(f"/api/academics/residents/{other_resident.id}/summary/")
+        denied = self.client.get(f"/api/academics/residents/{other_resident.user_id}/summary/")
         self.assertEqual(denied.status_code, status.HTTP_403_FORBIDDEN)
 
         create_supervisor_assignment(
@@ -126,7 +126,7 @@ class AcademicsFoundationTests(TestCase):
             start_date=date(2026, 7, 1),
             actor=self.admin,
         )
-        allowed = self.client.get(f"/api/academics/residents/{self.resident.id}/summary/")
+        allowed = self.client.get(f"/api/academics/residents/{self.resident.user_id}/summary/")
         self.assertEqual(allowed.status_code, status.HTTP_200_OK)
 
     def test_support_staff_cannot_mutate_training_records(self):
