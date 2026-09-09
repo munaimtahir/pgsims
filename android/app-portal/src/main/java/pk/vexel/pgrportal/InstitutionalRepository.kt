@@ -99,6 +99,13 @@ interface InstitutionalApi {
     @GET("api/residents/me/summary/") suspend fun residentSummary(): Response<JsonObject>
     @Multipart @POST("api/resident-documents/{id}/upload/")
     suspend fun upload(@Path("id") id: Int, @Part file: MultipartBody.Part): Response<JsonObject>
+
+    // Supervisor-role reads. Same auth/session plumbing as the resident endpoints above; the
+    // backend itself scopes every one of these to the caller's own assigned residents.
+    @GET("api/supervisors/me/summary/") suspend fun supervisorSummary(): Response<JsonObject>
+    @GET("api/academics/monitoring/supervisor-dashboard/") suspend fun supervisorDashboard(): Response<JsonObject>
+    @GET("api/supervisors/residents/{residentId}/progress/")
+    suspend fun supervisorResidentProgress(@Path("residentId") residentId: Int): Response<JsonObject>
 }
 
 /** A message that is safe to show a trainee. Never carries a token, password or raw stack trace. */
@@ -169,6 +176,9 @@ data class InstitutionalSnapshot(
     val research: JsonObject? = null,
     val workshops: List<JsonObject> = emptyList(),
     val residentSummary: JsonObject? = null,
+    /** Populated only for a SUPERVISOR-role account; see [snapshot]. */
+    val supervisorSummary: JsonObject? = null,
+    val supervisorDashboard: JsonObject? = null,
     /** Human-readable names of sections this account may not read. Shown, not treated as failure. */
     val unavailable: List<String> = emptyList(),
 )
@@ -234,6 +244,14 @@ class InstitutionalRepository internal constructor(
         runCatching {
             val me = required(authorized { authorizedApi.me() }, "your institutional profile")
             val unavailable = mutableListOf<String>()
+            if (me.string("role") == "SUPERVISOR") {
+                val supervisorSummary = optional(authorized { authorizedApi.supervisorSummary() }, "Supervisor summary", unavailable)
+                val supervisorDashboard = optional(authorized { authorizedApi.supervisorDashboard() }, "Supervisor dashboard", unavailable)
+                return@runCatching InstitutionalSnapshot(
+                    me = me, unavailable = unavailable,
+                    supervisorSummary = supervisorSummary, supervisorDashboard = supervisorDashboard,
+                )
+            }
             val onboarding = optional(authorized { authorizedApi.onboarding() }, "Onboarding", unavailable)
             val documents = optionalArray(authorized { authorizedApi.documents() }, "Documents", unavailable)
             val training = optional(authorized { authorizedApi.training() }, "Training", unavailable).paged()
@@ -247,9 +265,14 @@ class InstitutionalRepository internal constructor(
             val residentSummary = optional(authorized { authorizedApi.residentSummary() }, "Resident summary", unavailable)
             InstitutionalSnapshot(
                 me, onboarding, documents, training, assignments, rotations, logbook, logbookCategories,
-                assessments, research, workshops, residentSummary, unavailable,
+                assessments, research, workshops, residentSummary, unavailable = unavailable,
             )
         }
+    }
+
+    /** On-demand detail for one resident, fetched only when a supervisor opens that resident. */
+    suspend fun supervisorResidentProgress(residentId: Int): Result<JsonObject> = withContext(Dispatchers.IO) {
+        runCatching { required(authorized { authorizedApi.supervisorResidentProgress(residentId) }, "this resident's progress") }
     }
 
     suspend fun createLogbook(payload: AcademicLogbookPayload): Result<JsonObject> = withContext(Dispatchers.IO) {

@@ -128,7 +128,13 @@ fun InstitutionalWorkspace(repository: InstitutionalRepository) {
             onSignOut = { signOut() },
         )
 
-        InstitutionalState.CONNECTED -> ConnectedPane(
+        InstitutionalState.CONNECTED -> if (snapshot?.me?.string("role") == "SUPERVISOR") SupervisorPane(
+            repository = repository,
+            snapshot = snapshot,
+            busy = busy,
+            onSignOut = { signOut() },
+            onRefresh = { reloadKey++ },
+        ) else ConnectedPane(
             snapshot = snapshot,
             busy = busy,
             notice = notice,

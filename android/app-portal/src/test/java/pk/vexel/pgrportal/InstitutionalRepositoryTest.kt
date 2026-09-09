@@ -3,7 +3,9 @@ package pk.vexel.pgrportal
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.intOrNull
 import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
 import okhttp3.mockwebserver.RecordedRequest
@@ -59,6 +61,29 @@ private const val ASSESSMENTS_BODY = """{"count":0,"results":[]}"""
 private const val RESEARCH_BODY = """{"status":"DRAFT"}"""
 private const val WORKSHOPS_BODY = """{"count":0,"results":[]}"""
 private const val RESIDENT_SUMMARY_BODY = """{"rotation":{"current":{"id":8,"department":"Medicine","status":"ACTIVE"}}}"""
+private const val SUPERVISOR_ME_BODY = """{"id":2,"username":"demo.supervisor","role":"SUPERVISOR"}"""
+private const val SUPERVISOR_SUMMARY_BODY = """
+{"pending":{"rotation_approvals":1,"leave_approvals":0,"research_approvals":2},
+ "residents":[{"id":9,"rtr_id":3,"name":"Demo Resident","program":"MS Urology",
+   "current_rotation":"Urology @ Allied Hospital-I","imm_status":"ON_TRACK","final_status":null,"research_status":"SUBMITTED_TO_SUPERVISOR"}],
+ "supervision":{"active_primary_residents":[],"active_co_supervised_residents":[],"past_assigned_residents":[]}}
+"""
+private const val SUPERVISOR_DASHBOARD_BODY = """
+{"assigned_residents_count":1,"pending_evaluation_reviews_count":0,"pending_logbook_reviews_count":3,
+ "overdue_reviews_count":0,"returned_items_count":0,"recently_approved_evaluations":[],
+ "recently_verified_logbooks":[],"residents_below_req":[],"assigned_residents":[],"review_queue":[]}
+"""
+private const val SUPERVISOR_RESIDENT_PROGRESS_BODY = """
+{"RESIDENT":{"id":9,"name":"Demo Resident","username":"demo.resident"},
+ "training_record":{"program_code":"MS-URO","program_name":"MS Urology","degree_type":"MS",
+   "start_date":"2024-01-15","current_month_index":20},
+ "current_rotation":{"department":"Urology","hospital":"Allied Hospital-I Faisalabad",
+   "start_date":"2026-07-01","end_date":"2026-12-31","status":"ACTIVE"},
+ "research":{"status":"SUBMITTED_TO_SUPERVISOR","title":"Outcomes of PCNL"},
+ "thesis":{"status":"IN_PROGRESS"},
+ "workshops":{"total_completed":4},
+ "eligibility":{"IMM":{"status":"ON_TRACK","reasons":[]},"FINAL":{"status":"NOT_ELIGIBLE","reasons":["Logbook incomplete"]}}}
+"""
 
 class InstitutionalRepositoryTest {
     private lateinit var server: MockWebServer
@@ -160,21 +185,59 @@ class InstitutionalRepositoryTest {
         assertEquals("Bearer access-1", bearerOf(server.takeRequest()))
     }
 
-    /** A SUPERVISOR or ADMIN account gets 403 from the resident-only endpoints. */
-    @Test fun `snapshot still succeeds when resident-only sections are forbidden`() = runBlocking {
+    /** A SUPERVISOR account takes the supervisor branch of [InstitutionalRepository.snapshot]: it
+     * never calls the resident-only endpoints at all, and reads its own two sections instead. */
+    @Test fun `snapshot for a SUPERVISOR reads the supervisor sections, not the resident ones`() = runBlocking {
         tokens.save("access-1", "refresh-1")
-        server.enqueue(json("""{"id":2,"username":"demo.supervisor","role":"SUPERVISOR"}"""))
-        server.enqueue(json("""{"detail":"Resident onboarding is only available to residents."}""", 403))
-        server.enqueue(json("""[]"""))
-        server.enqueue(json("""{"count":0,"results":[]}"""))
-        server.enqueue(json("""{"count":0,"results":[]}"""))
-        enqueueResidentWorkflowBodies()
+        server.enqueue(json(SUPERVISOR_ME_BODY))
+        server.enqueue(json(SUPERVISOR_SUMMARY_BODY))
+        server.enqueue(json(SUPERVISOR_DASHBOARD_BODY))
 
         val snapshot = repository.snapshot().getOrThrow()
 
         assertEquals("SUPERVISOR", snapshot.me.string("role"))
         assertNull(snapshot.onboarding)
-        assertEquals(listOf("Onboarding"), snapshot.unavailable)
+        assertTrue(snapshot.training.isEmpty())
+        assertEquals(1, snapshot.supervisorSummary?.objectList("residents")?.size)
+        assertEquals("Demo Resident", snapshot.supervisorSummary?.objectList("residents")?.first()?.string("name"))
+        assertEquals(3, snapshot.supervisorDashboard?.get("pending_logbook_reviews_count")?.jsonPrimitive?.intOrNull)
+        assertTrue(snapshot.unavailable.isEmpty())
+    }
+
+    @Test fun `snapshot for a SUPERVISOR tolerates the dashboard section being unavailable`() = runBlocking {
+        tokens.save("access-1", "refresh-1")
+        server.enqueue(json(SUPERVISOR_ME_BODY))
+        server.enqueue(json(SUPERVISOR_SUMMARY_BODY))
+        server.enqueue(json("""{"detail":"Not found."}""", 404))
+
+        val snapshot = repository.snapshot().getOrThrow()
+
+        assertNull(snapshot.supervisorDashboard)
+        assertEquals(listOf("Supervisor dashboard"), snapshot.unavailable)
+    }
+
+    @Test fun `supervisorResidentProgress returns the resident's training and eligibility snapshot`() = runBlocking {
+        tokens.save("access-1", "refresh-1")
+        server.enqueue(json(SUPERVISOR_RESIDENT_PROGRESS_BODY))
+
+        val progress = repository.supervisorResidentProgress(9).getOrThrow()
+
+        assertEquals("Demo Resident", progress["RESIDENT"]?.jsonObject?.string("name"))
+        assertEquals("MS Urology", progress["training_record"]?.jsonObject?.string("program_name"))
+        assertEquals("Urology", progress["current_rotation"]?.jsonObject?.string("department"))
+        assertEquals("NOT_ELIGIBLE", progress["eligibility"]?.jsonObject?.get("FINAL")?.jsonObject?.string("status"))
+        val request = server.takeRequest()
+        assertTrue(request.path.orEmpty().endsWith("/api/supervisors/residents/9/progress/"))
+    }
+
+    @Test fun `supervisorResidentProgress surfaces a denied assignment as a plain message`() = runBlocking {
+        tokens.save("access-1", "refresh-1")
+        server.enqueue(json("""{"detail":"You do not have an active supervision assignment for this resident."}""", 403))
+
+        val result = repository.supervisorResidentProgress(9)
+
+        assertTrue(result.isFailure)
+        assertEquals("This account is not permitted to view this resident's progress.", result.exceptionOrNull()?.message)
     }
 
     @Test fun `snapshot fails when identity itself cannot be read`() = runBlocking {
