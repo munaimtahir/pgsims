@@ -1,27 +1,22 @@
-# SPRINT_STATE.md — Urology institutional demonstration bootstrap
+# SPRINT_STATE.md — Resident-only onboarding access
 
 ## Scope
 
-Bootstrap the canonical FMU → Allied Hospital-I → Urology hierarchy and import the approved 28-row
-Urology demonstration workbook into the VPS runtime, with idempotency and evidence.
+Keep mandatory onboarding enforcement for `RESIDENT` users and disable the
+onboarding workflow for `ADMIN`, `SUPERVISOR`, and `SUPPORT_STAFF` users.
 
 ## Completed work
 
-- Read environment context and established baseline: laptop and VPS are now synchronized at the current implementation SHA after fast-forward deployment.
-- Validated the finalized workbook: five sheets and exactly 28 approved master rows.
-- Added `bootstrap_urology_demo` with transactional, title-normalized, idempotent master/resident/workshop/research import.
-- Took `/tmp/pgsims_pre_urology_20260910.dump` on the VPS before writes and applied the import.
-- Verified 28 residents, 21 MS, 7 FCPS, 28 dates, 28 assignments, 45 workshop completions, and 28 research stages; corrected duplicate supervisors.
-- Configured MS Urology with 60 months, policy, month-24/month-60 milestones, six workshop requirements, five programme-relative rotation templates, research gates, and logbook requirements.
-- Added programme configuration documentation and `DEMO_RUNBOOK.md`; documented absent curriculum PDF, unsupported programme-linked portfolio/exam blueprint, and FCPS source boundary.
+- Backend `/api/auth/me/` now routes only residents with incomplete onboarding to `/complete-profile`.
+- Non-resident direct visits to `/complete-profile` redirect to their role dashboard.
+- Non-resident navigation and dashboard UI no longer advertise onboarding completion.
+- Added backend and frontend regression coverage for the resident-only policy.
 
 ## Pending work
 
-1. Commit and push the programme configuration/importer/docs, then fast-forward the VPS checkout and rebuild only the backend image.
-2. Run authenticated backend/API and web UI smoke checks if a suitable admin session is available.
-3. If Android emulator `pgsims` is available, verify the same resident/master data via canonical API.
+1. Run frontend and backend targeted tests, then deploy the backend/frontend changes to the VPS checkout.
+2. Verify live login routing with available authenticated accounts; confirm resident onboarding remains enforced.
 
 ## Closure state
 
-Database population and programme configuration are complete and reproducible; authenticated
-application/API/mobile verification and source deployment of the final commit remain open.
+Implementation is complete locally; test and deployment verification remain open.

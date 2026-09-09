@@ -79,7 +79,7 @@ export const NAV_SECTIONS: NavSection[] = [
       { label: 'Academic Review Queue', href: '/academics/review-queue', icon: 'queue-list' },
       { label: 'Rotation Approvals', href: '/academics/rotation-assignments', icon: 'location-marker' },
       { label: 'Leave Approvals', href: '/academics/leave-requests', icon: 'calendar' },
-      { label: 'My Profile', href: '/complete-profile', icon: 'user-circle' },
+      { label: 'My Profile', href: '/profile', icon: 'user-circle' },
     ],
   },
   {
@@ -101,7 +101,7 @@ export const NAV_SECTIONS: NavSection[] = [
     allowedRoles: ['SUPPORT_STAFF'],
     items: [
       { label: 'My Dashboard', href: '/dashboard', icon: 'home' },
-      { label: 'My Profile', href: '/complete-profile', icon: 'user-circle' },
+      { label: 'My Profile', href: '/profile', icon: 'user-circle' },
     ],
   },
 ];

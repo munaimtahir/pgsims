@@ -92,12 +92,11 @@ export default function UTRMCOverviewPage() {
           <div className="grid gap-4 md:grid-cols-2">
             <div className="pg-card">
               <h2 className="pg-section-title">My Access</h2>
-              <p className="mt-3 text-sm text-slate-600">This role is limited to profile completion and read-only operational support.</p>
+              <p className="mt-3 text-sm text-slate-600">This role is limited to read-only operational support.</p>
             </div>
             <div className="pg-card">
               <h2 className="pg-section-title">Available Actions</h2>
               <div className="mt-3 flex flex-wrap gap-3">
-                <Link href="/complete-profile" className="pg-btn-primary">Complete Profile</Link>
                 <Link href="/change-password" className="rounded-full border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700">
                   Change Password
                 </Link>

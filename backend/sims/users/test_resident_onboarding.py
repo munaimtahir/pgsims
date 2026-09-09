@@ -97,6 +97,25 @@ class ResidentOnboardingConsolidationTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data["allowed_next_route"], "/complete-profile")
 
+    def test_auth_me_does_not_force_non_resident_onboarding(self):
+        expected_routes = {
+            "ADMIN": "/dashboard/utrmc",
+            "SUPERVISOR": "/dashboard/supervisor",
+            "SUPPORT_STAFF": "/dashboard",
+        }
+        client = APIClient()
+        for role, expected_route in expected_routes.items():
+            user = User.objects.create_user(
+                username=f"{role.lower()}_no_onboarding",
+                password="x",
+                role=role,
+                must_change_password=False,
+            )
+            client.force_authenticate(user)
+            response = client.get("/api/auth/me/")
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response.data["allowed_next_route"], expected_route)
+
 
 class ResidentOnboardingReviewGateTests(TestCase):
     """Wave 1 addition: admin approve / request-correction review gate on ResidentProfile."""

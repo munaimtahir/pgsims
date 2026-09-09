@@ -82,6 +82,10 @@ export default function CompleteProfilePage() {
           router.push('/change-password');
           return;
         }
+        if (me.role !== 'RESIDENT') {
+          router.push(me.allowed_next_route);
+          return;
+        }
         if (me.allowed_next_route !== '/complete-profile') {
           router.push(me.allowed_next_route);
           return;
@@ -97,13 +101,6 @@ export default function CompleteProfilePage() {
           applyResidentState(nextState);
           setMode('resident');
           setStatus('All changes saved');
-        } else {
-          const nextForm = await authApi.getCompleteProfileForm();
-          if (!active) return;
-          setForm(nextForm);
-          setValues(Object.fromEntries(nextForm.missing_fields.map((field) => [field.field, ''])));
-          setMode('generic');
-          setStatus('Ready');
         }
       } catch (loadError) {
         if (!active) return;

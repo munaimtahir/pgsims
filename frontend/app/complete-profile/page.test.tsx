@@ -2,7 +2,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useRouter } from 'next/navigation';
 import CompleteProfilePage from './page';
-import authApi, { AuthMeResponse, CompleteProfileForm, IdentityOptions, ResidentOnboardingState } from '@/lib/api/auth';
+import authApi, { AuthMeResponse, IdentityOptions, ResidentOnboardingState } from '@/lib/api/auth';
 
 jest.mock('next/navigation', () => ({ useRouter: jest.fn() }));
 jest.mock('@/lib/api/auth', () => ({
@@ -69,16 +69,6 @@ function me(role: AuthMeResponse['role'], allowedNextRoute = '/complete-profile'
   };
 }
 
-function form(profileType: string): CompleteProfileForm {
-  return {
-    profile_type: profileType,
-    profile_status: 'INCOMPLETE',
-    schema_version: 1,
-    completed_schema_version: 0,
-    missing_fields: [{ field: 'email', label: 'Email', source: 'user', input_type: 'email', required: true }],
-  };
-}
-
 describe('CompleteProfilePage', () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -89,34 +79,19 @@ describe('CompleteProfilePage', () => {
   });
 
   ([
-    ['ADMIN', 'AdminProfile'],
-    ['SUPERVISOR', 'SupervisorProfile'],
-    ['SUPPORT_STAFF', 'SupportStaffProfile'],
-  ] as const).forEach(([role, profileType]) => {
-    it(`renders the registry-driven form for ${role}`, async () => {
-      (authApi.me as jest.Mock).mockResolvedValue(me(role));
-      (authApi.getCompleteProfileForm as jest.Mock).mockResolvedValue(form(profileType));
+    ['ADMIN', '/dashboard/utrmc'],
+    ['SUPERVISOR', '/dashboard/supervisor'],
+    ['SUPPORT_STAFF', '/dashboard'],
+  ] as const).forEach(([role, dashboard]) => {
+    it(`redirects ${role} away from resident onboarding`, async () => {
+      (authApi.me as jest.Mock).mockResolvedValue(me(role, dashboard));
 
       render(<CompleteProfilePage />);
 
-      expect(await screen.findByRole('heading', { name: 'Complete Profile' })).toBeInTheDocument();
-      expect(screen.getByLabelText('Email')).toBeInTheDocument();
+      await waitFor(() => expect(push).toHaveBeenCalledWith(dashboard));
       expect(authApi.onboarding).not.toHaveBeenCalled();
+      expect(authApi.getCompleteProfileForm).not.toHaveBeenCalled();
     });
-  });
-
-  it('submits a non-resident profile and follows the backend route', async () => {
-    (authApi.me as jest.Mock).mockResolvedValue(me('ADMIN'));
-    (authApi.getCompleteProfileForm as jest.Mock).mockResolvedValue(form('AdminProfile'));
-    (authApi.completeProfile as jest.Mock).mockResolvedValue({ ...me('ADMIN', '/dashboard/utrmc'), is_profile_complete: true });
-    const user = userEvent.setup();
-
-    render(<CompleteProfilePage />);
-    await user.type(await screen.findByLabelText('Email'), 'admin@example.com');
-    await user.click(screen.getByRole('button', { name: 'Save Profile' }));
-
-    await waitFor(() => expect(authApi.completeProfile).toHaveBeenCalledWith({ email: 'admin@example.com' }));
-    expect(push).toHaveBeenCalledWith('/dashboard/utrmc');
   });
 
   it('renders resident onboarding only for residents', async () => {
