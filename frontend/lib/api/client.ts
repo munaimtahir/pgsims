@@ -83,8 +83,14 @@ apiClient.interceptors.response.use(
               refresh: refreshToken,
             });
 
-            const { access } = response.data;
+            const { access, refresh } = response.data;
             localStorage.setItem('access_token', access);
+            // Production enables ROTATE_REFRESH_TOKENS + BLACKLIST_AFTER_ROTATION.
+            // Persist the replacement refresh token or the next access-token expiry
+            // will try to use the now-blacklisted token and clear the user session.
+            if (refresh) {
+              localStorage.setItem('refresh_token', refresh);
+            }
             syncAuthCookies({
               accessToken: access,
               role: (() => {
