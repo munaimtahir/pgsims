@@ -81,6 +81,15 @@ class Command(BaseCommand):
                 ))
                 continue
 
+            if not real_user.is_active:
+                # A prior run of this command already repointed the real profile onto
+                # login_user and retired this account -- nothing left to do.
+                self.stdout.write(self.style.SUCCESS(
+                    f"{login_username} already linked and reconciled (real login {real_username} is retired)."
+                ))
+                already_correct += 1
+                continue
+
             real_profile = ProfileModel.objects.filter(user=real_user).first()
             login_profile = ProfileModel.objects.filter(user=login_user).first()
 
