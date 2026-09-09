@@ -7,7 +7,7 @@ from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 from django.utils import timezone
 
-from sims.academics.models import AcademicPeriod, EvaluationFormTemplate, LogbookCategory
+from sims.academics.models import AcademicPeriod, EvaluationFormTemplate, LogbookCategory, SupervisorReviewQueueItem
 from sims.academics.services import (
     approve_evaluation,
     create_evaluation_submission,
@@ -155,6 +155,12 @@ class Command(BaseCommand):
                 actor=resident.user,
             )
             submit_logbook_entry(entry=entry, actor=resident.user)
+            queue_item = SupervisorReviewQueueItem.objects.filter(
+                notes__contains=f"logbook_entry_id: {entry.id}"
+            ).first()
+            if queue_item:
+                queue_item.notes = f"{queue_item.notes} {MARKER}".strip()
+                queue_item.save(update_fields=["notes", "updated_at"])
             if desired == "APPROVED":
                 verify_logbook_entry(entry=entry, supervisor_comments="Procedure reviewed. Appropriate level of participation documented.", actor=assignment.supervisor.user)
                 result["logbook_approved"] += 1
@@ -189,6 +195,12 @@ class Command(BaseCommand):
                 actor=resident.user,
             )
             submit_evaluation(submission=submission, actor=resident.user)
+            queue_item = SupervisorReviewQueueItem.objects.filter(
+                notes__contains=f"evaluation_submission_id: {submission.id}"
+            ).first()
+            if queue_item:
+                queue_item.notes = f"{queue_item.notes} {MARKER}".strip()
+                queue_item.save(update_fields=["notes", "updated_at"])
             if desired == "APPROVED":
                 start_evaluation_review(submission=submission, actor=assignment.supervisor.user)
                 approve_evaluation(submission=submission, supervisor_comments="Strong clinical progress demonstrated.", score=4.5, max_score=5, actor=assignment.supervisor.user)
@@ -318,8 +330,16 @@ class Command(BaseCommand):
     def cleanup(self):
         from sims.academics.models import EvaluationSubmission, LogbookEntry
         result = {}
-        result["logbook_entries"] = LogbookEntry.objects.filter(extra_data__demo_seed=True).delete()[0]
-        result["evaluation_submissions"] = EvaluationSubmission.objects.filter(extra_data__demo_seed=True).delete()[0]
+        logbook_ids = list(LogbookEntry.objects.filter(extra_data__demo_seed=True).values_list("id", flat=True))
+        evaluation_ids = list(EvaluationSubmission.objects.filter(extra_data__demo_seed=True).values_list("id", flat=True))
+        queue_ids = []
+        for entry_id in logbook_ids:
+            queue_ids.extend(SupervisorReviewQueueItem.objects.filter(notes__contains=f"logbook_entry_id: {entry_id}").values_list("id", flat=True))
+        for submission_id in evaluation_ids:
+            queue_ids.extend(SupervisorReviewQueueItem.objects.filter(notes__contains=f"evaluation_submission_id: {submission_id}").values_list("id", flat=True))
+        result["queue_items"] = SupervisorReviewQueueItem.objects.filter(id__in=set(queue_ids)).delete()[0]
+        result["logbook_entries"] = LogbookEntry.objects.filter(id__in=logbook_ids).delete()[0]
+        result["evaluation_submissions"] = EvaluationSubmission.objects.filter(id__in=evaluation_ids).delete()[0]
         result["research_projects"] = ResidentResearchProject.objects.filter(title__endswith=MARKER).delete()[0]
         result["leave_requests"] = LeaveRequest.objects.filter(reason__contains=MARKER).delete()[0]
         result["rotation_assignments"] = RotationAssignment.objects.filter(notes__contains=MARKER).delete()[0]
