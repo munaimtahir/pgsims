@@ -282,8 +282,8 @@ export default function CompleteProfilePage() {
           <h2 className="text-lg font-semibold">{residentState.sections.find((item) => item.key === section)?.title}</h2>
           {section === 'supervisor' && <SupervisorSection value={String(values.supervisor_status || '')} onChange={saveResidentField} />}
           {section === 'declaration' && (
-            <label className="mt-4 flex gap-3 rounded border p-4 text-sm">
-              <input type="checkbox" checked={residentState.declaration_accepted} disabled={saving || residentState.declaration_accepted} onChange={(event) => { if (event.target.checked) void acceptDeclaration(); }} />
+            <label htmlFor="resident-declaration" className="mt-4 flex cursor-pointer gap-3 rounded border p-4 text-sm">
+              <input id="resident-declaration" type="checkbox" checked={residentState.declaration_accepted} disabled={residentState.declaration_accepted} onChange={(event) => { if (event.target.checked) void acceptDeclaration(); }} />
               I confirm that the information provided is correct and documents are authentic. Deferred documents remain pending.
             </label>
           )}

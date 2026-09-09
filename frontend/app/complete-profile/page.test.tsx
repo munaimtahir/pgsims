@@ -157,4 +157,21 @@ describe('CompleteProfilePage', () => {
     expect(await screen.findByText('Complete all required fields and accept the declaration before continuing.')).toBeInTheDocument();
     expect(push).not.toHaveBeenCalled();
   });
+
+  it('allows the declaration checkbox to be selected while a draft save is in progress', async () => {
+    (authApi.me as jest.Mock).mockResolvedValue(me('RESIDENT'));
+    let resolveDraft: ((value: ResidentOnboardingState) => void) | undefined;
+    (authApi.saveOnboardingDraft as jest.Mock).mockImplementation(() => new Promise((resolve) => { resolveDraft = resolve; }));
+    (authApi.acceptResidentDeclaration as jest.Mock).mockResolvedValue({ ...residentState, declaration_accepted: true });
+    const user = userEvent.setup();
+
+    render(<CompleteProfilePage />);
+    await screen.findByRole('heading', { name: 'Resident onboarding' });
+    await user.click(screen.getByRole('button', { name: 'Continue' }));
+    await user.click(screen.getByRole('button', { name: /4\. Declaration/ }));
+    await user.click(screen.getByLabelText(/I confirm that the information provided is correct/));
+
+    expect(authApi.acceptResidentDeclaration).toHaveBeenCalledTimes(1);
+    resolveDraft?.(residentState);
+  });
 });
