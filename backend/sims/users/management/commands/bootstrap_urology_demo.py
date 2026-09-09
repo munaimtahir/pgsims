@@ -91,7 +91,19 @@ class Command(BaseCommand):
 
         from sims.academics.models import Department, Institution
         from sims.rotations.models import Hospital, HospitalDepartment
-        from sims.training.models import ResidentResearchProject, ResidentTrainingRecord, ResidentWorkshopCompletion, Workshop
+        from sims.training.models import (
+            ProgramMilestone,
+            ProgramMilestoneLogbookRequirement,
+            ProgramMilestoneResearchRequirement,
+            ProgramMilestoneWorkshopRequirement,
+            ProgramPolicy,
+            ProgramRotationTemplate,
+            ResidentResearchProject,
+            ResidentTrainingRecord,
+            ResidentWorkshopCompletion,
+            TrainingProgram,
+            Workshop,
+        )
         from sims.supervision.models import ResidentSupervisorAssignment
         from sims.users.models import ResidentProfile, SupervisorProfile, User
 
@@ -112,11 +124,84 @@ class Command(BaseCommand):
             HospitalDepartment.objects.update_or_create(hospital=hospital, department=department, defaults={"is_active": True})
             programs = {}
             for code, name, degree in (("MS-URO", "MS Urology", "MS"), ("FCPS-URO", "FCPS Urology", "FCPS")):
-                from sims.training.models import TrainingProgram
                 program, _ = TrainingProgram.objects.get_or_create(code=code, defaults={"name": name, "degree_type": degree, "duration_months": 60, "department": department})
                 program.name, program.degree_type, program.department_id, program.active = name, degree, department.id, True
+                if code == "MS-URO":
+                    program.description = "Five-year MS Urology programme, configured from FMU curriculum/statutes."
+                    program.notes = "Supervisor, research, thesis, logbook, portfolio, CIA, intermediate and final examination requirements are represented by the generic programme policy/milestone configuration where supported. FCPS detailed curriculum is intentionally not inferred."
                 program.save()
                 programs[name] = program
+            ms_program = programs["MS Urology"]
+
+            # The generic Department model is institution-wide; these departments are
+            # linked to the same canonical training hospital only because they host
+            # resident-specific off-service/advanced rotations.
+            rotation_departments = {
+                "General Surgery": "GENSURG",
+                "Renal Transplantation": "RENALTX",
+                "Nephrology": "NEPHRO",
+            }
+            rotation_depts = {}
+            for name, code in rotation_departments.items():
+                rot_dept = Department.objects.filter(code=code).first() or Department.objects.filter(name__iexact=name).first()
+                if rot_dept is None:
+                    rot_dept = Department(code=code, name=name)
+                rot_dept.name, rot_dept.active = name, True
+                rot_dept.save(update_fields=["name", "active", "updated_at"] if rot_dept.pk else None)
+                HospitalDepartment.objects.update_or_create(hospital=hospital, department=rot_dept, defaults={"is_active": True})
+                rotation_depts[name] = rot_dept
+
+            # MS Urology generic policy, milestones and requirements.
+            ProgramPolicy.objects.update_or_create(
+                program=ms_program,
+                defaults={
+                    "allow_program_change": False,
+                    "program_change_requires_restart": True,
+                    "min_active_months_before_imm": 24,
+                    "imm_allowed_from_month": 24,
+                    "final_allowed_from_month": 60,
+                    "exception_rules_text": "CURRICULUM_AMBIGUITY: detailed programme structure places Renal Transplantation and Nephrology in Part III; do not require them before Intermediate Examination. Continuous-assessment section contains an isolated four-year statement; canonical duration remains five years / 60 months.",
+                },
+            )
+            imm, _ = ProgramMilestone.objects.update_or_create(
+                program=ms_program, code=ProgramMilestone.CODE_IMM,
+                defaults={"name": "MS Urology Intermediate Examination", "recommended_month": 24, "is_active": True},
+            )
+            final, _ = ProgramMilestone.objects.update_or_create(
+                program=ms_program, code=ProgramMilestone.CODE_FINAL,
+                defaults={"name": "MS Urology Final Examination", "recommended_month": 60, "is_active": True},
+            )
+            ProgramMilestoneResearchRequirement.objects.update_or_create(
+                milestone=imm,
+                defaults={"requires_synopsis_approved": False, "requires_synopsis_submitted_to_university": True, "requires_thesis_submitted": False},
+            )
+            ProgramMilestoneResearchRequirement.objects.update_or_create(
+                milestone=final,
+                defaults={"requires_synopsis_approved": True, "requires_synopsis_submitted_to_university": True, "requires_thesis_submitted": True},
+            )
+            ProgramMilestoneLogbookRequirement.objects.update_or_create(
+                milestone=imm, procedure_key="MS-UROLOGY-LOGBOOK", defaults={"category": "MS Urology logbook", "min_entries": 1}
+            )
+            ProgramMilestoneLogbookRequirement.objects.update_or_create(
+                milestone=final, procedure_key="MS-UROLOGY-LOGBOOK", defaults={"category": "MS Urology logbook", "min_entries": 1}
+            )
+
+            # Major phase templates use programme-relative months, not global calendar
+            # dates. Resident-specific RotationAssignment scheduling remains separate.
+            phase_templates = (
+                ("MS-URO-P1-INITIAL", "Part I — Initial Urology", department, 26, 1, 1, 1, {"months": "1-6", "research_milestones": ["topic selection", "synopsis preparation"]}),
+                ("MS-URO-P2-GENSURG", "Part II — General Surgery", rotation_depts["General Surgery"], 78, 2, 2, 1, {"months": "7-24", "milestone": "synopsis submission by end of Year 2", "intermediate_exam_month": 24}),
+                ("MS-URO-P3-ADVANCED", "Part III — Advanced Urology", department, 156, 3, 3, 1, {"months": "25-60", "research": True, "thesis": True, "note": "Detailed mandatory specialty rotations are represented below."}),
+                ("MS-URO-P3-TRANSPLANT", "Renal Transplantation", rotation_depts["Renal Transplantation"], 9, 3, 3, 2, {"months": "25-60", "duration_months": 2}),
+                ("MS-URO-P3-NEPHRO", "Nephrology", rotation_depts["Nephrology"], 5, 3, 3, 3, {"months": "25-60", "duration_months": 1}),
+            )
+            for code, name, rot_dept, weeks, year, phase, block, payload in phase_templates:
+                template, _ = ProgramRotationTemplate.objects.update_or_create(
+                    program=ms_program, name=name,
+                    defaults={"department": rot_dept, "duration_weeks": weeks, "required": True, "is_mandatory": True, "sequence_order": block, "year_index": year, "phase_index": phase, "block_index": block, "requirements_json": payload, "active": True},
+                )
+                template.allowed_hospitals.set([hospital])
+
             supervisors = {}
             for canonical in SUPERVISORS.values():
                 user = next((u for u in User.objects.filter(role="SUPERVISOR").order_by("id") if person_norm(u.get_full_name()) == person_norm(canonical)), None)
@@ -136,6 +221,14 @@ class Command(BaseCommand):
             for code, name in WORKSHOPS.values():
                 workshop, _ = Workshop.objects.update_or_create(code=code, defaults={"name": name, "is_active": True})
                 workshop_map[norm(name)] = workshop
+            # Basic Surgical Skills is a programme requirement, not resident completion.
+            Workshop.objects.update_or_create(code="WS-BASIC-SURGICAL", defaults={"name": "Basic Surgical Skills", "is_active": True})
+
+            # Six requirements: three before/by IMM and three throughout the programme.
+            for workshop_code, milestone in (("WS-COMM", imm), ("WS-RESEARCH-WRITING", imm), ("WS-BASIC-SURGICAL", imm), ("WS-BIOSTATS", final), ("WS-IT", final), ("WS-ILS", final)):
+                ProgramMilestoneWorkshopRequirement.objects.update_or_create(
+                    milestone=milestone, workshop=Workshop.objects.get(code=workshop_code), defaults={"required_count": 1}
+                )
             admin = User.objects.filter(role="ADMIN", is_active=True).order_by("id").first()
             for row in rows:
                 name, first, last = clean(row["Resident Master Name"]), *split_name(row["Resident Master Name"])
