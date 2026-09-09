@@ -29,7 +29,9 @@ class Command(BaseCommand):
                 # Convert old role strings to final four choices
                 if role not in ["ADMIN", "RESIDENT", "SUPERVISOR", "SUPPORT_STAFF"]:
                     role_lower = str(role).lower()
-                    if role_lower in ["utrmc_admin", "super_admin", "system_admin"]:
+                    if role_lower in ["admin", "resident", "supervisor", "support_staff"]:
+                        user.role = role_lower.upper()
+                    elif role_lower in ["utrmc_admin", "super_admin", "system_admin"]:
                         user.role = "ADMIN"
                     elif role_lower in ["teacher", "faculty"]:
                         user.role = "SUPERVISOR"
