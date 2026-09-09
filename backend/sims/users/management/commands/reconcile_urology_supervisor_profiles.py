@@ -21,6 +21,25 @@ from sims.training.models import ResidentTrainingRecord
 
 User = get_user_model()
 
+
+def _swap_one_to_one_user(model, obj_a, obj_b, other_user_ids):
+    """Swap the `user` FK between two rows of a OneToOne-constrained model.
+
+    A direct two-step update collides with the unique constraint (each target user id is
+    still held by the other row at the moment of the intermediate UPDATE), so the first row
+    is parked on a scratch user with no row of this model before the second row claims its
+    final slot.
+    """
+    scratch_user = (
+        User.objects.exclude(id__in=other_user_ids)
+        .exclude(id__in=[obj_a.user_id, obj_b.user_id])
+        .first()
+    )
+    target_a, target_b = obj_b.user_id, obj_a.user_id
+    model.objects.filter(pk=obj_a.pk).update(user_id=scratch_user.id)
+    model.objects.filter(pk=obj_b.pk).update(user_id=target_b)
+    model.objects.filter(pk=obj_a.pk).update(user_id=target_a)
+
 # (canonical demo-login username, username holding the real identity/data, role)
 RECONCILIATIONS = [
     ("supervisor", "supmtahirbashirmalik", "SUPERVISOR"),
@@ -91,13 +110,18 @@ class Command(BaseCommand):
                 real_first, real_last = real_user.first_name, real_user.last_name
                 real_email = real_user.email
 
-                # Vacate the login account's own empty profile first (OneToOne can't collide).
                 if login_profile:
-                    ProfileModel.objects.filter(pk=login_profile.pk).update(user=real_user)
+                    # Swap via a scratch slot: a direct two-step update collides with the
+                    # OneToOne unique constraint (each target user id is still held by the
+                    # other row at the moment of the intermediate UPDATE).
+                    other_user_ids = ProfileModel.objects.exclude(
+                        pk__in=[login_profile.pk, real_profile.pk]
+                    ).values_list("user_id", flat=True)
+                    _swap_one_to_one_user(ProfileModel, login_profile, real_profile, other_user_ids)
+                    profiles_repointed += 2
+                else:
+                    ProfileModel.objects.filter(pk=real_profile.pk).update(user=login_user)
                     profiles_repointed += 1
-
-                ProfileModel.objects.filter(pk=real_profile.pk).update(user=login_user)
-                profiles_repointed += 1
 
                 if role == "RESIDENT":
                     login_tr = ResidentTrainingRecord.objects.filter(resident_user=login_user).first()
