@@ -6,6 +6,20 @@ PGMS / PGR SIMS is a clean-room postgraduate management system.
 
 All agents must treat this file as a binding instruction file before making code, migration, frontend, backend, documentation, or test changes.
 
+## Environment / Infrastructure Context
+
+Before performing Android, backend, deployment, VPS, networking or Caddy work, read:
+
+`docs/PROJECT_ENVIRONMENT_CONTEXT.md`
+
+Canonical terminology:
+
+- **Laptop** = local machine at `/home/munaim/Documents/github/pgsims`
+- **VPS** = Google Cloud VM accessed with `ssh test`
+- **VPS PGSIMS repo** = `/home/munaim/srv/apps/pgsims`
+
+Do not assume laptop and VPS repository states are synchronized.
+
 ---
 
 ## 1. Active Workspace Boundary
