@@ -11,12 +11,13 @@ onboarding workflow for `ADMIN`, `SUPERVISOR`, and `SUPPORT_STAFF` users.
 - Non-resident direct visits to `/complete-profile` redirect to their role dashboard.
 - Non-resident navigation and dashboard UI no longer advertise onboarding completion.
 - Added backend and frontend regression coverage for the resident-only policy.
+- Frontend checks passed; backend regression suite passed 15 tests in the VPS container.
+- Commit `bdd105b` deployed to the VPS; backend and frontend containers are healthy.
 
 ## Pending work
 
-1. Run frontend and backend targeted tests, then deploy the backend/frontend changes to the VPS checkout.
-2. Verify live login routing with available authenticated accounts; confirm resident onboarding remains enforced.
+1. Verify live login routing with authenticated resident and non-resident accounts when credentials are available.
 
 ## Closure state
 
-Implementation is complete locally; test and deployment verification remain open.
+Implementation, tests, and deployment are complete; authenticated browser verification remains pending account access.
