@@ -12,6 +12,7 @@ idempotent demonstration records and a live-demo runbook.
 - Seeded 4 pending/1 approved/1 returned logbooks, 2 pending/1 approved/1 returned evaluations, 3 research states, 3 leave states, and 1 pending/1 approved rotation.
 - Took `/tmp/pgsims_pre_urology_workflow_20260910.dump` before workflow writes.
 - Verified actual supervisor logbook API approval, then cleaned and reseeded pending demo records.
+- Verified actual evaluation API transition from submitted through under-review to approved, then cleaned and reseeded pending demo records.
 - Verified second seeder run is idempotent and `python manage.py check` plus 15 academic tests pass.
 - Added approval inventory and presentation runbook under `docs/implementation/20260910_urology_institutional_demo/`.
 
