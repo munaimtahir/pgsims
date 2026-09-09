@@ -1,41 +1,25 @@
-# SPRINT_STATE.md — PGR Companion production resident expansion
+# SPRINT_STATE.md — Urology institutional demonstration bootstrap
 
 ## Scope
 
-Expand `android/app-portal` from resident foundation commit
-`ed1d137c76beec33ddc7cb2c6140fc01a94102de` into the production PGR SIMS resident client. The
-owner has explicitly authorized production integration/deployment only after a safe synthetic
-resident, production state, migrations, and rollback path are verified. Preserve `.claude/`.
+Bootstrap the canonical FMU → Allied Hospital-I → Urology hierarchy and import the approved 28-row
+Urology demonstration workbook into the VPS runtime, with idempotency and evidence.
 
 ## Completed work
 
-- Started from `ed1d137c`; completed implementation commits `96a5c4c` and `f081a6d` are pushed
-  to `origin/main`. Unrelated `.claude/` remains untracked and untouched.
-- Audited active resident contracts: training rotations use `training.RotationAssignment`, while
-  the active web logbook uses `academics.LogbookEntry`; Android now uses those authoritative APIs.
-- Implemented Android Home training card, Training rotation history/detail, Logbook draft/edit/
-  submit, and Requirements summaries; debug/staging Android unit tests pass and debug lint/build
-  pass (no errors; existing unused-resource warnings only).
-- Added a production-guarded synthetic-only E2E fixture command. Production is now at `f081a6d`,
-  the backend image was rebuilt/restarted, health is 200, Django check/migration consistency/plan
-  pass, and the command prepared only `android.demo.*` records with synthetic rotations and a
-  primary supervisor. No schema migration or live API contract change was required.
-- Verified all production reads for the synthetic resident. Verified API logbook create, edit and
-  submit and then created a separate synthetic draft through the API-36 Android UI. Corrected the
-  actual production response shape (`rotation.current`, `department_name`/`hospital_name`) in the
-  Android Training presentation.
+- Read environment context and established baseline: laptop `c1d8c1e`, VPS `6ed50a4`; checkouts are not synchronized.
+- Validated the finalized workbook: five sheets and exactly 28 approved master rows.
+- Added `bootstrap_urology_demo` with transactional, title-normalized, idempotent master/resident/workshop/research import.
+- Took `/tmp/pgsims_pre_urology_20260910.dump` on the VPS before writes and applied the import.
+- Verified 28 residents, 21 MS, 7 FCPS, 28 dates, 28 assignments, 45 workshop completions, and 28 research stages; corrected duplicate supervisors.
 
 ## Pending work
 
-1. Commit the final evidence, generic internal terminology cleanup and sprint ledger; push and
-   verify `origin/main` plus the production checkout SHA. Preserve unrelated `.claude/`.
+1. Run backend/API and web UI smoke checks against the VPS deployment.
+2. If Android emulator `pgsims` is available, verify the same resident/master data via canonical API.
+3. Commit and push the importer/docs, then transfer the commit to the VPS checkout and rebuild the backend image.
 
 ## Closure state
 
-- Signed release/API-36 production E2E, certificate/hash checks and security review are complete.
-- Correction/resubmission is verified end-to-end on API 36 against production with the synthetic
-  supervisor and resident. Release versionCode 4/versionName 1.1.4 is built and signed; only the
-  external Play Console availability check remains before upload.
-- Final release freeze completed: clean Gradle test/lint, signed APK/AAB, API-36 smoke test,
-  signing continuity, production-host verification, and a corrected release gate with a working
-  no-`rg` fallback. Release record: `ANDROID_RELEASE_1.1.4.md`.
+Database population is complete and reproducible; application/API/mobile verification and source
+deployment remain open.
