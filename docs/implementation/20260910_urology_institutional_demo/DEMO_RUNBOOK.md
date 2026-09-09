@@ -52,3 +52,18 @@ The seeder output identifies residents by stable username and reports created co
 ```bash
 python manage.py seed_urology_workflow_demo --cleanup
 ```
+
+For the current seeded dataset, use supervisor account `supmuhammadirfanmunir` as the primary
+demo queue. Its actionable queue contains two logbook records and one evaluation record:
+
+| Resident username | Workflow | Starting state | Suggested action |
+|---|---|---|---|
+| `pgrdrbullawelarshad` | Diagnostic cystoscopy logbook | Submitted | Verify |
+| `pgrdrghulamabbas` | Ureteric stent insertion logbook | Submitted | Return or verify |
+| `pgrdrghulamabbas` | Evaluation/WBA | Submitted | Start review, then approve |
+| `pgrdrmuhammadabdullah` | TURP logbook | Returned | Show revision feedback |
+| `pgrdrmuhammadabdullah` | Evaluation/WBA | Returned | Show revision state |
+
+Other supervisor queues contain `pgrabdulrahman` (urinary catheterization, submitted) and
+`pgrdrjawadsaifullah` (suprapubic catheterization and evaluation, submitted). The approved
+examples are `pgrdrmasoodmahmood` (ureteroscopy/lithotripsy logbook and evaluation).
