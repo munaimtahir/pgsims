@@ -7,6 +7,6 @@ directory remediation and 22 backup tests, frontend install/lint/typecheck/Jest/
 controlled dependency patching.
 
 Conditions: clear the remaining Next/PostCSS production advisories through a tested compatible
-upgrade; execute and record disposable PostgreSQL, full backend, canonical-stack E2E, and production
-configuration gates. No merge, deployment, production mutation, or external upload is authorized by
-this report.
+upgrade; execute and record synthetic PostgreSQL uniqueness, canonical-stack E2E, and production
+configuration gates. Local and VPS backend/frontend verification is complete. No merge, deployment,
+production mutation, or external upload is authorized by this report.

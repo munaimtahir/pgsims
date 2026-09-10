@@ -20,9 +20,8 @@ package. Backend/frontend verification is to be repeated in the VPS checkout at
 
 ## Pending work
 
-1. Transfer this branch to `/home/munaim/srv/apps/pgsims` and repeat backend/frontend gates there without touching production data.
-2. Run synthetic PostgreSQL assignment uniqueness/duplicate-primary checks and canonical-stack Playwright smoke/workflow/RBAC suites.
-3. Review evidence, commit logical checkpoints, push the branch, and open one PR targeting `main` without merging.
+1. Run canonical-stack Playwright smoke/workflow/RBAC suites.
+2. Review evidence, commit the VPS verification update, and open one PR targeting `main` without merging.
 
 ## Known conditions
 

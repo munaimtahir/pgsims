@@ -6,3 +6,4 @@ silenced with repository defaults. Docker/compose and VPS runtime verification m
 against the actual deployment checkout before certification.
 `docker compose -f docker/docker-compose.yml config` passed, with warnings for intentionally unset
 `SECRET_KEY` and `DB_PASSWORD`.
+The VPS checkout was verified clean on the remediation branch; no production service was restarted.
