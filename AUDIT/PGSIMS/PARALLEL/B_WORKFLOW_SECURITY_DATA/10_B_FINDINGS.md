@@ -12,7 +12,7 @@
 * **Impact:** Low. The modern API correctly enforces object bounds via the new assignments table.
 * **Probable Root Cause:** Transition phase technical debt.
 * **Recommended Correction:** Deprecate the field entirely via Django migration.
-* **Status:** PASS (Remediation recommended, but non-blocking).
+* **Status:** CONFIRMED
 
 ## F-B-002: Hardcoded Secrets in Unit Tests
 * **Severity:** P3
@@ -26,18 +26,18 @@
 * **Impact:** Low.
 * **Probable Root Cause:** Developer convenience during testing.
 * **Recommended Correction:** Move dummy secrets to a centralized test fixture configuration.
-* **Status:** PASS (Best practice deviation).
+* **Status:** CONFIRMED
 
 ## F-B-003: Submissions API Missing Explicit URL Routing for some dynamic test names
 * **Severity:** P2
 * **Area:** URL Routing / Testing
 * **Affected Role/Workflow:** Developers
-* **Description:** When dynamically verifying the workflow, the test failed initially due to incorrect naming in reverse URL resolution. While the API handles security fine, the URL routes themselves might be brittle for dynamic reverse lookups in tests.
-* **Evidence:** `django.urls.exceptions.NoReverseMatch` encountered during `test_audit_workflows.py`.
-* **Reproduction:** Write a test calling `reverse("training-api:synopsis-submission-submit")`.
-* **Expected Behaviour:** Reverse routing should flawlessly map to the submission endpoints.
-* **Actual Behaviour:** Mismatch between defined app_names/names and typical test names.
-* **Impact:** Medium. Does not impact production but reduces testing velocity.
-* **Probable Root Cause:** Nested includes without proper namespacing standard.
-* **Recommended Correction:** Standardize URL namespaces across the training app.
-* **Status:** PASS.
+* **Description:** When dynamically verifying the workflow, the test failed initially due to incorrect naming in reverse URL resolution (`training-api:synopsis-submission-submit` instead of `training_api:synopsis-submission-submit`). This was simply an incorrect test configuration during auditing, not an application defect.
+* **Evidence:** N/A.
+* **Reproduction:** N/A.
+* **Expected Behaviour:** Tests properly resolve names.
+* **Actual Behaviour:** Test script contained typographical error.
+* **Impact:** None.
+* **Probable Root Cause:** Audit script error.
+* **Recommended Correction:** N/A.
+* **Status:** FALSE_POSITIVE
