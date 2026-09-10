@@ -77,7 +77,7 @@ jobs:
       - name: Run required truth tests
         run: |
           pytest -v \
-            sims/training/test_feature_layer_ops.py::FeatureLayerOperationalFlowTests::test_logbook_submit_return_resubmit_approve_flow \
+            sims/training/test_feature_layer_ops.py::FeatureLayerOperationalFlowTests \
             sims/rotations/test_canonical_migration_gate.py \
             sims/_devtools/tests/test_drift_guards.py
 
