@@ -49,21 +49,25 @@ export default function UTRMCOverviewPage() {
           return;
         }
 
-        const [users, academics, supervisionQuality] = await Promise.all([
-          userbaseApi.users.list(),
-          academicsApi.getOverview().catch(() => null),
-          supervisionApi.getSupervisionDataQuality().catch(() => null),
-        ]);
+        const [usersCount, residentsCount, supervisorsCount, supportStaffCount, academics, supervisionQuality] =
+          await Promise.all([
+            userbaseApi.users.count(),
+            userbaseApi.users.count({ role: 'RESIDENT' }),
+            userbaseApi.users.count({ role: 'SUPERVISOR' }),
+            userbaseApi.users.count({ role: 'SUPPORT_STAFF' }),
+            academicsApi.getOverview().catch(() => null),
+            supervisionApi.getSupervisionDataQuality().catch(() => null),
+          ]);
 
         if (!active) {
           return;
         }
 
         setStats({
-          users: users.length,
-          residents: users.filter((row) => row.role === 'RESIDENT').length,
-          supervisors: users.filter((row) => row.role === 'SUPERVISOR').length,
-          supportStaff: users.filter((row) => row.role === 'SUPPORT_STAFF').length,
+          users: usersCount,
+          residents: residentsCount,
+          supervisors: supervisorsCount,
+          supportStaff: supportStaffCount,
         });
         setAcademicOverview(academics);
         setSupervisionDataQuality(supervisionQuality);

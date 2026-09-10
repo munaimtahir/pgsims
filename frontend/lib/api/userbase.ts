@@ -191,6 +191,16 @@ export const userbaseApi = {
       );
       return Array.isArray(response.data) ? response.data : response.data.results || [];
     },
+    // Total count for a filter, read from the paginated response's `count` field rather
+    // than the (page-size-limited) `results` array — use this for dashboard stat tiles so
+    // roles created later than the first page aren't undercounted.
+    count: async (params?: { role?: string; department?: number; active?: boolean; search?: string }) => {
+      const response = await apiClient.get<{ count?: number; results?: UserbaseUser[] } | UserbaseUser[]>(
+        '/api/users/',
+        { params: { ...params, page_size: 1 } }
+      );
+      return Array.isArray(response.data) ? response.data.length : response.data.count ?? 0;
+    },
     create: async (payload: UserbaseUserUpsert) => {
       const response = await apiClient.post<UserbaseUser>('/api/users/', payload);
       return response.data;
