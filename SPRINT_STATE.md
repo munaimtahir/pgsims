@@ -17,11 +17,12 @@ package. Backend/frontend verification is to be repeated in the VPS checkout at
 - Applied non-forced frontend dependency remediation; remaining Next/PostCSS production advisories are documented.
 - Disposable PostgreSQL 15 tmpfs container migrated from zero and was removed; compose config parsed with unset-secret warnings.
 - Preserved `AUDIT/PGSIMS/FINAL/` unchanged and created the remediation evidence package.
+- Pushed through commit `827c380b609c4a11cbcfdded2518fa3ad88a8dff`; PR #16 opened against `main` and left unmerged.
 
 ## Pending work
 
-1. Run canonical-stack Playwright smoke/workflow/RBAC suites.
-2. Review evidence, commit the VPS verification update, and open one PR targeting `main` without merging.
+1. Run canonical-stack Playwright smoke/workflow/RBAC suites before release certification.
+2. Resolve or formally accept the remaining Next/PostCSS production advisories through a tested compatible upgrade.
 
 ## Known conditions
 
