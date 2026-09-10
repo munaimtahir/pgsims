@@ -54,12 +54,16 @@ describe('navRegistry route contract', () => {
     expect(hrefs.length).toBeGreaterThan(0);
   });
 
-  it.each(hrefs)('href %s resolves to a real page.tsx', (href) => {
-    expect(routeExists(href)).toBe(true);
+  hrefs.forEach((href) => {
+    it(`href ${href} resolves to a real page.tsx`, () => {
+      expect(routeExists(href)).toBe(true);
+    });
   });
 
-  it.each(hrefs)('href %s is mounted under an authenticated shell layout', (href) => {
-    const top = topLevelSegment(href);
-    expect(hasAuthenticatedLayout(top)).toBe(true);
+  hrefs.forEach((href) => {
+    it(`href ${href} is mounted under an authenticated shell layout`, () => {
+      const top = topLevelSegment(href);
+      expect(hasAuthenticatedLayout(top)).toBe(true);
+    });
   });
 });
