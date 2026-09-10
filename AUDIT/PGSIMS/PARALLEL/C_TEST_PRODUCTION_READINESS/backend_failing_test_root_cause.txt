@@ -1,0 +1,9 @@
+The failing test `sims/backup_center/tests.py::TestBackupCenterServices::test_create_disaster_backup` fails deterministically.
+
+Error:
+`FileNotFoundError: [Errno 2] No such file or directory: '/app/backend/backups/PGSIMS_DISASTER_BACKUP_*.pgsimsdr'`
+
+Root cause:
+The backup directory does not exist or the test does not correctly patch `BASE_DIR` causing the service to attempt to write to `/app/backend/backups/` which isn't created prior to execution within the test context. This is a deterministic flaw in the test setup (or a missing `os.makedirs` in the service code), not a flaky business-logic error, but it does break the backup function if the directory is missing.
+
+Regarding `test_parallel_primary_workflows_logbook_and_evaluation`: Running it locally passed successfully. It appears the initial user report of it returning 400 instead of 200 may be due to an earlier flaky state or data pollution in their specific test run, as the test passes deterministically on the current master branch against a fresh database.
