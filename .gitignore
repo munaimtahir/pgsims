@@ -1,3 +1,10 @@
+# Claude Code agent scratch state (worktrees, chat transcripts, local scratch DBs/dumps)
+.claude/
+
+# Runtime-only institutional workbook containing real resident PII (see
+# bootstrap_urology_demo management command docstring) - never commit.
+urology_pgsims_institutional_demo_ready.xlsx
+
 # Python
 __pycache__/
 *.py[cod]

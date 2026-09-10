@@ -26,7 +26,7 @@ jest.mock('@/lib/api/supervision', () => ({
 
 jest.mock('@/lib/api/userbase', () => ({
   userbaseApi: {
-    users: { list: jest.fn() },
+    users: { list: jest.fn(), count: jest.fn() },
   },
 }));
 
@@ -41,18 +41,13 @@ const mockedSupervisionApi = supervisionApi as unknown as {
   getSupervisionDataQuality: jest.Mock;
 };
 const mockedUserbaseApi = userbaseApi as unknown as {
-  users: { list: jest.Mock };
+  users: { list: jest.Mock; count: jest.Mock };
 };
 
 describe('UTRMCOverviewPage', () => {
   beforeEach(() => {
     (useAuthStore as unknown as jest.Mock).mockReturnValue({ user: { role: 'ADMIN' } });
-    mockedUserbaseApi.users.list.mockResolvedValue([
-      { role: 'ADMIN' },
-      { role: 'RESIDENT' },
-      { role: 'SUPERVISOR' },
-      { role: 'SUPPORT_STAFF' },
-    ]);
+    mockedUserbaseApi.users.count.mockResolvedValue(1);
     mockedAcademicsApi.getOverview.mockResolvedValue({
       cards: {
         active_training_records: 4,
