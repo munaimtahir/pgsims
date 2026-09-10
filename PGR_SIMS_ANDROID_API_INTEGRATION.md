@@ -87,8 +87,8 @@ user-facing string contains a token, a bearer header or the submitted password.
 
 ## Play Data Safety consequence
 
-**As of `versionCode 3` / `1.1.3`, the `pk.vexel.pgrcompanion` listing is built from
-`android/app-portal` — a login-gated PGR SIMS client, not the offline-only `1.0.2` build.** This
+**The current `versionCode 7` / `1.1.7` `pk.vexel.pgrcompanion` listing is built from
+`android/app-companion` — the single login-gated PGR SIMS Android application.** This
 was an explicit repository-level decision (see `builds/companion/build-info.json` and
 `SPRINT_STATE.md`): there is no offline Personal Workspace in this listing any more, and login is
 required to use the app at all. The declaration reflects that:
@@ -103,6 +103,6 @@ required to use the app at all. The declaration reflects that:
 - Data is encrypted in transit (HTTPS enforced; cleartext disabled in release).
 - No advertising, no analytics, no third-party sharing.
 
-The prior `1.0.2` offline-only build (`android/app-companion`) collected and transmitted nothing;
-it is now superseded and frozen. See `data_safety_export.csv` for the full machine-readable
+The prior offline-only implementation has been removed; there is no second Android application.
+See `data_safety_export.csv` for the full machine-readable
 declaration matching this build.

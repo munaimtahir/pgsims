@@ -4,26 +4,26 @@ The Gradle project has two application modules and one shared theme module:
 
 | Module | Role | Application ID | Status |
 | --- | --- | --- | --- |
-| `:app-portal` | Login-gated PGR SIMS client and current `PGR Companion` Play candidate | `pk.vexel.pgrcompanion` (`1.1.3`, code `3`) | Canonical |
-| `:app-companion` | Offline residency portfolio | `pk.vexel.pgrcompanion` (`1.0.2`, code `2`) | Frozen historical track |
+| `:app-companion` | Login-gated PGR SIMS Android application | `pk.vexel.pgrcompanion` (`1.1.7`, code `7`) | Canonical and only module |
 | `:core:common` | Shared Compose theme | N/A | Active shared library |
 
-`app-portal` intentionally supersedes the historical Companion listing under the same package ID.
+There is one Android application and one Gradle module: PGR Companion. The Play package ID is
+immutable and remains `pk.vexel.pgrcompanion`.
 Do not install or release both tracks as competing production artifacts. The Companion module remains
 only to preserve the prior offline release source and artifact provenance.
 
 ## Technology
 
 Kotlin, Jetpack Compose, Material 3, Retrofit/OkHttp, Kotlin serialization, and encrypted
-SharedPreferences for Portal session tokens. The project uses Gradle 8.7, AGP 8.5.2, Kotlin 2.0.0,
+SharedPreferences for PGR Companion session tokens. The project uses Gradle 8.7, AGP 8.5.2, Kotlin 2.0.0,
 Java 17 bytecode, `minSdk 26`, and `compileSdk`/`targetSdk 36`.
 
 ## Build the canonical application
 
 ```bash
 cd android
-./gradlew :app-portal:testDebugUnitTest :app-portal:lintDebug :app-portal:assembleDebug
-./gradlew :app-portal:assembleRelease :app-portal:bundleRelease \
+./gradlew :app-companion:testDebugUnitTest :app-companion:lintDebug :app-companion:assembleDebug
+./gradlew :app-companion:assembleRelease :app-companion:bundleRelease \
   -PpgrCompanionSigningPropertiesFile=/owner/controlled/path/signing.properties
 ```
 
@@ -44,7 +44,7 @@ resident data. Release uses the production base URL; staging remains available o
 diagnostics.
 
 Use the `staging` variant for end-to-end work. It has a distinct package ID and accepts an owner
-provided staging base URL via `-PpgrPortalStagingBaseUrl=...`; never point a debug test workflow at
+provided staging base URL via `-PpgrCompanionStagingBaseUrl=...`; never point a debug test workflow at
 the production reviewer account. The API-36 staging verification and endpoint audit are recorded in
 `../docs/implementation/20260908_pgr_companion_resident_foundation/`.
 

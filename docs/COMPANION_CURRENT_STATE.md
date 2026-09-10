@@ -1,9 +1,9 @@
 # Companion current state
 
-`PGR Companion: Residency` (`pk.vexel.pgrcompanion`, 1.0.2/code 2) is a standalone offline
-product: local profile, milestones, rotations, activities, document vault, and reminders. It
-requires no account, network connection, FMU affiliation, or Portal installation. The 1.0.0
-closed-testing provenance remains tagged `play-closed-testing-baseline-1.0.0`.
+`PGR Companion` (`pk.vexel.pgrcompanion`, version 1.1.7/code 7) is the single login-gated
+institutional PGR SIMS Android application. It uses the production backend over HTTPS; there is
+no separate Portal application or offline companion track. The 1.0.0 closed-testing provenance
+remains tagged `play-closed-testing-baseline-1.0.0`.
 
 ## Frozen 1.0.2 candidate audit — 2026-09-06
 

@@ -63,7 +63,7 @@ independent of everything else in this sprint.
   dashboard without typing a URL; a SUPERVISOR-role test user's "pending review" count reflects a
   real submitted-and-unreviewed logbook entry created through the actual UI (not the old, wrong
   count).
-- `:app-portal:testDebugUnitTest :app-portal:lintDebug` stay green (currently 24/24, 0 lint errors).
+- `:app-companion:testDebugUnitTest :app-companion:lintDebug` stay green (currently 24/24, 0 lint errors).
 - `docs/contracts/API_CONTRACT.md`'s logbook and roles sections match `sims/academics/serializers.py`
   / `sims/users/models.py` verbatim (spot-checked, not just self-attested).
 

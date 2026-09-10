@@ -266,7 +266,7 @@ MVP capabilities:
 
 The MVP should NOT initially allow new patient/logbook entries.
 
-## Supervisor — LIMITED MVP
+## Supervisor — Action-capable (fulfills former M7 milestone, 2026-09-10)
 
 - authentication
 - own information
@@ -275,8 +275,12 @@ The MVP should NOT initially allow new patient/logbook entries.
 - resident onboarding status
 - profile completion/submission status
 - document-completion summary where appropriate
+- approve / reject / return-for-revision on pending Logbook, Leave, Rotation, and Research items
+  (see `android/docs/SUPERVISOR_API_CAPABILITY_MATRIX.md` for the endpoint-by-endpoint detail)
 
-Advanced supervisor actions are deferred.
+Document review (resident document approve/reject) remains out of scope — the backend only allows
+admin accounts to review documents today; extending that to a resident's assigned supervisor is a
+backend change, not built here.
 
 ## Staff/Admin — LIMITED MVP
 
@@ -589,8 +593,11 @@ Implement document capture/upload/status and persistent outstanding-document rem
 ## M6 — Resident Post-Onboarding Experience
 Implement Home, Training, Documents, Profile, and available workshop/logbook summaries.
 
-## M7 — Minimal Supervisor/Staff Views
-Implement restricted role-specific visibility.
+## M7 — Minimal Supervisor/Staff Views (superseded, 2026-09-10)
+Originally scoped as restricted role-specific visibility only. Superseded: Supervisor is now
+action-capable (approve/reject/return on Logbook, Leave, Rotation, Research) — see "Supervisor —
+Action-capable" above and `android/docs/SUPERVISOR_API_CAPABILITY_MATRIX.md`. Staff/Admin remains
+view-only per the "Staff/Admin — LIMITED MVP" section above.
 
 ## M8 — Notifications & Compliance Layer
 Implement in-app notifications, deep links, onboarding/document reminders and appropriate push capability.

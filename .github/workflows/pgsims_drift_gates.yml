@@ -15,8 +15,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  android-portal-gates:
-    name: Android Portal debug gates
+  android-companion-gates:
+    name: Android PGR Companion debug gates
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -37,8 +37,8 @@ jobs:
       - name: Install Android platform and build tools
         run: sdkmanager 'platforms;android-36' 'build-tools;35.0.0'
 
-      - name: Run Portal unit, lint and debug APK gates
-        run: ./gradlew :app-portal:testDebugUnitTest :app-portal:lintDebug :app-portal:assembleDebug
+      - name: Run PGR Companion unit, lint and debug APK gates
+        run: ./gradlew :app-companion:testDebugUnitTest :app-companion:lintDebug :app-companion:assembleDebug
 
   backend-truth-gates:
     name: Backend truth gates

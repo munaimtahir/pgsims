@@ -7,46 +7,41 @@ anywhere in the current tree. No contamination risk found.
 
 ## 1. Baseline facts (from source)
 
-Source: `android/app-portal/build.gradle.kts` (read directly, 2026-09-09).
+Source: `android/app-companion/build.gradle.kts` (read directly, 2026-09-10).
 
 | Field | Value | Evidence |
 |---|---|---|
 | `applicationId` | `pk.vexel.pgrcompanion` | `build.gradle.kts:19` |
-| `namespace` | `pk.vexel.pgrportal` | `build.gradle.kts:12` |
+| `namespace` | `pk.vexel.pgrcompanion` | `build.gradle.kts:12` |
 | `versionCode` | `4` | `build.gradle.kts:22` |
 | `versionName` | `1.1.4` | `build.gradle.kts:23` |
 | `compileSdk` / `targetSdk` / `minSdk` | 36 / 36 / 26 | `build.gradle.kts:13,20-21` |
 | Production API base | `https://android.pgsims.alshifalab.pk/` | `buildConfigField "INSTITUTIONAL_API_BASE_URL"`, `build.gradle.kts:25` |
-| Staging API base | `https://staging.pgsims.alshifalab.pk/` (default; overridable via `-PpgrPortalStagingBaseUrl`) | `build.gradle.kts:73-74` |
+| Staging API base | `https://staging.pgsims.alshifalab.pk/` (default; overridable via `-PpgrCompanionStagingBaseUrl`) | `build.gradle.kts` |
 | Build types | `debug` (`.debug` suffix, debuggable), `staging` (`.staging` suffix, debug-derived, own base URL), `release` (minified, shrunk, signed) | `build.gradle.kts:64-83` |
 | Signing | `signingConfigs.release` reads `storeFile/storePassword/keyAlias/keyPassword` from an externally supplied `-PpgrCompanionSigningPropertiesFile`; task **errors out** (does not silently fall back to debug signing) if release signing is requested and any key is missing or the keystore file doesn't exist (`build.gradle.kts:29-61`). No keystore or credential is committed to the repo (confirmed: no `.jks`/`.keystore` file under `android/`, no plaintext password in `build.gradle.kts` or `gradle.properties`). Key identity (SHA-256 `a858f42c...b61f010`) is documented, not embedded. |
 
-**Doc/code contradiction found**: `android/README.md` states `app-portal` is `1.1.3`/code `3`
-(README.md:7) — **stale**. Current source and the release record (`ANDROID_RELEASE_1.1.4.md`) are
-`1.1.4`/code `4`. `README.md` should be updated in a follow-up; not fixed here since this is a
-discovery pass, but flagged as a P3 doc-drift item in `12_BUG_TECH_DEBT_REGISTER.md`.
+The repository has since been consolidated to one module: `android/app-companion`, version
+`1.1.7`/code `7`, package `pk.vexel.pgrcompanion`.
 
 ## 2. Module classification
 
 | Module | Package | Classification | Evidence |
 |---|---|---|---|
-| `android/app-portal` | `pk.vexel.pgrcompanion` (app-portal namespace `pk.vexel.pgrportal`) | **CANONICAL** | In `settings.gradle.kts` (`include(":app-portal")`); latest commit touching it `b8fe2db` (2026-09-08, "Prepare version 1.1.4 correction workflow E2E"); the only module built by CI (`.github/workflows/pgsims_drift_gates.yml` job `android-portal-gates` runs `:app-portal:testDebugUnitTest :app-portal:lintDebug :app-portal:assembleDebug` — no `app-companion` job exists); the release gate script `scripts/check_pgr_companion_release.sh` targets `app-portal` exclusively and asserts `versionCode = 4`/`versionName = "1.1.4"`. |
-| `android/app-companion` | `pk.vexel.pgrcompanion` (same package ID, different app) | **FROZEN HISTORICAL** | Still in `settings.gradle.kts` (`include(":app-companion")`) and still builds, but last commit touching it is `20e709e` (2026-09-08, "Stabilize PGR Companion Portal release baseline" — a 2-line diff bumping a string/version, not feature work); no CI job references `app-companion`; `android/README.md` and `docs/ANDROID_PLAY_STORE_UPLOAD_CHECKLIST.md` both explicitly say it is "frozen historical" / "not currently uploaded anywhere and has no separate Play listing of its own." It is `1.0.2`/code `2`, offline-only, 479 lines of Kotlin. |
+| `android/app-companion` | `pk.vexel.pgrcompanion` | **CANONICAL AND ONLY MODULE** | Included in `settings.gradle.kts`, built by CI and release scripts, version `1.1.7`/code `7`; login-gated institutional client. |
 | `core:common` | N/A (library) | Active shared library | Shared Compose theme (`PgrTheme`) only, used by both app modules; not a feature/business-logic layer. |
 
-**Package-ID note (not a bug, explicitly documented)**: both modules ship the same
-`applicationId pk.vexel.pgrcompanion`. This is an intentional, explicit repository decision (see
-`build.gradle.kts:17-19` comment and `docs/ANDROID_PLAY_STORE_UPLOAD_CHECKLIST.md`) — `app-portal`
-supersedes `app-companion` under the same Play listing identity, not a naming collision to fix.
+**Package-ID rule**: the single module ships the immutable Google Play package
+`applicationId pk.vexel.pgrcompanion`.
 
 ## 3. Architecture audit
 
-Source: `android/app-portal/src/main/java/pk/vexel/pgrportal/` — 6 Kotlin files, 1,482 lines total
-(`InstitutionalRepository.kt` 411, `InstitutionalScreen.kt` 565, `Onboarding.kt` 174,
-`PortalActivity.kt` 35, `PortalApplication.kt` 7, `ResidentWorkflowScreens.kt` 290).
+Source: `android/app-companion/src/main/java/pk/vexel/pgrcompanion/` — Kotlin sources for the single app
+(`InstitutionalRepository.kt`, `InstitutionalScreen.kt`, `Onboarding.kt`, `CompanionActivity.kt`,
+`CompanionApplication.kt`, and workflow screens).
 
 - **Navigation**: no Compose Navigation library (`androidx.navigation`) is used or declared as a
-  dependency. Navigation is a single Activity (`PortalActivity`) rendering one root Composable
+  dependency. Navigation is a single Activity (`CompanionActivity`) rendering one root Composable
   (`InstitutionalWorkspace`) that manages a `ResidentDestination` enum (`HOME, TRAINING, LOGBOOK,
   REQUIREMENTS, PROFILE` — `InstitutionalScreen.kt:62-67`) via a `NavigationBar`/`NavigationBarItem`
   (Material3 bottom bar, `InstitutionalScreen.kt:311-313`) driven by plain `remember { mutableStateOf(...) }`
@@ -54,7 +49,7 @@ Source: `android/app-portal/src/main/java/pk/vexel/pgrportal/` — 6 Kotlin file
   Navigation-Compose (or at least a nav-state abstraction) before adding deep-linkable sub-screens
   (e.g., a logbook entry detail screen reachable independently of its tab).
 - **State holders**: **no `ViewModel` classes exist anywhere in the module** (confirmed by grep — 0
-  matches for `ViewModel` under `android/app-portal/src`). All state (`snapshot`, `error`, `notice`,
+  matches for `ViewModel` under `android/app-companion/src`). All state (`snapshot`, `error`, `notice`,
   `busy`, `reloadKey`, form field values) is held as `remember`/`mutableStateOf` inside the root
   `InstitutionalWorkspace` Composable and passed down, with `rememberCoroutineScope()` used to
   launch repository calls directly from UI callbacks. This works for the current single-screen-tree
@@ -86,7 +81,7 @@ Source: `android/app-portal/src/main/java/pk/vexel/pgrportal/` — 6 Kotlin file
   (`InstitutionalRepository.kt:131-151`) if encrypted storage construction fails (e.g. corrupted
   keystore) — degrades gracefully rather than crashing, at the cost of losing persistence in that
   edge case. Tokens are excluded from Android backup/D2D transfer explicitly
-  (`android/app-portal/src/main/res/xml/data_extraction_rules.xml`, `backup_rules.xml` — excludes
+(`android/app-companion/src/main/res/xml/data_extraction_rules.xml`, `backup_rules.xml` — excludes
   `institutional_session.xml` and the Tink-encrypted-prefs file from both cloud-backup and
   device-transfer paths), and `android:allowBackup="false"` at the manifest level as a second layer.
 - **Error handling**: centralized HTTP-status → message mapping (`loginErrorFor`, `errorFor`,
@@ -97,7 +92,7 @@ Source: `android/app-portal/src/main/java/pk/vexel/pgrportal/` — 6 Kotlin file
   granular loading), acceptable for the current scope but coarse — a slow logbook submit blocks the
   whole UI's loading indicator, not just that action.
 - **File picker/upload**: Storage Access Framework via `ActivityResultContracts` (implied by
-  `displayNameOf(context, uri)` in `PortalActivity.kt:21-27`, resolving `OpenableColumns.DISPLAY_NAME`)
+  `displayNameOf(context, uri)` in `CompanionActivity.kt:21-27`, resolving `OpenableColumns.DISPLAY_NAME`)
   feeding `InstitutionalRepository.upload()` (`InstitutionalRepository.kt:277-`), which does
   client-side size/extension validation (`validateUpload`, `InstitutionalRepository.kt:364-`)
   mirroring the server's 10 MB / `.pdf .jpg .jpeg .png .doc .docx` rule before sending — matches
@@ -140,14 +135,14 @@ adoption.
   can't leak credentials/tokens into any log line that stringifies the object
   (`InstitutionalRepository.kt:54-63`), and there is a dedicated `CredentialRedactionTest.kt` unit
   test (1 test, passing) guarding this. No `Log.*`/`println`/`Timber` calls exist anywhere in
-  `android/app-portal/src/main` (confirmed by grep — zero matches), so there is no first-party log
+  `android/app-companion/src/main` (confirmed by grep — zero matches), so there is no first-party log
   surface to leak through in the first place. `ANDROID_RELEASE_VERIFICATION.md` item 22 independently
   confirms a 3,475-line logcat scan of the signed release build found zero password/JWT/Bearer
   matches.
 - **HTTPS enforcement**: `android:usesCleartextTraffic="false"` in the manifest
   (`AndroidManifest.xml`), production/staging both use `https://` base URLs
   (`build.gradle.kts:25,74`); no cleartext debug-network-security-config override file exists under
-  `android/app-portal/src/debug/` (the directory contains no files at all — contrary to what might
+  `android/app-companion/src/debug/` (the directory contains no files at all — contrary to what might
   be inferred from the module having a `debug/res/xml` path reference; verified empty by direct
   listing on 2026-09-09). Only the `staging` build type has its own network-security-adjacent
   concern, and that's solely the configurable base URL via Gradle property, not a cleartext

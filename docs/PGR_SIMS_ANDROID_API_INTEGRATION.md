@@ -1,6 +1,6 @@
 # PGR SIMS Android API integration
 
-Portal uses HTTPS PGR SIMS endpoints verified in backend source and prior production probes:
+PGR Companion uses HTTPS PGR SIMS endpoints verified in backend source and prior production probes:
 `POST /api/auth/login/`, `refresh/`, `logout/`; `GET /api/auth/me/`, `onboarding/`,
 `resident-documents/`, `resident-training/`, `supervision/assignments/`; `PATCH
 /api/auth/onboarding/`; and multipart `POST /api/resident-documents/{id}/upload/` with part name
@@ -24,4 +24,4 @@ separate database, Redis namespace, media volume, and staging-only accounts. Liv
 `GET` calls to `me`, onboarding, documents, training, and supervisor assignments, a permitted
 onboarding `PATCH`, multipart upload, admin correction feedback, and resident resubmission. The
 probe found that backend logout correctly requires a bearer token in addition to the refresh payload;
-Portal now sends it and its logout test asserts the header.
+PGR Companion now sends it and its logout test asserts the header.

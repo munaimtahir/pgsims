@@ -14,8 +14,8 @@
 
 - Compile/target SDK: 36
 - Minimum SDK: 26
-- APK: `android/app-portal/build/outputs/apk/release/app-portal-release.apk`
-- AAB: `android/app-portal/build/outputs/bundle/release/app-portal-release.aab`
+- APK: `android/app-companion/build/outputs/apk/release/app-companion-release.apk`
+- AAB: `android/app-companion/build/outputs/bundle/release/app-companion-release.aab`
 - APK SHA-256: `1015563f97839846fb4c428958bdf9d3495c3c24b6aeb449b68e1ab01b80ee0d`
 - AAB SHA-256: `4f9fcd0b38005e8aecda4c0508d26f6f8abd6b3c1fba2e374cf0dfa95d44d708`
 - Certificate SHA-256: `a858f42c4460feab688e3e9fce28b3e9e0d5af03a555133e5e134f890b61f010`

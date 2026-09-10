@@ -1,7 +1,7 @@
 # Android current state
 
 > Historical 1.0.2 companion-track record. The current canonical candidate is now
-> `android/app-portal` as `pk.vexel.pgrcompanion` version `1.1.3`/code `3`; see
+> `android/app-companion` as `pk.vexel.pgrcompanion` version `1.1.7`/code `7`; see
 > `SPRINT_STATE.md` and `android/README.md`. Statements below about a single `:app` module and an
 > optional institutional tab describe the retired architecture, not the current release track.
 

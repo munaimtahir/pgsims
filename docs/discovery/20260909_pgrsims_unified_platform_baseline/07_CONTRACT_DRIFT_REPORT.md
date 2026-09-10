@@ -2,7 +2,7 @@
 
 Compares `docs/contracts/API_CONTRACT.md` / `docs/contracts/TERMINOLOGY.md` against verified
 current source (`backend/sims/*/urls.py`, `views.py`, `serializers.py`, `models.py`,
-`frontend/lib/api/*.ts`, `android/app-portal/**/*.kt`) at HEAD `5686112` on 2026-09-09.
+`frontend/lib/api/*.ts`, `android/app-companion/**/*.kt`) at HEAD `5686112` on 2026-09-09.
 **All findings below were verified by reading actual code, not inferred.** Ranked P0 (highest) to
 P3.
 

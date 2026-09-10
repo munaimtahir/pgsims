@@ -53,7 +53,7 @@ release notes + a gate script — no code or migration drift). All services heal
 ## Sprint context (from `SPRINT_STATE.md`)
 
 The most recent completed sprint (documented in root `SPRINT_STATE.md`) expanded
-`android/app-portal` from resident-foundation commit `ed1d137c` into a production resident client
+`android/app-companion` from resident-foundation commit `ed1d137c` into a production resident client
 (commits `96a5c4c`, `f081a6d`, both on `main`), verified end-to-end against production with a
 synthetic resident/supervisor, and froze Android release `versionCode 4` / `1.1.4`. This is the
 most current, most authoritative statement of "what just happened" in this repository and is

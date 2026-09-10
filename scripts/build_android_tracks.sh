@@ -17,12 +17,8 @@ build_track() {
   printf '# %s verification\n\nBuilt with unit tests, lint, release APK and release AAB via `scripts/build_android_tracks.sh`.\n' "$label" > "$output/verification-report.md"
 }
 
-# As of 2026-09-07, android/app-portal builds the published pk.vexel.pgrcompanion listing
-# (login-gated PGR SIMS client), superseding the offline-only android/app-companion module below.
-# Both write to builds/companion — see builds/companion/build-info.json for the supersession
-# record. android/app-companion is kept building for reference but is frozen/historical and has
-# no Play listing of its own.
-build_track app-companion PGR-Companion companion pk.vexel.pgrcompanion 1.0.2
-build_track app-portal PGR-Companion companion pk.vexel.pgrcompanion 1.1.5
-cp "$repo_root/docs/PORTAL_WEB_PARITY_MATRIX.md" "$repo_root/builds/portal/parity-report.md" 2>/dev/null || true
-cp "$repo_root/docs/PGR_SIMS_ANDROID_API_INTEGRATION.md" "$repo_root/builds/portal/api-verification.md" 2>/dev/null || true
+# The single PGR Companion application is built from android/app-companion.
+# The release output and build record are written to builds/companion.
+build_track app-companion PGR-Companion companion pk.vexel.pgrcompanion 1.1.7
+cp "$repo_root/docs/PORTAL_WEB_PARITY_MATRIX.md" "$repo_root/builds/companion/parity-report.md" 2>/dev/null || true
+cp "$repo_root/docs/PGR_SIMS_ANDROID_API_INTEGRATION.md" "$repo_root/builds/companion/api-verification.md" 2>/dev/null || true

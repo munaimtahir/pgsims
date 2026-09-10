@@ -35,9 +35,9 @@ Run `seed_org_data`, then `seed_android_e2e_demo`, only in staging. The latter r
 `PGSIMS_ENVIRONMENT=staging` and a 12+ character password in
 `PGSIMS_STAGING_ANDROID_DEMO_PASSWORD`; it neither stores nor prints credentials.
 
-For isolated emulator testing, `portalStaging` may use
-`-PpgrPortalStagingBaseUrl=http://10.0.2.2:18014/`. Its staging-only network-security policy
-permits cleartext only to the emulator host. Normal Portal builds remain HTTPS-only.
+For isolated emulator testing, the PGR Companion staging variant may use
+`-PpgrCompanionStagingBaseUrl=http://10.0.2.2:18014/`. Its staging-only network-security policy
+permits cleartext only to the emulator host. Normal PGR Companion builds remain HTTPS-only.
 
 ## Rollback
 

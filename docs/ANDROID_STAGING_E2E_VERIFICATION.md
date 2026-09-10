@@ -34,8 +34,8 @@ No source-only row is represented as a live staging result.
 
 ## Emulator checks
 
-API 36 `emulator-5554` installed Companion and the distinct `pk.vexel.pgrportal.dev.staging`
-local-staging variant simultaneously. Portal completed a live resident login through the tunnel and
+API 36 `emulator-5554` installed PGR Companion's staging variant (`pk.vexel.pgrcompanion.debug`).
+PGR Companion completed a live resident login through the tunnel and
 rendered server-provided incomplete-profile/onboarding requirements. The authenticated logout defect
 found during this probe was fixed and covered by a unit test; server-side logout/revocation was
 also live-verified directly. Public staging API now verifies profile PATCH, programme/supervisor
@@ -44,14 +44,14 @@ final rebuilt APK session-restore/logout/uninstall pass.
 
 ## Required external closure
 
-When API 36 is available, install final Portal `0.1.2-dev`, verify session restoration,
+When API 36 is available, install final PGR Companion `1.1.7`, verify session restoration,
 document-picker upload, logout, and uninstall isolation. Record only account identifiers, never
 credentials.
 
 ## Build and security result
 
 The final Android verification command completed successfully: both unit-test tasks, both debug
-lint tasks, both release APK/AAB tasks, and Portal staging APK assembly passed. The rebuilt Portal
-development artifacts are version `0.1.2-dev` / code `3`. Portal does not log credentials
+lint tasks, both release APK/AAB tasks, and PGR Companion staging APK assembly passed. The rebuilt PGR Companion
+  development artifacts are version `1.1.7` / code `7`. PGR Companion does not log credentials
 or tokens, uses HTTPS-only traffic, and uses encrypted session storage. Companion’s frozen AAB was
 not rebuilt or changed during this sprint.

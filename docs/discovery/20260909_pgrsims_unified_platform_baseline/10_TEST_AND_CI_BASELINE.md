@@ -40,24 +40,24 @@ route-response correctness.
 
 ## Android Tests & CI
 
-Scope: PGR Companion Android app only (`android/app-portal`). Commands run 2026-09-09 from
+Scope: PGR Companion Android app only (`android/app-companion`). Commands run 2026-09-09 from
 `android/`:
 
 ```
-./gradlew :app-portal:testDebugUnitTest :app-portal:lintDebug
+./gradlew :app-companion:testDebugUnitTest :app-companion:lintDebug
 ```
 
 `assembleRelease`/`bundleRelease`/signed-build tasks were deliberately **not** run — they require an
 externally supplied signing-properties file (`-PpgrCompanionSigningPropertiesFile`) pointing at a
 keystore that does not exist in this environment; the module errors out by design rather than
-falling back to unsigned/debug signing (`android/app-portal/build.gradle.kts:29-61`).
+falling back to unsigned/debug signing (`android/app-companion/build.gradle.kts:29-61`).
 
 ### Result: BUILD SUCCESSFUL (cached — all tasks UP-TO-DATE from a prior run on this host, last
 test execution timestamp 2026-09-08T17:55:32 per `TEST-*.xml`; re-running with `--rerun-tasks` was
 not done since the goal was to confirm current pass/fail state, not force re-execution)
 
 **Unit tests: 24 tests, 24 passed, 0 failed, 0 skipped**, across 5 test classes
-(`android/app-portal/build/test-results/testDebugUnitTest/TEST-*.xml`):
+(`android/app-companion/build/test-results/testDebugUnitTest/TEST-*.xml`):
 
 | Test class | Tests |
 |---|---|
@@ -71,8 +71,8 @@ not done since the goal was to confirm current pass/fail state, not force re-exe
 passing, from the same source state — not part of what this task requested but present in the build
 output directory.)
 
-**Lint (`:app-portal:lintDebug`): 0 errors, 16 warnings** verbatim from
-`android/app-portal/build/reports/lint-results-debug.txt`:
+**Lint (`:app-companion:lintDebug`): 0 errors, 16 warnings** verbatim from
+`android/app-companion/build/reports/lint-results-debug.txt`:
 
 - `ComposableNaming`: `private fun detailLines(...)` in `ResidentWorkflowScreens.kt:285` should
   start uppercase (cosmetic, Compose convention only).
@@ -91,9 +91,9 @@ reconfirmed in this pass, not merely trusted from the doc.
 
 ### CI
 
-`.github/workflows/pgsims_drift_gates.yml` job `android-portal-gates` runs, on GitHub Actions:
+`.github/workflows/pgsims_drift_gates.yml` job `android-companion-gates` runs, on GitHub Actions:
 ```
-./gradlew :app-portal:testDebugUnitTest :app-portal:lintDebug :app-portal:assembleDebug
+./gradlew :app-companion:testDebugUnitTest :app-companion:lintDebug :app-companion:assembleDebug
 ```
 — i.e. CI covers the same two checks run here plus an unsigned debug assemble. No CI job builds,
 tests, or lints `android/app-companion` (confirms its FROZEN HISTORICAL classification — see
@@ -108,8 +108,8 @@ triggered).
 ### GitHub Actions workflows
 
 - **`.github/workflows/pgsims_drift_gates.yml`** ("PGSIMS CI Gates", `push`/`pull_request` on
-  `main`/`develop`) — 4 jobs: `android-portal-gates` (`testDebugUnitTest lintDebug assembleDebug`
-  for `app-portal` only), `backend-truth-gates` (migrate + `manage.py check` +
+  `main`/`develop`) — 4 jobs: `android-companion-gates` (`testDebugUnitTest lintDebug assembleDebug`
+  for `app-companion` only), `backend-truth-gates` (migrate + `manage.py check` +
   `sims/training/test_feature_layer_ops.py::…test_logbook_submit_return_resubmit_approve_flow`,
   `sims/rotations/test_canonical_migration_gate.py`, `sims/_devtools/tests/test_drift_guards.py`),
   `frontend-gates` (lint/test/build), `integration-truth-map` (regenerates

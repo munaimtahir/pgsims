@@ -53,7 +53,7 @@ Full detail: `09_PRODUCTION_BASELINE.md`.
 - **Missing/read-only**: Assessments, Research, Workshops — summary counts only, no submission UI
   (a scope gap, not a backend blocker).
 - **Production connectivity**: confirmed live and correct.
-- **Quality gates**: 24/24 unit tests pass, 0 lint errors, CI (`android-portal-gates`) wired and
+- **Quality gates**: 24/24 unit tests pass, 0 lint errors, CI (`android-companion-gates`) wired and
   current. Play Console upload of the signed `1.1.4` AAB is the one step not yet done, and its
   checklist doc is stale (AND-1).
 

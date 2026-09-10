@@ -59,7 +59,7 @@ BUILD WAVE 3 — WEB COMPLETION
 16. Logbook status-label reconciliation with the shared terminology system
 
 BUILD WAVE 4 — PGR COMPANION PARITY
-17. Incremental ViewModel + Navigation-Compose adoption in app-portal
+17. Incremental ViewModel + Navigation-Compose adoption in app-companion
 18. Play Console upload of the signed 1.1.4 AAB (after Wave 1 item 7)
 19. If Wave 2 item 13 decides to reactivate the deferred training surface: build Assessments/
     Research/Workshops submission UI against the already-stable backend endpoints

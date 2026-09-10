@@ -136,6 +136,4 @@ android/*.keystore
 android/*.jks
 android/**/google-services.json
 builds/companion/*
-builds/portal/*
 !builds/companion/.gitkeep
-!builds/portal/.gitkeep

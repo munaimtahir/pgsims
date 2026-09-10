@@ -1,9 +1,8 @@
 # Android release verification
 
-> Historical 1.0.2 companion-track verification. The current canonical candidate is
-> `:app-portal` packaged as `pk.vexel.pgrcompanion` version `1.1.3`/code `3`. Commands below that
-> reference the removed `:app` module are retained as provenance only; use `android/README.md` for
-> current build commands.
+> The single canonical PGR Companion application is `:app-companion`, packaged as
+> `pk.vexel.pgrcompanion` version `1.1.7`/code `7`. Historical pre-consolidation notes below are
+> retained as provenance only; use `android/README.md` for current build commands.
 
 Baseline: `play-closed-testing-baseline-1.0.0` (`pk.vexel.pgrcompanion`, `1.0.0`, `versionCode 1`).
 Candidate: `1.0.2`, `versionCode 2`.
@@ -12,8 +11,8 @@ Candidate: `1.0.2`, `versionCode 2`.
 
 ```bash
 cd android
-./gradlew clean :app:testDebugUnitTest :app:lintDebug :app:assembleDebug \
-  :app:assembleRelease :app:bundleRelease \
+./gradlew clean :app-companion:testDebugUnitTest :app-companion:lintDebug :app-companion:assembleDebug \
+  :app-companion:assembleRelease :app-companion:bundleRelease \
   -PpgrCompanionSigningPropertiesFile=/owner/controlled/path/signing.properties
 ```
 

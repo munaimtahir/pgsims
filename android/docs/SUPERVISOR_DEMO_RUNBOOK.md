@@ -59,7 +59,7 @@ Sign out, then sign back in as any resident account (e.g. `pgrdrmuhammadadeelbas
 
 ```
 Backend/Android build: c5a77c4 (laptop + VPS in sync, clean tree)
-Android compile:                PASS  (:app-portal:compileDebugKotlin)
+Android compile:                PASS  (:app-companion:compileDebugKotlin)
 Android unit tests:              PASS  (24 tests, incl. 3 new supervisor-snapshot/detail tests)
 Android debug APK assembled:     PASS
 Emulator:                        pgsims, installed pk.vexel.pgrcompanion.debug

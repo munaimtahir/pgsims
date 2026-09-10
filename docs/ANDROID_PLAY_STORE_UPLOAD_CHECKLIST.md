@@ -1,10 +1,10 @@
 # Android Play Store upload checklist
 
 **Repository-level decision (2026-09-07): the `pk.vexel.pgrcompanion` Play listing is now built
-from `android/app-portal` — a login-gated postgraduate management client — and this release
+from `android/app-companion` — the login-gated postgraduate management client — and this release
 (`versionCode 3` / `1.1.3`) supersedes the prior offline-only `1.0.2` build
-(`android/app-companion`), which is now frozen/historical.** This intentionally reverses the
-earlier "Portal is a separate track, never a Companion replacement" policy recorded lower in this
+the previous offline-only implementation, which has been removed.** There is no second Android
+track or separate application.
 file's git history — that policy applied until this decision was made.
 
 Reviewer/tester login credentials are **never committed to Git**. They're provided out-of-band
@@ -16,7 +16,7 @@ this release.
 - App name: PGR Companion
 - Application ID: `pk.vexel.pgrcompanion`
 - Version: `1.1.3` (versionCode `3`)
-- Source module: `android/app-portal`
+- Source module: `android/app-companion`
 - Artifact: `builds/companion/PGR-Companion-1.1.3.aab`
 - Target/min SDK: 36 / 26
 - Network/authentication: **required** — the app is login-gated end-to-end; there is no offline
@@ -66,7 +66,7 @@ server, not a hardcoded heading):
 
 ## Where the prior offline build stands
 
-`android/app-companion` (the `1.0.2` offline-only build) still exists in the repo and still builds,
-but `scripts/check_pgr_companion_release.sh` now targets `app-portal` instead — see
+The old offline-only implementation has been removed; `scripts/check_pgr_companion_release.sh`
+targets the single `app-companion` module — see
 `builds/companion/build-info.json` for the full supersession record. It is not currently uploaded
 anywhere and has no separate Play listing of its own.

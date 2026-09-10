@@ -3,7 +3,7 @@
 Scope: resident-facing + core RBAC-relevant API surface actually wired into `sims_project/urls.py`
 (installed apps only: `users, academics, rotations, audit, bulk, notifications, training,
 supervision, backup_center`). Verified against `backend/sims/*/urls.py`, `views.py`,
-`frontend/lib/api/*.ts`, and `android/app-portal` source on 2026-09-09 at HEAD `5686112`.
+`frontend/lib/api/*.ts`, and `android/app-companion` source on 2026-09-09 at HEAD `5686112`.
 
 Legend for **Maturity**: UNUSED / LEGACY / DRAFT / IMPLEMENTED / TESTED / PRODUCTION VERIFIED /
 STABLE FOR WEB / STABLE FOR MOBILE / DEPRECATED. Multiple labels may apply (e.g. a route can be
@@ -14,7 +14,7 @@ TESTED + STABLE FOR WEB but not yet consumed by Android).
 | Endpoint | Method | Backend | Web consumer | Android consumer | Maturity |
 |---|---|---|---|---|---|
 | `/api/auth/profile/` | GET/PATCH | `sims/users/api_urls.py` → canonical current-user | `frontend/lib/api/auth.ts` | not used (Android uses `/api/auth/me/`) | STABLE FOR WEB, PRODUCTION VERIFIED |
-| `/api/auth/me/` | GET | `sims/users/userbase_urls.py` | admin tooling | `android/app-portal` session bootstrap | STABLE FOR MOBILE, PRODUCTION VERIFIED (per SPRINT_STATE synthetic-resident E2E) |
+| `/api/auth/me/` | GET | `sims/users/userbase_urls.py` | admin tooling | `android/app-companion` session bootstrap | STABLE FOR MOBILE, PRODUCTION VERIFIED (per SPRINT_STATE synthetic-resident E2E) |
 | `/api/auth/change-password/` | POST | `sims/users/api_urls.py` | `frontend/lib/api/auth.ts` | not confirmed in Android source scan | TESTED, STABLE FOR WEB |
 | `/api/auth/password-reset/`, `.../confirm/` | POST | `sims/users/api_urls.py` | `frontend/lib/api/auth.ts` | not used | TESTED |
 
@@ -53,7 +53,7 @@ side** (defensive fallback), not by unifying the two serializer paths. See `07_C
 
 | Endpoint | Method | Web consumer | Android consumer | Maturity |
 |---|---|---|---|---|
-| `LogbookEntry` CRUD/submit/review | GET/POST/PATCH | `frontend/lib/api/academics.ts` | `android/app-portal` Logbook draft/edit/submit screens (per SPRINT_STATE: "Implemented ... Logbook draft/edit/submit") | PRODUCTION VERIFIED both clients per SPRINT_STATE ("Verified API logbook create, edit and submit and then created a separate synthetic draft through the API-36 Android UI") |
+| `LogbookEntry` CRUD/submit/review | GET/POST/PATCH | `frontend/lib/api/academics.ts` | `android/app-companion` Logbook draft/edit/submit screens (per SPRINT_STATE: "Implemented ... Logbook draft/edit/submit") | PRODUCTION VERIFIED both clients per SPRINT_STATE ("Verified API logbook create, edit and submit and then created a separate synthetic draft through the API-36 Android UI") |
 
 Status/field aliasing (`feedback`↔`supervisor_feedback`, `submitted_to_supervisor_at`↔`submitted_at`)
 is documented in `docs/contracts/API_CONTRACT.md` L14-22 and `docs/TERMINOLOGY.md` — see drift

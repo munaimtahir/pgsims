@@ -124,7 +124,7 @@ already issued to them, then setting their own password on first login. This is 
 If you don't already have this on the hosted privacy policy page Play Console needs a URL for,
 here's ready-to-use text reflecting the above:
 
-> **What we collect.** When you sign in to the FMU Postgraduate Residency Portal app, we collect
+> **What we collect.** When you sign in to the PGR Companion app, we collect
 > the identity and training-program information you provide during onboarding — your name, phone
 > number, email address, national ID (CNIC) and registration numbers, training program/department
 > details, and any identity or eligibility documents you upload (such as a CNIC copy or PMDC

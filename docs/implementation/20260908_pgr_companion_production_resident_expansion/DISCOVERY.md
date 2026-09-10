@@ -2,7 +2,7 @@
 
 Starting source: `ed1d137c76beec33ddc7cb2c6140fc01a94102de` on `main`.
 
-`android/app-portal` is the canonical PGR Companion application. `app-companion` remains frozen.
+`android/app-companion` is the single canonical PGR Companion application.
 The production Android URL in the release BuildConfig is `https://android.pgsims.alshifalab.pk/`.
 
 The active backend domains are `users`, `training`, `academics`, `supervision`, and `rotations`.
