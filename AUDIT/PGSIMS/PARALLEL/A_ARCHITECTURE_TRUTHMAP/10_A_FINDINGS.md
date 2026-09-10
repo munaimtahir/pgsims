@@ -1,0 +1,8 @@
+# Session A Findings
+
+| ID | Severity | Area | Description | Evidence | Reproduction | Impact | Probable Root Cause | Recommended Correction | Status |
+|---|---|---|---|---|---|---|---|---|---|
+| A-001 | P1 | Contract Drift | Frontend calls non-existent `/api/academics/` endpoints. | Static trace in `frontend/frontend_endpoints.txt` shows calls to `/api/academics/training-records/` but backend defines `sims.training` URLs. | Code inspection | Major frontend/backend disconnect for academics feature. | Backend refactored app routes without updating frontend client. | Update React API client paths to match Django DRF routers. | OPEN |
+| A-002 | P2 | Dead Code | Obsolete dummy routes in backend. | Backend `cases_dummy_urls.py`, `logbook_dummy_urls.py`, `certificates_dummy_urls.py` map to HTML dummy templates. | Route dump shows many dummy paths. | Technical debt. | Transitional migration from monolith to API left artifacts. | Remove dummy URL files. | OPEN |
+| A-003 | P2 | Orphan Routes | Backend contains endpoints not consumed by Frontend/Android. | `05_BACKEND_CLIENT_REVERSE_MAP.md` indicates hundreds of backend URLs lack direct consumers. | Static analysis | Unmaintained API surface area. | Deprecated features or over-engineering. | Remove or deprecate unused endpoints. | OPEN |
+| A-004 | P1 | Navigation Bug | Potential for infinite loop/404 based on `middleware.ts` logic. | `middleware.ts` enforces role checks but does not verify backend existence of the redirected routes. | Inspect `getRoleHome(role)` implementation. | Broken navigation. | Hardcoded routes in middleware diverging from actual App Router structure. | Synchronize middleware routes with `app/` structure. | OPEN |

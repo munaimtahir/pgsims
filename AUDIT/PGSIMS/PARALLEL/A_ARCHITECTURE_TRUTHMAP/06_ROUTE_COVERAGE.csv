@@ -1,0 +1,5 @@
+Metric,Count,Percentage
+Total Frontend API Calls Discovered,76,100%
+Frontend Calls Mapped to Backend,38,50%
+Total Backend Routes Discovered,855,100%
+Backend Routes with Consumers,532,62%
