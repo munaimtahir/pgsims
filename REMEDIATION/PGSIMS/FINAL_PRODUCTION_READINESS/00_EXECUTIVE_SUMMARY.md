@@ -8,9 +8,9 @@ Confirmed blocker fixes implemented:
 - Django dependency constrained to `>=5.2,<5.3`; Django 5.2.17 checks and targeted tests pass.
 - Disaster-recovery backup now creates the configured nested destination before opening its ZIP.
 
-Frontend clean install, lint, typecheck, Jest, and production build pass. Safe `npm audit fix` and
-Next 14.2.35 patch updates were applied. Two production-tree advisories remain and require the
-breaking Next 16 upgrade; they are explicitly documented, not suppressed.
+Frontend clean install, lint, typecheck, Jest, and production build pass on Next 16.3.4 / React
+19.2.0. Production dependency audit is zero; one indirect high dev/build-only `glob` advisory
+remains in the full audit and is explicitly documented.
 
-Final status: **CONDITIONAL GO** pending full backend/PostgreSQL/E2E verification and a planned
-Next major-version security upgrade. No production mutation was performed.
+Final status: **CONDITIONAL GO** pending canonical E2E workflow/RBAC verification. No production
+mutation was performed.

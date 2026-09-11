@@ -2,7 +2,8 @@
 
 Backend: `Django>=5.2,<5.3`; resolved verification version `5.2.17`.
 
-Frontend: `npm ci` passed. `npm audit fix` was run without `--force`; Next and eslint-config-next
-were updated within the Next 14 line to `14.2.35`. Production audit remains `1 high, 1 critical`
-through Next/PostCSS and reports a fix only via breaking Next 16. No breaking upgrade was applied
-without compatibility work and explicit review.
+Frontend: Next, React, and eslint-config-next were upgraded to `16.3.4`, `19.2.0`, and `16.3.4`.
+The upgrade included the required async catch-all route params, React 19 JSX typing, ESLint 9 flat
+configuration, and React 19-compatible test waits. `npm audit --omit=dev` is now zero.
+The full audit has one indirect high `glob` advisory in dev/build tooling only; it is absent from
+the production dependency tree. No `npm audit fix --force` was used.

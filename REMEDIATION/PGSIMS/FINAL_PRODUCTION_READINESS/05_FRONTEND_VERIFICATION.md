@@ -4,7 +4,11 @@
 - `npm run lint`: PASS, no warnings/errors.
 - `npm run typecheck`: PASS.
 - Jest: PASS, 39 suites / 243 tests.
-- `npm run build`: PASS on Next 14.2.35; 79 static pages generated.
-- VPS checkout verification: PASS for `npm ci`, lint, typecheck, 39 Jest suites / 243 tests, and
-  production build.
-- `npm audit --omit=dev`: 1 high and 1 critical remain via Next/PostCSS; fix requires Next 16.
+- `npm run build`: PASS on Next 16.3.4 / React 19.2.0; 78 static pages generated.
+- VPS checkout verification under Node 20.20.2: PASS for `npm ci`, lint, typecheck, 39 Jest suites
+  / 243 tests, and production build.
+- `npm audit --omit=dev`: PASS, 0 vulnerabilities.
+- Full `npm audit`: 1 indirect high `glob` advisory confined to dev/build tooling; not present in
+  the production dependency tree.
+- Build note: Next reports the existing `middleware` convention deprecation; runtime behavior is
+  unchanged and migration is deferred as non-blocking.
