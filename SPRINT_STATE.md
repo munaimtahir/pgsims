@@ -18,16 +18,17 @@ package. Backend/frontend verification is to be repeated in the VPS checkout at
 - Updated React 19 tests, Next 16 async route params, ESLint 9 flat config, and generated-report ignores.
 - Disposable PostgreSQL 15 tmpfs container migrated from zero and was removed; compose config parsed with unset-secret warnings.
 - Preserved `AUDIT/PGSIMS/FINAL/` unchanged and created the remediation evidence package.
-- Pushed through commit `3d45f1ce614aec6203fc341896f9e77f961e522a`; PR #16 remains open against `main` and unmerged.
+- Pushed through commit `9aa9df1`; PR #16 remains open against `main` and unmerged.
+- Disposable canonical stack smoke gate passed 25/25; stack and project-scoped volumes were removed.
 
 ## Pending work
 
-1. Migrate stale Playwright smoke fixtures/contracts to canonical four-role routes/labels, then rerun smoke.
-2. Run workflow-gate, RBAC, negative, and database-state E2E suites against the isolated canonical stack.
+1. Migrate workflow-gate tests from retired UTRMC onboarding/schedule routes to canonical routes and rerun the 4-test workflow gate.
+2. Run RBAC, negative, and database-state E2E suites against the isolated canonical stack.
 
 ## Known conditions
 
 - Ruff reports 2,663 existing findings; broad legacy cleanup is deferred and documented.
 - VPS host Node is 18.19.1; Next 16 verification used disposable Node 20.20.2 tooling, matching the frontend image requirement.
-- Playwright smoke executed 25 tests: 11 passed, 14 stale-contract failures; E2E certification remains conditional.
+- Playwright smoke executed 25 tests: 25 passed; workflow-gate executed 4 tests: 1 passed, 3 stale-contract failures; E2E certification remains conditional.
 - Final certification is CONDITIONAL GO until canonical E2E gates are complete.

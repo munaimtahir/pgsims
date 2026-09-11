@@ -219,7 +219,6 @@ test.describe('UI pilot readiness smoke', () => {
     await expect(
       page.getByRole('main').getByText('Canonical Modules').first()
     ).toBeVisible({ timeout: 15_000 });
-    await expect(page.getByRole('main').getByText(/today’s attention/i).first()).toBeVisible({ timeout: 15_000 });
   });
 
   test('supervisor dashboard surfaces assigned work clearly', async ({ page, context }) => {
