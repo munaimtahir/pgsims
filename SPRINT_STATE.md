@@ -1,82 +1,38 @@
-# SPRINT_STATE.md — Supervisor Android: action-capable build
+# SPRINT_STATE.md — Next sprint scope
 
 ## Scope
 
-Extend the "PGR Companion" Android app's Supervisor role from read-only (view residents +
-per-workflow pending counts) to action-capable: approve / reject / return-for-revision on pending
-Logbook, Leave, Rotation, and Research items, directly from Android. No new backend endpoints
-required — every action endpoint already existed and was already scoped to the caller's own
-supervised residents. Full detail: `android/docs/SUPERVISOR_API_CAPABILITY_MATRIX.md`.
+Post-remediation follow-up. The final production-readiness remediation is closed as GO for its
+defined scope on branch `remediation/pgsims-final-production-readiness`; PR #16 remains open and
+unmerged. Do not mutate production data or deployment state.
 
-## Completed work
+## Completed baseline
 
-- `InstitutionalRepository.kt`: added 4 on-demand queue GETs (`supervisorLogbookQueue`,
-  `supervisorLeaveQueue`, `supervisorRotationQueue`, `supervisorResearchQueue`, kept out of
-  `InstitutionalSnapshot`/`snapshot()` deliberately) and 8 action POSTs (logbook verify/return/reject,
-  leave approve/reject, rotation hod-approve/reject/returned, research supervisor-approve/return),
-  following the existing `submitLogbook`/`supervisorResidentProgress` templates.
-- New file `SupervisorWorkflowScreens.kt`: `SupervisorWorkflowQueueScreen` (queue list + item
-  `AlertDialog` + `ReasonConfirmDialog` for reject/return), `SupervisorWorkflow` enum
-  (LOGBOOK/LEAVE/ROTATION/RESEARCH) driving per-workflow endpoint/field dispatch.
-- `SupervisorScreens.kt`: added `selectedWorkflow` drill-down state (same pattern as the existing
-  `selectedResidentId` resident drill-down), made Home's workflow rows tappable, removed the old
-  "actions not available on Android" disclaimer.
-- Corrected a stale claim in `SUPERVISOR_API_CAPABILITY_MATRIX.md`: rotation reject/return DO exist
-  (`/api/rotations/{id}/reject/`, `.../returned/`) — it was not approve-only as previously documented.
-- Updated `docs/ANDROID_MOBILE_PRODUCT_POLICY_AND_PRODUCTION_PLAN.md`: Supervisor scope section and
-  M7 milestone marked superseded/fulfilled.
-- Consolidated Android naming to one PGR Companion application: `android/app-companion`,
-  namespace `pk.vexel.pgrcompanion`, with the former duplicate offline module and Portal naming removed.
-- `./gradlew :app-companion:compileDebugKotlin` passes clean.
-- Per explicit user instruction, `versionCode`/`versionName` in `app-companion/build.gradle.kts` were
-  **left unchanged** (still 7 / "1.1.7") — do not bump without asking first.
-
-## Release verification — 2026-09-10
-
-- `./gradlew clean :app-companion:testDebugUnitTest :app-companion:lintDebug :app-companion:bundleRelease
-  -PpgrCompanionSigningPropertiesFile=~/.config/pgr-companion/signing/signing.properties`: **27/27
-  unit tests pass, 0 lint errors, signed AAB built** (`app-companion/build/outputs/bundle/release/app-companion-release.aab`,
-  ~3.3 MB). Signing cert SHA-256 `A8:58:F4:2C…0B:61:F0:10` confirmed via `keytool -printcert -jarfile`
-  — matches the correct registered Play upload key per `ANDROID_RELEASE_VERIFICATION.md` (not the
-  wrong `vexel-health` key).
-- Verified live against production (`https://android.pgsims.alshifalab.pk/`) as `supervisor` /
-  `supervisor123` (M. Tahir Bashir Malik, id 63 → real identity id 3, 7 residents): login succeeds,
-  all 4 new queue endpoints return 200 and are correctly scoped (3 empty, 1 populated).
-- **Found and fixed a real bug during this verification**: the logbook queue was reading
-  `/api/academics/review-queue/`, whose item `id` (44) is a queue-row id, not the actual
-  `logbook-entries` id (28) that `verify`/`reject`/`return_revision` require — calling those
-  actions would have 404'd or acted on the wrong resource. Fixed to reuse the existing `logbook()`
-  endpoint (already supervisor-scoped server-side), filtered client-side to `status == "SUBMITTED"`;
-  confirmed post-fix that it now resolves to the correct `id=28`. Rebuilt and re-verified tests/lint/
-  bundle after the fix.
-- Not executed: a live approve/reject/return call. Per the precedent in
-  `ANDROID_RELEASE_VERIFICATION.md` ("mutating one for no test value was not worth it"), the seeded
-  demo data was not mutated for no test benefit — endpoint/ID correctness was confirmed via read-only
-  cross-checks instead (logbook entry 28's id matches the id referenced in the old queue row's notes).
-  Run one real approve/reject/return per workflow against a disposable/reseedable account before
-  relying on this build for a real approval.
-- No physical/emulator device verification was performed (still blocked on device access, see below).
-- Dedicated `pgsims` Pixel 8 / API 36 AVD created on the laptop; the existing
-  `app-companion-debug.apk` was installed and launched successfully on `emulator-5554`. The emulator
-  is now available for manual UI verification.
+- Confirmed laptop `origin/main` baseline `a08bb16eb321f6154774d1c9edf6be28bffc4a2f` and created the remediation branch.
+- Updated Django constraint to `>=5.2,<5.3`; Django 5.2.17 full suite passed (921 tests), checks and migration drift passed.
+- Fixed disaster archive destination creation; backup orchestration passed (22 tests), including missing nested path coverage.
+- Ran `repair_identity_profiles`: 37 scanned, 0 invalid users, 0 duplicate profiles; Update 0 gate passed.
+- Frontend `npm ci`, lint, typecheck, Jest (39 suites / 240 tests), and Next 16.3.4 / React 19.2.0 production build passed locally and on VPS Node 20.20.2.
+- Applied non-forced frontend dependency remediation; production audit is zero, with one indirect dev/build-only `glob` advisory documented.
+- Updated React 19 tests, Next 16 async route params, ESLint 9 flat config, and generated-report ignores.
+- Disposable PostgreSQL 15 tmpfs container migrated from zero and was removed; compose config parsed with unset-secret warnings.
+- Preserved `AUDIT/PGSIMS/FINAL/` unchanged and created the remediation evidence package.
+- Remediation commit: `228dc0c`; PR #16 remains open against `main` and unmerged.
+- Disposable canonical stack smoke gate passed 25/25; stack and project-scoped volumes were removed.
+- Canonical workflow gate passed 4/4; VPS production was checked read-only (healthz, frontend HTTP 200, migrations applied) with no mutation or restart.
+- RBAC/negative passed 31/31; broader workflows passed 23 with 1 explicit conditional skip; Android `:app-companion` unit tests, lint, and debug assembly passed.
 
 ## Pending work
 
-1. Run one real approve/reject/return-for-revision call per workflow (Logbook, Leave, Rotation,
-   Research) against reseedable demo data, then re-seed, to prove the write path end-to-end — not
-   done this pass (see "Release verification" above).
-2. Manually verify the new workflow screens in the running `pgsims` emulator (the app is installed
-   and launched on `emulator-5554`); record the results in the Android verification docs.
-3. Upload `app-companion/build/outputs/bundle/release/app-companion-release.aab` to Play Console (internal
-   testing track recommended before production) — not done by this session; that's a Play Console
-   action for the user.
-4. Carried over from the prior sprint (Supervisor/resident demo identity linkage, now otherwise
-   closed): Android emulator verification of the `resident`/`supervisor` demo-login chain is still
-   ready to execute on the running `pgsims` emulator — see
-   `docs/implementation/20260910_urology_institutional_demo/SUPERVISOR_RESIDENT_IDENTITY_LINKAGE.md`.
+1. When deployment ownership provides secure Android signing properties, run the documented
+   `:app-companion:assembleRelease`/`:app-companion:bundleRelease` verification without creating or
+   exposing signing material.
+2. Review the existing Ruff backlog and Django schema-generation warnings as a separately scoped
+   maintenance sprint.
 
-## Closure state
+## Known conditions
 
-Android client changes for action-capable Supervisor are implemented, unit-tested, lint-clean, and
-a correctly-signed release AAB has been built and endpoint-verified live against production (read
-paths only). Not yet uploaded to Play Console and no real write action has been exercised end-to-end.
+- Ruff reports 2,663 existing findings; broad legacy cleanup is deferred and documented.
+- VPS host Node is 18.19.1; Next 16 verification used disposable Node 20.20.2 tooling, matching the frontend image requirement.
+- Playwright smoke executed 25 tests: 25 passed; workflow-gate 4/4 passed; RBAC/negative 31/31 passed; broader workflows 23 passed with 1 explicit conditional skip.
+- Final certification: GO for the remediation scope; Android release signing remains NOT VERIFIED.

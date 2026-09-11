@@ -385,6 +385,10 @@ def create_disaster_recovery_backup(user=None, notes=None) -> BackupJob:
         # Include microseconds to avoid collisions.
         timestamp = timezone.now().strftime('%Y-%m-%d_%H%M%S_%f')
         backup_dir = Path(settings.SIMS_SETTINGS.get('BACKUP_LOCATION', settings.BASE_DIR / 'backups'))
+        # Disaster archives are written directly after the internal routine backup.  The
+        # configured location may be a new nested path on a clean host, so create the full
+        # destination tree before opening the archive.
+        backup_dir.mkdir(parents=True, exist_ok=True)
         file_name = f"PGSIMS_DISASTER_BACKUP_{timestamp}.pgsimsdr"
         file_path = backup_dir / file_name
         
@@ -1100,4 +1104,3 @@ def enforce_cloud_retention_policy() -> Dict[str, Any]:
                 logger.error(f"Failed to delete remote objects for job {job.id}: {e}")
 
     return {"status": "success", "deleted_count": deleted_count}
-

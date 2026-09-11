@@ -17,7 +17,7 @@ test.describe('Login form', () => {
 
     // Router.push('/dashboard/utrmc') — wait for navigation
     await expect(page).toHaveURL(/\/dashboard\/utrmc/, { timeout: 15_000 });
-    await expect(page.getByRole('heading', { name: /UTRMC (Dashboard|Overview)/ })).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByRole('heading', { name: 'Admin Dashboard' })).toBeVisible({ timeout: 15_000 });
   });
 
   test('valid supervisor credentials redirect to supervisor dashboard', async ({ page }) => {
@@ -43,7 +43,7 @@ test.describe('Login form', () => {
     // it is data-dependent. Smoke test verifies auth redirect only.
     await expect(page).toHaveURL(/\/dashboard\/(resident|pg)/, { timeout: 15_000 });
     // Confirm we are NOT on the login page (auth worked)
-    await expect(page.getByRole('heading', { name: /sign in to sims/i })).not.toBeVisible();
+    await expect(page.getByRole('heading', { name: /sign in to fmu-utrmc pgsims/i })).not.toBeVisible();
   });
 
   test('invalid credentials show error and stay on login page', async ({ page }) => {

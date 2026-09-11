@@ -52,6 +52,6 @@ management have real backend support but limited or no current frontend — see
 
 ## Technical Architecture
 
-- **Backend**: Django 4.2 REST Framework, SimpleJWT auth, PostgreSQL, Celery/Redis for async work.
+- **Backend**: Django 5.2 REST Framework, SimpleJWT auth, PostgreSQL, Celery/Redis for async work.
 - **Frontend**: Next.js 14 (App Router), TypeScript, Tailwind CSS, React Query, Zustand.
 - **Deployment**: Docker Compose + a host Caddy reverse proxy.

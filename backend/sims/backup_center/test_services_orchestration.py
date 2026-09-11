@@ -141,6 +141,16 @@ class CreateRoutineApplicationDataBackupTests(BackupCenterOrchestrationTestBase)
 
 
 class CreateDisasterRecoveryBackupTests(BackupCenterOrchestrationTestBase):
+    def test_creates_missing_nested_backup_directory(self):
+        nested_backup_dir = self.tmp_backup_dir / "new" / "nested" / "backups"
+        settings.SIMS_SETTINGS["BACKUP_LOCATION"] = nested_backup_dir
+
+        job = create_disaster_recovery_backup(user=self.admin)
+
+        self.assertTrue(nested_backup_dir.is_dir())
+        self.assertTrue(Path(job.file_path).is_file())
+        self.assertTrue(job.checksum)
+
     def test_creates_completed_disaster_bundle_containing_routine_backup(self):
         job = create_disaster_recovery_backup(user=self.admin, notes="dr test")
 

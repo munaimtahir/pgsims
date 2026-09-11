@@ -83,6 +83,8 @@ class User(AbstractUser):
         help_text="Training year (required for PGs)",
     )
 
+    # Deprecated compatibility field: authorization and new writes use
+    # ResidentSupervisorAssignment. Retain until legacy consumers are migrated.
     supervisor = models.ForeignKey(
         "self",
         on_delete=models.SET_NULL,

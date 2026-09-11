@@ -9,7 +9,7 @@ test.describe('Flexible Column Mapping Import E2E', () => {
     const { execSync } = require('child_process');
     try {
       execSync(
-        `docker compose --env-file ../.env -f ../docker/docker-compose.yml exec -T backend python manage.py shell -c "from sims.users.models import User; User.objects.filter(email='${residentEmail}').delete(); print('Cleaned up flex resident.')"`
+        `docker compose -p pgsims-remediation-e2e -f ../docker/docker-compose.yml exec -T backend python manage.py shell -c "from sims.users.models import User, ResidentProfile; from sims.supervision.models import ResidentSupervisorAssignment; ResidentSupervisorAssignment.objects.filter(resident__user__email='${residentEmail}').delete(); ResidentProfile.objects.filter(user__email='${residentEmail}').delete(); User.objects.filter(email='${residentEmail}').delete(); print('Cleaned up flex resident.')"`
       );
       console.log('Successfully cleaned up E2E resident dummy data.');
     } catch (e: any) {
@@ -17,12 +17,12 @@ test.describe('Flexible Column Mapping Import E2E', () => {
     }
   });
 
-  test('utrmc admin can import residents via flexible column mapping', async ({
+  test('admin can import residents via flexible column mapping', async ({
     page,
     context,
   }) => {
-    await loginAs(context, page, 'utrmc_admin');
-    await page.goto('/dashboard/utrmc/onboarding');
+    await loginAs(context, page, 'admin');
+    await page.goto('/masters');
 
     await expect(page.getByRole('heading', { name: 'Bulk Setup & Import/Export' })).toBeVisible({
       timeout: 15_000,
@@ -40,7 +40,7 @@ test.describe('Flexible Column Mapping Import E2E', () => {
     // 3. Upload a custom CSV file
     const csvContent = [
       'CustomEmail,CustomName,CustomSpecialty,CustomYear,CustomStart,CustomHospital,CustomDept,CustomSupervisor',
-      `${residentEmail},Dr. E2E Flex Resident,medicine,1,2026-01-01,AH,MED,supervisor_user@pgsims.local`,
+      `${residentEmail},Dr. E2E Flex Resident,surgery,1,2026-01-01,UTRMC,SURG,supervisor_user@pgsims.local`,
     ].join('\n');
 
     const csvBuffer = Buffer.from(csvContent);
@@ -104,12 +104,15 @@ test.describe('Flexible Column Mapping Import E2E', () => {
     });
 
     // Run import apply
-    await Promise.all([
+    const applyResponse = await Promise.all([
       page.waitForResponse((res) =>
         res.url().includes('/api/bulk/flexible/apply/') && res.request().method() === 'POST'
       ),
       page.getByRole('button', { name: /Apply Final Import/i }).click(),
-    ]);
+    ]).then(([response]) => response);
+    const applyPayload = await applyResponse.json();
+    expect(applyResponse.ok()).toBeTruthy();
+    expect(applyPayload.success_count).toBe(1);
 
     // Verify final success banner
     await expect(page.getByText(/Import succeeded! Successfully imported 1 records./i)).toBeVisible({
@@ -117,7 +120,8 @@ test.describe('Flexible Column Mapping Import E2E', () => {
     });
 
     // 9. Navigate to users list and verify imported user appears
-    await page.goto('/dashboard/utrmc/users');
-    await expect(page.getByText(residentEmail).first()).toBeVisible({ timeout: 15_000 });
+    await page.goto('/users');
+    await page.getByRole('searchbox', { name: 'Search directory' }).fill(residentEmail);
+    await expect(page.getByText('E2E Flex Resident').first()).toBeVisible({ timeout: 15_000 });
   });
 });

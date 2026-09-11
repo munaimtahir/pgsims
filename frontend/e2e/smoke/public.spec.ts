@@ -8,7 +8,7 @@ import { expect, test } from '@playwright/test';
 test.describe('Public pages', () => {
   test('login page renders with form fields', async ({ page }) => {
     await page.goto('/login');
-    await expect(page.getByRole('heading', { name: /sign in to sims/i })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /sign in to fmu-utrmc pgsims/i })).toBeVisible();
     await expect(page.getByLabel('Username')).toBeVisible();
     await expect(page.getByLabel('Password')).toBeVisible();
     await expect(page.getByRole('button', { name: /sign in/i })).toBeVisible();
@@ -25,7 +25,7 @@ test.describe('Public pages', () => {
   test('unauthenticated access to /dashboard/utrmc redirects to /login', async ({ page }) => {
     await page.goto('/dashboard/utrmc');
     await expect(page).toHaveURL(/\/login/);
-    await expect(page.getByRole('heading', { name: /sign in to sims/i })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /sign in to fmu-utrmc pgsims/i })).toBeVisible();
   });
 
   test('unauthenticated access to /dashboard/supervisor redirects to /login', async ({ page }) => {

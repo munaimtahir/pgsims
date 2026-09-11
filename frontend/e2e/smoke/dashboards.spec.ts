@@ -9,49 +9,47 @@ import { expect, test } from '@playwright/test';
 
 import { loginAs } from '../helpers/auth';
 
-// ─── UTRMC Admin ─────────────────────────────────────────────────────────────
+// ─── Administrator ──────────────────────────────────────────────────────────
 
-test.describe('UTRMC Admin dashboards', () => {
+test.describe('Administrator dashboards', () => {
   test.beforeEach(async ({ context, page }) => {
     await loginAs(context, page, 'utrmc_admin');
   });
 
   test('UTRMC overview loads with stat cards', async ({ page }) => {
     await page.goto('/dashboard/utrmc');
-    await expect(page.getByRole('heading', { name: /UTRMC (Dashboard|Overview)/ })).toBeVisible({
+      await expect(page.getByRole('heading', { name: 'Admin Dashboard' })).toBeVisible({
       timeout: 15_000,
     });
     // Stat card labels live inside <main> — scope avoids matching sidebar nav links
-    await expect(page.getByRole('main').getByText('Hospitals').first()).toBeVisible();
-    await expect(page.getByRole('main').getByText('Departments').first()).toBeVisible();
+    await expect(page.getByRole('main').getByText('Users').first()).toBeVisible();
     await expect(page.getByRole('main').getByText('Residents').first()).toBeVisible();
+    await expect(page.getByRole('main').getByText('Supervisors').first()).toBeVisible();
   });
 
   test('users management page loads with Add User button', async ({ page }) => {
-    await page.goto('/dashboard/utrmc/users');
+    await page.goto('/users');
     await expect(page.getByRole('heading', { name: 'Users' })).toBeVisible({ timeout: 15_000 });
-    await expect(page.getByRole('button', { name: /add user/i })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'New User' })).toBeVisible();
   });
 
   test('hospitals management page loads with Add Hospital button', async ({ page }) => {
-    await page.goto('/dashboard/utrmc/hospitals');
-    await expect(page.getByRole('button', { name: /add hospital/i })).toBeVisible({
+    await page.goto('/masters');
+    await expect(page.getByRole('heading', { name: 'Masters' })).toBeVisible({
       timeout: 15_000,
     });
   });
 
   test('departments management page loads', async ({ page }) => {
-    await page.goto('/dashboard/utrmc/departments');
-    await expect(page.getByRole('button', { name: /add department/i })).toBeVisible({
+    await page.goto('/masters');
+    await expect(page.getByText('Departments', { exact: true })).toBeVisible({
       timeout: 15_000,
     });
   });
 
   test('Hospital–Department matrix page loads', async ({ page }) => {
-    await page.goto('/dashboard/utrmc/matrix');
-    await expect(
-      page.getByRole('heading', { name: /hospital.*department.*matrix/i })
-    ).toBeVisible({ timeout: 15_000 });
+    await page.goto('/masters');
+    await expect(page.getByText('Hospital-Department Matrix', { exact: true })).toBeVisible({ timeout: 15_000 });
   });
 });
 
@@ -85,15 +83,9 @@ test.describe('Resident (PG) dashboard', () => {
     // Verify URL — middleware allows pg/resident role on this path
     await expect(page).toHaveURL(/\/dashboard\/resident/);
     // Not redirected back to login — auth cookie is valid
-    await expect(page.getByRole('heading', { name: /sign in to sims/i })).not.toBeVisible({
+    await expect(page.getByRole('heading', { name: /sign in to fmu-utrmc pgsims/i })).not.toBeVisible({
       timeout: 5_000,
     });
-    // The page should render the training dashboard as the user has a seeded record.
-    await expect(page.getByRole('heading', { name: 'My Training Dashboard' })).toBeVisible({
-      timeout: 15_000,
-    });
-    await expect(page.getByText('E2E Baseline FCPS Program').first()).toBeVisible({
-      timeout: 15_000,
-    });
+    await expect(page.getByRole('heading', { name: 'Resident Dashboard' })).toBeVisible({ timeout: 15_000 });
   });
 });

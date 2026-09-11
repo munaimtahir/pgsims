@@ -74,11 +74,13 @@ describe('ResidentHomePage', () => {
   it('renders the canonical resident dashboard summary', async () => {
     render(<ResidentHomePage />);
 
-    await waitFor(() => expect(screen.getByText('Resident Dashboard')).toBeInTheDocument());
-    expect(screen.getByText('My Training')).toBeInTheDocument();
-    expect(screen.getByText('My Supervisor')).toBeInTheDocument();
-    expect(screen.getByText('My Academic Summary')).toBeInTheDocument();
-    expect(screen.getByText(/Prof Supervisor/)).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText('Resident Dashboard')).toBeInTheDocument();
+      expect(screen.getByText('My Training')).toBeInTheDocument();
+      expect(screen.getByText('My Supervisor')).toBeInTheDocument();
+      expect(screen.getByText('My Academic Summary')).toBeInTheDocument();
+      expect(screen.getByText(/Prof Supervisor/)).toBeInTheDocument();
+    });
     expect(screen.queryByRole('link', { name: /View Schedule/i })).not.toBeInTheDocument();
   });
 });

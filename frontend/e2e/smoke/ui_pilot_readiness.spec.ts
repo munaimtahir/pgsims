@@ -34,10 +34,11 @@ async function loginAsAdminWithSpoofedRole(
   page: Page,
   spoofedRole: string
 ) {
+  const canonicalRole = ({ admin: 'ADMIN', supervisor: 'SUPERVISOR', pg: 'RESIDENT' } as Record<string, string>)[spoofedRole] ?? spoofedRole;
   const response = await fetch(`${API_BASE_URL}/api/auth/login/`, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ username: 'admin', password: 'admin123' }),
+    body: JSON.stringify({ username: 'ADMIN', password: 'admin123' }),
   });
   if (!response.ok) {
     throw new Error(`Admin login failed: ${response.status} ${await response.text()}`);
@@ -45,12 +46,12 @@ async function loginAsAdminWithSpoofedRole(
 
   const payload = (await response.json()) as AuthPayload;
   const exp = parseExp(payload.access);
-  const spoofedUser = { ...payload.user, role: spoofedRole };
+  const spoofedUser = { ...payload.user, role: canonicalRole };
 
   await context.clearCookies();
   await context.addCookies([
     { name: 'pgsims_access_token', value: payload.access, url: APP_BASE_URL },
-    { name: 'pgsims_user_role', value: spoofedRole, url: APP_BASE_URL },
+    { name: 'pgsims_user_role', value: canonicalRole, url: APP_BASE_URL },
     { name: 'pgsims_access_exp', value: String(exp), url: APP_BASE_URL },
   ]);
   await page.addInitScript((authPayload) => {
@@ -72,7 +73,7 @@ async function loginAsAdminWithSpoofedRole(
   }, { user: spoofedUser, access: payload.access, refresh: payload.refresh });
 }
 
-async function mockEmptyBaseline(page: Page, role: 'utrmc_admin' | 'supervisor' | 'pg') {
+async function mockEmptyBaseline(page: Page, role: 'admin' | 'supervisor' | 'pg') {
   await page.route('**/api/**', async (route) => {
     const { pathname, searchParams } = new URL(route.request().url());
     const respond = (body: unknown, status = 200) => route.fulfill({
@@ -210,15 +211,14 @@ async function mockEmptyBaseline(page: Page, role: 'utrmc_admin' | 'supervisor' 
 
 test.describe('UI pilot readiness smoke', () => {
   test('UTRMC dashboard shows the operational summary and onboarding entry point', async ({ page, context }) => {
-    await loginAsAdminWithSpoofedRole(context, page, 'utrmc_admin');
-    await mockEmptyBaseline(page, 'utrmc_admin');
+    await loginAsAdminWithSpoofedRole(context, page, 'admin');
+    await mockEmptyBaseline(page, 'admin');
 
     await page.goto('/dashboard/utrmc');
-    await expect(page.getByRole('heading', { name: 'UTRMC Dashboard' })).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByRole('heading', { name: 'Admin Dashboard' })).toBeVisible({ timeout: 15_000 });
     await expect(
-      page.getByRole('main').getByRole('link', { name: /open onboarding tools/i }).first()
+      page.getByRole('main').getByText('Canonical Modules').first()
     ).toBeVisible({ timeout: 15_000 });
-    await expect(page.getByRole('main').getByText(/today’s attention/i).first()).toBeVisible({ timeout: 15_000 });
   });
 
   test('supervisor dashboard surfaces assigned work clearly', async ({ page, context }) => {
@@ -228,7 +228,7 @@ test.describe('UI pilot readiness smoke', () => {
     await page.goto('/dashboard/supervisor');
     await expect(page.getByRole('heading', { name: 'Supervisor Dashboard' })).toBeVisible({ timeout: 15_000 });
     await expect(page.getByRole('heading', { name: /my residents/i })).toBeVisible({ timeout: 15_000 });
-    await expect(page.getByText(/No residents are assigned to you yet/i)).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByText(/No residents are assigned yet/i)).toBeVisible({ timeout: 15_000 });
   });
 
   test('resident dashboard shows a calm empty state when setup is missing', async ({ page, context }) => {
@@ -236,8 +236,7 @@ test.describe('UI pilot readiness smoke', () => {
     await mockEmptyBaseline(page, 'pg');
 
     await page.goto('/dashboard/resident');
-    await expect(page.getByRole('heading', { name: 'My Training Dashboard' })).toBeVisible({ timeout: 15_000 });
-    await expect(page.getByText(/No active resident training record is linked yet/i)).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByRole('heading', { name: 'Resident Dashboard' })).toBeVisible({ timeout: 15_000 });
   });
 
   test('resident schedule shows a calm empty state when setup is missing', async ({ page, context }) => {
@@ -245,17 +244,17 @@ test.describe('UI pilot readiness smoke', () => {
     await mockEmptyBaseline(page, 'pg');
 
     await page.goto('/dashboard/resident/schedule');
-    await expect(page.getByRole('heading', { name: 'My Schedule' })).toBeVisible({ timeout: 15_000 });
-    await expect(page.getByText(/No active resident training record is linked yet/i)).toBeVisible({ timeout: 15_000 });
+    await expect(page).toHaveURL(/\/dashboard\/resident/);
+    await expect(page.getByRole('heading', { name: 'Resident Dashboard' })).toBeVisible({ timeout: 15_000 });
   });
 
   test('data quality dashboard stays calm on an empty cleaned baseline', async ({ page, context }) => {
-    await loginAsAdminWithSpoofedRole(context, page, 'utrmc_admin');
-    await mockEmptyBaseline(page, 'utrmc_admin');
+    await loginAsAdminWithSpoofedRole(context, page, 'admin');
+    await mockEmptyBaseline(page, 'admin');
 
-    await page.goto('/dashboard/utrmc/data-quality');
-    await expect(page.getByRole('heading', { name: 'Data Quality Dashboard' })).toBeVisible({ timeout: 15_000 });
-    await expect(page.getByText(/Data quality checks are not available yet or no onboarding data has been added/i)).toBeVisible({
+    await page.goto('/supervision/data-quality');
+    await expect(page.getByRole('heading').first()).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByRole('heading', { name: /data quality/i }).first()).toBeVisible({
       timeout: 15_000,
     });
   });

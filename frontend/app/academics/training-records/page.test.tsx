@@ -50,8 +50,10 @@ describe('TrainingRecordsPage', () => {
 
   it('renders the training records route', async () => {
     render(<TrainingRecordsPage />);
-    await waitFor(() => expect(screen.getByText('Training Records')).toBeInTheDocument());
-    expect(screen.getByText('Create Training Record')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Open' })).toHaveAttribute('href', '/academics/training-records/1');
+    await waitFor(() => {
+      expect(screen.getByText('Training Records')).toBeInTheDocument();
+      expect(screen.getByText('Create Training Record')).toBeInTheDocument();
+      expect(screen.getByRole('link', { name: 'Open' })).toHaveAttribute('href', '/academics/training-records/1');
+    });
   });
 });

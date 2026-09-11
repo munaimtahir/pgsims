@@ -3,14 +3,14 @@ import { expect, test } from '@playwright/test';
 import { loginAs } from '../helpers/auth';
 
 test.describe('Workflow gate — bulk setup workspace', () => {
-  test('utrmc admin can dry-run hospital import from the overview workspace', async ({
+  test('admin can dry-run hospital import from the masters workspace', async ({
     page,
     context,
   }) => {
-    await loginAs(context, page, 'utrmc_admin');
-    await page.goto('/dashboard/utrmc');
+    await loginAs(context, page, 'admin');
+    await page.goto('/masters');
 
-    await expect(page.getByRole('heading', { name: /UTRMC (Dashboard|Overview)/ })).toBeVisible({
+    await expect(page.getByRole('heading', { name: 'Masters' })).toBeVisible({
       timeout: 15_000,
     });
     await expect(page.getByRole('heading', { name: 'Bulk Setup & Import/Export' })).toBeVisible({

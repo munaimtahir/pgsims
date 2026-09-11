@@ -25,7 +25,7 @@ code and `AGENTS.md`.
 ### Monorepo layout
 
 ```
-backend/          Django REST API (Python 3.11+, Django 4.2)
+backend/          Django REST API (Python 3.11+, Django 5.2 LTS)
   sims/            Active app modules (see below)
   sims/_legacy/    Deleted/deferred modules kept for reference only — NOT in INSTALLED_APPS
   sims_project/    Settings, urls, celery, wsgi/asgi, middleware

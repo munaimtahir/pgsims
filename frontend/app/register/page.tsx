@@ -8,6 +8,8 @@ import authApi from '@/lib/api/auth';
 import { useAuthStore } from '@/store/authStore';
 import { getDashboardPathForRole } from '@/lib/rbac';
 
+const PUBLIC_REGISTRATION_ENABLED = false;
+
 export default function RegisterPage() {
   const router = useRouter();
   const { setAuth } = useAuthStore();
@@ -101,6 +103,18 @@ export default function RegisterPage() {
           <p className="text-sm text-[#7D8A8A]">
             Setting up your portfolio and signing you in.
           </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!PUBLIC_REGISTRATION_ENABLED) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#F2F4F3] px-4">
+        <div className="max-w-md w-full space-y-6 bg-white p-10 rounded-[20px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-[#EAECEA] text-center">
+          <h2 className="text-3xl font-bold tracking-tight text-[#2C3333]">Registration is disabled</h2>
+          <p className="text-sm text-[#7D8A8A]">New accounts are provisioned by administrators only.</p>
+          <Link href="/login" className="font-medium text-[#647C7C] hover:text-[#4A5C5C]">Back to login</Link>
         </div>
       </div>
     );

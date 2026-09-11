@@ -3,8 +3,7 @@
  *
  * Covers:
  * - Login form validation (empty fields, invalid data)
- * - UTRMC hospital form validation (empty required fields)
- * - UTRMC department form validation (empty required fields)
+ * - Retired duplicate administration routes redirect to canonical masters
  * - Direct URL cross-role access blocked
  * - Invalid API payloads rejected
  */
@@ -56,25 +55,11 @@ test.describe('Login form validation', () => {
 // ------------------------------------------------------------------
 
 test.describe('Hospital form validation', () => {
-  test('save without name is blocked or shows error', async ({ page, context }) => {
-    await loginAs(context, page, 'utrmc_admin');
+  test('retired hospital route redirects to canonical masters workspace', async ({ page, context }) => {
+    await loginAs(context, page, 'admin');
     await page.goto('/dashboard/utrmc/hospitals');
-
-    await page.getByRole('button', { name: /add hospital/i }).click();
-    await expect(page.getByRole('heading', { name: /add hospital/i })).toBeVisible();
-
-    // Click Save without filling anything
-    await page.getByRole('button', { name: /^save$/i }).click();
-
-    // Either the modal stays open OR an error is shown
-    const modalOpen = await page.getByRole('heading', { name: /add hospital/i }).isVisible().catch(() => false);
-    const errorShown = await page.getByText(/required|error|failed/i).first().isVisible().catch(() => false);
-
-    expect(modalOpen || errorShown).toBe(true);
-
-    // Clean up
-    const cancelBtn = page.getByRole('button', { name: /cancel/i });
-    if (await cancelBtn.isVisible()) await cancelBtn.click();
+    await expect(page).toHaveURL(/\/masters/);
+    await expect(page.getByRole('heading', { name: 'Bulk Setup & Import\/Export' })).toBeVisible();
   });
 });
 
@@ -83,22 +68,11 @@ test.describe('Hospital form validation', () => {
 // ------------------------------------------------------------------
 
 test.describe('Department form validation', () => {
-  test('save without name is blocked or shows error', async ({ page, context }) => {
-    await loginAs(context, page, 'utrmc_admin');
+  test('retired department route redirects to canonical masters workspace', async ({ page, context }) => {
+    await loginAs(context, page, 'admin');
     await page.goto('/dashboard/utrmc/departments');
-
-    await page.getByRole('button', { name: /add department/i }).click();
-    await expect(page.getByRole('heading', { name: /add department/i })).toBeVisible();
-
-    await page.getByRole('button', { name: /^save$/i }).click();
-
-    const modalOpen = await page.getByRole('heading', { name: /add department/i }).isVisible().catch(() => false);
-    const errorShown = await page.getByText(/required|error|failed/i).first().isVisible().catch(() => false);
-
-    expect(modalOpen || errorShown).toBe(true);
-
-    const cancelBtn = page.getByRole('button', { name: /cancel/i });
-    if (await cancelBtn.isVisible()) await cancelBtn.click();
+    await expect(page).toHaveURL(/\/masters/);
+    await expect(page.getByRole('heading', { name: 'Bulk Setup & Import\/Export' })).toBeVisible();
   });
 });
 
@@ -108,21 +82,10 @@ test.describe('Department form validation', () => {
 
 test.describe('User form validation', () => {
   test('save user without required fields shows error', async ({ page, context }) => {
-    await loginAs(context, page, 'utrmc_admin');
-    await page.goto('/dashboard/utrmc/users');
-
-    await page.getByRole('button', { name: /add user/i }).click();
-    await expect(page.getByRole('heading', { name: /add user/i })).toBeVisible();
-
-    await page.getByRole('button', { name: /^save$/i }).click();
-
-    const modalOpen = await page.getByRole('heading', { name: /add user/i }).isVisible().catch(() => false);
-    const errorShown = await page.getByText(/required|error|failed/i).first().isVisible().catch(() => false);
-
-    expect(modalOpen || errorShown).toBe(true);
-
-    const cancelBtn = page.getByRole('button', { name: /cancel/i });
-    if (await cancelBtn.isVisible()) await cancelBtn.click();
+    await loginAs(context, page, 'admin');
+    await page.goto('/users/new');
+    await expect(page.getByRole('heading', { name: 'New User' })).toBeVisible();
+    await expect(page.getByLabel('Full Name')).toHaveAttribute('required', '');
   });
 });
 

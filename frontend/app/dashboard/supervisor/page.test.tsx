@@ -51,9 +51,11 @@ describe('SupervisorHomePage', () => {
   it('renders the canonical supervisor dashboard summary', async () => {
     render(<SupervisorHomePage />);
 
-    await waitFor(() => expect(screen.getByText('Supervisor Dashboard')).toBeInTheDocument());
-    expect(screen.getByText('My Residents')).toBeInTheDocument();
-    expect(screen.getByText('Academic Review Queue')).toBeInTheDocument();
-    expect(screen.getByText('Dr Resident')).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText('Supervisor Dashboard')).toBeInTheDocument();
+      expect(screen.getByText('My Residents')).toBeInTheDocument();
+      expect(screen.getByText('Academic Review Queue')).toBeInTheDocument();
+      expect(screen.getByText('Dr Resident')).toBeInTheDocument();
+    });
   });
 });

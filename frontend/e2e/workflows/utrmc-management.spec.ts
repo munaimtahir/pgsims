@@ -15,44 +15,20 @@ import { loginAs } from '../helpers/auth';
 // ------------------------------------------------------------------
 
 test.describe('Hospital management', () => {
-  test('add hospital modal opens and closes', async ({ page, context }) => {
+  test('retired hospital route resolves to masters workspace', async ({ page, context }) => {
     await loginAs(context, page, 'admin');
     await page.goto('/dashboard/utrmc/hospitals');
 
-    await page.getByRole('button', { name: /add hospital/i }).click();
-    // Modal should be visible
-    await expect(page.getByRole('heading', { name: /add hospital/i })).toBeVisible();
-    // Cancel closes modal
-    await page.getByRole('button', { name: /cancel/i }).click();
-    await expect(page.getByRole('heading', { name: /add hospital/i })).not.toBeVisible({ timeout: 5000 });
+    await expect(page).toHaveURL(/\/masters/);
+    await expect(page.getByRole('heading', { name: 'Bulk Setup & Import\/Export' })).toBeVisible();
   });
 
-  test('create a new hospital via UI', async ({ page, context }) => {
+  test('hospital setup is available from the canonical masters workspace', async ({ page, context }) => {
     await loginAs(context, page, 'admin');
     await page.goto('/dashboard/utrmc/hospitals');
 
-    const suffix = `WF-${Date.now()}`;
-    const code = `TH${Date.now().toString().slice(-6)}`;
-
-    await page.getByRole('button', { name: /add hospital/i }).click();
-    await expect(page.getByRole('heading', { name: /add hospital/i })).toBeVisible();
-
-    // Fill inputs inside modal (fixed overlay container)
-    const modal = page.locator('.fixed.inset-0').last();
-    const textboxes = await modal.getByRole('textbox').all();
-    await textboxes[0].fill(`Test Hospital ${suffix}`);
-    if (textboxes.length > 1) await textboxes[1].fill(code);
-
-    // Click Save and wait for API response
-    await Promise.all([
-      page.waitForResponse((res) => res.url().includes('/api/hospitals/') && res.request().method() === 'POST', { timeout: 15000 }),
-      modal.getByRole('button', { name: 'Save' }).click(),
-    ]);
-
-    // Modal should close on success (POST succeeded)
-    await expect(page.getByRole('heading', { name: /add hospital/i })).not.toBeVisible({ timeout: 10000 });
-    // Page should still be on hospitals page (not redirected)
-    await expect(page).not.toHaveURL(/\/login/);
+    await expect(page).toHaveURL(/\/masters/);
+    await expect(page.getByRole('heading', { name: 'Hospitals', exact: true })).toBeVisible();
   });
 });
 
@@ -61,40 +37,20 @@ test.describe('Hospital management', () => {
 // ------------------------------------------------------------------
 
 test.describe('Department management', () => {
-  test('add department modal opens and closes', async ({ page, context }) => {
+  test('retired department route resolves to masters workspace', async ({ page, context }) => {
     await loginAs(context, page, 'admin');
     await page.goto('/dashboard/utrmc/departments');
 
-    await page.getByRole('button', { name: /add department/i }).click();
-    await expect(page.getByRole('heading', { name: /add department/i })).toBeVisible();
-    await page.getByRole('button', { name: /cancel/i }).click();
-    await expect(page.getByRole('heading', { name: /add department/i })).not.toBeVisible({ timeout: 5000 });
+    await expect(page).toHaveURL(/\/masters/);
+    await expect(page.getByRole('heading', { name: 'Bulk Setup & Import\/Export' })).toBeVisible();
   });
 
-  test('create a new department via UI', async ({ page, context }) => {
+  test('department setup is available from the canonical masters workspace', async ({ page, context }) => {
     await loginAs(context, page, 'admin');
     await page.goto('/dashboard/utrmc/departments');
 
-    const suffix = `WF-${Date.now()}`;
-    const code = `TD${Date.now().toString().slice(-6)}`;
-
-    await page.getByRole('button', { name: /add department/i }).click();
-    await expect(page.getByRole('heading', { name: /add department/i })).toBeVisible();
-
-    const modal = page.locator('.fixed.inset-0').last();
-    const textboxes = await modal.getByRole('textbox').all();
-    await textboxes[0].fill(`Test Dept ${suffix}`);
-    if (textboxes.length > 1) await textboxes[1].fill(code);
-
-    await Promise.all([
-      page.waitForResponse((res) => res.url().includes('/api/departments/') && res.request().method() === 'POST', { timeout: 15000 }),
-      modal.getByRole('button', { name: 'Save' }).click(),
-    ]);
-
-    // Modal should close on success (POST succeeded)
-    await expect(page.getByRole('heading', { name: /add department/i })).not.toBeVisible({ timeout: 10000 });
-    // Page should still be on departments page (not redirected)
-    await expect(page).not.toHaveURL(/\/login/);
+    await expect(page).toHaveURL(/\/masters/);
+    await expect(page.getByRole('heading', { name: 'Departments', exact: true })).toBeVisible();
   });
 });
 
@@ -112,20 +68,13 @@ test.describe('User management', () => {
     await expect(page.getByText('e2e_supervisor').first()).toBeVisible({ timeout: 10000 });
   });
 
-  test('add user modal opens with all required fields', async ({ page, context }) => {
-    await loginAs(context, page, 'utrmc_admin');
-    await page.goto('/dashboard/utrmc/users');
+  test('universal user creation exposes the four canonical roles', async ({ page, context }) => {
+    await loginAs(context, page, 'admin');
+    await page.goto('/users/new');
 
-    await page.getByRole('button', { name: /add user/i }).click();
-    await expect(page.getByRole('heading', { name: /add user/i })).toBeVisible();
-
-    // Should have username, email, password, role inputs inside the modal
-    const modal = page.locator('.fixed.inset-0').last();
-    // Look for at least 3 textboxes (username, email, password)
-    const inputs = await modal.getByRole('textbox').all();
-    expect(inputs.length).toBeGreaterThanOrEqual(2);
-
-    await page.getByRole('button', { name: /cancel/i }).click();
+    await expect(page.getByRole('heading', { name: 'New User' })).toBeVisible();
+    await expect(page.getByLabel('Full Name')).toBeVisible();
+    await expect(page.getByLabel('Role').locator('option')).toHaveCount(4);
   });
 });
 

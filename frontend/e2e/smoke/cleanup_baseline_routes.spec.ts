@@ -30,7 +30,7 @@ async function loginAsAdmin(context: BrowserContext, page: Page) {
   const response = await fetch('http://127.0.0.1:8014/api/auth/login/', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ username: 'admin', password: 'admin123' }),
+    body: JSON.stringify({ username: 'ADMIN', password: 'admin123' }),
   });
   if (!response.ok) {
     throw new Error(`Admin login failed: ${response.status} ${await response.text()}`);
@@ -69,22 +69,11 @@ test.describe('Cleanup baseline routes', () => {
     await expect(page).not.toHaveURL(/\/login/);
     await expect(page.locator('main').first()).toBeVisible();
 
-    await page.goto('/dashboard/utrmc/hospitals');
-    await expect(page.getByRole('button', { name: /add hospital/i })).toBeVisible({ timeout: 10_000 });
-
-    await page.goto('/dashboard/utrmc/departments');
-    await expect(page.getByRole('button', { name: /add department/i })).toBeVisible({ timeout: 10_000 });
-
-    await page.goto('/dashboard/utrmc/users');
-    await expect(page.getByRole('button', { name: /add user/i })).toBeVisible({ timeout: 10_000 });
-
-    await page.goto('/dashboard/utrmc/matrix');
-    await expect(page.getByRole('heading', { name: /matrix/i })).toBeVisible({ timeout: 10_000 });
-
-    await page.goto('/dashboard/utrmc/programs');
-    await expect(page.getByRole('heading', { name: /programs/i })).toBeVisible({ timeout: 10_000 });
-
-    await page.goto('/dashboard/utrmc/eligibility-monitoring');
-    await expect(page.getByRole('heading', { name: /eligibility monitoring/i })).toBeVisible({ timeout: 10_000 });
+    await page.goto('/masters');
+    await expect(page.getByRole('heading', { name: 'Masters' })).toBeVisible({ timeout: 10_000 });
+    await page.goto('/users');
+    await expect(page.getByRole('link', { name: 'New User' })).toBeVisible({ timeout: 10_000 });
+    await page.goto('/supervision');
+    await expect(page.getByRole('heading').first()).toBeVisible({ timeout: 10_000 });
   });
 });
