@@ -7,7 +7,9 @@ directory remediation and 22 backup tests, frontend Next 16.3.4 / React 19.2.0
 install/lint/typecheck/Jest/build, production dependency audit at zero, and controlled dependency
 remediation.
 
-Conditions: migrate the remaining stale Playwright smoke fixtures/contracts, then execute and record
-workflow-gate, RBAC, cross-supervisor denial, and resulting database-state checks. Local and VPS
-backend/frontend verification is complete. No merge, deployment, production mutation, or external
+Conditions: production write-paths were not exercised because they would mutate real data; the
+disposable canonical stack is the write-path evidence. Android release signing remains NOT
+VERIFIED without owner-controlled signing properties. VPS `check --deploy` reports existing
+schema-generation warnings and `SECURE_SSL_REDIRECT=False`; these require deployment-owner review
+before an unconditional production GO. No merge, deployment, production mutation, or external
 upload is authorized by this report.

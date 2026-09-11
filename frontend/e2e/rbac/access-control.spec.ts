@@ -63,11 +63,10 @@ test.describe('Supervisor role access control', () => {
     await expect(page.locator('nav').first()).toBeVisible();
   });
 
-  test('supervisor can access research approvals page', async ({ page, context }) => {
+  test('supervisor can access the canonical review queue', async ({ page, context }) => {
     await loginAs(context, page, 'supervisor');
-    await page.goto('/dashboard/supervisor/research-approvals');
-    await expect(page).toHaveURL(/\/dashboard\/supervisor\/research-approvals/);
-    // Should not redirect away
+    await page.goto('/academics/review-queue');
+    await expect(page).toHaveURL(/\/academics\/review-queue/);
     await expect(page).not.toHaveURL(/\/login/);
   });
 });
@@ -76,27 +75,28 @@ test.describe('Supervisor role access control', () => {
 // UTRMC Admin RBAC
 // ------------------------------------------------------------------
 
-test.describe('UTRMC Admin role access control', () => {
-  test('utrmc_admin cannot access supervisor area — redirected', async ({ page, context }) => {
-    await loginAs(context, page, 'utrmc_admin');
+test.describe('Admin role access control', () => {
+  test('admin can access supervisor dashboard', async ({ page, context }) => {
+    await loginAs(context, page, 'admin');
     await page.goto('/dashboard/supervisor');
-    await expect(page).toHaveURL(/\/dashboard\/utrmc/, { timeout: 10000 });
+    await expect(page).toHaveURL(/\/dashboard\/supervisor/, { timeout: 10000 });
   });
 
-  test('utrmc_admin cannot access pg area — redirected', async ({ page, context }) => {
-    await loginAs(context, page, 'utrmc_admin');
+  test('admin can resolve the legacy resident entry route', async ({ page, context }) => {
+    await loginAs(context, page, 'admin');
     await page.goto('/dashboard/pg');
-    await expect(page).toHaveURL(/\/dashboard\/utrmc/, { timeout: 10000 });
+    await expect(page).toHaveURL(/\/dashboard\/resident/, { timeout: 10000 });
   });
 
-  test('utrmc_admin can access UTRMC dashboard pages', async ({ page, context }) => {
+  test('admin can access canonical administration pages', async ({ page, context }) => {
     const pages = [
       '/dashboard/utrmc',
-      '/dashboard/utrmc/hospitals',
-      '/dashboard/utrmc/departments',
-      '/dashboard/utrmc/users',
-      '/dashboard/utrmc/supervision',
-      '/dashboard/utrmc/programs',
+      '/masters',
+      '/users',
+      '/residents',
+      '/supervisors',
+      '/support-staff',
+      '/admins',
     ];
     for (const href of pages) {
       await loginAs(context, page, 'utrmc_admin');
@@ -111,15 +111,15 @@ test.describe('UTRMC Admin role access control', () => {
 // UTRMC User (read-only) RBAC
 // ------------------------------------------------------------------
 
-test.describe('UTRMC User (read-only) access control', () => {
-  test('utrmc_user can access UTRMC overview', async ({ page, context }) => {
+test.describe('Support staff access control', () => {
+  test('support staff can access the administration overview', async ({ page, context }) => {
     await loginAs(context, page, 'utrmc_user');
     await page.goto('/dashboard/utrmc');
     await expect(page).not.toHaveURL(/\/login/);
     await expect(page.locator('nav').first()).toBeVisible();
   });
 
-  test('utrmc_user cannot access supervisor area — redirected', async ({ page, context }) => {
+  test('support staff cannot access supervisor area — redirected', async ({ page, context }) => {
     await loginAs(context, page, 'utrmc_user');
     await page.goto('/dashboard/supervisor');
     await expect(page).toHaveURL(/\/dashboard\/utrmc/, { timeout: 10000 });

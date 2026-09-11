@@ -21,15 +21,16 @@ package. Backend/frontend verification is to be repeated in the VPS checkout at
 - Pushed through commit `9aa9df1`; PR #16 remains open against `main` and unmerged.
 - Disposable canonical stack smoke gate passed 25/25; stack and project-scoped volumes were removed.
 - Canonical workflow gate passed 4/4; VPS production was checked read-only (healthz, frontend HTTP 200, migrations applied) with no mutation or restart.
+- RBAC/negative passed 31/31; broader workflows passed 23 with 1 explicit conditional skip; Android `:app-companion` unit tests, lint, and debug assembly passed.
 
 ## Pending work
 
-1. Migrate the 7 stale RBAC/negative tests from retired UTRMC/HOD role and duplicate add-form contracts to canonical Update 0 routes, then rerun them.
-2. Run the remaining database-state/cross-supervisor E2E suites against the isolated canonical stack and update certification.
+1. Obtain deployment-owner decision on VPS `check --deploy` warnings, especially `SECURE_SSL_REDIRECT=False`, before changing CONDITIONAL GO to unconditional GO.
+2. Verify Android release signing only when owner-controlled signing properties are provided; otherwise retain `Release signing: NOT VERIFIED`.
 
 ## Known conditions
 
 - Ruff reports 2,663 existing findings; broad legacy cleanup is deferred and documented.
 - VPS host Node is 18.19.1; Next 16 verification used disposable Node 20.20.2 tooling, matching the frontend image requirement.
-- Playwright smoke executed 25 tests: 25 passed; workflow-gate executed 4 tests: 4 passed; RBAC/negative executed 31 tests: 24 passed and 7 stale-contract failures.
+- Playwright smoke executed 25 tests: 25 passed; workflow-gate 4/4 passed; RBAC/negative 31/31 passed; broader workflows 23 passed with 1 explicit conditional skip.
 - Final certification is CONDITIONAL GO until canonical E2E gates are complete.

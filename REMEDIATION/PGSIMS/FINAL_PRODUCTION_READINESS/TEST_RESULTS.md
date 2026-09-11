@@ -16,7 +16,10 @@ Recorded results for this pass:
 - Ruff: informational failure (2,663 existing findings); see `06_P3_DEBT_DISPOSITION.md`.
 - Synthetic PostgreSQL duplicate-assignment and duplicate-primary scenarios: PASS; cleanup complete.
 - Playwright isolated canonical stack: smoke PASS (25/25); workflow-gate PASS (4/4).
-- Playwright RBAC/negative: 24/31 passed; 7 stale-contract failures remain in retired UTRMC/HOD
-  route/role assumptions. No unresolved canonical authorization bypass was observed.
+- Playwright RBAC/negative: PASS (31/31).
+- Playwright broader workflows: PASS (23 passed, 1 explicit conditional skip); resident training,
+  supervisor review, Masters, universal user creation, and supervision surfaces passed.
+- Android `:app-companion`: PASS for `testDebugUnitTest`, `lintDebug`, and `assembleDebug`; release
+  signing NOT VERIFIED because no owner-controlled signing properties were supplied.
 - VPS read-only production verification: backend healthz PASS (DB/cache/Celery), frontend HTTP 200,
   migrations applied; no production mutation or restart performed.

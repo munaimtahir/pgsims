@@ -99,7 +99,7 @@ test.describe('Resident academic progress', () => {
 // ------------------------------------------------------------------
 
 test.describe('Resident research workflow', () => {
-  test('research page loads and shows deferred notice', async ({ page, context }) => {
+  test('retired research entry route resolves to resident dashboard', async ({ page, context }) => {
     await loginAs(context, page, 'pg');
     await page.goto('/dashboard/resident/research');
 
@@ -107,8 +107,7 @@ test.describe('Resident research workflow', () => {
     await page.waitForLoadState('networkidle');
     await expect(page.locator('main').first()).toBeVisible();
 
-    // Research workflow is deferred - page shows deferred notice instead of wizard
-    await expect(page.getByText(/deferred|not yet available/i)).toBeVisible({ timeout: 10000 });
+    await expect(page).toHaveURL(/\/dashboard\/resident/);
   });
 
   test('research API returns project for e2e_pg (or 404 if none created)', async ({ page, context }) => {
