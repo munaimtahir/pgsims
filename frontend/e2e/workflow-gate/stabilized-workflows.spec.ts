@@ -13,7 +13,7 @@ test.describe('Workflow gate — stabilized contract-critical flows', () => {
     });
   });
 
-  test('resident leave draft can be submitted and approved from supervisor dashboard', async ({
+  test('resident leave draft can be submitted and approved from canonical leave workflow', async ({
     context,
     page,
   }) => {
@@ -21,35 +21,35 @@ test.describe('Workflow gate — stabilized contract-critical flows', () => {
     const leaveReason = `Workflow leave ${Date.now()}`;
 
     await loginAs(context, page, 'pg');
-    await page.goto('/dashboard/resident/schedule');
+    await page.goto('/academics/leave-requests/new');
 
-    await expect(page.getByRole('heading', { name: 'My Schedule' })).toBeVisible({ timeout: 15_000 });
-    await page.getByLabel('Leave Type').selectOption('study');
-    await page.getByLabel('Start Date').fill('2026-04-10');
-    await page.getByLabel('End Date').fill('2026-04-12');
-    await page.getByLabel('Reason').fill(leaveReason);
-    await page.getByRole('button', { name: 'Save Draft' }).click();
+    await expect(page.getByRole('heading', { name: 'New Leave Request' })).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByText('Training Record', { exact: true })).toBeVisible({ timeout: 15_000 });
+    await page.locator('select').nth(0).selectOption({ index: 1 });
+    await page.locator('select').nth(1).selectOption('study');
+    await page.locator('input[type="date"]').nth(0).fill('2026-04-10');
+    await page.locator('input[type="date"]').nth(1).fill('2026-04-12');
+    await page.locator('textarea').fill(leaveReason);
+    await page.getByRole('button', { name: /Create Leave Request \(DRAFT\)/i }).click();
 
-    await expect(page.getByText(/Leave request saved as draft\./i)).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByRole('heading', { name: /Leave Request #/ })).toBeVisible({ timeout: 15_000 });
+    const leaveUrl = page.url();
+    const leaveId = leaveUrl.split('/').pop();
+    expect(leaveId).toMatch(/^\d+$/);
 
-    const residentLeaveCard = page.locator('.pg-card-muted').filter({ hasText: leaveReason }).first();
-    await expect(residentLeaveCard).toBeVisible({ timeout: 15_000 });
-    await residentLeaveCard.getByRole('button', { name: /submit for review/i }).click();
-    await expect(page.getByText(/Leave request submitted for review\./i)).toBeVisible({ timeout: 15_000 });
+    await page.getByRole('button', { name: 'Submit for Approval' }).click();
+    await expect(page.getByText('SUBMITTED')).toBeVisible({ timeout: 15_000 });
 
     await loginAs(context, page, 'supervisor');
-    await page.goto('/dashboard/supervisor');
+    await page.goto(`/academics/leave-requests/${leaveId}`);
 
-    const supervisorLeaveCard = page.locator('.pg-card').filter({ hasText: leaveReason }).first();
-    await expect(supervisorLeaveCard).toBeVisible({ timeout: 15_000 });
-    await supervisorLeaveCard.getByRole('button', { name: 'Approve' }).click();
-    await expect(page.getByText(/Leave request approved\./i)).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByRole('heading', { name: /Leave Request #/ })).toBeVisible({ timeout: 15_000 });
+    await page.getByRole('button', { name: 'Approve' }).click();
+    await expect(page.getByText('APPROVED')).toBeVisible({ timeout: 15_000 });
 
     await loginAs(context, page, 'pg');
-    await page.goto('/dashboard/resident/schedule');
+    await page.goto(`/academics/leave-requests/${leaveId}`);
 
-    const approvedLeaveCard = page.locator('.pg-card-muted').filter({ hasText: leaveReason }).first();
-    await expect(approvedLeaveCard).toBeVisible({ timeout: 15_000 });
-    await expect(approvedLeaveCard.getByText('APPROVED')).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByText('APPROVED')).toBeVisible({ timeout: 15_000 });
   });
 });

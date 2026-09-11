@@ -13,22 +13,23 @@ package. Backend/frontend verification is to be repeated in the VPS checkout at
 - Updated Django constraint to `>=5.2,<5.3`; Django 5.2.17 full suite passed (921 tests), checks and migration drift passed.
 - Fixed disaster archive destination creation; backup orchestration passed (22 tests), including missing nested path coverage.
 - Ran `repair_identity_profiles`: 37 scanned, 0 invalid users, 0 duplicate profiles; Update 0 gate passed.
-- Frontend `npm ci`, lint, typecheck, Jest (39 suites / 243 tests), and Next 16.3.4 / React 19.2.0 production build passed locally and on VPS Node 20.20.2.
+- Frontend `npm ci`, lint, typecheck, Jest (39 suites / 240 tests), and Next 16.3.4 / React 19.2.0 production build passed locally and on VPS Node 20.20.2.
 - Applied non-forced frontend dependency remediation; production audit is zero, with one indirect dev/build-only `glob` advisory documented.
 - Updated React 19 tests, Next 16 async route params, ESLint 9 flat config, and generated-report ignores.
 - Disposable PostgreSQL 15 tmpfs container migrated from zero and was removed; compose config parsed with unset-secret warnings.
 - Preserved `AUDIT/PGSIMS/FINAL/` unchanged and created the remediation evidence package.
 - Pushed through commit `9aa9df1`; PR #16 remains open against `main` and unmerged.
 - Disposable canonical stack smoke gate passed 25/25; stack and project-scoped volumes were removed.
+- Canonical workflow gate passed 4/4; VPS production was checked read-only (healthz, frontend HTTP 200, migrations applied) with no mutation or restart.
 
 ## Pending work
 
-1. Migrate workflow-gate tests from retired UTRMC onboarding/schedule routes to canonical routes and rerun the 4-test workflow gate.
-2. Run RBAC, negative, and database-state E2E suites against the isolated canonical stack.
+1. Migrate the 7 stale RBAC/negative tests from retired UTRMC/HOD role and duplicate add-form contracts to canonical Update 0 routes, then rerun them.
+2. Run the remaining database-state/cross-supervisor E2E suites against the isolated canonical stack and update certification.
 
 ## Known conditions
 
 - Ruff reports 2,663 existing findings; broad legacy cleanup is deferred and documented.
 - VPS host Node is 18.19.1; Next 16 verification used disposable Node 20.20.2 tooling, matching the frontend image requirement.
-- Playwright smoke executed 25 tests: 25 passed; workflow-gate executed 4 tests: 1 passed, 3 stale-contract failures; E2E certification remains conditional.
+- Playwright smoke executed 25 tests: 25 passed; workflow-gate executed 4 tests: 4 passed; RBAC/negative executed 31 tests: 24 passed and 7 stale-contract failures.
 - Final certification is CONDITIONAL GO until canonical E2E gates are complete.
