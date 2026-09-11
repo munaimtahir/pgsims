@@ -19,5 +19,7 @@ unauthenticated redirects, API denial, and validation checks passed. The broader
 passed 23 tests with 1 explicit skip for a conditional research-approval creation path.
 
 The VPS production checkout was verified read-only over `ssh test`: backend `/healthz/` reported
-database/cache/Celery healthy, frontend root returned HTTP 200, and no production service or
-database mutation was performed.
+database/cache/Celery healthy, frontend root returned HTTP 200, Django reported `DEBUG=False`,
+secure session/CSRF cookies, and the configured forwarded-HTTPS header. Caddy and the actual
+compose configuration both validated successfully. No production service restart, write-path
+execution, or database mutation was performed.
