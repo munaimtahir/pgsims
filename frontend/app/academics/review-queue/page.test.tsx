@@ -55,8 +55,10 @@ describe('ReviewQueuePage', () => {
 
   it('renders the academic review queue route', async () => {
     render(<ReviewQueuePage />);
-    await waitFor(() => expect(screen.getByText('Academic Review Queue')).toBeInTheDocument());
-    expect(screen.getByText('Dr Resident')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'View Resident' })).toHaveAttribute('href', '/residents/1');
+    await waitFor(() => {
+      expect(screen.getByText('Academic Review Queue')).toBeInTheDocument();
+      expect(screen.getByText('Dr Resident')).toBeInTheDocument();
+      expect(screen.getByRole('link', { name: 'View Resident' })).toHaveAttribute('href', '/residents/1');
+    });
   });
 });

@@ -37,7 +37,7 @@ async function loginAsAdminWithSpoofedRole(
   const response = await fetch(`${API_BASE_URL}/api/auth/login/`, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ username: 'admin', password: 'admin123' }),
+    body: JSON.stringify({ username: 'ADMIN', password: 'admin123' }),
   });
   if (!response.ok) {
     throw new Error(`Admin login failed: ${response.status} ${await response.text()}`);

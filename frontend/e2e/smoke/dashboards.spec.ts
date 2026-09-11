@@ -18,7 +18,7 @@ test.describe('UTRMC Admin dashboards', () => {
 
   test('UTRMC overview loads with stat cards', async ({ page }) => {
     await page.goto('/dashboard/utrmc');
-    await expect(page.getByRole('heading', { name: /UTRMC (Dashboard|Overview)/ })).toBeVisible({
+      await expect(page.getByRole('heading', { name: 'Admin Dashboard' })).toBeVisible({
       timeout: 15_000,
     });
     // Stat card labels live inside <main> — scope avoids matching sidebar nav links
@@ -85,7 +85,7 @@ test.describe('Resident (PG) dashboard', () => {
     // Verify URL — middleware allows pg/resident role on this path
     await expect(page).toHaveURL(/\/dashboard\/resident/);
     // Not redirected back to login — auth cookie is valid
-    await expect(page.getByRole('heading', { name: /sign in to sims/i })).not.toBeVisible({
+    await expect(page.getByRole('heading', { name: /sign in to fmu-utrmc pgsims/i })).not.toBeVisible({
       timeout: 5_000,
     });
     // The page should render the training dashboard as the user has a seeded record.

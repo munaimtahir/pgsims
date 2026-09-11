@@ -30,7 +30,7 @@ async function loginAsAdmin(context: BrowserContext, page: Page) {
   const response = await fetch('http://127.0.0.1:8014/api/auth/login/', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ username: 'admin', password: 'admin123' }),
+    body: JSON.stringify({ username: 'ADMIN', password: 'admin123' }),
   });
   if (!response.ok) {
     throw new Error(`Admin login failed: ${response.status} ${await response.text()}`);
