@@ -1,10 +1,11 @@
-# SPRINT_STATE.md — Next sprint scope
+# SPRINT_STATE.md — Android Sprint 1 follow-up
 
 ## Scope
 
-Post-remediation follow-up. The final production-readiness remediation is closed as GO for its
-defined scope on branch `remediation/pgsims-final-production-readiness`; PR #16 remains open and
-unmerged. Do not mutate production data or deployment state.
+The Android Sprint 1 implementation is recorded in `pendingwork.md` and is CONDITIONAL GO pending
+the two gates below. The final production-readiness remediation remains closed as GO for its defined
+scope on branch `remediation/pgsims-final-production-readiness`; PR #16 remains open and unmerged.
+Do not mutate production data or deployment state beyond the explicitly labelled Sprint 1 evidence.
 
 ## Completed baseline
 
@@ -24,10 +25,12 @@ unmerged. Do not mutate production data or deployment state.
 
 ## Pending work
 
-1. When deployment ownership provides secure Android signing properties, run the documented
+1. Run an authenticated resident and supervisor walkthrough through the installed Android build on
+   emulator `pgsims`; record evidence in the Sprint 1 report.
+2. When deployment ownership provides secure Android signing properties, run the documented
    `:app-companion:assembleRelease`/`:app-companion:bundleRelease` verification without creating or
    exposing signing material.
-2. Review the existing Ruff backlog and Django schema-generation warnings as a separately scoped
+3. Review the existing Ruff backlog and Django schema-generation warnings as a separately scoped
    maintenance sprint.
 
 ## Known conditions
@@ -35,4 +38,4 @@ unmerged. Do not mutate production data or deployment state.
 - Ruff reports 2,663 existing findings; broad legacy cleanup is deferred and documented.
 - VPS host Node is 18.19.1; Next 16 verification used disposable Node 20.20.2 tooling, matching the frontend image requirement.
 - Playwright smoke executed 25 tests: 25 passed; workflow-gate 4/4 passed; RBAC/negative 31/31 passed; broader workflows 23 passed with 1 explicit conditional skip.
-- Final certification: GO for the remediation scope; Android release signing remains NOT VERIFIED.
+- Final certification: CONDITIONAL GO for Android Sprint 1; release signing and authenticated emulator walkthrough remain NOT VERIFIED.
