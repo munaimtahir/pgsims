@@ -1,7 +1,7 @@
 # PGSIMS Android — Pending Work & Sprint Roadmap
 
 Last updated: 2026-09-12 (Asia/Karachi) — implementation and verification pass
-Repository HEAD: 67e604087715251559de4abf170a705241ef0681
+Repository HEAD: 500f95ef6a4d07170d9dafca7923fa909950d43b
 Branch: remediation/pgsims-final-production-readiness
 
 ## Purpose

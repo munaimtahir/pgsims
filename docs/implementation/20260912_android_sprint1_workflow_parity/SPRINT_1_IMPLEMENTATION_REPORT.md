@@ -7,7 +7,7 @@ Verdict: CONDITIONAL GO
 
 - Starting branch: `remediation/pgsims-final-production-readiness`
 - Starting SHA: `67e604087715251559de4abf170a705241ef0681`
-- Final implementation SHA: recorded after final documentation commit
+- Final implementation SHA: `500f95ef6a4d07170d9dafca7923fa909950d43b`
 - Android package: `pk.vexel.pgrcompanion`
 - Android version: `1.1.7` / code `7`
 - Backend: Django 5.2 / DRF; laptop and VPS were synchronized before work.
