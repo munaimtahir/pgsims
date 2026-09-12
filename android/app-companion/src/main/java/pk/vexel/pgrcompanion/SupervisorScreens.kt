@@ -23,10 +23,8 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 
 /**
- * Supervisor — LIMITED MVP (read-only): own info, assigned residents, per-workflow pending counts,
- * and a resident progress view. No approve/reject/revision actions here — see
- * docs/ANDROID_MOBILE_PRODUCT_POLICY_AND_PRODUCTION_PLAN.md "Supervisor — LIMITED MVP" and
- * android/docs/SUPERVISOR_API_CAPABILITY_MATRIX.md for what is deferred and why.
+ * Supervisor workspace: assigned residents, progress, pending workflow queues and supported
+ * approval actions. The backend remains authoritative for permissions and transitions.
  */
 
 private fun JsonObject.text(key: String): String = string(key).orEmpty()
@@ -141,7 +139,7 @@ private fun SupervisorHomeContent(data: InstitutionalSnapshot, onOpenWorkflow: (
         WorkflowPending("Research / Synopsis", pending?.number("research_approvals"), SupervisorWorkflow.RESEARCH),
         WorkflowPending("Leave Requests", pending?.number("leave_approvals"), SupervisorWorkflow.LEAVE),
         WorkflowPending("Rotations", pending?.number("rotation_approvals"), SupervisorWorkflow.ROTATION),
-        WorkflowPending("Evaluations", dashboard?.number("pending_evaluation_reviews_count"), null),
+        WorkflowPending("Evaluations", dashboard?.number("pending_evaluation_reviews_count"), SupervisorWorkflow.EVALUATION),
     )
     val totalPending = workflows.mapNotNull { it.count }.sum()
 

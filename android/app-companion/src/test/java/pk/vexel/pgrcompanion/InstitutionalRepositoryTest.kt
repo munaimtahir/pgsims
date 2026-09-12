@@ -55,13 +55,16 @@ private const val ASSIGNMENTS_BODY = """
   "supervisor":{"id":2,"name":"Ayesha Malik","department":"Medicine","training_site":"Allied","designation":"HOD"}}]}
 """
 private const val ROTATIONS_BODY = """{"count":1,"results":[{"id":8,"department":"Medicine","hospital":"Allied","start_date":"2026-01-01","end_date":"2026-03-31","status":"ACTIVE"}]}"""
+private const val LEAVES_BODY = """{"count":0,"results":[]}"""
 private const val LOGBOOK_BODY = """{"count":1,"results":[{"id":4,"title":"Synthetic activity","entry_date":"2026-09-01","status":"DRAFT"}]}"""
 private const val CATEGORIES_BODY = """{"count":1,"results":[{"id":2,"name":"Clinical activity"}]}"""
 private const val ASSESSMENTS_BODY = """{"count":0,"results":[]}"""
+private const val EVALUATION_TEMPLATES_BODY = """{"count":1,"results":[{"id":5,"name":"Mini-CEX","form_type":"MINI_CEX","schema":{}}]}"""
 private const val RESEARCH_BODY = """{"status":"DRAFT"}"""
 private const val WORKSHOPS_BODY = """{"count":0,"results":[]}"""
 private const val RESIDENT_SUMMARY_BODY = """{"rotation":{"current":{"id":8,"department":"Medicine","status":"ACTIVE"}}}"""
 private const val SUPERVISOR_ME_BODY = """{"id":2,"username":"demo.supervisor","role":"SUPERVISOR"}"""
+private const val ADMIN_ME_BODY = """{"id":1,"username":"demo.admin","role":"ADMIN"}"""
 private const val SUPERVISOR_SUMMARY_BODY = """
 {"pending":{"rotation_approvals":1,"leave_approvals":0,"research_approvals":2},
  "residents":[{"id":9,"rtr_id":3,"name":"Demo Resident","program":"MS Urology",
@@ -204,6 +207,17 @@ class InstitutionalRepositoryTest {
         assertTrue(snapshot.unavailable.isEmpty())
     }
 
+    @Test fun `snapshot for ADMIN never falls through to resident workspace calls`() = runBlocking {
+        tokens.save("access-1", "refresh-1")
+        server.enqueue(json(ADMIN_ME_BODY))
+
+        val snapshot = repository.snapshot().getOrThrow()
+
+        assertEquals("ADMIN", snapshot.me.string("role"))
+        assertEquals(listOf("Mobile workspace"), snapshot.unavailable)
+        assertEquals(1, server.requestCount)
+    }
+
     @Test fun `snapshot for a SUPERVISOR tolerates the dashboard section being unavailable`() = runBlocking {
         tokens.save("access-1", "refresh-1")
         server.enqueue(json(SUPERVISOR_ME_BODY))
@@ -328,11 +342,41 @@ class InstitutionalRepositoryTest {
         Unit
     }
 
+    @Test fun `resident leave create and submit use canonical actions`() = runBlocking {
+        tokens.save("access-1", "refresh-1")
+        server.enqueue(json("""{"id":12,"status":"DRAFT"}""", 201))
+        server.enqueue(json("""{"id":12,"status":"SUBMITTED"}"""))
+
+        val created = repository.createLeave(LeaveRequestPayload(3, "annual", "2026-09-20", "2026-09-22", "Conference" )).getOrThrow()
+        assertEquals(12, created["id"]?.jsonPrimitive?.intOrNull)
+        repository.submitLeave(12).getOrThrow()
+
+        val create = server.takeRequest()
+        assertEquals("POST", create.method)
+        assertEquals("/api/leaves/", create.path)
+        assertTrue(create.body.readUtf8().contains("resident_training"))
+        assertEquals("/api/leaves/12/submit/", server.takeRequest().path)
+    }
+
+    @Test fun `evaluation review actions use supervisor comment payload`() = runBlocking {
+        tokens.save("access-1", "refresh-1")
+        server.enqueue(json("""{"id":21,"status":"APPROVED"}"""))
+
+        repository.approveEvaluation(21, "Good progress.").getOrThrow()
+
+        val request = server.takeRequest()
+        assertEquals("POST", request.method)
+        assertEquals("/api/academics/evaluation-submissions/21/approve/", request.path)
+        assertTrue(request.body.readUtf8().contains("supervisor_comments"))
+    }
+
     private fun enqueueResidentWorkflowBodies() {
         server.enqueue(json(ROTATIONS_BODY))
+        server.enqueue(json(LEAVES_BODY))
         server.enqueue(json(LOGBOOK_BODY))
         server.enqueue(json(CATEGORIES_BODY))
         server.enqueue(json(ASSESSMENTS_BODY))
+        server.enqueue(json(EVALUATION_TEMPLATES_BODY))
         server.enqueue(json(RESEARCH_BODY))
         server.enqueue(json(WORKSHOPS_BODY))
         server.enqueue(json(RESIDENT_SUMMARY_BODY))

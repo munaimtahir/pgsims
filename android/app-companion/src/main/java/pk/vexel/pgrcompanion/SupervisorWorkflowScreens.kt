@@ -39,6 +39,7 @@ internal enum class SupervisorWorkflow(val title: String, val supportsReject: Bo
     LEAVE("Leave Requests", supportsReject = true, supportsReturn = false),
     ROTATION("Rotations", supportsReject = true, supportsReturn = true),
     RESEARCH("Research / Synopsis", supportsReject = false, supportsReturn = true),
+    EVALUATION("Evaluations", supportsReject = true, supportsReturn = true),
 }
 
 private fun JsonObject.value(key: String): String = string(key).orEmpty()
@@ -50,11 +51,12 @@ private fun itemTitle(item: JsonObject, workflow: SupervisorWorkflow): String = 
     SupervisorWorkflow.LEAVE -> InstitutionalLabels.humanize(item.value("leave_type")).ifBlank { "Leave request" }
     SupervisorWorkflow.ROTATION -> item.value("department_name").ifBlank { item.value("template_name") }.ifBlank { "Rotation" }
     SupervisorWorkflow.RESEARCH -> item.value("title").ifBlank { "Research submission" }
+    SupervisorWorkflow.EVALUATION -> item.value("template_name").ifBlank { "Evaluation" }
 }.ifBlank { "Item #${item.idValue() ?: ""}" }
 
 private fun itemDetailLines(item: JsonObject, workflow: SupervisorWorkflow): List<Pair<String, String>> = when (workflow) {
     SupervisorWorkflow.LOGBOOK -> listOf(
-        "Status" to InstitutionalLabels.humanize(item.value("status")),
+        "Status" to InstitutionalLabels.workflowStatus(item.value("status")),
         "Description" to item.value("description"),
     )
     SupervisorWorkflow.LEAVE -> listOf(
@@ -70,7 +72,14 @@ private fun itemDetailLines(item: JsonObject, workflow: SupervisorWorkflow): Lis
     )
     SupervisorWorkflow.RESEARCH -> listOf(
         "Topic area" to item.value("topic_area"),
-        "Status" to InstitutionalLabels.humanize(item.value("status_display").ifBlank { item.value("status") }),
+        "Status" to InstitutionalLabels.workflowStatus(item.value("status_display").ifBlank { item.value("status") }),
+    )
+    SupervisorWorkflow.EVALUATION -> listOf(
+        "Supervisor" to item.value("supervisor_name"),
+        "Status" to InstitutionalLabels.workflowStatus(item.value("status")),
+        "Resident comments" to item.value("resident_comments"),
+        "Feedback" to item.value("supervisor_comments"),
+        "Score" to listOf(item.value("score"), item.value("max_score")).filter { it.isNotBlank() }.joinToString(" / "),
     )
 }.filter { it.second.isNotBlank() }
 
@@ -99,6 +108,7 @@ internal fun SupervisorWorkflowQueueScreen(
                 SupervisorWorkflow.LEAVE -> repository.supervisorLeaveQueue()
                 SupervisorWorkflow.ROTATION -> repository.supervisorRotationQueue()
                 SupervisorWorkflow.RESEARCH -> repository.supervisorResearchQueue()
+                SupervisorWorkflow.EVALUATION -> repository.supervisorEvaluationQueue()
             }
             result.fold({ items = it }, { loadError = it.message ?: "Could not load this queue." })
             loading = false
@@ -168,6 +178,7 @@ internal fun SupervisorWorkflowQueueScreen(
                         SupervisorWorkflow.LEAVE -> repository.approveLeave(current.idValue()!!)
                         SupervisorWorkflow.ROTATION -> repository.approveRotation(current.idValue()!!)
                         SupervisorWorkflow.RESEARCH -> repository.approveResearch(current.idValue()!!, "")
+                        SupervisorWorkflow.EVALUATION -> repository.approveEvaluation(current.idValue()!!, "")
                     }
                 }
             },
@@ -193,6 +204,8 @@ internal fun SupervisorWorkflowQueueScreen(
                         SupervisorWorkflow.ROTATION to "reject" -> repository.rejectRotation(current.idValue()!!, reason)
                         SupervisorWorkflow.ROTATION to "return" -> repository.returnRotation(current.idValue()!!, reason)
                         SupervisorWorkflow.RESEARCH to "return" -> repository.returnResearch(current.idValue()!!, reason)
+                        SupervisorWorkflow.EVALUATION to "reject" -> repository.rejectEvaluation(current.idValue()!!, reason)
+                        SupervisorWorkflow.EVALUATION to "return" -> repository.returnEvaluation(current.idValue()!!, reason)
                         else -> error("Unsupported action")
                     }
                 }

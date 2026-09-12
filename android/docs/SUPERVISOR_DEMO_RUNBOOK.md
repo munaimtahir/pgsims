@@ -1,7 +1,7 @@
 # Supervisor Android — Demo Runbook (Read-only MVP)
 
-Scope: login → role routing → dashboard → residents → resident detail. No approve/reject actions —
-see `SUPERVISOR_API_CAPABILITY_MATRIX.md` for what's deferred and why.
+Scope: login → role routing → dashboard → residents → resident detail → workflow queues and
+supported approval actions. See `SUPERVISOR_API_CAPABILITY_MATRIX.md` for endpoint details.
 
 ## Demo supervisor
 
@@ -80,7 +80,7 @@ Android instrumentation:         Not run (JVM unit tests + manual emulator walkt
 
 ## Known gaps (by design, this pass)
 
-- No approve/reject/revision anywhere in Android yet — see capability matrix.
+- Evaluation review uses the existing action-capable queue pattern and is covered by the capability matrix.
 - Supervisor's own department/hospital name isn't shown on the header: `SupervisorProfileSerializer`
   returns `hospital`/`department_ref` as raw FK ids, not nested names, and no endpoint already
   fetched by this MVP resolves them to text. Resolving them would need an extra lookup call; skipped

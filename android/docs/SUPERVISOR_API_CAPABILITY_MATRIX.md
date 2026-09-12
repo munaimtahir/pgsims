@@ -27,6 +27,8 @@ were wired; re-verify against a seeded staging account before shipping.
 | Rotation pending queue | Yes | GET | `/api/supervisor/rotations/pending/` | `SupervisorWorkflowQueueScreen(ROTATION)` |
 | Approve/reject/return rotation | Yes | POST | `/api/rotations/{id}/hod-approve/`, `.../reject/`, `.../returned/` (payload: `reason`) | **Wired.** → Approve / Reject / Return for revision. Correcting a prior note in this doc: rotation reject and return DO exist (`docs/contracts/API_CONTRACT.md`), it was not approve-only. |
 | Research pending queue | Yes | GET | `/api/supervisor/research-approvals/` | `SupervisorWorkflowQueueScreen(RESEARCH)` |
+| Evaluation review queue | Yes | GET | `/api/academics/evaluation-submissions/` (supervisor-scoped) | `SupervisorWorkflowQueueScreen(EVALUATION)`; filters `SUBMITTED`/`UNDER_REVIEW` |
+| Approve/return/reject evaluation | Yes | POST | `/api/academics/evaluation-submissions/{id}/approve/`, `.../return_revision/`, `.../reject/` | Wired with backend-supported comment actions |
 | Approve/return research submission | Yes | POST | `/api/my/research/action/supervisor-approve/`, `.../supervisor-return/` (payload: `project_id`, `feedback`) | **Wired.** → Approve / Return for revision |
 | Document review (approve/reject) | **No** — `ResidentDocument.review()` is hard-coded admin-only today | — | `/api/resident-documents/{id}/review/` | **Not available to supervisors at all**, on web or Android. Out of scope until the backend adds a supervisor path. |
 | WBA / competency / portfolio assessment | **Not implemented anywhere in the backend** | — | — | Not built — there is nothing to surface |

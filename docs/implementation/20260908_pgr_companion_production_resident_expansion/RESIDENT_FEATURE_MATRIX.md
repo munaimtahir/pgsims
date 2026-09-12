@@ -11,6 +11,8 @@
 | Research | Deferred web route | `/api/my/research/` | Missing | Read-only status summary. |
 | Workshops | Deferred web route | `/api/my/workshops/` | Missing | Read-only completion summary. |
 | Documents | Yes | `/api/resident-documents/` | Implemented | Moved under Requirements, preserved. |
+| Leave requests | Yes | `/api/my/leaves/`, `/api/leaves/` | Missing | Sprint 1 adds list/detail/create/draft/submit. |
+| Evaluations/WBA | Yes | `/api/academics/evaluation-submissions/`, `/api/academics/evaluation-templates/` | Read-only | Sprint 1 adds list/detail and backend-supported draft/submit actions. |
 
 Resident writes are limited to server-supported onboarding/document and academic-logbook actions.
 Rotation assignment, assessment review, research approval, and workshop administration remain

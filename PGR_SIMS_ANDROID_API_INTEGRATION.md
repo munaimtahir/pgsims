@@ -22,6 +22,14 @@ server with a seeded demo resident account. Nothing here is inferred.
 | POST | `/api/resident-documents/{id}/upload/` | multipart, part name `file` | the updated document |
 | GET | `/api/resident-training/` | — | DRF page `{count, next, previous, results}` |
 | GET | `/api/supervision/assignments/` | — | DRF page `{count, next, previous, results}` |
+| GET | `/api/my/leaves/` | — | DRF page of resident-owned leave requests |
+| POST/PATCH | `/api/leaves/`, `/api/leaves/{id}/` | `resident_training`, `leave_type`, `start_date`, `end_date`, `reason` | Leave draft/updated record |
+| POST | `/api/leaves/{id}/submit/` | — | Submitted leave record |
+| GET | `/api/academics/evaluation-submissions/` | — | Supervisor-scoped or resident-scoped DRF page |
+| GET | `/api/academics/evaluation-templates/` | — | Active evaluation templates |
+| POST/PATCH | `/api/academics/evaluation-submissions/`, `/{id}/` | `template`, optional period/supervisor/comments/responses | Evaluation draft |
+| POST | `/api/academics/evaluation-submissions/{id}/submit/` | — | Submitted evaluation |
+| POST | `/api/academics/evaluation-submissions/{id}/approve/`, `.../return_revision/`, `.../reject/` | supervisor comments and optional score fields | Review transition |
 
 Two shape details are easy to get wrong and are both covered by tests: `/api/resident-documents/`
 overrides `list()` and returns a bare array while the other two collections are paginated at

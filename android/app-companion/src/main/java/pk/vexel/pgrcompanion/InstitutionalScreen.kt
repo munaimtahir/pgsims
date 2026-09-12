@@ -12,6 +12,8 @@ import androidx.compose.material3.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.filled.Checklist
+import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.automirrored.filled.FactCheck
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.School
@@ -63,6 +65,8 @@ private enum class ResidentDestination(val label: String, val icon: androidx.com
     HOME("Home", Icons.Default.Home),
     TRAINING("Training", Icons.Default.School),
     LOGBOOK("Logbook", Icons.AutoMirrored.Filled.MenuBook),
+    LEAVE("Leave", Icons.Default.CalendarMonth),
+    EVALUATIONS("Evaluations", Icons.AutoMirrored.Filled.FactCheck),
     REQUIREMENTS("Requirements", Icons.Default.Checklist),
     PROFILE("Profile", Icons.Default.Person),
 }
@@ -128,13 +132,13 @@ fun InstitutionalWorkspace(repository: InstitutionalRepository) {
             onSignOut = { signOut() },
         )
 
-        InstitutionalState.CONNECTED -> if (snapshot?.me?.string("role") == "SUPERVISOR") SupervisorPane(
+        InstitutionalState.CONNECTED -> when (snapshot?.me?.string("role")?.uppercase()) {
+            "SUPERVISOR" -> SupervisorPane(
+                repository = repository, snapshot = snapshot, busy = busy,
+                onSignOut = { signOut() }, onRefresh = { reloadKey++ },
+            )
+            "RESIDENT" -> ConnectedPane(
             repository = repository,
-            snapshot = snapshot,
-            busy = busy,
-            onSignOut = { signOut() },
-            onRefresh = { reloadKey++ },
-        ) else ConnectedPane(
             snapshot = snapshot,
             busy = busy,
             notice = notice,
@@ -200,7 +204,32 @@ fun InstitutionalWorkspace(repository: InstitutionalRepository) {
                     )
                 }
             },
-        )
+            )
+            "ADMIN" -> RestrictedMobilePane("ADMIN", { signOut() }, { reloadKey++ })
+            "SUPPORT_STAFF" -> RestrictedMobilePane("SUPPORT_STAFF", { signOut() }, { reloadKey++ })
+            else -> RestrictedMobilePane(snapshot?.me?.string("role").orEmpty().ifBlank { "UNKNOWN" }, { signOut() }, { reloadKey++ })
+        }
+    }
+}
+
+@Composable
+private fun RestrictedMobilePane(role: String, onSignOut: () -> Unit, onRetry: () -> Unit) {
+    Column(
+        Modifier.fillMaxSize().padding(20.dp),
+        verticalArrangement = Arrangement.spacedBy(14.dp),
+    ) {
+        Text("PGR Companion", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+        Card(Modifier.fillMaxWidth()) {
+            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text("Mobile access is restricted", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                Text("Signed-in role: ${InstitutionalLabels.humanize(role)}")
+                Text("Administrative functions are available through the PGR SIMS web portal. This mobile release supports resident and supervisor workflows only.")
+            }
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Button(onClick = onRetry) { Text("Reload") }
+            OutlinedButton(onClick = onSignOut) { Text("Sign out") }
+        }
     }
 }
 
@@ -278,6 +307,7 @@ private fun ErrorPane(message: String, busy: Boolean, onRetry: () -> Unit, onSig
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
 private fun ConnectedPane(
+    repository: InstitutionalRepository,
     snapshot: InstitutionalSnapshot?,
     busy: Boolean,
     notice: String?,
@@ -407,6 +437,10 @@ private fun ConnectedPane(
         if (destination == ResidentDestination.TRAINING) TrainingDashboard(data)
 
         if (destination == ResidentDestination.LOGBOOK) LogbookScreen(data, busy, onCreateLogbook, onSubmitLogbook, onUpdateLogbook)
+
+        if (destination == ResidentDestination.LEAVE) LeaveRequestsScreen(repository, data, busy, onNotice, onRefresh)
+
+        if (destination == ResidentDestination.EVALUATIONS) EvaluationsScreen(repository, data, busy, onNotice, onRefresh)
 
         if (destination == ResidentDestination.REQUIREMENTS) RequirementsScreen(data) {
         Text("Documents", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)

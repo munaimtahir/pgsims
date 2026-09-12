@@ -58,6 +58,20 @@ object InstitutionalLabels {
         "NOT_STARTED", "NOT_ASSIGNED", "" -> "Not assigned yet"
         else -> humanize(raw)
     }
+
+    /** Shared presentation for workflow resources (leave, evaluation, rotation and logbook). */
+    fun workflowStatus(raw: String): String = when (raw.uppercase()) {
+        "DRAFT" -> "Draft"
+        "SUBMITTED" -> "Submitted"
+        "UNDER_REVIEW" -> "Under review"
+        "RETURNED" -> "Returned for revision"
+        "APPROVED", "VERIFIED" -> "Approved"
+        "REJECTED" -> "Rejected"
+        "CANCELLED" -> "Cancelled"
+        "COMPLETED" -> "Completed"
+        "" -> "Unknown"
+        else -> humanize(raw)
+    }
 }
 
 /**

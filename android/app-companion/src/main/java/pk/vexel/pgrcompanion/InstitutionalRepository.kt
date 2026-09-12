@@ -74,6 +74,28 @@ import java.util.concurrent.TimeUnit
 /** Approve/return payload for research submissions. */
 @Serializable data class ResearchActionPayload(val project_id: Int, val feedback: String = "")
 
+@Serializable data class LeaveRequestPayload(
+    val resident_training: Int,
+    val leave_type: String,
+    val start_date: String,
+    val end_date: String,
+    val reason: String = "",
+)
+
+@Serializable data class EvaluationSubmissionPayload(
+    val template: Int,
+    val academic_period: Int? = null,
+    val supervisor: Int? = null,
+    val resident_comments: String = "",
+    val responses: List<JsonObject> = emptyList(),
+)
+
+@Serializable data class EvaluationReviewPayload(
+    val supervisor_comments: String = "",
+    val score: Double? = null,
+    val max_score: Double? = null,
+)
+
 /** Active academics-logbook contract. The server assigns resident/training ownership. */
 @Serializable data class AcademicLogbookPayload(
     val category: Int,
@@ -97,12 +119,24 @@ interface InstitutionalApi {
     @GET("api/resident-training/") suspend fun training(): Response<JsonObject>
     @GET("api/supervision/assignments/") suspend fun assignments(): Response<JsonObject>
     @GET("api/my/rotations/") suspend fun rotations(): Response<JsonObject>
+    @GET("api/my/leaves/") suspend fun leaves(): Response<JsonObject>
+    @POST("api/leaves/") suspend fun createLeave(@Body body: LeaveRequestPayload): Response<JsonObject>
+    @PATCH("api/leaves/{id}/") suspend fun updateLeave(@Path("id") id: Int, @Body body: LeaveRequestPayload): Response<JsonObject>
+    @POST("api/leaves/{id}/submit/") suspend fun submitLeave(@Path("id") id: Int): Response<JsonObject>
     @GET("api/academics/logbook-entries/") suspend fun logbook(): Response<JsonObject>
     @GET("api/academics/logbook-categories/") suspend fun logbookCategories(): Response<JsonObject>
     @POST("api/academics/logbook-entries/") suspend fun createLogbook(@Body body: AcademicLogbookPayload): Response<JsonObject>
     @PATCH("api/academics/logbook-entries/{id}/") suspend fun updateLogbook(@Path("id") id: Int, @Body body: AcademicLogbookPayload): Response<JsonObject>
     @POST("api/academics/logbook-entries/{id}/submit/") suspend fun submitLogbook(@Path("id") id: Int): Response<JsonObject>
     @GET("api/academics/evaluation-submissions/") suspend fun assessments(): Response<JsonObject>
+    @GET("api/academics/evaluation-templates/") suspend fun evaluationTemplates(): Response<JsonObject>
+    @POST("api/academics/evaluation-submissions/") suspend fun createEvaluation(@Body body: EvaluationSubmissionPayload): Response<JsonObject>
+    @PATCH("api/academics/evaluation-submissions/{id}/") suspend fun updateEvaluation(@Path("id") id: Int, @Body body: EvaluationSubmissionPayload): Response<JsonObject>
+    @POST("api/academics/evaluation-submissions/{id}/submit/") suspend fun submitEvaluation(@Path("id") id: Int): Response<JsonObject>
+    @POST("api/academics/evaluation-submissions/{id}/start_review/") suspend fun startEvaluationReview(@Path("id") id: Int): Response<JsonObject>
+    @POST("api/academics/evaluation-submissions/{id}/approve/") suspend fun approveEvaluation(@Path("id") id: Int, @Body body: EvaluationReviewPayload): Response<JsonObject>
+    @POST("api/academics/evaluation-submissions/{id}/return_revision/") suspend fun returnEvaluation(@Path("id") id: Int, @Body body: SupervisorCommentPayload): Response<JsonObject>
+    @POST("api/academics/evaluation-submissions/{id}/reject/") suspend fun rejectEvaluation(@Path("id") id: Int, @Body body: SupervisorCommentPayload): Response<JsonObject>
     @GET("api/my/research/") suspend fun research(): Response<JsonObject>
     @GET("api/my/workshops/") suspend fun workshops(): Response<JsonObject>
     @GET("api/residents/me/summary/") suspend fun residentSummary(): Response<JsonObject>
@@ -202,8 +236,8 @@ class InMemoryTokenStore : TokenStore {
 
 /**
  * One institutional read. [me] is required — if identity cannot be read there is no session to
- * show. Every other section is optional so that a non-resident account (SUPERVISOR / ADMIN), for
- * which resident-only endpoints legitimately return 403, still gets a working screen.
+ * show. Supervisor reads are handled separately; ADMIN, SUPPORT_STAFF and unknown roles receive
+ * an explicit restricted-mobile state rather than being allowed into the resident workspace.
  */
 data class InstitutionalSnapshot(
     val me: JsonObject,
@@ -212,9 +246,11 @@ data class InstitutionalSnapshot(
     val training: List<JsonObject> = emptyList(),
     val assignments: List<JsonObject> = emptyList(),
     val rotations: List<JsonObject> = emptyList(),
+    val leaves: List<JsonObject> = emptyList(),
     val logbook: List<JsonObject> = emptyList(),
     val logbookCategories: List<JsonObject> = emptyList(),
     val assessments: List<JsonObject> = emptyList(),
+    val evaluationTemplates: List<JsonObject> = emptyList(),
     val research: JsonObject? = null,
     val workshops: List<JsonObject> = emptyList(),
     val residentSummary: JsonObject? = null,
@@ -294,20 +330,28 @@ class InstitutionalRepository internal constructor(
                     supervisorSummary = supervisorSummary, supervisorDashboard = supervisorDashboard,
                 )
             }
+            if (me.string("role") != "RESIDENT") {
+                return@runCatching InstitutionalSnapshot(me = me, unavailable = listOf("Mobile workspace"))
+            }
             val onboarding = optional(authorized { authorizedApi.onboarding() }, "Onboarding", unavailable)
             val documents = optionalArray(authorized { authorizedApi.documents() }, "Documents", unavailable)
             val training = optional(authorized { authorizedApi.training() }, "Training", unavailable).paged()
             val assignments = optional(authorized { authorizedApi.assignments() }, "Supervisor", unavailable).paged()
             val rotations = optional(authorized { authorizedApi.rotations() }, "Rotations", unavailable).paged()
+            val leaves = optional(authorized { authorizedApi.leaves() }, "Leave requests", unavailable).paged()
             val logbook = optional(authorized { authorizedApi.logbook() }, "Logbook", unavailable).paged()
             val logbookCategories = optional(authorized { authorizedApi.logbookCategories() }, "Logbook categories", unavailable).paged()
             val assessments = optional(authorized { authorizedApi.assessments() }, "Assessments", unavailable).paged()
+            val evaluationTemplates = optional(authorized { authorizedApi.evaluationTemplates() }, "Evaluation templates", unavailable).paged()
             val research = optional(authorized { authorizedApi.research() }, "Research", unavailable)
             val workshops = optional(authorized { authorizedApi.workshops() }, "Workshops", unavailable).paged()
             val residentSummary = optional(authorized { authorizedApi.residentSummary() }, "Resident summary", unavailable)
             InstitutionalSnapshot(
-                me, onboarding, documents, training, assignments, rotations, logbook, logbookCategories,
-                assessments, research, workshops, residentSummary, unavailable = unavailable,
+                me = me, onboarding = onboarding, documents = documents, training = training,
+                assignments = assignments, rotations = rotations, leaves = leaves, logbook = logbook,
+                logbookCategories = logbookCategories, assessments = assessments,
+                evaluationTemplates = evaluationTemplates, research = research, workshops = workshops,
+                residentSummary = residentSummary, unavailable = unavailable,
             )
         }
     }
@@ -337,6 +381,13 @@ class InstitutionalRepository internal constructor(
 
     suspend fun supervisorResearchQueue(): Result<List<JsonObject>> = withContext(Dispatchers.IO) {
         runCatching { required(authorized { authorizedApi.supervisorResearchQueue() }, "the research queue").paged() }
+    }
+
+    suspend fun supervisorEvaluationQueue(): Result<List<JsonObject>> = withContext(Dispatchers.IO) {
+        runCatching {
+            required(authorized { authorizedApi.assessments() }, "the evaluation queue")
+                .paged().filter { it.string("status") in setOf("SUBMITTED", "UNDER_REVIEW") }
+        }
     }
 
     // --- Supervisor workflow actions -----------------------------------------------------------
@@ -379,6 +430,37 @@ class InstitutionalRepository internal constructor(
 
     suspend fun returnResearch(projectId: Int, feedback: String): Result<JsonObject> = withContext(Dispatchers.IO) {
         runCatching { required(authorized { authorizedApi.returnResearch(ResearchActionPayload(projectId, feedback)) }, "this research submission") }
+    }
+
+    suspend fun createLeave(payload: LeaveRequestPayload): Result<JsonObject> = withContext(Dispatchers.IO) {
+        runCatching { required(authorized { authorizedApi.createLeave(payload) }, "your leave request") }
+    }
+    suspend fun updateLeave(id: Int, payload: LeaveRequestPayload): Result<JsonObject> = withContext(Dispatchers.IO) {
+        runCatching { required(authorized { authorizedApi.updateLeave(id, payload) }, "your leave request") }
+    }
+    suspend fun submitLeave(id: Int): Result<JsonObject> = withContext(Dispatchers.IO) {
+        runCatching { required(authorized { authorizedApi.submitLeave(id) }, "your leave request") }
+    }
+    suspend fun createEvaluation(payload: EvaluationSubmissionPayload): Result<JsonObject> = withContext(Dispatchers.IO) {
+        runCatching { required(authorized { authorizedApi.createEvaluation(payload) }, "your evaluation") }
+    }
+    suspend fun updateEvaluation(id: Int, payload: EvaluationSubmissionPayload): Result<JsonObject> = withContext(Dispatchers.IO) {
+        runCatching { required(authorized { authorizedApi.updateEvaluation(id, payload) }, "your evaluation") }
+    }
+    suspend fun submitEvaluation(id: Int): Result<JsonObject> = withContext(Dispatchers.IO) {
+        runCatching { required(authorized { authorizedApi.submitEvaluation(id) }, "your evaluation") }
+    }
+    suspend fun startEvaluationReview(id: Int): Result<JsonObject> = withContext(Dispatchers.IO) {
+        runCatching { required(authorized { authorizedApi.startEvaluationReview(id) }, "this evaluation") }
+    }
+    suspend fun approveEvaluation(id: Int, comments: String): Result<JsonObject> = withContext(Dispatchers.IO) {
+        runCatching { required(authorized { authorizedApi.approveEvaluation(id, EvaluationReviewPayload(supervisor_comments = comments)) }, "this evaluation") }
+    }
+    suspend fun returnEvaluation(id: Int, comments: String): Result<JsonObject> = withContext(Dispatchers.IO) {
+        runCatching { required(authorized { authorizedApi.returnEvaluation(id, SupervisorCommentPayload(comments)) }, "this evaluation") }
+    }
+    suspend fun rejectEvaluation(id: Int, comments: String): Result<JsonObject> = withContext(Dispatchers.IO) {
+        runCatching { required(authorized { authorizedApi.rejectEvaluation(id, SupervisorCommentPayload(comments)) }, "this evaluation") }
     }
 
     suspend fun createLogbook(payload: AcademicLogbookPayload): Result<JsonObject> = withContext(Dispatchers.IO) {
