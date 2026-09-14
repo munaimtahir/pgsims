@@ -3,6 +3,7 @@ package pk.vexel.pgrcompanion
 import android.content.Context
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
+import androidx.work.ListenableWorker
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.sync.Mutex
@@ -12,11 +13,14 @@ internal object RecoveryCoordinator { val mutex = Mutex() }
 
 /** Logout waits for this critical section before purging either encrypted store. */
 class OfflineDraftSyncWorker(context: Context, parameters: WorkerParameters) : CoroutineWorker(context, parameters) {
-    override suspend fun doWork(): Result = RecoveryCoordinator.mutex.withLock {
-        val repository = (applicationContext as CompanionApplication).institutional
-        if (!repository.isConnected()) return@withLock Result.success()
+    override suspend fun doWork(): Result = replayOffline(applicationContext, (applicationContext as CompanionApplication).institutional)
+}
+
+internal suspend fun replayOffline(applicationContext: Context, repository: InstitutionalRepository): ListenableWorker.Result =
+    RecoveryCoordinator.mutex.withLock {
+        if (!repository.isConnected()) return@withLock ListenableWorker.Result.success()
         val owner = repository.me().getOrNull()?.string("id")?.toIntOrNull()
-            ?: return@withLock Result.retry()
+            ?: return@withLock ListenableWorker.Result.retry()
         val drafts = OfflineDraftStore(applicationContext)
         var retry = false
         for (draft in drafts.all()) {
@@ -51,6 +55,5 @@ class OfflineDraftSyncWorker(context: Context, parameters: WorkerParameters) : C
                 { uploads.update(upload.copy(state = OfflineUpload.FAILED, attempts = upload.attempts + 1, lastError = "Upload failed; encrypted source retained.")); retry = true },
             )
         }
-        if (retry) Result.retry() else Result.success()
+        if (retry) ListenableWorker.Result.retry() else ListenableWorker.Result.success()
     }
-}

@@ -35,7 +35,10 @@ internal data class OfflineUpload(
 }
 
 /** All instances share a lock: reconciliation must never delete an in-flight stage. */
-internal class OfflineUploadStore(context: Context) {
+internal class OfflineUploadStore(
+    context: Context,
+    private val commitMetadata: (android.content.SharedPreferences.Editor) -> Boolean = { it.commit() },
+) {
     private val app = context.applicationContext
     private val json = Json { ignoreUnknownKeys = true }
     private val key = MasterKey.Builder(app).setKeyScheme(MasterKey.KeyScheme.AES256_GCM).build()
@@ -93,7 +96,7 @@ internal class OfflineUploadStore(context: Context) {
         directory.listFiles()?.forEach { check(it.delete()) }
     }
     private fun save(upload: OfflineUpload) {
-        check(preferences.edit().putString(upload.id, json.encodeToString(upload)).commit()) {
+        check(commitMetadata(preferences.edit().putString(upload.id, json.encodeToString(upload)))) {
             "Could not persist encrypted upload metadata. Please select the document again."
         }
     }

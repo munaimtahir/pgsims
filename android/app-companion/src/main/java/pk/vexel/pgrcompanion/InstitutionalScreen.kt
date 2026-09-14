@@ -110,9 +110,10 @@ fun InstitutionalWorkspace(repository: InstitutionalRepository) {
 
     fun signOut() = scope.launch {
         busy = true
-        (context.applicationContext as CompanionApplication).signOutInstitutional()
-        snapshot = null; error = null; notice = null
-        state = InstitutionalState.DISCONNECTED
+        runCatching { (context.applicationContext as CompanionApplication).signOutInstitutional() }.fold(
+            { snapshot = null; error = null; notice = null; state = InstitutionalState.DISCONNECTED },
+            { error = "Could not finish secure sign-out. Please retry."; state = InstitutionalState.ERROR },
+        )
         busy = false
     }
 
@@ -192,12 +193,16 @@ fun InstitutionalWorkspace(repository: InstitutionalRepository) {
             onCreateLogbook = { payload ->
                 scope.launch {
                     busy = true; notice = null
+                    val owner = repository.currentUserId()
                     val retrySafePayload = payload.withOfflineId()
                     repository.createLogbook(retrySafePayload).fold(
                         { notice = "Logbook draft saved to PGR SIMS."; reloadKey++ },
                         {
-                            OfflineDraftStore(context).saveLogbook(retrySafePayload, repository.currentUserId() ?: error("Reconnect before saving a draft."))
-                            notice = "PGR SIMS is unavailable. Your encrypted logbook draft is retained on this device."; busy = false
+                            retainDraft(context, repository, owner) { store, id -> store.saveLogbook(retrySafePayload, id) }.fold(
+                                { notice = "PGR SIMS is unavailable. Your encrypted logbook draft is retained on this device." },
+                                { notice = "Could not retain the draft. Reconnect and try again." },
+                            )
+                            busy = false
                         },
                     )
                 }
@@ -407,6 +412,7 @@ private fun ConnectedPane(
         val me = data.me
         val summary = remember(data) { OnboardingSummary.from(data.onboarding, data.documents) }
         if (destination == ResidentDestination.HOME) {
+        OfflineDraftQueue(repository)
         Text("Welcome, ${me.text("username").ifBlank { "Resident" }}", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
         Text("Your residency at a glance", color = MaterialTheme.colorScheme.onSurfaceVariant)
         Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = Color(0xFFE2F3F0))) {
@@ -497,7 +503,7 @@ private fun ConnectedPane(
             queuedUploads.forEach { upload ->
                 Card(Modifier.fillMaxWidth()) {
                     Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                        Text(upload.displayName, fontWeight = FontWeight.SemiBold)
+                        Text(if (upload.ownerUserId == repository.currentUserId()) upload.displayName else "Upload from another or unknown account", fontWeight = FontWeight.SemiBold)
                         Text(
                             when (upload.state) {
                                 OfflineUpload.QUEUED -> "Queued for secure upload"
@@ -508,7 +514,7 @@ private fun ConnectedPane(
                             color = if (upload.state == OfflineUpload.FAILED) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            TextButton(onClick = {
+                            TextButton(enabled = upload.ownerUserId != null && upload.ownerUserId == repository.currentUserId(), onClick = {
                                 uploadStore.update(upload.copy(state = OfflineUpload.QUEUED, lastError = null))
                                 queuedUploads = uploadStore.all()
                                 (context.applicationContext as CompanionApplication).enqueueOfflineRecovery()

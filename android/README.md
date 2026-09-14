@@ -4,7 +4,7 @@ The Gradle project has two application modules and one shared theme module:
 
 | Module | Role | Application ID | Status |
 | --- | --- | --- | --- |
-| `:app-companion` | Login-gated PGR SIMS Android application | `pk.vexel.pgrcompanion` (`1.1.7`, code `7`) | Canonical and only module |
+| `:app-companion` | Login-gated PGR SIMS Android application | `pk.vexel.pgrcompanion` (`1.1.9`, code `9`) | Canonical and only module |
 | `:core:common` | Shared Compose theme | N/A | Active shared library |
 
 There is one Android application and one Gradle module: PGR Companion. The Play package ID is

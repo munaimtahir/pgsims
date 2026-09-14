@@ -12,6 +12,10 @@ class CompanionApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
+        scheduleRecovery()
+    }
+
+    private fun scheduleRecovery() {
         val request = PeriodicWorkRequestBuilder<OfflineDraftSyncWorker>(15, TimeUnit.MINUTES)
             .setConstraints(Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build())
             .build()
@@ -21,6 +25,7 @@ class CompanionApplication : Application() {
     }
 
     fun enqueueOfflineRecovery() {
+        scheduleRecovery()
         val request = OneTimeWorkRequestBuilder<OfflineDraftSyncWorker>()
             .setConstraints(Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build())
             .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, 15, TimeUnit.MINUTES)
