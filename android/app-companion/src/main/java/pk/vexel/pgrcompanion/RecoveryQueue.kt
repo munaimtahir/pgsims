@@ -43,7 +43,7 @@ internal fun OfflineDraftQueue(repository: InstitutionalRepository) {
                 val owned = draft.ownerUserId != null && draft.ownerUserId == repository.currentUserId()
                 Text(if (owned) "${InstitutionalLabels.humanize(draft.kind)} draft · ${draft.state}" else "Draft from another or unknown account; discard required")
                 Row {
-                    TextButton(enabled = owned, onClick = { (context.applicationContext as CompanionApplication).enqueueOfflineRecovery(); message = "Recovery queued." }) { Text("Retry") }
+                    TextButton(enabled = owned, onClick = { (context.applicationContext as CompanionApplication).enqueueOfflineRecovery(replacePending = true); message = "Recovery queued." }) { Text("Retry") }
                     TextButton(onClick = { scope.launch {
                         runCatching { withContext(Dispatchers.IO) { RecoveryCoordinator.mutex.withLock {
                             val store = OfflineDraftStore(context)
