@@ -1,0 +1,14 @@
+PGR Companion [53,53][517,137]
+Mobile access is restricted [95,216][784,290]
+Signed-in role: Support staff [95,311][654,374]
+Administrative functions are available through the PGR SIMS web portal. This mobile release supports resident and supervisor workflows only. [95,395][985,647]
+Reload [116,763][229,816]
+Sign out [376,763][511,816]
+PGR Companion [53,53][517,137]
+Mobile access is restricted [95,216][784,290]
+Signed-in role: Support staff [95,311][654,374]
+Administrative functions are available through the PGR SIMS web portal. This mobile release supports resident and supervisor workflows only. [95,395][985,647]
+Reload [116,763][229,816]
+Sign out [376,763][511,816]
+
+Note: second dump caught logout pending. The subsequent supervisor login used the login controls and reached the supervisor dashboard, confirming account transition after sign-out.

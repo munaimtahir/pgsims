@@ -1,0 +1,6 @@
+
+pk.vexel.pgrcompanion.ReleaseAcceptanceTest:.
+
+Time: 0.089
+
+OK (1 test)

@@ -1,0 +1,8 @@
+
+pk.vexel.pgrcompanion.ReleaseAcceptanceTest:INSTRUMENTATION_STATUS: idempotency_keys=1f93d8ad-9808-4826-8eed-a2bb99e009b0, d17eb5f9-d032-4fc2-8bd9-ad2e12d199ba
+INSTRUMENTATION_STATUS_CODE: 0
+.
+
+Time: 0.067
+
+OK (1 test)

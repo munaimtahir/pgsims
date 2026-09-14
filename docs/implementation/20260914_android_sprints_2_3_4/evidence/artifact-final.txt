@@ -1,0 +1,4 @@
+Final installed package: pk.vexel.pgrcompanion.debug
+Version 1.1.8 (8), AVD pgsims, emulator-5554
+SHA256 e7994e24b282b0656f2873389d94e027e618a20f5ae89252a68ebc29d524455e
+Local generated APK and installed APK match. Runtime edits made after this build are not covered.

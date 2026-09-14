@@ -24,6 +24,7 @@ internal data class OfflineUpload(
     val displayName: String,
     val mimeType: String,
     val sizeBytes: Long,
+    val ownerUserId: Int? = null,
     val state: String = QUEUED,
     val attempts: Int = 0,
     val lastError: String? = null,
@@ -47,23 +48,39 @@ internal class OfflineUploadStore(context: Context) {
     )
     private val directory = File(app.filesDir, "institutional_upload_queue").also { it.mkdirs() }
 
+    init {
+        val metadataIds = preferences.all.keys
+        directory.listFiles()?.filterNot { it.name in metadataIds }?.forEach(File::delete)
+        preferences.all.forEach { (id, raw) ->
+            if (raw !is String || runCatching { json.decodeFromString<OfflineUpload>(raw) }.isFailure) {
+                preferences.edit().remove(id).commit()
+                File(directory, id).delete()
+            }
+        }
+    }
+
     fun all(): List<OfflineUpload> = preferences.all.values.mapNotNull { raw ->
         (raw as? String)?.let { runCatching { json.decodeFromString<OfflineUpload>(it) }.getOrNull() }
     }.sortedBy { it.createdAtMillis }
 
-    fun stage(documentId: Int, displayName: String, mimeType: String, input: InputStream): OfflineUpload {
+    fun stage(documentId: Int, displayName: String, mimeType: String, ownerUserId: Int, input: InputStream): OfflineUpload {
         val id = UUID.randomUUID().toString()
         val encrypted = encryptedFile(id)
         val size = encrypted.openFileOutput().use { output -> input.copyTo(output) }
-        val upload = OfflineUpload(id, documentId, displayName, mimeType, size)
-        save(upload)
+        val upload = OfflineUpload(id, documentId, displayName, mimeType, size, ownerUserId)
+        try {
+            save(upload)
+        } catch (failure: Throwable) {
+            File(directory, id).delete()
+            throw failure
+        }
         return upload
     }
 
     fun open(upload: OfflineUpload): InputStream = encryptedFile(upload.id).openFileInput()
     fun update(upload: OfflineUpload) = save(upload)
     fun remove(upload: OfflineUpload) {
-        preferences.edit().remove(upload.id).apply()
+        preferences.edit().remove(upload.id).commit()
         File(directory, upload.id).delete()
     }
 
@@ -73,7 +90,11 @@ internal class OfflineUploadStore(context: Context) {
         directory.listFiles()?.forEach { it.delete() }
     }
 
-    private fun save(upload: OfflineUpload) = preferences.edit().putString(upload.id, json.encodeToString(upload)).apply()
+    private fun save(upload: OfflineUpload) {
+        check(preferences.edit().putString(upload.id, json.encodeToString(upload)).commit()) {
+            "Could not durably retain the upload queue record."
+        }
+    }
     private fun encryptedFile(id: String) = EncryptedFile.Builder(
         app, File(directory, id), key, EncryptedFile.FileEncryptionScheme.AES256_GCM_HKDF_4KB,
     ).build()

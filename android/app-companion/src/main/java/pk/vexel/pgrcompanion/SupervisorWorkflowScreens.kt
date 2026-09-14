@@ -172,13 +172,15 @@ internal fun SupervisorWorkflowQueueScreen(
             busy = actionBusy,
             error = actionError,
             onApprove = {
-                runAction {
+                if (workflow == SupervisorWorkflow.EVALUATION) {
+                    reasonPromptFor = "approve"
+                } else runAction {
                     when (workflow) {
                         SupervisorWorkflow.LOGBOOK -> repository.verifyLogbook(current.idValue()!!, "")
                         SupervisorWorkflow.LEAVE -> repository.approveLeave(current.idValue()!!)
                         SupervisorWorkflow.ROTATION -> repository.approveRotation(current.idValue()!!)
                         SupervisorWorkflow.RESEARCH -> repository.approveResearch(current.idValue()!!, "")
-                        SupervisorWorkflow.EVALUATION -> repository.approveEvaluation(current.idValue()!!, "")
+                        SupervisorWorkflow.EVALUATION -> error("Evaluation approval requires the scoring dialog")
                     }
                 }
             },
@@ -189,7 +191,21 @@ internal fun SupervisorWorkflowQueueScreen(
     }
 
     val prompt = reasonPromptFor
-    if (current != null && prompt != null) {
+    if (current != null && prompt == "approve" && workflow == SupervisorWorkflow.EVALUATION) {
+        EvaluationApprovalDialog(
+            busy = actionBusy,
+            onDismiss = { reasonPromptFor = null },
+            onConfirm = { comments, score, maxScore ->
+                runAction {
+                    if (current.value("status") == "SUBMITTED") {
+                        val started = repository.startEvaluationReview(current.idValue()!!)
+                        if (started.isFailure) Result.failure(started.exceptionOrNull()!!)
+                        else repository.approveEvaluation(current.idValue()!!, comments, score, maxScore)
+                    } else repository.approveEvaluation(current.idValue()!!, comments, score, maxScore)
+                }
+            },
+        )
+    } else if (current != null && prompt != null) {
         ReasonConfirmDialog(
             actionLabel = if (prompt == "reject") "Reject" else "Return for revision",
             requireReason = workflow == SupervisorWorkflow.LOGBOOK && prompt == "return",
@@ -215,6 +231,40 @@ internal fun SupervisorWorkflowQueueScreen(
 }
 
 @Composable
+private fun EvaluationApprovalDialog(
+    busy: Boolean,
+    onDismiss: () -> Unit,
+    onConfirm: (String, Double?, Double?) -> Unit,
+) {
+    var comments by remember { mutableStateOf("") }
+    var score by remember { mutableStateOf("") }
+    var maxScore by remember { mutableStateOf("") }
+    val scoreValue = score.toDoubleOrNull()
+    val maxValue = maxScore.toDoubleOrNull()
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Approve evaluation") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedTextField(score, { score = it }, label = { Text("Score (optional)") }, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(maxScore, { maxScore = it }, label = { Text("Maximum score (optional)") }, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(comments, { comments = it }, label = { Text("Approval comments") }, modifier = Modifier.fillMaxWidth())
+                if ((score.isNotBlank() || maxScore.isNotBlank()) && (scoreValue == null || maxValue == null || scoreValue > maxValue)) {
+                    Text("Enter valid scores; score cannot exceed the maximum.", color = MaterialTheme.colorScheme.error)
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = { onConfirm(comments, scoreValue, maxValue) },
+                enabled = !busy && ((score.isBlank() && maxScore.isBlank()) || (scoreValue != null && maxValue != null && scoreValue <= maxValue)),
+            ) { Text("Approve") }
+        },
+        dismissButton = { TextButton(onClick = onDismiss, enabled = !busy) { Text("Cancel") } },
+    )
+}
+
+@Composable
 @OptIn(ExperimentalMaterial3Api::class)
 private fun SupervisorWorkflowItemDialog(
     item: JsonObject,
@@ -233,6 +283,24 @@ private fun SupervisorWorkflowItemDialog(
             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 item.value("resident_name").takeIf { it.isNotBlank() }?.let { Text("Resident: $it") }
                 itemDetailLines(item, workflow).forEach { (label, text) -> Text("$label: $text", style = MaterialTheme.typography.bodySmall) }
+                if (workflow == SupervisorWorkflow.EVALUATION) {
+                    item.objectList("responses").forEach { response ->
+                        val rendered = if (response.value("field_type") == "number") response.value("value_number") else response.value("value_text")
+                        Text("${response.value("field_label").ifBlank { response.value("field_key") }}: ${rendered.ifBlank { "—" }}", style = MaterialTheme.typography.bodySmall)
+                    }
+                }
+                if (workflow == SupervisorWorkflow.LOGBOOK) {
+                    (item["procedure_record"] as? JsonObject)?.let { procedure ->
+                        listOf(
+                            "Procedure" to procedure.value("procedure_name"),
+                            "Code" to procedure.value("procedure_code"),
+                            "Role" to procedure.value("role_performed"),
+                            "Complexity" to procedure.value("complexity"),
+                            "Outcome" to procedure.value("outcome"),
+                            "Complications" to procedure.value("complications"),
+                        ).filter { it.second.isNotBlank() }.forEach { (label, value) -> Text("$label: $value", style = MaterialTheme.typography.bodySmall) }
+                    }
+                }
                 error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
             }
         },

@@ -33,6 +33,7 @@ from .serializers import (
     SelfProfileUpdateSerializer,
 )
 from .permissions import IsSupervisor
+from .services import get_allowed_next_route
 
 
 class AuthEmptySchemaSerializer(serializers.Serializer):
@@ -368,7 +369,7 @@ def change_password_view(request):
         user.must_change_password = False
     user.save()
 
-    next_route = user.get_dashboard_url()
+    next_route = get_allowed_next_route(user)
     return Response({"message": "Password changed successfully", "allowed_next_route": next_route}, status=status.HTTP_200_OK)
 
 

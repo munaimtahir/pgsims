@@ -1,0 +1,8 @@
+
+pk.vexel.pgrcompanion.ReleaseAcceptanceTest:INSTRUMENTATION_STATUS: recovery_counts=leave=1,logbook=1,upload=1
+INSTRUMENTATION_STATUS_CODE: 0
+.
+
+Time: 0.105
+
+OK (1 test)

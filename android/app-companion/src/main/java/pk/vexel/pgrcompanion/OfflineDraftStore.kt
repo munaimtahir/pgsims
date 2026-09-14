@@ -20,8 +20,18 @@ internal data class OfflineDraft(
     val kind: String,
     val leave: LeaveRequestPayload? = null,
     val logbook: AcademicLogbookPayload? = null,
+    val ownerUserId: Int? = null,
+    val state: String = QUEUED,
+    val attempts: Int = 0,
+    val lastError: String? = null,
     val createdAtMillis: Long = System.currentTimeMillis(),
-)
+) {
+    companion object {
+        const val QUEUED = "queued"
+        const val UPLOADING = "uploading"
+        const val FAILED = "failed"
+    }
+}
 
 internal class OfflineDraftStore(context: Context) {
     private val json = Json { ignoreUnknownKeys = true }
@@ -37,13 +47,16 @@ internal class OfflineDraftStore(context: Context) {
         (raw as? String)?.let { runCatching { json.decodeFromString<OfflineDraft>(it) }.getOrNull() }
     }.sortedByDescending { it.createdAtMillis }
 
-    fun saveLeave(payload: LeaveRequestPayload) = save(OfflineDraft(kind = "leave", leave = payload))
-    fun saveLogbook(payload: AcademicLogbookPayload) = save(OfflineDraft(kind = "logbook", logbook = payload))
-    fun remove(id: String) { preferences.edit().remove(id).apply() }
+    fun saveLeave(payload: LeaveRequestPayload, ownerUserId: Int) = save(OfflineDraft(kind = "leave", leave = payload, ownerUserId = ownerUserId))
+    fun saveLogbook(payload: AcademicLogbookPayload, ownerUserId: Int) = save(OfflineDraft(kind = "logbook", logbook = payload, ownerUserId = ownerUserId))
+    fun update(draft: OfflineDraft) = save(draft)
+    fun remove(id: String) { preferences.edit().remove(id).commit() }
     /** Logout is a hard ownership boundary for recoverable institutional work. */
-    fun clear() { preferences.edit().clear().apply() }
+    fun clear() { preferences.edit().clear().commit() }
 
     private fun save(draft: OfflineDraft) {
-        preferences.edit().putString(draft.id, json.encodeToString(draft)).apply()
+        check(preferences.edit().putString(draft.id, json.encodeToString(draft)).commit()) {
+            "Could not durably retain the offline draft."
+        }
     }
 }

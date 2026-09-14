@@ -11,16 +11,30 @@ class OfflineDraftSyncWorker(context: Context, parameters: WorkerParameters) : C
         val drafts = OfflineDraftStore(applicationContext)
         val repository = (applicationContext as CompanionApplication).institutional
         if (!repository.isConnected()) return Result.success()
+        val activeUserId = repository.currentUserId() ?: repository.me().getOrNull()?.string("id")?.toIntOrNull()
+            ?: return Result.retry()
         for (draft in drafts.all()) {
+            if (draft.ownerUserId != activeUserId) {
+                drafts.update(draft.copy(state = OfflineDraft.FAILED, lastError = "Queued under a different PGR SIMS account."))
+                continue
+            }
+            drafts.update(draft.copy(state = OfflineDraft.UPLOADING, attempts = draft.attempts + 1, lastError = null))
             val result = when (draft.kind) {
                 "leave" -> draft.leave?.let { repository.createLeave(it) }
                 "logbook" -> draft.logbook?.let { repository.createLogbook(it) }
                 else -> null
             } ?: continue
-            if (result.isSuccess) drafts.remove(draft.id) else return Result.retry()
+            if (result.isSuccess) drafts.remove(draft.id) else {
+                drafts.update(draft.copy(state = OfflineDraft.FAILED, attempts = draft.attempts + 1, lastError = result.exceptionOrNull()?.message))
+                return Result.retry()
+            }
         }
         val uploads = OfflineUploadStore(applicationContext)
         for (upload in uploads.all()) {
+            if (upload.ownerUserId != activeUserId) {
+                uploads.update(upload.copy(state = OfflineUpload.FAILED, lastError = "Queued under a different PGR SIMS account."))
+                continue
+            }
             val result = runCatching {
                 uploads.update(upload.copy(state = OfflineUpload.UPLOADING, attempts = upload.attempts + 1, lastError = null))
                 val temporary = File.createTempFile("pgr-upload-", ".tmp", applicationContext.cacheDir)

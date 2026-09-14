@@ -19,6 +19,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
@@ -30,6 +31,9 @@ import kotlinx.coroutines.launch
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.intOrNull
 import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 
 private fun JsonObject.ra(key: String): String = string(key).orEmpty()
 private fun JsonObject.raId(key: String = "id"): Int? = runCatching { this[key]?.jsonPrimitive?.intOrNull }.getOrNull()
@@ -77,7 +81,9 @@ internal fun LeaveRequestsScreen(
             repository.createLeave(retrySafePayload).fold(
                 { onNotice("Leave request saved as a draft."); onRefresh() },
                 {
-                    offlineDrafts.saveLeave(retrySafePayload)
+                    val owner = repository.currentUserId()
+                    if (owner == null) onNotice("Reload your account before retaining an offline draft.")
+                    else offlineDrafts.saveLeave(retrySafePayload, owner)
                     onNotice("PGR SIMS is unavailable. Your encrypted leave draft is retained on this device.")
                 },
             )
@@ -191,12 +197,48 @@ internal fun EvaluationsScreen(
 private fun EvaluationCreateDialog(data: InstitutionalSnapshot, busy: Boolean, onDismiss: () -> Unit, onCreate: (EvaluationSubmissionPayload) -> Unit) {
     var selectedTemplate by remember { mutableStateOf(data.evaluationTemplates.firstOrNull()?.raId()) }
     var comments by remember { mutableStateOf("") }
+    val supervisors = data.academicOptions?.objectList("supervisors").orEmpty()
+    val periods = data.academicOptions?.objectList("periods").orEmpty()
+    var selectedSupervisor by remember { mutableStateOf<Int?>(null) }
+    var selectedPeriod by remember { mutableStateOf<Int?>(null) }
+    var templateMenu by remember { mutableStateOf(false) }
+    var supervisorMenu by remember { mutableStateOf(false) }
+    var periodMenu by remember { mutableStateOf(false) }
+    val responses = remember(selectedTemplate) { mutableStateMapOf<String, String>() }
+    val schemaFields = data.evaluationTemplates.firstOrNull { it.raId() == selectedTemplate }
+        ?.let { runCatching { it["schema"]?.jsonObject }.getOrNull() }
+        ?.objectList("fields").orEmpty()
     AlertDialog(onDismissRequest = onDismiss, title = { Text("New evaluation") }, text = {
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text("Template: ${data.evaluationTemplates.firstOrNull { it.raId() == selectedTemplate }?.ra("name") ?: "Unavailable"}")
+            TextButton(onClick = { templateMenu = true }, enabled = !busy) { Text("Template: ${data.evaluationTemplates.firstOrNull { it.raId() == selectedTemplate }?.ra("name") ?: "Unavailable"}") }
+            DropdownMenu(expanded = templateMenu, onDismissRequest = { templateMenu = false }) { data.evaluationTemplates.forEach { template -> DropdownMenuItem(text = { Text(template.ra("name")) }, onClick = { selectedTemplate = template.raId(); templateMenu = false }) } }
+            TextButton(onClick = { supervisorMenu = true }, enabled = !busy && supervisors.isNotEmpty()) { Text("Supervisor: ${supervisors.firstOrNull { it.raId() == selectedSupervisor }?.ra("name") ?: "Primary / not selected"}") }
+            DropdownMenu(expanded = supervisorMenu, onDismissRequest = { supervisorMenu = false }) { supervisors.forEach { row -> DropdownMenuItem(text = { Text(row.ra("name")) }, onClick = { selectedSupervisor = row.raId(); supervisorMenu = false }) } }
+            TextButton(onClick = { periodMenu = true }, enabled = !busy && periods.isNotEmpty()) { Text("Academic period: ${periods.firstOrNull { it.raId() == selectedPeriod }?.ra("name") ?: "Not selected"}") }
+            DropdownMenu(expanded = periodMenu, onDismissRequest = { periodMenu = false }) { periods.forEach { row -> DropdownMenuItem(text = { Text(row.ra("name")) }, onClick = { selectedPeriod = row.raId(); periodMenu = false }) } }
+            schemaFields.forEach { field ->
+                val key = field.ra("key")
+                OutlinedTextField(
+                    responses[key].orEmpty(),
+                    { responses[key] = it },
+                    label = { Text(field.ra("label").ifBlank { InstitutionalLabels.humanize(key) }) },
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = !busy,
+                )
+            }
             OutlinedTextField(comments, { comments = it }, label = { Text("Resident comments") }, modifier = Modifier.fillMaxWidth(), enabled = !busy)
         }
-    }, confirmButton = { TextButton(onClick = { onCreate(EvaluationSubmissionPayload(selectedTemplate!!, resident_comments = comments)) }, enabled = !busy && selectedTemplate != null) { Text("Save draft") } }, dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } })
+    }, confirmButton = { TextButton(onClick = {
+        val mapped = schemaFields.map { field ->
+            val key = field.ra("key"); val type = field.ra("type"); val value = responses[key].orEmpty()
+            buildJsonObject {
+                put("field_key", key); put("field_label", field.ra("label")); put("field_type", type)
+                put("value_text", if (type == "number") "" else value)
+                value.toDoubleOrNull()?.takeIf { type == "number" }?.let { put("value_number", it) }
+            }
+        }
+        onCreate(EvaluationSubmissionPayload(selectedTemplate!!, selectedPeriod, selectedSupervisor, comments, mapped))
+    }, enabled = !busy && selectedTemplate != null) { Text("Save draft") } }, dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } })
 }
 
 @Composable
@@ -211,5 +253,12 @@ private fun EvaluationDetailDialog(repository: InstitutionalRepository, evaluati
             evaluation.ra("supervisor_comments").takeIf { it.isNotBlank() }?.let { Text("Supervisor feedback: $it") }
             evaluation.ra("responses").takeIf { it.isNotBlank() }?.let { Text(it) }
         }
-    }, confirmButton = { if (id != null && status == "DRAFT") TextButton(onClick = { scope.launch { repository.submitEvaluation(id).fold({ onNotice("Evaluation submitted."); onRefresh(); onDismiss() }, { onNotice(it.message ?: "Could not submit the evaluation.") }) } }, enabled = !busy) { Text("Submit") } }, dismissButton = { TextButton(onClick = onDismiss) { Text("Close") } })
+    }, confirmButton = { if (id != null && status in setOf("DRAFT", "RETURNED")) TextButton(onClick = { scope.launch { repository.submitEvaluation(id).fold({ onNotice("Evaluation submitted."); onRefresh(); onDismiss() }, { onNotice(it.message ?: "Could not submit the evaluation.") }) } }, enabled = !busy) { Text(if (status == "RETURNED") "Resubmit" else "Submit") } }, dismissButton = {
+        Column {
+            if (id != null && status == "DRAFT") TextButton(onClick = {
+                scope.launch { repository.cancelEvaluation(id).fold({ onNotice("Evaluation cancelled."); onRefresh(); onDismiss() }, { onNotice(it.message ?: "Could not cancel the evaluation.") }) }
+            }, enabled = !busy) { Text("Cancel evaluation") }
+            TextButton(onClick = onDismiss) { Text("Close") }
+        }
+    })
 }

@@ -1,0 +1,10 @@
+healthy sha256:b1984da08b5eaa50509dbec55519c33e2aab8cf51e9f8b500a323d42b9b4998a
+{"status": "healthy", "checks": {"database": "ok", "cache": "ok", "celery": "ok"}}
+Frontend HTTP 200
+Android API health HTTP 200
+Checked 2026-09-14T20:36:10Z
+FCM_ENABLED=False
+Post-verification 2026-09-14T20:53:19Z
+{"status": "healthy", "checks": {"database": "ok", "cache": "ok", "celery": "ok"}}
+Frontend HTTP 200
+Android API health HTTP 200

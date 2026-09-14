@@ -1,0 +1,12 @@
+FATAL EXCEPTION: main
+09-15 01:36:55.403  2694  2694 E AndroidRuntime: Process: pk.vexel.pgrcompanion.debug, PID: 2694
+09-15 01:36:55.403  2694  2694 E AndroidRuntime: java.lang.IllegalStateException: Vertically scrollable component was measured with an infinity maximum height constraints, which is disallowed. One of the common reasons is nesting layouts like LazyColumn and Column(Modifier.verticalScroll()). If you want to add a header before the list of items please add a header as a separate item() before the main items() inside the LazyColumn scope. There are could be other reasons for this to happen: your ComposeView was added into a LinearLayout with some weight, you applied Modifier.wrapContentSize(unbounded = true) or wrote a custom layout. Please try to remove the source of infinite constraints in the hierarchy above the scrolling container.
+09-15 01:36:55.403  2694  2694 E AndroidRuntime: 	at androidx.compose.foundation.CheckScrollableContainerConstraintsKt.checkScrollableContainerConstraints-K40F9xA(CheckScrollableContainerConstraints.kt:35)
+09-15 01:36:55.403  2694  2694 E AndroidRuntime: 	at androidx.compose.foundation.ScrollingLayoutNode.measure-3p2s80s(Scroll.kt:385)
+09-15 01:36:55.403  2694  2694 E AndroidRuntime: 	at androidx.compose.ui.node.LayoutModifierNodeCoordinator.measure-BRTryo0(LayoutModifierNodeCoordinator.kt:116)
+09-15 01:36:55.403  2694  2694 E AndroidRuntime: 	at androidx.compose.foundation.AndroidOverscroll_androidKt$StretchOverscrollNonClippingLayer$2.invoke-3p2s80s(AndroidOverscroll.android.kt:584)
+09-15 01:36:55.403  2694  2694 E AndroidRuntime: 	at androidx.compose.foundation.AndroidOverscroll_androidKt$StretchOverscrollNonClippingLayer$2.invoke(AndroidOverscroll.android.kt:583)
+09-15 01:36:55.403  2694  2694 E AndroidRuntime: 	at androidx.compose.ui.layout.LayoutModifierImpl.measure-3p2s80s(LayoutModifier.kt:294)
+09-15 01:36:55.403  2694  2694 E AndroidRuntime: 	at androidx.compose.ui.node.LayoutModifierNodeCoordinator.measure-BRTryo0(LayoutModifierNodeCoordinator.kt:116)
+09-15 01:36:55.403  2694  2694 E AndroidRuntime: 	at androidx.compose.foundation.AndroidOverscroll_androidKt$StretchOverscrollNonClippingLayer$1.invoke-3p2s80s(AndroidOverscroll.android.kt:568)
+09-15 01:36:55.403  2694  2694 E AndroidRuntime: 	at androidx.compose.foundation.AndroidOverscroll_androidKt$StretchOverscrollNonClippingLayer$1.invoke(AndroidOverscroll.android.kt:567)

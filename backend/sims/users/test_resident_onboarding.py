@@ -90,22 +90,18 @@ class ResidentOnboardingConsolidationTests(TestCase):
         with (
             patch("sims.users.userbase_views.recalculate_profile_completion"),
             patch("sims.users.userbase_views.get_missing_profile_fields", return_value=[]),
+            patch("sims.users.services.get_missing_profile_fields", return_value=[]),
             patch("sims.users.onboarding_api.get_resident_onboarding_state", return_value=onboarding_state),
         ):
             response = client.get("/api/auth/me/")
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.data["allowed_next_route"], "/dashboard/resident")
+        self.assertEqual(response.data["allowed_next_route"], resident.get_dashboard_url())
         self.assertFalse(response.data["onboarding_complete"])
 
-    def test_auth_me_does_not_force_non_resident_onboarding(self):
-        expected_routes = {
-            "ADMIN": "/dashboard/utrmc",
-            "SUPERVISOR": "/dashboard/supervisor",
-            "SUPPORT_STAFF": "/dashboard",
-        }
+    def test_auth_me_requires_missing_profile_fields_for_every_role(self):
         client = APIClient()
-        for role, expected_route in expected_routes.items():
+        for role in ("ADMIN", "SUPERVISOR", "SUPPORT_STAFF"):
             user = User.objects.create_user(
                 username=f"{role.lower()}_no_onboarding",
                 password="x",
@@ -115,7 +111,7 @@ class ResidentOnboardingConsolidationTests(TestCase):
             client.force_authenticate(user)
             response = client.get("/api/auth/me/")
             self.assertEqual(response.status_code, 200)
-            self.assertEqual(response.data["allowed_next_route"], expected_route)
+            self.assertEqual(response.data["allowed_next_route"], "/complete-profile")
 
 
 class ResidentOnboardingReviewGateTests(TestCase):

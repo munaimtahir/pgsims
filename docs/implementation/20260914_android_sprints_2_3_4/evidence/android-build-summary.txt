@@ -1,0 +1,6 @@
+Command: ./gradlew :app-companion:assembleDebug :app-companion:testDebugUnitTest :app-companion:lintDebug
+Baseline source 13f1bb7 plus concurrent version-only bump and test dependencies.
+BUILD SUCCESSFUL in 26s
+Unit XML totals: suites=5 tests=30 failures=0 errors=0 skipped=0
+Test APK: :app-companion:assembleDebugAndroidTest PASS; installed and named manual methods run.
+Runtime feature edits made later are outside this result.

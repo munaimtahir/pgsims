@@ -9,6 +9,9 @@ class CompanionApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
+        // Construction reconciles encrypted queue metadata with app-private files, removing
+        // process-death orphans before any worker can attempt recovery.
+        runCatching { OfflineUploadStore(this) }
         val request = PeriodicWorkRequestBuilder<OfflineDraftSyncWorker>(15, TimeUnit.MINUTES)
             .setConstraints(Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build())
             .build()
