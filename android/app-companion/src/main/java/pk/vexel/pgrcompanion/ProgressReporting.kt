@@ -17,13 +17,13 @@ private fun JsonObject.progressObject(key: String): JsonObject? = runCatching { 
 internal fun ResidentProgressReport(data: InstitutionalSnapshot) {
     Text("My progress", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
     Text("This is a read-only summary of your PGR SIMS record.", color = MaterialTheme.colorScheme.onSurfaceVariant)
-    val logbook = data.logbook.groupingBy { it.progressValue("status") }.eachCount()
+    val logbook = logbookCounts(data.logbook)
     val evaluations = data.assessments.groupingBy { it.progressValue("status") }.eachCount()
     val rotation = data.residentSummary?.progressObject("rotation")?.progressObject("current")
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         ProgressCard("Current posting", rotation?.progressValue("template_name").orEmpty().ifBlank { "No current posting" })
         ProgressCard("Rotations", "${data.rotations.size} recorded")
-        ProgressCard("Logbook", "${logbook["VERIFIED"] ?: logbook["APPROVED"] ?: 0} verified · ${logbook["SUBMITTED"] ?: 0} awaiting review")
+        ProgressCard("Logbook (loaded records)", "${logbook["APPROVED"] ?: 0} verified · ${logbook["SUBMITTED"] ?: 0} awaiting review")
         ProgressCard("Evaluations / WBA", "${evaluations["APPROVED"] ?: evaluations["COMPLETED"] ?: 0} complete · ${evaluations["SUBMITTED"] ?: 0} awaiting review")
         ProgressCard("Research", data.research?.progressValue("status").orEmpty().ifBlank { "No research status recorded" })
         ProgressCard("Workshops", "${data.workshops.size} recorded")

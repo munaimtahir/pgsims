@@ -1,0 +1,12 @@
+Candidate source: e0c98b5 (session fix 41493b8); emulator pgsims/API36.
+Commands: scripts/android_acceptance_ui.py with owner-controlled credentials file;
+ADB am start/force-stop and named ReleaseAcceptanceTest#forceRefresh.
+SUPPORT_STAFF: observed restricted-mobile screen and Sign out -> Sign in PASS.
+RESIDENT: fresh login/dashboard, Inbox/Preferences, restored session, forced refresh,
+logout/relogin PASS. Reopened after forced refresh on repaired session code PASS.
+SUPERVISOR: fresh login, Inbox/Preferences, exact notification target logbook31,
+recipient isolation, mark-unread action, restored session after forced refresh,
+logout/relogin and clean sign-out PASS.
+Missing-target production UI race found and fixed; InboxUiTest now tests persistent
+missing and unsupported messages. Signed-candidate production retest remains pending.
+No credential values, tokens or resident profile contents retained.

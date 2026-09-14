@@ -7,6 +7,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Groups
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
@@ -36,6 +37,7 @@ private fun JsonObject.child(key: String): JsonObject? =
 private enum class SupervisorDestination(val label: String, val icon: androidx.compose.ui.graphics.vector.ImageVector) {
     HOME("Home", Icons.Default.Home),
     RESIDENTS("Residents", Icons.Default.Groups),
+    INBOX("Inbox", Icons.Default.Notifications),
     PROFILE("Profile", Icons.Default.Person),
 }
 
@@ -109,6 +111,8 @@ fun SupervisorPane(
             } else when (destination) {
                 SupervisorDestination.HOME -> SupervisorHomeContent(data) { selectedWorkflow = it }
                 SupervisorDestination.RESIDENTS -> SupervisorResidentsContent(data) { selectedResidentId = it }
+                SupervisorDestination.INBOX -> NotificationCenterScreen(repository,
+                    onBack = { destination = SupervisorDestination.HOME }, onTarget = { _, _ -> })
                 SupervisorDestination.PROFILE -> SupervisorProfileContent(data, onSignOut, busy)
             }
 

@@ -1,0 +1,9 @@
+
+pk.vexel.pgrcompanion.InboxUiTest:...
+pk.vexel.pgrcompanion.RecoveryOwnershipTest:..
+
+Time: 11.879
+
+OK (5 tests)
+
+

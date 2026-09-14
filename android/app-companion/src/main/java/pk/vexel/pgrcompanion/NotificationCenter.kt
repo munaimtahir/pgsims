@@ -2,8 +2,6 @@ package pk.vexel.pgrcompanion
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -36,6 +34,7 @@ internal fun NotificationCenterScreen(
     var loading by remember { mutableStateOf(true) }
     var message by remember { mutableStateOf<String?>(null) }
     var preferencesOpen by remember { mutableStateOf(false) }
+    var targetDetail by remember { mutableStateOf<Pair<String, JsonObject>?>(null) }
     fun load() = scope.launch {
         loading = true
         repository.notifications().fold(
@@ -47,7 +46,9 @@ internal fun NotificationCenterScreen(
     LaunchedEffect(Unit) { load() }
 
     Column(
-        Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
+        // The role shell owns scrolling. A second vertical scroll container here caused an
+        // infinite-height measurement crash when Resident Inbox was opened.
+        Modifier.fillMaxWidth().padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
@@ -70,8 +71,18 @@ internal fun NotificationCenterScreen(
             val targetId = target?.noticeNumber("id")
             Card(
                 Modifier.fillMaxWidth().clickable {
-                    scope.launch { repository.markNotifications(listOf(id), true) }
-                    if (!kind.isNullOrBlank()) onTarget(kind, targetId)
+                    scope.launch {
+                        repository.markNotifications(listOf(id), true).onFailure { message = "Could not mark notification read." }
+                        load().join()
+                        if (!kind.isNullOrBlank() && targetId != null) {
+                            repository.notificationTarget(kind, targetId).fold(
+                                { exact -> targetDetail = kind to exact },
+                                { message = it.message ?: "This notification target is no longer available." },
+                            )
+                        } else if (!kind.isNullOrBlank()) {
+                            message = "This notification does not identify a record to open."
+                        }
+                    }
                 },
                 colors = if (read) CardDefaults.cardColors() else CardDefaults.cardColors(
                     containerColor = MaterialTheme.colorScheme.secondaryContainer,
@@ -86,7 +97,7 @@ internal fun NotificationCenterScreen(
                         TextButton(onClick = {
                             scope.launch {
                                 repository.markNotifications(listOf(id), !read)
-                                rows = rows.map { if (it.noticeNumber("id") == id) it else it }
+
                                 load()
                             }
                         }) { Text(if (read) "Mark unread" else "Mark read") }
@@ -96,6 +107,22 @@ internal fun NotificationCenterScreen(
         }
     }
     if (preferencesOpen) NotificationPreferencesDialog(repository) { preferencesOpen = false }
+    targetDetail?.let { (kind, detail) ->
+        AlertDialog(
+            onDismissRequest = { targetDetail = null },
+            title = { Text(detail.noticeText("title").ifBlank { detail.noticeText("template_name") }.ifBlank { InstitutionalLabels.humanize(kind) }) },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    detail.noticeText("status").takeIf { it.isNotBlank() }?.let { Text("Status: ${InstitutionalLabels.workflowStatus(it)}") }
+                    detail.noticeText("description").takeIf { it.isNotBlank() }?.let { Text(it) }
+                    detail.noticeText("reason").takeIf { it.isNotBlank() }?.let { Text("Reason: $it") }
+                    detail.noticeText("supervisor_comments").takeIf { it.isNotBlank() }?.let { Text("Feedback: $it") }
+                    Text("Record #${detail.noticeNumber("id") ?: "—"}", style = MaterialTheme.typography.bodySmall)
+                }
+            },
+            confirmButton = { TextButton(onClick = { targetDetail = null }) { Text("Close") } },
+        )
+    }
 }
 
 @Composable
