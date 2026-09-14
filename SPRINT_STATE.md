@@ -11,13 +11,20 @@ checkout on fix/android-release-closure from main 436053a.
 - Paused handoff confirmed; parity changes committed and preserved at d8e2ce6.
 - Read AGENTS.md/environment context; production and laptop are separate checkouts.
 - Focused source checkpoint 431e09d pushed/fetched on VPS; no production runtime changes.
-- Android 32 unit tests, lint, debug/test APK PASS. Inbox + owner/logout race
+- Android 33 unit tests, lint, debug/test APK PASS. Inbox + owner/logout race
   instrumentation OK (4 tests). Host-kill post/pre-ack and in-flight upload
   recovery, source/reconcile/metadata fault tests PASS. SUPPORT_STAFF UI PASS.
 - Backend 431e09d: isolated SQLite 928 tests/0 failures/0 errors, 102.644s, one
   PostgreSQL-only skip; separate PostgreSQL race test PASS (0.878s). Drift check,
   migrate-from-zero and Django check PASS. Containers/PG tmpfs/network removed.
   VPS logs: /home/munaim/srv/apps/pgsims-verification/closure-{sqlite,postgres}.log.
+
+- Fresh release image 7fe0b71e: full SQLite 928/0 failures/0 errors (87.707s),
+  PostgreSQL race 1/1 (0.794s); layers match worker/beat. Backup gzip/checksum
+  verified at /home/munaim/srv/backups/pgsims/pre_android_closure_20260915_0300.sql.gz.
+- Resident/supervisor sessions + forced refresh/restoration + logout/relogin PASS;
+  notification missing-target race fixed, device regression running. Fixture document
+  ID 2 (optional/no global requirement), demo-only in-app notification IDs 1–6.
 
 ## Pending Work
 1. Reconcile sanitized backend evidence into canonical reports; backend gates complete.

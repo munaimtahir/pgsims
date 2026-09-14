@@ -1,6 +1,8 @@
 # Android Sprints 1–5 — Canonical Test Results
 
-Final verification: 2026-09-15 PKT. **CONDITIONAL GO — mandatory device/recovery gates fail.**
+Current focused candidate: **CONDITIONAL GO — release acceptance in progress.**
+See [RELEASE_CLOSURE.md](RELEASE_CLOSURE.md) for repaired-source and new gate evidence.
+The baseline failures below are historical and remain preserved for traceability.
 This report supersedes earlier pending lists and distinguishes tested artifacts from ongoing development.
 
 ## Tested baseline and evidence boundary
