@@ -73,7 +73,7 @@ internal fun NotificationCenterScreen(
                 Modifier.fillMaxWidth().clickable {
                     scope.launch {
                         repository.markNotifications(listOf(id), true).onFailure { message = "Could not mark notification read." }
-                        load()
+                        load().join()
                         if (!kind.isNullOrBlank() && targetId != null) {
                             repository.notificationTarget(kind, targetId).fold(
                                 { exact -> targetDetail = kind to exact },

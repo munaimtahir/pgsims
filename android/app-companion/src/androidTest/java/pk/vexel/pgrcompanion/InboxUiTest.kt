@@ -47,6 +47,30 @@ class InboxUiTest {
         compose.onNodeWithText("Action required").assertExists()
     }
 
+    @Test fun missingAndUnsupportedTargetsKeepTheirRecoveryMessage() {
+        server.dispatcher = object : Dispatcher() {
+            override fun dispatch(request: RecordedRequest): MockResponse = when (request.path) {
+                "/api/notifications/" -> MockResponse().setBody("""{"results":[{"id":1,"title":"Missing fixture","target":{"kind":"leave","id":404}},{"id":2,"title":"Unsupported fixture","target":{"kind":"research","id":404}}]}""")
+                "/api/leaves/404/" -> MockResponse().setResponseCode(404).setBody("{}")
+                else -> MockResponse().setBody("{}")
+            }
+        }
+        compose.setContent { MaterialTheme {
+            Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
+                NotificationCenterScreen(repo, {}, { _, _ -> })
+            }
+        } }
+        compose.waitUntil(10000) { compose.onAllNodesWithText("Missing fixture").fetchSemanticsNodes().isNotEmpty() }
+        compose.onNodeWithText("Missing fixture").performScrollTo().performClick()
+        compose.waitUntil(10000) { compose.onAllNodesWithText("not available in PGR SIMS", substring = true).fetchSemanticsNodes().isNotEmpty() }
+        compose.waitForIdle()
+        compose.onNodeWithText("not available in PGR SIMS", substring = true).assertExists()
+        compose.onNodeWithText("Unsupported fixture").performScrollTo().performClick()
+        compose.waitUntil(10000) { compose.onAllNodesWithText("not supported by this app version", substring = true).fetchSemanticsNodes().isNotEmpty() }
+        compose.waitForIdle()
+        compose.onNodeWithText("not supported by this app version", substring = true).assertExists()
+    }
+
     @Test fun supervisorHasReachableInbox() {
         val snapshot = InstitutionalSnapshot(Json.parseToJsonElement("""{"id":9001,"role":"SUPERVISOR"}""").jsonObject)
         compose.setContent { MaterialTheme { SupervisorPane(repo, snapshot, false, {}, {}) } }
