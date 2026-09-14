@@ -58,5 +58,5 @@ that feature branch; the active feature worktree and its SPRINT_STATE.md remain 
 | ADMIN/staff | Universal four-role create and paged universal directory/details built for ADMIN. Staff remains own-account/Inbox only. Broader document/supervision/report administration remains open. |
 | Offline | Immediate synchronous owner-bound metadata and encrypted orphan cleanup pass instrumentation. Live lost-response exactly-once and foreground draft reconciliation remain open. |
 | Android candidate | 1.1.8/code 8; 37 unit tests, lint, both APK assemblies and `OK (10 tests)` instrumentation pass. Debug APK SHA-256 `e603de08dc892c37506996f03adbd1c04c67329f0d3f56e227dcda14c64c691c`. |
-| Backend/project | 21 focused and 922 full tests pass; 3 deployment-domain tests, Django check, Update 0 gate and canonical compose render pass. Migration drift check remains failing on two unrelated pre-existing state differences. |
+| Backend/project | 21 focused and 922 full tests pass; 3 deployment-domain tests, Django check, Update 0 gate, disposable identity repair (0 scanned, final PASS) and canonical compose render pass. Migration drift check remains failing on two unrelated pre-existing state differences. |
 | Release boundary | CONDITIONAL GO. No signing material found; no merge, VPS mutation, production deployment, Caddy or FCM change. |

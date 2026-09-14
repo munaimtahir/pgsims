@@ -188,6 +188,7 @@ This addendum applies to `feature/android-parity-stages-1-6`, not to the earlier
 | Final-source isolated Django suite | PASS — 922 tests in 40.740s, no failures/errors/skips |
 | `manage.py check` | PASS |
 | Update 0 identity cleanup gate | PASS |
+| Disposable `repair_identity_profiles` after migrate | PASS — 0 users/orphans/duplicates, final status PASS |
 | Canonical Docker compose render with disposable required variables | PASS |
 | `makemigrations --check --dry-run` | FAIL — pre-existing notification index-name and historical leave field drift |
 | `git diff --check` | PASS before final documentation/ledger update; repeated at handoff |

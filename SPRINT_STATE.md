@@ -21,7 +21,8 @@ deploy, mutate VPS/production, enable FCM or change Caddy.
 - Verification: Android 37 unit tests/lint/debug/debugAndroidTest PASS; rebuilt 1.1.8/code 8 APKs
   installed on `pgsims`; noncredentialed instrumentation `OK (10 tests)` and cold reset app link
   PASS. Backend focused 21 and full isolated 922 tests PASS; deployment-domain 3, Django check,
-  Update 0 gate and canonical compose render PASS.
+  Update 0 gate, disposable identity repair (`Users scanned: 0`, `Final status: PASS`) and canonical
+  compose render PASS.
 - Updated `android.md`, implementation status, canonical test addendum and verification ledger with
   precise completed/deferred/runtime boundaries.
 
