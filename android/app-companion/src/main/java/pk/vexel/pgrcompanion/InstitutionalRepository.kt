@@ -139,6 +139,10 @@ interface InstitutionalApi {
     @GET("api/resident-training/") suspend fun training(): Response<JsonObject>
     @GET("api/supervision/assignments/") suspend fun assignments(): Response<JsonObject>
     @GET("api/my/rotations/") suspend fun rotations(): Response<JsonObject>
+    @GET("api/leaves/{id}/") suspend fun leaveDetail(@Path("id") id: Int): Response<JsonObject>
+    @GET("api/academics/logbook-entries/{id}/") suspend fun logbookDetail(@Path("id") id: Int): Response<JsonObject>
+    @GET("api/academics/evaluation-submissions/{id}/") suspend fun evaluationDetail(@Path("id") id: Int): Response<JsonObject>
+    @GET("api/rotations/{id}/") suspend fun rotationDetail(@Path("id") id: Int): Response<JsonObject>
     @GET("api/my/leaves/") suspend fun leaves(): Response<JsonObject>
     @POST("api/leaves/") suspend fun createLeave(@Body body: LeaveRequestPayload): Response<JsonObject>
     @PATCH("api/leaves/{id}/") suspend fun updateLeave(@Path("id") id: Int, @Body body: LeaveRequestPayload): Response<JsonObject>
@@ -211,6 +215,8 @@ class InstitutionalException(message: String) : Exception(message)
 interface TokenStore {
     val access: String?
     val refresh: String?
+    val userId: Int? get() = null
+    fun saveUserId(id: Int) {}
     fun save(access: String, refresh: String)
     fun clear()
 }
@@ -221,12 +227,14 @@ interface TokenStore {
  * institutional session is recoverable, taking down the offline Personal Workspace is not.
  */
 class EncryptedTokenStore private constructor(private val prefs: android.content.SharedPreferences) : TokenStore {
+    override val userId: Int? get() = prefs.getInt("user_id", -1).takeIf { it > 0 }
+    override fun saveUserId(id: Int) { check(prefs.edit().putInt("user_id", id).commit()) }
     override val access: String? get() = prefs.getString(KEY_ACCESS, null)
     override val refresh: String? get() = prefs.getString(KEY_REFRESH, null)
     override fun save(access: String, refresh: String) {
-        prefs.edit().putString(KEY_ACCESS, access).putString(KEY_REFRESH, refresh).apply()
+        prefs.edit().putString(KEY_ACCESS, access).putString(KEY_REFRESH, refresh).commit().also { check(it) }
     }
-    override fun clear() { prefs.edit().clear().apply() }
+    override fun clear() { check(prefs.edit().clear().commit()) }
 
     companion object {
         private const val KEY_ACCESS = "access"
@@ -246,12 +254,15 @@ class EncryptedTokenStore private constructor(private val prefs: android.content
 }
 
 class InMemoryTokenStore : TokenStore {
+    private var owner: Int? = null
+    override val userId: Int? get() = owner
+    override fun saveUserId(id: Int) { owner = id }
     private var accessValue: String? = null
     private var refreshValue: String? = null
     override val access: String? get() = accessValue
     override val refresh: String? get() = refreshValue
     override fun save(access: String, refresh: String) { accessValue = access; refreshValue = refresh }
-    override fun clear() { accessValue = null; refreshValue = null }
+    override fun clear() { accessValue = null; refreshValue = null; owner = null }
 }
 
 /**
@@ -320,6 +331,14 @@ class InstitutionalRepository internal constructor(
         .build()
         .create(InstitutionalApi::class.java)
 
+    fun currentUserId(): Int? = tokens.userId
+
+    suspend fun me(): Result<JsonObject> = withContext(Dispatchers.IO) {
+        runCatching { required(authorized { authorizedApi.me() }, "your institutional profile").also { value ->
+            value.string("id")?.toIntOrNull()?.let(tokens::saveUserId)
+        } }
+    }
+
     fun isConnected(): Boolean = !tokens.access.isNullOrBlank() && !tokens.refresh.isNullOrBlank()
 
     suspend fun login(username: String, password: String): Result<JsonObject> =
@@ -340,7 +359,7 @@ class InstitutionalRepository internal constructor(
 
     suspend fun snapshot(): Result<InstitutionalSnapshot> = withContext(Dispatchers.IO) {
         runCatching {
-            val me = required(authorized { authorizedApi.me() }, "your institutional profile")
+            val me = me().getOrThrow()
             val unavailable = mutableListOf<String>()
             if (me.string("role") == "SUPERVISOR") {
                 val supervisorSummary = optional(authorized { authorizedApi.supervisorSummary() }, "Supervisor summary", unavailable)
@@ -534,6 +553,28 @@ class InstitutionalRepository internal constructor(
             }
         }
 
+    internal suspend fun upload(upload: OfflineUpload, store: OfflineUploadStore): Result<JsonObject> = withContext(Dispatchers.IO) {
+        runCatching {
+            validateUpload(upload.displayName, upload.sizeBytes)?.let { throw InstitutionalException(it) }
+            val body = object : okhttp3.RequestBody() {
+                override fun contentType() = upload.mimeType.toMediaType()
+                override fun contentLength() = upload.sizeBytes
+                override fun writeTo(sink: okio.BufferedSink) {
+                    store.open(upload).use { input ->
+                        val buffer = ByteArray(8192)
+                        while (true) {
+                            val count = input.read(buffer)
+                            if (count < 0) break
+                            sink.write(buffer, 0, count)
+                        }
+                    }
+                }
+            }
+            val part = MultipartBody.Part.createFormData("file", upload.displayName, body)
+            required(authorized { authorizedApi.upload(upload.documentId, part) }, "the uploaded document")
+        }
+    }
+
     suspend fun upload(documentId: Int, file: File, displayName: String): Result<JsonObject> =
         withContext(Dispatchers.IO) {
             runCatching {
@@ -544,6 +585,19 @@ class InstitutionalRepository internal constructor(
                 required(authorized { authorizedApi.upload(documentId, part) }, "the uploaded document")
             }
         }
+
+    suspend fun notificationTarget(kind: String, id: Int): Result<JsonObject> = withContext(Dispatchers.IO) {
+        runCatching {
+            val response = when (kind.lowercase()) {
+                "leave" -> authorized { authorizedApi.leaveDetail(id) }
+                "logbook" -> authorized { authorizedApi.logbookDetail(id) }
+                "evaluation" -> authorized { authorizedApi.evaluationDetail(id) }
+                "rotation" -> authorized { authorizedApi.rotationDetail(id) }
+                else -> throw InstitutionalException("This notification target is not supported by this app version.")
+            }
+            required(response, "this notification target")
+        }
+    }
 
     suspend fun notificationPreferences(): Result<JsonObject> = withContext(Dispatchers.IO) {
         runCatching { required(authorized { authorizedApi.notificationPreferences() }, "notification preferences") }

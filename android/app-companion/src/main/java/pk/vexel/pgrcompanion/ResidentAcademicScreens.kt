@@ -77,7 +77,7 @@ internal fun LeaveRequestsScreen(
             repository.createLeave(retrySafePayload).fold(
                 { onNotice("Leave request saved as a draft."); onRefresh() },
                 {
-                    offlineDrafts.saveLeave(retrySafePayload)
+                    offlineDrafts.saveLeave(retrySafePayload, repository.currentUserId() ?: error("Reconnect before saving a draft."))
                     onNotice("PGR SIMS is unavailable. Your encrypted leave draft is retained on this device.")
                 },
             )

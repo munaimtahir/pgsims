@@ -29,6 +29,9 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.booleanOrNull
@@ -107,8 +110,7 @@ fun InstitutionalWorkspace(repository: InstitutionalRepository) {
 
     fun signOut() = scope.launch {
         busy = true
-        repository.logout()
-        (context.applicationContext as CompanionApplication).purgeInstitutionalRecoveryMaterial()
+        (context.applicationContext as CompanionApplication).signOutInstitutional()
         snapshot = null; error = null; notice = null
         state = InstitutionalState.DISCONNECTED
         busy = false
@@ -159,13 +161,15 @@ fun InstitutionalWorkspace(repository: InstitutionalRepository) {
                 scope.launch {
                     busy = true; notice = null
                     val name = displayNameOf(context, uri)
-                    val result = runCatching {
+                    val result = withContext(Dispatchers.IO) { runCatching {
+                        RecoveryCoordinator.mutex.withLock {
                         context.contentResolver.openInputStream(uri)?.use { input ->
                             OfflineUploadStore(context).stage(
-                                documentId, name, context.contentResolver.getType(uri) ?: "application/octet-stream", input,
+                                documentId, name, context.contentResolver.getType(uri) ?: "application/octet-stream",
+                                repository.currentUserId() ?: error("Reconnect before staging a document."), input,
                             )
                         } ?: throw InstitutionalException("The selected file could not be opened.")
-                    }
+                    } } }
                     busy = false
                     result.fold(
                         {
@@ -192,7 +196,7 @@ fun InstitutionalWorkspace(repository: InstitutionalRepository) {
                     repository.createLogbook(retrySafePayload).fold(
                         { notice = "Logbook draft saved to PGR SIMS."; reloadKey++ },
                         {
-                            OfflineDraftStore(context).saveLogbook(retrySafePayload)
+                            OfflineDraftStore(context).saveLogbook(retrySafePayload, repository.currentUserId() ?: error("Reconnect before saving a draft."))
                             notice = "PGR SIMS is unavailable. Your encrypted logbook draft is retained on this device."; busy = false
                         },
                     )

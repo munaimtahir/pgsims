@@ -162,10 +162,10 @@ internal fun LogbookScreen(
     var adding by remember { mutableStateOf(false) }
     var selected by remember { mutableStateOf<JsonObject?>(null) }
     Text("Logbook", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-    val counts = data.logbook.groupingBy { it.value("status") }.eachCount()
+    val counts = logbookCounts(data.logbook)
     Card(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(3.dp)) {
-            Text("Activity summary", fontWeight = FontWeight.SemiBold)
+            Text("Activity summary (loaded records)", fontWeight = FontWeight.SemiBold)
             Text("Draft ${counts["DRAFT"] ?: 0} · Submitted ${counts["SUBMITTED"] ?: 0} · Correction required ${counts["RETURNED"] ?: 0} · Approved ${counts["APPROVED"] ?: 0}")
         }
     }

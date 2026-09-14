@@ -3,42 +3,54 @@ package pk.vexel.pgrcompanion
 import android.content.Context
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
-import java.io.File
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
-/** Replays only idempotency-keyed drafts; a server success is the only deletion condition. */
+internal object RecoveryCoordinator { val mutex = Mutex() }
+
+/** Logout waits for this critical section before purging either encrypted store. */
 class OfflineDraftSyncWorker(context: Context, parameters: WorkerParameters) : CoroutineWorker(context, parameters) {
-    override suspend fun doWork(): Result {
-        val drafts = OfflineDraftStore(applicationContext)
+    override suspend fun doWork(): Result = RecoveryCoordinator.mutex.withLock {
         val repository = (applicationContext as CompanionApplication).institutional
-        if (!repository.isConnected()) return Result.success()
+        if (!repository.isConnected()) return@withLock Result.success()
+        val owner = repository.me().getOrNull()?.string("id")?.toIntOrNull()
+            ?: return@withLock Result.retry()
+        val drafts = OfflineDraftStore(applicationContext)
+        var retry = false
         for (draft in drafts.all()) {
+            currentCoroutineContext().ensureActive()
+            if (draft.ownerUserId != owner) {
+                drafts.update(draft.copy(state = "failed", lastError = "This draft belongs to another or unknown account. Discard it explicitly."))
+                continue
+            }
             val result = when (draft.kind) {
                 "leave" -> draft.leave?.let { repository.createLeave(it) }
                 "logbook" -> draft.logbook?.let { repository.createLogbook(it) }
                 else -> null
             } ?: continue
-            if (result.isSuccess) drafts.remove(draft.id) else return Result.retry()
+            currentCoroutineContext().ensureActive()
+            if (result.isSuccess) drafts.remove(draft.id) else {
+                drafts.update(draft.copy(state = "failed", attempts = draft.attempts + 1, lastError = "Retry failed; draft retained."))
+                retry = true
+            }
         }
         val uploads = OfflineUploadStore(applicationContext)
         for (upload in uploads.all()) {
-            val result = runCatching {
-                uploads.update(upload.copy(state = OfflineUpload.UPLOADING, attempts = upload.attempts + 1, lastError = null))
-                val temporary = File.createTempFile("pgr-upload-", ".tmp", applicationContext.cacheDir)
-                try {
-                    uploads.open(upload).use { input -> temporary.outputStream().use(input::copyTo) }
-                    repository.upload(upload.documentId, temporary, upload.displayName).getOrThrow()
-                } finally {
-                    temporary.delete()
-                }
+            currentCoroutineContext().ensureActive()
+            if (upload.ownerUserId != owner) {
+                uploads.update(upload.copy(state = OfflineUpload.FAILED, lastError = "This upload belongs to another or unknown account. Discard it explicitly."))
+                continue
             }
+            uploads.update(upload.copy(state = OfflineUpload.UPLOADING, attempts = upload.attempts + 1, lastError = null))
+            val result = repository.upload(upload, uploads)
+            currentCoroutineContext().ensureActive()
             result.fold(
                 { uploads.remove(upload) },
-                { uploads.update(upload.copy(state = OfflineUpload.FAILED, attempts = upload.attempts + 1, lastError = it.message)) },
+                { uploads.update(upload.copy(state = OfflineUpload.FAILED, attempts = upload.attempts + 1, lastError = "Upload failed; encrypted source retained.")); retry = true },
             )
-            // Retain every failed source and let WorkManager backoff retry it.  It is never
-            // discarded or replaced without an explicit user action.
-            if (result.isFailure) return Result.retry()
         }
-        return Result.success()
+        if (retry) Result.retry() else Result.success()
     }
 }

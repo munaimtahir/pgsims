@@ -1,30 +1,28 @@
-# SPRINT_STATE.md — Android Sprints 1–5 release verification
+# Android focused release closure
 
 ## Scope
-
-Verify the `13f1bb7` baseline without production infrastructure changes. Final result: CONDITIONAL GO.
-Canonical evidence: `docs/implementation/20260914_android_sprints_2_3_4/TEST_RESULTS.md`.
+Five defects: resident Inbox scrolling, supervisor Inbox, leave idempotency,
+logbook status counts, durable encrypted upload recovery. User authorized paused
+handoff, focused implementation and production backend + signed APK/AAB release;
+no Play publication. Preserve parity branch at d8e2ce6. Work directly in this
+checkout on fix/android-release-closure from main 436053a.
 
 ## Completed Work
-
-- Reconciled inherited four-role API-login and ADMIN restricted-device evidence without repeating standalone API logins.
-- Isolated current VPS image: SQLite suite 922 tests, 0 failures/errors, 3 repository-file skips, 59.308s; container removed and health/FCM-disabled state verified.
-- SUPPORT_STAFF restricted routing/sign-out; RESIDENT/SUPERVISOR login, restore, forced refresh, logout; baseline Android build, 30 unit tests and lint pass.
-- Offline drafts survive restart; logbook deduplicates to ID 31. Normal encrypted upload restart/explicit discard and populated-queue logout purge pass.
-- Captured mandatory failures with reproducible device/server evidence; no production code/config deployment, no unrelated workflow changes.
+- Paused handoff confirmed; parity changes committed and preserved at d8e2ce6.
+- Read AGENTS.md/environment context; production and laptop are separate checkouts.
 
 ## Pending Work
+1. Repair backend leave serializer/create collision handling and immutability; add
+   permission/replay/race tests; reconcile reviewed migration drift.
+2. Fix resident/supervisor Inbox and shared count classifier in Android baseline.
+3. Make encrypted staging durable, owner-bound and race-safe; stream retries and
+   cancel recovery before logout purge; add process-death/fault tests.
+4. Run Android tests/lint and emulator acceptance with authorized labeled fixtures;
+   run full isolated VPS SQLite suite and separate disposable PostgreSQL races.
+5. Freeze/build signed 1.1.9/code9 APK/AAB; verify signature/hash; merge/push main,
+   verify VPS source; backup and scoped backend deployment only after gates pass.
+6. Reconcile evidence into pendingwork.md and canonical Sprint 1–5 reports; recheck
+   production health. GO requires all mandatory evidence committed on main.
 
-1. Fix `InstitutionalScreen.kt` / `NotificationCenter.kt` nested scrolling and add Supervisor Inbox; rerun both role Inbox/read-unread/target checks on a frozen artifact.
-2. Fix `LeaveRequestSerializer` / `LeaveRequestViewSet` key persistence; test new labeled keys for exactly one server record. Existing test leave IDs 17/18/19 are unsubmitted duplicate drafts; logbook ID 31 is the single synthetic draft.
-3. Normalize logbook state counts in `ResidentWorkflowScreens.kt`; verify Approved count agrees with list/detail/Progress.
-4. Reproduce and fix immediate-process-death upload metadata loss; assert retained upload count and orphan handling. Normal restart/explicit discard/logout purge already pass.
-5. Complete unverified write-action regression and document-upload integration using dedicated fixtures; retain the three repository-dependent SQLite skips explicitly.
-6. Freeze and separately verify any later `feature/android-parity-stages-1-6` changes and signed candidate; this report certifies only its recorded debug APK hashes. No GO or deployment until required gates pass.
-
-## Environment
-
-Laptop physical checkout `/media/munaim/shared1/Documents/github/pgsims`; VPS `ssh test`, repo
-`/home/munaim/srv/apps/pgsims`. A concurrent session owns the feature branch/worktree; evidence is
-committed on main separately without merging its edits. Credentials and tokens are not in evidence.
-FCM remains false; Caddy, production volumes, unrelated services and legacy folders are unchanged.
+## Verdict
+CONDITIONAL GO; repairs and candidate acceptance pending. Never log credentials.
