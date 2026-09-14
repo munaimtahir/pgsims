@@ -5,6 +5,8 @@ import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
@@ -616,7 +618,7 @@ class InstitutionalRepository internal constructor(
             // local clearing below remains guaranteed if the network/session has expired.
             runCatching { authorized { authorizedApi.logout(LogoutPayload(token)) } }
         }
-        tokens.clear()
+        refreshMutex.withLock { tokens.clear() }
     }
 
     // --- request plumbing -------------------------------------------------------------------
@@ -624,7 +626,13 @@ class InstitutionalRepository internal constructor(
     private suspend fun <T> authorized(request: suspend () -> Response<T>): Response<T> {
         val first = call(request)
         if (first.code() != 401) return first
-        return if (refreshToken()) call(request) else first
+        val refreshed = refreshMutex.withLock {
+            val used = first.raw().request.header("Authorization")?.removePrefix("Bearer ")
+            // Another request (or repository instance) may already have rotated the
+            // shared session while this request was returning its stale 401.
+            if (!tokens.access.isNullOrBlank() && tokens.access != used) true else refreshToken()
+        }
+        return if (refreshed) call(request) else first
     }
 
     private suspend fun <T> call(request: suspend () -> Response<T>): Response<T> = try {
@@ -640,7 +648,7 @@ class InstitutionalRepository internal constructor(
         val response = runCatching { anonymousApi.refresh(RefreshPayload(token)) }.getOrNull() ?: return false
         if (!response.isSuccessful) {
             // The refresh token is spent or revoked: drop the session rather than loop on 401.
-            tokens.clear()
+            if (response.code() == 401 || response.code() == 403) tokens.clear()
             return false
         }
         val body = response.body() ?: return false
@@ -678,6 +686,8 @@ class InstitutionalRepository internal constructor(
     }
 
     companion object {
+        private val refreshMutex = Mutex()
+
         /** Mirrors the backend's own limits so the trainee gets the error before the upload runs. */
         val ALLOWED_UPLOAD_EXTENSIONS = setOf("pdf", "jpg", "jpeg", "png", "doc", "docx")
         const val MAX_UPLOAD_BYTES = 10L * 1024 * 1024
