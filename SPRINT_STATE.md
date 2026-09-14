@@ -27,6 +27,9 @@ disabled; PGSIMS remains the notification authority.
   WorkManager recovery, and logout purge for all offline institutional material.
 - Added recipient-scoped inbox preferences UI and an Android `FCM_ENABLED=false` build-time gate.
 - Debug Kotlin compilation passed after the encrypted upload queue change.
+- Reviewed change set committed and pushed as `3b4a6f0` on
+  `remediation/pgsims-final-production-readiness`; VPS remains deliberately unchanged pending
+  disposable backend and authenticated regression gates.
 
 ## Pending work
 
