@@ -1,247 +1,55 @@
-# PGSIMS Android — Pending Work & Sprint Roadmap
+# PGSIMS Android — Remaining Release Work
 
-Last updated: 2026-09-14 23:36 PKT
-Repository HEAD: 921969bbeed29fb897fe57dc32f8614de6ab446b
-Branch: remediation/pgsims-final-production-readiness
+Updated 2026-09-15. **CONDITIONAL GO** for the tested Sprint 1–5 baseline.
+Canonical report: [TEST_RESULTS.md](docs/implementation/20260914_android_sprints_2_3_4/TEST_RESULTS.md).
+The `feature/android-parity-stages-1-6` candidate now contains the repairs below. `[x]` means source
+and automated verification complete; `[ ]` means authenticated/runtime acceptance or later scope.
 
-## Purpose
+## Closed verification gates
 
-This document is the canonical tracker for remaining PGSIMS Android development.
+- [x] Reconcile four-role production API login and historical ADMIN restricted-device result.
+- [x] SUPPORT_STAFF restricted-mobile screen and clean sign-out, including rebuilt APK.
+- [x] RESIDENT/SUPERVISOR fresh login, dashboard, logout/relogin, restored session and forced refresh.
+- [x] Resident training/posting/history/assignment, progress, profile/requirements and workflow lists;
+  supervisor assigned list/progress and queue/action-control read-only smoke checks (limits below).
+- [x] Offline leave/logbook draft creation in the real UI and retention across process restart.
+- [x] Logbook reconnect/replay yields exactly one server record per key (record 31).
+- [x] Encrypted synthetic document normal restart, explicit retry failure/discard, and logout purge
+  of populated draft/upload queues plus orphan file. This covers the discard acceptance branch.
+- [x] Baseline Android debug assembly, 30 unit tests across five suites, lint and test APK assembly.
+- [x] Disposable network-isolated VPS SQLite suite: 922 tests, 0 failures/errors, 3 explicit skips,
+  59.308 seconds; test container and SQLite files removed.
+- [x] Production database/cache/Celery health, frontend/Android API HTTP 200, FCM disabled.
+- [x] Reproducible sanitized evidence reconciled into the canonical report and Sprint 1–5 release report.
 
-Rules:
-- [ ] means pending
-- [~] means actively being implemented
-- [x] means implemented AND verified
-- Blocked items remain unchecked and must state the blocker.
-- A sprint is checked complete only after all mandatory acceptance gates pass.
+## Repaired candidate gates
 
-## Sprint 1 — Core Resident–Supervisor Workflow Parity
+- [x] Resident nested-scroll crash removed and all four role shells expose Inbox.
+- [x] Exact typed notification target lookup and stale/forbidden recovery wired and contract-tested.
+- [x] Leave `client_request_id` is writable-on-create, persisted and deduplicated; focused API test
+  proves a retry returns the same record and leaves one database row.
+- [x] Logbook `VERIFIED` and `RETURNED_FOR_REVISION` values normalize into the displayed summary.
+- [x] Draft/upload metadata uses synchronous persistence, is owner-bound, and removes encrypted
+  orphan files; immediate durability/orphan instrumentation passes.
+- [x] Migration drift reconciled by reviewed notification index and historical leave migrations;
+  migrate-from-zero and `makemigrations --check --dry-run` pass.
 
-Status: [~] CONDITIONAL GO — core functionality validated on device; remaining gates are session/refresh and full regression coverage.
+## Explicitly unverified / deferred acceptance
 
-### 1. Role Routing and Mobile Access Safety
+- [ ] Complete resident/supervisor write-action transitions using dedicated fixtures. This pass did
+  not approve/reject/submit unrelated leave, logbook, research, rotation or evaluation records.
+- [ ] Authenticated notification read/unread/preferences, role isolation and exact-target UI behavior.
+- [ ] Real document picker/upload/replacement success remains unverified; synthetic encrypted-store
+  retry/discard was the branch exercised. Canonical resident has no assigned document requirement.
+- [x] The three `DeploymentDomainConfigTests` pass in a repository-aware isolated run.
+- [ ] Signed release/Play package, accessibility/performance/physical-device QA and later parity
+  changes require their own frozen-candidate evidence; historical signed artifacts are not newly certified.
 
-- [x] Recognise RESIDENT explicitly
-- [x] Recognise SUPERVISOR explicitly
-- [x] Recognise ADMIN explicitly
-- [x] Recognise SUPPORT_STAFF explicitly
-- [x] Handle unknown/unsupported roles safely
-- [x] Prevent ADMIN from entering resident UI
-- [x] Prevent SUPPORT_STAFF from entering resident UI
-- [x] Add restricted-mobile screen for unsupported mobile roles
-- [x] Verify fresh login routing
-- [ ] Verify restored-session routing — Blocker: not yet exercised on authenticated restart flow.
-- [ ] Verify token-refresh routing — Blocker: not yet exercised during this session.
-- [x] Verify logout/re-login routing
+## Boundaries and retained fixtures
 
-### 2. Resident Leave Workflow
-
-- [x] Discover and document canonical leave API contract
-- [x] Leave request list
-- [x] Leave request detail
-- [x] New leave request
-- [x] Draft support using the backend draft status
-- [x] Submit leave request
-- [x] Display supervisor decision
-- [x] Display return/rejection reason
-- [x] Edit/resubmit where backend permits
-- [x] Error/validation handling
-- [x] End-to-end resident → supervisor → resident verification
-
-### 3. Resident Evaluations / WBA
-
-- [x] Discover canonical evaluation/WBA API contract
-- [x] Evaluation list
-- [x] Evaluation detail
-- [x] Pending/in-progress/completed state presentation
-- [x] Supervisor feedback display
-- [x] Resident actions where backend explicitly supports them
-- [x] Error and empty-state handling
-- [x] Real-backend verification
-
-### 4. Supervisor Evaluation Review
-
-- [x] Pending evaluation count reconciled with backend
-- [x] Evaluation queue
-- [x] Evaluation detail
-- [x] Resident/context information
-- [x] Supervisor review actions supported by backend
-- [x] Remarks/comments where required
-- [x] Approve action
-- [x] Return action
-- [x] Reject action
-- [x] Queue refresh after action
-- [x] Resident sees resulting state
-
-### 5. Workflow State Consistency
-
-- [x] Audit canonical backend states
-- [x] Shared Android workflow-state mapping
-- [x] Eliminate contradictory Android status labels
-- [ ] Ensure lists/details/dashboard counts agree — Blocker: not yet validated on non-demo dataset.
-- [x] Ensure allowed actions derive from backend state
-
-### 6. Regression Verification
-
-Resident:
-
-- [x] Authentication
-- [ ] Profile — Blocker: full regression pass not yet completed in this sequence.
-- [ ] Onboarding — Blocker: full regression pass not yet completed in this sequence.
-- [ ] Dashboard — Blocker: full regression pass not yet completed in this sequence.
-- [ ] Training programme
-- [ ] Current posting
-- [ ] Rotation history
-- [ ] Supervisor assignment
-- [ ] Logbook create/edit/submit
-- [ ] Research status
-- [ ] Workshop status
-- [ ] Document upload/replacement
-
-Supervisor:
-
-- [x] Resident list
-- [ ] Resident progress/detail
-- [ ] Logbook approval
-- [ ] Leave approval
-- [ ] Rotation approval
-- [ ] Research approval
-- [x] Evaluation approval/review
-
-### 7. Documentation
-
-- [x] Update Android API integration documentation
-- [ ] Update resident capability matrix
-- [ ] Update supervisor capability matrix
-- [x] Correct stale read-only supervisor documentation
-- [x] Update test/runbook documentation
-- [x] Add Sprint 1 implementation report
-
-### 8. Sprint 1 Release Gates
-
-- [x] Android debug build PASS
-- [x] Android release compilation PASS
-- [x] Unit tests PASS
-- [ ] Relevant instrumentation/UI tests PASS
-- [x] Backend/API checks PASS
-- [x] Real authenticated resident workflow PASS
-- [x] Real authenticated supervisor workflow PASS
-- [ ] No role-routing regression — Blocker: requires a full retained-session test matrix.
-- [ ] Existing Android workflows regression-tested — Blocker: broad regression matrix still pending.
-- [x] Evidence captured
-- [x] Sprint report completed
-
-## Sprint 2 — Mobile Workflow Inbox & Notifications
-
-Status: [ ] PENDING
-
-- [x] Unified Action Required inbox
-- [ ] Resident workflow notifications
-- [ ] Supervisor pending-action notifications
-- [x] Notification list
-- [x] Unread count/badge
-- [x] Mark read/unread
-- [x] Deep-link notification → relevant workflow
-- [ ] Notification preferences
-- [x] Background refresh strategy
-- [ ] Evaluate push-notification architecture
-- [ ] Implement push only after infrastructure/design approval
-- [ ] Notification API regression tests
-- [ ] Sprint 2 documentation and evidence
-
-## Sprint 3 — Mobile Resilience & Offline Drafts
-
-Status: [ ] PENDING
-
-- [x] Connectivity-state handling
-- [x] Logbook offline draft
-- [x] Leave offline draft
-- [x] Secure local draft storage
-- [x] Draft recovery after process restart
-- [x] Safe synchronization
-- [ ] Conflict handling
-- [ ] Failed submission retry
-- [ ] Document upload retry
-- [ ] Upload progress
-- [ ] Interrupted upload handling
-- [ ] Security review of cached sensitive information
-- [ ] Sprint 3 tests/documentation/evidence
-
-## Sprint 4 — Mobile Reporting & Resident Progress
-
-Status: [ ] PENDING
-
-- [x] Resident progress overview
-- [x] Training milestone summary
-- [x] Rotation completion summary
-- [x] Logbook completion metrics
-- [x] Evaluation/WBA progress
-- [x] Research progress
-- [x] Workshop/compliance status
-- [x] Supervisor resident-progress summary
-- [ ] Appropriate mobile reports
-- [ ] Export/share only where justified
-- [ ] Sprint 4 tests/documentation/evidence
-
-## Sprint 5 — Mobile UX, Reliability & Release Hardening
-
-Status: [ ] PENDING — do not implement in Sprint 1
-
-- [ ] Cross-screen UX consistency audit
-- [ ] Accessibility audit
-- [ ] Loading-state consistency
-- [ ] Empty-state consistency
-- [ ] Error-state consistency
-- [ ] Session-expiry behaviour
-- [ ] Deep-link verification
-- [ ] Performance profiling
-- [ ] Network efficiency review
-- [ ] Security review
-- [ ] Crash-path review
-- [ ] Release build verification
-- [ ] Emulator/device acceptance suite
-- [ ] Play-ready release package
-- [ ] Final capability matrix
-- [ ] Final release report
-
-## Explicit Web-First / Not Planned for Immediate Android Parity
-
-- Admin user management
-- Master-data administration
-- Bulk import/export
-- Backup/restore
-- Full audit-log administration
-- Data-quality administration
-- Complex institutional reports
-- System configuration
-
-These capabilities remain intentionally web-first unless a later product decision establishes a
-genuine mobile use case. Android parity means parity for appropriate resident and supervisor
-workflows, not duplication of every desktop administrative function.
-
-## Sprint 1 Evidence and Blockers
-
-Implementation evidence and blockers will be recorded in:
-`docs/implementation/20260912_android_sprint1_workflow_parity/SPRINT_1_IMPLEMENTATION_REPORT.md`.
-
-Verified evidence:
-- Signed release APK installed on `emulator-5554` and launched successfully (`pk.vexel.pgrcompanion`,
-  `versionName=1.1.7`, `versionCode=7`).
-- Supervisor demo walkthrough (`supervisor` / `supervisor123`):
-  - Sign-in, dashboard, evaluation queue, and evaluation detail/action controls validated (`Approve`, `Reject`,
-    `Return for revision`, `Cancel`).
-- Resident demo walkthrough (`pgrdrmuhammadadeelbas` / `pgfmu123`):
-  - Sign-in, resident workspace nav, dashboard, and core screens validated.
-- Live backend chain has been validated for leave and evaluation resident→supervisor→resident updates.
-- VPS backend checks and full 921-test suite remain passing.
-- Android debug build, release compilation, lint, unit tests, and emulator launch pass.
-
-Remaining mandatory gates:
-- [x] Authenticated Android emulator walkthrough for resident and supervisor.
-- [x] Owner-supplied signed release APK/AAB verification.
-  - Signed artifacts:
-    - [APK] `app-companion/build/outputs/apk/release/app-companion-release.apk`
-    - [AAB] `app-companion/build/outputs/bundle/release/app-companion-release.aab`
-- [ ] ADMIN/SUPPORT_STAFF routing smoke checks on device
-- [ ] Restored-session and token-refresh routing checks
-- [ ] Full resident/supervisor regression matrix for existing feature surfaces
+FCM stays disabled. No Caddy/route/production-service changes, external messaging or unrelated record
+changes. Labeled test server remnants are unsubmitted leave drafts 17/18/19 and logbook draft 31.
+Device recovery material and tokens were purged; test payload cache removed; networking restored.
+ADMIN now has bounded universal-user management; SUPPORT_STAFF remains own-account/Inbox only.
+No release GO is granted until authenticated candidate acceptance and remaining roadmap scope are
+resolved. Merge/deployment remain separate decisions.

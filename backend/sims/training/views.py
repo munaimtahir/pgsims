@@ -11,6 +11,7 @@ from datetime import timedelta
 
 from django.utils import timezone
 from uuid import UUID
+from django.db import IntegrityError, transaction
 from django.db.models import Q
 from rest_framework import serializers, viewsets, status
 from rest_framework.decorators import action
@@ -658,6 +659,7 @@ class LeaveRequestViewSet(viewsets.ModelViewSet):
         if not (_is_resident(request.user) or _is_admin_or_utrmc_admin(request.user)):
             return Response({"detail": "Permission denied."}, status=status.HTTP_403_FORBIDDEN)
         client_request_id = request.data.get("client_request_id")
+        request_uuid = None
         if client_request_id and _is_resident(request.user):
             try:
                 request_uuid = UUID(str(client_request_id))
@@ -666,7 +668,17 @@ class LeaveRequestViewSet(viewsets.ModelViewSet):
             existing = self.get_queryset().filter(client_request_id=request_uuid).first()
             if existing:
                 return Response(self.get_serializer(existing).data, status=status.HTTP_200_OK)
-        return super().create(request, *args, **kwargs)
+        try:
+            # The nested savepoint lets a concurrent unique-key collision be recovered even when
+            # the project enables request-level transactions.
+            with transaction.atomic():
+                return super().create(request, *args, **kwargs)
+        except IntegrityError:
+            if request_uuid is not None:
+                existing = self.get_queryset().filter(client_request_id=request_uuid).first()
+                if existing:
+                    return Response(self.get_serializer(existing).data, status=status.HTTP_200_OK)
+            raise
 
     @action(detail=True, methods=["post"])
     def submit(self, request, pk=None):

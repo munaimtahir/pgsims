@@ -80,6 +80,8 @@ coherent source increment completed in this sprint:
   creation; SUPPORT_STAFF remains limited to Inbox and own account;
 - synchronous owner-bound offline metadata, stable request IDs, upload/draft states and encrypted
   orphan cleanup.
+- server-side leave retry-key persistence/deduplication, canonical logbook status-count
+  normalization, and reviewed migrations that reconcile the formerly reported schema-state drift.
 
 The implementation remains intentionally partial: returned evaluation editing, permitted leave
 editing, generic supervisor review/workload, dedicated role directories, document/supervision

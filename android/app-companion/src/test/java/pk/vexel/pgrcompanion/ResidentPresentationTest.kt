@@ -48,6 +48,12 @@ class ResidentPresentationTest {
         assertEquals("In progress", residentStatus("IN_PROGRESS"))
     }
 
+    @Test fun `logbook summary normalizes canonical verified and returned statuses`() {
+        assertEquals("APPROVED", canonicalLogbookBucket("VERIFIED"))
+        assertEquals("RETURNED", canonicalLogbookBucket("RETURNED_FOR_REVISION"))
+        assertEquals("DRAFT", canonicalLogbookBucket("draft"))
+    }
+
     @Test fun `authoritative route applies password then profile then workspace precedence`() {
         assertEquals(
             AuthoritativeRoute.CHANGE_PASSWORD,

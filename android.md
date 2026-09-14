@@ -144,7 +144,7 @@ Android source aliases (all under `android/app-companion/src/main/java/pk/vexel/
 | Capability / implementation status | Role | Web source | Backend endpoint | Android evidence | Branch | QA | Stage | Dependency and acceptance |
 |---|---|---|---|---|---|---|---|---|
 | [x] ~~Queue offline leave/logbook create drafts and recover document uploads~~ | RESIDENT | Mobile resilience extension | `leaves/; academics/logbook-entries/; resident-documents/{id}/upload/` | I/E → D/U; CompanionApplication → J → R | B | Q | 6 | Q: create-only draft queues; updates/reviews not declared offline-capable |
-| [ ] Finish account isolation, conflict/retry and lifecycle behavior | All | Cross-client acceptance | `auth/session and affected workflow contracts` | Draft/upload metadata is synchronous, owner-bound and stateful; orphan encrypted files are removed; stable client request IDs survive retry; upload retry/discard is visible | F | Q | 6 | Noncredentialed durable/orphan instrumentation passes; live lost-response exactly-once and foreground draft-state reconciliation remain pending |
+| [ ] Finish account isolation, conflict/retry and lifecycle behavior | All | Cross-client acceptance | `auth/session and affected workflow contracts` | Draft/upload metadata is synchronous, owner-bound and stateful; orphan files are removed; leave/logbook request IDs persist and server retries deduplicate; upload retry/discard is visible | F | Q | 6 | Durable/orphan instrumentation and leave API retry coverage pass; live duplicate-worker device acceptance and foreground draft-state reconciliation remain pending |
 
 ### Additional active actions and conditional surfaces
 

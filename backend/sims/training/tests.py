@@ -298,6 +298,26 @@ class LeaveRequestAPITest(APITestCase):
         })
         self.assertEqual(r.status_code, 201)
 
+    def test_resident_leave_retry_key_is_persisted_and_deduplicated(self):
+        self._auth(self.resident_user)
+        request_id = "1d294ad4-ceaf-4f34-85ec-12e45dc7b935"
+        payload = {
+            "resident_training": self.rec.id,
+            "leave_type": "annual",
+            "start_date": str(TODAY),
+            "end_date": str(TODAY + timedelta(days=5)),
+            "client_request_id": request_id,
+        }
+
+        first = self.client.post("/api/leaves/", payload)
+        retry = self.client.post("/api/leaves/", payload)
+
+        self.assertEqual(first.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(retry.status_code, status.HTTP_200_OK)
+        self.assertEqual(retry.data["id"], first.data["id"])
+        self.assertEqual(str(LeaveRequest.objects.get(pk=first.data["id"]).client_request_id), request_id)
+        self.assertEqual(LeaveRequest.objects.filter(client_request_id=request_id).count(), 1)
+
     def test_resident_leave_create_requires_resident_training(self):
         self._auth(self.resident_user)
         r = self.client.post("/api/leaves/", {

@@ -176,7 +176,7 @@ This addendum applies to `feature/android-parity-stages-1-6`, not to the earlier
 
 | Command / check | Result |
 |---|---|
-| `:app-companion:testDebugUnitTest` | PASS — 37 tests |
+| `:app-companion:testDebugUnitTest` | PASS — 38 tests |
 | `:app-companion:lintDebug` | PASS |
 | `:app-companion:assembleDebug` | PASS — 1.1.8/code 8 |
 | `:app-companion:assembleDebugAndroidTest` | PASS |
@@ -184,16 +184,18 @@ This addendum applies to `feature/android-parity-stages-1-6`, not to the earlier
 | Noncredentialed instrumentation | PASS — `OK (10 tests)`; eight opt-in authenticated tests skipped by their guard |
 | Cold HTTPS reset app link | PASS — `CompanionActivity` rendered reset UID/token confirmation UI |
 | Focused identity/onboarding/backend permission suite | PASS — 21 tests |
+| Focused leave retry/idempotency suite | PASS — 4 tests; retry returns the original ID and one stored row |
 | Repository-aware deployment-domain tests | PASS — 3 tests |
-| Final-source isolated Django suite | PASS — 922 tests in 40.740s, no failures/errors/skips |
+| Final-source isolated Django suite | PASS — 923 tests in 32.140s, no failures/errors/skips |
 | `manage.py check` | PASS |
 | Update 0 identity cleanup gate | PASS |
 | Disposable `repair_identity_profiles` after migrate | PASS — 0 users/orphans/duplicates, final status PASS |
 | Canonical Docker compose render with disposable required variables | PASS |
-| `makemigrations --check --dry-run` | FAIL — pre-existing notification index-name and historical leave field drift |
+| `makemigrations --check --dry-run` | PASS after reviewed reconciliation migrations |
+| Migrate from zero including notification `0004` and training `0012` | PASS |
 | `git diff --check` | PASS before final documentation/ledger update; repeated at handoff |
 
-Final debug APK SHA-256: `e603de08dc892c37506996f03adbd1c04c67329f0d3f56e227dcda14c64c691c`.
+Final debug APK SHA-256: `9584c0b27078b95953a7b6ed06c62d7dbde50a8fdf806549e34d90c635b4da24`.
 Final test APK SHA-256: `95d725652ff3a075953ae569e6d5f9190166e1029d27dbb42f40b2b00ba4dca4`.
 
 Authenticated four-role/device workflow acceptance was not repeated because no approved demo session

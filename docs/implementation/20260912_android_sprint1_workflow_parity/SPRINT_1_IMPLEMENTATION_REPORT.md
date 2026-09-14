@@ -98,3 +98,21 @@ or unrelated production data was changed.
 Implementation is complete for the scoped code paths. Sprint 1 remains **CONDITIONAL GO** pending
 device-level restored-session/token-refresh checks and the full legacy-feature regression matrix. Sprint
 2 and later remain pending.
+
+
+## Sprint 1–5 final verification — 2026-09-15
+
+Final baseline verdict remains **CONDITIONAL GO**. Support-staff restricted routing, resident/supervisor
+session restoration and forced refresh now pass, as does the isolated full Django SQLite suite
+(922 tests, zero failures/errors, three explicit repository-file skips). Later device checks found
+resident Inbox crashing, supervisor Inbox absent, leave replay creating duplicates, inconsistent
+logbook counts, and an abrupt-upload metadata risk. Normal upload restart/discard/logout purge and
+logbook exactly-once replay pass within their documented boundaries. Full write-action regression
+and later feature/signed-candidate certification remain unverified. See the authoritative
+[combined report](../20260914_android_sprints_2_3_4/TEST_RESULTS.md) for artifact hashes, failures,
+fixture IDs, reproducible commands and remaining gates. No GO or deployment is granted here.
+
+The later `feature/android-parity-stages-1-6` candidate supersedes the source defects listed above:
+all-role Inbox, synchronous owner-bound upload metadata, persisted/deduplicated leave request IDs and
+normalized logbook counts are implemented with automated coverage. Historical baseline failures stay
+recorded for provenance; authenticated candidate acceptance and deployment remain separate gates.

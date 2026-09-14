@@ -18,26 +18,27 @@ deploy, mutate VPS/production, enable FCM or change Caddy.
   SUPPORT_STAFF remains own-account/Inbox only.
 - Stage 6 increment: synchronous owner-bound encrypted draft/upload metadata, retry state, stable
   client request IDs and orphan cleanup.
-- Verification: Android 37 unit tests/lint/debug/debugAndroidTest PASS; rebuilt 1.1.8/code 8 APKs
+- Verification: Android 38 unit tests/lint/debug/debugAndroidTest PASS; rebuilt 1.1.8/code 8 APKs
   installed on `pgsims`; noncredentialed instrumentation `OK (10 tests)` and cold reset app link
-  PASS. Backend focused 21 and full isolated 922 tests PASS; deployment-domain 3, Django check,
+  PASS. Backend focused identity 21, leave 4, and full isolated 923 tests PASS; deployment-domain 3, Django check,
   Update 0 gate, disposable identity repair (`Users scanned: 0`, `Final status: PASS`) and canonical
   compose render PASS.
+- Reconciled migration drift with reviewed notification index rename and historical leave field
+  migrations; migrate-from-zero and `makemigrations --check --dry-run` pass. Leave retry IDs now
+  persist/deduplicate and logbook summary status normalization has focused coverage.
 - Updated `android.md`, implementation status, canonical test addendum and verification ledger with
   precise completed/deferred/runtime boundaries.
 
 ## Pending Work
 
-1. Before release, resolve the existing `makemigrations --check --dry-run` drift: notification
-   index rename and historical leave `client_request_id` alteration. Do not generate them blindly.
-2. With approved demo identities, run the authenticated four-role matrix in `android.md`: route
+1. With approved demo identities, run the authenticated four-role matrix in `android.md`: route
    gates, Inbox isolation/targets, workflow transitions, lost-response exactly-once and upload
    recovery. Never retain credentials/tokens.
-3. Implement remaining unchecked roadmap rows: returned evaluation/leave edits, canonical
+2. Implement remaining unchecked roadmap rows: returned evaluation/leave edits, canonical
    supervisor queue/workload, role directories, document/supervision administration, reports/CSV
    and complete pagination. Academic master authoring, bulk mapping/import and backup/restore remain
    explicitly deferred.
-4. Produce signed APK/AAB only after owner-controlled signing properties become available; physical
+3. Produce signed APK/AAB only after owner-controlled signing properties become available; physical
    device and Play validation remain deferred.
 
 ## Verdict

@@ -163,7 +163,7 @@ internal fun LogbookScreen(
     var adding by remember { mutableStateOf(false) }
     var selected by remember { mutableStateOf<JsonObject?>(null) }
     Text("Logbook", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-    val counts = data.logbook.groupingBy { it.value("status") }.eachCount()
+    val counts = data.logbook.groupingBy { canonicalLogbookBucket(it.value("status")) }.eachCount()
     Card(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(3.dp)) {
             Text("Activity summary", fontWeight = FontWeight.SemiBold)
@@ -183,6 +183,12 @@ internal fun LogbookScreen(
     }
     if (adding) LogbookEntryDialog(data.logbookCategories, data.academicOptions, busy, { adding = false }, onCreate)
     selected?.let { LogbookDetailDialog(it, busy, { selected = null }, onSubmit, onUpdate, onCancel) }
+}
+
+internal fun canonicalLogbookBucket(status: String): String = when (status.uppercase()) {
+    "VERIFIED" -> "APPROVED"
+    "RETURNED_FOR_REVISION" -> "RETURNED"
+    else -> status.uppercase()
 }
 
 @Composable
