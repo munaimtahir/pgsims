@@ -415,6 +415,9 @@ class LeaveRequest(models.Model):
     start_date = models.DateField()
     end_date = models.DateField()
     reason = models.TextField(blank=True)
+    # Android retries use this client-generated key so an ambiguous network timeout cannot
+    # create two leave records.  Web-created records intentionally leave it null.
+    client_request_id = models.UUIDField(null=True, blank=True, unique=True, editable=False)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=STATUS_DRAFT)
     approved_by = models.ForeignKey(
         User, on_delete=models.SET_NULL, null=True, blank=True,

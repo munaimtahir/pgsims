@@ -1,4 +1,5 @@
 from datetime import date
+from uuid import UUID
 
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
@@ -505,6 +506,21 @@ class LogbookEntryViewSet(viewsets.ModelViewSet):
     serializer_class = LogbookEntrySerializer
     permission_classes = [IsAuthenticated]
 
+    def create(self, request, *args, **kwargs):
+        request_id = request.data.get("client_request_id")
+        if request_id and request.user.role == "RESIDENT" and hasattr(request.user, "resident_profile"):
+            try:
+                UUID(str(request_id))
+            except (TypeError, ValueError):
+                raise ValidationError({"client_request_id": "Must be a valid UUID."})
+            existing = self.queryset.filter(
+                resident=request.user.resident_profile,
+                extra_data__mobile_client_request_id=request_id,
+            ).first()
+            if existing:
+                return Response(self.get_serializer(existing).data, status=status.HTTP_200_OK)
+        return super().create(request, *args, **kwargs)
+
     def get_queryset(self):
         user = self.request.user
         if user.role == "ADMIN" or user.is_superuser:
@@ -566,7 +582,11 @@ class LogbookEntryViewSet(viewsets.ModelViewSet):
             supervisor=supervisor,
             academic_period=period,
             resident_reflection=self.request.data.get("resident_reflection", ""),
-            extra_data=self.request.data.get("extra_data", {}),
+            extra_data={
+                **self.request.data.get("extra_data", {}),
+                **({"mobile_client_request_id": self.request.data["client_request_id"]}
+                   if self.request.data.get("client_request_id") else {}),
+            },
             procedure_data=procedure_data,
             actor=user,
         )
@@ -1136,5 +1156,3 @@ class DataQualityReportExportCSVView(APIView):
                     "details": item.get("issue_details") or item.get("notes") or "Missing training records or supervisor links",
                 })
         return generate_csv_response(filename, headers, rows, keys)
-
-

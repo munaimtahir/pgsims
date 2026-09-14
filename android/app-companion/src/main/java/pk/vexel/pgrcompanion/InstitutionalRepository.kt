@@ -30,6 +30,7 @@ import retrofit2.http.Path
 import java.io.File
 import java.io.IOException
 import java.util.concurrent.TimeUnit
+import java.util.UUID
 
 /**
  * PGR SIMS networking boundary.
@@ -64,6 +65,13 @@ import java.util.concurrent.TimeUnit
 }
 
 @Serializable data class FieldPatch(val fields: Map<String, String?>)
+@Serializable data class NotificationPreferencesPayload(
+    val email_enabled: Boolean? = null,
+    val in_app_enabled: Boolean? = null,
+    val push_enabled: Boolean? = null,
+)
+@Serializable data class NotificationIdsPayload(val notification_ids: List<Int>)
+@Serializable data class DeviceRegistrationPayload(val token: String, val platform: String = "android")
 
 /** Reject/return payload shared by leave and rotation actions. */
 @Serializable data class ReasonPayload(val reason: String = "")
@@ -80,6 +88,7 @@ import java.util.concurrent.TimeUnit
     val start_date: String,
     val end_date: String,
     val reason: String = "",
+    val client_request_id: String? = null,
 )
 
 @Serializable data class EvaluationSubmissionPayload(
@@ -106,7 +115,11 @@ import java.util.concurrent.TimeUnit
     val patient_age: String = "",
     val patient_gender: String = "",
     val resident_reflection: String = "",
+    val client_request_id: String? = null,
 )
+
+internal fun LeaveRequestPayload.withOfflineId() = if (client_request_id != null) this else copy(client_request_id = UUID.randomUUID().toString())
+internal fun AcademicLogbookPayload.withOfflineId() = if (client_request_id != null) this else copy(client_request_id = UUID.randomUUID().toString())
 
 interface InstitutionalApi {
     @POST("api/auth/login/") suspend fun login(@Body body: LoginPayload): Response<JsonObject>
@@ -114,6 +127,13 @@ interface InstitutionalApi {
     @POST("api/auth/logout/") suspend fun logout(@Body body: LogoutPayload): Response<JsonObject>
     @GET("api/auth/me/") suspend fun me(): Response<JsonObject>
     @GET("api/auth/onboarding/") suspend fun onboarding(): Response<JsonObject>
+    @GET("api/notifications/") suspend fun notifications(): Response<JsonObject>
+    @GET("api/notifications/unread-count/") suspend fun notificationUnreadCount(): Response<JsonObject>
+    @GET("api/notifications/preferences/") suspend fun notificationPreferences(): Response<JsonObject>
+    @PATCH("api/notifications/preferences/") suspend fun updateNotificationPreferences(@Body body: NotificationPreferencesPayload): Response<JsonObject>
+    @POST("api/notifications/mark-read/") suspend fun markNotificationsRead(@Body body: NotificationIdsPayload): Response<JsonObject>
+    @POST("api/notifications/mark-unread/") suspend fun markNotificationsUnread(@Body body: NotificationIdsPayload): Response<JsonObject>
+    @POST("api/notifications/devices/") suspend fun registerDevice(@Body body: DeviceRegistrationPayload): Response<JsonObject>
     @PATCH("api/auth/onboarding/") suspend fun updateOnboarding(@Body body: FieldPatch): Response<JsonObject>
     @GET("api/resident-documents/") suspend fun documents(): Response<JsonArray>
     @GET("api/resident-training/") suspend fun training(): Response<JsonObject>
@@ -356,6 +376,35 @@ class InstitutionalRepository internal constructor(
         }
     }
 
+    /** Notification centre reads are on demand: failure never breaks the institutional workspace. */
+    suspend fun notifications(): Result<List<JsonObject>> = withContext(Dispatchers.IO) {
+        runCatching { required(authorized { authorizedApi.notifications() }, "your notifications").paged() }
+    }
+
+    suspend fun unreadNotificationCount(): Result<Int> = withContext(Dispatchers.IO) {
+        runCatching { required(authorized { authorizedApi.notificationUnreadCount() }, "your notification count").string("unread")?.toIntOrNull() ?: 0 }
+    }
+
+    suspend fun markNotifications(ids: List<Int>, read: Boolean): Result<Unit> = withContext(Dispatchers.IO) {
+        runCatching {
+            if (ids.isNotEmpty()) {
+                val request = NotificationIdsPayload(ids.distinct())
+                val response = if (read) authorized { authorizedApi.markNotificationsRead(request) }
+                else authorized { authorizedApi.markNotificationsUnread(request) }
+                required(response, "your notifications")
+                Unit
+            }
+        }
+    }
+
+    suspend fun registerPushToken(token: String): Result<Unit> = withContext(Dispatchers.IO) {
+        runCatching {
+            val request = DeviceRegistrationPayload(token = token, platform = "android")
+            required(authorized { authorizedApi.registerDevice(request) }, "your push registration")
+            Unit
+        }
+    }
+
     /** On-demand detail for one resident, fetched only when a supervisor opens that resident. */
     suspend fun supervisorResidentProgress(residentId: Int): Result<JsonObject> = withContext(Dispatchers.IO) {
         runCatching { required(authorized { authorizedApi.supervisorResidentProgress(residentId) }, "this resident's progress") }
@@ -495,6 +544,14 @@ class InstitutionalRepository internal constructor(
                 required(authorized { authorizedApi.upload(documentId, part) }, "the uploaded document")
             }
         }
+
+    suspend fun notificationPreferences(): Result<JsonObject> = withContext(Dispatchers.IO) {
+        runCatching { required(authorized { authorizedApi.notificationPreferences() }, "notification preferences") }
+    }
+
+    suspend fun updateNotificationPreferences(payload: NotificationPreferencesPayload): Result<JsonObject> = withContext(Dispatchers.IO) {
+        runCatching { required(authorized { authorizedApi.updateNotificationPreferences(payload) }, "notification preferences") }
+    }
 
     /** Clears the institutional session only. Personal Workspace data is untouched. */
     suspend fun logout() = withContext(Dispatchers.IO) {

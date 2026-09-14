@@ -41,3 +41,20 @@ class NotificationBasicTests(TestCase):
         count = len([n for n in (r.data if isinstance(r.data, list) else r.data.get("results", r.data)) 
                      if True])  # any positive count means endpoint works
         self.assertGreaterEqual(count, 1)
+
+    def test_target_and_mark_unread_are_recipient_scoped(self):
+        own = Notification.objects.create(
+            recipient=self.user, actor=self.admin, verb="leave.approved", title="Leave", body="Approved",
+            metadata={"target": {"kind": "leave", "id": 7}},
+        )
+        other = Notification.objects.create(recipient=self.admin, verb="x", title="Other", body="x")
+        self.client.force_authenticate(self.user)
+        listed = self.client.get("/api/notifications/")
+        rows = listed.data.get("results", listed.data)
+        self.assertEqual(next(row for row in rows if row["id"] == own.id)["target"], {"kind": "leave", "id": 7})
+        self.client.post("/api/notifications/mark-read/", {"notification_ids": [own.id]}, format="json")
+        response = self.client.post("/api/notifications/mark-unread/", {"notification_ids": [own.id, other.id]}, format="json")
+        own.refresh_from_db(); other.refresh_from_db()
+        self.assertEqual(response.data["marked"], 1)
+        self.assertIsNone(own.read_at)
+        self.assertIsNone(other.read_at)

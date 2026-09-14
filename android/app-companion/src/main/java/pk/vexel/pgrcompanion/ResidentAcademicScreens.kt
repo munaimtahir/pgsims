@@ -23,6 +23,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
@@ -44,6 +45,8 @@ internal fun LeaveRequestsScreen(
     onRefresh: () -> Unit,
 ) {
     val scope = rememberCoroutineScope()
+    val context = LocalContext.current
+    val offlineDrafts = remember(context) { OfflineDraftStore(context) }
     var selected by remember { mutableStateOf<JsonObject?>(null) }
     var adding by remember { mutableStateOf(false) }
     var filter by remember { mutableStateOf("ALL") }
@@ -70,9 +73,13 @@ internal fun LeaveRequestsScreen(
     if (adding) LeaveRequestDialog(data, busy, { adding = false }) { payload ->
         adding = false
         scope.launch {
-            repository.createLeave(payload).fold(
+            val retrySafePayload = payload.withOfflineId()
+            repository.createLeave(retrySafePayload).fold(
                 { onNotice("Leave request saved as a draft."); onRefresh() },
-                { onNotice(it.message ?: "Could not save the leave request.") },
+                {
+                    offlineDrafts.saveLeave(retrySafePayload)
+                    onNotice("PGR SIMS is unavailable. Your encrypted leave draft is retained on this device.")
+                },
             )
         }
     }

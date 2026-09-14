@@ -16,6 +16,7 @@ import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.automirrored.filled.FactCheck
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.School
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -34,7 +35,7 @@ import kotlinx.serialization.json.booleanOrNull
 import kotlinx.serialization.json.intOrNull
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
-import java.io.File
+import com.google.firebase.messaging.FirebaseMessaging
 
 /**
  * The four states named in INSTITUTIONAL_WORKSPACE_ARCHITECTURE.md. An institutional failure is
@@ -64,9 +65,11 @@ private fun humanize(value: String): String = InstitutionalLabels.humanize(value
 private enum class ResidentDestination(val label: String, val icon: androidx.compose.ui.graphics.vector.ImageVector) {
     HOME("Home", Icons.Default.Home),
     TRAINING("Training", Icons.Default.School),
+    PROGRESS("Progress", Icons.Default.School),
     LOGBOOK("Logbook", Icons.AutoMirrored.Filled.MenuBook),
     LEAVE("Leave", Icons.Default.CalendarMonth),
     EVALUATIONS("Evaluations", Icons.AutoMirrored.Filled.FactCheck),
+    INBOX("Inbox", Icons.Default.Notifications),
     REQUIREMENTS("Requirements", Icons.Default.Checklist),
     PROFILE("Profile", Icons.Default.Person),
 }
@@ -105,6 +108,7 @@ fun InstitutionalWorkspace(repository: InstitutionalRepository) {
     fun signOut() = scope.launch {
         busy = true
         repository.logout()
+        (context.applicationContext as CompanionApplication).purgeInstitutionalRecoveryMaterial()
         snapshot = null; error = null; notice = null
         state = InstitutionalState.DISCONNECTED
         busy = false
@@ -118,7 +122,13 @@ fun InstitutionalWorkspace(repository: InstitutionalRepository) {
                 scope.launch {
                     state = InstitutionalState.SIGNING_IN; error = null
                     repository.login(username, password).fold(
-                        { state = InstitutionalState.CONNECTED; reloadKey++ },
+                        {
+                            state = InstitutionalState.CONNECTED; reloadKey++
+                            (context.applicationContext as CompanionApplication).enqueueOfflineRecovery()
+                            if (BuildConfig.FCM_ENABLED) FirebaseMessaging.getInstance().token.addOnSuccessListener { token ->
+                                scope.launch { repository.registerPushToken(token) }
+                            }
+                        },
                         { error = it.message ?: "Sign in failed."; state = InstitutionalState.DISCONNECTED },
                     )
                 }
@@ -150,21 +160,19 @@ fun InstitutionalWorkspace(repository: InstitutionalRepository) {
                     busy = true; notice = null
                     val name = displayNameOf(context, uri)
                     val result = runCatching {
-                        val staged = File(context.cacheDir, "institutional_upload_$name")
-                        try {
-                            context.contentResolver.openInputStream(uri)?.use { input ->
-                                staged.outputStream().use(input::copyTo)
-                            } ?: throw InstitutionalException("The selected file could not be opened.")
-                            repository.upload(documentId, staged, name).getOrThrow()
-                        } finally {
-                            // Never leave institutional documents lying in the cache directory.
-                            staged.delete()
-                        }
+                        context.contentResolver.openInputStream(uri)?.use { input ->
+                            OfflineUploadStore(context).stage(
+                                documentId, name, context.contentResolver.getType(uri) ?: "application/octet-stream", input,
+                            )
+                        } ?: throw InstitutionalException("The selected file could not be opened.")
                     }
                     busy = false
                     result.fold(
-                        { notice = "Uploaded \"$name\". PGR SIMS will review it."; reloadKey++ },
-                        { notice = it.message ?: "Upload failed." },
+                        {
+                            (context.applicationContext as CompanionApplication).enqueueOfflineRecovery()
+                            notice = "\"$name\" is encrypted on this device and queued for secure upload."
+                        },
+                        { notice = it.message ?: "Could not queue the document." },
                     )
                 }
             },
@@ -180,9 +188,13 @@ fun InstitutionalWorkspace(repository: InstitutionalRepository) {
             onCreateLogbook = { payload ->
                 scope.launch {
                     busy = true; notice = null
-                    repository.createLogbook(payload).fold(
+                    val retrySafePayload = payload.withOfflineId()
+                    repository.createLogbook(retrySafePayload).fold(
                         { notice = "Logbook draft saved to PGR SIMS."; reloadKey++ },
-                        { notice = it.message ?: "Could not save the logbook entry."; busy = false },
+                        {
+                            OfflineDraftStore(context).saveLogbook(retrySafePayload)
+                            notice = "PGR SIMS is unavailable. Your encrypted logbook draft is retained on this device."; busy = false
+                        },
                     )
                 }
             },
@@ -322,8 +334,11 @@ private fun ConnectedPane(
 ) {
     val context = LocalContext.current
     var destination by rememberSaveable { mutableStateOf(ResidentDestination.HOME) }
+    var unreadNotifications by remember { mutableIntStateOf(0) }
     var targetDocument by remember { mutableStateOf<Int?>(null) }
     var confirmReplace by remember { mutableStateOf<Pair<Int, String>?>(null) }
+    val uploadStore = remember(context) { OfflineUploadStore(context) }
+    var queuedUploads by remember { mutableStateOf<List<OfflineUpload>>(emptyList()) }
     val picker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? ->
         val id = targetDocument
         targetDocument = null
@@ -335,12 +350,25 @@ private fun ConnectedPane(
         val problem = InstitutionalRepository.validateUpload(name, if (size >= 0) size else 1L)
         if (problem != null) onNotice(problem) else onUpload(id, uri)
     }
+    LaunchedEffect(destination, snapshot) {
+        if (destination != ResidentDestination.INBOX) {
+            repository.unreadNotificationCount().onSuccess { unreadNotifications = it }
+        }
+    }
+    LaunchedEffect(destination) {
+        if (destination == ResidentDestination.REQUIREMENTS) queuedUploads = uploadStore.all()
+    }
 
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text("PGR Companion") },
-                actions = { TextButton(onClick = onSignOut, enabled = !busy) { Text("Sign out") } },
+                actions = {
+                    TextButton(onClick = { destination = ResidentDestination.INBOX }, enabled = !busy) {
+                        Text(if (unreadNotifications > 0) "Inbox ($unreadNotifications)" else "Inbox")
+                    }
+                    TextButton(onClick = onSignOut, enabled = !busy) { Text("Sign out") }
+                },
             )
         },
         bottomBar = {
@@ -436,15 +464,60 @@ private fun ConnectedPane(
 
         if (destination == ResidentDestination.TRAINING) TrainingDashboard(data)
 
+        if (destination == ResidentDestination.PROGRESS) ResidentProgressReport(data)
+
         if (destination == ResidentDestination.LOGBOOK) LogbookScreen(data, busy, onCreateLogbook, onSubmitLogbook, onUpdateLogbook)
 
         if (destination == ResidentDestination.LEAVE) LeaveRequestsScreen(repository, data, busy, onNotice, onRefresh)
 
         if (destination == ResidentDestination.EVALUATIONS) EvaluationsScreen(repository, data, busy, onNotice, onRefresh)
 
+        if (destination == ResidentDestination.INBOX) NotificationCenterScreen(
+            repository = repository,
+            onBack = { destination = ResidentDestination.HOME },
+            onTarget = { kind, _ ->
+                destination = when (kind) {
+                    "leave" -> ResidentDestination.LEAVE
+                    "evaluation" -> ResidentDestination.EVALUATIONS
+                    "logbook" -> ResidentDestination.LOGBOOK
+                    else -> ResidentDestination.TRAINING
+                }
+            },
+        )
+
         if (destination == ResidentDestination.REQUIREMENTS) RequirementsScreen(data) {
         Text("Documents", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
         Text("Upload requested documents and follow review feedback.", color = MaterialTheme.colorScheme.onSurfaceVariant)
+        if (queuedUploads.isNotEmpty()) {
+            Text("Queued uploads", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            queuedUploads.forEach { upload ->
+                Card(Modifier.fillMaxWidth()) {
+                    Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Text(upload.displayName, fontWeight = FontWeight.SemiBold)
+                        Text(
+                            when (upload.state) {
+                                OfflineUpload.QUEUED -> "Queued for secure upload"
+                                OfflineUpload.UPLOADING -> "Upload in progress"
+                                else -> "Upload paused: ${upload.lastError ?: "retry required"}"
+                            },
+                            style = MaterialTheme.typography.bodySmall,
+                            color = if (upload.state == OfflineUpload.FAILED) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            TextButton(onClick = {
+                                uploadStore.update(upload.copy(state = OfflineUpload.QUEUED, lastError = null))
+                                queuedUploads = uploadStore.all()
+                                (context.applicationContext as CompanionApplication).enqueueOfflineRecovery()
+                            }) { Text("Retry") }
+                            TextButton(onClick = {
+                                uploadStore.remove(upload)
+                                queuedUploads = uploadStore.all()
+                            }) { Text("Discard") }
+                        }
+                    }
+                }
+            }
+        }
         if (data.documents.isEmpty()) {
             InstitutionalEmpty("No document requirements are currently assigned to your account.")
         } else {

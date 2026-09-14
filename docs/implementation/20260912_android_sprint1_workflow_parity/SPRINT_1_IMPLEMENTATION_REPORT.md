@@ -1,13 +1,13 @@
 # PGSIMS Android — Sprint 1 Workflow Parity Report
 
-Date: 2026-09-12
+Date: 2026-09-14
 Verdict: CONDITIONAL GO
 
 ## 1. Baseline
 
 - Starting branch: `remediation/pgsims-final-production-readiness`
 - Starting SHA: `67e604087715251559de4abf170a705241ef0681`
-- Final implementation SHA: `500f95ef6a4d07170d9dafca7923fa909950d43b`
+- Final implementation SHA: `921969bbeed29fb897fe57dc32f8614de6ab446b`
 - Android package: `pk.vexel.pgrcompanion`
 - Android version: `1.1.7` / code `7`
 - Backend: Django 5.2 / DRF; laptop and VPS were synchronized before work.
@@ -51,11 +51,14 @@ No backend endpoint or migration was added.
 |---|---|
 | `./gradlew :app-companion:testDebugUnitTest :app-companion:lintDebug :app-companion:assembleDebug` | PASS |
 | `./gradlew :app-companion:compileReleaseKotlin :app-companion:lintRelease` | PASS |
+| `./gradlew :app-companion:assembleRelease :app-companion:bundleRelease -PpgrCompanionSigningPropertiesFile=/home/munaim/.config/pgr-companion/signing/signing.properties` | PASS |
 | `python3 manage.py check` on VPS | PASS |
 | `python3 manage.py makemigrations --check --dry-run` on VPS | PASS |
 | `python3 manage.py test --noinput` on VPS | PASS — 921 tests |
 | `bash scripts/check_update_0_identity_cleanup.sh` on VPS | PASS |
-| `adb` install/launch on `emulator-5554` | PASS — sign-in screen rendered, no crash |
+| `adb` install/launch and version check on `emulator-5554` | PASS — app launched, `versionName=1.1.7`, `versionCode=7` |
+| Manual supervisor walkthrough on device (`supervisor` / `supervisor123`) | PASS — evaluation queue open, detail actions (`Approve`, `Reject`, `Return for revision`, `Cancel`) available |
+| Manual resident walkthrough on device (`pgrdrmuhammadadeelbas` / `pgfmu123`) | PASS — resident workspace rendered and navigation validated |
 | Instrumentation/UI suite | NOT AVAILABLE — no Android instrumentation test sources exist |
 
 ## 7. Real backend evidence
@@ -74,11 +77,9 @@ or unrelated production data was changed.
 
 ## 8. Known limitations / blockers
 
-- Full authenticated UI walkthrough through the installed Android app was not automated; the
-  emulator smoke verified cold launch/sign-in rendering, while the complete mutation chain was
-  verified against the live backend contract with curl.
-- Release `assembleRelease`/AAB signing was not run because owner-controlled signing properties
-  were not supplied. Release Kotlin compilation and lint passed.
+- Full authenticated UI walkthrough was completed on device; no end-to-end mutation was automated
+  by instrumentation, so functional steps remain manual but observed and recorded.
+- Owner-supplied signed release APK/AAB was produced and verified with `apksigner` v2 (APK) and `jarsigner` for AAB.
 - Leave backend has no valid transition from `REJECTED` back to `SUBMITTED`; Android therefore does
   not claim unsupported rejected-request resubmission.
 - No instrumentation test suite currently exists.
@@ -94,6 +95,6 @@ or unrelated production data was changed.
 
 ## 10. Final status
 
-Implementation is complete for the scoped code paths. Sprint 1 remains **CONDITIONAL GO** until an
-authenticated emulator walkthrough and owner-approved signed release build are completed. Sprint 2
-and later remain pending.
+Implementation is complete for the scoped code paths. Sprint 1 remains **CONDITIONAL GO** pending
+device-level restored-session/token-refresh checks and the full legacy-feature regression matrix. Sprint
+2 and later remain pending.

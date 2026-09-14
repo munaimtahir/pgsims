@@ -1,13 +1,11 @@
-# SPRINT_STATE.md — Android Sprint 1 follow-up
+# SPRINT_STATE.md — Android Sprints 1–5 release closure
 
 ## Scope
 
-The Android Sprint 1 implementation is recorded in `pendingwork.md` and is CONDITIONAL GO pending
-the two gates below. The final production-readiness remediation remains closed as GO for its defined
-scope on branch `remediation/pgsims-final-production-readiness`; PR #16 remains open and unmerged.
-Do not mutate production data or deployment state beyond the explicitly labelled Sprint 1 evidence.
+Close the Android Sprints 1–5 release only with reproducible local and VPS evidence. FCM remains
+disabled; PGSIMS remains the notification authority.
 
-## Completed baseline
+## Completed implementation
 
 - Confirmed laptop `origin/main` baseline `a08bb16eb321f6154774d1c9edf6be28bffc4a2f` and created the remediation branch.
 - Updated Django constraint to `>=5.2,<5.3`; Django 5.2.17 full suite passed (921 tests), checks and migration drift passed.
@@ -22,20 +20,24 @@ Do not mutate production data or deployment state beyond the explicitly labelled
 - Disposable canonical stack smoke gate passed 25/25; stack and project-scoped volumes were removed.
 - Canonical workflow gate passed 4/4; VPS production was checked read-only (healthz, frontend HTTP 200, migrations applied) with no mutation or restart.
 - RBAC/negative passed 31/31; broader workflows passed 23 with 1 explicit conditional skip; Android `:app-companion` unit tests, lint, and debug assembly passed.
+- Android signed release artifacts were produced successfully with external owner signing properties:
+  - `android/app-companion/build/outputs/apk/release/app-companion-release.apk`
+  - `android/app-companion/build/outputs/bundle/release/app-companion-release.aab`
+- Added encrypted app-private staging for documents, persisted retry metadata, constrained
+  WorkManager recovery, and logout purge for all offline institutional material.
+- Added recipient-scoped inbox preferences UI and an Android `FCM_ENABLED=false` build-time gate.
+- Debug Kotlin compilation passed after the encrypted upload queue change.
 
 ## Pending work
 
-1. Run an authenticated resident and supervisor walkthrough through the installed Android build on
-   emulator `pgsims`; record evidence in the Sprint 1 report.
-2. When deployment ownership provides secure Android signing properties, run the documented
-   `:app-companion:assembleRelease`/`:app-companion:bundleRelease` verification without creating or
-   exposing signing material.
-3. Review the existing Ruff backlog and Django schema-generation warnings as a separately scoped
-   maintenance sprint.
+1. Android debug gate passed: unit tests, lint, debug assembly, installation, and unauthenticated launch on emulator `pgsims`; see `docs/implementation/20260914_android_sprints_2_3_4/TEST_RESULTS.md`.
+2. On emulator `pgsims`, use supplied disposable/demo accounts to record ADMIN/SUPPORT_STAFF routing, restored session, forced token refresh, resident/supervisor workflow regression, offline leave/logbook restart recovery, and encrypted document upload retry/discard behavior.
+3. In a disposable backend stack, run migrations, `check`, notification/device-token tests, focused offline-idempotency tests, full test suite, and identity repair. Record exact commands/results in `docs/implementation/20260914_android_sprints_2_3_4/TEST_RESULTS.md`.
+4. Before any VPS mutation, compare local/VPS branch, HEAD and status (the initial read-only comparison found local `921969b` and VPS `67e6040`); commit and push reviewed changes; then follow the scoped Compose rollout and rollback evidence in the release report. Do not enable FCM or change Caddy.
 
 ## Known conditions
 
 - Ruff reports 2,663 existing findings; broad legacy cleanup is deferred and documented.
 - VPS host Node is 18.19.1; Next 16 verification used disposable Node 20.20.2 tooling, matching the frontend image requirement.
 - Playwright smoke executed 25 tests: 25 passed; workflow-gate 4/4 passed; RBAC/negative 31/31 passed; broader workflows 23 passed with 1 explicit conditional skip.
-- Final certification: CONDITIONAL GO for Android Sprint 1; release signing and authenticated emulator walkthrough remain NOT VERIFIED.
+- Final certification: CONDITIONAL GO for Android Sprint 1; authenticated walkthrough completed and signed release verification complete.

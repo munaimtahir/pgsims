@@ -22,6 +22,8 @@ android {
         vectorDrawables { useSupportLibrary = true }
         buildConfigField("String", "INSTITUTIONAL_API_BASE_URL", "\"https://android.pgsims.alshifalab.pk/\"")
         buildConfigField("String", "INSTITUTION_DISPLAY_NAME", "\"Faisalabad Medical University\"")
+        // FCM is deliberately opt-in at build time.  PGR SIMS remains the notification authority.
+        buildConfigField("boolean", "FCM_ENABLED", "false")
     }
     signingConfigs {
         create("release") {
@@ -91,6 +93,9 @@ dependencies {
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.androidx.security.crypto)
+    implementation(libs.androidx.work.runtime)
+    implementation(platform("com.google.firebase:firebase-bom:33.1.2"))
+    implementation("com.google.firebase:firebase-messaging-ktx")
     implementation(libs.retrofit.core)
     implementation(libs.retrofit.kotlinx.serialization)
     implementation(libs.okhttp.core)

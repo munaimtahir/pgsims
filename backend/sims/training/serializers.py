@@ -144,6 +144,7 @@ class LeaveRequestSerializer(serializers.ModelSerializer):
         fields = [
             "id", "resident_training", "resident_name",
             "leave_type", "start_date", "end_date", "reason", "status",
+            "client_request_id",
             "approved_by", "approved_at", "reject_reason",
             "created_at", "updated_at",
         ]

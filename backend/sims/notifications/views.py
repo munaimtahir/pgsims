@@ -10,11 +10,12 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from drf_spectacular.utils import extend_schema
 
-from sims.notifications.models import Notification, NotificationPreference
+from sims.notifications.models import MobileDevice, Notification, NotificationPreference
 from sims.notifications.serializers import (
     NotificationMarkReadSerializer,
     NotificationPreferenceSerializer,
     NotificationSerializer,
+    MobileDeviceSerializer,
 )
 
 
@@ -73,6 +74,22 @@ class NotificationMarkReadView(APIView):
 
 
 @extend_schema(responses={200: None})
+class NotificationMarkUnreadView(APIView):
+    """Restore unread state, never crossing the authenticated recipient boundary."""
+
+    serializer_class = NotificationEmptySchemaSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request: Request) -> Response:
+        serializer = NotificationMarkReadSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        updated = Notification.objects.filter(
+            recipient=request.user, pk__in=serializer.validated_data["notification_ids"]
+        ).update(read_at=None)
+        return Response({"marked": updated}, status=status.HTTP_200_OK)
+
+
+@extend_schema(responses={200: None})
 class NotificationPreferenceView(APIView):
     serializer_class = NotificationPreferenceSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -100,9 +117,28 @@ class NotificationUnreadCountView(APIView):
         return Response({"unread": count})
 
 
+class MobileDeviceRegistrationView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request: Request) -> Response:
+        serializer = MobileDeviceSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        device, _ = MobileDevice.objects.update_or_create(
+            token=serializer.validated_data["token"],
+            defaults={"user": request.user, "platform": serializer.validated_data["platform"], "active": True},
+        )
+        return Response({"id": device.id}, status=status.HTTP_201_CREATED)
+
+    def delete(self, request: Request) -> Response:
+        MobileDevice.objects.filter(user=request.user, token=request.data.get("token", "")).delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
 __all__ = [
     "NotificationListView",
     "NotificationMarkReadView",
+    "NotificationMarkUnreadView",
     "NotificationPreferenceView",
     "NotificationUnreadCountView",
+    "MobileDeviceRegistrationView",
 ]

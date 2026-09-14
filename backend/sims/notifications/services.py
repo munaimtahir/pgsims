@@ -12,11 +12,13 @@ from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.utils import timezone
 
-from sims.notifications.models import Notification, NotificationPreference
+from sims.notifications.models import MobileDevice, Notification, NotificationPreference
 from sims.training.models import RotationAssignment
 from sims.users.models import User
 
 logger = logging.getLogger(__name__)
+
+MOBILE_TARGET_KINDS = {"leave", "evaluation", "logbook", "rotation", "research", "resident_progress"}
 
 
 @dataclass
@@ -56,6 +58,8 @@ class NotificationService:
                     self._create_in_app(recipient, verb, title, template, context)
                 elif channel == Notification.CHANNEL_EMAIL:
                     self._send_email(recipient, title, template, context)
+                elif channel == Notification.CHANNEL_PUSH:
+                    self._send_push(recipient, title, body=render_to_string(f"notifications/{template}.txt", context), metadata=self._serialise_metadata(context))
                 results.append(NotificationResult(channel=channel, delivered=True))
             except Exception as exc:  # pragma: no cover - defensive logging
                 logger.exception("Notification delivery failed", exc_info=exc)
@@ -89,9 +93,31 @@ class NotificationService:
         email.attach_alternative(html_body, "text/html")
         email.send(fail_silently=False)
 
+    def _send_push(self, recipient: User, title: str, body: str, metadata: dict) -> None:
+        """Opt-in FCM transport; credentials are supplied only by deployment environment."""
+        if not getattr(settings, "FCM_ENABLED", False):
+            return
+        import firebase_admin
+        from firebase_admin import messaging  # optional dependency, loaded only when enabled
+        if not firebase_admin._apps:
+            firebase_admin.initialize_app()
+        tokens = list(MobileDevice.objects.filter(user=recipient, active=True).values_list("token", flat=True))
+        for token in tokens:
+            try:
+                messaging.send(messaging.Message(notification=messaging.Notification(title=title, body=body), data={k: str(v) for k, v in metadata.items() if isinstance(v, (str, int, float, bool))}, token=token))
+            except Exception:
+                MobileDevice.objects.filter(token=token).update(active=False)
+                raise
+
     def _serialise_metadata(self, context: dict) -> dict:
         serialised: dict[str, object] = {}
         for key, value in context.items():
+            if key == "target" and isinstance(value, dict):
+                kind, target_id = value.get("kind"), value.get("id")
+                if kind in MOBILE_TARGET_KINDS and (target_id is None or isinstance(target_id, int)):
+                    serialised[key] = {"kind": kind, **({"id": target_id} if target_id is not None else {})}
+                # Invalid targets are intentionally omitted rather than stored as a route.
+                continue
             if isinstance(value, (str, int, float, bool)) or value is None:
                 serialised[key] = value
             elif hasattr(value, "pk"):
@@ -131,4 +157,4 @@ def ensure_preferences_exist(user: User) -> NotificationPreference:
     return NotificationPreference.for_user(user)
 
 
-__all__ = ["NotificationService", "NotificationResult", "ensure_preferences_exist"]
+__all__ = ["NotificationService", "NotificationResult", "ensure_preferences_exist", "MOBILE_TARGET_KINDS"]

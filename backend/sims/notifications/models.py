@@ -16,9 +16,11 @@ class Notification(models.Model):
 
     CHANNEL_EMAIL = "email"
     CHANNEL_IN_APP = "in_app"
+    CHANNEL_PUSH = "push"
     CHANNEL_CHOICES = (
         (CHANNEL_EMAIL, "Email"),
         (CHANNEL_IN_APP, "In-App"),
+        (CHANNEL_PUSH, "Push"),
     )
 
     recipient = models.ForeignKey(
@@ -68,6 +70,7 @@ class NotificationPreference(models.Model):
     )
     email_enabled = models.BooleanField(default=True)
     in_app_enabled = models.BooleanField(default=True)
+    push_enabled = models.BooleanField(default=True)
     quiet_hours_start = models.TimeField(null=True, blank=True)
     quiet_hours_end = models.TimeField(null=True, blank=True)
 
@@ -82,6 +85,8 @@ class NotificationPreference(models.Model):
         if channel == Notification.CHANNEL_EMAIL and not self.email_enabled:
             return False
         if channel == Notification.CHANNEL_IN_APP and not self.in_app_enabled:
+            return False
+        if channel == Notification.CHANNEL_PUSH and not self.push_enabled:
             return False
         if when is None or not self.quiet_hours_start or not self.quiet_hours_end:
             return True
@@ -111,4 +116,16 @@ class NotificationPreference(models.Model):
         }
 
 
-__all__ = ["Notification", "NotificationPreference"]
+class MobileDevice(models.Model):
+    """FCM registration token.  It is private operational data and is never listed to clients."""
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="mobile_devices")
+    token = models.TextField(unique=True)
+    platform = models.CharField(max_length=16, default="android")
+    active = models.BooleanField(default=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        indexes = [models.Index(fields=["user", "active"])]
+
+
+__all__ = ["Notification", "NotificationPreference", "MobileDevice"]
