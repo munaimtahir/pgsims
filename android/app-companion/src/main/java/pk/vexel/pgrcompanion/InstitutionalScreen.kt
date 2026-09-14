@@ -517,7 +517,7 @@ private fun ConnectedPane(
                             TextButton(enabled = upload.ownerUserId != null && upload.ownerUserId == repository.currentUserId(), onClick = {
                                 uploadStore.update(upload.copy(state = OfflineUpload.QUEUED, lastError = null))
                                 queuedUploads = uploadStore.all()
-                                (context.applicationContext as CompanionApplication).enqueueOfflineRecovery()
+                                (context.applicationContext as CompanionApplication).enqueueOfflineRecovery(replacePending = true)
                             }) { Text("Retry") }
                             TextButton(onClick = {
                                 uploadStore.remove(upload)

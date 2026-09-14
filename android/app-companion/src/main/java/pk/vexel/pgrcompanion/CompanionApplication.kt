@@ -24,14 +24,15 @@ class CompanionApplication : Application() {
         )
     }
 
-    fun enqueueOfflineRecovery() {
+    fun enqueueOfflineRecovery(replacePending: Boolean = false) {
         scheduleRecovery()
         val request = OneTimeWorkRequestBuilder<OfflineDraftSyncWorker>()
             .setConstraints(Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build())
             .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, 15, TimeUnit.MINUTES)
             .build()
         WorkManager.getInstance(this).enqueueUniqueWork(
-            "institutional-offline-recovery-now", ExistingWorkPolicy.KEEP, request,
+            "institutional-offline-recovery-now",
+            if (replacePending) ExistingWorkPolicy.REPLACE else ExistingWorkPolicy.KEEP, request,
         )
     }
 
