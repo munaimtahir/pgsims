@@ -26,17 +26,22 @@ disabled; PGSIMS remains the notification authority.
 - Added encrypted app-private staging for documents, persisted retry metadata, constrained
   WorkManager recovery, and logout purge for all offline institutional material.
 - Added recipient-scoped inbox preferences UI and an Android `FCM_ENABLED=false` build-time gate.
-- Debug Kotlin compilation passed after the encrypted upload queue change.
+- Android debug gate passed: unit tests, lint, debug assembly, installation, and unauthenticated
+  launch on emulator `pgsims`; see `docs/implementation/20260914_android_sprints_2_3_4/TEST_RESULTS.md`.
 - Reviewed change set committed and pushed as `3b4a6f0` on
   `remediation/pgsims-final-production-readiness`; VPS remains deliberately unchanged pending
   disposable backend and authenticated regression gates.
+- Production PGSIMS rollout completed at `46eccbd`: PostgreSQL backup
+  `/home/munaim/srv/backups/pgsims/pre_android_release_20260914_192142.sql.gz` created and
+  checksummed; backend/worker/beat rebuilt and recreated only. Backend health, Celery, frontend
+  HTTP 200, Django checks, notification/training migrations, and identity repair all passed.
+- Production FCM verification: `FCM_ENABLED=False`.
 
 ## Pending work
 
-1. Android debug gate passed: unit tests, lint, debug assembly, installation, and unauthenticated launch on emulator `pgsims`; see `docs/implementation/20260914_android_sprints_2_3_4/TEST_RESULTS.md`.
-2. On emulator `pgsims`, use supplied disposable/demo accounts to record ADMIN/SUPPORT_STAFF routing, restored session, forced token refresh, resident/supervisor workflow regression, offline leave/logbook restart recovery, and encrypted document upload retry/discard behavior.
-3. In a disposable backend stack, run migrations, `check`, notification/device-token tests, focused offline-idempotency tests, full test suite, and identity repair. Record exact commands/results in `docs/implementation/20260914_android_sprints_2_3_4/TEST_RESULTS.md`.
-4. Before any VPS mutation, compare local/VPS branch, HEAD and status (the initial read-only comparison found local `921969b` and VPS `67e6040`); commit and push reviewed changes; then follow the scoped Compose rollout and rollback evidence in the release report. Do not enable FCM or change Caddy.
+1. On emulator `pgsims`, use supplied disposable/demo accounts to record ADMIN/SUPPORT_STAFF routing, restored session, forced token refresh, resident/supervisor workflow regression, offline leave/logbook restart recovery, and encrypted document upload retry/discard behavior.
+2. Resolve or isolate the existing full-suite backup/restore test lock. The production-disposable run found 922 tests and progressed normally, but a `pg_restore` relation lock in `test_sims_db` did not complete; the disposable test container and database were stopped/removed to protect production resources. Rerun the full suite in a truly isolated database host before a GO verdict.
+3. Record the authenticated mobile matrix and the rerun full-suite result in `docs/implementation/20260914_android_sprints_2_3_4/TEST_RESULTS.md`, then update the final release verdict. Do not enable FCM or change Caddy.
 
 ## Known conditions
 
