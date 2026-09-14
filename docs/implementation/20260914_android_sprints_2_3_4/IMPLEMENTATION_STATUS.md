@@ -1,5 +1,9 @@
 # Android Sprints 2–4 — Combined Delivery Status
 
+**Current focused release: GO, signed 1.1.9/code 9.** All five blockers are closed; see
+[RELEASE_CLOSURE.md](RELEASE_CLOSURE.md). The sections below also cover historical implementation
+and a wider roadmap outside this release scope.
+
 For the current shared runtime/API verification state, read
 [`VERIFICATION_LEDGER.md`](VERIFICATION_LEDGER.md) before changing this document or claiming a
 release gate is complete.

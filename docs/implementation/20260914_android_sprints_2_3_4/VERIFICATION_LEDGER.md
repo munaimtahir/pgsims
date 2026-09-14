@@ -1,8 +1,24 @@
 # Shared Verification Ledger — Android Sprints 1–5
 
-Last reconciled: 2026-09-15 PKT. **CONDITIONAL GO.**
+Last reconciled: 2026-09-15 PKT. **GO for the focused five-defect release.**
 Canonical, reproducible artifact-specific evidence: [TEST_RESULTS.md](TEST_RESULTS.md).
 Implemented code, API tests and authenticated device acceptance are distinct claims.
+
+## Final closure
+
+- Runtime `5f92265`, signed 1.1.9/code 9; PR #17/#18 merged. Broader parity preserved at `d8e2ce6`.
+- All five defects PASS on required automated/device/production gates. Exact evidence and scope:
+  [RELEASE_CLOSURE.md](RELEASE_CLOSURE.md).
+- Fresh-image Django 928 tests/zero failures/errors; separate PostgreSQL race PASS. Android 33 unit
+  tests, final 5-test device suite and process-death/fault/race assertions PASS.
+- Signed offline leave #20/logbook #32 persist exactly once per key and replay twice via HTTPS 200/same ID.
+  Real picker document #2 retry succeeds with exact SHA256; discard and populated logout purge PASS.
+- Existing four-role API login and ADMIN restricted evidence remains accepted, without repeating
+  an independent login matrix. Signed staff/resident/supervisor UI gates pass.
+- Backup verified, scoped backend/worker/beat deployed, upload-directory permission issue fixed;
+  final production health PASS, FCM false, device signed out and networking restored.
+
+## Historical baseline ledger (superseded release verdict)
 
 ## Closed baseline gates
 

@@ -1,9 +1,8 @@
+Final runtime source: 5f922657ea6dec17317a00eb4060168a816e1e1f
 
 pk.vexel.pgrcompanion.InboxUiTest:...
 pk.vexel.pgrcompanion.RecoveryOwnershipTest:..
 
-Time: 11.879
+Time: 7.312
 
 OK (5 tests)
-
-

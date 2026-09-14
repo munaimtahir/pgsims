@@ -1,0 +1,8 @@
+Verified UTC: 2026-09-14T22:37:23.407407+00:00
+Production backend/worker/beat running at tested image digests in RELEASE_CLOSURE.md.
+Backend /healthz/: healthy; database=ok; cache=ok; celery=ok.
+Frontend https://pgsims.alshifalab.pk/: HTTP200.
+Android API https://android.pgsims.alshifalab.pk/api/health/: HTTP200.
+FCM_ENABLED=False; unapplied migrations=0. Temporary verification networks removed.
+Signed app ends at Sign in; debug disconnected; synthetic picker files removed;
+device Wi-Fi/data restored. No Play publication or unrelated service restarts.

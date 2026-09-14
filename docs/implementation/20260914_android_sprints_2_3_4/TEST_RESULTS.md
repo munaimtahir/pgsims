@@ -1,9 +1,15 @@
 # Android Sprints 1–5 — Canonical Test Results
 
-Current focused candidate: **CONDITIONAL GO — release acceptance in progress.**
-See [RELEASE_CLOSURE.md](RELEASE_CLOSURE.md) for repaired-source and new gate evidence.
-The baseline failures below are historical and remain preserved for traceability.
-This report supersedes earlier pending lists and distinguishes tested artifacts from ongoing development.
+**GO — focused five-defect release, 2026-09-15 PKT.**
+
+Current authoritative results: [RELEASE_CLOSURE.md](RELEASE_CLOSURE.md). Production backend is deployed;
+1.1.9/code9 signed APK/AAB verify with the existing certificate. Fresh-image Django 928 tests and
+separate PostgreSQL race PASS; Android 33 unit tests, final device/recovery and signed production
+acceptance PASS. All five original failures are closed. No Play publication or broader parity certification.
+
+## Historical baseline verification (superseded release verdict)
+
+The following failures/results describe the earlier baseline and remain as traceable historical evidence.
 
 ## Tested baseline and evidence boundary
 

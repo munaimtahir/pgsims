@@ -1,27 +1,20 @@
-# Android focused release closure — pending work
+# Android release closure — all five items complete
 
-Candidate `e0c98b5`, 1.1.9/code9. **CONDITIONAL GO** until final production acceptance.
-See [release closure report](docs/implementation/20260914_android_sprints_2_3_4/RELEASE_CLOSURE.md).
-Concurrent parity remains preserved at `d8e2ce6`; it is not part of this release.
+**GO — 1.1.9/code9, 2026-09-15.** Backend deployed; signed APK/AAB ready.
 
-## Five original defects
+- [x] Resident Inbox crash: fixed; real signed Inbox and exact/missing target checks pass.
+- [x] Supervisor Inbox: present; role-scoped signed navigation and session checks pass.
+- [x] Leave idempotency: immutable persisted UUID; concurrent PostgreSQL and production HTTPS
+  replay pass; leave #20 remains exactly one row per key.
+- [x] Logbook counts: shared normalization/summing; list Approved 1 equals Progress verified 1.
+- [x] Upload durability: acknowledged encrypted staging survives process death; real picker/retry
+  succeeds with matching server hash; replacement discard and populated-queue logout purge pass.
 
-1. Resident Inbox: source, Compose regression and real resident Inbox PASS.
-2. Supervisor Inbox: source and Compose navigation PASS; authenticated login/Inbox/restoration/refresh PASS.
-3. Leave idempotency: immutable UUID, scope/collision/rollback tests PASS; 928-test SQLite
-   suite and PostgreSQL race PASS. Production exactly-once replay awaits deployment.
-4. Logbook counts: shared normalized/summed classifier and unit test PASS; final device
-   list/Progress comparison pending.
-5. Upload durability: host process-death, interrupted upload, failed source/metadata,
-   reconciliation race, owner isolation and logout race PASS. Real picker/success recovery pending.
+No mandatory gates remain for this five-defect release. Backend 928 tests, Android 33 unit tests,
+final device/fault/recovery checks and production health pass; evidence is committed on main.
 
-## Actions still required
+[Canonical release report](docs/implementation/20260914_android_sprints_2_3_4/RELEASE_CLOSURE.md)
+contains artifacts, hashes, commands, fixture IDs, backup and rollback details.
 
-- Complete authenticated candidate resident/supervisor regression and recovery fixture checks.
-- Verify signed APK/AAB; run full suite against newly built backend image.
-- Backup, merge verified focused branch to main, verify VPS checkout, deploy only backend/worker/beat.
-- Verify labeled production drafts exactly once per key and real document upload/retry/discard/purge.
-- Recheck health, commit canonical evidence and release verdict on main.
-
-FCM remains disabled. No Play publication, Caddy changes, unrelated workflows or destructive
-resets. Earlier labeled leave 17/18/19 and logbook 31 are retained historical fixtures.
+Outside this release scope: the preserved parity branch at `d8e2ce6`, full workflow-action/
+physical-device/accessibility/performance certification and Play publication. FCM remains disabled.

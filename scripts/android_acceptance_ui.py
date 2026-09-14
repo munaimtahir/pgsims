@@ -38,8 +38,9 @@ def login(role):
     if len(fields)!=2: raise RuntimeError('Expected two sign-in fields')
     for node,value in zip(fields,credentials[role]):
         clicknode(node)
-        adb('shell','input','keyevent','123')
-        adb('shell','input','keyevent',*(['67']*45))
+        if node.get('text'):
+            adb('shell','input','keyevent','123')
+            adb('shell','input','keyevent',*(['67']*45))
         adb('shell','input','text',value)
         time.sleep(.2)
     adb('shell','input','keyevent','4')
