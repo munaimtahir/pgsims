@@ -50,6 +50,9 @@
 - Checked-in `backend/.venv` is missing Django, so the full backend suite could not be reliably run from the declared virtualenv.
 - Full disposable backend `pytest -q`: PASS, 1,211 passed, 9 skipped, 82.13% coverage.
 - Live Playwright smoke suite: BLOCKED before page assertions because configured E2E users are absent from the running database and authentication returns 401. No persistent data was seeded.
+- E2E fixtures provisioned with repository `seed_e2e`; current frontend image rebuilt and deployed to the test stack.
+- Live admin smoke: 7/7 PASS. Responsive runtime checks at 1440x900, 1280x800, 900x800, and 390x844 passed with no horizontal overflow; resident quick action resolved to `/users/new?role=RESIDENT`.
+- Broader dashboard-page suite: 20/25 PASS. Five failures are stale assertions expecting Add controls on redirect-only compatibility routes; the routes correctly redirect to existing `/masters` or `/users` destinations.
 - No schema migration was created. Monitoring response changes are additive and backwards compatible.
 
 ## Responsive/accessibility review
@@ -64,4 +67,4 @@ The shell uses a full desktop sidebar, collapsible desktop sidebar, mobile drawe
 
 ## Verdict
 
-CONDITIONAL PASS: static, focused test, build, Django checks, and full disposable backend regression are clean. Live browser verification remains blocked by unavailable authorized E2E credentials.
+CONDITIONAL PASS: implementation, full backend regression, current-image live smoke, responsive runtime checks, and quick-action verification are clean. Legacy test expectations should be updated separately for redirect-only compatibility routes.
