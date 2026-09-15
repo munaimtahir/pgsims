@@ -38,6 +38,9 @@ the final parity candidate retains 1.1.9/code9. Production remains on source com
   payload fields, response values and leave idempotency-key preservation (`e211118`).
 - Admin CSV export: Reports now calls the four authenticated `export.csv` endpoints and shares
   generated CSV text; MockWebServer coverage verifies authorization and path selection (`b42a465`).
+- Signed release verification: debug unit tests, lint, `assembleRelease`, and `bundleRelease` pass
+  with the owner-controlled signing properties. Current artifact hashes are recorded in the release
+  handoff; Play upload remains intentionally unperformed.
 
 ## Pending Work
 1. Implement remaining unchecked `android.md` rows: role directories,

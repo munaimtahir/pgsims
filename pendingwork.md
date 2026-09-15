@@ -31,6 +31,8 @@ physical-device/accessibility/performance certification and Play publication. FC
   are implemented and their PATCH contracts are covered by `e211118`; authenticated transition acceptance remains required.
 - [x] Owner-signed parity 1.1.9/code9 APK/AAB signatures and prior Play upload certificate match;
   code9 is still available in Play per owner confirmation.
+- [x] Current source builds and signs successfully with the owner-controlled release properties;
+  Play upload remains intentionally unperformed.
 - [ ] Physical-device checks and Play Console upload/publication remain open.
 
 Authenticated recovery addendum: restart/replay/exactly-once, PDF hash, logbook return/correction/

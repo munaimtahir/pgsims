@@ -219,7 +219,7 @@ private fun AdminUserDirectory(repository: InstitutionalRepository) {
         loading = false
     }
     LaunchedEffect(role) { load(true) }
-    Text("User directory", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+    Text("User and role directories", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
     Text("$total matching identities")
     OutlinedTextField(query, { query = it }, Modifier.fillMaxWidth(), label = { Text("Search name, username or email") }, singleLine = true)
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
