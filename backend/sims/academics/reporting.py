@@ -11,12 +11,15 @@ from sims.academics.models import (
     LogbookCategory,
 )
 from sims.training.models import ResidentTrainingRecord, TrainingProgram
-from sims.users.models import ResidentProfile, SupervisorProfile
+from sims.users.models import ResidentProfile, SupervisorProfile, User
 from sims.supervision.models import ResidentSupervisorAssignment
+from sims.supervision.models import PendingSupervisorAssignment
 from sims.academics.services import get_academic_data_quality
 
 
 def get_admin_monitoring_dashboard() -> dict:
+    user_counts = User.objects.values("role").annotate(count=Count("id"))
+    users_by_role = {row["role"]: row["count"] for row in user_counts}
     total_residents = ResidentProfile.objects.filter(is_archived=False).count()
     active_residents = ResidentProfile.objects.filter(is_archived=False, user__is_active=True).count()
     
@@ -41,6 +44,8 @@ def get_admin_monitoring_dashboard() -> dict:
     )
     
     pending_reviews = SupervisorReviewQueueItem.objects.filter(status=SupervisorReviewQueueItem.STATUS_PENDING).count()
+    pending_supervisor_links = PendingSupervisorAssignment.objects.filter(status=PendingSupervisorAssignment.STATUS_PENDING).count()
+    active_training_records = ResidentTrainingRecord.objects.filter(active=True).count()
     overdue_reviews = SupervisorReviewQueueItem.objects.filter(
         status=SupervisorReviewQueueItem.STATUS_PENDING,
         due_date__lt=date.today()
@@ -85,6 +90,10 @@ def get_admin_monitoring_dashboard() -> dict:
     dq_issue_count = sum(section["count"] for section in dq.get("sections", []))
     
     return {
+        "total_users": User.objects.filter(is_active=True).count(),
+        "admin_users": users_by_role.get("ADMIN", 0),
+        "supervisor_users": users_by_role.get("SUPERVISOR", 0),
+        "support_staff_users": users_by_role.get("SUPPORT_STAFF", 0),
         "total_residents": total_residents,
         "active_residents": active_residents,
         "residents_with_training_record": residents_with_record_count,
@@ -94,6 +103,9 @@ def get_admin_monitoring_dashboard() -> dict:
         "eval_stats": eval_stats,
         "log_stats": log_stats,
         "pending_supervisor_reviews": pending_reviews,
+        "pending_review_queue_items": pending_reviews,
+        "pending_supervisor_links": pending_supervisor_links,
+        "active_training_records": active_training_records,
         "overdue_supervisor_reviews": overdue_reviews,
         "returned_items": returned_items,
         "rejected_items": rejected_items,
