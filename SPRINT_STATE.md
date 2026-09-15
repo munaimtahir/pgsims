@@ -1,8 +1,8 @@
-# Android parity — acceptance and remaining workflows
+# Android parity — merged signed 1.1.10 candidate
 
 ## Scope
-Continue `feature/android-parity-stages-1-6` after reconciliation with released main `aef3bd2`.
-Production remains on verified 1.1.9; parity candidate is 1.1.10/code10.
+Parity is merged directly to `main`. Production remains on verified 1.1.9 (`aef3bd2`); signed
+candidate is 1.1.10/code10.
 
 ## Completed Work
 - Merge `800f7ac` preserves both `d8e2ce6` parity and released safeguards; original parity is retained at `checkpoint/android-parity-before-reconciliation`.
@@ -15,12 +15,18 @@ Production remains on verified 1.1.9; parity candidate is 1.1.10/code10.
   1.1.9. Local artifacts are under `builds/companion/1.1.10/`.
 
 - Authenticated resident/supervisor refresh, initial gated-session restoration/logout, four-role profile completion and backend identity/notification isolation checks recorded in parity acceptance report.
+- Final authenticated ADMIN/RESIDENT/SUPERVISOR/SUPPORT_STAFF Home, Inbox, Profile, restoration and
+  logout matrix PASS. ADMIN Users/create-dialog reachability PASS without creating a user.
+- Owner-signed 1.1.10 APK/AAB verification and prior Play upload certificate match PASS.
 
 ## Pending Work
-1. Resume authenticated device matrix after competing MedSIMS automation releases `pgsims`: foreground repeatedly switched to `pk.vexel.medsims/.MainActivity`; owner asked to pause it. All four demo profiles now completed using authorized demo values and two audited demo lookups; ADMIN credentials added privately. See `docs/implementation/20260915_android_parity_acceptance/TEST_RESULTS.md` for exact fixture values and remaining device gates.
-2. Implement remaining unchecked `android.md` rows: returned evaluation/leave edits, supervisor queues/workload, role directories, document/supervision administration, reports/CSV and pagination.
+1. Implement remaining unchecked `android.md` rows: returned evaluation/leave edits, supervisor
+   queues/workload, role directories, document/supervision administration, reports/CSV and pagination.
+2. Run authenticated workflow-transition/offline-upload matrix and isolated password/schema-state
+   cases; the shell/session matrix is complete.
 3. Physical-device and Play Console upload/publication remain separate release gates. FCM and
    production deployment remain outside current scope.
 
 ## Verdict
-GO for branch reconciliation; CONDITIONAL GO for broader parity release pending the explicit gates above.
+GO for merge and signed-candidate handoff; CONDITIONAL GO for broader parity release pending the
+explicit workflow, physical-device and Play gates above.

@@ -1,0 +1,9 @@
+Candidate: PGR Companion 1.1.10/code10 debug acceptance build
+Device: pgsims / emulator-5554 / API36
+SUPPORT_STAFF: Home, Inbox, Profile, session restoration, logout PASS
+RESIDENT: Home, Inbox, Profile, session restoration, logout PASS
+SUPERVISOR: Home, Inbox, Profile, session restoration, logout PASS
+ADMIN: Home, Users directory, create dialog open/cancel, Inbox, Profile, session restoration, logout PASS
+Administrative/user/workflow mutations during final shell pass: none
+Credentials or tokens retained: no
+Competing MedSIMS app was force-stopped before the final PGR-only sequence.

@@ -23,9 +23,9 @@ physical-device/accessibility/performance certification and Play publication. FC
 
 - [x] Reconciled `feature/android-parity-stages-1-6` with `aef3bd2`; combined Android, emulator,
   recovery and isolated backend gates PASS (see `SPRINT_STATE.md`).
-- [ ] Finish authenticated four-role device matrix after competing MedSIMS automation releases `pgsims`.
-  Demo profiles are ready; backend role/isolation and resident/supervisor refresh checks pass.
-  See `docs/implementation/20260915_android_parity_acceptance/TEST_RESULTS.md`.
+- [x] Authenticated four-role Home/Inbox/Profile/session-restoration/logout matrix passes; ADMIN
+  Users and universal-create dialog also render without performing a creation mutation.
 - [ ] Complete unchecked parity workflows in `android.md`: returned evaluation/leave edits,
   supervisor queue/workload, directories, document/supervision administration, reports/CSV and pagination.
-- [ ] Sign and verify the next candidate after its acceptance gates; physical-device checks remain open.
+- [x] Owner-signed 1.1.10/code10 APK/AAB signatures and prior Play upload certificate match.
+- [ ] Physical-device checks and Play Console upload/publication remain open.

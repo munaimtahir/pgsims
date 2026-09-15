@@ -1,6 +1,6 @@
 # Authenticated Android parity acceptance — 2026-09-15
 
-**CONDITIONAL GO: backend/account prerequisites closed; device matrix incomplete.**
+**CONDITIONAL GO: signed candidate and four-role shell matrix pass; broader workflow matrix remains.**
 
 Candidate source `595e415` (runtime `800f7ac`), branch `feature/android-parity-stages-1-6`.
 Device `pgsims`, emulator-5554, API36; `pk.vexel.pgrcompanion.debug`, 1.1.10/code10.
@@ -45,8 +45,12 @@ Caddy, FCM, notification delivery or Play changes were made.
   endpoint reads PASS (1 test, 8.777s).
 - Supervisor: confirmed fresh login to required-profile gate; restored session retains gate and
   logout reaches login form. Same forced-refresh check PASS (1 test, 4.910s).
-- Staff: confirmed fresh login to profile gate; dashboard visible after authorized profile completion.
-  Final dashboard/Inbox/restoration matrix is not claimed complete.
+- Final four-role shell run after profile completion:
+  - SUPPORT_STAFF: Home, Inbox, Profile, force-stop/session restoration and logout PASS.
+  - RESIDENT: Home, Inbox, Profile, force-stop/session restoration and logout PASS.
+  - SUPERVISOR: Home, Inbox, Profile, force-stop/session restoration and logout PASS.
+  - ADMIN: Home, paged Users directory, universal-create dialog (opened/cancelled without mutation),
+    Inbox, Profile, force-stop/session restoration and logout PASS.
 - All four roles: authenticated notification reads succeed. Resident/supervisor each see their own
   three labeled notification fixtures; no other role's labeled fixtures appear. Staff/admin have
   no labeled fixtures, so their empty result alone does not prove cross-recipient isolation.
@@ -66,20 +70,27 @@ Initial refresh invocation had no stored session and failed its precondition; af
 resident login it passed. Preserve that log separately rather than treating it as a product failure.
 The routing timeout logs are likewise retained and not counted as passing tests.
 
-## Current blocking condition and remaining gates
+## Signed artifacts and remaining gates
 
-The emulator repeatedly changed foreground to `pk.vexel.medsims/.MainActivity` during this run,
-including after explicitly bringing PGR Companion forward. Final dumpsys focus showed MedSIMS
-(task209), and the package-filtered PGR helper timed out. Device automation was paused and the
-owner was asked to pause the competing session. Do not operate the other app or claim these
-interrupted checks as passes.
+Owner signing produced package `pk.vexel.pgrcompanion`, version 1.1.10/code10. APK signature and
+AAB JAR verification pass; certificate SHA-256
+`a858f42c4460feab688e3e9fce28b3e9e0d5af03a555133e5e134f890b61f010` matches verified 1.1.9.
 
-1. Once `pgsims` is exclusively available, run four-role dashboard, Inbox and profile navigation,
-   logout/relogin/restoration after the now-complete demo profiles. ADMIN device login still pending.
-2. Full onboarding/password-first/schema-change tests need an isolated candidate backend and
+- APK: `builds/companion/1.1.10/PGR-Companion-1.1.10.apk`, SHA-256
+  `d5808f628b84da2575a9b5806a834d6250a2c7aa595b0e243e88c3cc36a91e1a`.
+- AAB: `builds/companion/1.1.10/PGR-Companion-1.1.10.aab`, SHA-256
+  `46ce93a195d75e334040a176ab11314a133f5928ab10f675e8fe9f0362a6a715`.
+
+Fetched-candidate VPS isolation also passes: SQLite 929 tests (one PostgreSQL-only skip) and the
+separate disposable PostgreSQL concurrency test pass; migration drift, migrate-from-zero, Django
+check and repository-aware deployment tests pass. No production database or volume was used.
+
+1. Full onboarding/password-first/schema-change tests need an isolated candidate backend and
    deliberate fixture states; the completed production demo profiles are not substitutes.
-3. Run role-scoped workflow transitions, notification target/read/unread isolation, and authenticated
+2. Run role-scoped workflow transitions, notification target/read/unread isolation, and authenticated
    offline draft/upload recovery. Earlier synthetic recovery gates remain valid but are separate.
-4. Continue unchecked roadmap rows, signed/physical-device/release gates in `android.md`.
+3. Continue unchecked roadmap rows and physical-device/Play release gates in `android.md`.
 
 Evidence is in `evidence/`; no credentials or tokens are retained there.
+The candidate was merged directly and pushed to `main`; production deployment and Play upload were
+not performed.
