@@ -1,8 +1,8 @@
-# Android parity — merged signed 1.1.10 candidate
+# Android parity — merged signed 1.1.9/code9 candidate
 
 ## Scope
-Parity is merged directly to `main`. Production remains on verified 1.1.9 (`aef3bd2`); signed
-candidate is 1.1.10/code10.
+Parity is merged directly to `main`. The owner confirmed Play has not received versionCode 9, so
+the final parity candidate retains 1.1.9/code9. Production remains on source commit `aef3bd2`.
 
 ## Completed Work
 - Merge `800f7ac` preserves both `d8e2ce6` parity and released safeguards; original parity is retained at `checkpoint/android-parity-before-reconciliation`.
@@ -11,13 +11,16 @@ candidate is 1.1.10/code10.
 - Evidence: `docs/implementation/20260915_android_parity_reconciliation/RECONCILIATION.md`. No production changes.
 - Repeated fetched-candidate VPS isolation PASS: 929 SQLite tests plus the separate PostgreSQL
   concurrency test; no production database, environment or volume was used.
-- Owner-signed 1.1.10/code10 APK and AAB produced; signatures and upload certificate match verified
-  1.1.9. Local artifacts are under `builds/companion/1.1.10/`.
+- Owner-signed parity 1.1.9/code9 APK and AAB produced; signatures and upload certificate match the
+  established release identity. New local artifacts are under `builds/companion/1.1.9-parity-main/`;
+  the earlier 1.1.9 and superseded 1.1.10 artifacts remain preserved separately.
 
 - Authenticated resident/supervisor refresh, initial gated-session restoration/logout, four-role profile completion and backend identity/notification isolation checks recorded in parity acceptance report.
 - Final authenticated ADMIN/RESIDENT/SUPERVISOR/SUPPORT_STAFF Home, Inbox, Profile, restoration and
   logout matrix PASS. ADMIN Users/create-dialog reachability PASS without creating a user.
-- Owner-signed 1.1.10 APK/AAB verification and prior Play upload certificate match PASS.
+- Owner-signed parity 1.1.9/code9 APK/AAB verification and prior upload certificate match PASS.
+- Rebuilt code9 debug and test APKs installed on emulator `pgsims` with the explicit downgrade flag
+  from superseded code10; final package metadata verified and default instrumentation PASS (29 tests).
 
 - Authenticated recovery/logbook correction cycle: seven device methods PASS; leave21/logbook33
   exactly once, document2 byte hash matches, explicit discard/offline logout purge and server zero

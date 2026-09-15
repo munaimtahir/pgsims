@@ -6,6 +6,8 @@ CONDITIONAL GO; this report does not certify every roadmap workflow or UI action
 Baseline `70dbb85`, unchanged Android runtime from `800f7ac`. App `pk.vexel.pgrcompanion.debug`,
 1.1.10/code10, emulator `pgsims` / emulator-5554 / API36. Production remains on `aef3bd2`.
 The checkout stayed on main and the emulator stayed in PGR Companion during this resumed run.
+The final signed candidate was subsequently retargeted to 1.1.9/code9 after the owner confirmed
+code9 remains unused in Play; that change affects release metadata only, not this tested runtime.
 
 ## Results
 

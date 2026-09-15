@@ -27,7 +27,8 @@ physical-device/accessibility/performance certification and Play publication. FC
   Users and universal-create dialog also render without performing a creation mutation.
 - [ ] Complete unchecked parity workflows in `android.md`: returned evaluation/leave edits,
   supervisor queue/workload, directories, document/supervision administration, reports/CSV and pagination.
-- [x] Owner-signed 1.1.10/code10 APK/AAB signatures and prior Play upload certificate match.
+- [x] Owner-signed parity 1.1.9/code9 APK/AAB signatures and prior Play upload certificate match;
+  code9 is still available in Play per owner confirmation.
 - [ ] Physical-device checks and Play Console upload/publication remain open.
 
 Authenticated recovery addendum: restart/replay/exactly-once, PDF hash, logbook return/correction/

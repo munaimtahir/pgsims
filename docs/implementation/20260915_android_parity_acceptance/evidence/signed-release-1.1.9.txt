@@ -1,0 +1,33 @@
+Final signed Android parity release evidence
+Date: 2026-09-15 Asia/Karachi
+Source baseline: main at f1de05f plus version metadata retarget
+Package: pk.vexel.pgrcompanion
+Version name: 1.1.9
+Version code: 9
+
+Gradle gate:
+- :app-companion:testDebugUnitTest PASS (41 tests, 0 failures, 0 errors, 0 skipped)
+- :app-companion:lintDebug PASS (0 errors; 98 non-blocking warnings)
+- :app-companion:assembleDebug PASS
+- :app-companion:assembleDebugAndroidTest PASS
+- :app-companion:assembleRelease PASS
+- :app-companion:bundleRelease PASS
+
+Final emulator gate:
+- Installed debug 1.1.9/code9 on pgsims/emulator-5554 with explicit test-device downgrade from code10
+- dumpsys package metadata: versionName=1.1.9, versionCode=9
+- Default noncredentialed instrumentation: OK (29 tests), 23.66 seconds
+- Authenticated mutation-capable acceptance methods were not opted in for the metadata-only retarget
+
+Signing verification:
+- APK v2 signature verified
+- AAB JAR signature verified
+- Certificate SHA-256: a858f42c4460feab688e3e9fce28b3e9e0d5af03a555133e5e134f890b61f010
+
+Artifacts (app-private ignored release directory):
+- builds/companion/1.1.9-parity-main/PGR-Companion-1.1.9-parity.apk
+  SHA-256: 376ecbda92761f76b5eab39820d4063348ba1e9508b7ce98c88fbf8807ba1b94
+- builds/companion/1.1.9-parity-main/PGR-Companion-1.1.9-parity.aab
+  SHA-256: 3ff3d81a4de04875dab7c665feae70185e34a5af4364c174611df796e7846432
+
+Play Console upload/publication and production deployment were not performed.

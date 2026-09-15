@@ -16,8 +16,9 @@ android {
         applicationId = "pk.vexel.pgrcompanion"
         minSdk = 26
         targetSdk = 36
-        versionCode = 10
-        versionName = "1.1.10"
+        // Play has not received code 9; retain the available store version for this release.
+        versionCode = 9
+        versionName = "1.1.9"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables { useSupportLibrary = true }
         buildConfigField("String", "INSTITUTIONAL_API_BASE_URL", "\"https://android.pgsims.alshifalab.pk/\"")

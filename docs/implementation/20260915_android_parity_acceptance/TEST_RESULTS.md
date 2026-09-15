@@ -1,6 +1,7 @@
 # Authenticated Android parity acceptance — 2026-09-15
 
-**CONDITIONAL GO: signed candidate and four-role shell matrix pass; broader workflow matrix remains.**
+**CONDITIONAL GO: final signed 1.1.9/code9 candidate and four-role shell matrix pass; broader
+workflow matrix remains.**
 
 Candidate source `595e415` (runtime `800f7ac`), branch `feature/android-parity-stages-1-6`.
 Device `pgsims`, emulator-5554, API36; `pk.vexel.pgrcompanion.debug`, 1.1.10/code10.
@@ -70,16 +71,32 @@ Initial refresh invocation had no stored session and failed its precondition; af
 resident login it passed. Preserve that log separately rather than treating it as a product failure.
 The routing timeout logs are likewise retained and not counted as passing tests.
 
-## Signed artifacts and remaining gates
+## Final Play-version retarget and signed artifacts
 
-Owner signing produced package `pk.vexel.pgrcompanion`, version 1.1.10/code10. APK signature and
-AAB JAR verification pass; certificate SHA-256
-`a858f42c4460feab688e3e9fce28b3e9e0d5af03a555133e5e134f890b61f010` matches verified 1.1.9.
+The owner confirmed versionCode 9 has not been uploaded to Play. The merged parity runtime was
+therefore rebuilt with final package metadata `pk.vexel.pgrcompanion`, version 1.1.9/code9. The
+complete Gradle gate passed: 41 unit tests, lint (0 errors), debug APK, Android-test APK, signed
+release APK and signed AAB. APK signature and AAB JAR verification pass; certificate SHA-256
+`a858f42c4460feab688e3e9fce28b3e9e0d5af03a555133e5e134f890b61f010` matches the established
+release identity.
 
-- APK: `builds/companion/1.1.10/PGR-Companion-1.1.10.apk`, SHA-256
-  `d5808f628b84da2575a9b5806a834d6250a2c7aa595b0e243e88c3cc36a91e1a`.
-- AAB: `builds/companion/1.1.10/PGR-Companion-1.1.10.aab`, SHA-256
-  `46ce93a195d75e334040a176ab11314a133f5928ab10f675e8fe9f0362a6a715`.
+- APK: `builds/companion/1.1.9-parity-main/PGR-Companion-1.1.9-parity.apk`, SHA-256
+  `376ecbda92761f76b5eab39820d4063348ba1e9508b7ce98c88fbf8807ba1b94`.
+- AAB: `builds/companion/1.1.9-parity-main/PGR-Companion-1.1.9-parity.aab`, SHA-256
+  `3ff3d81a4de04875dab7c665feae70185e34a5af4364c174611df796e7846432`.
+
+The previous `builds/companion/1.1.9/` binaries and superseded 1.1.10 candidate remain preserved;
+neither was overwritten. Emulator acceptance above was run on 1.1.10/code10 before the owner's
+clarification. The only subsequent source change was version metadata, and the full build/test gate
+was rerun after that change.
+
+The rebuilt debug APK initially met Android's expected downgrade rejection because code10 remained
+installed on the emulator. It was then installed on the test-only `pgsims` emulator using `adb -d`;
+`dumpsys` confirmed 1.1.9/code9. The matching test APK installed and the default, noncredentialed
+instrumentation invocation completed `OK (29 tests)` in 23.66 seconds. Authenticated destructive
+acceptance methods remain opt-in and were not rerun during this metadata-only retarget.
+
+## Remaining gates
 
 Fetched-candidate VPS isolation also passes: SQLite 929 tests (one PostgreSQL-only skip) and the
 separate disposable PostgreSQL concurrency test pass; migration drift, migrate-from-zero, Django

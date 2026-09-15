@@ -1,10 +1,14 @@
-> Current verification (2026-09-15): parity branch is reconciled with released `aef3bd2` at
-> candidate `595e415`, version 1.1.10/code10. Android 41 unit tests, 7 synthetic emulator tests,
+> Current verification (2026-09-15): parity is merged to `main`; final signed release metadata is
+> version 1.1.9/code9 because the owner confirmed code9 has not been uploaded to Play. Android 41
+> unit tests, 7 synthetic emulator tests,
 > process-death recovery and isolated Django 929 tests pass; PostgreSQL concurrency passes separately.
 > Production remains verified 1.1.9. The historical baseline/version/failure sections below are
 > retained as roadmap history; they do not supersede the current reconciliation report or
-> `SPRINT_STATE.md`. Signed 1.1.10/code10 APK/AAB production and isolated backend gates pass;
-> authenticated parity acceptance is limited by missing demo profile prerequisites and ADMIN credentials.
+> `SPRINT_STATE.md`. Signed 1.1.9/code9 APK/AAB and isolated backend gates pass. The earlier
+> 1.1.10/code10 emulator evidence remains valid because the retarget changed only release metadata;
+> the final code9 debug build is also installed on `pgsims` and its default instrumentation run
+> passes (29 tests). Authenticated four-role shell and recovery results are recorded in the current
+> acceptance reports.
 
 # Android feature-parity review and development roadmap
 
