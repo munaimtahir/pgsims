@@ -48,6 +48,8 @@
 - Isolated `NEXT_DIST_DIR=.next-sprint npm run build`: PASS; generated output was removed after verification.
 - Django `check` and `makemigrations --check --dry-run`: PASS with `DJANGO_SETTINGS_MODULE=sims_project.settings python3`.
 - Checked-in `backend/.venv` is missing Django, so the full backend suite could not be reliably run from the declared virtualenv.
+- Full disposable backend `pytest -q`: PASS, 1,211 passed, 9 skipped, 82.13% coverage.
+- Live Playwright smoke suite: BLOCKED before page assertions because configured E2E users are absent from the running database and authentication returns 401. No persistent data was seeded.
 - No schema migration was created. Monitoring response changes are additive and backwards compatible.
 
 ## Responsive/accessibility review
@@ -62,4 +64,4 @@ The shell uses a full desktop sidebar, collapsible desktop sidebar, mobile drawe
 
 ## Verdict
 
-CONDITIONAL PASS: static, focused test, build, and Django check evidence is clean; live browser route verification and full backend regression remain target-runtime gates.
+CONDITIONAL PASS: static, focused test, build, Django checks, and full disposable backend regression are clean. Live browser verification remains blocked by unavailable authorized E2E credentials.
