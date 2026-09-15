@@ -23,7 +23,9 @@ def clicknode(node):
 def click(text,contains=False):
     matches=[n for n in nodes() if any((text in n.get(a,'') if contains else text==n.get(a,'')) for a in ('text','content-desc'))]
     if not matches: raise RuntimeError('UI control unavailable: '+text)
-    clicknode(matches[-1])
+    enabled=[n for n in matches if n.get('enabled') == 'true']
+    if not enabled: raise RuntimeError('UI control is disabled: '+text)
+    clicknode(enabled[-1])
 
 def wait(text,timeout=35):
     end=time.monotonic()+timeout

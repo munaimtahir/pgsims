@@ -29,3 +29,7 @@ physical-device/accessibility/performance certification and Play publication. FC
   supervisor queue/workload, directories, document/supervision administration, reports/CSV and pagination.
 - [x] Owner-signed 1.1.10/code10 APK/AAB signatures and prior Play upload certificate match.
 - [ ] Physical-device checks and Play Console upload/publication remain open.
+
+Authenticated recovery addendum: restart/replay/exactly-once, PDF hash, logbook return/correction/
+resubmit and offline discard/logout purge PASS. Full UI/evaluation/expired-session/schema cases
+remain open; see `docs/implementation/20260915_android_parity_acceptance/RECOVERY_WORKFLOW_RESULTS.md`.

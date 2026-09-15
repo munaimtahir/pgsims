@@ -1,0 +1,2 @@
+{"document_bytes": 125, "document_filename": "ANDROID-PARITY-20260915-RECOVERY.pdf", "document_sha256": "034360b8929e7273d543cf892ed752d6f6add7cf407ab271cbdd5a6d290fe5a0", "leave_id": 21, "leave_key_count": 1, "leave_status": "SUBMITTED", "logbook_id": 33, "logbook_key_count": 1, "logbook_status": "SUBMITTED", "purge_leave_count": 0, "purge_logbook_count": 0}
+backend_health=healthy

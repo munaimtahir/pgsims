@@ -19,11 +19,16 @@ candidate is 1.1.10/code10.
   logout matrix PASS. ADMIN Users/create-dialog reachability PASS without creating a user.
 - Owner-signed 1.1.10 APK/AAB verification and prior Play upload certificate match PASS.
 
+- Authenticated recovery/logbook correction cycle: seven device methods PASS; leave21/logbook33
+  exactly once, document2 byte hash matches, explicit discard/offline logout purge and server zero
+  purge-record checks PASS. Runtime unchanged; demo fixtures retained and app signed out.
+
 ## Pending Work
 1. Implement remaining unchecked `android.md` rows: returned evaluation/leave edits, supervisor
    queues/workload, role directories, document/supervision administration, reports/CSV and pagination.
-2. Run authenticated workflow-transition/offline-upload matrix and isolated password/schema-state
-   cases; the shell/session matrix is complete.
+2. Complete evaluation/review payload and transition tests, full UI workflow forms, notification
+   target/read/unread matrix and expired-session lifecycle cases; run isolated password/schema-state
+   cases. See `docs/implementation/20260915_android_parity_acceptance/RECOVERY_WORKFLOW_RESULTS.md`.
 3. Physical-device and Play Console upload/publication remain separate release gates. FCM and
    production deployment remain outside current scope.
 

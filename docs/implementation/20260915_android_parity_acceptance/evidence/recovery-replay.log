@@ -1,0 +1,8 @@
+
+pk.vexel.pgrcompanion.AuthenticatedParityRecoveryTest:INSTRUMENTATION_STATUS: parity_gate=replayed twice to same IDs; submitted leave=21 logbook=33; leave_key=fb7f76c5-dd25-42d7-bb3d-c924260c3e9c; logbook_key=786c751e-0134-4784-8d7e-a3caba22b339
+INSTRUMENTATION_STATUS_CODE: 0
+.
+
+Time: 10.951
+
+OK (1 test)

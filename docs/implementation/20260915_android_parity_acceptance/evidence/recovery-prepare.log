@@ -1,0 +1,8 @@
+
+pk.vexel.pgrcompanion.AuthenticatedParityRecoveryTest:INSTRUMENTATION_STATUS: parity_gate=prepared synthetic fixture; no server writes
+INSTRUMENTATION_STATUS_CODE: 0
+.
+
+Time: 8.933
+
+OK (1 test)

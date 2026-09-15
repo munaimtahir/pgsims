@@ -94,3 +94,10 @@ check and repository-aware deployment tests pass. No production database or volu
 Evidence is in `evidence/`; no credentials or tokens are retained there.
 The candidate was merged directly and pushed to `main`; production deployment and Play upload were
 not performed.
+
+## Resumed authenticated recovery run
+
+[Recovery and workflow results](RECOVERY_WORKFLOW_RESULTS.md): seven opt-in device tests PASS for
+restart/replay, server exactly-once records, PDF hash, supervisor return/resident correction and
+offline discard/logout purge. These repository/service-level tests do not close every UI workflow
+or expired-session lifecycle gate. Production remains unchanged.
