@@ -28,9 +28,12 @@ the final parity candidate retains 1.1.9/code9. Production remains on source com
 - Resident workflow implementation increment: draft/returned leave edit dialog and draft/returned
   evaluation response/comment editor now call the canonical PATCH endpoints and preserve record IDs.
   Android unit tests, lint and debug build pass; authenticated UI transition acceptance remains open.
+- Supervisor workload and admin overview increment: supervisor home now renders canonical assigned
+  resident/training/review totals; admin home renders the backend academic workflow overview cards.
+  Android unit tests, lint and debug build pass.
 
 ## Pending Work
-1. Implement remaining unchecked `android.md` rows: supervisor queues/workload, role directories,
+1. Implement remaining unchecked `android.md` rows: role directories,
    document/supervision administration, reports/CSV and pagination. Authenticated acceptance is still
    required for the new returned evaluation/leave editors.
 2. Complete evaluation/review payload and transition tests, full UI workflow forms, notification

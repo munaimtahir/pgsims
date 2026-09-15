@@ -160,6 +160,14 @@ private fun SupervisorHomeContent(data: InstitutionalSnapshot, onOpenWorkflow: (
     }
 
     Text("Workflows", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+    val workload = summary?.child("summary")
+    Card(Modifier.fillMaxWidth()) {
+        Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Text("Academic workload", fontWeight = FontWeight.SemiBold)
+            Text("${workload?.number("assigned_residents") ?: residentsCount} assigned residents · ${workload?.number("pending_review_queue_items") ?: totalPending} pending reviews")
+            Text("${workload?.number("active_training_records") ?: 0} active training records · ${workload?.number("residents_missing_training_records") ?: 0} missing records", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+    }
     Card(Modifier.fillMaxWidth()) {
         Column {
             workflows.forEachIndexed { index, workflow ->

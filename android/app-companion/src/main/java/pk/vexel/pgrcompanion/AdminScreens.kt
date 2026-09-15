@@ -48,6 +48,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.jsonObject
 
 private val ADMIN_ROLES = listOf("ADMIN", "RESIDENT", "SUPERVISOR", "SUPPORT_STAFF")
 
@@ -92,9 +93,11 @@ private fun AdminDashboard(repository: InstitutionalRepository, onRefresh: () ->
     var active by remember { mutableIntStateOf(0) }
     var loading by remember { mutableStateOf(true) }
     var error by remember { mutableStateOf<String?>(null) }
+    var overview by remember { mutableStateOf<JsonObject?>(null) }
     LaunchedEffect(Unit) {
         repository.users(page = 1).fold({ total = it.count }, { error = it.message })
         repository.users(page = 1, active = true).fold({ active = it.count }, { error = it.message })
+        repository.adminWorkflowOverview().fold({ overview = it }, { error = it.message })
         loading = false
     }
     Text("Administration", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
@@ -103,8 +106,28 @@ private fun AdminDashboard(repository: InstitutionalRepository, onRefresh: () ->
     Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxWidth()) {
         AdminStat("All users", total, Modifier.weight(1f)); AdminStat("Active", active, Modifier.weight(1f))
     }
+    val cards = overview?.get("cards")?.jsonObject
+    if (cards != null) {
+        Text("Academic and supervision overview", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            AdminOverviewRow("Active training records", cards.string("active_training_records"))
+            AdminOverviewRow("Residents without training record", cards.string("residents_without_training_record"))
+            AdminOverviewRow("Residents without primary supervisor", cards.string("residents_without_primary_supervisor"))
+            AdminOverviewRow("Pending review items", cards.string("pending_review_items"))
+        }
+    }
     error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
     OutlinedButton(onClick = onRefresh, modifier = Modifier.fillMaxWidth()) { Text("Refresh account") }
+}
+
+@Composable
+private fun AdminOverviewRow(label: String, value: String?) {
+    Card(Modifier.fillMaxWidth()) {
+        Row(Modifier.fillMaxWidth().padding(12.dp), horizontalArrangement = Arrangement.SpaceBetween) {
+            Text(label)
+            Text(value ?: "—", fontWeight = FontWeight.Bold)
+        }
+    }
 }
 
 @Composable

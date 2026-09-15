@@ -218,6 +218,7 @@ interface InstitutionalApi {
     @GET("api/academics/logbook-entries/") suspend fun logbook(): Response<JsonObject>
     @GET("api/academics/logbook-categories/") suspend fun logbookCategories(): Response<JsonObject>
     @GET("api/academics/options/") suspend fun academicOptions(): Response<JsonObject>
+    @GET("api/academics/admin-workflow-overview/") suspend fun adminWorkflowOverview(): Response<JsonObject>
     @POST("api/academics/logbook-entries/") suspend fun createLogbook(@Body body: AcademicLogbookPayload): Response<JsonObject>
     @PATCH("api/academics/logbook-entries/{id}/") suspend fun updateLogbook(@Path("id") id: Int, @Body body: AcademicLogbookPayload): Response<JsonObject>
     @POST("api/academics/logbook-entries/{id}/submit/") suspend fun submitLogbook(@Path("id") id: Int): Response<JsonObject>
@@ -475,6 +476,10 @@ class InstitutionalRepository internal constructor(
     /** Notification centre reads are on demand: failure never breaks the institutional workspace. */
     suspend fun notifications(): Result<List<JsonObject>> = withContext(Dispatchers.IO) {
         runCatching { required(authorized { authorizedApi.notifications() }, "your notifications").paged() }
+    }
+
+    suspend fun adminWorkflowOverview(): Result<JsonObject> = withContext(Dispatchers.IO) {
+        runCatching { required(authorized { authorizedApi.adminWorkflowOverview() }, "the academic overview") }
     }
 
     suspend fun me(): Result<JsonObject> = withContext(Dispatchers.IO) {

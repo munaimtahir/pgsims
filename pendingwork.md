@@ -25,7 +25,7 @@ physical-device/accessibility/performance certification and Play publication. FC
   recovery and isolated backend gates PASS (see `SPRINT_STATE.md`).
 - [x] Authenticated four-role Home/Inbox/Profile/session-restoration/logout matrix passes; ADMIN
   Users and universal-create dialog also render without performing a creation mutation.
-- [ ] Complete unchecked parity workflows in `android.md`: supervisor queue/workload, directories,
+- [ ] Complete unchecked parity workflows in `android.md`: directories,
   document/supervision administration, reports/CSV and pagination. Returned evaluation/leave editors
   are implemented; authenticated transition acceptance remains required.
 - [x] Owner-signed parity 1.1.9/code9 APK/AAB signatures and prior Play upload certificate match;
