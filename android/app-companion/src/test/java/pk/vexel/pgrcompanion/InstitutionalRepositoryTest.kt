@@ -5,6 +5,7 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.intOrNull
 import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonPrimitive
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
@@ -485,6 +486,32 @@ class InstitutionalRepositoryTest {
         file.delete()
         Unit
     }
+
+    @Test fun `returned leave editor patches the existing record and preserves idempotency key`() = runBlocking {
+        tokens.save("access-1", "refresh-1")
+        server.enqueue(json("""{"id":21,"status":"RETURNED"}"""))
+        val result = repository.updateLeave(21, LeaveRequestPayload(11, "annual", "2026-11-10", "2026-11-11", "Corrected dates", "leave-key-21"))
+        assertTrue(result.isSuccess)
+        val request = server.takeRequest()
+        assertEquals("PATCH", request.method)
+        assertEquals("/api/leaves/21/", request.path)
+        val body = Json.parseToJsonElement(request.body.readUtf8()) as JsonObject
+        assertEquals("leave-key-21", body.string("client_request_id"))
+        assertEquals("Corrected dates", body.string("reason"))
+    }
+
+    @Test fun `returned evaluation editor patches the same submission with response values`() = runBlocking {
+        tokens.save("access-1", "refresh-1")
+        server.enqueue(json("""{"id":33,"status":"RETURNED"}"""))
+        val result = repository.updateEvaluation(33, EvaluationSubmissionPayload(5, 4, 2, "Updated reflection", listOf(Json.parseToJsonElement("""{"field_key":"quality","value_text":"improved"}""") as JsonObject)))
+        assertTrue(result.isSuccess)
+        val request = server.takeRequest()
+        assertEquals("PATCH", request.method)
+        assertEquals("/api/academics/evaluation-submissions/33/", request.path)
+        val body = Json.parseToJsonElement(request.body.readUtf8()) as JsonObject
+        assertEquals("Updated reflection", body.string("resident_comments"))
+        assertEquals("improved", body["responses"]!!.jsonArray[0].jsonObject.string("value_text"))
+    }
 }
 
 class InstitutionalValidationTest {
@@ -536,6 +563,7 @@ class InstitutionalValidationTest {
         assertNull(body.string("c"))
         assertNull(body.string("missing"))
     }
+
 }
 
 class CredentialRedactionTest {
