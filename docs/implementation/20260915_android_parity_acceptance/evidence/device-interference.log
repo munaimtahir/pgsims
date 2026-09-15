@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "<stdin>", line 3, in <module>
+  File "/media/munaim/shared1/Documents/github/pgsims/scripts/android_acceptance_ui.py", line 33, in wait
+    raise RuntimeError('UI did not reach '+text)
+RuntimeError: UI did not reach Signed in as Support staff

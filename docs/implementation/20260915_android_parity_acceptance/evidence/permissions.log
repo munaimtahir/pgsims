@@ -1,0 +1,15 @@
+staff required fields complete allowed route /dashboard
+staff notification recipient fixture isolation PASS 0
+staff users directory HTTP 200
+staff forged user creation denied 403 PASS
+resident required fields complete allowed route /dashboard/resident
+resident notification recipient fixture isolation PASS 3
+resident users directory HTTP 200
+resident forged user creation denied 403 PASS
+supervisor required fields complete allowed route /dashboard/supervisor
+supervisor notification recipient fixture isolation PASS 3
+supervisor users directory HTTP 200
+supervisor forged user creation denied 403 PASS
+admin required fields complete allowed route /dashboard/utrmc
+admin notification recipient fixture isolation PASS 0
+admin users directory HTTP 200

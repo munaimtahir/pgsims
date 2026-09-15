@@ -14,8 +14,10 @@ Production remains on verified 1.1.9; parity candidate is 1.1.10/code10.
 - Owner-signed 1.1.10/code10 APK and AAB produced; signatures and upload certificate match verified
   1.1.9. Local artifacts are under `builds/companion/1.1.10/`.
 
+- Authenticated resident/supervisor refresh, initial gated-session restoration/logout, four-role profile completion and backend identity/notification isolation checks recorded in parity acceptance report.
+
 ## Pending Work
-1. Authenticated matrix in progress on `pgsims`: staff is blocked by missing phone/email; resident by missing Academic Session / Induction. ADMIN credentials absent from private file. Await requested demo values/ADMIN path before dashboard/workflow gates. Resident fresh login, process session refresh PASS; evidence is being recorded under `docs/implementation/20260915_android_parity_acceptance/`. Continue supervisor and restoration/logout checks. Credentials remain outside repository/logs.
+1. Resume authenticated device matrix after competing MedSIMS automation releases `pgsims`: foreground repeatedly switched to `pk.vexel.medsims/.MainActivity`; owner asked to pause it. All four demo profiles now completed using authorized demo values and two audited demo lookups; ADMIN credentials added privately. See `docs/implementation/20260915_android_parity_acceptance/TEST_RESULTS.md` for exact fixture values and remaining device gates.
 2. Implement remaining unchecked `android.md` rows: returned evaluation/leave edits, supervisor queues/workload, role directories, document/supervision administration, reports/CSV and pagination.
 3. Physical-device and Play Console upload/publication remain separate release gates. FCM and
    production deployment remain outside current scope.

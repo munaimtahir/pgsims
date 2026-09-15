@@ -1,0 +1,7 @@
+staff assigned {'phone': '+923000000101', 'email': 'android-parity-staff@example.invalid'} remaining []
+Traceback (most recent call last):
+  File "<stdin>", line 14, in <module>
+AssertionError: ('resident', 400)
+resident assigned {'academic_session_ref': 'ANDROID-DEMO-2026'} remaining []
+supervisor assigned {'phone': '+923000000103', 'email': 'android-parity-supervisor@example.invalid', 'designation_ref': 'ANDROID-DEMO'} remaining []
+admin assigned {'phone': '+923000000104'} remaining []

@@ -1,0 +1,4 @@
+RESIDENT process restart: session restored to required-profile gate
+RESIDENT logout: login form confirmed
+SUPERVISOR fresh login: required-profile gate reached
+Required labels: ['Phone Number *', 'Email *', 'Supervisor Designation *']

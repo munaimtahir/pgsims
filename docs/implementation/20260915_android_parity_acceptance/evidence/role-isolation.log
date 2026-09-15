@@ -1,0 +1,3 @@
+staff directory own identity only; other identity denied PASS
+resident directory own identity only; other identity denied PASS
+supervisor directory own identity only; other identity denied PASS

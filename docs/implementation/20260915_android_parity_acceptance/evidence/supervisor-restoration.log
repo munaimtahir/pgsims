@@ -1,0 +1,7 @@
+SUPERVISOR restored session: designation/phone/email gate retained
+SUPERVISOR logout: login form confirmed
+Traceback (most recent call last):
+  File "<stdin>", line 6, in <module>
+  File "/media/munaim/shared1/Documents/github/pgsims/scripts/android_acceptance_ui.py", line 33, in wait
+    raise RuntimeError('UI did not reach '+text)
+RuntimeError: UI did not reach Support staff accounts
