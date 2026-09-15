@@ -512,6 +512,17 @@ class InstitutionalRepositoryTest {
         assertEquals("Updated reflection", body.string("resident_comments"))
         assertEquals("improved", body["responses"]!!.jsonArray[0].jsonObject.string("value_text"))
     }
+
+    @Test fun `admin report export returns CSV text through the authenticated client`() = runBlocking {
+        tokens.save("access-1", "refresh-1")
+        server.enqueue(MockResponse().setResponseCode(200).setHeader("Content-Type", "text/csv").setBody("name,count\nDemo,2\n"))
+        val result = repository.adminReportCsv("Data quality")
+        assertEquals("name,count\nDemo,2\n", result.getOrThrow())
+        val request = server.takeRequest()
+        assertEquals("GET", request.method)
+        assertEquals("/api/academics/reports/data-quality/export.csv", request.path)
+        assertEquals("Bearer access-1", request.getHeader("Authorization"))
+    }
 }
 
 class InstitutionalValidationTest {

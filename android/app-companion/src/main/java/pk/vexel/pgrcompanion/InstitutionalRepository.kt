@@ -19,6 +19,7 @@ import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.MultipartBody
 import okhttp3.OkHttpClient
 import okhttp3.RequestBody.Companion.asRequestBody
+import okhttp3.ResponseBody
 import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.kotlinx.serialization.asConverterFactory
@@ -223,6 +224,10 @@ interface InstitutionalApi {
     @GET("api/academics/reports/logbook/") suspend fun adminLogbookReport(): Response<JsonObject>
     @GET("api/academics/reports/evaluations/") suspend fun adminEvaluationReport(): Response<JsonObject>
     @GET("api/academics/reports/supervisor-workload/") suspend fun adminSupervisorWorkloadReport(): Response<JsonObject>
+    @GET("api/academics/reports/data-quality/export.csv") suspend fun adminDataQualityCsv(): Response<ResponseBody>
+    @GET("api/academics/reports/logbook/export.csv") suspend fun adminLogbookCsv(): Response<ResponseBody>
+    @GET("api/academics/reports/evaluations/export.csv") suspend fun adminEvaluationCsv(): Response<ResponseBody>
+    @GET("api/academics/reports/supervisor-workload/export.csv") suspend fun adminSupervisorWorkloadCsv(): Response<ResponseBody>
     @POST("api/academics/logbook-entries/") suspend fun createLogbook(@Body body: AcademicLogbookPayload): Response<JsonObject>
     @PATCH("api/academics/logbook-entries/{id}/") suspend fun updateLogbook(@Path("id") id: Int, @Body body: AcademicLogbookPayload): Response<JsonObject>
     @POST("api/academics/logbook-entries/{id}/submit/") suspend fun submitLogbook(@Path("id") id: Int): Response<JsonObject>
@@ -493,6 +498,22 @@ class InstitutionalRepository internal constructor(
             "Evaluation report" to runCatching { required(authorized { authorizedApi.adminEvaluationReport() }, "the evaluation report") },
             "Supervisor workload report" to runCatching { required(authorized { authorizedApi.adminSupervisorWorkloadReport() }, "the supervisor workload report") },
         )
+    }
+
+    suspend fun adminReportCsv(label: String): Result<String> = withContext(Dispatchers.IO) {
+        runCatching {
+            val response = authorized {
+                when (label) {
+                    "Data quality" -> authorizedApi.adminDataQualityCsv()
+                    "Logbook" -> authorizedApi.adminLogbookCsv()
+                    "Evaluations" -> authorizedApi.adminEvaluationCsv()
+                    "Supervisor workload" -> authorizedApi.adminSupervisorWorkloadCsv()
+                    else -> throw InstitutionalException("Unknown report.")
+                }
+            }
+            if (!response.isSuccessful) throw InstitutionalException(errorFor(response.code(), "the report export"))
+            response.body()?.string()?.takeIf { it.isNotBlank() } ?: throw InstitutionalException("The report export was empty.")
+        }
     }
 
     suspend fun me(): Result<JsonObject> = withContext(Dispatchers.IO) {

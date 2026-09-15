@@ -1,5 +1,6 @@
 package pk.vexel.pgrcompanion
 
+import android.content.Intent
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -42,6 +43,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
@@ -91,6 +93,8 @@ internal fun AdminPane(
 
 @Composable
 private fun AdminReports(repository: InstitutionalRepository) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
     var loading by remember { mutableStateOf(true) }
     var reports by remember { mutableStateOf<List<Pair<String, Result<JsonObject>>>>(emptyList()) }
     LaunchedEffect(Unit) {
@@ -108,6 +112,29 @@ private fun AdminReports(repository: InstitutionalRepository) {
                     { body -> Text(reportSummary(body)) },
                     { error -> Text(error.message ?: "Report unavailable.", color = MaterialTheme.colorScheme.error) },
                 )
+                var exporting by remember(label) { mutableStateOf(false) }
+                var exportError by remember(label) { mutableStateOf<String?>(null) }
+                OutlinedButton(
+                    onClick = {
+                        exporting = true
+                        exportError = null
+                        scope.launch {
+                            repository.adminReportCsv(label).fold(
+                                { csv ->
+                                    context.startActivity(Intent.createChooser(Intent(Intent.ACTION_SEND).apply {
+                                        type = "text/csv"
+                                        putExtra(Intent.EXTRA_SUBJECT, "$label report")
+                                        putExtra(Intent.EXTRA_TEXT, csv)
+                                    }, "Share $label CSV"))
+                                    exporting = false
+                                },
+                                { exportError = it.message ?: "Export unavailable."; exporting = false },
+                            )
+                        }
+                    },
+                    enabled = !exporting,
+                ) { Text(if (exporting) "Preparing…" else "Export CSV") }
+                exportError?.let { Text(it, color = MaterialTheme.colorScheme.error) }
             }
         }
     }
