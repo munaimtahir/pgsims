@@ -41,6 +41,9 @@ the final parity candidate retains 1.1.9/code9. Production remains on source com
 - Signed release verification: debug unit tests, lint, `assembleRelease`, and `bundleRelease` pass
   with the owner-controlled signing properties. Current artifact hashes are recorded in the release
   handoff; Play upload remains intentionally unperformed.
+- Admin setup workspace: added authenticated, error-safe views for document requirements,
+  supervision assignments, training records, academic periods/templates/categories, and review queue
+  data (`abc804a`).
 
 ## Pending Work
 1. Implement remaining unchecked `android.md` rows: role directories,
