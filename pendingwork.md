@@ -21,7 +21,8 @@ physical-device/accessibility/performance certification and Play publication. FC
 
 ## Next sprint — parity integration and acceptance
 
-- [ ] Verify reconciliation of `feature/android-parity-stages-1-6` with `aef3bd2` (see `SPRINT_STATE.md`).
+- [x] Reconciled `feature/android-parity-stages-1-6` with `aef3bd2`; combined Android, emulator,
+  recovery and isolated backend gates PASS (see `SPRINT_STATE.md`).
 - [ ] Run the authenticated four-role matrix in `android.md` on the combined candidate.
 - [ ] Complete unchecked parity workflows in `android.md`: returned evaluation/leave edits,
   supervisor queue/workload, directories, document/supervision administration, reports/CSV and pagination.

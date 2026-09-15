@@ -1,17 +1,19 @@
-# Android parity reconciliation — in progress
+# Android parity — acceptance and remaining workflows
 
 ## Scope
-Reconcile `feature/android-parity-stages-1-6` with released main `aef3bd2`; verify and push the combined branch. Production remains on the verified 1.1.9 release.
+Continue `feature/android-parity-stages-1-6` after reconciliation with released main `aef3bd2`.
+Production remains on verified 1.1.9; parity candidate is 1.1.10/code10.
 
 ## Completed Work
-- Original parity commit `d8e2ce6` preserved at `checkpoint/android-parity-before-reconciliation`.
-- Reconciled overlapping auth, recovery, Inbox and leave logic using release safeguards; parity screens/APIs retained. Candidate version 1.1.10/code10.
+- Merge `800f7ac` preserves both `d8e2ce6` parity and released safeguards; original parity is retained at `checkpoint/android-parity-before-reconciliation`.
+- Candidate `9364d37` pushed/fetched on VPS: Android build/lint, 41 unit tests, 7 emulator tests and process-death harness PASS.
+- Disposable backend: 929 tests PASS (89.097s; one PG-only skip), separate PostgreSQL concurrency PASS (0.863s), schema/migrate/check and identity gate PASS.
+- Evidence: `docs/implementation/20260915_android_parity_reconciliation/RECONCILIATION.md`. No production changes.
 
 ## Pending Work
-1. Compile/test/lint combined Android code and run emulator regression tests; resolve integration failures.
-2. Verify combined backend in disposable VPS containers using `scripts/verify_android_backend_closure.sh`; run identity gate.
-3. Commit evidence and push parity branch; fetch/verify branch on VPS without deployment.
-4. Subsequent parity acceptance: authenticated four-role matrix and remaining unchecked workflow rows in `android.md`; signed candidate and physical-device checks before release verdict.
+1. Run authenticated four-role matrix in `android.md` on the combined candidate: onboarding routes, Inbox isolation, workflow transitions, session/refresh and offline recovery. Credentials remain outside repository/logs.
+2. Implement remaining unchecked `android.md` rows: returned evaluation/leave edits, supervisor queues/workload, role directories, document/supervision administration, reports/CSV and pagination.
+3. Freeze/sign next candidate after acceptance; verify physical device and release gates before production rollout. FCM and Play remain outside current scope.
 
 ## Verdict
-CONDITIONAL GO — integration verification pending. Historical 1.1.9 GO remains in RELEASE_CLOSURE.md.
+GO for branch reconciliation; CONDITIONAL GO for broader parity release pending the explicit gates above.
