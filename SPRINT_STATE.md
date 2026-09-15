@@ -36,10 +36,12 @@ the final parity candidate retains 1.1.9/code9. Production remains on source com
   build pass.
 - Returned workflow contract coverage: repository tests assert leave and evaluation PATCH paths,
   payload fields, response values and leave idempotency-key preservation (`e211118`).
+- Admin CSV export: Reports now calls the four authenticated `export.csv` endpoints and shares
+  generated CSV text; MockWebServer coverage verifies authorization and path selection (`b42a465`).
 
 ## Pending Work
 1. Implement remaining unchecked `android.md` rows: role directories,
-   document/supervision administration, CSV/export actions and complete pagination. Authenticated
+   document/supervision administration and complete pagination. Authenticated
    device acceptance is still required for the returned evaluation/leave editors; repository
    contract coverage is now present.
 2. Complete evaluation/review payload and transition tests, full UI workflow forms, notification

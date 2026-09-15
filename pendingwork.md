@@ -26,7 +26,8 @@ physical-device/accessibility/performance certification and Play publication. FC
 - [x] Authenticated four-role Home/Inbox/Profile/session-restoration/logout matrix passes; ADMIN
   Users and universal-create dialog also render without performing a creation mutation.
 - [ ] Complete unchecked parity workflows in `android.md`: directories,
-  document/supervision administration, CSV/export actions and pagination. Returned evaluation/leave editors
+  document/supervision administration and pagination. CSV export is now wired in the Admin Reports tab;
+  returned evaluation/leave editors
   are implemented and their PATCH contracts are covered by `e211118`; authenticated transition acceptance remains required.
 - [x] Owner-signed parity 1.1.9/code9 APK/AAB signatures and prior Play upload certificate match;
   code9 is still available in Play per owner confirmation.
