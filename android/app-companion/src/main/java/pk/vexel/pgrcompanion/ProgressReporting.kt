@@ -19,14 +19,19 @@ internal fun ResidentProgressReport(data: InstitutionalSnapshot) {
     Text("This is a read-only summary of your PGR SIMS record.", color = MaterialTheme.colorScheme.onSurfaceVariant)
     val progress = data.academicProgress
     val monitoring = data.progressMonitoring
+    val logbook = logbookCounts(data.logbook)
+    val evaluations = data.assessments.groupingBy { it.progressValue("status") }.eachCount()
     val rotation = data.residentSummary?.progressObject("rotation")?.progressObject("current")
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         ProgressCard("Current posting", rotation?.progressValue("template_name").orEmpty().ifBlank { "No current posting" })
         ProgressCard("Training status", progress?.progressValue("training_record_status").orEmpty().ifBlank { "Not available" })
         ProgressCard("Training year", progress?.progressValue("training_year").orEmpty().ifBlank { "Not available" })
-        ProgressCard("Logbook", "${progress?.progressValue("logbooks_verified").orEmpty().ifBlank { "0" }} verified · ${progress?.progressValue("logbooks_total").orEmpty().ifBlank { "0" }} total")
-        ProgressCard("Evaluations / WBA", "${progress?.progressValue("evaluations_approved").orEmpty().ifBlank { "0" }} approved · ${progress?.progressValue("evaluations_total").orEmpty().ifBlank { "0" }} total")
-        ProgressCard("Monitoring", monitoring?.progressValue("overall_status").orEmpty().ifBlank { monitoring?.progressValue("status").orEmpty().ifBlank { "Current" } })
+        ProgressCard("Logbook (server totals)", "${progress?.progressValue("logbooks_verified").orEmpty().ifBlank { "Unavailable" }} verified · ${progress?.progressValue("logbooks_total").orEmpty().ifBlank { "Unavailable" }} total")
+        ProgressCard("Evaluations (server totals)", "${progress?.progressValue("evaluations_approved").orEmpty().ifBlank { "Unavailable" }} approved · ${progress?.progressValue("evaluations_total").orEmpty().ifBlank { "Unavailable" }} total")
+        ProgressCard("Monitoring", monitoring?.progressValue("overall_status").orEmpty().ifBlank { monitoring?.progressValue("status").orEmpty().ifBlank { "Not available" } })
+        ProgressCard("Rotations", "${data.rotations.size} recorded")
+        ProgressCard("Logbook (loaded records)", "${logbook["APPROVED"] ?: 0} verified · ${logbook["SUBMITTED"] ?: 0} awaiting review")
+        ProgressCard("Evaluations / WBA", "${evaluations["APPROVED"] ?: evaluations["COMPLETED"] ?: 0} complete · ${evaluations["SUBMITTED"] ?: 0} awaiting review")
         ProgressCard("Research", data.research?.progressValue("status").orEmpty().ifBlank { "No research status recorded" })
         ProgressCard("Workshops", "${data.workshops.size} recorded")
     }

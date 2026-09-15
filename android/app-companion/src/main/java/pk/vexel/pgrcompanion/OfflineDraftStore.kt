@@ -11,8 +11,7 @@ import java.util.UUID
 /**
  * Small encrypted, app-private holding area for work created while PGR SIMS is unreachable.
  * Drafts are never mixed with the personal workspace and are only removed after explicit user
- * action or confirmed server persistence.  Automatic replay is intentionally not implemented
- * until the backend accepts idempotency keys for these create operations.
+ * action or confirmed server persistence. Replay uses stable backend idempotency keys.
  */
 @Serializable
 internal data class OfflineDraft(
@@ -50,9 +49,9 @@ internal class OfflineDraftStore(context: Context) {
     fun saveLeave(payload: LeaveRequestPayload, ownerUserId: Int) = save(OfflineDraft(kind = "leave", leave = payload, ownerUserId = ownerUserId))
     fun saveLogbook(payload: AcademicLogbookPayload, ownerUserId: Int) = save(OfflineDraft(kind = "logbook", logbook = payload, ownerUserId = ownerUserId))
     fun update(draft: OfflineDraft) = save(draft)
-    fun remove(id: String) { preferences.edit().remove(id).commit() }
+    fun remove(id: String) { check(preferences.edit().remove(id).commit()) }
     /** Logout is a hard ownership boundary for recoverable institutional work. */
-    fun clear() { preferences.edit().clear().commit() }
+    fun clear() { check(preferences.edit().clear().commit()) }
 
     private fun save(draft: OfflineDraft) {
         check(preferences.edit().putString(draft.id, json.encodeToString(draft)).commit()) {

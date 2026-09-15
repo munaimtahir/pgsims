@@ -328,6 +328,56 @@ class LeaveRequestAPITest(APITestCase):
         self.assertEqual(r.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("resident_training", r.data)
 
+    def _leave_payload(self, **overrides):
+        return {"resident_training": self.rec.pk, "leave_type": "annual",
+                "start_date": str(TODAY), "end_date": str(TODAY + timedelta(days=2)),
+                "client_request_id": "d804858e-d91b-4cb3-8e8c-c0959133d5f7", **overrides}
+
+    def test_leave_key_persisted_replay_unchanged_and_unfiltered(self):
+        for user in (self.resident_user, self.utrmc):
+            self._auth(user)
+            payload = self._leave_payload()
+            first = self.client.post("/api/leaves/", payload, format="json")
+            self.assertIn(first.status_code, (200, 201))
+            replay = self.client.post("/api/leaves/?status=APPROVED", {**payload, "reason": "changed"}, format="json")
+            self.assertEqual(replay.status_code, 200)
+            self.assertEqual(first.data, replay.data)
+            self.assertEqual(str(LeaveRequest.objects.get(pk=first.data["id"]).client_request_id), payload["client_request_id"])
+        self.assertEqual(LeaveRequest.objects.count(), 1)
+
+    def test_leave_invalid_null_and_missing_keys(self):
+        self._auth(self.resident_user)
+        self.assertEqual(self.client.post("/api/leaves/", self._leave_payload(client_request_id="invalid"), format="json").status_code, 400)
+        payload = self._leave_payload(client_request_id=None)
+        for _ in range(2):
+            self.assertEqual(self.client.post("/api/leaves/", payload, format="json").status_code, 201)
+        del payload["client_request_id"]
+        self.assertEqual(self.client.post("/api/leaves/", payload, format="json").status_code, 201)
+        self.assertEqual(LeaveRequest.objects.count(), 3)
+
+    def test_leave_key_cannot_move_or_change(self):
+        self._auth(self.resident_user)
+        response = self.client.post("/api/leaves/", self._leave_payload(), format="json")
+        for value in (None, "7ed573c2-5659-4e37-baad-de329195d213"):
+            self.assertEqual(self.client.patch(f"/api/leaves/{response.data['id']}/", {"client_request_id": value}, format="json").status_code, 400)
+        self.assertEqual(self.client.patch(f"/api/leaves/{response.data['id']}/", {"reason": "editable"}, format="json").status_code, 200)
+
+    def test_leave_collision_and_permissions_do_not_leak_existing_record(self):
+        self._auth(self.resident_user)
+        created = self.client.post("/api/leaves/", self._leave_payload(), format="json")
+        other = make_user("leave_other", "RESIDENT")
+        other_record = ResidentTrainingRecord.objects.create(resident_user=other, program=self.rec.program, start_date=TODAY)
+        self.assertEqual(self.client.post("/api/leaves/", self._leave_payload(resident_training=other_record.pk), format="json").status_code, 403)
+        self.assertEqual(self.client.patch(f"/api/leaves/{created.data['id']}/", {"resident_training": other_record.pk}, format="json").status_code, 400)
+        for user in (other, self.utrmc):
+            self._auth(user)
+            collision = self.client.post("/api/leaves/", self._leave_payload(resident_training=other_record.pk), format="json")
+            self.assertEqual(collision.status_code, 409)
+            self.assertEqual(set(collision.data), {"detail"})
+        self._auth(self.supervisor)
+        self.assertEqual(self.client.post("/api/leaves/", self._leave_payload(), format="json").status_code, 403)
+        self.assertEqual(LeaveRequest.objects.count(), 1)
+
     def test_full_leave_approval_flow(self):
         self._auth(self.resident_user)
         r = self.client.post("/api/leaves/", {
@@ -364,3 +414,59 @@ class ResidentDashboardFallbackTest(APITestCase):
         self.assertEqual(response.data["leaves"]["active_count"], 0)
         self.assertEqual(response.data["eligibility"]["IMM"]["status"], None)
         self.assertEqual(response.data["thesis"]["status"], "NOT_STARTED")
+
+
+from concurrent.futures import ThreadPoolExecutor
+from threading import Barrier
+from unittest import skipUnless
+from unittest.mock import patch
+from django.db import connection, connections, IntegrityError
+from rest_framework.test import APITransactionTestCase, APIClient
+
+
+@skipUnless(connection.vendor == "postgresql", "PostgreSQL concurrent unique-key gate runs separately")
+class LeaveIdempotencyConcurrencyTest(APITransactionTestCase):
+    setUp = LeaveRequestAPITest.setUp
+
+    def test_simultaneous_replay_inserts_exactly_once(self):
+        from .views import LeaveRequestViewSet
+        barrier = Barrier(2)
+        original = LeaveRequestViewSet.perform_create
+        payload = LeaveRequestAPITest._leave_payload(self)
+
+        def synchronized_create(view, serializer):
+            barrier.wait(timeout=15)
+            return original(view, serializer)
+
+        def post():
+            try:
+                client = APIClient()
+                client.force_authenticate(User.objects.get(pk=self.resident_user.pk))
+                response = client.post("/api/leaves/", payload, format="json")
+                return response.status_code, response.data["id"]
+            finally:
+                connections.close_all()
+
+        with patch.object(LeaveRequestViewSet, "perform_create", synchronized_create):
+            with ThreadPoolExecutor(max_workers=2) as pool:
+                futures = [pool.submit(post) for _ in range(2)]
+                results = [future.result(timeout=30) for future in futures]
+        self.assertEqual(sorted(code for code, _ in results), [200, 201])
+        self.assertEqual(len({pk for _, pk in results}), 1)
+        self.assertEqual(LeaveRequest.objects.count(), 1)
+
+
+class LeaveIdempotencyRollbackTest(APITestCase):
+    setUp = LeaveRequestAPITest.setUp
+
+    def test_unrelated_integrity_failure_rolls_back_and_is_not_a_replay(self):
+        from .views import LeaveRequestViewSet
+        original = LeaveRequestViewSet.perform_create
+        def fail(view, serializer):
+            original(view, serializer)
+            raise IntegrityError("synthetic post-save failure")
+        self.client.force_authenticate(self.resident_user)
+        with patch.object(LeaveRequestViewSet, "perform_create", fail):
+            with self.assertRaises(IntegrityError):
+                self.client.post("/api/leaves/", LeaveRequestAPITest._leave_payload(self), format="json")
+        self.assertEqual(LeaveRequest.objects.count(), 0)

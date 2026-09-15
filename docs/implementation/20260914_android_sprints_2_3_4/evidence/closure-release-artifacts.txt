@@ -1,0 +1,7 @@
+Runtime source: 5f922657ea6dec17317a00eb4060168a816e1e1f
+package: name='pk.vexel.pgrcompanion' versionCode='9' versionName='1.1.9' platformBuildVersionName='16' platformBuildVersionCode='36' compileSdkVersion='36' compileSdkVersionCodename='16'
+APK apksigner verify: PASS; AAB jarsigner verify: jar verified.
+Both artifacts match prior 1.1.3 APK signer SHA256: a858f42c4460feab688e3e9fce28b3e9e0d5af03a555133e5e134f890b61f010
+builds/companion/1.1.9/PGR-Companion-1.1.9.apk: bytes=2135689 sha256=38d90bb1c4b329582d706f7914678ae19e2f1a7e5ef8621e105c8edf054b3043
+builds/companion/1.1.9/PGR-Companion-1.1.9.aab: bytes=4494970 sha256=b42837a4ca4d051bf2046066cab7723f86f8a0677dd2e1644cccea4a99770984
+Installed signed base.apk SHA256 matches distributed APK: 38d90bb1c4b329582d706f7914678ae19e2f1a7e5ef8621e105c8edf054b3043

@@ -3,56 +3,57 @@ package pk.vexel.pgrcompanion
 import android.content.Context
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
-import java.io.File
+import androidx.work.ListenableWorker
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
-/** Replays only idempotency-keyed drafts; a server success is the only deletion condition. */
+internal object RecoveryCoordinator { val mutex = Mutex() }
+
+/** Logout waits for this critical section before purging either encrypted store. */
 class OfflineDraftSyncWorker(context: Context, parameters: WorkerParameters) : CoroutineWorker(context, parameters) {
-    override suspend fun doWork(): Result {
+    override suspend fun doWork(): Result = replayOffline(applicationContext, (applicationContext as CompanionApplication).institutional)
+}
+
+internal suspend fun replayOffline(applicationContext: Context, repository: InstitutionalRepository): ListenableWorker.Result =
+    RecoveryCoordinator.mutex.withLock {
+        if (!repository.isConnected()) return@withLock ListenableWorker.Result.success()
+        val owner = repository.me().getOrNull()?.string("id")?.toIntOrNull()
+            ?: return@withLock ListenableWorker.Result.retry()
         val drafts = OfflineDraftStore(applicationContext)
-        val repository = (applicationContext as CompanionApplication).institutional
-        if (!repository.isConnected()) return Result.success()
-        val activeUserId = repository.currentUserId() ?: repository.me().getOrNull()?.string("id")?.toIntOrNull()
-            ?: return Result.retry()
+        var retry = false
         for (draft in drafts.all()) {
-            if (draft.ownerUserId != activeUserId) {
-                drafts.update(draft.copy(state = OfflineDraft.FAILED, lastError = "Queued under a different PGR SIMS account."))
+            currentCoroutineContext().ensureActive()
+            if (draft.ownerUserId != owner) {
+                drafts.update(draft.copy(state = "failed", lastError = "This draft belongs to another or unknown account. Discard it explicitly."))
                 continue
             }
-            drafts.update(draft.copy(state = OfflineDraft.UPLOADING, attempts = draft.attempts + 1, lastError = null))
             val result = when (draft.kind) {
                 "leave" -> draft.leave?.let { repository.createLeave(it) }
                 "logbook" -> draft.logbook?.let { repository.createLogbook(it) }
                 else -> null
             } ?: continue
+            currentCoroutineContext().ensureActive()
             if (result.isSuccess) drafts.remove(draft.id) else {
-                drafts.update(draft.copy(state = OfflineDraft.FAILED, attempts = draft.attempts + 1, lastError = result.exceptionOrNull()?.message))
-                return Result.retry()
+                drafts.update(draft.copy(state = "failed", attempts = draft.attempts + 1, lastError = "Retry failed; draft retained."))
+                retry = true
             }
         }
         val uploads = OfflineUploadStore(applicationContext)
         for (upload in uploads.all()) {
-            if (upload.ownerUserId != activeUserId) {
-                uploads.update(upload.copy(state = OfflineUpload.FAILED, lastError = "Queued under a different PGR SIMS account."))
+            currentCoroutineContext().ensureActive()
+            if (upload.ownerUserId != owner) {
+                uploads.update(upload.copy(state = OfflineUpload.FAILED, lastError = "This upload belongs to another or unknown account. Discard it explicitly."))
                 continue
             }
-            val result = runCatching {
-                uploads.update(upload.copy(state = OfflineUpload.UPLOADING, attempts = upload.attempts + 1, lastError = null))
-                val temporary = File.createTempFile("pgr-upload-", ".tmp", applicationContext.cacheDir)
-                try {
-                    uploads.open(upload).use { input -> temporary.outputStream().use(input::copyTo) }
-                    repository.upload(upload.documentId, temporary, upload.displayName).getOrThrow()
-                } finally {
-                    temporary.delete()
-                }
-            }
+            uploads.update(upload.copy(state = OfflineUpload.UPLOADING, attempts = upload.attempts + 1, lastError = null))
+            val result = repository.upload(upload, uploads)
+            currentCoroutineContext().ensureActive()
             result.fold(
                 { uploads.remove(upload) },
-                { uploads.update(upload.copy(state = OfflineUpload.FAILED, attempts = upload.attempts + 1, lastError = it.message)) },
+                { uploads.update(upload.copy(state = OfflineUpload.FAILED, attempts = upload.attempts + 1, lastError = "Upload failed; encrypted source retained.")); retry = true },
             )
-            // Retain every failed source and let WorkManager backoff retry it.  It is never
-            // discarded or replaced without an explicit user action.
-            if (result.isFailure) return Result.retry()
         }
-        return Result.success()
+        if (retry) ListenableWorker.Result.retry() else ListenableWorker.Result.success()
     }
-}

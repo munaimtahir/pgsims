@@ -658,27 +658,36 @@ class LeaveRequestViewSet(viewsets.ModelViewSet):
     def create(self, request, *args, **kwargs):
         if not (_is_resident(request.user) or _is_admin_or_utrmc_admin(request.user)):
             return Response({"detail": "Permission denied."}, status=status.HTTP_403_FORBIDDEN)
-        client_request_id = request.data.get("client_request_id")
-        request_uuid = None
-        if client_request_id and _is_resident(request.user):
-            try:
-                request_uuid = UUID(str(client_request_id))
-            except (TypeError, ValueError):
-                raise DRFValidationError({"client_request_id": "Must be a valid UUID."})
-            existing = self.get_queryset().filter(client_request_id=request_uuid).first()
-            if existing:
-                return Response(self.get_serializer(existing).data, status=status.HTTP_200_OK)
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        training = serializer.validated_data["resident_training"]
+        # Authorize the requested target before looking up a globally unique key.
+        if _is_resident(request.user) and training.resident_user_id != request.user.id:
+            self.permission_denied(request, message="Residents can only create leave for their own training record.")
+        key = serializer.validated_data.get("client_request_id")
+
+        def replay():
+            existing = LeaveRequest.objects.filter(client_request_id=key).first() if key else None
+            if existing is None:
+                return None
+            if existing.resident_training_id != training.pk:
+                return Response({"detail": "Client request ID is already in use."}, status=status.HTTP_409_CONFLICT)
+            return Response(self.get_serializer(existing).data, status=status.HTTP_200_OK)
+
+        previous = replay()
+        if previous is not None:
+            return previous
         try:
-            # The nested savepoint lets a concurrent unique-key collision be recovered even when
-            # the project enables request-level transactions.
+            # A savepoint allows reading the winner after a unique-key race.
             with transaction.atomic():
-                return super().create(request, *args, **kwargs)
+                self.perform_create(serializer)
         except IntegrityError:
-            if request_uuid is not None:
-                existing = self.get_queryset().filter(client_request_id=request_uuid).first()
-                if existing:
-                    return Response(self.get_serializer(existing).data, status=status.HTTP_200_OK)
+            previous = replay()
+            if previous is not None:
+                return previous
             raise
+        return Response(serializer.data, status=status.HTTP_201_CREATED,
+                        headers=self.get_success_headers(serializer.data))
 
     @action(detail=True, methods=["post"])
     def submit(self, request, pk=None):

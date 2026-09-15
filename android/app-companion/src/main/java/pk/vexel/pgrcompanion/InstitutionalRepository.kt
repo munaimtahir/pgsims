@@ -5,6 +5,8 @@ import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
@@ -286,9 +288,9 @@ class InstitutionalException(message: String) : Exception(message)
 interface TokenStore {
     val access: String?
     val refresh: String?
-    val userId: Int?
+    val userId: Int? get() = null
+    fun saveUserId(id: Int) {}
     fun save(access: String, refresh: String)
-    fun saveUserId(userId: Int)
     fun clear()
 }
 
@@ -298,14 +300,14 @@ interface TokenStore {
  * institutional session is recoverable, taking down the offline Personal Workspace is not.
  */
 class EncryptedTokenStore private constructor(private val prefs: android.content.SharedPreferences) : TokenStore {
+    override val userId: Int? get() = prefs.getInt("user_id", -1).takeIf { it > 0 }
+    override fun saveUserId(id: Int) { check(prefs.edit().putInt("user_id", id).commit()) }
     override val access: String? get() = prefs.getString(KEY_ACCESS, null)
     override val refresh: String? get() = prefs.getString(KEY_REFRESH, null)
-    override val userId: Int? get() = prefs.getInt(KEY_USER_ID, -1).takeIf { it >= 0 }
     override fun save(access: String, refresh: String) {
-        prefs.edit().putString(KEY_ACCESS, access).putString(KEY_REFRESH, refresh).commit()
+        prefs.edit().putString(KEY_ACCESS, access).putString(KEY_REFRESH, refresh).commit().also { check(it) }
     }
-    override fun saveUserId(userId: Int) { prefs.edit().putInt(KEY_USER_ID, userId).commit() }
-    override fun clear() { prefs.edit().clear().commit() }
+    override fun clear() { check(prefs.edit().clear().commit()) }
 
     companion object {
         private const val KEY_ACCESS = "access"
@@ -326,15 +328,15 @@ class EncryptedTokenStore private constructor(private val prefs: android.content
 }
 
 class InMemoryTokenStore : TokenStore {
+    private var owner: Int? = null
+    override val userId: Int? get() = owner
+    override fun saveUserId(id: Int) { owner = id }
     private var accessValue: String? = null
     private var refreshValue: String? = null
-    private var userIdValue: Int? = null
     override val access: String? get() = accessValue
     override val refresh: String? get() = refreshValue
-    override val userId: Int? get() = userIdValue
     override fun save(access: String, refresh: String) { accessValue = access; refreshValue = refresh }
-    override fun saveUserId(userId: Int) { userIdValue = userId }
-    override fun clear() { accessValue = null; refreshValue = null; userIdValue = null }
+    override fun clear() { accessValue = null; refreshValue = null; owner = null }
 }
 
 /**
@@ -406,6 +408,7 @@ class InstitutionalRepository internal constructor(
         .build()
         .create(InstitutionalApi::class.java)
 
+
     fun isConnected(): Boolean = !tokens.access.isNullOrBlank() && !tokens.refresh.isNullOrBlank()
     fun currentUserId(): Int? = tokens.userId
 
@@ -429,8 +432,7 @@ class InstitutionalRepository internal constructor(
 
     suspend fun snapshot(): Result<InstitutionalSnapshot> = withContext(Dispatchers.IO) {
         runCatching {
-            val me = required(authorized { authorizedApi.me() }, "your institutional profile")
-            me.string("id")?.toIntOrNull()?.let(tokens::saveUserId)
+            val me = me().getOrThrow()
             val unavailable = mutableListOf<String>()
             if (me.string("role") == "SUPERVISOR") {
                 val supervisorSummary = optional(authorized { authorizedApi.supervisorSummary() }, "Supervisor summary", unavailable)
@@ -728,6 +730,28 @@ class InstitutionalRepository internal constructor(
             }
         }
 
+    internal suspend fun upload(upload: OfflineUpload, store: OfflineUploadStore): Result<JsonObject> = withContext(Dispatchers.IO) {
+        runCatching {
+            validateUpload(upload.displayName, upload.sizeBytes)?.let { throw InstitutionalException(it) }
+            val body = object : okhttp3.RequestBody() {
+                override fun contentType() = upload.mimeType.toMediaType()
+                override fun contentLength() = upload.sizeBytes
+                override fun writeTo(sink: okio.BufferedSink) {
+                    store.open(upload).use { input ->
+                        val buffer = ByteArray(8192)
+                        while (true) {
+                            val count = input.read(buffer)
+                            if (count < 0) break
+                            sink.write(buffer, 0, count)
+                        }
+                    }
+                }
+            }
+            val part = MultipartBody.Part.createFormData("file", upload.displayName, body)
+            required(authorized { authorizedApi.upload(upload.documentId, part) }, "the uploaded document")
+        }
+    }
+
     suspend fun upload(documentId: Int, file: File, displayName: String): Result<JsonObject> =
         withContext(Dispatchers.IO) {
             runCatching {
@@ -760,7 +784,7 @@ class InstitutionalRepository internal constructor(
             // local clearing below remains guaranteed if the network/session has expired.
             runCatching { authorized { authorizedApi.logout(LogoutPayload(token)) } }
         }
-        tokens.clear()
+        refreshMutex.withLock { tokens.clear() }
     }
 
     // --- request plumbing -------------------------------------------------------------------
@@ -768,7 +792,13 @@ class InstitutionalRepository internal constructor(
     private suspend fun <T> authorized(request: suspend () -> Response<T>): Response<T> {
         val first = call(request)
         if (first.code() != 401) return first
-        return if (refreshToken()) call(request) else first
+        val refreshed = refreshMutex.withLock {
+            val used = first.raw().request.header("Authorization")?.removePrefix("Bearer ")
+            // Another request (or repository instance) may already have rotated the
+            // shared session while this request was returning its stale 401.
+            if (!tokens.access.isNullOrBlank() && tokens.access != used) true else refreshToken()
+        }
+        return if (refreshed) call(request) else first
     }
 
     private suspend fun <T> call(request: suspend () -> Response<T>): Response<T> = try {
@@ -784,7 +814,7 @@ class InstitutionalRepository internal constructor(
         val response = runCatching { anonymousApi.refresh(RefreshPayload(token)) }.getOrNull() ?: return false
         if (!response.isSuccessful) {
             // The refresh token is spent or revoked: drop the session rather than loop on 401.
-            tokens.clear()
+            if (response.code() == 401 || response.code() == 403) tokens.clear()
             return false
         }
         val body = response.body() ?: return false
@@ -833,6 +863,8 @@ class InstitutionalRepository internal constructor(
     }
 
     companion object {
+        private val refreshMutex = Mutex()
+
         /** Mirrors the backend's own limits so the trainee gets the error before the upload runs. */
         val ALLOWED_UPLOAD_EXTENSIONS = setOf("pdf", "jpg", "jpeg", "png", "doc", "docx")
         const val MAX_UPLOAD_BYTES = 10L * 1024 * 1024

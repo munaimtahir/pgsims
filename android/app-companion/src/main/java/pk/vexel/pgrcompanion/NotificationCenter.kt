@@ -48,7 +48,7 @@ internal fun NotificationCenterScreen(
     Column(
         // The role shell owns scrolling. A second vertical scroll container here caused an
         // infinite-height measurement crash when Resident Inbox was opened.
-        Modifier.fillMaxSize().padding(16.dp),
+        Modifier.fillMaxWidth().padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
@@ -72,10 +72,11 @@ internal fun NotificationCenterScreen(
             Card(
                 Modifier.fillMaxWidth().clickable {
                     scope.launch {
-                        repository.markNotifications(listOf(id), true)
+                        repository.markNotifications(listOf(id), true).onFailure { message = "Could not mark notification read." }
+                        load().join()
                         if (!kind.isNullOrBlank() && targetId != null) {
                             repository.notificationTarget(kind, targetId).fold(
-                                { exact -> targetDetail = kind to exact; onTarget(kind, targetId) },
+                                { exact -> targetDetail = kind to exact },
                                 { message = it.message ?: "This notification target is no longer available." },
                             )
                         } else if (!kind.isNullOrBlank()) {
@@ -96,7 +97,7 @@ internal fun NotificationCenterScreen(
                         TextButton(onClick = {
                             scope.launch {
                                 repository.markNotifications(listOf(id), !read)
-                                rows = rows.map { if (it.noticeNumber("id") == id) it else it }
+
                                 load()
                             }
                         }) { Text(if (read) "Mark unread" else "Mark read") }

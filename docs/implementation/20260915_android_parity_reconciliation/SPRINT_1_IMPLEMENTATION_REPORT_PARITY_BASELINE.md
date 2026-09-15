@@ -1,14 +1,5 @@
 # PGSIMS Android — Sprint 1 Workflow Parity Report
 
-**Current release status: GO — focused Sprint 1–5 closure, 2026-09-15.**
-The five mandatory Android defects are repaired, deployed and evidenced on signed 1.1.9/code 9.
-See the [final closure report](../20260914_android_sprints_2_3_4/RELEASE_CLOSURE.md) for
-928-test backend/isolated PostgreSQL, Android/device/recovery results and exact artifact hashes.
-The earlier status sections below are historical; wider parity and full workflow-action certification
-remain outside this focused release.
-
-## Historical Sprint 1 implementation report
-
 Date: 2026-09-14
 Verdict: CONDITIONAL GO
 
@@ -120,3 +111,8 @@ logbook exactly-once replay pass within their documented boundaries. Full write-
 and later feature/signed-candidate certification remain unverified. See the authoritative
 [combined report](../20260914_android_sprints_2_3_4/TEST_RESULTS.md) for artifact hashes, failures,
 fixture IDs, reproducible commands and remaining gates. No GO or deployment is granted here.
+
+The later `feature/android-parity-stages-1-6` candidate supersedes the source defects listed above:
+all-role Inbox, synchronous owner-bound upload metadata, persisted/deduplicated leave request IDs and
+normalized logbook counts are implemented with automated coverage. Historical baseline failures stay
+recorded for provenance; authenticated candidate acceptance and deployment remain separate gates.

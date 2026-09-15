@@ -1,28 +1,22 @@
 # Android Sprints 1–5 — Final Release Verification
 
-**CONDITIONAL GO — 2026-09-15.** The verification pass is complete; release acceptance is not.
-The canonical results and reproducible commands are in [TEST_RESULTS.md](TEST_RESULTS.md).
+**GO — 2026-09-15 PKT, focused five-defect release.**
 
-- Isolated VPS SQLite suite: 922 tests, zero failures/errors, three explicit repository-file skips,
-  59.308s. Test container removed; production health and FCM-disabled state rechecked.
-- SUPPORT_STAFF device routing/sign-out, resident/supervisor sessions and forced refresh pass.
-- Logbook offline restart/replay, encrypted upload normal restart/explicit discard, and logout
-  purge with real queued material pass within the documented test boundaries.
-- Mandatory failures: resident Inbox crash; absent supervisor Inbox; leave replay duplicates;
-  inconsistent logbook counts. Abrupt-exit upload metadata loss remains a documented recovery failure
-  requiring repaired-candidate verification. Full write-action regression is not certified.
-- Owner-authorized synthetic records remain unsubmitted drafts: leave 17/18/19; logbook 31.
-- Tests cover APK hashes recorded in the canonical report. Later work on
-  `feature/android-parity-stages-1-6` and signed release artifacts require separate certification.
+Resident Inbox scrolling, supervisor Inbox, leave UUID idempotency, logbook counts and encrypted
+upload durability are repaired and verified. The final signed 1.1.9/code9 APK passed production
+recovery: real offline draft creation, process restart, exactly-once persistence/replay, real document
+picker/retry, replacement discard and populated-queue logout purge. Session/refresh and role gates pass.
 
-This pass adds opt-in device verification tooling and evidence, not application fixes or a deployment.
-No FCM enablement, Caddy changes, unrelated workflow changes, or legacy-folder changes were made.
-Do not mark GO until every failed or unverified mandatory gate has fresh evidence on the final candidate.
+- Deployed backend image: full SQLite 928 tests, zero failures/errors, 87.707s; one PostgreSQL-only
+  skip passes separately in 0.794s. Migration drift/from-zero checks pass.
+- Android 33 unit tests, lint/debug/release builds, final 5-test Inbox/ownership suite and host-controlled
+  process-death/fault/race tests pass. APK/AAB signatures match the prior certificate.
+- PR #17 and PR #18 merged to main. Tested backend/worker/beat deployed with verified backup and rollback
+  tags. Only the document-upload directory chain required a scoped group/SGID permission correction.
+- Production database/cache/Celery healthy, frontend/API HTTP 200, FCM disabled. No Caddy, Play,
+  unrelated workflow/service, identity-role or legacy-folder changes.
 
-## Feature-candidate closure
-
-`feature/android-parity-stages-1-6` repairs the source failures retained above: all-role Inbox and
-exact targets, persisted leave retry IDs with server deduplication, normalized logbook counts, and
-synchronous owner-bound upload metadata/orphan cleanup. Migration drift is reconciled and applies
-from zero. Automated candidate gates pass; authenticated four-role and release-signing acceptance
-remain outstanding, so the verdict remains CONDITIONAL GO.
+Exact artifacts, hashes, commands, production fixture IDs, retained rollback material and evidence:
+[RELEASE_CLOSURE.md](RELEASE_CLOSURE.md). Earlier failures remain historical in
+[TEST_RESULTS.md](TEST_RESULTS.md). Broader parity, full workflow-action/physical-device/accessibility/
+performance certification and Play publication are outside this five-defect closure.

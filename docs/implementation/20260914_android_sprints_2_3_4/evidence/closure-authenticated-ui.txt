@@ -1,0 +1,13 @@
+Final signed package pk.vexel.pgrcompanion 1.1.9/code9, runtime5f92265, AVD pgsims/API36.
+STAFF: restricted-mobile screen and clean sign-out PASS on final signed build.
+RESIDENT: fresh login/dashboard, Inbox exact record31, own-recipient isolation,
+missing target and unsupported target recovery messages PASS. Logbook Approved1
+matches Progress verified1. Offline recovery/purge details in closure-production-recovery.txt.
+SUPERVISOR: final signed fresh login, Inbox exact assigned record31, missing/unsupported
+recovery, Residents/Profile navigation, clean sign-out/restart PASS.
+Resident/supervisor restoration, logout/relogin and forced invalid-access refresh PASS.
+Forced-refresh evidence uses41493b8; InstitutionalRepository.kt is unchanged in5f92265.
+Supervisor fixture4 mark-unread action persisted read=False, independently checked on server;
+opening the exact target marks it read again. Preferences load/save checks preserve FCM-disabled scope.
+Final app signed out, test picker files removed, device networking restored.
+No credentials, tokens or private resident details retained.

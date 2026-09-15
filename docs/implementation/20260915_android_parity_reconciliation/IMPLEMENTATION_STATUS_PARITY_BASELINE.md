@@ -1,9 +1,5 @@
 # Android Sprints 2–4 — Combined Delivery Status
 
-**Current focused release: GO, signed 1.1.9/code 9.** All five blockers are closed; see
-[RELEASE_CLOSURE.md](RELEASE_CLOSURE.md). The sections below also cover historical implementation
-and a wider roadmap outside this release scope.
-
 For the current shared runtime/API verification state, read
 [`VERIFICATION_LEDGER.md`](VERIFICATION_LEDGER.md) before changing this document or claiming a
 release gate is complete.
@@ -68,3 +64,27 @@ remains a recovery finding. The baseline APK was rebuilt and tested; later parit
 separate, unverified work. Both Inbox defects and the logbook count mismatch reproduce on that APK.
 Verdict: CONDITIONAL GO. No claim that all mobile APIs/workflows are verified follows from the
 922-test SQLite pass or from successful authenticated API reads.
+
+## Feature parity increment — 2026-09-15
+
+Branch `feature/android-parity-stages-1-6` repairs the two Inbox defects and adds the largest
+coherent source increment completed in this sprint:
+
+- backend-authoritative password/profile/workspace routing; forced/voluntary password change,
+  reset request/confirmation app link, dynamic all-role required fields, own-profile editing and
+  declaration acceptance;
+- all-role Inbox navigation with exact authorized leave/logbook/evaluation/rotation target fetch;
+- full logbook create payload and cancellation, dynamic evaluation create/cancellation, document
+  deferral, canonical resident progress, supervisor scoring/details and canonical rotation review;
+- bounded ADMIN totals, paged/searchable/filterable universal users, details and atomic four-role
+  creation; SUPPORT_STAFF remains limited to Inbox and own account;
+- synchronous owner-bound offline metadata, stable request IDs, upload/draft states and encrypted
+  orphan cleanup.
+- server-side leave retry-key persistence/deduplication, canonical logbook status-count
+  normalization, and reviewed migrations that reconcile the formerly reported schema-state drift.
+
+The implementation remains intentionally partial: returned evaluation editing, permitted leave
+editing, generic supervisor review/workload, dedicated role directories, document/supervision
+administration, operational reports/CSV, complete cross-screen pagination, academic master authoring,
+bulk mapping/import and backup/restore are deferred. No production/VPS state, Caddy, FCM or external
+integration was changed.

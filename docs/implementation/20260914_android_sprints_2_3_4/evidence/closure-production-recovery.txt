@@ -1,0 +1,27 @@
+Signed package pk.vexel.pgrcompanion, version1.1.9/code9, AVD pgsims API36.
+Original offline UI fixture staging used e0c98b5; pending encrypted upload was
+preserved by in-place upgrade to final signed 5f92265 and explicitly retried.
+
+Real UI offline leave/logbook creation and document picker staging acknowledged.
+Before reconnect: matching server leave0, logbook0, document2 file absent.
+Host force-stop/restart while offline; reconnect restored session and worker replay.
+Leave20 key6767c572-ea7a-4bfb-a130-699e3145d0a2: DRAFT, exactly1 row.
+Logbook32 key27c2cbf2-43d5-448d-b769-7720e5bd1553: DRAFT, exactly1 row.
+Two actual HTTPS POST replays each returned200 and the same ID; see closure-https-replay.txt.
+
+Initial document request500: destination directory group1003 excluded container uid/gid1000.
+Only resident_documents, resident_documents/2026 and resident_documents/2026/09 changed
+from owner/group1003:1003 mode775 to1003:1000 mode2775. Existing files untouched; no
+recursive ownership change. Container write check passed; future child directories inherit group.
+Manual Retry previously kept WorkManager backoff. Final5f92265 replaces pending work only for
+explicit retries; automatic enqueue retains KEEP. No backend source/image change required.
+Retained encrypted document2 upload succeeded 2026-09-14T22:23:17.737576+00:00,
+PENDING_REVIEW. Original picker file607bytes; server SHA256 matches exactly:
+d83de7f81d4aa1e6b3e306b2ea39343005e229a90655f97df0d81b6e523015c5.
+
+Final signed APK: real replacement picker -> offline staging -> explicit Discard PASS.
+Then one replacement upload + one leave + one logbook staged offline before logout.
+Offline logout, process restart, reconnect and resident relogin: no queued uploads/drafts.
+Server after reconnect: purge-marker leave0/logbook0; document2 filename, hash and uploaded_at
+unchanged. Original closure leave/logbook still exactly1 each. PASS.
+No unrelated record was submitted, approved, rejected or altered. Earlier IDs17–19/31 retained.

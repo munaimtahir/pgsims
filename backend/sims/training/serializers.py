@@ -137,10 +137,16 @@ class RotationAssignmentSerializer(serializers.ModelSerializer):
 
 
 class LeaveRequestSerializer(serializers.ModelSerializer):
-    resident_name = serializers.SerializerMethodField()
-    # The model is immutable after creation, but resident clients must be allowed to submit this
-    # retry key. Declaring it explicitly avoids ModelSerializer treating editable=False as read-only.
     client_request_id = serializers.UUIDField(required=False, allow_null=True)
+
+    def validate(self, attrs):
+        if self.instance is not None:
+            for field in ("client_request_id", "resident_training"):
+                if field in attrs and attrs[field] != getattr(self.instance, field):
+                    raise serializers.ValidationError({field: "This field cannot be changed."})
+        return attrs
+
+    resident_name = serializers.SerializerMethodField()
 
     class Meta:
         model = LeaveRequest

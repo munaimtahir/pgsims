@@ -1,15 +1,7 @@
 # Android Sprints 1–5 — Canonical Test Results
 
-**GO — focused five-defect release, 2026-09-15 PKT.**
-
-Current authoritative results: [RELEASE_CLOSURE.md](RELEASE_CLOSURE.md). Production backend is deployed;
-1.1.9/code9 signed APK/AAB verify with the existing certificate. Fresh-image Django 928 tests and
-separate PostgreSQL race PASS; Android 33 unit tests, final device/recovery and signed production
-acceptance PASS. All five original failures are closed. No Play publication or broader parity certification.
-
-## Historical baseline verification (superseded release verdict)
-
-The following failures/results describe the earlier baseline and remain as traceable historical evidence.
+Final verification: 2026-09-15 PKT. **CONDITIONAL GO — mandatory device/recovery gates fail.**
+This report supersedes earlier pending lists and distinguishes tested artifacts from ongoing development.
 
 ## Tested baseline and evidence boundary
 
@@ -177,3 +169,36 @@ only test names/status lines, totals and timing. Earlier full-suite lock is clos
 
 **Final verdict: CONDITIONAL GO.** Evidence consolidation closes the verification pass; it does not
 make the failed application gates pass. FCM stays disabled. No next-stage GO is granted by this report.
+
+## Feature-candidate verification addendum — 2026-09-15 PKT
+
+This addendum applies to `feature/android-parity-stages-1-6`, not to the earlier baseline artifact.
+
+| Command / check | Result |
+|---|---|
+| `:app-companion:testDebugUnitTest` | PASS — 38 tests |
+| `:app-companion:lintDebug` | PASS |
+| `:app-companion:assembleDebug` | PASS — 1.1.8/code 8 |
+| `:app-companion:assembleDebugAndroidTest` | PASS |
+| Install both APKs on AVD `pgsims` / `emulator-5554` | PASS |
+| Noncredentialed instrumentation | PASS — `OK (10 tests)`; eight opt-in authenticated tests skipped by their guard |
+| Cold HTTPS reset app link | PASS — `CompanionActivity` rendered reset UID/token confirmation UI |
+| Focused identity/onboarding/backend permission suite | PASS — 21 tests |
+| Focused leave retry/idempotency suite | PASS — 4 tests; retry returns the original ID and one stored row |
+| Repository-aware deployment-domain tests | PASS — 3 tests |
+| Final-source isolated Django suite | PASS — 923 tests in 32.140s, no failures/errors/skips |
+| `manage.py check` | PASS |
+| Update 0 identity cleanup gate | PASS |
+| Disposable `repair_identity_profiles` after migrate | PASS — 0 users/orphans/duplicates, final status PASS |
+| Canonical Docker compose render with disposable required variables | PASS |
+| `makemigrations --check --dry-run` | PASS after reviewed reconciliation migrations |
+| Migrate from zero including notification `0004` and training `0012` | PASS |
+| `git diff --check` | PASS before final documentation/ledger update; repeated at handoff |
+
+Final debug APK SHA-256: `9584c0b27078b95953a7b6ed06c62d7dbde50a8fdf806549e34d90c635b4da24`.
+Final test APK SHA-256: `95d725652ff3a075953ae569e6d5f9190166e1029d27dbb42f40b2b00ba4dca4`.
+
+Authenticated four-role/device workflow acceptance was not repeated because no approved demo session
+was supplied to this run. Release signing is deferred because no owner-controlled signing properties
+or keystore were available. Large Stage 4/5 surfaces remain deferred as recorded in `android.md`.
+The candidate verdict is **CONDITIONAL GO**; it is not authorized for merge or deployment.

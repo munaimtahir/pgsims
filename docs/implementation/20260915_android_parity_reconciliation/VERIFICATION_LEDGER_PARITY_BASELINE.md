@@ -1,24 +1,8 @@
 # Shared Verification Ledger — Android Sprints 1–5
 
-Last reconciled: 2026-09-15 PKT. **GO for the focused five-defect release.**
+Last reconciled: 2026-09-15 PKT. **CONDITIONAL GO.**
 Canonical, reproducible artifact-specific evidence: [TEST_RESULTS.md](TEST_RESULTS.md).
 Implemented code, API tests and authenticated device acceptance are distinct claims.
-
-## Final closure
-
-- Runtime `5f92265`, signed 1.1.9/code 9; PR #17/#18 merged. Broader parity preserved at `d8e2ce6`.
-- All five defects PASS on required automated/device/production gates. Exact evidence and scope:
-  [RELEASE_CLOSURE.md](RELEASE_CLOSURE.md).
-- Fresh-image Django 928 tests/zero failures/errors; separate PostgreSQL race PASS. Android 33 unit
-  tests, final 5-test device suite and process-death/fault/race assertions PASS.
-- Signed offline leave #20/logbook #32 persist exactly once per key and replay twice via HTTPS 200/same ID.
-  Real picker document #2 retry succeeds with exact SHA256; discard and populated logout purge PASS.
-- Existing four-role API login and ADMIN restricted evidence remains accepted, without repeating
-  an independent login matrix. Signed staff/resident/supervisor UI gates pass.
-- Backup verified, scoped backend/worker/beat deployed, upload-directory permission issue fixed;
-  final production health PASS, FCM false, device signed out and networking restored.
-
-## Historical baseline ledger (superseded release verdict)
 
 ## Closed baseline gates
 
@@ -63,3 +47,16 @@ that feature branch; the active feature worktree and its SPRINT_STATE.md remain 
 - Do not expose passwords, tokens, signing/Firebase properties or VPS environment values.
 - Preserve explicit failures, skipped checks, artifact boundaries and labeled test-record ownership.
 - FCM remains disabled; Caddy and unrelated workflow records are out of scope.
+
+## 2026-09-15 feature-candidate ledger
+
+| Area | Candidate result / boundary |
+|---|---|
+| Identity | Source/API/unit PASS for authoritative route precedence, password change/reset, app link, dynamic completion, declaration and own profile. Live mail and authenticated four-role device QA deferred. |
+| Inbox | Nested scroll removed; all four role shells expose Inbox; exact typed record fetch and stale/forbidden recovery wired. Authenticated recipient/read/preferences/target device QA deferred. |
+| Resident/Supervisor | Full create/review payload increment builds and has MockWebServer coverage. Returned evaluation edit, leave edit, generic review queue/workload and authenticated transition loops remain open. |
+| ADMIN/staff | Universal four-role create and paged universal directory/details built for ADMIN. Staff remains own-account/Inbox only. Broader document/supervision/report administration remains open. |
+| Offline | Immediate synchronous owner-bound metadata and encrypted orphan cleanup pass instrumentation. Leave request IDs now persist and a retry returns the original record; live lost-response/duplicate-worker device acceptance and foreground draft reconciliation remain open. |
+| Android candidate | 1.1.8/code 8; 38 unit tests, lint, both APK assemblies and `OK (10 tests)` instrumentation pass. Debug APK SHA-256 `9584c0b27078b95953a7b6ed06c62d7dbde50a8fdf806549e34d90c635b4da24`. |
+| Backend/project | 21 identity plus 4 leave focused tests and 923 full-suite tests pass; 3 deployment-domain tests, Django check, Update 0 gate, disposable identity repair and canonical compose render pass. Reviewed notification/training reconciliation migrations apply from zero and the migration drift check passes. |
+| Release boundary | CONDITIONAL GO. No signing material found; no merge, VPS mutation, production deployment, Caddy or FCM change. |

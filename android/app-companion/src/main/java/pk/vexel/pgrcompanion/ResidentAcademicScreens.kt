@@ -50,7 +50,6 @@ internal fun LeaveRequestsScreen(
 ) {
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
-    val offlineDrafts = remember(context) { OfflineDraftStore(context) }
     var selected by remember { mutableStateOf<JsonObject?>(null) }
     var adding by remember { mutableStateOf(false) }
     var filter by remember { mutableStateOf("ALL") }
@@ -77,14 +76,15 @@ internal fun LeaveRequestsScreen(
     if (adding) LeaveRequestDialog(data, busy, { adding = false }) { payload ->
         adding = false
         scope.launch {
+            val owner = repository.currentUserId()
             val retrySafePayload = payload.withOfflineId()
             repository.createLeave(retrySafePayload).fold(
                 { onNotice("Leave request saved as a draft."); onRefresh() },
                 {
-                    val owner = repository.currentUserId()
-                    if (owner == null) onNotice("Reload your account before retaining an offline draft.")
-                    else offlineDrafts.saveLeave(retrySafePayload, owner)
-                    onNotice("PGR SIMS is unavailable. Your encrypted leave draft is retained on this device.")
+                    retainDraft(context, repository, owner) { store, id -> store.saveLeave(retrySafePayload, id) }.fold(
+                        { onNotice("PGR SIMS is unavailable. Your encrypted leave draft is retained on this device.") },
+                        { onNotice("Could not retain the draft. Reconnect and try again.") },
+                    )
                 },
             )
         }

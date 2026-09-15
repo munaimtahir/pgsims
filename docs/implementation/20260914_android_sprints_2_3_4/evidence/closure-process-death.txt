@@ -1,0 +1,56 @@
+Final runtime source: 5f922657ea6dec17317a00eb4060168a816e1e1f
+STAGE_ACK: host force-stop issued immediately; command completed in 0.027s
+
+pk.vexel.pgrcompanion.UploadDurabilityTest:INSTRUMENTATION_STATUS: storage_gate=POST_KILL_VERIFIED
+INSTRUMENTATION_STATUS_CODE: 0
+.
+
+Time: 0.092
+
+OK (1 test)
+
+
+
+PRE_ACK: host force-stop issued immediately; command completed in 0.031s
+
+pk.vexel.pgrcompanion.UploadDurabilityTest:INSTRUMENTATION_STATUS: storage_gate=PRE_ACK_CLEANUP_VERIFIED
+INSTRUMENTATION_STATUS_CODE: 0
+.
+
+Time: 0.081
+
+OK (1 test)
+
+
+
+UPLOAD_IN_FLIGHT: host force-stop issued immediately; command completed in 0.026s
+
+pk.vexel.pgrcompanion.UploadDurabilityTest:INSTRUMENTATION_STATUS: storage_gate=POST_KILL_VERIFIED
+INSTRUMENTATION_STATUS_CODE: 0
+.
+
+Time: 0.093
+
+OK (1 test)
+
+
+
+
+pk.vexel.pgrcompanion.UploadDurabilityTest:.
+
+Time: 0.12
+
+OK (1 test)
+
+
+
+
+pk.vexel.pgrcompanion.UploadDurabilityTest:.
+
+Time: 0.114
+
+OK (1 test)
+
+
+
+PASS: post-ack death, pre-ack cleanup, in-flight upload recovery, source failure, staging/reconcile race, metadata failure
