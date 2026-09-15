@@ -29,6 +29,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.intOrNull
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.jsonObject
@@ -143,6 +145,13 @@ private fun LeaveDetailDialog(
 ) {
     val scope = rememberCoroutineScope()
     val id = leave.raId()
+    var editing by remember { mutableStateOf(false) }
+    if (editing && id != null) {
+        LeaveEditDialog(leave, busy, { editing = false }) { payload ->
+            scope.launch { repository.updateLeave(id, payload).fold({ onNotice("Leave request updated."); onRefresh(); editing = false }, { onNotice(it.message ?: "Could not update the leave request.") }) }
+        }
+        return
+    }
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(leaveLabel(leave.ra("leave_type"))) },
@@ -155,8 +164,28 @@ private fun LeaveDetailDialog(
         confirmButton = { if (id != null && leave.ra("status") == "DRAFT") TextButton(onClick = {
             scope.launch { repository.submitLeave(id).fold({ onNotice("Leave request submitted."); onRefresh(); onDismiss() }, { onNotice(it.message ?: "Could not submit the leave request.") }) }
         }, enabled = !busy) { Text("Submit") } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Close") } },
+        dismissButton = {
+            Row {
+                if (id != null && leave.ra("status") in setOf("DRAFT", "RETURNED")) TextButton(onClick = { editing = true }, enabled = !busy) { Text("Edit") }
+                TextButton(onClick = onDismiss) { Text("Close") }
+            }
+        },
     )
+}
+
+@Composable
+private fun LeaveEditDialog(leave: JsonObject, busy: Boolean, onDismiss: () -> Unit, onSave: (LeaveRequestPayload) -> Unit) {
+    var start by remember { mutableStateOf(leave.ra("start_date")) }
+    var end by remember { mutableStateOf(leave.ra("end_date")) }
+    var reason by remember { mutableStateOf(leave.ra("reason")) }
+    val trainingId = leave.ra("resident_training").toIntOrNull()
+    AlertDialog(onDismissRequest = onDismiss, title = { Text("Edit leave request") }, text = {
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            OutlinedTextField(start, { start = it }, label = { Text("Start date (YYYY-MM-DD)") }, modifier = Modifier.fillMaxWidth(), enabled = !busy)
+            OutlinedTextField(end, { end = it }, label = { Text("End date (YYYY-MM-DD)") }, modifier = Modifier.fillMaxWidth(), enabled = !busy)
+            OutlinedTextField(reason, { reason = it }, label = { Text("Reason") }, modifier = Modifier.fillMaxWidth(), enabled = !busy)
+        }
+    }, confirmButton = { TextButton(onClick = { onSave(LeaveRequestPayload(trainingId ?: 0, leave.ra("leave_type"), start, end, reason, leave.ra("client_request_id").ifBlank { null })) }, enabled = !busy && trainingId != null && start.isNotBlank() && end.isNotBlank()) { Text("Save") } }, dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } })
 }
 
 @Composable
@@ -244,6 +273,13 @@ private fun EvaluationCreateDialog(data: InstitutionalSnapshot, busy: Boolean, o
 @Composable
 private fun EvaluationDetailDialog(repository: InstitutionalRepository, evaluation: JsonObject, busy: Boolean, onDismiss: () -> Unit, onNotice: (String) -> Unit, onRefresh: () -> Unit) {
     val scope = rememberCoroutineScope(); val id = evaluation.raId(); val status = evaluation.ra("status")
+    var editing by remember { mutableStateOf(false) }
+    if (editing && id != null) {
+        EvaluationEditDialog(evaluation, busy, { editing = false }) { payload ->
+            scope.launch { repository.updateEvaluation(id, payload).fold({ onNotice("Evaluation updated."); onRefresh(); editing = false }, { onNotice(it.message ?: "Could not update the evaluation.") }) }
+        }
+        return
+    }
     AlertDialog(onDismissRequest = onDismiss, title = { Text(evaluation.ra("template_name").ifBlank { "Evaluation" }) }, text = {
         Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
             Text("Status: ${InstitutionalLabels.workflowStatus(status)}")
@@ -258,7 +294,32 @@ private fun EvaluationDetailDialog(repository: InstitutionalRepository, evaluati
             if (id != null && status == "DRAFT") TextButton(onClick = {
                 scope.launch { repository.cancelEvaluation(id).fold({ onNotice("Evaluation cancelled."); onRefresh(); onDismiss() }, { onNotice(it.message ?: "Could not cancel the evaluation.") }) }
             }, enabled = !busy) { Text("Cancel evaluation") }
+            if (id != null && status in setOf("DRAFT", "RETURNED")) TextButton(onClick = { editing = true }, enabled = !busy) { Text("Edit") }
             TextButton(onClick = onDismiss) { Text("Close") }
         }
     })
+}
+
+@Composable
+private fun EvaluationEditDialog(evaluation: JsonObject, busy: Boolean, onDismiss: () -> Unit, onSave: (EvaluationSubmissionPayload) -> Unit) {
+    var comments by remember { mutableStateOf(evaluation.ra("resident_comments")) }
+    val responseRows = remember {
+        runCatching { evaluation["responses"]?.jsonArray?.map { it.jsonObject } ?: emptyList() }.getOrDefault(emptyList())
+    }
+    val responses = remember { mutableStateMapOf<String, String>().apply { responseRows.forEach { row -> put(row.ra("field_key"), row.ra("value_text").ifBlank { row.ra("value_number") }) } } }
+    AlertDialog(onDismissRequest = onDismiss, title = { Text("Edit evaluation") }, text = {
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            responseRows.forEach { row ->
+                val key = row.ra("field_key")
+                OutlinedTextField(responses[key].orEmpty(), { responses[key] = it }, label = { Text(row.ra("field_label").ifBlank { InstitutionalLabels.humanize(key) }) }, modifier = Modifier.fillMaxWidth(), enabled = !busy)
+            }
+            OutlinedTextField(comments, { comments = it }, label = { Text("Resident comments") }, modifier = Modifier.fillMaxWidth(), enabled = !busy)
+        }
+    }, confirmButton = { TextButton(onClick = {
+        val mapped = responseRows.map { row ->
+            val key = row.ra("field_key"); val type = row.ra("field_type"); val value = responses[key].orEmpty()
+            buildJsonObject { put("field_key", key); put("field_label", row.ra("field_label")); put("field_type", type); put("value_text", if (type == "number") "" else value); value.toDoubleOrNull()?.takeIf { type == "number" }?.let { put("value_number", it) } }
+        }
+        onSave(EvaluationSubmissionPayload(evaluation.ra("template").toIntOrNull() ?: 0, evaluation.ra("academic_period").toIntOrNull(), evaluation.ra("supervisor").toIntOrNull(), comments, mapped))
+    }, enabled = !busy && evaluation.ra("template").toIntOrNull() != null) { Text("Save") } }, dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } })
 }

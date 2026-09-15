@@ -25,10 +25,14 @@ the final parity candidate retains 1.1.9/code9. Production remains on source com
 - Authenticated recovery/logbook correction cycle: seven device methods PASS; leave21/logbook33
   exactly once, document2 byte hash matches, explicit discard/offline logout purge and server zero
   purge-record checks PASS. Runtime unchanged; demo fixtures retained and app signed out.
+- Resident workflow implementation increment: draft/returned leave edit dialog and draft/returned
+  evaluation response/comment editor now call the canonical PATCH endpoints and preserve record IDs.
+  Android unit tests, lint and debug build pass; authenticated UI transition acceptance remains open.
 
 ## Pending Work
-1. Implement remaining unchecked `android.md` rows: returned evaluation/leave edits, supervisor
-   queues/workload, role directories, document/supervision administration, reports/CSV and pagination.
+1. Implement remaining unchecked `android.md` rows: supervisor queues/workload, role directories,
+   document/supervision administration, reports/CSV and pagination. Authenticated acceptance is still
+   required for the new returned evaluation/leave editors.
 2. Complete evaluation/review payload and transition tests, full UI workflow forms, notification
    target/read/unread matrix and expired-session lifecycle cases; run isolated password/schema-state
    cases. See `docs/implementation/20260915_android_parity_acceptance/RECOVERY_WORKFLOW_RESULTS.md`.
