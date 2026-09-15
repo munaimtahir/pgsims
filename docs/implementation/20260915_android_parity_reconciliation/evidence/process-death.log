@@ -1,0 +1,55 @@
+STAGE_ACK: host force-stop issued immediately; command completed in 0.033s
+
+pk.vexel.pgrcompanion.UploadDurabilityTest:INSTRUMENTATION_STATUS: storage_gate=POST_KILL_VERIFIED
+INSTRUMENTATION_STATUS_CODE: 0
+.
+
+Time: 0.099
+
+OK (1 test)
+
+
+
+PRE_ACK: host force-stop issued immediately; command completed in 0.024s
+
+pk.vexel.pgrcompanion.UploadDurabilityTest:INSTRUMENTATION_STATUS: storage_gate=PRE_ACK_CLEANUP_VERIFIED
+INSTRUMENTATION_STATUS_CODE: 0
+.
+
+Time: 0.088
+
+OK (1 test)
+
+
+
+UPLOAD_IN_FLIGHT: host force-stop issued immediately; command completed in 0.030s
+
+pk.vexel.pgrcompanion.UploadDurabilityTest:INSTRUMENTATION_STATUS: storage_gate=POST_KILL_VERIFIED
+INSTRUMENTATION_STATUS_CODE: 0
+.
+
+Time: 0.097
+
+OK (1 test)
+
+
+
+
+pk.vexel.pgrcompanion.UploadDurabilityTest:.
+
+Time: 0.149
+
+OK (1 test)
+
+
+
+
+pk.vexel.pgrcompanion.UploadDurabilityTest:.
+
+Time: 0.119
+
+OK (1 test)
+
+
+
+PASS: post-ack death, pre-ack cleanup, in-flight upload recovery, source failure, staging/reconcile race, metadata failure
