@@ -1,0 +1,23 @@
+Feature: feature/android-parity-stages-1-6
+Date: 2026-09-15 PKT
+Android version: 1.1.8 (code 8)
+Android unit tests: PASS (38)
+Android lintDebug: PASS
+Android assembleDebug: PASS
+Android assembleDebugAndroidTest: PASS
+AVD install: PASS (pgsims / emulator-5554)
+Noncredentialed instrumentation: PASS, OK (10 tests)
+Cold HTTPS reset app link: PASS
+Focused backend identity/onboarding tests: PASS (21)
+Repository-aware deployment-domain tests: PASS (3)
+Focused leave retry/idempotency tests: PASS (4)
+Full isolated backend suite: PASS (923 tests, 32.140s)
+Django check: PASS
+Update 0 gate: PASS
+Canonical compose render: PASS with disposable required variables
+Migration drift check: PASS after reviewed reconciliation migrations; migrate from zero PASS
+Debug APK SHA256: 9584c0b27078b95953a7b6ed06c62d7dbde50a8fdf806549e34d90c635b4da24
+Android test APK SHA256: 95d725652ff3a075953ae569e6d5f9190166e1029d27dbb42f40b2b00ba4dca4
+Signing: deferred; owner-controlled properties/keystore unavailable
+Production/VPS mutation: none
+Verdict: CONDITIONAL GO for branch review only

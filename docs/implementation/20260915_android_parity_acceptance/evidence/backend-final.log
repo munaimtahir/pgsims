@@ -1,0 +1,11 @@
+VPS fetched candidate: origin/feature/android-parity-stages-1-6
+Production checkout switched or deployed: no
+SQLite disposable container: 929 tests, OK (skipped=1), 74.338s
+SQLite-only skip: PostgreSQL simultaneous leave replay
+PostgreSQL disposable container: simultaneous replay test, OK, 0.671s
+Migration drift: none
+Migrate from zero: PASS
+Django check: PASS
+Repository-aware deployment-domain tests: PASS
+Production database/environment/volumes used: no
+Disposable containers/networks retained: no

@@ -7,9 +7,9 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Groups
-import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -56,6 +56,7 @@ fun SupervisorPane(
     busy: Boolean,
     onSignOut: () -> Unit,
     onRefresh: () -> Unit,
+    onChangePassword: () -> Unit,
 ) {
     var destination by rememberSaveable { mutableStateOf(SupervisorDestination.HOME) }
     var selectedResidentId by rememberSaveable { mutableStateOf<Int?>(null) }
@@ -111,9 +112,12 @@ fun SupervisorPane(
             } else when (destination) {
                 SupervisorDestination.HOME -> SupervisorHomeContent(data) { selectedWorkflow = it }
                 SupervisorDestination.RESIDENTS -> SupervisorResidentsContent(data) { selectedResidentId = it }
-                SupervisorDestination.INBOX -> NotificationCenterScreen(repository,
-                    onBack = { destination = SupervisorDestination.HOME }, onTarget = { _, _ -> })
-                SupervisorDestination.PROFILE -> SupervisorProfileContent(data, onSignOut, busy)
+                SupervisorDestination.INBOX -> NotificationCenterScreen(
+                    repository = repository,
+                    onBack = { destination = SupervisorDestination.HOME },
+                    onTarget = { _, _ -> },
+                )
+                SupervisorDestination.PROFILE -> SupervisorProfileContent(repository, data, onSignOut, busy, onChangePassword, onRefresh)
             }
 
             if (data.unavailable.isNotEmpty()) {
@@ -331,7 +335,14 @@ private fun SupervisorResidentDetailScreen(repository: InstitutionalRepository, 
 }
 
 @Composable
-private fun SupervisorProfileContent(data: InstitutionalSnapshot, onSignOut: () -> Unit, busy: Boolean) {
+private fun SupervisorProfileContent(
+    repository: InstitutionalRepository,
+    data: InstitutionalSnapshot,
+    onSignOut: () -> Unit,
+    busy: Boolean,
+    onChangePassword: () -> Unit,
+    onRefresh: () -> Unit,
+) {
     val me = data.me
     Text("Profile", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
     Card(Modifier.fillMaxWidth()) {
@@ -340,6 +351,8 @@ private fun SupervisorProfileContent(data: InstitutionalSnapshot, onSignOut: () 
             Text("Role: Supervisor")
         }
     }
+    OwnProfileEditor(repository, onRefresh)
+    OutlinedButton(onClick = onChangePassword, enabled = !busy) { Text("Change password") }
     Button(onClick = onSignOut, enabled = !busy) { Text("Sign out") }
     Disclaimer()
 }

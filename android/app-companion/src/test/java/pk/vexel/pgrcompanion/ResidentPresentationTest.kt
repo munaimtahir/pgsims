@@ -47,4 +47,30 @@ class ResidentPresentationTest {
         assertEquals("Approved", residentStatus("VERIFIED"))
         assertEquals("In progress", residentStatus("IN_PROGRESS"))
     }
+
+    @Test fun `logbook summary normalizes canonical verified and returned statuses`() {
+        assertEquals("APPROVED", canonicalLogbookBucket("VERIFIED"))
+        assertEquals("RETURNED", canonicalLogbookBucket("RETURNED_FOR_REVISION"))
+        assertEquals("DRAFT", canonicalLogbookBucket("draft"))
+    }
+
+    @Test fun `authoritative route applies password then profile then workspace precedence`() {
+        assertEquals(
+            AuthoritativeRoute.CHANGE_PASSWORD,
+            authoritativeRoute(objectOf("""{"must_change_password":true,"allowed_next_route":"/complete-profile"}""")),
+        )
+        assertEquals(
+            AuthoritativeRoute.COMPLETE_PROFILE,
+            authoritativeRoute(objectOf("""{"must_change_password":false,"missing_required_fields":["email"],"allowed_next_route":"/dashboard"}""")),
+        )
+        assertEquals(
+            AuthoritativeRoute.WORKSPACE,
+            authoritativeRoute(objectOf("""{"must_change_password":false,"missing_required_fields":[],"allowed_next_route":"/dashboard/resident"}""")),
+        )
+    }
+
+    @Test fun `reset link parser rejects stale shapes and extracts exact uid token`() {
+        assertEquals(PasswordResetLink("uid-1", "token-1"), PasswordResetLink.fromSegments(listOf("reset-password", "uid-1", "token-1")))
+        assertEquals(null, PasswordResetLink.fromSegments(listOf("reset-password", "uid-only")))
+    }
 }

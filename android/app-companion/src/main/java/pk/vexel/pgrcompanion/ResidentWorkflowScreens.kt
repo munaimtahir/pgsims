@@ -158,6 +158,7 @@ internal fun LogbookScreen(
     onCreate: (AcademicLogbookPayload) -> Unit,
     onSubmit: (Int) -> Unit,
     onUpdate: (Int, AcademicLogbookPayload) -> Unit,
+    onCancel: (Int) -> Unit,
 ) {
     var adding by remember { mutableStateOf(false) }
     var selected by remember { mutableStateOf<JsonObject?>(null) }
@@ -180,17 +181,34 @@ internal fun LogbookScreen(
             }
         }
     }
-    if (adding) LogbookEntryDialog(data.logbookCategories, busy, { adding = false }, onCreate)
-    selected?.let { LogbookDetailDialog(it, busy, { selected = null }, onSubmit, onUpdate) }
+    if (adding) LogbookEntryDialog(data.logbookCategories, data.academicOptions, busy, { adding = false }, onCreate)
+    selected?.let { LogbookDetailDialog(it, busy, { selected = null }, onSubmit, onUpdate, onCancel) }
 }
 
+
 @Composable
-private fun LogbookEntryDialog(categories: List<JsonObject>, busy: Boolean, onDismiss: () -> Unit, onCreate: (AcademicLogbookPayload) -> Unit) {
+private fun LogbookEntryDialog(categories: List<JsonObject>, options: JsonObject?, busy: Boolean, onDismiss: () -> Unit, onCreate: (AcademicLogbookPayload) -> Unit) {
     var category by remember { mutableStateOf(categories.firstOrNull()?.idValue()?.toString().orEmpty()) }
     var categoryMenuExpanded by remember { mutableStateOf(false) }
     var date by remember { mutableStateOf("") }
     var title by remember { mutableStateOf("") }
     var reflection by remember { mutableStateOf("") }
+    var description by remember { mutableStateOf("") }
+    var caseIdentifier by remember { mutableStateOf("") }
+    var patientAge by remember { mutableStateOf("") }
+    var patientGender by remember { mutableStateOf("") }
+    var procedureName by remember { mutableStateOf("") }
+    var procedureCode by remember { mutableStateOf("") }
+    var procedureRole by remember { mutableStateOf("") }
+    var complexity by remember { mutableStateOf("") }
+    var outcome by remember { mutableStateOf("") }
+    var complications by remember { mutableStateOf("") }
+    val supervisors = options?.objectList("supervisors").orEmpty()
+    val periods = options?.objectList("periods").orEmpty()
+    var supervisorId by remember { mutableStateOf(supervisors.firstOrNull()?.idValue()) }
+    var periodId by remember { mutableStateOf(periods.firstOrNull()?.idValue()) }
+    var supervisorMenu by remember { mutableStateOf(false) }
+    var periodMenu by remember { mutableStateOf(false) }
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text("New logbook entry") },
@@ -216,13 +234,41 @@ private fun LogbookEntryDialog(categories: List<JsonObject>, busy: Boolean, onDi
                 }
                 OutlinedTextField(date, { date = it }, label = { Text("Entry date (YYYY-MM-DD)") }, enabled = !busy, modifier = Modifier.fillMaxWidth())
                 OutlinedTextField(title, { title = it }, label = { Text("Activity title") }, enabled = !busy, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(description, { description = it }, label = { Text("Description") }, enabled = !busy, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(caseIdentifier, { caseIdentifier = it }, label = { Text("Case identifier (non-identifying)") }, enabled = !busy, modifier = Modifier.fillMaxWidth())
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedTextField(patientAge, { patientAge = it }, label = { Text("Age") }, enabled = !busy, modifier = Modifier.weight(1f))
+                    OutlinedTextField(patientGender, { patientGender = it }, label = { Text("Gender") }, enabled = !busy, modifier = Modifier.weight(1f))
+                }
+                TextButton(onClick = { supervisorMenu = true }, enabled = !busy && supervisors.isNotEmpty()) { Text("Supervisor: ${supervisors.firstOrNull { it.idValue() == supervisorId }?.value("name") ?: "Not selected"}") }
+                DropdownMenu(expanded = supervisorMenu, onDismissRequest = { supervisorMenu = false }) { supervisors.forEach { row -> DropdownMenuItem(text = { Text(row.value("name")) }, onClick = { supervisorId = row.idValue(); supervisorMenu = false }) } }
+                TextButton(onClick = { periodMenu = true }, enabled = !busy && periods.isNotEmpty()) { Text("Academic period: ${periods.firstOrNull { it.idValue() == periodId }?.value("name") ?: "Not selected"}") }
+                DropdownMenu(expanded = periodMenu, onDismissRequest = { periodMenu = false }) { periods.forEach { row -> DropdownMenuItem(text = { Text(row.value("name")) }, onClick = { periodId = row.idValue(); periodMenu = false }) } }
+                Text("Procedure record", fontWeight = FontWeight.SemiBold)
+                OutlinedTextField(procedureName, { procedureName = it }, label = { Text("Procedure name (optional)") }, enabled = !busy, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(procedureCode, { procedureCode = it }, label = { Text("Procedure code") }, enabled = !busy, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(procedureRole, { procedureRole = it }, label = { Text("Role performed") }, enabled = !busy, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(complexity, { complexity = it }, label = { Text("Complexity") }, enabled = !busy, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(outcome, { outcome = it }, label = { Text("Outcome") }, enabled = !busy, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(complications, { complications = it }, label = { Text("Complications") }, enabled = !busy, modifier = Modifier.fillMaxWidth())
                 OutlinedTextField(reflection, { reflection = it }, label = { Text("Reflection (optional)") }, enabled = !busy, modifier = Modifier.fillMaxWidth())
                 Text("Do not include patient-identifying information.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         },
         confirmButton = {
             TextButton(enabled = !busy && category.toIntOrNull() != null && date.isNotBlank() && title.isNotBlank(), onClick = {
-                onCreate(AcademicLogbookPayload(category.toInt(), date, title, resident_reflection = reflection)); onDismiss()
+                onCreate(
+                    AcademicLogbookPayload(
+                        category = category.toInt(), entry_date = date, title = title,
+                        description = description, case_identifier = caseIdentifier,
+                        patient_age = patientAge, patient_gender = patientGender,
+                        resident_reflection = reflection, supervisor = supervisorId,
+                        academic_period = periodId,
+                        procedure_record = procedureName.takeIf { it.isNotBlank() }?.let {
+                            ProcedureRecordPayload(it, procedureCode, procedureRole, complexity, outcome, complications)
+                        },
+                    )
+                ); onDismiss()
             }) { Text("Save draft") }
         },
         dismissButton = { TextButton(onClick = onDismiss, enabled = !busy) { Text("Cancel") } },
@@ -236,6 +282,7 @@ private fun LogbookDetailDialog(
     onDismiss: () -> Unit,
     onSubmit: (Int) -> Unit,
     onUpdate: (Int, AcademicLogbookPayload) -> Unit,
+    onCancel: (Int) -> Unit,
 ) {
     var editing by remember { mutableStateOf(false) }
     var title by remember { mutableStateOf(entry.value("title")) }
@@ -258,7 +305,15 @@ private fun LogbookDetailDialog(
             }, enabled = !busy && title.isNotBlank()) { Text("Save changes") }
             else if (canEdit) TextButton(onClick = { onSubmit(id); onDismiss() }, enabled = !busy) { Text("Submit") }
         } },
-        dismissButton = { if (canEdit && !editing) TextButton(onClick = { editing = true }, enabled = !busy) { Text("Edit") } else TextButton(onClick = onDismiss) { Text("Close") } },
+        dismissButton = {
+            Column {
+                if (canEdit && !editing) TextButton(onClick = { editing = true }, enabled = !busy) { Text("Edit") }
+                entry.idValue()?.takeIf { canEdit && !editing }?.let { id ->
+                    TextButton(onClick = { onCancel(id); onDismiss() }, enabled = !busy) { Text("Cancel entry") }
+                }
+                TextButton(onClick = onDismiss) { Text("Close") }
+            }
+        },
     )
 }
 

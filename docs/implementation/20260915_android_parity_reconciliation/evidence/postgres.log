@@ -1,0 +1,129 @@
+Found 1 test(s).
+Creating test database for alias 'default' ('test_verification')...
+Operations to perform:
+  Synchronize unmigrated apps: corsheaders, crispy_bootstrap5, crispy_forms, django_filters, drf_spectacular, humanize, import_export, messages, postgres, rest_framework, rest_framework_simplejwt, simple_history, staticfiles, widget_tweaks
+  Apply all migrations: academics, admin, audit, auth, backup_center, bulk, contenttypes, django_celery_beat, notifications, rotations, sessions, supervision, token_blacklist, training, users
+Synchronizing apps without migrations:
+  Creating tables...
+    Running deferred SQL...
+Running migrations:
+  Applying academics.0001_initial... OK
+  Applying rotations.0001_initial... OK
+  Applying rotations.0002_initial... OK
+  Applying contenttypes.0001_initial... OK
+  Applying contenttypes.0002_remove_content_type_name... OK
+  Applying auth.0001_initial... OK
+  Applying auth.0002_alter_permission_name_max_length... OK
+  Applying auth.0003_alter_user_email_max_length... OK
+  Applying auth.0004_alter_user_username_opts... OK
+  Applying auth.0005_alter_user_last_login_null... OK
+  Applying auth.0006_require_contenttypes_0002... OK
+  Applying auth.0007_alter_validators_add_error_messages... OK
+  Applying auth.0008_alter_user_username_max_length... OK
+  Applying auth.0009_alter_user_last_name_max_length... OK
+  Applying auth.0010_alter_group_name_max_length... OK
+  Applying auth.0011_update_proxy_permissions... OK
+  Applying auth.0012_alter_user_first_name_max_length... OK
+  Applying users.0001_initial... OK
+  Applying academics.0002_initial... OK
+  Applying training.0001_initial... OK
+  Applying training.0002_phase6_academic_core... OK
+  Applying training.0003_residenttrainingrecord_has_default_dates... OK
+  Applying training.0004_historicalresidenttrainingrecord_has_default_dates... OK
+  Applying training.0005_logbookentry_logbookthresholdconfig_and_more... OK
+  Applying training.0006_alter_historicalrotationassignment_options_and_more... OK
+  Applying training.0007_alter_historicalresidentresearchproject_supervisor_and_more... OK
+  Applying rotations.0003_alter_hospitaldepartment_options... OK
+  Applying academics.0003_remove_studentprofile_batch_and_more... OK
+  Applying academics.0004_alter_department_head... OK
+  Applying academics.0005_specialty_institution_designation_academicsession... OK
+  Applying rotations.0004_hospital_institution... OK
+  Applying users.0002_alter_historicaluser_role_and_more... OK
+  Applying users.0003_alter_historicaluser_year_alter_user_year... OK
+  Applying users.0004_data_correction_flags... OK
+  Applying users.0005_historicaluser_data_quality_and_index_names... OK
+  Applying users.0006_alter_departmentmembership_options_and_more... OK
+  Applying users.0007_adminprofile_historicaladminprofile_and_more... OK
+  Applying users.0008_alter_historicalresidentprofile_academic_session_ref_and_more... OK
+  Applying users.0009_delete_supervisorresidentlink... OK
+  Applying academics.0006_residenttrainingrecord_supervisorreviewqueueitem_and_more... OK
+  Applying academics.0007_logbookentry_procedurerecord_and_more... OK
+  Applying academics.0008_alter_historicalsupervisorreviewqueueitem_queue_type_and_more... OK
+  Applying training.0008_add_academics_bridge_fields... OK
+  Applying academics.0009_add_training_record_new... OK
+  Applying academics.0010_link_training_record_new... OK
+  Applying academics.0011_finalize_training_record_retarget... OK
+  Applying academics.0012_drop_academics_resident_training_record... OK
+  Applying admin.0001_initial... OK
+  Applying admin.0002_logentry_remove_auto_add... OK
+  Applying admin.0003_logentry_add_action_flag_choices... OK
+  Applying audit.0001_initial... OK
+  Applying audit.0002_initial... OK
+  Applying backup_center.0001_initial... OK
+  Applying backup_center.0002_schema_drift_repair... OK
+  Applying backup_center.0003_backupjob_cloud_bucket_backupjob_cloud_checksum_and_more... OK
+  Applying backup_center.0004_alter_backupauditlog_action... OK
+  Applying backup_center.0005_backupcloudconnection_alter_backupauditlog_action_and_more... OK
+  Applying bulk.0001_initial... OK
+  Applying bulk.0002_initial... OK
+  Applying bulk.0003_historicalmappingpreset_and_more... OK
+  Applying django_celery_beat.0001_initial... OK
+  Applying django_celery_beat.0002_auto_20161118_0346... OK
+  Applying django_celery_beat.0003_auto_20161209_0049... OK
+  Applying django_celery_beat.0004_auto_20170221_0000... OK
+  Applying django_celery_beat.0005_add_solarschedule_events_choices... OK
+  Applying django_celery_beat.0006_auto_20180322_0932... OK
+  Applying django_celery_beat.0007_auto_20180521_0826... OK
+  Applying django_celery_beat.0008_auto_20180914_1922... OK
+  Applying django_celery_beat.0006_auto_20180210_1226... OK
+  Applying django_celery_beat.0006_periodictask_priority... OK
+  Applying django_celery_beat.0009_periodictask_headers... OK
+  Applying django_celery_beat.0010_auto_20190429_0326... OK
+  Applying django_celery_beat.0011_auto_20190508_0153... OK
+  Applying django_celery_beat.0012_periodictask_expire_seconds... OK
+  Applying django_celery_beat.0013_auto_20200609_0727... OK
+  Applying django_celery_beat.0014_remove_clockedschedule_enabled... OK
+  Applying django_celery_beat.0015_edit_solarschedule_events_choices... OK
+  Applying django_celery_beat.0016_alter_crontabschedule_timezone... OK
+  Applying django_celery_beat.0017_alter_crontabschedule_month_of_year... OK
+  Applying django_celery_beat.0018_improve_crontab_helptext... OK
+  Applying django_celery_beat.0019_alter_periodictasks_options... OK
+  Applying notifications.0001_initial... OK
+  Applying notifications.0002_initial... OK
+  Applying notifications.0003_mobile_push... OK
+  Applying notifications.0004_rename_notificatio_user_id_9df594_idx_notificatio_user_id_41244e_idx... OK
+  Applying sessions.0001_initial... OK
+  Applying users.0010_add_specialty_ref... OK
+  Applying users.0011_backfill_specialty_ref... OK
+  Applying users.0012_finalize_specialty_fk... OK
+  Applying users.0013_alter_historicaluser_specialty_alter_user_specialty... OK
+  Applying supervision.0001_initial... OK
+  Applying supervision.0002_pendingsupervisorassignment... OK
+  Applying token_blacklist.0001_initial... OK
+  Applying token_blacklist.0002_outstandingtoken_jti_hex... OK
+  Applying token_blacklist.0003_auto_20171017_2007... OK
+  Applying token_blacklist.0004_auto_20171017_2013... OK
+  Applying token_blacklist.0005_remove_outstandingtoken_jti... OK
+  Applying token_blacklist.0006_auto_20171017_2113... OK
+  Applying token_blacklist.0007_auto_20171017_2214... OK
+  Applying token_blacklist.0008_migrate_to_bigautofield... OK
+  Applying token_blacklist.0010_fix_migrate_to_bigautofield... OK
+  Applying token_blacklist.0011_linearizes_history... OK
+  Applying token_blacklist.0012_alter_outstandingtoken_user... OK
+  Applying token_blacklist.0013_alter_blacklistedtoken_options_and_more... OK
+  Applying training.0009_add_training_year_notes... OK
+  Applying training.0010_add_actual_end_date... OK
+  Applying training.0011_leaverequest_client_request_id... OK
+  Applying training.0012_alter_historicalleaverequest_client_request_id... OK
+  Applying users.0014_historicalresidentprofile_declaration_accepted_and_more... OK
+  Applying users.0015_historicalresidentprofile_review_note_and_more... OK
+System check identified no issues (0 silenced).
+test_simultaneous_replay_inserts_exactly_once (sims.training.tests.LeaveIdempotencyConcurrencyTest.test_simultaneous_replay_inserts_exactly_once) ... /home/sims/.local/lib/python3.11/site-packages/django/core/handlers/base.py:61: UserWarning: No directory at: /tmp/repo/backend/staticfiles/
+  mw_instance = middleware(adapted_handler)
+ok
+
+----------------------------------------------------------------------
+Ran 1 test in 0.863s
+
+OK
+Destroying test database for alias 'default' ('test_verification')...

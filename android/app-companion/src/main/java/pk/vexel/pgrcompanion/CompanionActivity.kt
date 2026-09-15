@@ -15,7 +15,15 @@ import pk.vexel.pgr.shared.PgrTheme
 class CompanionActivity : ComponentActivity() {
     override fun onCreate(state: Bundle?) {
         super.onCreate(state)
-        setContent { PgrTheme { InstitutionalWorkspace((application as CompanionApplication).institutional) } }
+        val resetLink = PasswordResetLink.fromSegments(intent?.data?.pathSegments.orEmpty())
+        setContent {
+            PgrTheme {
+                InstitutionalWorkspace(
+                    repository = (application as CompanionApplication).institutional,
+                    initialResetLink = resetLink,
+                )
+            }
+        }
     }
 }
 

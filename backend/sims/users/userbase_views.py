@@ -43,6 +43,7 @@ from sims.users.userbase_serializers import (
 from sims.users.services import (
     create_user_with_profile,
     get_missing_profile_fields,
+    get_allowed_next_route,
     recalculate_profile_completion,
     PROFILE_COMPLETION_REQUIREMENTS,
 )
@@ -838,10 +839,7 @@ class AuthMeView(APIView):
 
         from sims.users.onboarding_api import get_resident_onboarding_state
         onboarding = get_resident_onboarding_state(user) if user.role == "RESIDENT" else {}
-        if user.must_change_password:
-            allowed_next_route = "/change-password"
-        else:
-            allowed_next_route = user.get_dashboard_url()
+        allowed_next_route = get_allowed_next_route(user)
 
         data = {
             "id": user.id,
@@ -999,22 +997,7 @@ class CompleteProfileView(APIView):
 
         missing = get_missing_profile_fields(user)
         missing_fields = [m["field"] for m in missing]
-        resident_onboarding_incomplete = False
-        if user.role == "RESIDENT":
-            from sims.users.onboarding_api import get_resident_onboarding_state
-
-            resident_onboarding_incomplete = not get_resident_onboarding_state(user).get(
-                "onboarding_complete", False
-            )
-        allowed_next_route = (
-            "/change-password"
-            if user.must_change_password
-            else (
-                "/complete-profile"
-                if missing or resident_onboarding_incomplete
-                else user.get_dashboard_url()
-            )
-        )
+        allowed_next_route = get_allowed_next_route(user)
 
         return Response({
             "id": user.id,

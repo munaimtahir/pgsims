@@ -165,6 +165,21 @@ PROFILE_COMPLETION_REQUIREMENTS = {
 }
 
 
+def get_allowed_next_route(user):
+    """Return the single backend-owned post-authentication route decision.
+
+    Password replacement always wins. Required profile fields (including schema-version additions)
+    are next. Resident workflow requirements remain reachable from the role workspace; they are
+    not role-profile fields and must not make the profile-completion route a dead end. Clients must
+    not duplicate this ordering.
+    """
+    if user.must_change_password:
+        return "/change-password"
+    if get_missing_profile_fields(user):
+        return "/complete-profile"
+    return user.get_dashboard_url()
+
+
 def generate_unique_username(role):
     prefix_map = {
         "ADMIN": "admin",

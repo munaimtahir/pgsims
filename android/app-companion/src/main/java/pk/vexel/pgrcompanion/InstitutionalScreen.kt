@@ -78,7 +78,7 @@ private enum class ResidentDestination(val label: String, val icon: androidx.com
 }
 
 @Composable
-fun InstitutionalWorkspace(repository: InstitutionalRepository) {
+internal fun InstitutionalWorkspace(repository: InstitutionalRepository, initialResetLink: PasswordResetLink? = null) {
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
 
@@ -92,6 +92,9 @@ fun InstitutionalWorkspace(repository: InstitutionalRepository) {
     var notice by remember { mutableStateOf<String?>(null) }
     var busy by remember { mutableStateOf(false) }
     var reloadKey by remember { mutableIntStateOf(0) }
+    var resetLink by remember { mutableStateOf(initialResetLink) }
+    var requestingReset by rememberSaveable { mutableStateOf(false) }
+    var voluntaryPasswordChange by rememberSaveable { mutableStateOf(false) }
 
     suspend fun reload() {
         busy = true
@@ -117,10 +120,26 @@ fun InstitutionalWorkspace(repository: InstitutionalRepository) {
         busy = false
     }
 
+    if (resetLink != null) {
+        PasswordResetConfirmScreen(repository, resetLink!!) {
+            resetLink = null
+            requestingReset = false
+            state = InstitutionalState.DISCONNECTED
+            notice = "Password reset. Sign in with your new password."
+        }
+        return
+    }
+    if (requestingReset) {
+        PasswordResetRequestScreen(repository) { requestingReset = false }
+        return
+    }
+
     when (state) {
         InstitutionalState.DISCONNECTED, InstitutionalState.SIGNING_IN -> SignInPane(
             signingIn = state == InstitutionalState.SIGNING_IN,
             error = error,
+            notice = notice,
+            onForgotPassword = { requestingReset = true },
             onSignIn = { username, password ->
                 scope.launch {
                     state = InstitutionalState.SIGNING_IN; error = null
@@ -145,10 +164,28 @@ fun InstitutionalWorkspace(repository: InstitutionalRepository) {
             onSignOut = { signOut() },
         )
 
-        InstitutionalState.CONNECTED -> when (snapshot?.me?.string("role")?.uppercase()) {
+        InstitutionalState.CONNECTED -> {
+            val data = snapshot
+            val route = data?.me?.let(::authoritativeRoute)
+            if (data != null && (route == AuthoritativeRoute.CHANGE_PASSWORD || voluntaryPasswordChange)) {
+                ChangePasswordScreen(
+                    repository = repository,
+                    forced = route == AuthoritativeRoute.CHANGE_PASSWORD,
+                    onComplete = { voluntaryPasswordChange = false; reloadKey++ },
+                    onCancel = if (route == AuthoritativeRoute.CHANGE_PASSWORD) null else ({ voluntaryPasswordChange = false }),
+                )
+            } else if (data != null && route == AuthoritativeRoute.COMPLETE_PROFILE) {
+                DynamicProfileCompletionScreen(
+                    repository = repository,
+                    role = data.me.string("role").orEmpty(),
+                    onAuthoritativeRefresh = { reloadKey++ },
+                    onSignOut = { signOut() },
+                )
+            } else when (data?.me?.string("role")?.uppercase()) {
             "SUPERVISOR" -> SupervisorPane(
                 repository = repository, snapshot = snapshot, busy = busy,
                 onSignOut = { signOut() }, onRefresh = { reloadKey++ },
+                onChangePassword = { voluntaryPasswordChange = true },
             )
             "RESIDENT" -> ConnectedPane(
             repository = repository,
@@ -225,10 +262,33 @@ fun InstitutionalWorkspace(repository: InstitutionalRepository) {
                     )
                 }
             },
+            onCancelLogbook = { entryId ->
+                scope.launch {
+                    busy = true; notice = null
+                    repository.cancelLogbook(entryId).fold(
+                        { notice = "Logbook entry cancelled."; reloadKey++ },
+                        { notice = it.message ?: "Could not cancel the logbook entry."; busy = false },
+                    )
+                }
+            },
+            onChangePassword = { voluntaryPasswordChange = true },
             )
-            "ADMIN" -> RestrictedMobilePane("ADMIN", { signOut() }, { reloadKey++ })
-            "SUPPORT_STAFF" -> RestrictedMobilePane("SUPPORT_STAFF", { signOut() }, { reloadKey++ })
-            else -> RestrictedMobilePane(snapshot?.me?.string("role").orEmpty().ifBlank { "UNKNOWN" }, { signOut() }, { reloadKey++ })
+            "ADMIN" -> AdminPane(
+                repository = repository,
+                me = data.me,
+                onSignOut = { signOut() },
+                onRefresh = { reloadKey++ },
+                onChangePassword = { voluntaryPasswordChange = true },
+            )
+            "SUPPORT_STAFF" -> SharedRolePane(
+                repository = repository,
+                me = data.me,
+                onSignOut = { signOut() },
+                onRefresh = { reloadKey++ },
+                onChangePassword = { voluntaryPasswordChange = true },
+            )
+            else -> RestrictedMobilePane(data?.me?.string("role").orEmpty().ifBlank { "UNKNOWN" }, { signOut() }, { reloadKey++ })
+            }
         }
     }
 }
@@ -255,7 +315,13 @@ private fun RestrictedMobilePane(role: String, onSignOut: () -> Unit, onRetry: (
 }
 
 @Composable
-private fun SignInPane(signingIn: Boolean, error: String?, onSignIn: (String, String) -> Unit) {
+private fun SignInPane(
+    signingIn: Boolean,
+    error: String?,
+    notice: String?,
+    onForgotPassword: () -> Unit,
+    onSignIn: (String, String) -> Unit,
+) {
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     Column(
@@ -291,6 +357,8 @@ private fun SignInPane(signingIn: Boolean, error: String?, onSignIn: (String, St
             }
         }
         error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+        notice?.let { Text(it, color = MaterialTheme.colorScheme.primary) }
+        TextButton(onClick = onForgotPassword, enabled = !signingIn) { Text("Forgot password?") }
         Text(
             "Your username and password are sent only to PGR SIMS over an encrypted " +
                 "connection. They are never stored on this device; only an encrypted session is retained.",
@@ -340,12 +408,16 @@ private fun ConnectedPane(
     onCreateLogbook: (AcademicLogbookPayload) -> Unit,
     onSubmitLogbook: (Int) -> Unit,
     onUpdateLogbook: (Int, AcademicLogbookPayload) -> Unit,
+    onCancelLogbook: (Int) -> Unit,
+    onChangePassword: () -> Unit,
 ) {
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
     var destination by rememberSaveable { mutableStateOf(ResidentDestination.HOME) }
     var unreadNotifications by remember { mutableIntStateOf(0) }
     var targetDocument by remember { mutableStateOf<Int?>(null) }
     var confirmReplace by remember { mutableStateOf<Pair<Int, String>?>(null) }
+    var declarationSaving by remember { mutableStateOf(false) }
     val uploadStore = remember(context) { OfflineUploadStore(context) }
     var queuedUploads by remember { mutableStateOf<List<OfflineUpload>>(emptyList()) }
     val picker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? ->
@@ -458,7 +530,28 @@ private fun ConnectedPane(
         DashboardSummary(data, summary, onOpenTraining = { destination = ResidentDestination.TRAINING })
         }
 
-        if (destination == ResidentDestination.PROFILE) data.onboarding?.let { onboarding ->
+        if (destination == ResidentDestination.PROFILE) {
+            OwnProfileEditor(repository, onRefresh)
+            if (!summary.declarationAccepted) {
+                Button(
+                    onClick = {
+                        declarationSaving = true
+                        scope.launch {
+                            repository.acceptDeclaration().fold(
+                                onSuccess = {
+                                    onNotice("Declaration accepted.")
+                                    onRefresh()
+                                },
+                                onFailure = { onNotice(it.message ?: "Could not accept declaration.") },
+                            )
+                            declarationSaving = false
+                        }
+                    },
+                    enabled = !busy && !declarationSaving,
+                    modifier = Modifier.fillMaxWidth(),
+                ) { Text("Accept onboarding declaration") }
+            }
+            data.onboarding?.let { onboarding ->
             val sections = onboarding.objectList("sections")
             if (sections.isNotEmpty()) {
                 Text("Profile", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
@@ -470,13 +563,15 @@ private fun ConnectedPane(
                 )
                 sections.forEach { section -> OnboardingSection(section, busy, onSaveField) }
             }
+            }
+            OutlinedButton(onClick = onChangePassword, enabled = !busy, modifier = Modifier.fillMaxWidth()) { Text("Change password") }
         }
 
         if (destination == ResidentDestination.TRAINING) TrainingDashboard(data)
 
         if (destination == ResidentDestination.PROGRESS) ResidentProgressReport(data)
 
-        if (destination == ResidentDestination.LOGBOOK) LogbookScreen(data, busy, onCreateLogbook, onSubmitLogbook, onUpdateLogbook)
+        if (destination == ResidentDestination.LOGBOOK) LogbookScreen(data, busy, onCreateLogbook, onSubmitLogbook, onUpdateLogbook, onCancelLogbook)
 
         if (destination == ResidentDestination.LEAVE) LeaveRequestsScreen(repository, data, busy, onNotice, onRefresh)
 
@@ -485,14 +580,7 @@ private fun ConnectedPane(
         if (destination == ResidentDestination.INBOX) NotificationCenterScreen(
             repository = repository,
             onBack = { destination = ResidentDestination.HOME },
-            onTarget = { kind, _ ->
-                destination = when (kind) {
-                    "leave" -> ResidentDestination.LEAVE
-                    "evaluation" -> ResidentDestination.EVALUATIONS
-                    "logbook" -> ResidentDestination.LOGBOOK
-                    else -> ResidentDestination.TRAINING
-                }
-            },
+            onTarget = { _, _ -> },
         )
 
         if (destination == ResidentDestination.REQUIREMENTS) RequirementsScreen(data) {
@@ -554,6 +642,7 @@ private fun ConnectedPane(
                             }
                         }
                         if (id != null) {
+                            Column {
                             TextButton(
                                 enabled = !busy,
                                 onClick = {
@@ -567,6 +656,18 @@ private fun ConnectedPane(
                                     }
                                 },
                             ) { Text(InstitutionalLabels.documentAction(status)) }
+                            if (status == "NOT_STARTED") TextButton(
+                                enabled = !busy,
+                                onClick = {
+                                    scope.launch {
+                                        repository.deferDocument(id).fold(
+                                            { onNotice("Document deferred. It remains an outstanding requirement."); onRefresh() },
+                                            { onNotice(it.message ?: "Could not defer this document.") },
+                                        )
+                                    }
+                                },
+                            ) { Text("Defer") }
+                            }
                         }
                     }
                 }

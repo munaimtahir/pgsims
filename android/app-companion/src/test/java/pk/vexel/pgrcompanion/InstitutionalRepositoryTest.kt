@@ -58,11 +58,14 @@ private const val ROTATIONS_BODY = """{"count":1,"results":[{"id":8,"department"
 private const val LEAVES_BODY = """{"count":0,"results":[]}"""
 private const val LOGBOOK_BODY = """{"count":1,"results":[{"id":4,"title":"Synthetic activity","entry_date":"2026-09-01","status":"DRAFT"}]}"""
 private const val CATEGORIES_BODY = """{"count":1,"results":[{"id":2,"name":"Clinical activity"}]}"""
+private const val ACADEMIC_OPTIONS_BODY = """{"supervisors":[{"id":2,"name":"Ayesha Malik"}],"periods":[{"id":4,"name":"Year 2"}]}"""
 private const val ASSESSMENTS_BODY = """{"count":0,"results":[]}"""
 private const val EVALUATION_TEMPLATES_BODY = """{"count":1,"results":[{"id":5,"name":"Mini-CEX","form_type":"MINI_CEX","schema":{}}]}"""
 private const val RESEARCH_BODY = """{"status":"DRAFT"}"""
 private const val WORKSHOPS_BODY = """{"count":0,"results":[]}"""
 private const val RESIDENT_SUMMARY_BODY = """{"rotation":{"current":{"id":8,"department":"Medicine","status":"ACTIVE"}}}"""
+private const val ACADEMIC_PROGRESS_BODY = """{"training_record_status":"ACTIVE","training_year":2,"evaluations_total":3,"evaluations_approved":2,"logbooks_total":12,"logbooks_verified":9}"""
+private const val PROGRESS_MONITORING_BODY = """{"training_record_status":"ACTIVE","overall_status":"ON_TRACK"}"""
 private const val SUPERVISOR_ME_BODY = """{"id":2,"username":"demo.supervisor","role":"SUPERVISOR"}"""
 private const val ADMIN_ME_BODY = """{"id":1,"username":"demo.admin","role":"ADMIN"}"""
 private const val SUPERVISOR_SUMMARY_BODY = """
@@ -184,6 +187,7 @@ class InstitutionalRepositoryTest {
             "Medicine",
             snapshot.residentSummary?.get("rotation")?.jsonObject?.get("current")?.jsonObject?.string("department"),
         )
+        assertEquals("ACTIVE", snapshot.academicProgress?.string("training_record_status"))
         assertTrue(snapshot.unavailable.isEmpty())
         assertEquals("Bearer access-1", bearerOf(server.takeRequest()))
     }
@@ -370,16 +374,104 @@ class InstitutionalRepositoryTest {
         assertTrue(request.body.readUtf8().contains("supervisor_comments"))
     }
 
+    @Test fun `password and dynamic completion contracts use canonical endpoints`() = runBlocking {
+        tokens.save("access-1", "refresh-1")
+        server.enqueue(json("""{"message":"Password changed","allowed_next_route":"/complete-profile"}"""))
+        server.enqueue(json("""{"profile_type":"AdminProfile","missing_fields":[{"field":"email","input_type":"email","required":true}]}"""))
+        server.enqueue(json("""{"hospitals":[],"departments":[]}"""))
+        server.enqueue(json("""{"id":1,"role":"ADMIN","allowed_next_route":"/dashboard/utrmc"}"""))
+
+        repository.changePassword("old-secret", "new-secret", "new-secret").getOrThrow()
+        repository.completeProfileForm().getOrThrow()
+        repository.identityOptions().getOrThrow()
+        repository.completeProfile(mapOf("email" to "admin@example.com")).getOrThrow()
+
+        val passwordRequest = server.takeRequest()
+        assertEquals("/api/auth/change-password/", passwordRequest.path)
+        val passwordBody = passwordRequest.body.readUtf8()
+        assertTrue(passwordBody.contains("old_password"))
+        assertTrue(passwordBody.contains("new_password2"))
+        assertEquals("/api/auth/complete-profile/", server.takeRequest().path)
+        assertEquals("/api/identity/options/", server.takeRequest().path)
+        val completion = server.takeRequest()
+        assertEquals("POST", completion.method)
+        assertEquals("/api/auth/complete-profile/", completion.path)
+        assertTrue(completion.body.readUtf8().contains("admin@example.com"))
+    }
+
+    @Test fun `password reset confirmation is anonymous and preserves uid token contract`() = runBlocking {
+        server.enqueue(json("""{"message":"Password reset successful"}"""))
+
+        repository.confirmPasswordReset("uid-value", "reset-token", "new-secret", "new-secret").getOrThrow()
+
+        val request = server.takeRequest()
+        assertNull(request.getHeader("Authorization"))
+        assertEquals("/api/auth/password-reset/confirm/", request.path)
+        val body = request.body.readUtf8()
+        assertTrue(body.contains("uid-value"))
+        assertTrue(body.contains("reset-token"))
+    }
+
+    @Test fun `notification target fetches the exact authorized record`() = runBlocking {
+        tokens.save("access-1", "refresh-1")
+        server.enqueue(json("""{"id":44,"title":"Exact logbook","status":"RETURNED"}"""))
+
+        val target = repository.notificationTarget("logbook", 44).getOrThrow()
+
+        assertEquals("44", target.string("id"))
+        assertEquals("/api/academics/logbook-entries/44/", server.takeRequest().path)
+    }
+
+    @Test fun `rotation review uses the canonical review application action`() = runBlocking {
+        tokens.save("access-1", "refresh-1")
+        server.enqueue(json("""{"id":8,"status":"RETURNED"}"""))
+
+        repository.returnRotation(8, "More information required").getOrThrow()
+
+        val request = server.takeRequest()
+        assertEquals("/api/rotations/8/review-application/", request.path)
+        val body = request.body.readUtf8()
+        assertTrue(body.contains("\"action\":\"defer\""))
+        assertTrue(body.contains("More information required"))
+    }
+
+    @Test fun `admin directory preserves server paging filters and four role creation`() = runBlocking {
+        tokens.save("access-1", "refresh-1")
+        server.enqueue(json("""{"count":31,"next":"https://example/api/users/?page=3","previous":null,"results":[{"id":9,"username":"res9","role":"RESIDENT"}]}"""))
+        server.enqueue(json("""{"user_id":40,"username":"staff040","role":"SUPPORT_STAFF","profile_type":"SupportStaffProfile"}""", 201))
+
+        val page = repository.users(page = 2, role = "RESIDENT", search = "demo", active = true).getOrThrow()
+        assertEquals(31, page.count)
+        assertNotNull(page.next)
+        assertEquals(1, page.results.size)
+        repository.createUser(UniversalUserPayload("SUPPORT_STAFF", "Demo Staff", "staff@example.com", "03000000000")).getOrThrow()
+
+        val list = server.takeRequest()
+        assertTrue(list.path.orEmpty().contains("page=2"))
+        assertTrue(list.path.orEmpty().contains("role=RESIDENT"))
+        assertTrue(list.path.orEmpty().contains("search=demo"))
+        assertTrue(list.path.orEmpty().contains("active=true"))
+        val create = server.takeRequest()
+        assertEquals("POST", create.method)
+        assertEquals("/api/users/", create.path)
+        val body = create.body.readUtf8()
+        assertTrue(body.contains("SUPPORT_STAFF"))
+        assertTrue(body.contains("Demo Staff"))
+    }
+
     private fun enqueueResidentWorkflowBodies() {
         server.enqueue(json(ROTATIONS_BODY))
         server.enqueue(json(LEAVES_BODY))
         server.enqueue(json(LOGBOOK_BODY))
         server.enqueue(json(CATEGORIES_BODY))
+        server.enqueue(json(ACADEMIC_OPTIONS_BODY))
         server.enqueue(json(ASSESSMENTS_BODY))
         server.enqueue(json(EVALUATION_TEMPLATES_BODY))
         server.enqueue(json(RESEARCH_BODY))
         server.enqueue(json(WORKSHOPS_BODY))
         server.enqueue(json(RESIDENT_SUMMARY_BODY))
+        server.enqueue(json(ACADEMIC_PROGRESS_BODY))
+        server.enqueue(json(PROGRESS_MONITORING_BODY))
     }
 
     @Test fun `upload is rejected client-side before any request when the file is unusable`() = runBlocking {
@@ -456,6 +548,8 @@ class CredentialRedactionTest {
 
         assertFalse(RefreshPayload("refresh-token-value").toString().contains("refresh-token-value"))
         assertFalse(LogoutPayload("refresh-token-value").toString().contains("refresh-token-value"))
+        assertFalse(ChangePasswordPayload("old-secret", "new-secret", "new-secret").toString().contains("old-secret"))
+        assertFalse(PasswordResetConfirmPayload("uid-secret", "token-secret", "new", "new").toString().contains("token-secret"))
     }
 }
 
@@ -466,8 +560,11 @@ class InstitutionalTokenStoreTest {
         store.save("a", "r")
         assertEquals("a", store.access)
         assertEquals("r", store.refresh)
+        store.saveUserId(42)
+        assertEquals(42, store.userId)
         store.clear()
         assertNull(store.access)
         assertNull(store.refresh)
+        assertNull(store.userId)
     }
 }

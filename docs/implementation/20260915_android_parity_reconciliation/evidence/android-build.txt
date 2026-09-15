@@ -1,0 +1,7 @@
+Candidate source: 800f7ac (9364d37 changes backend verification helper only).
+Command: ./gradlew :app-companion:testDebugUnitTest :app-companion:lintDebug :app-companion:assembleDebug :app-companion:assembleDebugAndroidTest
+BUILD SUCCESSFUL in 1m 39s; 118 tasks (20 executed, 98 up-to-date).
+{'tests': 41, 'failures': 0, 'errors': 0, 'skipped': 0}
+Emulator: pgsims / emulator-5554. Debug candidate 1.1.10/code10.
+Device command: adb shell am instrument -w -e class pk.vexel.pgrcompanion.InboxUiTest,pk.vexel.pgrcompanion.RecoveryOwnershipTest,pk.vexel.pgrcompanion.OfflineRecoveryInstrumentationTest pk.vexel.pgrcompanion.debug.test/androidx.test.runner.AndroidJUnitRunner
+Process death: PATH=/home/munaim/Android/Sdk/platform-tools:$PATH python3 scripts/verify_android_process_death.py

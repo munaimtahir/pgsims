@@ -29,6 +29,7 @@ import retrofit2.http.PATCH
 import retrofit2.http.POST
 import retrofit2.http.Part
 import retrofit2.http.Path
+import retrofit2.http.Query
 import java.io.File
 import java.io.IOException
 import java.util.concurrent.TimeUnit
@@ -66,6 +67,43 @@ import java.util.UUID
     override fun toString() = "LogoutPayload(refresh=***)"
 }
 
+@Serializable data class ChangePasswordPayload(
+    val old_password: String,
+    val new_password: String,
+    val new_password2: String,
+) {
+    override fun toString() = "ChangePasswordPayload(old_password=***, new_password=***, new_password2=***)"
+}
+
+@Serializable data class PasswordResetPayload(val email: String)
+@Serializable data class PasswordResetConfirmPayload(
+    val uid: String,
+    val token: String,
+    val new_password: String,
+    val new_password2: String,
+) {
+    override fun toString() = "PasswordResetConfirmPayload(uid=***, token=***, new_password=***, new_password2=***)"
+}
+
+@Serializable data class CompleteProfilePayload(val fields: Map<String, String>)
+@Serializable data class DeclarationPayload(val accepted: Boolean = true)
+@Serializable data class UniversalUserPayload(
+    val role: String,
+    val full_name: String,
+    val email: String = "",
+    val phone: String = "",
+    val username: String? = null,
+    val password: String? = null,
+    val profile: JsonObject = JsonObject(emptyMap()),
+)
+
+data class PagedJsonResponse(
+    val count: Int,
+    val next: String?,
+    val previous: String?,
+    val results: List<JsonObject>,
+)
+
 @Serializable data class FieldPatch(val fields: Map<String, String?>)
 @Serializable data class NotificationPreferencesPayload(
     val email_enabled: Boolean? = null,
@@ -80,6 +118,7 @@ import java.util.UUID
 
 /** Reject/return payload for logbook actions, which use `supervisor_comments` not `reason`. */
 @Serializable data class SupervisorCommentPayload(val supervisor_comments: String = "")
+@Serializable data class RotationReviewPayload(val action: String, val reason: String = "")
 
 /** Approve/return payload for research submissions. */
 @Serializable data class ResearchActionPayload(val project_id: Int, val feedback: String = "")
@@ -107,6 +146,15 @@ import java.util.UUID
     val max_score: Double? = null,
 )
 
+@Serializable data class ProcedureRecordPayload(
+    val procedure_name: String,
+    val procedure_code: String = "",
+    val role_performed: String = "",
+    val complexity: String = "",
+    val outcome: String = "",
+    val complications: String = "",
+)
+
 /** Active academics-logbook contract. The server assigns resident/training ownership. */
 @Serializable data class AcademicLogbookPayload(
     val category: Int,
@@ -117,6 +165,9 @@ import java.util.UUID
     val patient_age: String = "",
     val patient_gender: String = "",
     val resident_reflection: String = "",
+    val supervisor: Int? = null,
+    val academic_period: Int? = null,
+    val procedure_record: ProcedureRecordPayload? = null,
     val client_request_id: String? = null,
 )
 
@@ -128,6 +179,22 @@ interface InstitutionalApi {
     @POST("api/auth/refresh/") suspend fun refresh(@Body body: RefreshPayload): Response<JsonObject>
     @POST("api/auth/logout/") suspend fun logout(@Body body: LogoutPayload): Response<JsonObject>
     @GET("api/auth/me/") suspend fun me(): Response<JsonObject>
+    @GET("api/auth/profile/") suspend fun ownProfile(): Response<JsonObject>
+    @PATCH("api/auth/profile/update/") suspend fun updateOwnProfile(@Body body: Map<String, String>): Response<JsonObject>
+    @POST("api/auth/change-password/") suspend fun changePassword(@Body body: ChangePasswordPayload): Response<JsonObject>
+    @POST("api/auth/password-reset/") suspend fun requestPasswordReset(@Body body: PasswordResetPayload): Response<JsonObject>
+    @POST("api/auth/password-reset/confirm/") suspend fun confirmPasswordReset(@Body body: PasswordResetConfirmPayload): Response<JsonObject>
+    @GET("api/auth/complete-profile/") suspend fun completeProfileForm(): Response<JsonObject>
+    @POST("api/auth/complete-profile/") suspend fun completeProfile(@Body body: Map<String, String>): Response<JsonObject>
+    @GET("api/identity/options/") suspend fun identityOptions(): Response<JsonObject>
+    @GET("api/users/") suspend fun users(
+        @Query("page") page: Int,
+        @Query("role") role: String? = null,
+        @Query("search") search: String? = null,
+        @Query("active") active: Boolean? = null,
+    ): Response<JsonObject>
+    @POST("api/users/") suspend fun createUser(@Body body: UniversalUserPayload): Response<JsonObject>
+    @GET("api/users/{id}/") suspend fun userDetail(@Path("id") id: Int): Response<JsonObject>
     @GET("api/auth/onboarding/") suspend fun onboarding(): Response<JsonObject>
     @GET("api/notifications/") suspend fun notifications(): Response<JsonObject>
     @GET("api/notifications/unread-count/") suspend fun notificationUnreadCount(): Response<JsonObject>
@@ -137,28 +204,32 @@ interface InstitutionalApi {
     @POST("api/notifications/mark-unread/") suspend fun markNotificationsUnread(@Body body: NotificationIdsPayload): Response<JsonObject>
     @POST("api/notifications/devices/") suspend fun registerDevice(@Body body: DeviceRegistrationPayload): Response<JsonObject>
     @PATCH("api/auth/onboarding/") suspend fun updateOnboarding(@Body body: FieldPatch): Response<JsonObject>
+    @POST("api/resident-onboarding/state/") suspend fun acceptDeclaration(@Body body: DeclarationPayload): Response<JsonObject>
     @GET("api/resident-documents/") suspend fun documents(): Response<JsonArray>
     @GET("api/resident-training/") suspend fun training(): Response<JsonObject>
     @GET("api/supervision/assignments/") suspend fun assignments(): Response<JsonObject>
     @GET("api/my/rotations/") suspend fun rotations(): Response<JsonObject>
-    @GET("api/leaves/{id}/") suspend fun leaveDetail(@Path("id") id: Int): Response<JsonObject>
-    @GET("api/academics/logbook-entries/{id}/") suspend fun logbookDetail(@Path("id") id: Int): Response<JsonObject>
-    @GET("api/academics/evaluation-submissions/{id}/") suspend fun evaluationDetail(@Path("id") id: Int): Response<JsonObject>
     @GET("api/rotations/{id}/") suspend fun rotationDetail(@Path("id") id: Int): Response<JsonObject>
     @GET("api/my/leaves/") suspend fun leaves(): Response<JsonObject>
     @POST("api/leaves/") suspend fun createLeave(@Body body: LeaveRequestPayload): Response<JsonObject>
     @PATCH("api/leaves/{id}/") suspend fun updateLeave(@Path("id") id: Int, @Body body: LeaveRequestPayload): Response<JsonObject>
     @POST("api/leaves/{id}/submit/") suspend fun submitLeave(@Path("id") id: Int): Response<JsonObject>
+    @GET("api/leaves/{id}/") suspend fun leaveDetail(@Path("id") id: Int): Response<JsonObject>
     @GET("api/academics/logbook-entries/") suspend fun logbook(): Response<JsonObject>
     @GET("api/academics/logbook-categories/") suspend fun logbookCategories(): Response<JsonObject>
+    @GET("api/academics/options/") suspend fun academicOptions(): Response<JsonObject>
     @POST("api/academics/logbook-entries/") suspend fun createLogbook(@Body body: AcademicLogbookPayload): Response<JsonObject>
     @PATCH("api/academics/logbook-entries/{id}/") suspend fun updateLogbook(@Path("id") id: Int, @Body body: AcademicLogbookPayload): Response<JsonObject>
     @POST("api/academics/logbook-entries/{id}/submit/") suspend fun submitLogbook(@Path("id") id: Int): Response<JsonObject>
+    @POST("api/academics/logbook-entries/{id}/cancel/") suspend fun cancelLogbook(@Path("id") id: Int): Response<JsonObject>
+    @GET("api/academics/logbook-entries/{id}/") suspend fun logbookDetail(@Path("id") id: Int): Response<JsonObject>
     @GET("api/academics/evaluation-submissions/") suspend fun assessments(): Response<JsonObject>
     @GET("api/academics/evaluation-templates/") suspend fun evaluationTemplates(): Response<JsonObject>
     @POST("api/academics/evaluation-submissions/") suspend fun createEvaluation(@Body body: EvaluationSubmissionPayload): Response<JsonObject>
     @PATCH("api/academics/evaluation-submissions/{id}/") suspend fun updateEvaluation(@Path("id") id: Int, @Body body: EvaluationSubmissionPayload): Response<JsonObject>
     @POST("api/academics/evaluation-submissions/{id}/submit/") suspend fun submitEvaluation(@Path("id") id: Int): Response<JsonObject>
+    @POST("api/academics/evaluation-submissions/{id}/cancel/") suspend fun cancelEvaluation(@Path("id") id: Int): Response<JsonObject>
+    @GET("api/academics/evaluation-submissions/{id}/") suspend fun evaluationDetail(@Path("id") id: Int): Response<JsonObject>
     @POST("api/academics/evaluation-submissions/{id}/start_review/") suspend fun startEvaluationReview(@Path("id") id: Int): Response<JsonObject>
     @POST("api/academics/evaluation-submissions/{id}/approve/") suspend fun approveEvaluation(@Path("id") id: Int, @Body body: EvaluationReviewPayload): Response<JsonObject>
     @POST("api/academics/evaluation-submissions/{id}/return_revision/") suspend fun returnEvaluation(@Path("id") id: Int, @Body body: SupervisorCommentPayload): Response<JsonObject>
@@ -166,6 +237,9 @@ interface InstitutionalApi {
     @GET("api/my/research/") suspend fun research(): Response<JsonObject>
     @GET("api/my/workshops/") suspend fun workshops(): Response<JsonObject>
     @GET("api/residents/me/summary/") suspend fun residentSummary(): Response<JsonObject>
+    @GET("api/academics/my-progress/") suspend fun academicProgress(): Response<JsonObject>
+    @GET("api/academics/monitoring/my-progress/") suspend fun progressMonitoring(): Response<JsonObject>
+    @POST("api/resident-documents/{id}/defer/") suspend fun deferDocument(@Path("id") id: Int): Response<JsonObject>
     @Multipart @POST("api/resident-documents/{id}/upload/")
     suspend fun upload(@Path("id") id: Int, @Part file: MultipartBody.Part): Response<JsonObject>
 
@@ -198,11 +272,8 @@ interface InstitutionalApi {
     @POST("api/leaves/{id}/reject/")
     suspend fun rejectLeave(@Path("id") id: Int, @Body body: ReasonPayload): Response<JsonObject>
 
-    @POST("api/rotations/{id}/hod-approve/") suspend fun approveRotation(@Path("id") id: Int): Response<JsonObject>
-    @POST("api/rotations/{id}/reject/")
-    suspend fun rejectRotation(@Path("id") id: Int, @Body body: ReasonPayload): Response<JsonObject>
-    @POST("api/rotations/{id}/returned/")
-    suspend fun returnRotation(@Path("id") id: Int, @Body body: ReasonPayload): Response<JsonObject>
+    @POST("api/rotations/{id}/review-application/")
+    suspend fun reviewRotation(@Path("id") id: Int, @Body body: RotationReviewPayload): Response<JsonObject>
 
     @POST("api/my/research/action/supervisor-approve/")
     suspend fun approveResearch(@Body body: ResearchActionPayload): Response<JsonObject>
@@ -241,6 +312,7 @@ class EncryptedTokenStore private constructor(private val prefs: android.content
     companion object {
         private const val KEY_ACCESS = "access"
         private const val KEY_REFRESH = "refresh"
+        private const val KEY_USER_ID = "user_id"
         fun create(context: Context): TokenStore = runCatching {
             val app = context.applicationContext
             val key = MasterKey.Builder(app).setKeyScheme(MasterKey.KeyScheme.AES256_GCM).build()
@@ -282,11 +354,14 @@ data class InstitutionalSnapshot(
     val leaves: List<JsonObject> = emptyList(),
     val logbook: List<JsonObject> = emptyList(),
     val logbookCategories: List<JsonObject> = emptyList(),
+    val academicOptions: JsonObject? = null,
     val assessments: List<JsonObject> = emptyList(),
     val evaluationTemplates: List<JsonObject> = emptyList(),
     val research: JsonObject? = null,
     val workshops: List<JsonObject> = emptyList(),
     val residentSummary: JsonObject? = null,
+    val academicProgress: JsonObject? = null,
+    val progressMonitoring: JsonObject? = null,
     /** Populated only for a SUPERVISOR-role account; see [snapshot]. */
     val supervisorSummary: JsonObject? = null,
     val supervisorDashboard: JsonObject? = null,
@@ -333,15 +408,9 @@ class InstitutionalRepository internal constructor(
         .build()
         .create(InstitutionalApi::class.java)
 
-    fun currentUserId(): Int? = tokens.userId
-
-    suspend fun me(): Result<JsonObject> = withContext(Dispatchers.IO) {
-        runCatching { required(authorized { authorizedApi.me() }, "your institutional profile").also { value ->
-            value.string("id")?.toIntOrNull()?.let(tokens::saveUserId)
-        } }
-    }
 
     fun isConnected(): Boolean = !tokens.access.isNullOrBlank() && !tokens.refresh.isNullOrBlank()
+    fun currentUserId(): Int? = tokens.userId
 
     suspend fun login(username: String, password: String): Result<JsonObject> =
         withContext(Dispatchers.IO) {
@@ -355,7 +424,9 @@ class InstitutionalRepository internal constructor(
                 val refresh = body.string("refresh")
                     ?: throw InstitutionalException("PGR SIMS did not return a refresh token.")
                 tokens.save(access, refresh)
-                body["user"]?.jsonObject ?: JsonObject(emptyMap())
+                val user = body["user"]?.jsonObject ?: JsonObject(emptyMap())
+                user.string("id")?.toIntOrNull()?.let(tokens::saveUserId)
+                user
             }
         }
 
@@ -382,17 +453,21 @@ class InstitutionalRepository internal constructor(
             val leaves = optional(authorized { authorizedApi.leaves() }, "Leave requests", unavailable).paged()
             val logbook = optional(authorized { authorizedApi.logbook() }, "Logbook", unavailable).paged()
             val logbookCategories = optional(authorized { authorizedApi.logbookCategories() }, "Logbook categories", unavailable).paged()
+            val academicOptions = optional(authorized { authorizedApi.academicOptions() }, "Academic options", unavailable)
             val assessments = optional(authorized { authorizedApi.assessments() }, "Assessments", unavailable).paged()
             val evaluationTemplates = optional(authorized { authorizedApi.evaluationTemplates() }, "Evaluation templates", unavailable).paged()
             val research = optional(authorized { authorizedApi.research() }, "Research", unavailable)
             val workshops = optional(authorized { authorizedApi.workshops() }, "Workshops", unavailable).paged()
             val residentSummary = optional(authorized { authorizedApi.residentSummary() }, "Resident summary", unavailable)
+            val academicProgress = optional(authorized { authorizedApi.academicProgress() }, "Academic progress", unavailable)
+            val progressMonitoring = optional(authorized { authorizedApi.progressMonitoring() }, "Progress monitoring", unavailable)
             InstitutionalSnapshot(
                 me = me, onboarding = onboarding, documents = documents, training = training,
                 assignments = assignments, rotations = rotations, leaves = leaves, logbook = logbook,
-                logbookCategories = logbookCategories, assessments = assessments,
+                logbookCategories = logbookCategories, academicOptions = academicOptions, assessments = assessments,
                 evaluationTemplates = evaluationTemplates, research = research, workshops = workshops,
-                residentSummary = residentSummary, unavailable = unavailable,
+                residentSummary = residentSummary, academicProgress = academicProgress,
+                progressMonitoring = progressMonitoring, unavailable = unavailable,
             )
         }
     }
@@ -400,6 +475,100 @@ class InstitutionalRepository internal constructor(
     /** Notification centre reads are on demand: failure never breaks the institutional workspace. */
     suspend fun notifications(): Result<List<JsonObject>> = withContext(Dispatchers.IO) {
         runCatching { required(authorized { authorizedApi.notifications() }, "your notifications").paged() }
+    }
+
+    suspend fun me(): Result<JsonObject> = withContext(Dispatchers.IO) {
+        runCatching {
+            required(authorized { authorizedApi.me() }, "your institutional profile").also { me ->
+                me.string("id")?.toIntOrNull()?.let(tokens::saveUserId)
+            }
+        }
+    }
+
+    suspend fun ownProfile(): Result<JsonObject> = withContext(Dispatchers.IO) {
+        runCatching { required(authorized { authorizedApi.ownProfile() }, "your profile") }
+    }
+
+    suspend fun updateOwnProfile(fields: Map<String, String>): Result<JsonObject> = withContext(Dispatchers.IO) {
+        runCatching { required(authorized { authorizedApi.updateOwnProfile(fields) }, "your profile") }
+    }
+
+    suspend fun changePassword(oldPassword: String, newPassword: String, confirmation: String): Result<JsonObject> =
+        withContext(Dispatchers.IO) {
+            runCatching {
+                required(
+                    authorized { authorizedApi.changePassword(ChangePasswordPayload(oldPassword, newPassword, confirmation)) },
+                    "your password",
+                )
+            }
+        }
+
+    suspend fun requestPasswordReset(email: String): Result<JsonObject> = withContext(Dispatchers.IO) {
+        runCatching { required(call { anonymousApi.requestPasswordReset(PasswordResetPayload(email.trim())) }, "the password reset request") }
+    }
+
+    suspend fun confirmPasswordReset(
+        uid: String,
+        token: String,
+        newPassword: String,
+        confirmation: String,
+    ): Result<JsonObject> = withContext(Dispatchers.IO) {
+        runCatching {
+            required(
+                call { anonymousApi.confirmPasswordReset(PasswordResetConfirmPayload(uid, token, newPassword, confirmation)) },
+                "the password reset",
+            )
+        }
+    }
+
+    suspend fun completeProfileForm(): Result<JsonObject> = withContext(Dispatchers.IO) {
+        runCatching { required(authorized { authorizedApi.completeProfileForm() }, "your profile requirements") }
+    }
+
+    suspend fun identityOptions(): Result<JsonObject> = withContext(Dispatchers.IO) {
+        runCatching { required(authorized { authorizedApi.identityOptions() }, "profile options") }
+    }
+
+    suspend fun users(page: Int = 1, role: String? = null, search: String? = null, active: Boolean? = null): Result<PagedJsonResponse> =
+        withContext(Dispatchers.IO) {
+            runCatching {
+                val body = required(authorized { authorizedApi.users(page, role, search?.takeIf { it.isNotBlank() }, active) }, "the user directory")
+                PagedJsonResponse(
+                    count = body.string("count")?.toIntOrNull() ?: body.paged().size,
+                    next = body.string("next"),
+                    previous = body.string("previous"),
+                    results = body.paged(),
+                )
+            }
+        }
+
+    suspend fun createUser(payload: UniversalUserPayload): Result<JsonObject> = withContext(Dispatchers.IO) {
+        runCatching { required(authorized { authorizedApi.createUser(payload) }, "the new identity") }
+    }
+
+    suspend fun userDetail(id: Int): Result<JsonObject> = withContext(Dispatchers.IO) {
+        runCatching { required(authorized { authorizedApi.userDetail(id) }, "this user") }
+    }
+
+    suspend fun completeProfile(fields: Map<String, String>): Result<JsonObject> = withContext(Dispatchers.IO) {
+        runCatching { required(authorized { authorizedApi.completeProfile(fields) }, "your profile") }
+    }
+
+    suspend fun acceptDeclaration(): Result<JsonObject> = withContext(Dispatchers.IO) {
+        runCatching { required(authorized { authorizedApi.acceptDeclaration(DeclarationPayload()) }, "your declaration") }
+    }
+
+    suspend fun notificationTarget(kind: String, id: Int): Result<JsonObject> = withContext(Dispatchers.IO) {
+        runCatching {
+            val response = when (kind.lowercase()) {
+                "leave" -> authorized { authorizedApi.leaveDetail(id) }
+                "logbook" -> authorized { authorizedApi.logbookDetail(id) }
+                "evaluation" -> authorized { authorizedApi.evaluationDetail(id) }
+                "rotation" -> authorized { authorizedApi.rotationDetail(id) }
+                else -> throw InstitutionalException("This notification target is not supported by this app version.")
+            }
+            required(response, "this notification target")
+        }
     }
 
     suspend fun unreadNotificationCount(): Result<Int> = withContext(Dispatchers.IO) {
@@ -483,15 +652,15 @@ class InstitutionalRepository internal constructor(
     }
 
     suspend fun approveRotation(id: Int): Result<JsonObject> = withContext(Dispatchers.IO) {
-        runCatching { required(authorized { authorizedApi.approveRotation(id) }, "this rotation") }
+        runCatching { required(authorized { authorizedApi.reviewRotation(id, RotationReviewPayload("approve")) }, "this rotation") }
     }
 
     suspend fun rejectRotation(id: Int, reason: String): Result<JsonObject> = withContext(Dispatchers.IO) {
-        runCatching { required(authorized { authorizedApi.rejectRotation(id, ReasonPayload(reason)) }, "this rotation") }
+        runCatching { required(authorized { authorizedApi.reviewRotation(id, RotationReviewPayload("reject", reason)) }, "this rotation") }
     }
 
     suspend fun returnRotation(id: Int, reason: String): Result<JsonObject> = withContext(Dispatchers.IO) {
-        runCatching { required(authorized { authorizedApi.returnRotation(id, ReasonPayload(reason)) }, "this rotation") }
+        runCatching { required(authorized { authorizedApi.reviewRotation(id, RotationReviewPayload("defer", reason)) }, "this rotation") }
     }
 
     suspend fun approveResearch(projectId: Int, feedback: String): Result<JsonObject> = withContext(Dispatchers.IO) {
@@ -520,11 +689,14 @@ class InstitutionalRepository internal constructor(
     suspend fun submitEvaluation(id: Int): Result<JsonObject> = withContext(Dispatchers.IO) {
         runCatching { required(authorized { authorizedApi.submitEvaluation(id) }, "your evaluation") }
     }
+    suspend fun cancelEvaluation(id: Int): Result<JsonObject> = withContext(Dispatchers.IO) {
+        runCatching { required(authorized { authorizedApi.cancelEvaluation(id) }, "your evaluation") }
+    }
     suspend fun startEvaluationReview(id: Int): Result<JsonObject> = withContext(Dispatchers.IO) {
         runCatching { required(authorized { authorizedApi.startEvaluationReview(id) }, "this evaluation") }
     }
-    suspend fun approveEvaluation(id: Int, comments: String): Result<JsonObject> = withContext(Dispatchers.IO) {
-        runCatching { required(authorized { authorizedApi.approveEvaluation(id, EvaluationReviewPayload(supervisor_comments = comments)) }, "this evaluation") }
+    suspend fun approveEvaluation(id: Int, comments: String, score: Double? = null, maxScore: Double? = null): Result<JsonObject> = withContext(Dispatchers.IO) {
+        runCatching { required(authorized { authorizedApi.approveEvaluation(id, EvaluationReviewPayload(comments, score, maxScore)) }, "this evaluation") }
     }
     suspend fun returnEvaluation(id: Int, comments: String): Result<JsonObject> = withContext(Dispatchers.IO) {
         runCatching { required(authorized { authorizedApi.returnEvaluation(id, SupervisorCommentPayload(comments)) }, "this evaluation") }
@@ -539,6 +711,9 @@ class InstitutionalRepository internal constructor(
 
     suspend fun submitLogbook(entryId: Int): Result<JsonObject> = withContext(Dispatchers.IO) {
         runCatching { required(authorized { authorizedApi.submitLogbook(entryId) }, "your logbook entry") }
+    }
+    suspend fun cancelLogbook(entryId: Int): Result<JsonObject> = withContext(Dispatchers.IO) {
+        runCatching { required(authorized { authorizedApi.cancelLogbook(entryId) }, "your logbook entry") }
     }
 
     suspend fun updateLogbook(entryId: Int, payload: AcademicLogbookPayload): Result<JsonObject> = withContext(Dispatchers.IO) {
@@ -588,17 +763,8 @@ class InstitutionalRepository internal constructor(
             }
         }
 
-    suspend fun notificationTarget(kind: String, id: Int): Result<JsonObject> = withContext(Dispatchers.IO) {
-        runCatching {
-            val response = when (kind.lowercase()) {
-                "leave" -> authorized { authorizedApi.leaveDetail(id) }
-                "logbook" -> authorized { authorizedApi.logbookDetail(id) }
-                "evaluation" -> authorized { authorizedApi.evaluationDetail(id) }
-                "rotation" -> authorized { authorizedApi.rotationDetail(id) }
-                else -> throw InstitutionalException("This notification target is not supported by this app version.")
-            }
-            required(response, "this notification target")
-        }
+    suspend fun deferDocument(documentId: Int): Result<JsonObject> = withContext(Dispatchers.IO) {
+        runCatching { required(authorized { authorizedApi.deferDocument(documentId) }, "this document requirement") }
     }
 
     suspend fun notificationPreferences(): Result<JsonObject> = withContext(Dispatchers.IO) {
@@ -662,8 +828,19 @@ class InstitutionalRepository internal constructor(
         if (response.isSuccessful) {
             response.body() ?: throw InstitutionalException("PGR SIMS returned no $what.")
         } else {
-            throw InstitutionalException(errorFor(response.code(), what))
+            val validation = if (response.code() == 400 || response.code() == 409) response.validationMessage() else null
+            throw InstitutionalException(validation ?: errorFor(response.code(), what))
         }
+
+    private fun Response<*>.validationMessage(): String? = runCatching {
+        val body = errorBody()?.string()?.takeIf { it.isNotBlank() } ?: return@runCatching null
+        val parsed = json.parseToJsonElement(body).jsonObject
+        val value = parsed["detail"] ?: parsed["error"] ?: return@runCatching null
+        when (value) {
+            is kotlinx.serialization.json.JsonArray -> value.joinToString(" ") { it.jsonPrimitive.content }
+            else -> value.jsonPrimitive.content
+        }.trim().takeIf { it.isNotBlank() }?.let { if (it.endsWith(".")) it else "$it." }
+    }.getOrNull()
 
     private fun optional(
         response: Response<JsonObject>,

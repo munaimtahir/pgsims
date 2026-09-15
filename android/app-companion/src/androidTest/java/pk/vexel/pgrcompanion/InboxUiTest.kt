@@ -73,7 +73,7 @@ class InboxUiTest {
 
     @Test fun supervisorHasReachableInbox() {
         val snapshot = InstitutionalSnapshot(Json.parseToJsonElement("""{"id":9001,"role":"SUPERVISOR"}""").jsonObject)
-        compose.setContent { MaterialTheme { SupervisorPane(repo, snapshot, false, {}, {}) } }
+        compose.setContent { MaterialTheme { SupervisorPane(repo, snapshot, false, {}, {}, {}) } }
         compose.onNodeWithText("Inbox").performClick()
         compose.waitUntil(10000) { compose.onAllNodesWithText("Synthetic notice").fetchSemanticsNodes().isNotEmpty() }
         compose.onNodeWithText("Synthetic notice").performScrollTo().assertIsDisplayed()

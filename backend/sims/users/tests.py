@@ -118,6 +118,7 @@ class UserAPIAuthTests(TestCase):
         user.refresh_from_db()
         self.assertFalse(user.must_change_password)
         self.assertTrue(user.check_password("newpass123"))
+        self.assertEqual(r.data["allowed_next_route"], "/complete-profile")
 
     def test_change_password_wrong_old_password_leaves_flag_unchanged(self):
         user = User.objects.create_user(
