@@ -12,7 +12,7 @@ def nodes():
         try:
             adb('shell','uiautomator','dump','/sdcard/closure-window.xml')
             value=adb('shell','cat','/sdcard/closure-window.xml')
-            return list(ET.fromstring(value).iter('node'))
+            return [node for node in ET.fromstring(value).iter('node') if node.get('package') == PACKAGE]
         except (subprocess.CalledProcessError,ET.ParseError): time.sleep(.5)
     raise RuntimeError('Could not read UI')
 
@@ -34,16 +34,20 @@ def wait(text,timeout=35):
 
 def login(role):
     credentials=json.loads(Path(os.environ['PGR_ACCEPTANCE_CREDENTIALS']).read_text())
-    fields=[n for n in nodes() if n.get('class')=='android.widget.EditText']
-    if len(fields)!=2: raise RuntimeError('Expected two sign-in fields')
-    for node,value in zip(fields,credentials[role]):
-        clicknode(node)
-        if node.get('text'):
-            adb('shell','input','keyevent','123')
-            adb('shell','input','keyevent',*(['67']*45))
+    wait('Forgot password?')
+    for index,value in enumerate(credentials[role]):
+        # IME resizing changes field coordinates. Re-read after each keyboard dismissal.
+        fields=[n for n in nodes() if n.get('class')=='android.widget.EditText']
+        if len(fields)!=2: raise RuntimeError('Expected the sign-in form, not profile inputs')
+        clicknode(fields[index])
+        adb('shell','input','keyevent','123')
+        adb('shell','input','keyevent',*(['67']*128))
         adb('shell','input','text',value)
-        time.sleep(.2)
-    adb('shell','input','keyevent','4')
+        adb('shell','input','keyevent','4')
+        time.sleep(.3)
+    fields=[n for n in nodes() if n.get('class')=='android.widget.EditText']
+    if len(fields)!=2 or fields[0].get('text')!=credentials[role][0]:
+        raise RuntimeError('Username input verification failed; credentials were not submitted')
     click('Sign in')
 
 if __name__=='__main__':

@@ -1,3 +1,11 @@
+> Current verification (2026-09-15): parity branch is reconciled with released `aef3bd2` at
+> candidate `595e415`, version 1.1.10/code10. Android 41 unit tests, 7 synthetic emulator tests,
+> process-death recovery and isolated Django 929 tests pass; PostgreSQL concurrency passes separately.
+> Production remains verified 1.1.9. The historical baseline/version/failure sections below are
+> retained as roadmap history; they do not supersede the current reconciliation report or
+> `SPRINT_STATE.md`. Signed 1.1.10/code10 APK/AAB production and isolated backend gates pass;
+> authenticated parity acceptance is limited by missing demo profile prerequisites and ADMIN credentials.
+
 # Android feature-parity review and development roadmap
 
 Review date: **2026-09-15** (Asia/Karachi). Last evidence reconciliation: **2026-09-15**.

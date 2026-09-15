@@ -1,0 +1,33 @@
+
+pk.vexel.pgrcompanion.ReleaseAcceptanceTest:
+Error in forceRefresh(pk.vexel.pgrcompanion.ReleaseAcceptanceTest):
+java.lang.IllegalStateException: Check failed.
+	at pk.vexel.pgrcompanion.ReleaseAcceptanceTest$forceRefresh$1.invokeSuspend(ReleaseAcceptanceTest.kt:28)
+	at kotlin.coroutines.jvm.internal.BaseContinuationImpl.resumeWith(ContinuationImpl.kt:33)
+	at kotlinx.coroutines.DispatchedTask.run(DispatchedTask.kt:104)
+	at kotlinx.coroutines.EventLoopImplBase.processNextEvent(EventLoop.common.kt:277)
+	at kotlinx.coroutines.BlockingCoroutine.joinBlocking(Builders.kt:95)
+	at kotlinx.coroutines.BuildersKt__BuildersKt.runBlocking(Builders.kt:69)
+	at kotlinx.coroutines.BuildersKt.runBlocking(Unknown Source:1)
+	at kotlinx.coroutines.BuildersKt__BuildersKt.runBlocking$default(Builders.kt:48)
+	at kotlinx.coroutines.BuildersKt.runBlocking$default(Unknown Source:1)
+	at pk.vexel.pgrcompanion.ReleaseAcceptanceTest.forceRefresh(ReleaseAcceptanceTest.kt:23)
+
+
+Time: 0.073
+There was 1 failure:
+1) forceRefresh(pk.vexel.pgrcompanion.ReleaseAcceptanceTest)
+java.lang.IllegalStateException: Check failed.
+	at pk.vexel.pgrcompanion.ReleaseAcceptanceTest$forceRefresh$1.invokeSuspend(ReleaseAcceptanceTest.kt:28)
+	at kotlin.coroutines.jvm.internal.BaseContinuationImpl.resumeWith(ContinuationImpl.kt:33)
+	at kotlinx.coroutines.DispatchedTask.run(DispatchedTask.kt:104)
+	at kotlinx.coroutines.EventLoopImplBase.processNextEvent(EventLoop.common.kt:277)
+	at kotlinx.coroutines.BlockingCoroutine.joinBlocking(Builders.kt:95)
+	at kotlinx.coroutines.BuildersKt__BuildersKt.runBlocking(Builders.kt:69)
+	at kotlinx.coroutines.BuildersKt.runBlocking(Unknown Source:1)
+	at kotlinx.coroutines.BuildersKt__BuildersKt.runBlocking$default(Builders.kt:48)
+	at kotlinx.coroutines.BuildersKt.runBlocking$default(Unknown Source:1)
+	at pk.vexel.pgrcompanion.ReleaseAcceptanceTest.forceRefresh(ReleaseAcceptanceTest.kt:23)
+
+FAILURES!!!
+Tests run: 1,  Failures: 1
