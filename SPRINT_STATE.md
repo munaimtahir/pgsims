@@ -31,10 +31,13 @@ the final parity candidate retains 1.1.9/code9. Production remains on source com
 - Supervisor workload and admin overview increment: supervisor home now renders canonical assigned
   resident/training/review totals; admin home renders the backend academic workflow overview cards.
   Android unit tests, lint and debug build pass.
+- Admin reporting increment: added a Reports tab backed by data-quality, logbook, evaluation, and
+  supervisor-workload endpoints with safe summary rendering. Android unit tests, lint and debug
+  build pass.
 
 ## Pending Work
 1. Implement remaining unchecked `android.md` rows: role directories,
-   document/supervision administration, reports/CSV and pagination. Authenticated acceptance is still
+   document/supervision administration, CSV/export actions and complete pagination. Authenticated acceptance is still
    required for the new returned evaluation/leave editors.
 2. Complete evaluation/review payload and transition tests, full UI workflow forms, notification
    target/read/unread matrix and expired-session lifecycle cases; run isolated password/schema-state

@@ -219,6 +219,10 @@ interface InstitutionalApi {
     @GET("api/academics/logbook-categories/") suspend fun logbookCategories(): Response<JsonObject>
     @GET("api/academics/options/") suspend fun academicOptions(): Response<JsonObject>
     @GET("api/academics/admin-workflow-overview/") suspend fun adminWorkflowOverview(): Response<JsonObject>
+    @GET("api/academics/reports/data-quality/") suspend fun adminDataQualityReport(): Response<JsonObject>
+    @GET("api/academics/reports/logbook/") suspend fun adminLogbookReport(): Response<JsonObject>
+    @GET("api/academics/reports/evaluations/") suspend fun adminEvaluationReport(): Response<JsonObject>
+    @GET("api/academics/reports/supervisor-workload/") suspend fun adminSupervisorWorkloadReport(): Response<JsonObject>
     @POST("api/academics/logbook-entries/") suspend fun createLogbook(@Body body: AcademicLogbookPayload): Response<JsonObject>
     @PATCH("api/academics/logbook-entries/{id}/") suspend fun updateLogbook(@Path("id") id: Int, @Body body: AcademicLogbookPayload): Response<JsonObject>
     @POST("api/academics/logbook-entries/{id}/submit/") suspend fun submitLogbook(@Path("id") id: Int): Response<JsonObject>
@@ -480,6 +484,15 @@ class InstitutionalRepository internal constructor(
 
     suspend fun adminWorkflowOverview(): Result<JsonObject> = withContext(Dispatchers.IO) {
         runCatching { required(authorized { authorizedApi.adminWorkflowOverview() }, "the academic overview") }
+    }
+
+    suspend fun adminReports(): List<Pair<String, Result<JsonObject>>> = withContext(Dispatchers.IO) {
+        listOf(
+            "Data quality" to runCatching { required(authorized { authorizedApi.adminDataQualityReport() }, "the data-quality report") },
+            "Logbook report" to runCatching { required(authorized { authorizedApi.adminLogbookReport() }, "the logbook report") },
+            "Evaluation report" to runCatching { required(authorized { authorizedApi.adminEvaluationReport() }, "the evaluation report") },
+            "Supervisor workload report" to runCatching { required(authorized { authorizedApi.adminSupervisorWorkloadReport() }, "the supervisor workload report") },
+        )
     }
 
     suspend fun me(): Result<JsonObject> = withContext(Dispatchers.IO) {

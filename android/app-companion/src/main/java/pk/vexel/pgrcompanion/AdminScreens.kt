@@ -15,6 +15,7 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Assessment
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -54,7 +55,7 @@ private val ADMIN_ROLES = listOf("ADMIN", "RESIDENT", "SUPERVISOR", "SUPPORT_STA
 
 private enum class AdminDestination(val label: String, val icon: ImageVector) {
     HOME("Home", Icons.Default.Home), USERS("Users", Icons.Default.People),
-    INBOX("Inbox", Icons.Default.Notifications), PROFILE("Profile", Icons.Default.Person),
+    REPORTS("Reports", Icons.Default.Assessment), INBOX("Inbox", Icons.Default.Notifications), PROFILE("Profile", Icons.Default.Person),
 }
 
 @Composable
@@ -77,6 +78,7 @@ internal fun AdminPane(
             when (destination) {
                 AdminDestination.HOME -> AdminDashboard(repository, onRefresh)
                 AdminDestination.USERS -> AdminUserDirectory(repository)
+                AdminDestination.REPORTS -> AdminReports(repository)
                 AdminDestination.INBOX -> NotificationCenterScreen(repository, { destination = AdminDestination.HOME }) { _, _ -> }
                 AdminDestination.PROFILE -> {
                     OwnProfileEditor(repository, onRefresh)
@@ -85,6 +87,37 @@ internal fun AdminPane(
             }
         }
     }
+}
+
+@Composable
+private fun AdminReports(repository: InstitutionalRepository) {
+    var loading by remember { mutableStateOf(true) }
+    var reports by remember { mutableStateOf<List<Pair<String, Result<JsonObject>>>>(emptyList()) }
+    LaunchedEffect(Unit) {
+        reports = repository.adminReports()
+        loading = false
+    }
+    Text("Reports", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+    Text("Canonical administrative summaries from PGR SIMS.", color = MaterialTheme.colorScheme.onSurfaceVariant)
+    if (loading) LinearProgressIndicator(Modifier.fillMaxWidth())
+    reports.forEach { (label, result) ->
+        Card(Modifier.fillMaxWidth()) {
+            Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(label, fontWeight = FontWeight.SemiBold)
+                result.fold(
+                    { body -> Text(reportSummary(body)) },
+                    { error -> Text(error.message ?: "Report unavailable.", color = MaterialTheme.colorScheme.error) },
+                )
+            }
+        }
+    }
+}
+
+private fun reportSummary(body: JsonObject): String {
+    val summary = body["summary"]?.jsonObject ?: body["workload"]?.jsonObject ?: body
+    return summary.entries.filter { it.value is kotlinx.serialization.json.JsonPrimitive }
+        .take(6).joinToString(" · ") { (key, value) -> "${InstitutionalLabels.humanize(key)}: ${value.toString().trim('"')}" }
+        .ifBlank { "Report loaded successfully." }
 }
 
 @Composable
