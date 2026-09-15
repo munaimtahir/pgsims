@@ -196,6 +196,14 @@ interface InstitutionalApi {
     ): Response<JsonObject>
     @POST("api/users/") suspend fun createUser(@Body body: UniversalUserPayload): Response<JsonObject>
     @GET("api/users/{id}/") suspend fun userDetail(@Path("id") id: Int): Response<JsonObject>
+    @GET("api/resident-document-requirements/") suspend fun documentRequirements(): Response<JsonObject>
+    @GET("api/supervision/assignments/") suspend fun adminAssignments(): Response<JsonObject>
+    @GET("api/academics/training-records/") suspend fun adminTrainingRecords(): Response<JsonObject>
+    @GET("api/academics/periods/") suspend fun adminPeriods(): Response<JsonObject>
+    @GET("api/academics/rotation-templates/") suspend fun adminRotationTemplates(): Response<JsonObject>
+    @GET("api/academics/evaluation-templates/") suspend fun adminEvaluationTemplates(): Response<JsonObject>
+    @GET("api/academics/logbook-categories/") suspend fun adminLogbookCategories(): Response<JsonObject>
+    @GET("api/academics/review-queue/") suspend fun adminReviewQueue(): Response<JsonObject>
     @GET("api/auth/onboarding/") suspend fun onboarding(): Response<JsonObject>
     @GET("api/notifications/") suspend fun notifications(): Response<JsonObject>
     @GET("api/notifications/unread-count/") suspend fun notificationUnreadCount(): Response<JsonObject>
@@ -497,6 +505,19 @@ class InstitutionalRepository internal constructor(
             "Logbook report" to runCatching { required(authorized { authorizedApi.adminLogbookReport() }, "the logbook report") },
             "Evaluation report" to runCatching { required(authorized { authorizedApi.adminEvaluationReport() }, "the evaluation report") },
             "Supervisor workload report" to runCatching { required(authorized { authorizedApi.adminSupervisorWorkloadReport() }, "the supervisor workload report") },
+        )
+    }
+
+    suspend fun adminSetup(): List<Pair<String, Result<List<JsonObject>>>> = withContext(Dispatchers.IO) {
+        listOf(
+            "Document requirements" to runCatching { required(authorized { authorizedApi.documentRequirements() }, "document requirements").paged() },
+            "Supervision assignments" to runCatching { required(authorized { authorizedApi.adminAssignments() }, "supervision assignments").paged() },
+            "Training records" to runCatching { required(authorized { authorizedApi.adminTrainingRecords() }, "training records").paged() },
+            "Academic periods" to runCatching { required(authorized { authorizedApi.adminPeriods() }, "academic periods").paged() },
+            "Rotation templates" to runCatching { required(authorized { authorizedApi.adminRotationTemplates() }, "rotation templates").paged() },
+            "Evaluation templates" to runCatching { required(authorized { authorizedApi.adminEvaluationTemplates() }, "evaluation templates").paged() },
+            "Logbook categories" to runCatching { required(authorized { authorizedApi.adminLogbookCategories() }, "logbook categories").paged() },
+            "Review queue" to runCatching { required(authorized { authorizedApi.adminReviewQueue() }, "the review queue").paged() },
         )
     }
 

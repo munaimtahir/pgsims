@@ -17,6 +17,7 @@ import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Assessment
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -57,7 +58,7 @@ private val ADMIN_ROLES = listOf("ADMIN", "RESIDENT", "SUPERVISOR", "SUPPORT_STA
 
 private enum class AdminDestination(val label: String, val icon: ImageVector) {
     HOME("Home", Icons.Default.Home), USERS("Users", Icons.Default.People),
-    REPORTS("Reports", Icons.Default.Assessment), INBOX("Inbox", Icons.Default.Notifications), PROFILE("Profile", Icons.Default.Person),
+    REPORTS("Reports", Icons.Default.Assessment), SETUP("Setup", Icons.Default.Settings), INBOX("Inbox", Icons.Default.Notifications), PROFILE("Profile", Icons.Default.Person),
 }
 
 @Composable
@@ -81,11 +82,42 @@ internal fun AdminPane(
                 AdminDestination.HOME -> AdminDashboard(repository, onRefresh)
                 AdminDestination.USERS -> AdminUserDirectory(repository)
                 AdminDestination.REPORTS -> AdminReports(repository)
+                AdminDestination.SETUP -> AdminSetup(repository)
                 AdminDestination.INBOX -> NotificationCenterScreen(repository, { destination = AdminDestination.HOME }) { _, _ -> }
                 AdminDestination.PROFILE -> {
                     OwnProfileEditor(repository, onRefresh)
                     Button(onClick = onChangePassword, modifier = Modifier.fillMaxWidth()) { Text("Change password") }
                 }
+            }
+        }
+    }
+}
+
+@Composable
+private fun AdminSetup(repository: InstitutionalRepository) {
+    var loading by remember { mutableStateOf(true) }
+    var sections by remember { mutableStateOf<List<Pair<String, Result<List<JsonObject>>>>>(emptyList()) }
+    LaunchedEffect(Unit) {
+        sections = repository.adminSetup()
+        loading = false
+    }
+    Text("Academic and supervision setup", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+    Text("Canonical administrative records. Changes remain governed by backend permissions and audits.", color = MaterialTheme.colorScheme.onSurfaceVariant)
+    if (loading) LinearProgressIndicator(Modifier.fillMaxWidth())
+    sections.forEach { (label, result) ->
+        Card(Modifier.fillMaxWidth()) {
+            Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(label, fontWeight = FontWeight.SemiBold)
+                result.fold(
+                    { rows ->
+                        Text("${rows.size} records loaded")
+                        rows.take(3).forEach { row ->
+                            val title = row.string("name") ?: row.string("title") ?: row.string("code") ?: row.string("id") ?: "Record"
+                            Text("• $title", style = MaterialTheme.typography.bodySmall)
+                        }
+                    },
+                    { error -> Text(error.message ?: "Unavailable.", color = MaterialTheme.colorScheme.error) },
+                )
             }
         }
     }
