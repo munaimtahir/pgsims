@@ -3,6 +3,8 @@
 set -euo pipefail
 image=${1:?pass the existing backend image digest}
 mode=${2:-sqlite}
+source_ref=${VERIFY_REF:-HEAD}
+git rev-parse --verify "${source_ref}^{commit}" >/dev/null
 root=$(git rev-parse --show-toplevel)
 cd "$root"
 network=none
@@ -26,7 +28,7 @@ if [[ "$mode" == postgres ]]; then
     sleep 1
   done
 fi
-git archive HEAD backend deploy/Caddyfile.pgsims docker docs/DEPLOYMENT.md README.md scripts/verify_android_backend_closure.sh |
+git archive "$source_ref" backend deploy/Caddyfile.pgsims docker docs/DEPLOYMENT.md README.md scripts/verify_android_backend_closure.sh |
  docker run --rm -i --network "$network" --memory=1500m --cpus=1 --pids-limit=256 \
  -e SECRET_KEY=disposable-verification-only -e DATABASE_URL=sqlite:////tmp/verification.sqlite3 \
  -e DJANGO_SETTINGS_MODULE=verification_settings -e FCM_ENABLED=False -e VERIFY_MODE="$mode" \
