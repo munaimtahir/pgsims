@@ -25,6 +25,13 @@ already `GO` (`docs/implementation/20260626_update_0_universal_identity_dynamic_
   mismatch affecting logbook, evaluation, and workload exports.
 - Added standard CSV/Excel import selection with an explicit dry-run-before-apply gate
   for canonical master, identity, supervision, and academic datasets.
+- Added the backend-backed flexible-import workflow: schema-driven source-column mapping,
+  header detection, mapping validation, named mapping presets, and a dry-run-before-apply
+  safeguard. The fixed-contract and flexible flows both remain restricted to canonical datasets.
+- Added MockWebServer coverage for flexible header detection, mapping validation, and mapped
+  import uploads; the Android unit suite passes after the new contract coverage.
+- Added allow-listed master-data template and current-data CSV export actions in the same
+  import workspace, routed through the Android share sheet without persisting institutional data.
 - Android gate after the changes: `:app-companion:testDebugUnitTest`, `lintDebug`, and
   `assembleDebug` pass.
 - `pgsims` emulator connected suite passes 51 tests with the existing 22 credential-gated
@@ -32,8 +39,7 @@ already `GO` (`docs/implementation/20260626_update_0_universal_identity_dynamic_
 
 ## Pending Work
 
-1. Add admin edit/end/close lifecycle controls, flexible import header/mapping/presets,
-   and master-data/template export surfaces.
+1. Add admin edit/end/close lifecycle controls.
 2. Complete resident progress/report detail and cross-screen list/filter/error behavior.
 3. Complete supervisor generic review queue/workload/status parity and workflow refresh behavior.
 4. Certify resident leave/evaluation edit-resubmit, notifications, onboarding/session, and
@@ -46,5 +52,5 @@ already `GO` (`docs/implementation/20260626_update_0_universal_identity_dynamic_
 
 ## Next Command
 
-Add flexible import header detection, mapping validation, persisted presets, dry-run/apply,
-and master-data/template export without enabling seed/demo actions.
+Add canonical administrative edit/end/close controls and template/export surfaces without
+enabling seed/demo actions.

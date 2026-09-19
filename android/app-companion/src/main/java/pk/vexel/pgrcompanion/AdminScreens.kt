@@ -58,10 +58,12 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.intOrNull
+import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
@@ -126,6 +128,13 @@ private fun AdminImportScreen(repository: InstitutionalRepository) {
     var dryRunPassed by remember { mutableStateOf(false) }
     var resultText by remember { mutableStateOf<String?>(null) }
     var error by remember { mutableStateOf<String?>(null) }
+    var flexibleMode by rememberSaveable { mutableStateOf(false) }
+    var downloading by remember { mutableStateOf(false) }
+    TextButton(onClick = { flexibleMode = !flexibleMode }) { Text(if (flexibleMode) "Use standard import" else "Use flexible column mapping") }
+    if (flexibleMode) {
+        FlexibleImportScreen(repository)
+        return
+    }
     val picker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         selectedUri = uri
         selectedName = uri?.lastPathSegment?.substringAfterLast('/') ?: uri?.lastPathSegment
@@ -148,6 +157,23 @@ private fun AdminImportScreen(repository: InstitutionalRepository) {
             busy = false
         }
     }
+    fun shareCsv(operation: String) {
+        val resource = if (entity == "supervisors") "faculty-supervisors" else entity
+        scope.launch {
+            downloading = true; error = null
+            val result = if (operation == "template") repository.bulkTemplate(resource) else repository.bulkExport(resource)
+            result.fold(
+                { csv ->
+                    context.startActivity(Intent.createChooser(Intent(Intent.ACTION_SEND).apply {
+                        type = "text/csv"; putExtra(Intent.EXTRA_SUBJECT, "${BULK_IMPORT_LABELS[entity]} $operation")
+                        putExtra(Intent.EXTRA_TEXT, csv)
+                    }, "Share CSV $operation"))
+                },
+                { error = it.message ?: "Could not prepare the $operation." },
+            )
+            downloading = false
+        }
+    }
     Text("Bulk import", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
     Text("Validate a CSV or Excel file before applying it. Imports are administrative writes and are never retried automatically.", color = MaterialTheme.colorScheme.onSurfaceVariant)
     TextButton(onClick = { entityMenu = true }, enabled = !busy) { Text("Dataset: ${BULK_IMPORT_LABELS[entity]}") }
@@ -157,9 +183,140 @@ private fun AdminImportScreen(repository: InstitutionalRepository) {
     OutlinedButton(onClick = { picker.launch(arrayOf("text/csv", "application/vnd.ms-excel", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")) }, enabled = !busy, modifier = Modifier.fillMaxWidth()) { Text(selectedName?.let { "Selected: $it" } ?: "Choose CSV or Excel file") }
     Button(onClick = { runImport("dry-run") }, enabled = !busy && selectedUri != null, modifier = Modifier.fillMaxWidth()) { Text(if (busy) "Working…" else "Validate import") }
     OutlinedButton(onClick = { runImport("apply") }, enabled = !busy && selectedUri != null && dryRunPassed, modifier = Modifier.fillMaxWidth()) { Text("Apply validated import") }
+    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+        OutlinedButton(onClick = { shareCsv("template") }, enabled = !busy && !downloading, modifier = Modifier.weight(1f)) { Text(if (downloading) "Preparing…" else "Share template") }
+        OutlinedButton(onClick = { shareCsv("export") }, enabled = !busy && !downloading, modifier = Modifier.weight(1f)) { Text("Share current CSV") }
+    }
     resultText?.let { Card(Modifier.fillMaxWidth()) { Text(it, Modifier.padding(12.dp)) } }
     error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
 }
+
+private val FLEXIBLE_IMPORT_LABELS = linkedMapOf(
+    "residents" to "Residents", "faculty-supervisors" to "Supervisors",
+    "supervision-links" to "Supervision links", "rotation-assignments" to "Rotation assignments",
+    "hospitals" to "Hospitals", "departments" to "Departments", "matrix" to "Hospital/department matrix",
+    "rotation-templates" to "Rotation templates",
+)
+
+@Composable
+private fun FlexibleImportScreen(repository: InstitutionalRepository) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    var schemas by remember { mutableStateOf<JsonObject?>(null) }
+    var entity by rememberSaveable { mutableStateOf("residents") }
+    var entityMenu by remember { mutableStateOf(false) }
+    var selectedUri by remember { mutableStateOf<Uri?>(null) }
+    var selectedName by remember { mutableStateOf<String?>(null) }
+    var headers by remember { mutableStateOf<List<String>>(emptyList()) }
+    val mapping = remember { mutableStateMapOf<String, String>() }
+    var validation by remember { mutableStateOf<JsonObject?>(null) }
+    var presets by remember { mutableStateOf<List<JsonObject>>(emptyList()) }
+    var selectedPresetId by remember { mutableStateOf<Int?>(null) }
+    var savingPreset by remember { mutableStateOf(false) }
+    var busy by remember { mutableStateOf(false) }
+    var dryRunPassed by remember { mutableStateOf(false) }
+    var resultText by remember { mutableStateOf<String?>(null) }
+    var error by remember { mutableStateOf<String?>(null) }
+    val picker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        selectedUri = uri; selectedName = uri?.lastPathSegment?.substringAfterLast('/') ?: uri?.lastPathSegment
+        headers = emptyList(); mapping.clear(); validation = null; dryRunPassed = false; resultText = null; error = null
+    }
+    LaunchedEffect(Unit) { repository.flexibleSchemas().fold({ schemas = it }, { error = it.message ?: "Could not load flexible import schemas." }) }
+    LaunchedEffect(entity) {
+        repository.mappingPresets(entity).fold({ presets = it }, { presets = emptyList() })
+        selectedPresetId = null; validation = null; dryRunPassed = false
+    }
+    val fields = schemas?.get(entity)?.jsonObject?.get("fields")?.jsonArray?.mapNotNull { runCatching { it.jsonObject }.getOrNull() }.orEmpty()
+    fun currentMapping(): JsonObject = buildJsonObject { mapping.filterValues { it.isNotBlank() }.forEach { (field, header) -> put(field, header) } }
+    fun withFile(action: suspend (File) -> Result<JsonObject>) {
+        val uri = selectedUri ?: return
+        scope.launch {
+            busy = true; error = null
+            val copied = withContext(Dispatchers.IO) { copyImportToCache(context.cacheDir, context.contentResolver, uri, selectedName ?: "import.csv") }
+            val file = copied.getOrNull()
+            if (file == null) {
+                error = copied.exceptionOrNull()?.message ?: "Could not open this import file."
+            } else {
+                val result = action(file)
+                file.delete()
+                result.fold({ body -> resultText = importSummary(body); if (body.boolean("dry_run")) dryRunPassed = true }, { error = it.message ?: "Flexible import failed." })
+            }
+            busy = false
+        }
+    }
+    Text("Flexible import", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+    Text("Map source columns before validation. Apply is blocked until the current mapping completes a dry run.", color = MaterialTheme.colorScheme.onSurfaceVariant)
+    TextButton(onClick = { entityMenu = true }, enabled = !busy) { Text("Dataset: ${FLEXIBLE_IMPORT_LABELS[entity]}") }
+    DropdownMenu(expanded = entityMenu, onDismissRequest = { entityMenu = false }) {
+        FLEXIBLE_IMPORT_LABELS.forEach { (key, label) -> DropdownMenuItem(text = { Text(label) }, onClick = { entity = key; entityMenu = false; mapping.clear(); headers = emptyList() }) }
+    }
+    OutlinedButton(onClick = { picker.launch(arrayOf("text/csv", "application/vnd.ms-excel", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")) }, enabled = !busy, modifier = Modifier.fillMaxWidth()) { Text(selectedName?.let { "Selected: $it" } ?: "Choose CSV or Excel file") }
+    Button(onClick = {
+        val uri = selectedUri ?: return@Button
+        scope.launch {
+            busy = true; error = null
+            val copied = withContext(Dispatchers.IO) { copyImportToCache(context.cacheDir, context.contentResolver, uri, selectedName ?: "import.csv") }
+            val file = copied.getOrNull()
+            if (file == null) {
+                error = copied.exceptionOrNull()?.message ?: "Could not open this import file."
+            } else {
+                repository.detectFlexibleHeaders(file).fold({ body ->
+                    headers = body["headers"]?.jsonArray?.map { it.jsonPrimitive.content }.orEmpty()
+                    mapping.clear()
+                    fields.forEach { field ->
+                        val key = field.string("name").orEmpty()
+                        headers.firstOrNull { normalizeImportHeader(it) == normalizeImportHeader(key) }?.let { mapping[key] = it }
+                    }
+                    resultText = "Detected ${headers.size} columns and ${body.string("total_rows") ?: "0"} rows."
+                }, { error = it.message ?: "Could not detect headers." })
+                file.delete()
+            }
+            busy = false
+        }
+    }, enabled = !busy && selectedUri != null, modifier = Modifier.fillMaxWidth()) { Text("Detect headers") }
+    if (headers.isNotEmpty()) {
+        fields.forEach { field -> FlexibleMappingField(field, headers, mapping, busy) }
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            OutlinedButton(onClick = {
+                scope.launch { busy = true; error = null; repository.validateFlexibleMapping(entity, currentMapping()).fold({ validation = it; resultText = importSummary(it) }, { error = it.message ?: "Mapping validation failed." }); busy = false }
+            }, enabled = !busy) { Text("Validate mapping") }
+            OutlinedButton(onClick = { savingPreset = true }, enabled = !busy && mapping.isNotEmpty()) { Text("Save preset") }
+        }
+        if (presets.isNotEmpty()) {
+            var presetMenu by remember { mutableStateOf(false) }
+            TextButton(onClick = { presetMenu = true }, enabled = !busy) { Text("Load preset") }
+            DropdownMenu(expanded = presetMenu, onDismissRequest = { presetMenu = false }) {
+                presets.forEach { preset -> DropdownMenuItem(text = { Text(preset.string("name") ?: "Preset" ) }, onClick = {
+                    val saved = preset["mapping"]?.jsonObject ?: JsonObject(emptyMap()); mapping.clear(); saved.entries.forEach { (key, value) -> mapping[key] = value.jsonPrimitive.content }; selectedPresetId = preset.string("id")?.toIntOrNull(); presetMenu = false; validation = null; dryRunPassed = false
+                }) }
+            }
+        }
+        Button(onClick = { withFile { file -> repository.flexibleImport(entity, "dry-run", file, currentMapping(), presetId = selectedPresetId) } }, enabled = !busy && validation?.boolean("ready") == true, modifier = Modifier.fillMaxWidth()) { Text("Dry run mapped import") }
+        OutlinedButton(onClick = { withFile { file -> repository.flexibleImport(entity, "apply", file, currentMapping(), presetId = selectedPresetId) } }, enabled = !busy && dryRunPassed, modifier = Modifier.fillMaxWidth()) { Text("Apply validated mapped import") }
+    }
+    resultText?.let { Card(Modifier.fillMaxWidth()) { Text(it, Modifier.padding(12.dp)) } }
+    error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+    if (savingPreset) MappingPresetDialog(entity, currentMapping(), repository, { savingPreset = false }) { preset -> presets = listOf(preset) + presets; savingPreset = false }
+}
+
+@Composable
+private fun FlexibleMappingField(field: JsonObject, headers: List<String>, mapping: MutableMap<String, String>, busy: Boolean) {
+    val key = field.string("name").orEmpty(); val required = field.boolean("required")
+    var expanded by remember(key) { mutableStateOf(false) }
+    TextButton(onClick = { expanded = true }, enabled = !busy) { Text("${field.string("label") ?: key}${if (required) " *" else ""}: ${mapping[key]?.ifBlank { "Unmapped" } ?: "Unmapped"}") }
+    DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+        DropdownMenuItem(text = { Text("Unmapped") }, onClick = { mapping.remove(key); expanded = false })
+        headers.forEach { header -> DropdownMenuItem(text = { Text(header) }, onClick = { mapping[key] = header; expanded = false }) }
+    }
+}
+
+@Composable
+private fun MappingPresetDialog(entity: String, mapping: JsonObject, repository: InstitutionalRepository, onDismiss: () -> Unit, onSaved: (JsonObject) -> Unit) {
+    val scope = rememberCoroutineScope(); var name by remember { mutableStateOf("") }; var busy by remember { mutableStateOf(false) }; var error by remember { mutableStateOf<String?>(null) }
+    AlertDialog(onDismissRequest = { if (!busy) onDismiss() }, title = { Text("Save mapping preset") }, text = { Column(verticalArrangement = Arrangement.spacedBy(8.dp)) { OutlinedTextField(name, { name = it }, label = { Text("Preset name") }, modifier = Modifier.fillMaxWidth(), enabled = !busy); error?.let { Text(it, color = MaterialTheme.colorScheme.error) } } }, confirmButton = { TextButton(onClick = { busy = true; scope.launch { repository.createMappingPreset(name, entity, mapping).fold(onSaved, { error = it.message ?: "Could not save preset."; busy = false }) } }, enabled = !busy && name.isNotBlank()) { Text(if (busy) "Saving…" else "Save") } }, dismissButton = { TextButton(onClick = onDismiss, enabled = !busy) { Text("Cancel") } })
+}
+
+private fun normalizeImportHeader(value: String): String = value.lowercase().filter(Char::isLetterOrDigit)
 
 private fun copyImportToCache(cacheDir: File, resolver: android.content.ContentResolver, uri: Uri, displayName: String): Result<File> = runCatching {
     val safeName = displayName.replace(Regex("[^A-Za-z0-9._-]"), "_").ifBlank { "import.csv" }

@@ -19,8 +19,10 @@ import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.MultipartBody
+import okhttp3.RequestBody
 import okhttp3.OkHttpClient
 import okhttp3.RequestBody.Companion.asRequestBody
+import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.ResponseBody
 import retrofit2.Response
 import retrofit2.Retrofit
@@ -233,6 +235,32 @@ interface InstitutionalApi {
         @Path("action") action: String,
         @Part file: MultipartBody.Part,
     ): Response<JsonObject>
+    @GET("api/bulk/templates/{resource}/") suspend fun bulkTemplate(
+        @Path("resource") resource: String,
+    ): Response<ResponseBody>
+    @GET("api/bulk/exports/{resource}/") suspend fun bulkExport(
+        @Path("resource") resource: String,
+        @Query("file_format") fileFormat: String = "csv",
+    ): Response<ResponseBody>
+    @GET("api/bulk/flexible/schemas/") suspend fun flexibleSchemas(): Response<JsonObject>
+    @Multipart
+    @POST("api/bulk/flexible/detect-headers/") suspend fun detectFlexibleHeaders(
+        @Part file: MultipartBody.Part,
+    ): Response<JsonObject>
+    @POST("api/bulk/flexible/validate-mapping/") suspend fun validateFlexibleMapping(
+        @Body body: JsonObject,
+    ): Response<JsonObject>
+    @Multipart
+    @POST("api/bulk/flexible/{action}/") suspend fun flexibleImport(
+        @Path("action") action: String,
+        @Part file: MultipartBody.Part,
+        @Part("entity") entity: RequestBody,
+        @Part("mapping") mapping: RequestBody,
+        @Part("import_mode") importMode: RequestBody,
+        @Part("preset_id") presetId: RequestBody? = null,
+    ): Response<JsonObject>
+    @GET("api/bulk/flexible/presets/") suspend fun mappingPresets(@Query("entity") entity: String): Response<JsonObject>
+    @POST("api/bulk/flexible/presets/") suspend fun createMappingPreset(@Body body: JsonObject): Response<JsonObject>
     @GET("api/auth/onboarding/") suspend fun onboarding(): Response<JsonObject>
     @GET("api/notifications/") suspend fun notifications(@Query("page") page: Int = 1): Response<JsonObject>
     @GET("api/notifications/unread-count/") suspend fun notificationUnreadCount(): Response<JsonObject>
@@ -606,6 +634,86 @@ class InstitutionalRepository internal constructor(
                 "file", file.name, file.asRequestBody(mimeTypeFor(file.name).toMediaType()),
             )
             required(authorized { authorizedApi.bulkImport(entity, action, part) }, "the import")
+        }
+    }
+
+    /** CSV text is intentionally returned to the caller for the platform share sheet; the app
+     * never writes institutional exports into the device's local personal-workspace database. */
+    suspend fun bulkTemplate(resource: String): Result<String> = bulkCsv(resource, "template")
+
+    suspend fun bulkExport(resource: String): Result<String> = bulkCsv(resource, "export")
+
+    private suspend fun bulkCsv(resource: String, operation: String): Result<String> = withContext(Dispatchers.IO) {
+        runCatching {
+            require(resource in BULK_EXPORT_RESOURCES) { "Unsupported bulk resource." }
+            val response = authorized {
+                if (operation == "template") authorizedApi.bulkTemplate(resource) else authorizedApi.bulkExport(resource)
+            }
+            if (!response.isSuccessful) throw InstitutionalException(errorFor(response.code(), "the $operation"))
+            response.body()?.string()?.takeIf { it.isNotBlank() }
+                ?: throw InstitutionalException("The $operation was empty.")
+        }
+    }
+
+    suspend fun flexibleSchemas(): Result<JsonObject> = withContext(Dispatchers.IO) {
+        runCatching { required(authorized { authorizedApi.flexibleSchemas() }, "flexible import schemas") }
+    }
+
+    suspend fun detectFlexibleHeaders(file: File): Result<JsonObject> = withContext(Dispatchers.IO) {
+        runCatching {
+            val part = MultipartBody.Part.createFormData("file", file.name, file.asRequestBody(mimeTypeFor(file.name).toMediaType()))
+            required(authorized { authorizedApi.detectFlexibleHeaders(part) }, "file headers")
+        }
+    }
+
+    suspend fun validateFlexibleMapping(entity: String, mapping: JsonObject): Result<JsonObject> = withContext(Dispatchers.IO) {
+        runCatching {
+            require(entity in FLEXIBLE_IMPORT_ENTITIES) { "Unsupported flexible import entity." }
+            required(authorized { authorizedApi.validateFlexibleMapping(buildJsonObject { put("entity", entity); put("mapping", mapping) }) }, "the column mapping")
+        }
+    }
+
+    suspend fun flexibleImport(
+        entity: String,
+        action: String,
+        file: File,
+        mapping: JsonObject,
+        importMode: String = "strict",
+        presetId: Int? = null,
+    ): Result<JsonObject> = withContext(Dispatchers.IO) {
+        runCatching {
+            require(entity in FLEXIBLE_IMPORT_ENTITIES) { "Unsupported flexible import entity." }
+            require(action in setOf("dry-run", "apply")) { "Unsupported flexible import action." }
+            require(importMode in setOf("strict", "partial")) { "Unsupported import mode." }
+            val mediaType = "text/plain".toMediaType()
+            val part = MultipartBody.Part.createFormData("file", file.name, file.asRequestBody(mimeTypeFor(file.name).toMediaType()))
+            required(authorized {
+                authorizedApi.flexibleImport(
+                    action = action,
+                    file = part,
+                    entity = entity.toRequestBody(mediaType),
+                    mapping = json.encodeToString(JsonObject.serializer(), mapping).toRequestBody("application/json".toMediaType()),
+                    importMode = importMode.toRequestBody(mediaType),
+                    presetId = presetId?.toString()?.toRequestBody(mediaType),
+                )
+            }, "the flexible import")
+        }
+    }
+
+    suspend fun mappingPresets(entity: String): Result<List<JsonObject>> = withContext(Dispatchers.IO) {
+        runCatching {
+            require(entity in FLEXIBLE_IMPORT_ENTITIES) { "Unsupported flexible import entity." }
+            val response = authorized { authorizedApi.mappingPresets(entity) }
+            if (!response.isSuccessful) throw InstitutionalException(errorFor(response.code(), "mapping presets"))
+            response.body().paged()
+        }
+    }
+
+    suspend fun createMappingPreset(name: String, entity: String, mapping: JsonObject): Result<JsonObject> = withContext(Dispatchers.IO) {
+        runCatching {
+            require(name.isNotBlank()) { "Preset name is required." }
+            require(entity in FLEXIBLE_IMPORT_ENTITIES) { "Unsupported flexible import entity." }
+            required(authorized { authorizedApi.createMappingPreset(buildJsonObject { put("name", name.trim()); put("entity", entity); put("mapping", mapping) }) }, "the mapping preset")
         }
     }
 
@@ -1080,6 +1188,17 @@ class InstitutionalRepository internal constructor(
             "faculty-supervisors", "supervision-links", "rotation-assignments",
             "training-programs", "rotation-templates", "resident-training-records",
             "academic-sessions",
+        )
+
+        internal val BULK_EXPORT_RESOURCES = setOf(
+            "hospitals", "departments", "matrix", "faculty-supervisors", "residents",
+            "supervision-links", "rotation-assignments", "training-programs", "academic-sessions",
+            "rotation-templates", "resident-training-records",
+        )
+
+        internal val FLEXIBLE_IMPORT_ENTITIES = setOf(
+            "residents", "faculty-supervisors", "rotation-assignments", "supervision-links",
+            "hospitals", "departments", "matrix", "rotation-templates",
         )
 
         /** Mirrors the backend's own limits so the trainee gets the error before the upload runs. */

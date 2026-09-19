@@ -587,6 +587,41 @@ class InstitutionalRepositoryTest {
         Unit
     }
 
+    @Test fun `flexible import detects headers validates mappings and posts a mapped dry run`() = runBlocking {
+        tokens.save("access-1", "refresh-1")
+        val file = File.createTempFile("pgr-flexible", ".csv").apply { writeText("Full Name,Email\nDemo,demo@example.com\n") }
+        val mapping = Json.parseToJsonElement("""{"full_name":"Full Name","email":"Email"}""") as JsonObject
+        server.enqueue(json("""{"headers":["Full Name","Email"],"total_rows":1}"""))
+        server.enqueue(json("""{"ready":true,"missing_required_fields":[]}"""))
+        server.enqueue(json("""{"dry_run":true,"status":"COMPLETED"}"""))
+
+        assertEquals(2, repository.detectFlexibleHeaders(file).getOrThrow()["headers"]!!.jsonArray.size)
+        assertTrue(repository.validateFlexibleMapping("residents", mapping).getOrThrow().boolean("ready"))
+        assertEquals("COMPLETED", repository.flexibleImport("residents", "dry-run", file, mapping).getOrThrow().string("status"))
+
+        assertEquals("/api/bulk/flexible/detect-headers/", server.takeRequest().path)
+        val validate = server.takeRequest()
+        assertEquals("/api/bulk/flexible/validate-mapping/", validate.path)
+        assertEquals("residents", (Json.parseToJsonElement(validate.body.readUtf8()) as JsonObject).string("entity"))
+        val dryRun = server.takeRequest()
+        assertEquals("/api/bulk/flexible/dry-run/", dryRun.path)
+        assertTrue(dryRun.body.readUtf8().contains("full_name"))
+        file.delete()
+        Unit
+    }
+
+    @Test fun `bulk templates and exports use allow-listed canonical resources`() = runBlocking {
+        tokens.save("access-1", "refresh-1")
+        server.enqueue(MockResponse().setResponseCode(200).setHeader("Content-Type", "text/csv").setBody("code,name\nH1,Hospital\n"))
+        server.enqueue(MockResponse().setResponseCode(200).setHeader("Content-Type", "text/csv").setBody("code,name\nH1,Hospital\n"))
+        assertTrue(repository.bulkTemplate("hospitals").getOrThrow().contains("Hospital"))
+        assertTrue(repository.bulkExport("hospitals").getOrThrow().contains("Hospital"))
+        assertEquals("/api/bulk/templates/hospitals/", server.takeRequest().path)
+        assertEquals("/api/bulk/exports/hospitals/?file_format=csv", server.takeRequest().path)
+        assertTrue(repository.bulkExport("not-a-resource").isFailure)
+        Unit
+    }
+
     @Test fun `notification reads follow every server page`() = runBlocking {
         tokens.save("access-1", "refresh-1")
         server.enqueue(json("""{"count":2,"next":"https://example/api/notifications/?page=2","results":[{"id":1,"title":"First"}]}"""))
