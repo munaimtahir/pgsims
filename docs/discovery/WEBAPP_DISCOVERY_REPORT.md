@@ -10,11 +10,11 @@ Feature matrix counts (30 rows; primary status, not route count):
 
 | Status | Count |
 |---|---:|
-| BUILT_WORKING | 3 |
+| BUILT_WORKING | 4 |
 | BUILT_NEEDS_DEBUG | 4 |
 | PARTIALLY_BUILT | 10 |
 | NOT_BUILT | 3 |
-| BLOCKED_UNVERIFIED | 10 |
+| BLOCKED_UNVERIFIED | 9 |
 
 The matrix and maps are the detailed source of truth. Counts are not a claim that every individual page or database record was exercised.
 
@@ -86,8 +86,8 @@ Public/auth routes and authenticated shell routes render 200 in the running depl
 
 ## Coverage metrics
 
-- Frontend route patterns discovered: 92; static inventory assessed: 92/92; browser exercised: 19 passing core smoke cases plus direct HEAD checks, not every route.
-- Meaningful frontend actions mapped: 24 rows in the frontend map; static mapping 24/24; end-to-end verified 0 full business mutation workflows in this audit.
+- Frontend page route files discovered: 93; static inventory assessed: 93/93; browser exercised: 19 passing core smoke cases plus direct HEAD checks, not every route.
+- Meaningful frontend actions mapped: 23 rows in the frontend map; static mapping 23/23; end-to-end verified 0 full business mutation workflows in this audit.
 - Backend capabilities classified: 20 rows in backend map; static classification 20/20; runtime business verification limited to health, auth/dashboard access and Backup Center controls.
 - Roles defined in frontend: 4; browser login success observed for 3 configured role paths, but role matrix is unverified because baseline fixtures are inconsistent.
 - Workflows identified: 17; exercised end-to-end: 0 full state-transition workflows; smoke-level auth/navigation: 19 passing cases.
