@@ -32,6 +32,13 @@ already `GO` (`docs/implementation/20260626_update_0_universal_identity_dynamic_
   import uploads; the Android unit suite passes after the new contract coverage.
 - Added allow-listed master-data template and current-data CSV export actions in the same
   import workspace, routed through the Android share sheet without persisting institutional data.
+- Pushed `d2f2646` and fast-forwarded the VPS checkout at
+  `/home/munaim/srv/apps/pgsims` to that commit. Production HTTPS health returned
+  `{"status":"ok","database":"ok"}`; no backend migration or service restart was required
+  because this slice changes Android source only.
+- Factory-reset only the dedicated `pgsims` AVD, which restarted as `emulator-5556` on Android 16.
+  The fresh-device connected suite reports `OK (29 tests)`; the seven authenticated recovery tests
+  remain intentionally credential-gated and skipped.
 - Android gate after the changes: `:app-companion:testDebugUnitTest`, `lintDebug`, and
   `assembleDebug` pass.
 - `pgsims` emulator connected suite passes 51 tests with the existing 22 credential-gated
@@ -44,13 +51,10 @@ already `GO` (`docs/implementation/20260626_update_0_universal_identity_dynamic_
 3. Complete supervisor generic review queue/workload/status parity and workflow refresh behavior.
 4. Certify resident leave/evaluation edit-resubmit, notifications, onboarding/session, and
    offline lifecycle paths with authenticated four-role fixtures on `pgsims`.
-5. Add Android unit/instrumentation coverage for every new contract and failure path.
-6. Push the verified commit, synchronize `/home/munaim/srv/apps/pgsims` through `ssh test`,
-   migrate and deploy only the scoped PGSIMS services, then verify HTTPS/API routing.
-7. Run physical-device accessibility/lifecycle/performance acceptance, rebuild/sign/version-verify
+5. Add Android unit/instrumentation coverage for the remaining new contract and failure paths.
+6. Run physical-device accessibility/lifecycle/performance acceptance, rebuild/sign/version-verify
    `1.1.9` / code `9`, then upload and verify Play Console publication if code `9` is unused.
 
 ## Next Command
 
-Add canonical administrative edit/end/close controls and template/export surfaces without
-enabling seed/demo actions.
+Add canonical administrative edit/end/close controls without enabling seed/demo actions.
