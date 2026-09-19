@@ -1,0 +1,30 @@
+PGSIMS web discovery audit evidence — 2026-09-19 UTC
+
+Baseline
+- cwd: /home/munaim/srv/apps/pgsims
+- branch: main
+- HEAD: 649b02556b9830c082b5f947ba79b77e1778a7db
+- worktree had pre-existing edits in SPRINT_STATE.md, docs/UIUX_ADMIN_SPRINT.md, frontend/e2e/dashboard/pages.spec.ts; preserved.
+
+Build/static checks
+- cd backend && python3 manage.py check: PASS; 0 issues.
+- cd backend && python3 manage.py makemigrations --check --dry-run: PASS; no changes detected.
+- cd frontend && npm run typecheck: PASS.
+- cd frontend && npm run lint: PASS.
+- docker compose -f docker/docker-compose.yml config --quiet: PASS with unset SECRET_KEY/DB_PASSWORD warnings.
+- cd frontend && npm test -- --runInBand --watch=false: FAIL; 39 suites, 38 passed, 1 failed; 240 tests, 239 passed, 1 failed. Failure: app/dashboard/utrmc/page.test.tsx mock omits academicsApi.getAdminDashboardMonitoring used by the page.
+- cd frontend && npm run build: BLOCKED; EACCES opening root-owned frontend/.next/trace-build.
+
+Runtime checks against existing local services (no data mutation)
+- GET http://127.0.0.1:8014/healthz/: 200 healthy; database/cache/celery ok.
+- GET http://127.0.0.1:8014/api/health/: 200; database ok.
+- HEAD http://127.0.0.1:8082/login: 200.
+- HEAD http://127.0.0.1:8082/academics/logbook: 200.
+- npx playwright test --project=smoke: 19 passed, 6 failed of 25. All six failures were 401 No active account found with the given credentials in baseline-admin login helpers; no workflow mutation was performed.
+
+Static findings
+- frontend/app/dashboard/utrmc/page.tsx calls getAdminDashboardMonitoring; its current test mock in frontend/app/dashboard/utrmc/page.test.tsx only defines getOverview.
+- frontend/lib/navRegistry.ts omits logbook, evaluations, reports, monitoring, workload, workflow overview/data-quality routes that exist under frontend/app/academics/.
+- backend/sims_project/urls.py mounts cases/, logbook/, certificates/ and rotations/ compatibility modules; those modules route to dummy_redirect.
+- backend/sims/users/userbase_views.py and backend/sims/training/views.py still contain HOD/designation_ref/faculty-era workflow logic; contracts also document HOD and legacy roles.
+- cd backend && python3 -m pytest sims -q: PASS; 1,211 passed, 9 skipped, 50 warnings, 82.13% coverage, 625.10s. Test configuration used `sims_project.settings_test` from backend/pytest.ini.

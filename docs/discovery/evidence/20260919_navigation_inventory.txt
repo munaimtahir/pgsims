@@ -1,0 +1,10 @@
+Navigation and route inventory source snapshot
+
+Frontend route patterns discovered from frontend/app:
+- public/auth: /, /login, /forgot-password, /reset-password/[uid]/[token], /register, /unauthorized
+- identity: /users, /users/new, /residents, /residents/[id], /residents/document-requirements, /supervisors, /supervisors/[id], /support-staff, /support-staff/[id], /admins, /admins/[id], /profile, /complete-profile, /change-password
+- supervision: /supervision, /supervision/assignments, /supervision/assignments/new, /supervision/assignments/[id], /supervision/import, /supervision/data-quality
+- academics: /academics, training-records(+/[id]), periods, rotation-templates, rotation-assignments(+/new,+/[id]), leave-requests(+/new,+/[id]), logbook(+/new,+/[id],+/[id]/review), logbook-categories, evaluations(+/new,+/[id],+/[id]/review), evaluation-templates, review-queue, my-progress, monitoring, supervisor-workload, data-quality, workflow-overview, workflow-data-quality, reports/{data-quality,evaluations,logbook,resident-progress(+/[id]),supervisor-workload(+/[id])}
+- legacy/compatibility families under /dashboard/{pg,resident,supervisor,utrmc} remain in source; several are redirect-only, while /dashboard/utrmc/backup is active.
+
+Known navigation omissions: academics/logbook*, academics/evaluations*, reports/*, monitoring, my-progress, supervisor-workload, workflow-overview and workflow-data-quality are not in frontend/lib/navRegistry.ts for any role. They may be reached by direct URL or incidental links, but not by the primary sidebar.

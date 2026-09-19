@@ -59,3 +59,13 @@ the final parity candidate retains 1.1.9/code9. Production remains on source com
 ## Verdict
 GO for merge and signed-candidate handoff; CONDITIONAL GO for broader parity release pending the
 explicit workflow, physical-device and Play gates above.
+
+---
+
+## Web discovery audit addendum — 2026-09-19
+
+Completed: repository baseline, route/action inventory, frontend↔backend maps, build/runtime checks, evidence package, and canonical web pending-work entries under `docs/discovery/`.
+
+Pending: do not implement web backlog items in this audit. First recommended web sprint is WEB-DISC-006/005/001: restore disposable verification, resolve role/HOD contract drift, and repair the red admin dashboard test.
+
+Evidence: backend pytest 1,211 passed/9 skipped/82.13% coverage; frontend typecheck/lint pass; Django check/migration check pass; Jest 38/39 suites pass; Playwright smoke 19/25 pass with six baseline-admin 401 blockers; frontend build blocked by root-owned `.next/trace-build`.

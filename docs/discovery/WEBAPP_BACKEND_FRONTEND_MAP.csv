@@ -1,0 +1,21 @@
+capability_type,endpoint_service_model,business_purpose,permissions,known_consumers,corresponding_frontend_coverage,missing_ui_or_gap,intentional_exclusion_reason,verification_result,backlog_id
+auth,api/auth/login refresh logout,session lifecycle,public/authenticated,web and mobile,web login/auth client,none identified,mobile also consumes,login smoke pass,
+identity,api/users/ UserViewSet and profile viewsets,identity/profile CRUD,ADMIN plus self scope,web and admin,users/directories/new,mutation and ownership not runtime verified,,static only,WEB-DISC-003
+onboarding,api/auth/me complete-profile onboarding,required field completion,authenticated,web and mobile,complete-profile/profile,role-specific browser flow not fully exercised,,blocked by role fixture,WEB-DISC-002
+masters,api/hospitals departments hospital-departments,reference/org graph,ADMIN,web,masters/dashboard pages,mutation not runtime verified,,smoke route access pass,WEB-DISC-016
+supervision,api/supervision/*,resident-supervisor assignments,ADMIN role-scoped supervisors,web and mobile,supervision pages,full role mutation flow not browser verified,,static only,WEB-DISC-005
+academic,api/academics/training-records,academic record CRUD,ADMIN plus scoped reads,web,training-record pages,static/unit only,,unit page test pass,
+workflow,api/rotations and api/leaves,rotation/leave workflows,role scoped,web and mobile,academics rotation/leave pages,page-level browser proof absent,,static only,WEB-DISC-008
+workflow,api/academics/logbook-entries,logbook lifecycle,role scoped,web and mobile,logbook pages,not discoverable in nav; no page test,,not intentionally excluded,WEB-DISC-010
+workflow,api/academics/evaluation-submissions,evaluation lifecycle,role scoped,web,evaluation pages,not discoverable in nav; no page test,,not intentionally excluded,WEB-DISC-011
+monitoring,api/academics/monitoring/*,operational aggregates,ADMIN/SUPERVISOR/RESIDENT,web,monitoring/dashboard pages,admin Jest mock drift,,not excluded,WEB-DISC-014
+reports,api/academics/reports/*,reports and CSV exports,role scoped,web,report pages,not discoverable in nav; download auth not verified,,not excluded,WEB-DISC-015
+documents,api/resident-documents/*,upload/review/resubmit,RESIDENT/ADMIN,web and mobile,resident documents/admin requirements,web E2E not verified,,mobile is legitimate additional consumer,WEB-DISC-018
+research,api/my/research and supervisor/research-approvals,research workflow,RESIDENT/SUPERVISOR,backend and mobile,none current web,required web decision/UI missing,web research historically deferred; confirm,WEB-DISC-022
+thesis,api/submissions/synopsis and thesis,submission/review,RESIDENT/SUPERVISOR,backend and mobile,none current web,required web decision/UI missing,web research/thesis historically deferred; confirm,WEB-DISC-023
+workshops,api/my/workshops,workshop completion,RESIDENT,backend and mobile,none current web,web surface absent,web deferred historically,WEB-DISC-024
+eligibility,api/my/eligibility and utrmc/eligibility,progress eligibility,RESIDENT/ADMIN,backend/mobile,legacy route only,consumer and requirement unclear,,WEB-DISC-025
+backup,api/backup_center/*,backup/restore administration,ADMIN,web,Backup Center,restore mutation intentionally not audited,,smoke controls pass,
+notifications,api/notifications/*,in-app notifications,authenticated,web/mobile,header notification count,full read/mark/preferences flow not runtime verified,,static only,WEB-DISC-020
+legacy,users/cases logbook certificates rotations,old server-rendered workflows,legacy,none found,dummy redirect modules,misleading active routes,AGENTS.md forbids legacy modules,WEB-DISC-026
+role-contract,designation_ref HOD and faculty-era capability,old organizational identity,not allowed by current AGENTS.md,tests/seed/contracts/backend views,no compliant current web consumer,clean-room role/HOD cleanup incomplete,legacy migration/reference only is not documented consistently,WEB-DISC-027
