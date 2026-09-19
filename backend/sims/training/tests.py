@@ -219,8 +219,8 @@ class RotationAssignmentAPITest(APITestCase):
     def test_hod_approve_after_submit(self):
         rid = self._create_rotation()
         self.client.post(f"/api/rotations/{rid}/submit/")
-        # utrmc_admin can also do hod-approve
-        r = self.client.post(f"/api/rotations/{rid}/hod-approve/")
+        # ADMIN can also perform supervisor approval as an administrative fallback.
+        r = self.client.post(f"/api/rotations/{rid}/supervisor-approve/")
         self.assertEqual(r.status_code, 200)
         self.assertEqual(r.data["status"], "APPROVED")
 

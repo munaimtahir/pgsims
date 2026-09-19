@@ -96,302 +96,6 @@
     "permissions": []
   },
   {
-    "path": "users/api/users/search/",
-    "method": "GET",
-    "view": "UserSearchAPIView",
-    "action": "custom/standard",
-    "serializer": null,
-    "permissions": []
-  },
-  {
-    "path": "users/api/users/search/",
-    "method": "POST",
-    "view": "UserSearchAPIView",
-    "action": "custom/standard",
-    "serializer": null,
-    "permissions": []
-  },
-  {
-    "path": "users/api/users/search/",
-    "method": "PUT",
-    "view": "UserSearchAPIView",
-    "action": "custom/standard",
-    "serializer": null,
-    "permissions": []
-  },
-  {
-    "path": "users/api/users/search/",
-    "method": "PATCH",
-    "view": "UserSearchAPIView",
-    "action": "custom/standard",
-    "serializer": null,
-    "permissions": []
-  },
-  {
-    "path": "users/api/users/search/",
-    "method": "DELETE",
-    "view": "UserSearchAPIView",
-    "action": "custom/standard",
-    "serializer": null,
-    "permissions": []
-  },
-  {
-    "path": "users/api/users/search/",
-    "method": "TRACE",
-    "view": "UserSearchAPIView",
-    "action": "custom/standard",
-    "serializer": null,
-    "permissions": []
-  },
-  {
-    "path": "users/api/supervisors/specialty/<str:specialty>/",
-    "method": "GET",
-    "view": "SupervisorsBySpecialtyAPIView",
-    "action": "custom/standard",
-    "serializer": null,
-    "permissions": []
-  },
-  {
-    "path": "users/api/supervisors/specialty/<str:specialty>/",
-    "method": "POST",
-    "view": "SupervisorsBySpecialtyAPIView",
-    "action": "custom/standard",
-    "serializer": null,
-    "permissions": []
-  },
-  {
-    "path": "users/api/supervisors/specialty/<str:specialty>/",
-    "method": "PUT",
-    "view": "SupervisorsBySpecialtyAPIView",
-    "action": "custom/standard",
-    "serializer": null,
-    "permissions": []
-  },
-  {
-    "path": "users/api/supervisors/specialty/<str:specialty>/",
-    "method": "PATCH",
-    "view": "SupervisorsBySpecialtyAPIView",
-    "action": "custom/standard",
-    "serializer": null,
-    "permissions": []
-  },
-  {
-    "path": "users/api/supervisors/specialty/<str:specialty>/",
-    "method": "DELETE",
-    "view": "SupervisorsBySpecialtyAPIView",
-    "action": "custom/standard",
-    "serializer": null,
-    "permissions": []
-  },
-  {
-    "path": "users/api/supervisors/specialty/<str:specialty>/",
-    "method": "TRACE",
-    "view": "SupervisorsBySpecialtyAPIView",
-    "action": "custom/standard",
-    "serializer": null,
-    "permissions": []
-  },
-  {
-    "path": "users/api/user/<int:pk>/stats/",
-    "method": "GET",
-    "view": "UserStatsAPIView",
-    "action": "custom/standard",
-    "serializer": null,
-    "permissions": []
-  },
-  {
-    "path": "users/api/user/<int:pk>/stats/",
-    "method": "POST",
-    "view": "UserStatsAPIView",
-    "action": "custom/standard",
-    "serializer": null,
-    "permissions": []
-  },
-  {
-    "path": "users/api/user/<int:pk>/stats/",
-    "method": "PUT",
-    "view": "UserStatsAPIView",
-    "action": "custom/standard",
-    "serializer": null,
-    "permissions": []
-  },
-  {
-    "path": "users/api/user/<int:pk>/stats/",
-    "method": "PATCH",
-    "view": "UserStatsAPIView",
-    "action": "custom/standard",
-    "serializer": null,
-    "permissions": []
-  },
-  {
-    "path": "users/api/user/<int:pk>/stats/",
-    "method": "DELETE",
-    "view": "UserStatsAPIView",
-    "action": "custom/standard",
-    "serializer": null,
-    "permissions": []
-  },
-  {
-    "path": "users/api/user/<int:pk>/stats/",
-    "method": "TRACE",
-    "view": "UserStatsAPIView",
-    "action": "custom/standard",
-    "serializer": null,
-    "permissions": []
-  },
-  {
-    "path": "users/api/stats/",
-    "method": "GET",
-    "view": "UserListStatsAPIView",
-    "action": "custom/standard",
-    "serializer": null,
-    "permissions": []
-  },
-  {
-    "path": "users/api/stats/",
-    "method": "POST",
-    "view": "UserListStatsAPIView",
-    "action": "custom/standard",
-    "serializer": null,
-    "permissions": []
-  },
-  {
-    "path": "users/api/stats/",
-    "method": "PUT",
-    "view": "UserListStatsAPIView",
-    "action": "custom/standard",
-    "serializer": null,
-    "permissions": []
-  },
-  {
-    "path": "users/api/stats/",
-    "method": "PATCH",
-    "view": "UserListStatsAPIView",
-    "action": "custom/standard",
-    "serializer": null,
-    "permissions": []
-  },
-  {
-    "path": "users/api/stats/",
-    "method": "DELETE",
-    "view": "UserListStatsAPIView",
-    "action": "custom/standard",
-    "serializer": null,
-    "permissions": []
-  },
-  {
-    "path": "users/api/stats/",
-    "method": "TRACE",
-    "view": "UserListStatsAPIView",
-    "action": "custom/standard",
-    "serializer": null,
-    "permissions": []
-  },
-  {
-    "path": "users/api/admin/stats/",
-    "method": "ANY",
-    "view": "admin_stats_api",
-    "action": "func",
-    "serializer": null,
-    "permissions": []
-  },
-  {
-    "path": "users/api/user-statistics/",
-    "method": "GET",
-    "view": "UserStatisticsAPIView",
-    "action": "custom/standard",
-    "serializer": null,
-    "permissions": []
-  },
-  {
-    "path": "users/api/user-statistics/",
-    "method": "POST",
-    "view": "UserStatisticsAPIView",
-    "action": "custom/standard",
-    "serializer": null,
-    "permissions": []
-  },
-  {
-    "path": "users/api/user-statistics/",
-    "method": "PUT",
-    "view": "UserStatisticsAPIView",
-    "action": "custom/standard",
-    "serializer": null,
-    "permissions": []
-  },
-  {
-    "path": "users/api/user-statistics/",
-    "method": "PATCH",
-    "view": "UserStatisticsAPIView",
-    "action": "custom/standard",
-    "serializer": null,
-    "permissions": []
-  },
-  {
-    "path": "users/api/user-statistics/",
-    "method": "DELETE",
-    "view": "UserStatisticsAPIView",
-    "action": "custom/standard",
-    "serializer": null,
-    "permissions": []
-  },
-  {
-    "path": "users/api/user-statistics/",
-    "method": "TRACE",
-    "view": "UserStatisticsAPIView",
-    "action": "custom/standard",
-    "serializer": null,
-    "permissions": []
-  },
-  {
-    "path": "users/api/user-performance/",
-    "method": "GET",
-    "view": "UserPerformanceAPIView",
-    "action": "custom/standard",
-    "serializer": null,
-    "permissions": []
-  },
-  {
-    "path": "users/api/user-performance/",
-    "method": "POST",
-    "view": "UserPerformanceAPIView",
-    "action": "custom/standard",
-    "serializer": null,
-    "permissions": []
-  },
-  {
-    "path": "users/api/user-performance/",
-    "method": "PUT",
-    "view": "UserPerformanceAPIView",
-    "action": "custom/standard",
-    "serializer": null,
-    "permissions": []
-  },
-  {
-    "path": "users/api/user-performance/",
-    "method": "PATCH",
-    "view": "UserPerformanceAPIView",
-    "action": "custom/standard",
-    "serializer": null,
-    "permissions": []
-  },
-  {
-    "path": "users/api/user-performance/",
-    "method": "DELETE",
-    "view": "UserPerformanceAPIView",
-    "action": "custom/standard",
-    "serializer": null,
-    "permissions": []
-  },
-  {
-    "path": "users/api/user-performance/",
-    "method": "TRACE",
-    "view": "UserPerformanceAPIView",
-    "action": "custom/standard",
-    "serializer": null,
-    "permissions": []
-  },
-  {
     "path": "logbook/api/stats/",
     "method": "ANY",
     "view": "dummy_redirect",
@@ -1676,6 +1380,66 @@
     ]
   },
   {
+    "path": "api/notifications/mark-unread/",
+    "method": "GET",
+    "view": "NotificationMarkUnreadView",
+    "action": "custom/standard",
+    "serializer": "NotificationEmptySchemaSerializer",
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/notifications/mark-unread/",
+    "method": "POST",
+    "view": "NotificationMarkUnreadView",
+    "action": "custom/standard",
+    "serializer": "NotificationEmptySchemaSerializer",
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/notifications/mark-unread/",
+    "method": "PUT",
+    "view": "NotificationMarkUnreadView",
+    "action": "custom/standard",
+    "serializer": "NotificationEmptySchemaSerializer",
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/notifications/mark-unread/",
+    "method": "PATCH",
+    "view": "NotificationMarkUnreadView",
+    "action": "custom/standard",
+    "serializer": "NotificationEmptySchemaSerializer",
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/notifications/mark-unread/",
+    "method": "DELETE",
+    "view": "NotificationMarkUnreadView",
+    "action": "custom/standard",
+    "serializer": "NotificationEmptySchemaSerializer",
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/notifications/mark-unread/",
+    "method": "TRACE",
+    "view": "NotificationMarkUnreadView",
+    "action": "custom/standard",
+    "serializer": "NotificationEmptySchemaSerializer",
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
     "path": "api/notifications/preferences/",
     "method": "GET",
     "view": "NotificationPreferenceView",
@@ -1791,6 +1555,66 @@
     "view": "NotificationUnreadCountView",
     "action": "custom/standard",
     "serializer": "NotificationEmptySchemaSerializer",
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/notifications/devices/",
+    "method": "GET",
+    "view": "MobileDeviceRegistrationView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/notifications/devices/",
+    "method": "POST",
+    "view": "MobileDeviceRegistrationView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/notifications/devices/",
+    "method": "PUT",
+    "view": "MobileDeviceRegistrationView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/notifications/devices/",
+    "method": "PATCH",
+    "view": "MobileDeviceRegistrationView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/notifications/devices/",
+    "method": "DELETE",
+    "view": "MobileDeviceRegistrationView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/notifications/devices/",
+    "method": "TRACE",
+    "view": "MobileDeviceRegistrationView",
+    "action": "custom/standard",
+    "serializer": null,
     "permissions": [
       "IsAuthenticated"
     ]
@@ -2004,6 +1828,66 @@
     ]
   },
   {
+    "path": "api/dashboard/resident/",
+    "method": "GET",
+    "view": "ResidentDashboardAPI",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/dashboard/resident/",
+    "method": "POST",
+    "view": "ResidentDashboardAPI",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/dashboard/resident/",
+    "method": "PUT",
+    "view": "ResidentDashboardAPI",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/dashboard/resident/",
+    "method": "PATCH",
+    "view": "ResidentDashboardAPI",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/dashboard/resident/",
+    "method": "DELETE",
+    "view": "ResidentDashboardAPI",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/dashboard/resident/",
+    "method": "TRACE",
+    "view": "ResidentDashboardAPI",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
     "path": "api/schema/",
     "method": "GET",
     "view": "SpectacularAPIView",
@@ -2192,6 +2076,214 @@
     "permissions": []
   },
   {
+    "path": "api/^resident-document-requirements/$",
+    "method": "ANY",
+    "view": "ResidentDocumentRequirementViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/^resident-document-requirements\\.(?P<format>[a-z0-9]+)/?$",
+    "method": "ANY",
+    "view": "ResidentDocumentRequirementViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/^resident-document-requirements/(?P<pk>[^/.]+)/$",
+    "method": "ANY",
+    "view": "ResidentDocumentRequirementViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/^resident-document-requirements/(?P<pk>[^/.]+)\\.(?P<format>[a-z0-9]+)/?$",
+    "method": "ANY",
+    "view": "ResidentDocumentRequirementViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/^resident-documents/$",
+    "method": "ANY",
+    "view": "ResidentDocumentViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/^resident-documents\\.(?P<format>[a-z0-9]+)/?$",
+    "method": "ANY",
+    "view": "ResidentDocumentViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/^resident-documents/(?P<pk>[^/.]+)/$",
+    "method": "ANY",
+    "view": "ResidentDocumentViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/^resident-documents/(?P<pk>[^/.]+)\\.(?P<format>[a-z0-9]+)/?$",
+    "method": "ANY",
+    "view": "ResidentDocumentViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/^resident-documents/(?P<pk>[^/.]+)/defer/$",
+    "method": "ANY",
+    "view": "ResidentDocumentViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/^resident-documents/(?P<pk>[^/.]+)/defer\\.(?P<format>[a-z0-9]+)/?$",
+    "method": "ANY",
+    "view": "ResidentDocumentViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/^resident-documents/(?P<pk>[^/.]+)/download/$",
+    "method": "ANY",
+    "view": "ResidentDocumentViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/^resident-documents/(?P<pk>[^/.]+)/download\\.(?P<format>[a-z0-9]+)/?$",
+    "method": "ANY",
+    "view": "ResidentDocumentViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/^resident-documents/(?P<pk>[^/.]+)/file/$",
+    "method": "ANY",
+    "view": "ResidentDocumentViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/^resident-documents/(?P<pk>[^/.]+)/file\\.(?P<format>[a-z0-9]+)/?$",
+    "method": "ANY",
+    "view": "ResidentDocumentViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/^resident-documents/(?P<pk>[^/.]+)/review/$",
+    "method": "ANY",
+    "view": "ResidentDocumentViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/^resident-documents/(?P<pk>[^/.]+)/review\\.(?P<format>[a-z0-9]+)/?$",
+    "method": "ANY",
+    "view": "ResidentDocumentViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/^resident-documents/(?P<pk>[^/.]+)/upload/$",
+    "method": "ANY",
+    "view": "ResidentDocumentViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/^resident-documents/(?P<pk>[^/.]+)/upload\\.(?P<format>[a-z0-9]+)/?$",
+    "method": "ANY",
+    "view": "ResidentDocumentViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/^pending-supervisor-links/$",
+    "method": "ANY",
+    "view": "PendingSupervisorViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/^pending-supervisor-links\\.(?P<format>[a-z0-9]+)/?$",
+    "method": "ANY",
+    "view": "PendingSupervisorViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/^pending-supervisor-links/(?P<pk>[^/.]+)/$",
+    "method": "ANY",
+    "view": "PendingSupervisorViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/^pending-supervisor-links/(?P<pk>[^/.]+)\\.(?P<format>[a-z0-9]+)/?$",
+    "method": "ANY",
+    "view": "PendingSupervisorViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/^pending-supervisor-links/(?P<pk>[^/.]+)/create-supervisor/$",
+    "method": "ANY",
+    "view": "PendingSupervisorViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/^pending-supervisor-links/(?P<pk>[^/.]+)/create-supervisor\\.(?P<format>[a-z0-9]+)/?$",
+    "method": "ANY",
+    "view": "PendingSupervisorViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/^pending-supervisor-links/(?P<pk>[^/.]+)/resolve/$",
+    "method": "ANY",
+    "view": "PendingSupervisorViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/^pending-supervisor-links/(?P<pk>[^/.]+)/resolve\\.(?P<format>[a-z0-9]+)/?$",
+    "method": "ANY",
+    "view": "PendingSupervisorViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
     "path": "api/^admins/$",
     "method": "ANY",
     "view": "AdminProfileViewSet",
@@ -2249,6 +2341,38 @@
   },
   {
     "path": "api/^residents/(?P<user_id>[^/.]+)\\.(?P<format>[a-z0-9]+)/?$",
+    "method": "ANY",
+    "view": "ResidentProfileViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/^residents/(?P<user_id>[^/.]+)/approve-onboarding/$",
+    "method": "ANY",
+    "view": "ResidentProfileViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/^residents/(?P<user_id>[^/.]+)/approve-onboarding\\.(?P<format>[a-z0-9]+)/?$",
+    "method": "ANY",
+    "view": "ResidentProfileViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/^residents/(?P<user_id>[^/.]+)/request-onboarding-correction/$",
+    "method": "ANY",
+    "view": "ResidentProfileViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/^residents/(?P<user_id>[^/.]+)/request-onboarding-correction\\.(?P<format>[a-z0-9]+)/?$",
     "method": "ANY",
     "view": "ResidentProfileViewSet",
     "action": "func",
@@ -2529,6 +2653,66 @@
     "path": "api/<drf_format_suffix:format>",
     "method": "TRACE",
     "view": "APIRootView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/resident-onboarding/state/",
+    "method": "GET",
+    "view": "ResidentOnboardingStateView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/resident-onboarding/state/",
+    "method": "POST",
+    "view": "ResidentOnboardingStateView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/resident-onboarding/state/",
+    "method": "PUT",
+    "view": "ResidentOnboardingStateView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/resident-onboarding/state/",
+    "method": "PATCH",
+    "view": "ResidentOnboardingStateView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/resident-onboarding/state/",
+    "method": "DELETE",
+    "view": "ResidentOnboardingStateView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/resident-onboarding/state/",
+    "method": "TRACE",
+    "view": "ResidentOnboardingStateView",
     "action": "custom/standard",
     "serializer": null,
     "permissions": [
@@ -4106,126 +4290,6 @@
     ]
   },
   {
-    "path": "api/logbook/review-queue/",
-    "method": "GET",
-    "view": "LogbookReviewQueueView",
-    "action": "custom/standard",
-    "serializer": "LogbookEntrySerializer",
-    "permissions": [
-      "IsAuthenticated"
-    ]
-  },
-  {
-    "path": "api/logbook/review-queue/",
-    "method": "POST",
-    "view": "LogbookReviewQueueView",
-    "action": "custom/standard",
-    "serializer": "LogbookEntrySerializer",
-    "permissions": [
-      "IsAuthenticated"
-    ]
-  },
-  {
-    "path": "api/logbook/review-queue/",
-    "method": "PUT",
-    "view": "LogbookReviewQueueView",
-    "action": "custom/standard",
-    "serializer": "LogbookEntrySerializer",
-    "permissions": [
-      "IsAuthenticated"
-    ]
-  },
-  {
-    "path": "api/logbook/review-queue/",
-    "method": "PATCH",
-    "view": "LogbookReviewQueueView",
-    "action": "custom/standard",
-    "serializer": "LogbookEntrySerializer",
-    "permissions": [
-      "IsAuthenticated"
-    ]
-  },
-  {
-    "path": "api/logbook/review-queue/",
-    "method": "DELETE",
-    "view": "LogbookReviewQueueView",
-    "action": "custom/standard",
-    "serializer": "LogbookEntrySerializer",
-    "permissions": [
-      "IsAuthenticated"
-    ]
-  },
-  {
-    "path": "api/logbook/review-queue/",
-    "method": "TRACE",
-    "view": "LogbookReviewQueueView",
-    "action": "custom/standard",
-    "serializer": "LogbookEntrySerializer",
-    "permissions": [
-      "IsAuthenticated"
-    ]
-  },
-  {
-    "path": "api/logbook/my-threshold/",
-    "method": "GET",
-    "view": "LogbookMyThresholdView",
-    "action": "custom/standard",
-    "serializer": "TrainingEmptySchemaSerializer",
-    "permissions": [
-      "IsAuthenticated"
-    ]
-  },
-  {
-    "path": "api/logbook/my-threshold/",
-    "method": "POST",
-    "view": "LogbookMyThresholdView",
-    "action": "custom/standard",
-    "serializer": "TrainingEmptySchemaSerializer",
-    "permissions": [
-      "IsAuthenticated"
-    ]
-  },
-  {
-    "path": "api/logbook/my-threshold/",
-    "method": "PUT",
-    "view": "LogbookMyThresholdView",
-    "action": "custom/standard",
-    "serializer": "TrainingEmptySchemaSerializer",
-    "permissions": [
-      "IsAuthenticated"
-    ]
-  },
-  {
-    "path": "api/logbook/my-threshold/",
-    "method": "PATCH",
-    "view": "LogbookMyThresholdView",
-    "action": "custom/standard",
-    "serializer": "TrainingEmptySchemaSerializer",
-    "permissions": [
-      "IsAuthenticated"
-    ]
-  },
-  {
-    "path": "api/logbook/my-threshold/",
-    "method": "DELETE",
-    "view": "LogbookMyThresholdView",
-    "action": "custom/standard",
-    "serializer": "TrainingEmptySchemaSerializer",
-    "permissions": [
-      "IsAuthenticated"
-    ]
-  },
-  {
-    "path": "api/logbook/my-threshold/",
-    "method": "TRACE",
-    "view": "LogbookMyThresholdView",
-    "action": "custom/standard",
-    "serializer": "TrainingEmptySchemaSerializer",
-    "permissions": [
-      "IsAuthenticated"
-    ]
-  },
-  {
     "path": "api/submissions/synopsis/",
     "method": "GET",
     "view": "SynopsisSubmissionView",
@@ -5001,186 +5065,6 @@
     "view": "RotationCompletionVerifyView",
     "action": "custom/standard",
     "serializer": "RotationCompletionSerializer",
-    "permissions": [
-      "IsAuthenticated"
-    ]
-  },
-  {
-    "path": "api/dashboard/resident/",
-    "method": "GET",
-    "view": "ResidentOperationalDashboardView",
-    "action": "custom/standard",
-    "serializer": null,
-    "permissions": [
-      "IsAuthenticated"
-    ]
-  },
-  {
-    "path": "api/dashboard/resident/",
-    "method": "POST",
-    "view": "ResidentOperationalDashboardView",
-    "action": "custom/standard",
-    "serializer": null,
-    "permissions": [
-      "IsAuthenticated"
-    ]
-  },
-  {
-    "path": "api/dashboard/resident/",
-    "method": "PUT",
-    "view": "ResidentOperationalDashboardView",
-    "action": "custom/standard",
-    "serializer": null,
-    "permissions": [
-      "IsAuthenticated"
-    ]
-  },
-  {
-    "path": "api/dashboard/resident/",
-    "method": "PATCH",
-    "view": "ResidentOperationalDashboardView",
-    "action": "custom/standard",
-    "serializer": null,
-    "permissions": [
-      "IsAuthenticated"
-    ]
-  },
-  {
-    "path": "api/dashboard/resident/",
-    "method": "DELETE",
-    "view": "ResidentOperationalDashboardView",
-    "action": "custom/standard",
-    "serializer": null,
-    "permissions": [
-      "IsAuthenticated"
-    ]
-  },
-  {
-    "path": "api/dashboard/resident/",
-    "method": "TRACE",
-    "view": "ResidentOperationalDashboardView",
-    "action": "custom/standard",
-    "serializer": null,
-    "permissions": [
-      "IsAuthenticated"
-    ]
-  },
-  {
-    "path": "api/dashboard/supervisor/",
-    "method": "GET",
-    "view": "SupervisorOperationalDashboardView",
-    "action": "custom/standard",
-    "serializer": null,
-    "permissions": [
-      "IsAuthenticated"
-    ]
-  },
-  {
-    "path": "api/dashboard/supervisor/",
-    "method": "POST",
-    "view": "SupervisorOperationalDashboardView",
-    "action": "custom/standard",
-    "serializer": null,
-    "permissions": [
-      "IsAuthenticated"
-    ]
-  },
-  {
-    "path": "api/dashboard/supervisor/",
-    "method": "PUT",
-    "view": "SupervisorOperationalDashboardView",
-    "action": "custom/standard",
-    "serializer": null,
-    "permissions": [
-      "IsAuthenticated"
-    ]
-  },
-  {
-    "path": "api/dashboard/supervisor/",
-    "method": "PATCH",
-    "view": "SupervisorOperationalDashboardView",
-    "action": "custom/standard",
-    "serializer": null,
-    "permissions": [
-      "IsAuthenticated"
-    ]
-  },
-  {
-    "path": "api/dashboard/supervisor/",
-    "method": "DELETE",
-    "view": "SupervisorOperationalDashboardView",
-    "action": "custom/standard",
-    "serializer": null,
-    "permissions": [
-      "IsAuthenticated"
-    ]
-  },
-  {
-    "path": "api/dashboard/supervisor/",
-    "method": "TRACE",
-    "view": "SupervisorOperationalDashboardView",
-    "action": "custom/standard",
-    "serializer": null,
-    "permissions": [
-      "IsAuthenticated"
-    ]
-  },
-  {
-    "path": "api/dashboard/utrmc/",
-    "method": "GET",
-    "view": "UTRMCOperationalDashboardView",
-    "action": "custom/standard",
-    "serializer": null,
-    "permissions": [
-      "IsAuthenticated"
-    ]
-  },
-  {
-    "path": "api/dashboard/utrmc/",
-    "method": "POST",
-    "view": "UTRMCOperationalDashboardView",
-    "action": "custom/standard",
-    "serializer": null,
-    "permissions": [
-      "IsAuthenticated"
-    ]
-  },
-  {
-    "path": "api/dashboard/utrmc/",
-    "method": "PUT",
-    "view": "UTRMCOperationalDashboardView",
-    "action": "custom/standard",
-    "serializer": null,
-    "permissions": [
-      "IsAuthenticated"
-    ]
-  },
-  {
-    "path": "api/dashboard/utrmc/",
-    "method": "PATCH",
-    "view": "UTRMCOperationalDashboardView",
-    "action": "custom/standard",
-    "serializer": null,
-    "permissions": [
-      "IsAuthenticated"
-    ]
-  },
-  {
-    "path": "api/dashboard/utrmc/",
-    "method": "DELETE",
-    "view": "UTRMCOperationalDashboardView",
-    "action": "custom/standard",
-    "serializer": null,
-    "permissions": [
-      "IsAuthenticated"
-    ]
-  },
-  {
-    "path": "api/dashboard/utrmc/",
-    "method": "TRACE",
-    "view": "UTRMCOperationalDashboardView",
-    "action": "custom/standard",
-    "serializer": null,
     "permissions": [
       "IsAuthenticated"
     ]
@@ -5362,22 +5246,6 @@
     "permissions": []
   },
   {
-    "path": "api/^rotations/(?P<pk>[^/.]+)/hod-approve/$",
-    "method": "ANY",
-    "view": "RotationAssignmentViewSet",
-    "action": "func",
-    "serializer": null,
-    "permissions": []
-  },
-  {
-    "path": "api/^rotations/(?P<pk>[^/.]+)/hod-approve\\.(?P<format>[a-z0-9]+)/?$",
-    "method": "ANY",
-    "view": "RotationAssignmentViewSet",
-    "action": "func",
-    "serializer": null,
-    "permissions": []
-  },
-  {
     "path": "api/^rotations/(?P<pk>[^/.]+)/reject/$",
     "method": "ANY",
     "view": "RotationAssignmentViewSet",
@@ -5435,6 +5303,22 @@
   },
   {
     "path": "api/^rotations/(?P<pk>[^/.]+)/submit\\.(?P<format>[a-z0-9]+)/?$",
+    "method": "ANY",
+    "view": "RotationAssignmentViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/^rotations/(?P<pk>[^/.]+)/supervisor-approve/$",
+    "method": "ANY",
+    "view": "RotationAssignmentViewSet",
+    "action": "func",
+    "serializer": null,
+    "permissions": []
+  },
+  {
+    "path": "api/^rotations/(?P<pk>[^/.]+)/supervisor-approve\\.(?P<format>[a-z0-9]+)/?$",
     "method": "ANY",
     "view": "RotationAssignmentViewSet",
     "action": "func",
@@ -5661,118 +5545,6 @@
     "path": "api/^workshops/(?P<pk>[^/.]+)\\.(?P<format>[a-z0-9]+)/?$",
     "method": "ANY",
     "view": "WorkshopViewSet",
-    "action": "func",
-    "serializer": null,
-    "permissions": []
-  },
-  {
-    "path": "api/^logbook/config/$",
-    "method": "ANY",
-    "view": "LogbookThresholdConfigViewSet",
-    "action": "func",
-    "serializer": null,
-    "permissions": []
-  },
-  {
-    "path": "api/^logbook/config\\.(?P<format>[a-z0-9]+)/?$",
-    "method": "ANY",
-    "view": "LogbookThresholdConfigViewSet",
-    "action": "func",
-    "serializer": null,
-    "permissions": []
-  },
-  {
-    "path": "api/^logbook/config/(?P<pk>[^/.]+)/$",
-    "method": "ANY",
-    "view": "LogbookThresholdConfigViewSet",
-    "action": "func",
-    "serializer": null,
-    "permissions": []
-  },
-  {
-    "path": "api/^logbook/config/(?P<pk>[^/.]+)\\.(?P<format>[a-z0-9]+)/?$",
-    "method": "ANY",
-    "view": "LogbookThresholdConfigViewSet",
-    "action": "func",
-    "serializer": null,
-    "permissions": []
-  },
-  {
-    "path": "api/^logbook/$",
-    "method": "ANY",
-    "view": "LogbookEntryViewSet",
-    "action": "func",
-    "serializer": null,
-    "permissions": []
-  },
-  {
-    "path": "api/^logbook\\.(?P<format>[a-z0-9]+)/?$",
-    "method": "ANY",
-    "view": "LogbookEntryViewSet",
-    "action": "func",
-    "serializer": null,
-    "permissions": []
-  },
-  {
-    "path": "api/^logbook/(?P<pk>[^/.]+)/$",
-    "method": "ANY",
-    "view": "LogbookEntryViewSet",
-    "action": "func",
-    "serializer": null,
-    "permissions": []
-  },
-  {
-    "path": "api/^logbook/(?P<pk>[^/.]+)\\.(?P<format>[a-z0-9]+)/?$",
-    "method": "ANY",
-    "view": "LogbookEntryViewSet",
-    "action": "func",
-    "serializer": null,
-    "permissions": []
-  },
-  {
-    "path": "api/^logbook/(?P<pk>[^/.]+)/review/$",
-    "method": "ANY",
-    "view": "LogbookEntryViewSet",
-    "action": "func",
-    "serializer": null,
-    "permissions": []
-  },
-  {
-    "path": "api/^logbook/(?P<pk>[^/.]+)/review\\.(?P<format>[a-z0-9]+)/?$",
-    "method": "ANY",
-    "view": "LogbookEntryViewSet",
-    "action": "func",
-    "serializer": null,
-    "permissions": []
-  },
-  {
-    "path": "api/^logbook/(?P<pk>[^/.]+)/submit/$",
-    "method": "ANY",
-    "view": "LogbookEntryViewSet",
-    "action": "func",
-    "serializer": null,
-    "permissions": []
-  },
-  {
-    "path": "api/^logbook/(?P<pk>[^/.]+)/submit\\.(?P<format>[a-z0-9]+)/?$",
-    "method": "ANY",
-    "view": "LogbookEntryViewSet",
-    "action": "func",
-    "serializer": null,
-    "permissions": []
-  },
-  {
-    "path": "api/^logbook/(?P<pk>[^/.]+)/verify/$",
-    "method": "ANY",
-    "view": "LogbookEntryViewSet",
-    "action": "func",
-    "serializer": null,
-    "permissions": []
-  },
-  {
-    "path": "api/^logbook/(?P<pk>[^/.]+)/verify\\.(?P<format>[a-z0-9]+)/?$",
-    "method": "ANY",
-    "view": "LogbookEntryViewSet",
     "action": "func",
     "serializer": null,
     "permissions": []
@@ -6315,350 +6087,6 @@
     "path": "api/system/settings/",
     "method": "TRACE",
     "view": "SystemSettingsView",
-    "action": "custom/standard",
-    "serializer": null,
-    "permissions": [
-      "IsAuthenticated"
-    ]
-  },
-  {
-    "path": "api/masters/^institutions/$",
-    "method": "ANY",
-    "view": "InstitutionViewSet",
-    "action": "func",
-    "serializer": null,
-    "permissions": []
-  },
-  {
-    "path": "api/masters/^institutions\\.(?P<format>[a-z0-9]+)/?$",
-    "method": "ANY",
-    "view": "InstitutionViewSet",
-    "action": "func",
-    "serializer": null,
-    "permissions": []
-  },
-  {
-    "path": "api/masters/^institutions/(?P<pk>[^/.]+)/$",
-    "method": "ANY",
-    "view": "InstitutionViewSet",
-    "action": "func",
-    "serializer": null,
-    "permissions": []
-  },
-  {
-    "path": "api/masters/^institutions/(?P<pk>[^/.]+)\\.(?P<format>[a-z0-9]+)/?$",
-    "method": "ANY",
-    "view": "InstitutionViewSet",
-    "action": "func",
-    "serializer": null,
-    "permissions": []
-  },
-  {
-    "path": "api/masters/^training-sites/$",
-    "method": "ANY",
-    "view": "HospitalViewSet",
-    "action": "func",
-    "serializer": null,
-    "permissions": []
-  },
-  {
-    "path": "api/masters/^training-sites\\.(?P<format>[a-z0-9]+)/?$",
-    "method": "ANY",
-    "view": "HospitalViewSet",
-    "action": "func",
-    "serializer": null,
-    "permissions": []
-  },
-  {
-    "path": "api/masters/^training-sites/(?P<pk>[^/.]+)/$",
-    "method": "ANY",
-    "view": "HospitalViewSet",
-    "action": "func",
-    "serializer": null,
-    "permissions": []
-  },
-  {
-    "path": "api/masters/^training-sites/(?P<pk>[^/.]+)\\.(?P<format>[a-z0-9]+)/?$",
-    "method": "ANY",
-    "view": "HospitalViewSet",
-    "action": "func",
-    "serializer": null,
-    "permissions": []
-  },
-  {
-    "path": "api/masters/^departments/$",
-    "method": "ANY",
-    "view": "DepartmentViewSet",
-    "action": "func",
-    "serializer": null,
-    "permissions": []
-  },
-  {
-    "path": "api/masters/^departments\\.(?P<format>[a-z0-9]+)/?$",
-    "method": "ANY",
-    "view": "DepartmentViewSet",
-    "action": "func",
-    "serializer": null,
-    "permissions": []
-  },
-  {
-    "path": "api/masters/^departments/(?P<pk>[^/.]+)/$",
-    "method": "ANY",
-    "view": "DepartmentViewSet",
-    "action": "func",
-    "serializer": null,
-    "permissions": []
-  },
-  {
-    "path": "api/masters/^departments/(?P<pk>[^/.]+)\\.(?P<format>[a-z0-9]+)/?$",
-    "method": "ANY",
-    "view": "DepartmentViewSet",
-    "action": "func",
-    "serializer": null,
-    "permissions": []
-  },
-  {
-    "path": "api/masters/^programs/$",
-    "method": "ANY",
-    "view": "TrainingProgramViewSet",
-    "action": "func",
-    "serializer": null,
-    "permissions": []
-  },
-  {
-    "path": "api/masters/^programs\\.(?P<format>[a-z0-9]+)/?$",
-    "method": "ANY",
-    "view": "TrainingProgramViewSet",
-    "action": "func",
-    "serializer": null,
-    "permissions": []
-  },
-  {
-    "path": "api/masters/^programs/(?P<pk>[^/.]+)/$",
-    "method": "ANY",
-    "view": "TrainingProgramViewSet",
-    "action": "func",
-    "serializer": null,
-    "permissions": []
-  },
-  {
-    "path": "api/masters/^programs/(?P<pk>[^/.]+)\\.(?P<format>[a-z0-9]+)/?$",
-    "method": "ANY",
-    "view": "TrainingProgramViewSet",
-    "action": "func",
-    "serializer": null,
-    "permissions": []
-  },
-  {
-    "path": "api/masters/^specialties/$",
-    "method": "ANY",
-    "view": "SpecialtyViewSet",
-    "action": "func",
-    "serializer": null,
-    "permissions": []
-  },
-  {
-    "path": "api/masters/^specialties\\.(?P<format>[a-z0-9]+)/?$",
-    "method": "ANY",
-    "view": "SpecialtyViewSet",
-    "action": "func",
-    "serializer": null,
-    "permissions": []
-  },
-  {
-    "path": "api/masters/^specialties/(?P<pk>[^/.]+)/$",
-    "method": "ANY",
-    "view": "SpecialtyViewSet",
-    "action": "func",
-    "serializer": null,
-    "permissions": []
-  },
-  {
-    "path": "api/masters/^specialties/(?P<pk>[^/.]+)\\.(?P<format>[a-z0-9]+)/?$",
-    "method": "ANY",
-    "view": "SpecialtyViewSet",
-    "action": "func",
-    "serializer": null,
-    "permissions": []
-  },
-  {
-    "path": "api/masters/^designations/$",
-    "method": "ANY",
-    "view": "DesignationViewSet",
-    "action": "func",
-    "serializer": null,
-    "permissions": []
-  },
-  {
-    "path": "api/masters/^designations\\.(?P<format>[a-z0-9]+)/?$",
-    "method": "ANY",
-    "view": "DesignationViewSet",
-    "action": "func",
-    "serializer": null,
-    "permissions": []
-  },
-  {
-    "path": "api/masters/^designations/(?P<pk>[^/.]+)/$",
-    "method": "ANY",
-    "view": "DesignationViewSet",
-    "action": "func",
-    "serializer": null,
-    "permissions": []
-  },
-  {
-    "path": "api/masters/^designations/(?P<pk>[^/.]+)\\.(?P<format>[a-z0-9]+)/?$",
-    "method": "ANY",
-    "view": "DesignationViewSet",
-    "action": "func",
-    "serializer": null,
-    "permissions": []
-  },
-  {
-    "path": "api/masters/^academic-sessions/$",
-    "method": "ANY",
-    "view": "AcademicSessionViewSet",
-    "action": "func",
-    "serializer": null,
-    "permissions": []
-  },
-  {
-    "path": "api/masters/^academic-sessions\\.(?P<format>[a-z0-9]+)/?$",
-    "method": "ANY",
-    "view": "AcademicSessionViewSet",
-    "action": "func",
-    "serializer": null,
-    "permissions": []
-  },
-  {
-    "path": "api/masters/^academic-sessions/(?P<pk>[^/.]+)/$",
-    "method": "ANY",
-    "view": "AcademicSessionViewSet",
-    "action": "func",
-    "serializer": null,
-    "permissions": []
-  },
-  {
-    "path": "api/masters/^academic-sessions/(?P<pk>[^/.]+)\\.(?P<format>[a-z0-9]+)/?$",
-    "method": "ANY",
-    "view": "AcademicSessionViewSet",
-    "action": "func",
-    "serializer": null,
-    "permissions": []
-  },
-  {
-    "path": "api/masters/",
-    "method": "GET",
-    "view": "APIRootView",
-    "action": "custom/standard",
-    "serializer": null,
-    "permissions": [
-      "IsAuthenticated"
-    ]
-  },
-  {
-    "path": "api/masters/",
-    "method": "POST",
-    "view": "APIRootView",
-    "action": "custom/standard",
-    "serializer": null,
-    "permissions": [
-      "IsAuthenticated"
-    ]
-  },
-  {
-    "path": "api/masters/",
-    "method": "PUT",
-    "view": "APIRootView",
-    "action": "custom/standard",
-    "serializer": null,
-    "permissions": [
-      "IsAuthenticated"
-    ]
-  },
-  {
-    "path": "api/masters/",
-    "method": "PATCH",
-    "view": "APIRootView",
-    "action": "custom/standard",
-    "serializer": null,
-    "permissions": [
-      "IsAuthenticated"
-    ]
-  },
-  {
-    "path": "api/masters/",
-    "method": "DELETE",
-    "view": "APIRootView",
-    "action": "custom/standard",
-    "serializer": null,
-    "permissions": [
-      "IsAuthenticated"
-    ]
-  },
-  {
-    "path": "api/masters/",
-    "method": "TRACE",
-    "view": "APIRootView",
-    "action": "custom/standard",
-    "serializer": null,
-    "permissions": [
-      "IsAuthenticated"
-    ]
-  },
-  {
-    "path": "api/masters/<drf_format_suffix:format>",
-    "method": "GET",
-    "view": "APIRootView",
-    "action": "custom/standard",
-    "serializer": null,
-    "permissions": [
-      "IsAuthenticated"
-    ]
-  },
-  {
-    "path": "api/masters/<drf_format_suffix:format>",
-    "method": "POST",
-    "view": "APIRootView",
-    "action": "custom/standard",
-    "serializer": null,
-    "permissions": [
-      "IsAuthenticated"
-    ]
-  },
-  {
-    "path": "api/masters/<drf_format_suffix:format>",
-    "method": "PUT",
-    "view": "APIRootView",
-    "action": "custom/standard",
-    "serializer": null,
-    "permissions": [
-      "IsAuthenticated"
-    ]
-  },
-  {
-    "path": "api/masters/<drf_format_suffix:format>",
-    "method": "PATCH",
-    "view": "APIRootView",
-    "action": "custom/standard",
-    "serializer": null,
-    "permissions": [
-      "IsAuthenticated"
-    ]
-  },
-  {
-    "path": "api/masters/<drf_format_suffix:format>",
-    "method": "DELETE",
-    "view": "APIRootView",
-    "action": "custom/standard",
-    "serializer": null,
-    "permissions": [
-      "IsAuthenticated"
-    ]
-  },
-  {
-    "path": "api/masters/<drf_format_suffix:format>",
-    "method": "TRACE",
-    "view": "APIRootView",
     "action": "custom/standard",
     "serializer": null,
     "permissions": [
@@ -9154,350 +8582,6 @@
     ]
   },
   {
-    "path": "academics/api/^institutions/$",
-    "method": "ANY",
-    "view": "InstitutionViewSet",
-    "action": "func",
-    "serializer": null,
-    "permissions": []
-  },
-  {
-    "path": "academics/api/^institutions\\.(?P<format>[a-z0-9]+)/?$",
-    "method": "ANY",
-    "view": "InstitutionViewSet",
-    "action": "func",
-    "serializer": null,
-    "permissions": []
-  },
-  {
-    "path": "academics/api/^institutions/(?P<pk>[^/.]+)/$",
-    "method": "ANY",
-    "view": "InstitutionViewSet",
-    "action": "func",
-    "serializer": null,
-    "permissions": []
-  },
-  {
-    "path": "academics/api/^institutions/(?P<pk>[^/.]+)\\.(?P<format>[a-z0-9]+)/?$",
-    "method": "ANY",
-    "view": "InstitutionViewSet",
-    "action": "func",
-    "serializer": null,
-    "permissions": []
-  },
-  {
-    "path": "academics/api/^training-sites/$",
-    "method": "ANY",
-    "view": "HospitalViewSet",
-    "action": "func",
-    "serializer": null,
-    "permissions": []
-  },
-  {
-    "path": "academics/api/^training-sites\\.(?P<format>[a-z0-9]+)/?$",
-    "method": "ANY",
-    "view": "HospitalViewSet",
-    "action": "func",
-    "serializer": null,
-    "permissions": []
-  },
-  {
-    "path": "academics/api/^training-sites/(?P<pk>[^/.]+)/$",
-    "method": "ANY",
-    "view": "HospitalViewSet",
-    "action": "func",
-    "serializer": null,
-    "permissions": []
-  },
-  {
-    "path": "academics/api/^training-sites/(?P<pk>[^/.]+)\\.(?P<format>[a-z0-9]+)/?$",
-    "method": "ANY",
-    "view": "HospitalViewSet",
-    "action": "func",
-    "serializer": null,
-    "permissions": []
-  },
-  {
-    "path": "academics/api/^departments/$",
-    "method": "ANY",
-    "view": "DepartmentViewSet",
-    "action": "func",
-    "serializer": null,
-    "permissions": []
-  },
-  {
-    "path": "academics/api/^departments\\.(?P<format>[a-z0-9]+)/?$",
-    "method": "ANY",
-    "view": "DepartmentViewSet",
-    "action": "func",
-    "serializer": null,
-    "permissions": []
-  },
-  {
-    "path": "academics/api/^departments/(?P<pk>[^/.]+)/$",
-    "method": "ANY",
-    "view": "DepartmentViewSet",
-    "action": "func",
-    "serializer": null,
-    "permissions": []
-  },
-  {
-    "path": "academics/api/^departments/(?P<pk>[^/.]+)\\.(?P<format>[a-z0-9]+)/?$",
-    "method": "ANY",
-    "view": "DepartmentViewSet",
-    "action": "func",
-    "serializer": null,
-    "permissions": []
-  },
-  {
-    "path": "academics/api/^programs/$",
-    "method": "ANY",
-    "view": "TrainingProgramViewSet",
-    "action": "func",
-    "serializer": null,
-    "permissions": []
-  },
-  {
-    "path": "academics/api/^programs\\.(?P<format>[a-z0-9]+)/?$",
-    "method": "ANY",
-    "view": "TrainingProgramViewSet",
-    "action": "func",
-    "serializer": null,
-    "permissions": []
-  },
-  {
-    "path": "academics/api/^programs/(?P<pk>[^/.]+)/$",
-    "method": "ANY",
-    "view": "TrainingProgramViewSet",
-    "action": "func",
-    "serializer": null,
-    "permissions": []
-  },
-  {
-    "path": "academics/api/^programs/(?P<pk>[^/.]+)\\.(?P<format>[a-z0-9]+)/?$",
-    "method": "ANY",
-    "view": "TrainingProgramViewSet",
-    "action": "func",
-    "serializer": null,
-    "permissions": []
-  },
-  {
-    "path": "academics/api/^specialties/$",
-    "method": "ANY",
-    "view": "SpecialtyViewSet",
-    "action": "func",
-    "serializer": null,
-    "permissions": []
-  },
-  {
-    "path": "academics/api/^specialties\\.(?P<format>[a-z0-9]+)/?$",
-    "method": "ANY",
-    "view": "SpecialtyViewSet",
-    "action": "func",
-    "serializer": null,
-    "permissions": []
-  },
-  {
-    "path": "academics/api/^specialties/(?P<pk>[^/.]+)/$",
-    "method": "ANY",
-    "view": "SpecialtyViewSet",
-    "action": "func",
-    "serializer": null,
-    "permissions": []
-  },
-  {
-    "path": "academics/api/^specialties/(?P<pk>[^/.]+)\\.(?P<format>[a-z0-9]+)/?$",
-    "method": "ANY",
-    "view": "SpecialtyViewSet",
-    "action": "func",
-    "serializer": null,
-    "permissions": []
-  },
-  {
-    "path": "academics/api/^designations/$",
-    "method": "ANY",
-    "view": "DesignationViewSet",
-    "action": "func",
-    "serializer": null,
-    "permissions": []
-  },
-  {
-    "path": "academics/api/^designations\\.(?P<format>[a-z0-9]+)/?$",
-    "method": "ANY",
-    "view": "DesignationViewSet",
-    "action": "func",
-    "serializer": null,
-    "permissions": []
-  },
-  {
-    "path": "academics/api/^designations/(?P<pk>[^/.]+)/$",
-    "method": "ANY",
-    "view": "DesignationViewSet",
-    "action": "func",
-    "serializer": null,
-    "permissions": []
-  },
-  {
-    "path": "academics/api/^designations/(?P<pk>[^/.]+)\\.(?P<format>[a-z0-9]+)/?$",
-    "method": "ANY",
-    "view": "DesignationViewSet",
-    "action": "func",
-    "serializer": null,
-    "permissions": []
-  },
-  {
-    "path": "academics/api/^academic-sessions/$",
-    "method": "ANY",
-    "view": "AcademicSessionViewSet",
-    "action": "func",
-    "serializer": null,
-    "permissions": []
-  },
-  {
-    "path": "academics/api/^academic-sessions\\.(?P<format>[a-z0-9]+)/?$",
-    "method": "ANY",
-    "view": "AcademicSessionViewSet",
-    "action": "func",
-    "serializer": null,
-    "permissions": []
-  },
-  {
-    "path": "academics/api/^academic-sessions/(?P<pk>[^/.]+)/$",
-    "method": "ANY",
-    "view": "AcademicSessionViewSet",
-    "action": "func",
-    "serializer": null,
-    "permissions": []
-  },
-  {
-    "path": "academics/api/^academic-sessions/(?P<pk>[^/.]+)\\.(?P<format>[a-z0-9]+)/?$",
-    "method": "ANY",
-    "view": "AcademicSessionViewSet",
-    "action": "func",
-    "serializer": null,
-    "permissions": []
-  },
-  {
-    "path": "academics/api/",
-    "method": "GET",
-    "view": "APIRootView",
-    "action": "custom/standard",
-    "serializer": null,
-    "permissions": [
-      "IsAuthenticated"
-    ]
-  },
-  {
-    "path": "academics/api/",
-    "method": "POST",
-    "view": "APIRootView",
-    "action": "custom/standard",
-    "serializer": null,
-    "permissions": [
-      "IsAuthenticated"
-    ]
-  },
-  {
-    "path": "academics/api/",
-    "method": "PUT",
-    "view": "APIRootView",
-    "action": "custom/standard",
-    "serializer": null,
-    "permissions": [
-      "IsAuthenticated"
-    ]
-  },
-  {
-    "path": "academics/api/",
-    "method": "PATCH",
-    "view": "APIRootView",
-    "action": "custom/standard",
-    "serializer": null,
-    "permissions": [
-      "IsAuthenticated"
-    ]
-  },
-  {
-    "path": "academics/api/",
-    "method": "DELETE",
-    "view": "APIRootView",
-    "action": "custom/standard",
-    "serializer": null,
-    "permissions": [
-      "IsAuthenticated"
-    ]
-  },
-  {
-    "path": "academics/api/",
-    "method": "TRACE",
-    "view": "APIRootView",
-    "action": "custom/standard",
-    "serializer": null,
-    "permissions": [
-      "IsAuthenticated"
-    ]
-  },
-  {
-    "path": "academics/api/<drf_format_suffix:format>",
-    "method": "GET",
-    "view": "APIRootView",
-    "action": "custom/standard",
-    "serializer": null,
-    "permissions": [
-      "IsAuthenticated"
-    ]
-  },
-  {
-    "path": "academics/api/<drf_format_suffix:format>",
-    "method": "POST",
-    "view": "APIRootView",
-    "action": "custom/standard",
-    "serializer": null,
-    "permissions": [
-      "IsAuthenticated"
-    ]
-  },
-  {
-    "path": "academics/api/<drf_format_suffix:format>",
-    "method": "PUT",
-    "view": "APIRootView",
-    "action": "custom/standard",
-    "serializer": null,
-    "permissions": [
-      "IsAuthenticated"
-    ]
-  },
-  {
-    "path": "academics/api/<drf_format_suffix:format>",
-    "method": "PATCH",
-    "view": "APIRootView",
-    "action": "custom/standard",
-    "serializer": null,
-    "permissions": [
-      "IsAuthenticated"
-    ]
-  },
-  {
-    "path": "academics/api/<drf_format_suffix:format>",
-    "method": "DELETE",
-    "view": "APIRootView",
-    "action": "custom/standard",
-    "serializer": null,
-    "permissions": [
-      "IsAuthenticated"
-    ]
-  },
-  {
-    "path": "academics/api/<drf_format_suffix:format>",
-    "method": "TRACE",
-    "view": "APIRootView",
-    "action": "custom/standard",
-    "serializer": null,
-    "permissions": [
-      "IsAuthenticated"
-    ]
-  },
-  {
     "path": "api/auth/login/",
     "method": "GET",
     "view": "CustomTokenObtainPairView",
@@ -9727,6 +8811,66 @@
     "path": "api/auth/complete-profile/",
     "method": "TRACE",
     "view": "CompleteProfileView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/auth/onboarding/",
+    "method": "GET",
+    "view": "ResidentOnboardingView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/auth/onboarding/",
+    "method": "POST",
+    "view": "ResidentOnboardingView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/auth/onboarding/",
+    "method": "PUT",
+    "view": "ResidentOnboardingView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/auth/onboarding/",
+    "method": "PATCH",
+    "view": "ResidentOnboardingView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/auth/onboarding/",
+    "method": "DELETE",
+    "view": "ResidentOnboardingView",
+    "action": "custom/standard",
+    "serializer": null,
+    "permissions": [
+      "IsAuthenticated"
+    ]
+  },
+  {
+    "path": "api/auth/onboarding/",
+    "method": "TRACE",
+    "view": "ResidentOnboardingView",
     "action": "custom/standard",
     "serializer": null,
     "permissions": [

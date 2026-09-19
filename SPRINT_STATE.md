@@ -62,10 +62,10 @@ explicit workflow, physical-device and Play gates above.
 
 ---
 
-## Web discovery audit addendum — 2026-09-19
+## Web implementation sprint — verification, navigation, approval contract — 2026-09-19
 
-Completed: repository baseline, route/action inventory, frontend↔backend maps, build/runtime checks, evidence package, and canonical web pending-work entries under `docs/discovery/`.
+Completed: repaired the admin dashboard test contract; added admin/supervisor academic monitoring, workload, and progress navigation; renamed the HOD-labelled rotation approval route/client contract to `supervisor-approve`; updated affected tests/contracts/truth maps and regenerated the endpoint inventory.
 
-Pending: do not implement web backlog items in this audit. First recommended web sprint is WEB-DISC-006/005/001: restore disposable verification, resolve role/HOD contract drift, and repair the red admin dashboard test.
+Pending: complete the remaining Update 0 identity/onboarding and HOD designation cleanup; obtain valid isolated browser credentials for role-based E2E workflows; resolve the root-owned frontend `.next/trace-build` build artifact blocker; run full browser verification after those blockers are cleared.
 
-Evidence: backend pytest 1,211 passed/9 skipped/82.13% coverage; frontend typecheck/lint pass; Django check/migration check pass; Jest 38/39 suites pass; Playwright smoke 19/25 pass with six baseline-admin 401 blockers; frontend build blocked by root-owned `.next/trace-build`.
+Evidence: backend pytest 1,211 passed/9 skipped/82.13% coverage; affected frontend suites 142/142 passed; full frontend Jest 252/252 passed; typecheck and lint passed; Django check/migration check passed; prior Playwright smoke 19/25 passed with six baseline-admin 401 blockers; direct frontend build remains blocked by root-owned `.next/trace-build`.

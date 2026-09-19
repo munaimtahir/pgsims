@@ -390,7 +390,7 @@ Active release-gated dashboard UI exposes resident schedule/leave and logbook, s
 - `PATCH /api/rotations/{id}/` — update rotation fields; allowed only while status is `DRAFT` or `RETURNED`; Roles: admin, utrmc_admin
 - `DELETE /api/rotations/{id}/` — delete rotation (not part of the promoted active workflow)
 - `POST /api/rotations/{id}/submit/` — resident or admin submits a `DRAFT` or `RETURNED` rotation; Roles: pg/resident (own), admin, utrmc_admin
-- `POST /api/rotations/{id}/hod-approve/` — HOD or admin approves; Roles: supervisor (HOD), admin
+- `POST /api/rotations/{id}/supervisor-approve/` — assigned supervisor or admin approves; Roles: supervisor, admin
 - `POST /api/rotations/{id}/utrmc-approve/` — admin/UTRMC admin approval override; Roles: admin, utrmc_admin
 - `POST /api/rotations/{id}/activate/` — admin activates approved rotation; Roles: admin, utrmc_admin
 - `POST /api/rotations/{id}/complete/` — admin marks rotation complete; Roles: admin, utrmc_admin

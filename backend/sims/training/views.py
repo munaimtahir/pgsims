@@ -367,14 +367,14 @@ class RotationAssignmentViewSet(viewsets.ModelViewSet):
         obj.save()
         return Response(RotationAssignmentSerializer(obj, context={"request": request}).data)
 
-    @action(detail=True, methods=["post"], url_path="hod-approve")
-    def hod_approve(self, request, pk=None):
+    @action(detail=True, methods=["post"], url_path="supervisor-approve")
+    def supervisor_approve(self, request, pk=None):
         obj = self.get_object()
         if not (_is_supervisor_or_hod(request.user) or _is_admin_or_utrmc_admin(request.user)):
             return Response({"detail": "Permission denied."}, status=status.HTTP_403_FORBIDDEN)
         if obj.status != RotationAssignment.STATUS_SUBMITTED:
             return Response(
-                {"detail": f"Cannot HOD-approve from status {obj.status}."},
+                {"detail": f"Cannot supervisor-approve from status {obj.status}."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
         obj.status = RotationAssignment.STATUS_APPROVED

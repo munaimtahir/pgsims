@@ -47,8 +47,8 @@ class TrainingViewsExtendedTests(TestCase):
         response = self.client.post(f"/api/rotations/{assignment.id}/submit/")
         self.assertEqual(response.status_code, 200)
         
-        # Approve (HOD Approve)
-        response = self.client.post(f"/api/rotations/{assignment.id}/hod-approve/")
+        # Approve (supervisor approval)
+        response = self.client.post(f"/api/rotations/{assignment.id}/supervisor-approve/")
         self.assertEqual(response.status_code, 200)
 
     def test_leave_request_actions(self):

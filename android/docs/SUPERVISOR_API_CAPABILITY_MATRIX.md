@@ -25,7 +25,7 @@ were wired; re-verify against a seeded staging account before shipping.
 | Leave pending queue | Yes | GET | `/api/utrmc/approvals/leaves/` (auto-scopes to the caller's own supervised residents for a supervisor account, despite the `utrmc` path segment) | `SupervisorWorkflowQueueScreen(LEAVE)` |
 | Approve/reject leave request | Yes | POST | `/api/leaves/{id}/approve/`, `.../reject/` (payload: `reason`) | **Wired.** → Approve / Reject |
 | Rotation pending queue | Yes | GET | `/api/supervisor/rotations/pending/` | `SupervisorWorkflowQueueScreen(ROTATION)` |
-| Approve/reject/return rotation | Yes | POST | `/api/rotations/{id}/hod-approve/`, `.../reject/`, `.../returned/` (payload: `reason`) | **Wired.** → Approve / Reject / Return for revision. Correcting a prior note in this doc: rotation reject and return DO exist (`docs/contracts/API_CONTRACT.md`), it was not approve-only. |
+| Approve/reject/return rotation | Yes | POST | `/api/rotations/{id}/supervisor-approve/`, `.../reject/`, `.../returned/` (payload: `reason`) | **Wired.** → Approve / Reject / Return for revision. Correcting a prior note in this doc: rotation reject and return DO exist (`docs/contracts/API_CONTRACT.md`), it was not approve-only. |
 | Research pending queue | Yes | GET | `/api/supervisor/research-approvals/` | `SupervisorWorkflowQueueScreen(RESEARCH)` |
 | Evaluation review queue | Yes | GET | `/api/academics/evaluation-submissions/` (supervisor-scoped) | `SupervisorWorkflowQueueScreen(EVALUATION)`; filters `SUBMITTED`/`UNDER_REVIEW` |
 | Approve/return/reject evaluation | Yes | POST | `/api/academics/evaluation-submissions/{id}/approve/`, `.../return_revision/`, `.../reject/` | Wired with backend-supported comment actions |

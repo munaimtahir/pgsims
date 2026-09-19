@@ -800,16 +800,16 @@ class TestRotationAssignmentWorkflow:
         assert r.status_code == status.HTTP_200_OK
         assert r.data["status"] == RotationAssignment.STATUS_SUBMITTED
 
-        # HOD approve (supervisor)
+        # Supervisor approval
         sup_c = auth_client(u_supervisor)
-        r = sup_c.post(f"/api/rotations/{rot_id}/hod-approve/")
+        r = sup_c.post(f"/api/rotations/{rot_id}/supervisor-approve/")
         assert r.status_code == status.HTTP_200_OK
         assert r.data["status"] == RotationAssignment.STATUS_APPROVED
 
     def test_utrmc_approve_rotation(
         self, db, resident_training, hospital_dept, u_admin, u_utrmc_admin, u_supervisor, department
     ):
-        """admin creates → submit → hod-approve → utrmc-approve."""
+        """admin creates → submit → supervisor approval → administrative approval."""
         from sims.users.models import SupervisorProfile
 
         SupervisorProfile.objects.update_or_create(
@@ -829,8 +829,8 @@ class TestRotationAssignmentWorkflow:
         })
         rot_id = r.data["id"]
         admin_c.post(f"/api/rotations/{rot_id}/submit/")
-        # admin can hod-approve (admin or utrmc_admin bypasses HOD check)
-        admin_c.post(f"/api/rotations/{rot_id}/hod-approve/")
+        # ADMIN can perform supervisor approval as an administrative fallback.
+        admin_c.post(f"/api/rotations/{rot_id}/supervisor-approve/")
 
         utrmc_c = auth_client(u_utrmc_admin)
         r = utrmc_c.post(f"/api/rotations/{rot_id}/utrmc-approve/")
@@ -855,7 +855,7 @@ class TestRotationAssignmentWorkflow:
         })
         rot_id = r.data["id"]
         admin_c.post(f"/api/rotations/{rot_id}/submit/")
-        admin_c.post(f"/api/rotations/{rot_id}/hod-approve/")
+        admin_c.post(f"/api/rotations/{rot_id}/supervisor-approve/")
 
         pg_c = auth_client(u_pg)
         r = pg_c.post(f"/api/rotations/{rot_id}/utrmc-approve/")

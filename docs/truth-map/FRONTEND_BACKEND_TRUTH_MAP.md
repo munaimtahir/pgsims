@@ -72,12 +72,12 @@ regression found from the Phase C migration.
 
 ### 4.1 Rotation Assignments — WORKING (new since 2026-07-23)
 `/academics/rotation-assignments[, /new, /[id]]` calls `rotationsApi` (`frontend/lib/api/rotations.ts`)
-against `POST/GET /api/rotations/` (create/list/detail), `.../submit/`, `.../hod-approve/`
+against `POST/GET /api/rotations/` (create/list/detail), `.../submit/`, `.../supervisor-approve/`
 (exposed in the UI as `reviewApplication` with `action: approve|defer|reject`),
 `.../utrmc-approve/`, `.../activate/`, `.../complete/`, plus `/api/hospital-departments/`,
 `/api/resident-training/`, `/api/programs/` for the create form's dropdowns. Confirmed real usage by
 grepping `rotationsApi.*` call sites in `frontend/app/academics/rotation-assignments/**/*.tsx`, not
-just the client file. Full draft → submit → HOD-approve → UTRMC-approve → activate → complete
+just the client file. Full draft → submit → Supervisor approval → UTRMC-approve → activate → complete
 lifecycle is reachable from the UI for admin/supervisor/resident roles per `ProtectedRoute`.
 
 The dedicated "mine"/"inbox" endpoints (`GET /api/my/rotations/`, `/api/utrmc/approvals/rotations/`,

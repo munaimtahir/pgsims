@@ -110,18 +110,18 @@ class RotationAssignmentActionGapsTests(APITestCase):
         r = self.client.post(f"/api/rotations/{rotation.id}/submit/")
         self.assertEqual(r.status_code, status.HTTP_400_BAD_REQUEST)
 
-    # ---- hod-approve ----
+    # ---- supervisor-approve ----
 
     def test_hod_approve_permission_denied_for_resident(self):
         rotation = self._make_rotation(status_value=RotationAssignment.STATUS_SUBMITTED)
         self.client.force_authenticate(self.resident)
-        r = self.client.post(f"/api/rotations/{rotation.id}/hod-approve/")
+        r = self.client.post(f"/api/rotations/{rotation.id}/supervisor-approve/")
         self.assertEqual(r.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_hod_approve_invalid_status(self):
         rotation = self._make_rotation(status_value=RotationAssignment.STATUS_DRAFT)
         self.client.force_authenticate(self.supervisor)
-        r = self.client.post(f"/api/rotations/{rotation.id}/hod-approve/")
+        r = self.client.post(f"/api/rotations/{rotation.id}/supervisor-approve/")
         self.assertEqual(r.status_code, status.HTTP_400_BAD_REQUEST)
 
     # ---- utrmc-approve ----

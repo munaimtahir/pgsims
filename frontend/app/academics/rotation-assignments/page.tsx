@@ -31,7 +31,7 @@ export default function RotationAssignmentsPage() {
         <div className="flex items-center justify-between">
           <PageHeader
             title="Rotation Assignments"
-            description="Placements into a hospital/department rotation, with HOD and UTRMC approval."
+            description="Placements into a hospital/department rotation, with supervisor and administrative approval."
           />
           {isAdmin && (
             <Link href="/academics/rotation-assignments/new" className="pg-btn-primary">
@@ -93,7 +93,7 @@ export default function RotationAssignmentsPage() {
         )}
         {isSupervisor && (
           <p className="text-xs text-slate-500">
-            Rotations awaiting your review appear above with status &quot;SUBMITTED&quot; — open one to approve or reject it.
+            Rotations awaiting supervisor or administrative review appear above with status &quot;SUBMITTED&quot; — open one to approve or reject it.
           </p>
         )}
       </div>

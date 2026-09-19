@@ -111,8 +111,8 @@ export const rotationsApi = {
     (await apiClient.patch<RotationAssignment>(`/api/rotations/${id}/`, payload)).data,
   submit: async (id: number) =>
     (await apiClient.post<RotationAssignment>(`/api/rotations/${id}/submit/`)).data,
-  hodApprove: async (id: number) =>
-    (await apiClient.post<RotationAssignment>(`/api/rotations/${id}/hod-approve/`)).data,
+  supervisorApprove: async (id: number) =>
+    (await apiClient.post<RotationAssignment>(`/api/rotations/${id}/supervisor-approve/`)).data,
   utrmcApprove: async (id: number) =>
     (await apiClient.post<RotationAssignment>(`/api/rotations/${id}/utrmc-approve/`)).data,
   activate: async (id: number) =>
