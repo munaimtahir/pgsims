@@ -11,10 +11,12 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.put
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.MultipartBody
 import okhttp3.OkHttpClient
@@ -204,6 +206,33 @@ interface InstitutionalApi {
     @GET("api/academics/evaluation-templates/") suspend fun adminEvaluationTemplates(@Query("page") page: Int = 1): Response<JsonObject>
     @GET("api/academics/logbook-categories/") suspend fun adminLogbookCategories(@Query("page") page: Int = 1): Response<JsonObject>
     @GET("api/academics/review-queue/") suspend fun adminReviewQueue(@Query("page") page: Int = 1): Response<JsonObject>
+    @GET("api/pending-supervisor-links/") suspend fun pendingSupervisorLinks(): Response<JsonArray>
+    @POST("api/pending-supervisor-links/{id}/resolve/") suspend fun resolvePendingSupervisor(
+        @Path("id") id: Int,
+        @Body body: JsonObject,
+    ): Response<JsonObject>
+    /** Administrative paths are checked against a repository allow-list before any request. */
+    @POST("api/{path}/") suspend fun adminCreate(
+        @Path(value = "path", encoded = true) path: String,
+        @Body body: JsonObject,
+    ): Response<JsonObject>
+    @PATCH("api/{path}/{id}/") suspend fun adminUpdate(
+        @Path(value = "path", encoded = true) path: String,
+        @Path("id") id: Int,
+        @Body body: JsonObject,
+    ): Response<JsonObject>
+    @POST("api/{path}/{id}/{action}/") suspend fun adminAction(
+        @Path(value = "path", encoded = true) path: String,
+        @Path("id") id: Int,
+        @Path("action") action: String,
+        @Body body: JsonObject,
+    ): Response<JsonObject>
+    @Multipart
+    @POST("api/bulk/import/{entity}/{action}/") suspend fun bulkImport(
+        @Path("entity") entity: String,
+        @Path("action") action: String,
+        @Part file: MultipartBody.Part,
+    ): Response<JsonObject>
     @GET("api/auth/onboarding/") suspend fun onboarding(): Response<JsonObject>
     @GET("api/notifications/") suspend fun notifications(@Query("page") page: Int = 1): Response<JsonObject>
     @GET("api/notifications/unread-count/") suspend fun notificationUnreadCount(): Response<JsonObject>
@@ -231,10 +260,12 @@ interface InstitutionalApi {
     @GET("api/academics/reports/data-quality/") suspend fun adminDataQualityReport(): Response<JsonObject>
     @GET("api/academics/reports/logbook/") suspend fun adminLogbookReport(): Response<JsonObject>
     @GET("api/academics/reports/evaluations/") suspend fun adminEvaluationReport(): Response<JsonObject>
+    @GET("api/academics/reports/resident-progress/") suspend fun adminResidentProgressReport(): Response<JsonObject>
     @GET("api/academics/reports/supervisor-workload/") suspend fun adminSupervisorWorkloadReport(): Response<JsonObject>
     @GET("api/academics/reports/data-quality/export.csv") suspend fun adminDataQualityCsv(): Response<ResponseBody>
     @GET("api/academics/reports/logbook/export.csv") suspend fun adminLogbookCsv(): Response<ResponseBody>
     @GET("api/academics/reports/evaluations/export.csv") suspend fun adminEvaluationCsv(): Response<ResponseBody>
+    @GET("api/academics/reports/resident-progress/export.csv") suspend fun adminResidentProgressCsv(): Response<ResponseBody>
     @GET("api/academics/reports/supervisor-workload/export.csv") suspend fun adminSupervisorWorkloadCsv(): Response<ResponseBody>
     @POST("api/academics/logbook-entries/") suspend fun createLogbook(@Body body: AcademicLogbookPayload): Response<JsonObject>
     @PATCH("api/academics/logbook-entries/{id}/") suspend fun updateLogbook(@Path("id") id: Int, @Body body: AcademicLogbookPayload): Response<JsonObject>
@@ -502,9 +533,10 @@ class InstitutionalRepository internal constructor(
     suspend fun adminReports(): List<Pair<String, Result<JsonObject>>> = withContext(Dispatchers.IO) {
         listOf(
             "Data quality" to runCatching { required(authorized { authorizedApi.adminDataQualityReport() }, "the data-quality report") },
-            "Logbook report" to runCatching { required(authorized { authorizedApi.adminLogbookReport() }, "the logbook report") },
-            "Evaluation report" to runCatching { required(authorized { authorizedApi.adminEvaluationReport() }, "the evaluation report") },
-            "Supervisor workload report" to runCatching { required(authorized { authorizedApi.adminSupervisorWorkloadReport() }, "the supervisor workload report") },
+            "Logbook" to runCatching { required(authorized { authorizedApi.adminLogbookReport() }, "the logbook report") },
+            "Evaluations" to runCatching { required(authorized { authorizedApi.adminEvaluationReport() }, "the evaluation report") },
+            "Resident progress" to runCatching { required(authorized { authorizedApi.adminResidentProgressReport() }, "the resident-progress report") },
+            "Supervisor workload" to runCatching { required(authorized { authorizedApi.adminSupervisorWorkloadReport() }, "the supervisor workload report") },
         )
     }
 
@@ -521,6 +553,62 @@ class InstitutionalRepository internal constructor(
         )
     }
 
+    /** Shared reference data for the admin create forms. */
+    suspend fun academicOptions(): Result<JsonObject> = withContext(Dispatchers.IO) {
+        runCatching { required(authorized { authorizedApi.academicOptions() }, "academic setup options") }
+    }
+
+    suspend fun pendingSupervisorLinks(): Result<List<JsonObject>> = withContext(Dispatchers.IO) {
+        runCatching {
+            val response = authorized { authorizedApi.pendingSupervisorLinks() }
+            if (!response.isSuccessful) throw InstitutionalException(errorFor(response.code(), "pending supervisor links"))
+            response.body()?.map { it.jsonObject }.orEmpty()
+        }
+    }
+
+    suspend fun resolvePendingSupervisor(pendingId: Int, supervisorId: Int): Result<JsonObject> = withContext(Dispatchers.IO) {
+        runCatching {
+            required(
+                authorized { authorizedApi.resolvePendingSupervisor(pendingId, buildJsonObject { put("supervisor_id", supervisorId) }) },
+                "the pending supervisor link",
+            )
+        }
+    }
+
+    suspend fun adminCreate(path: String, body: JsonObject, label: String): Result<JsonObject> = withContext(Dispatchers.IO) {
+        runCatching {
+            require(path in ADMIN_MUTATION_PATHS) { "Unsupported administrative collection." }
+            required(authorized { authorizedApi.adminCreate(path, body) }, label)
+        }
+    }
+
+    suspend fun adminUpdate(path: String, id: Int, body: JsonObject, label: String): Result<JsonObject> = withContext(Dispatchers.IO) {
+        runCatching {
+            require(path in ADMIN_MUTATION_PATHS) { "Unsupported administrative collection." }
+            required(authorized { authorizedApi.adminUpdate(path, id, body) }, label)
+        }
+    }
+
+    suspend fun adminAction(path: String, id: Int, action: String, body: JsonObject, label: String): Result<JsonObject> = withContext(Dispatchers.IO) {
+        runCatching {
+            val allowed = (path == "supervision/assignments" && action == "end") ||
+                (path == "academics/training-records" && action == "close")
+            require(allowed) { "Unsupported administrative action." }
+            required(authorized { authorizedApi.adminAction(path, id, action, body) }, label)
+        }
+    }
+
+    suspend fun bulkImport(entity: String, action: String, file: File): Result<JsonObject> = withContext(Dispatchers.IO) {
+        runCatching {
+            require(entity in BULK_IMPORT_ENTITIES) { "Unsupported import entity." }
+            require(action in setOf("dry-run", "apply")) { "Unsupported import action." }
+            val part = MultipartBody.Part.createFormData(
+                "file", file.name, file.asRequestBody(mimeTypeFor(file.name).toMediaType()),
+            )
+            required(authorized { authorizedApi.bulkImport(entity, action, part) }, "the import")
+        }
+    }
+
     suspend fun adminReportCsv(label: String): Result<String> = withContext(Dispatchers.IO) {
         runCatching {
             val response = authorized {
@@ -528,6 +616,7 @@ class InstitutionalRepository internal constructor(
                     "Data quality" -> authorizedApi.adminDataQualityCsv()
                     "Logbook" -> authorizedApi.adminLogbookCsv()
                     "Evaluations" -> authorizedApi.adminEvaluationCsv()
+                    "Resident progress" -> authorizedApi.adminResidentProgressCsv()
                     "Supervisor workload" -> authorizedApi.adminSupervisorWorkloadCsv()
                     else -> throw InstitutionalException("Unknown report.")
                 }
@@ -973,6 +1062,25 @@ class InstitutionalRepository internal constructor(
 
     companion object {
         private val refreshMutex = Mutex()
+
+        /** Collections exposed by the Android admin workspace; callers cannot supply arbitrary URLs. */
+        internal val ADMIN_MUTATION_PATHS = setOf(
+            "resident-document-requirements",
+            "supervision/assignments",
+            "academics/training-records",
+            "academics/periods",
+            "academics/rotation-templates",
+            "academics/evaluation-templates",
+            "academics/logbook-categories",
+            "academics/review-queue",
+        )
+
+        internal val BULK_IMPORT_ENTITIES = setOf(
+            "hospitals", "departments", "matrix", "residents", "supervisors",
+            "faculty-supervisors", "supervision-links", "rotation-assignments",
+            "training-programs", "rotation-templates", "resident-training-records",
+            "academic-sessions",
+        )
 
         /** Mirrors the backend's own limits so the trainee gets the error before the upload runs. */
         val ALLOWED_UPLOAD_EXTENSIONS = setOf("pdf", "jpg", "jpeg", "png", "doc", "docx")

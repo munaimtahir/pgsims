@@ -524,6 +524,69 @@ class InstitutionalRepositoryTest {
         assertEquals("Bearer access-1", request.getHeader("Authorization"))
     }
 
+    @Test fun `all displayed report labels resolve to their canonical CSV exports`() = runBlocking {
+        tokens.save("access-1", "refresh-1")
+        val expected = mapOf(
+            "Logbook" to "/api/academics/reports/logbook/export.csv",
+            "Evaluations" to "/api/academics/reports/evaluations/export.csv",
+            "Resident progress" to "/api/academics/reports/resident-progress/export.csv",
+            "Supervisor workload" to "/api/academics/reports/supervisor-workload/export.csv",
+        )
+        expected.forEach { (label, path) ->
+            server.enqueue(MockResponse().setResponseCode(200).setHeader("Content-Type", "text/csv").setBody("id\n1\n"))
+            assertEquals("id\n1\n", repository.adminReportCsv(label).getOrThrow())
+            assertEquals(path, server.takeRequest().path)
+        }
+    }
+
+    @Test fun `admin authoring only posts to an allow-listed canonical collection`() = runBlocking {
+        tokens.save("access-1", "refresh-1")
+        server.enqueue(json("""{"id":12,"name":"Rotation A"}""", 201))
+        val payload = Json.parseToJsonElement("""{"name":"Rotation A","code":"ROT-A"}""") as JsonObject
+
+        repository.adminCreate("academics/rotation-templates", payload, "rotation template").getOrThrow()
+
+        val request = server.takeRequest()
+        assertEquals("POST", request.method)
+        assertEquals("/api/academics/rotation-templates/", request.path)
+        assertEquals("Bearer access-1", request.getHeader("Authorization"))
+        assertEquals("Rotation A", (Json.parseToJsonElement(request.body.readUtf8()) as JsonObject).string("name"))
+        val requestsBeforeRejectedPath = server.requestCount
+        val rejected = repository.adminCreate("auth/logout", payload, "logout")
+        assertTrue(rejected.isFailure)
+        assertEquals(requestsBeforeRejectedPath, server.requestCount)
+    }
+
+    @Test fun `pending supervisor links list and resolve through canonical admin endpoints`() = runBlocking {
+        tokens.save("access-1", "refresh-1")
+        server.enqueue(json("""[{"id":18,"resident":"Demo Resident","supervisor_name":"Dr Requested"}]"""))
+        server.enqueue(json("""{"pending_id":18,"assignment_id":4,"status":"RESOLVED"}"""))
+
+        assertEquals(18, repository.pendingSupervisorLinks().getOrThrow().single().string("id")?.toInt())
+        assertEquals("RESOLVED", repository.resolvePendingSupervisor(18, 7).getOrThrow().string("status"))
+
+        assertEquals("/api/pending-supervisor-links/", server.takeRequest().path)
+        val resolve = server.takeRequest()
+        assertEquals("/api/pending-supervisor-links/18/resolve/", resolve.path)
+        assertEquals(7, (Json.parseToJsonElement(resolve.body.readUtf8()) as JsonObject).string("supervisor_id")?.toInt())
+    }
+
+    @Test fun `standard import requires a supported entity and uses dry-run before apply`() = runBlocking {
+        tokens.save("access-1", "refresh-1")
+        val file = File.createTempFile("pgr-import", ".csv").apply { writeText("email,full_name\ndemo@example.com,Demo\n") }
+        server.enqueue(json("""{"dry_run":true,"status":"COMPLETED"}"""))
+        assertEquals("COMPLETED", repository.bulkImport("residents", "dry-run", file).getOrThrow().string("status"))
+        val request = server.takeRequest()
+        assertEquals("POST", request.method)
+        assertEquals("/api/bulk/import/residents/dry-run/", request.path)
+        assertTrue(request.body.readUtf8().contains("demo@example.com"))
+        val requestsBeforeRejectedImport = server.requestCount
+        assertTrue(repository.bulkImport("unknown", "apply", file).isFailure)
+        assertEquals(requestsBeforeRejectedImport, server.requestCount)
+        file.delete()
+        Unit
+    }
+
     @Test fun `notification reads follow every server page`() = runBlocking {
         tokens.save("access-1", "refresh-1")
         server.enqueue(json("""{"count":2,"next":"https://example/api/notifications/?page=2","results":[{"id":1,"title":"First"}]}"""))
