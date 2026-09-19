@@ -1,6 +1,11 @@
 # Android release verification
 
-Run from `android/`:
+The current canonical candidate is `pk.vexel.pgrcompanion` version `1.1.9` / code `9`. Older
+1.1.7 and earlier entries in this file are historical evidence. Current gap-closure status and
+the complete pending Android backlog are tracked in `SPRINT_STATE.md` and
+`docs/implementation/20260920_android_gap_closure/PENDING_WORK_REGISTER.md`.
+
+Run from `android/` for a later release gate:
 
 ```bash
 ./gradlew :app-companion:testDebugUnitTest :app-companion:lintDebug :app-companion:assembleRelease :app-companion:bundleRelease

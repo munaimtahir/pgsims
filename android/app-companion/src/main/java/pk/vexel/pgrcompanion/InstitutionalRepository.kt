@@ -196,16 +196,16 @@ interface InstitutionalApi {
     ): Response<JsonObject>
     @POST("api/users/") suspend fun createUser(@Body body: UniversalUserPayload): Response<JsonObject>
     @GET("api/users/{id}/") suspend fun userDetail(@Path("id") id: Int): Response<JsonObject>
-    @GET("api/resident-document-requirements/") suspend fun documentRequirements(): Response<JsonObject>
-    @GET("api/supervision/assignments/") suspend fun adminAssignments(): Response<JsonObject>
-    @GET("api/academics/training-records/") suspend fun adminTrainingRecords(): Response<JsonObject>
-    @GET("api/academics/periods/") suspend fun adminPeriods(): Response<JsonObject>
-    @GET("api/academics/rotation-templates/") suspend fun adminRotationTemplates(): Response<JsonObject>
-    @GET("api/academics/evaluation-templates/") suspend fun adminEvaluationTemplates(): Response<JsonObject>
-    @GET("api/academics/logbook-categories/") suspend fun adminLogbookCategories(): Response<JsonObject>
-    @GET("api/academics/review-queue/") suspend fun adminReviewQueue(): Response<JsonObject>
+    @GET("api/resident-document-requirements/") suspend fun documentRequirements(@Query("page") page: Int = 1): Response<JsonObject>
+    @GET("api/supervision/assignments/") suspend fun adminAssignments(@Query("page") page: Int = 1): Response<JsonObject>
+    @GET("api/academics/training-records/") suspend fun adminTrainingRecords(@Query("page") page: Int = 1): Response<JsonObject>
+    @GET("api/academics/periods/") suspend fun adminPeriods(@Query("page") page: Int = 1): Response<JsonObject>
+    @GET("api/academics/rotation-templates/") suspend fun adminRotationTemplates(@Query("page") page: Int = 1): Response<JsonObject>
+    @GET("api/academics/evaluation-templates/") suspend fun adminEvaluationTemplates(@Query("page") page: Int = 1): Response<JsonObject>
+    @GET("api/academics/logbook-categories/") suspend fun adminLogbookCategories(@Query("page") page: Int = 1): Response<JsonObject>
+    @GET("api/academics/review-queue/") suspend fun adminReviewQueue(@Query("page") page: Int = 1): Response<JsonObject>
     @GET("api/auth/onboarding/") suspend fun onboarding(): Response<JsonObject>
-    @GET("api/notifications/") suspend fun notifications(): Response<JsonObject>
+    @GET("api/notifications/") suspend fun notifications(@Query("page") page: Int = 1): Response<JsonObject>
     @GET("api/notifications/unread-count/") suspend fun notificationUnreadCount(): Response<JsonObject>
     @GET("api/notifications/preferences/") suspend fun notificationPreferences(): Response<JsonObject>
     @PATCH("api/notifications/preferences/") suspend fun updateNotificationPreferences(@Body body: NotificationPreferencesPayload): Response<JsonObject>
@@ -215,17 +215,17 @@ interface InstitutionalApi {
     @PATCH("api/auth/onboarding/") suspend fun updateOnboarding(@Body body: FieldPatch): Response<JsonObject>
     @POST("api/resident-onboarding/state/") suspend fun acceptDeclaration(@Body body: DeclarationPayload): Response<JsonObject>
     @GET("api/resident-documents/") suspend fun documents(): Response<JsonArray>
-    @GET("api/resident-training/") suspend fun training(): Response<JsonObject>
-    @GET("api/supervision/assignments/") suspend fun assignments(): Response<JsonObject>
-    @GET("api/my/rotations/") suspend fun rotations(): Response<JsonObject>
+    @GET("api/resident-training/") suspend fun training(@Query("page") page: Int = 1): Response<JsonObject>
+    @GET("api/supervision/assignments/") suspend fun assignments(@Query("page") page: Int = 1): Response<JsonObject>
+    @GET("api/my/rotations/") suspend fun rotations(@Query("page") page: Int = 1): Response<JsonObject>
     @GET("api/rotations/{id}/") suspend fun rotationDetail(@Path("id") id: Int): Response<JsonObject>
-    @GET("api/my/leaves/") suspend fun leaves(): Response<JsonObject>
+    @GET("api/my/leaves/") suspend fun leaves(@Query("page") page: Int = 1): Response<JsonObject>
     @POST("api/leaves/") suspend fun createLeave(@Body body: LeaveRequestPayload): Response<JsonObject>
     @PATCH("api/leaves/{id}/") suspend fun updateLeave(@Path("id") id: Int, @Body body: LeaveRequestPayload): Response<JsonObject>
     @POST("api/leaves/{id}/submit/") suspend fun submitLeave(@Path("id") id: Int): Response<JsonObject>
     @GET("api/leaves/{id}/") suspend fun leaveDetail(@Path("id") id: Int): Response<JsonObject>
-    @GET("api/academics/logbook-entries/") suspend fun logbook(): Response<JsonObject>
-    @GET("api/academics/logbook-categories/") suspend fun logbookCategories(): Response<JsonObject>
+    @GET("api/academics/logbook-entries/") suspend fun logbook(@Query("page") page: Int = 1): Response<JsonObject>
+    @GET("api/academics/logbook-categories/") suspend fun logbookCategories(@Query("page") page: Int = 1): Response<JsonObject>
     @GET("api/academics/options/") suspend fun academicOptions(): Response<JsonObject>
     @GET("api/academics/admin-workflow-overview/") suspend fun adminWorkflowOverview(): Response<JsonObject>
     @GET("api/academics/reports/data-quality/") suspend fun adminDataQualityReport(): Response<JsonObject>
@@ -241,8 +241,8 @@ interface InstitutionalApi {
     @POST("api/academics/logbook-entries/{id}/submit/") suspend fun submitLogbook(@Path("id") id: Int): Response<JsonObject>
     @POST("api/academics/logbook-entries/{id}/cancel/") suspend fun cancelLogbook(@Path("id") id: Int): Response<JsonObject>
     @GET("api/academics/logbook-entries/{id}/") suspend fun logbookDetail(@Path("id") id: Int): Response<JsonObject>
-    @GET("api/academics/evaluation-submissions/") suspend fun assessments(): Response<JsonObject>
-    @GET("api/academics/evaluation-templates/") suspend fun evaluationTemplates(): Response<JsonObject>
+    @GET("api/academics/evaluation-submissions/") suspend fun assessments(@Query("page") page: Int = 1): Response<JsonObject>
+    @GET("api/academics/evaluation-templates/") suspend fun evaluationTemplates(@Query("page") page: Int = 1): Response<JsonObject>
     @POST("api/academics/evaluation-submissions/") suspend fun createEvaluation(@Body body: EvaluationSubmissionPayload): Response<JsonObject>
     @PATCH("api/academics/evaluation-submissions/{id}/") suspend fun updateEvaluation(@Path("id") id: Int, @Body body: EvaluationSubmissionPayload): Response<JsonObject>
     @POST("api/academics/evaluation-submissions/{id}/submit/") suspend fun submitEvaluation(@Path("id") id: Int): Response<JsonObject>
@@ -253,7 +253,7 @@ interface InstitutionalApi {
     @POST("api/academics/evaluation-submissions/{id}/return_revision/") suspend fun returnEvaluation(@Path("id") id: Int, @Body body: SupervisorCommentPayload): Response<JsonObject>
     @POST("api/academics/evaluation-submissions/{id}/reject/") suspend fun rejectEvaluation(@Path("id") id: Int, @Body body: SupervisorCommentPayload): Response<JsonObject>
     @GET("api/my/research/") suspend fun research(): Response<JsonObject>
-    @GET("api/my/workshops/") suspend fun workshops(): Response<JsonObject>
+    @GET("api/my/workshops/") suspend fun workshops(@Query("page") page: Int = 1): Response<JsonObject>
     @GET("api/residents/me/summary/") suspend fun residentSummary(): Response<JsonObject>
     @GET("api/academics/my-progress/") suspend fun academicProgress(): Response<JsonObject>
     @GET("api/academics/monitoring/my-progress/") suspend fun progressMonitoring(): Response<JsonObject>
@@ -274,9 +274,9 @@ interface InstitutionalApi {
     // repository filters it to SUBMITTED. The separate `review-queue` endpoint was tried first but
     // rejected — its item `id` is a queue-row id, not the actual logbook entry id the action
     // endpoints require, and it also mixes in EVALUATION_REVIEW rows with no action support.
-    @GET("api/utrmc/approvals/leaves/") suspend fun supervisorLeaveQueue(): Response<JsonObject>
-    @GET("api/supervisor/rotations/pending/") suspend fun supervisorRotationQueue(): Response<JsonObject>
-    @GET("api/supervisor/research-approvals/") suspend fun supervisorResearchQueue(): Response<JsonObject>
+    @GET("api/utrmc/approvals/leaves/") suspend fun supervisorLeaveQueue(@Query("page") page: Int = 1): Response<JsonObject>
+    @GET("api/supervisor/rotations/pending/") suspend fun supervisorRotationQueue(@Query("page") page: Int = 1): Response<JsonObject>
+    @GET("api/supervisor/research-approvals/") suspend fun supervisorResearchQueue(@Query("page") page: Int = 1): Response<JsonObject>
 
     // Supervisor-role workflow actions.
     @POST("api/academics/logbook-entries/{id}/verify/")
@@ -465,17 +465,17 @@ class InstitutionalRepository internal constructor(
             }
             val onboarding = optional(authorized { authorizedApi.onboarding() }, "Onboarding", unavailable)
             val documents = optionalArray(authorized { authorizedApi.documents() }, "Documents", unavailable)
-            val training = optional(authorized { authorizedApi.training() }, "Training", unavailable).paged()
-            val assignments = optional(authorized { authorizedApi.assignments() }, "Supervisor", unavailable).paged()
-            val rotations = optional(authorized { authorizedApi.rotations() }, "Rotations", unavailable).paged()
-            val leaves = optional(authorized { authorizedApi.leaves() }, "Leave requests", unavailable).paged()
-            val logbook = optional(authorized { authorizedApi.logbook() }, "Logbook", unavailable).paged()
-            val logbookCategories = optional(authorized { authorizedApi.logbookCategories() }, "Logbook categories", unavailable).paged()
+            val training = optionalPaged("Training", unavailable) { authorizedApi.training(it) }
+            val assignments = optionalPaged("Supervisor", unavailable) { authorizedApi.assignments(it) }
+            val rotations = optionalPaged("Rotations", unavailable) { authorizedApi.rotations(it) }
+            val leaves = optionalPaged("Leave requests", unavailable) { authorizedApi.leaves(it) }
+            val logbook = optionalPaged("Logbook", unavailable) { authorizedApi.logbook(it) }
+            val logbookCategories = optionalPaged("Logbook categories", unavailable) { authorizedApi.logbookCategories(it) }
             val academicOptions = optional(authorized { authorizedApi.academicOptions() }, "Academic options", unavailable)
-            val assessments = optional(authorized { authorizedApi.assessments() }, "Assessments", unavailable).paged()
-            val evaluationTemplates = optional(authorized { authorizedApi.evaluationTemplates() }, "Evaluation templates", unavailable).paged()
+            val assessments = optionalPaged("Assessments", unavailable) { authorizedApi.assessments(it) }
+            val evaluationTemplates = optionalPaged("Evaluation templates", unavailable) { authorizedApi.evaluationTemplates(it) }
             val research = optional(authorized { authorizedApi.research() }, "Research", unavailable)
-            val workshops = optional(authorized { authorizedApi.workshops() }, "Workshops", unavailable).paged()
+            val workshops = optionalPaged("Workshops", unavailable) { authorizedApi.workshops(it) }
             val residentSummary = optional(authorized { authorizedApi.residentSummary() }, "Resident summary", unavailable)
             val academicProgress = optional(authorized { authorizedApi.academicProgress() }, "Academic progress", unavailable)
             val progressMonitoring = optional(authorized { authorizedApi.progressMonitoring() }, "Progress monitoring", unavailable)
@@ -492,7 +492,7 @@ class InstitutionalRepository internal constructor(
 
     /** Notification centre reads are on demand: failure never breaks the institutional workspace. */
     suspend fun notifications(): Result<List<JsonObject>> = withContext(Dispatchers.IO) {
-        runCatching { required(authorized { authorizedApi.notifications() }, "your notifications").paged() }
+        runCatching { allPages("your notifications") { authorizedApi.notifications(it) } }
     }
 
     suspend fun adminWorkflowOverview(): Result<JsonObject> = withContext(Dispatchers.IO) {
@@ -510,14 +510,14 @@ class InstitutionalRepository internal constructor(
 
     suspend fun adminSetup(): List<Pair<String, Result<List<JsonObject>>>> = withContext(Dispatchers.IO) {
         listOf(
-            "Document requirements" to runCatching { required(authorized { authorizedApi.documentRequirements() }, "document requirements").paged() },
-            "Supervision assignments" to runCatching { required(authorized { authorizedApi.adminAssignments() }, "supervision assignments").paged() },
-            "Training records" to runCatching { required(authorized { authorizedApi.adminTrainingRecords() }, "training records").paged() },
-            "Academic periods" to runCatching { required(authorized { authorizedApi.adminPeriods() }, "academic periods").paged() },
-            "Rotation templates" to runCatching { required(authorized { authorizedApi.adminRotationTemplates() }, "rotation templates").paged() },
-            "Evaluation templates" to runCatching { required(authorized { authorizedApi.adminEvaluationTemplates() }, "evaluation templates").paged() },
-            "Logbook categories" to runCatching { required(authorized { authorizedApi.adminLogbookCategories() }, "logbook categories").paged() },
-            "Review queue" to runCatching { required(authorized { authorizedApi.adminReviewQueue() }, "the review queue").paged() },
+            "Document requirements" to runCatching { allPages("document requirements") { authorizedApi.documentRequirements(it) } },
+            "Supervision assignments" to runCatching { allPages("supervision assignments") { authorizedApi.adminAssignments(it) } },
+            "Training records" to runCatching { allPages("training records") { authorizedApi.adminTrainingRecords(it) } },
+            "Academic periods" to runCatching { allPages("academic periods") { authorizedApi.adminPeriods(it) } },
+            "Rotation templates" to runCatching { allPages("rotation templates") { authorizedApi.adminRotationTemplates(it) } },
+            "Evaluation templates" to runCatching { allPages("evaluation templates") { authorizedApi.adminEvaluationTemplates(it) } },
+            "Logbook categories" to runCatching { allPages("logbook categories") { authorizedApi.adminLogbookCategories(it) } },
+            "Review queue" to runCatching { allPages("the review queue") { authorizedApi.adminReviewQueue(it) } },
         )
     }
 
@@ -664,28 +664,27 @@ class InstitutionalRepository internal constructor(
 
     suspend fun supervisorLogbookQueue(): Result<List<JsonObject>> = withContext(Dispatchers.IO) {
         runCatching {
-            required(authorized { authorizedApi.logbook() }, "the logbook queue")
-                .paged()
+            allPages("the logbook queue") { authorizedApi.logbook(it) }
                 .filter { it.string("status") == "SUBMITTED" }
         }
     }
 
     suspend fun supervisorLeaveQueue(): Result<List<JsonObject>> = withContext(Dispatchers.IO) {
-        runCatching { required(authorized { authorizedApi.supervisorLeaveQueue() }, "the leave queue").paged() }
+        runCatching { allPages("the leave queue") { authorizedApi.supervisorLeaveQueue(it) } }
     }
 
     suspend fun supervisorRotationQueue(): Result<List<JsonObject>> = withContext(Dispatchers.IO) {
-        runCatching { required(authorized { authorizedApi.supervisorRotationQueue() }, "the rotation queue").paged() }
+        runCatching { allPages("the rotation queue") { authorizedApi.supervisorRotationQueue(it) } }
     }
 
     suspend fun supervisorResearchQueue(): Result<List<JsonObject>> = withContext(Dispatchers.IO) {
-        runCatching { required(authorized { authorizedApi.supervisorResearchQueue() }, "the research queue").paged() }
+        runCatching { allPages("the research queue") { authorizedApi.supervisorResearchQueue(it) } }
     }
 
     suspend fun supervisorEvaluationQueue(): Result<List<JsonObject>> = withContext(Dispatchers.IO) {
         runCatching {
-            required(authorized { authorizedApi.assessments() }, "the evaluation queue")
-                .paged().filter { it.string("status") in setOf("SUBMITTED", "UNDER_REVIEW") }
+            allPages("the evaluation queue") { authorizedApi.assessments(it) }
+                .filter { it.string("status") in setOf("SUBMITTED", "UNDER_REVIEW") }
         }
     }
 
@@ -910,6 +909,56 @@ class InstitutionalRepository internal constructor(
         response.isSuccessful -> response.body()
         response.code() == 403 || response.code() == 404 -> { unavailable += section; null }
         else -> throw InstitutionalException(errorFor(response.code(), section.lowercase()))
+    }
+
+    /**
+     * Reads every DRF page for a section whose endpoint is optional for the current role. A 403/404
+     * keeps the existing restricted-section behavior; successful pages are combined in server order.
+     */
+    private suspend fun optionalPaged(
+        section: String,
+        unavailable: MutableList<String>,
+        fetch: suspend (Int) -> Response<JsonObject>,
+    ): List<JsonObject> {
+        val first = authorized { fetch(1) }
+        if (!first.isSuccessful) {
+            if (first.code() == 403 || first.code() == 404) {
+                unavailable += section
+                return emptyList()
+            }
+            throw InstitutionalException(errorFor(first.code(), section.lowercase()))
+        }
+        return allPagesFromFirst(first, section.lowercase(), fetch)
+    }
+
+    /** Reads a paginated endpoint until the backend's `next` link is exhausted. */
+    private suspend fun allPages(
+        what: String,
+        fetch: suspend (Int) -> Response<JsonObject>,
+    ): List<JsonObject> {
+        val first = authorized { fetch(1) }
+        return allPagesFromFirst(first, what, fetch)
+    }
+
+    private suspend fun allPagesFromFirst(
+        first: Response<JsonObject>,
+        what: String,
+        fetch: suspend (Int) -> Response<JsonObject>,
+    ): List<JsonObject> {
+        val rows = mutableListOf<JsonObject>()
+        var response = first
+        var page = 1
+        repeat(100) {
+            val body = required(response, what)
+            rows += body.paged()
+            val next = body.string("next") ?: return rows
+            val nextPage = Regex("[?&]page=(\\d+)").find(next)?.groupValues?.getOrNull(1)?.toIntOrNull()
+                ?: return rows
+            if (nextPage <= page) return rows
+            page = nextPage
+            response = authorized { fetch(page) }
+        }
+        throw InstitutionalException("PGR SIMS returned too many pages for $what.")
     }
 
     private fun optionalArray(

@@ -23,8 +23,8 @@ class InboxUiTest {
     private val server = MockWebServer().apply {
         dispatcher = object : Dispatcher() {
             override fun dispatch(request: RecordedRequest) = MockResponse().setHeader("Content-Type", "application/json").setBody(
-                if (request.path == "/api/notifications/") """{"results":[{"id":1,"title":"Synthetic notice","body":"fixture","is_read":false,"target":{"kind":"leave","id":42}}]}"""
-                else if (request.path == "/api/leaves/42/") """{"id":42,"status":"DRAFT","reason":"Exact target fixture"}"""
+                if (request.path?.substringBefore("?") == "/api/notifications/") """{"results":[{"id":1,"title":"Synthetic notice","body":"fixture","is_read":false,"target":{"kind":"leave","id":42}}]}"""
+                else if (request.path?.substringBefore("?") == "/api/leaves/42/") """{"id":42,"status":"DRAFT","reason":"Exact target fixture"}"""
                 else "{}"
             )
         }
@@ -49,7 +49,7 @@ class InboxUiTest {
 
     @Test fun missingAndUnsupportedTargetsKeepTheirRecoveryMessage() {
         server.dispatcher = object : Dispatcher() {
-            override fun dispatch(request: RecordedRequest): MockResponse = when (request.path) {
+            override fun dispatch(request: RecordedRequest): MockResponse = when (request.path?.substringBefore("?")) {
                 "/api/notifications/" -> MockResponse().setBody("""{"results":[{"id":1,"title":"Missing fixture","target":{"kind":"leave","id":404}},{"id":2,"title":"Unsupported fixture","target":{"kind":"research","id":404}}]}""")
                 "/api/leaves/404/" -> MockResponse().setResponseCode(404).setBody("{}")
                 else -> MockResponse().setBody("{}")

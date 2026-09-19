@@ -1,11 +1,12 @@
 # Android release verification
 
 > The single canonical PGR Companion application is `:app-companion`, packaged as
-> `pk.vexel.pgrcompanion` version `1.1.7`/code `7`. Historical pre-consolidation notes below are
-> retained as provenance only; use `android/README.md` for current build commands.
+> `pk.vexel.pgrcompanion` version `1.1.9`/code `9`. Historical pre-consolidation notes below are
+> retained as provenance only; current gap-closure status is tracked in `SPRINT_STATE.md` and
+> `docs/implementation/20260920_android_gap_closure/PENDING_WORK_REGISTER.md`.
 
 Baseline: `play-closed-testing-baseline-1.0.0` (`pk.vexel.pgrcompanion`, `1.0.0`, `versionCode 1`).
-Candidate: `1.0.2`, `versionCode 2`.
+Current candidate: `1.1.9`, `versionCode 9`; no rebuild is performed during the current gap-closure sprint.
 
 ## Commands
 

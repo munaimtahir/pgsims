@@ -523,6 +523,18 @@ class InstitutionalRepositoryTest {
         assertEquals("/api/academics/reports/data-quality/export.csv", request.path)
         assertEquals("Bearer access-1", request.getHeader("Authorization"))
     }
+
+    @Test fun `notification reads follow every server page`() = runBlocking {
+        tokens.save("access-1", "refresh-1")
+        server.enqueue(json("""{"count":2,"next":"https://example/api/notifications/?page=2","results":[{"id":1,"title":"First"}]}"""))
+        server.enqueue(json("""{"count":2,"next":null,"results":[{"id":2,"title":"Second"}]}"""))
+
+        val rows = repository.notifications().getOrThrow()
+
+        assertEquals(listOf(1, 2), rows.mapNotNull { it.string("id")?.toIntOrNull() })
+        assertEquals("/api/notifications/?page=1", server.takeRequest().path)
+        assertEquals("/api/notifications/?page=2", server.takeRequest().path)
+    }
 }
 
 class InstitutionalValidationTest {
