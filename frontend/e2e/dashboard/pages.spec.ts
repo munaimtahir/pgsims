@@ -23,26 +23,25 @@ test.describe('UTRMC Admin dashboard', () => {
     await expect(page.locator('main').first()).toBeVisible();
   });
 
-  test('hospitals page loads and shows table', async ({ page, context }) => {
+  test('hospitals compatibility route redirects to masters', async ({ page, context }) => {
     await loginAs(context, page, 'utrmc_admin');
     await page.goto('/dashboard/utrmc/hospitals');
     await expect(page).not.toHaveURL(/\/login/);
-    // Should have + Add Hospital button
-    await expect(page.getByRole('button', { name: /add hospital/i })).toBeVisible({ timeout: 10000 });
+    await expect(page).toHaveURL(/\/masters$/);
   });
 
-  test('departments page loads and shows table', async ({ page, context }) => {
+  test('departments compatibility route redirects to masters', async ({ page, context }) => {
     await loginAs(context, page, 'utrmc_admin');
     await page.goto('/dashboard/utrmc/departments');
     await expect(page).not.toHaveURL(/\/login/);
-    await expect(page.getByRole('button', { name: /add department/i })).toBeVisible({ timeout: 10000 });
+    await expect(page).toHaveURL(/\/masters$/);
   });
 
-  test('users page loads and shows add user button', async ({ page, context }) => {
+  test('users compatibility route redirects to users directory', async ({ page, context }) => {
     await loginAs(context, page, 'utrmc_admin');
     await page.goto('/dashboard/utrmc/users');
     await expect(page).not.toHaveURL(/\/login/);
-    await expect(page.getByRole('button', { name: /add user/i })).toBeVisible({ timeout: 10000 });
+    await expect(page).toHaveURL(/\/users$/);
   });
 
   test('supervision links page loads', async ({ page, context }) => {
@@ -52,18 +51,18 @@ test.describe('UTRMC Admin dashboard', () => {
     await expect(page.locator('main').first()).toBeVisible();
   });
 
-  test('H-D Matrix page loads', async ({ page, context }) => {
+  test('H-D Matrix compatibility route redirects to masters', async ({ page, context }) => {
     await loginAs(context, page, 'utrmc_admin');
     await page.goto('/dashboard/utrmc/matrix');
     await expect(page).not.toHaveURL(/\/login/);
-    await expect(page.getByRole('heading', { name: /matrix/i })).toBeVisible({ timeout: 10000 });
+    await expect(page).toHaveURL(/\/masters$/);
   });
 
-  test('programs page loads', async ({ page, context }) => {
+  test('programs compatibility route redirects to masters', async ({ page, context }) => {
     await loginAs(context, page, 'utrmc_admin');
     await page.goto('/dashboard/utrmc/programs');
     await expect(page).not.toHaveURL(/\/login/);
-    await expect(page.locator('main').first()).toBeVisible();
+    await expect(page).toHaveURL(/\/masters$/);
   });
 
   test('eligibility monitoring page loads', async ({ page, context }) => {
