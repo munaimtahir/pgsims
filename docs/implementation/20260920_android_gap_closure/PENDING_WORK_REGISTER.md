@@ -25,16 +25,15 @@ Older release documents are evidence of previous source states and are not addit
 | Notifications | UI/repository present; full isolation/paging runtime not certified | Four-role recipient isolation, read/unread/preferences, targets |
 | Onboarding/session | Backend route handling and unit contracts present | Password-first, schema bump, expiry, refresh failure, restart |
 | Offline recovery | Queue/retry/purge coverage present; remaining metadata/lifecycle findings | Duplicate workers, account switch, abrupt death, retry/discard |
-| Admin directories/setup/reports | Current read/create/report surfaces present in source | Authenticated role filtering, details, setup, CSV and error states |
+| Admin directories/setup/reports | Canonical directory detail, setup authoring, pending-supervisor resolution, reports and standard imports are present in source | Authenticated role filtering, mutation, CSV, import and error-state evidence |
 
 ## Next-sprint implementation checklist
 
-1. Dedicated role directory/detail management using existing canonical user/profile APIs.
+1. Admin edit/end/close lifecycle controls using existing canonical user/profile APIs.
 2. Resident progress/report detail and canonical multi-page totals.
 3. Generic supervisor review queue/workload/status parity.
-4. Admin document requirements, pending supervisor links and supervision mutations.
-5. Academic master authoring for training, periods, rotation/evaluation templates and categories.
-6. Administrative workflow actions for leaves, logbooks and evaluations.
+4. Flexible imports: header detection, mapping validation, presets, dry-run and apply.
+5. Administrative workflow actions for leaves, logbooks and evaluations, plus master-data/template exports.
 7. Report detail/filter/export surfaces where backend contracts are available.
 8. Standard/flexible import, mapping presets and dry-run/apply behavior.
 9. Cross-screen pagination/error/empty/filter regression coverage.

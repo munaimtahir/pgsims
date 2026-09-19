@@ -9,7 +9,7 @@ cd android
 ./gradlew :app-companion:testDebugUnitTest :app-companion:lintDebug :app-companion:assembleDebug
 ```
 
-Result: PASS. 39 unit tests passed, lint reported 0 errors, and debug APK assembly succeeded.
+Result: PASS. 48 unit tests passed, lint reported 0 errors, and debug APK assembly succeeded.
 Lint warnings are existing dependency/resource warnings and are not release errors.
 
 ## Emulator gate
@@ -48,4 +48,14 @@ staging/reconciliation race, and metadata failure each returned `OK (1 test)`.
 Credential-gated authenticated role workflows, live notification recipient isolation, onboarding
 schema/password cases, returned leave/evaluation transitions, and production upload success remain
 open because no approved credential file was supplied to this run. Physical-device and Play gates
-remain intentionally outside this source-gap sprint. No release APK/AAB was rebuilt or uploaded.
+are planned for the mega sprint after source and authenticated acceptance completion. No release
+APK/AAB was rebuilt or uploaded.
+
+## Mega-sprint admin workspace checkpoint
+
+The source gate was rerun after the admin workflow implementation: canonical setup authoring,
+pending-supervisor resolution, user-detail loading, resident-progress CSV export, and standard
+CSV/Excel import with dry-run-before-apply all compile and pass MockWebServer contract tests.
+
+The same `pgsims` connected suite again passed 51 tests with 22 intentional credential-gated skips
+and zero failures. This does not replace four-role authenticated acceptance.

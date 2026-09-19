@@ -23,13 +23,17 @@ already `GO` (`docs/implementation/20260626_update_0_universal_identity_dynamic_
 - Added pending-supervisor list/resolution, authoritative user-detail loading, and the
   missing resident-progress report/CSV contract; corrected the existing CSV label
   mismatch affecting logbook, evaluation, and workload exports.
+- Added standard CSV/Excel import selection with an explicit dry-run-before-apply gate
+  for canonical master, identity, supervision, and academic datasets.
 - Android gate after the changes: `:app-companion:testDebugUnitTest`, `lintDebug`, and
   `assembleDebug` pass.
+- `pgsims` emulator connected suite passes 51 tests with the existing 22 credential-gated
+  authenticated/lifecycle tests intentionally skipped.
 
 ## Pending Work
 
-1. Add admin edit/end/close lifecycle controls, flexible/standard import, mapping presets,
-   dry-run/apply, and master-data/template export surfaces.
+1. Add admin edit/end/close lifecycle controls, flexible import header/mapping/presets,
+   and master-data/template export surfaces.
 2. Complete resident progress/report detail and cross-screen list/filter/error behavior.
 3. Complete supervisor generic review queue/workload/status parity and workflow refresh behavior.
 4. Certify resident leave/evaluation edit-resubmit, notifications, onboarding/session, and
@@ -42,5 +46,5 @@ already `GO` (`docs/implementation/20260626_update_0_universal_identity_dynamic_
 
 ## Next Command
 
-Add the standard import dry-run/apply contract and Android document-picker workspace, then
-add the flexible header/mapping and preset flow without enabling seed/demo actions.
+Add flexible import header detection, mapping validation, persisted presets, dry-run/apply,
+and master-data/template export without enabling seed/demo actions.
