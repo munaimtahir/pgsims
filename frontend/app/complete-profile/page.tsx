@@ -45,16 +45,19 @@ export default function CompleteProfilePage() {
   const [mode, setMode] = useState<PageMode>('loading');
   const [form, setForm] = useState<CompleteProfileForm | null>(null);
   const [residentState, setResidentState] = useState<ResidentOnboardingState | null>(null);
+  const [declarationChecked, setDeclarationChecked] = useState(false);
   const [options, setOptions] = useState<IdentityOptions | null>(null);
   const [values, setValues] = useState<Record<string, FieldValue>>({});
   const [section, setSection] = useState(RESIDENT_SECTION_ORDER[0]);
   const [status, setStatus] = useState('Loading…');
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
+  const [uploadingDocumentId, setUploadingDocumentId] = useState<number | null>(null);
   const timers = useRef<Record<string, number>>({});
 
   const applyResidentState = (nextState: ResidentOnboardingState) => {
     setResidentState(nextState);
+    setDeclarationChecked(nextState.declaration_accepted);
     setValues((current) => {
       const nextValues = { ...current };
       nextState.sections.flatMap((item) => item.fields).forEach((field) => {
@@ -170,9 +173,14 @@ export default function CompleteProfilePage() {
     }
 
     try {
+      if (!savedState.declaration_accepted) {
+        setError('Accept the declaration before finishing onboarding.');
+        return;
+      }
+      await authApi.submitResidentOnboarding();
       const me = await authApi.me();
       if (me.allowed_next_route === '/complete-profile') {
-        setError('Complete all required fields and accept the declaration before continuing.');
+        setError('Complete all required fields before finishing onboarding.');
         return;
       }
       router.push(me.allowed_next_route);
@@ -182,6 +190,7 @@ export default function CompleteProfilePage() {
   };
 
   const acceptDeclaration = async () => {
+    setDeclarationChecked(true);
     setSaving(true);
     setStatus('Saving…');
     setError('');
@@ -189,10 +198,27 @@ export default function CompleteProfilePage() {
       applyResidentState(await authApi.acceptResidentDeclaration());
       setStatus('Saved');
     } catch (saveError) {
+      setDeclarationChecked(false);
       setStatus('Save failed');
       setError(errorMessage(saveError, 'The declaration could not be saved. Please retry.'));
     } finally {
       setSaving(false);
+    }
+  };
+
+  const uploadResidentDocument = async (documentId: number, file?: File) => {
+    if (!file) return;
+    setUploadingDocumentId(documentId);
+    setStatus('Uploading…');
+    setError('');
+    try {
+      applyResidentState(await authApi.uploadResidentDocument(documentId, file));
+      setStatus('Uploaded');
+    } catch (uploadError) {
+      setStatus('Upload failed');
+      setError(errorMessage(uploadError, 'The document could not be uploaded. Please retry.'));
+    } finally {
+      setUploadingDocumentId(null);
     }
   };
 
@@ -275,11 +301,11 @@ export default function CompleteProfilePage() {
           {section === 'supervisor' && <SupervisorSection value={String(values.supervisor_status || '')} onChange={saveResidentField} />}
           {section === 'declaration' && (
             <label htmlFor="resident-declaration" className="mt-4 flex cursor-pointer gap-3 rounded border p-4 text-sm">
-              <input id="resident-declaration" type="checkbox" checked={residentState.declaration_accepted} disabled={residentState.declaration_accepted} onChange={(event) => { if (event.target.checked) void acceptDeclaration(); }} />
+              <input id="resident-declaration" type="checkbox" checked={declarationChecked} disabled={declarationChecked} onChange={(event) => { if (event.target.checked) void acceptDeclaration(); }} />
               I confirm that the information provided is correct and documents are authentic. Deferred documents remain pending.
             </label>
           )}
-          {section === 'documents_baseline' && <ResidentBaseline state={residentState} values={values} onChange={saveResidentField} />}
+          {section === 'documents_baseline' && <ResidentBaseline state={residentState} values={values} onChange={saveResidentField} onUpload={uploadResidentDocument} uploadingDocumentId={uploadingDocumentId} />}
           {residentFields.map((field) => <ResidentField key={field.field} field={field} value={values[field.field]} options={optionList(field)} onChange={saveResidentField} />)}
           {error && <div className="mt-4 rounded border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</div>}
           <div className="mt-6 flex justify-between">
@@ -344,13 +370,39 @@ function SupervisorSection({ value, onChange }: { value: string; onChange: (fiel
   );
 }
 
-function ResidentBaseline({ state, values, onChange }: { state: ResidentOnboardingState; values: Record<string, FieldValue>; onChange: (field: string, value: string) => void }) {
+function ResidentBaseline({ state, values, onChange, onUpload, uploadingDocumentId }: { state: ResidentOnboardingState; values: Record<string, FieldValue>; onChange: (field: string, value: string) => void; onUpload: (documentId: number, file?: File) => void; uploadingDocumentId: number | null }) {
   return (
     <div className="mt-4 space-y-6">
       <div>
         <h3 className="font-medium">Documents</h3>
         <p className="text-sm text-slate-600">Upload or explicitly defer each required document; documents do not block dashboard access.</p>
-        <ul className="mt-2 space-y-2 text-sm">{state.documents.map((document) => <li key={document.id} className="flex justify-between rounded border p-3"><span>{document.title}</span><span className="text-slate-500">{document.status}</span></li>)}</ul>
+        <ul className="mt-2 space-y-2 text-sm">
+          {state.documents.map((document) => (
+            <li key={document.id} className="rounded border p-3">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <p className="font-medium">{document.title}</p>
+                  <p className="text-slate-500">Status: {document.status.replaceAll('_', ' ')}</p>
+                  {document.original_filename && <p className="text-xs text-slate-500">Current file: {document.original_filename}</p>}
+                  {document.verification_remarks && <p className="text-xs text-amber-700">Review note: {document.verification_remarks}</p>}
+                </div>
+                <label className="pg-button cursor-pointer">
+                  <input
+                    type="file"
+                    className="sr-only"
+                    accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                    disabled={uploadingDocumentId === document.id}
+                    onChange={(event) => {
+                      void onUpload(document.id, event.target.files?.[0]);
+                      event.currentTarget.value = '';
+                    }}
+                  />
+                  {uploadingDocumentId === document.id ? 'Uploading…' : document.original_filename ? 'Replace document' : 'Upload document'}
+                </label>
+              </div>
+            </li>
+          ))}
+        </ul>
       </div>
       <div>
         <h3 className="font-medium">Academic baseline</h3>

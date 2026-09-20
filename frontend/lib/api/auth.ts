@@ -104,7 +104,7 @@ export interface ResidentOnboardingState {
   required_onboarding_fields: string[];
   supervisor_status: string;
   declaration_accepted: boolean;
-  documents: Array<{ id: number; requirement_id: number; title: string; status: string; stage: string }>;
+  documents: Array<{ id: number; requirement_id: number; title: string; status: string; stage: string; original_filename?: string | null; file?: string | null; verification_remarks?: string }>;
   workshops: Array<{ id: number; name: string; code: string; completed_at: string | null; completion_id: number | null }>;
   baseline: {
     research: { title: string; topic_area: string; status: string };
@@ -285,8 +285,22 @@ export const authApi = {
   },
 
   async acceptResidentDeclaration(): Promise<ResidentOnboardingState> {
+    const response = await apiClient.post<ResidentOnboardingState>('/api/auth/onboarding/declaration/', { accepted: true });
+    return response.data;
+  },
+
+  async submitResidentOnboarding(): Promise<ResidentOnboardingState> {
     const response = await apiClient.post<ResidentOnboardingState>('/api/resident-onboarding/state/', { accepted: true });
     return response.data;
+  },
+
+  async uploadResidentDocument(documentId: number, file: File): Promise<ResidentOnboardingState> {
+    const formData = new FormData();
+    formData.append('file', file);
+    await apiClient.post(`/api/resident-documents/${documentId}/upload/`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return authApi.onboarding();
   },
 };
 

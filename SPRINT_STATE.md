@@ -49,6 +49,9 @@ already `GO` (`docs/implementation/20260626_update_0_universal_identity_dynamic_
   `assembleDebug` pass.
 - `pgsims` emulator connected suite passes 51 tests with the existing 22 credential-gated
   authenticated/lifecycle tests intentionally skipped.
+- Fixed resident web onboarding: declaration acceptance is saved independently before final
+  submission, and the final documents step now exposes upload/replace controls backed by the
+  resident document upload API.
 
 ## Pending Work
 

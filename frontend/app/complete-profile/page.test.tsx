@@ -16,6 +16,8 @@ jest.mock('@/lib/api/auth', () => ({
     saveOnboardingField: jest.fn(),
     saveOnboardingDraft: jest.fn(),
     acceptResidentDeclaration: jest.fn(),
+    submitResidentOnboarding: jest.fn(),
+    uploadResidentDocument: jest.fn(),
   },
 }));
 
@@ -129,7 +131,7 @@ describe('CompleteProfilePage', () => {
     await user.click(screen.getByRole('button', { name: /5\. Documents and academic baseline/ }));
     await user.click(screen.getByRole('button', { name: 'Finish onboarding' }));
 
-    expect(await screen.findByText('Complete all required fields and accept the declaration before continuing.')).toBeInTheDocument();
+    expect(await screen.findByText('Accept the declaration before finishing onboarding.')).toBeInTheDocument();
     expect(push).not.toHaveBeenCalled();
   });
 

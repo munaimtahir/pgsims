@@ -117,7 +117,16 @@ def get_resident_onboarding_state(user):
         "review_note": profile.review_note,
         "submitted_at": profile.submitted_at.isoformat() if profile.submitted_at else None,
         "reviewed_at": profile.reviewed_at.isoformat() if profile.reviewed_at else None,
-        "documents": [{"id": d.id, "requirement_id": d.requirement_id, "title": d.title, "status": d.status, "stage": d.requirement.stage if d.requirement else "OPTIONAL"} for d in required_documents],
+        "documents": [{
+            "id": d.id,
+            "requirement_id": d.requirement_id,
+            "title": d.title,
+            "status": d.status,
+            "stage": d.requirement.stage if d.requirement else "OPTIONAL",
+            "original_filename": d.original_filename,
+            "file": f"/api/resident-documents/{d.id}/file/" if d.file else None,
+            "verification_remarks": d.verification_remarks,
+        } for d in required_documents],
         "baseline": {
             "research": {"title": research.title, "topic_area": research.topic_area, "status": research.status} if research else {"title": "", "topic_area": "", "status": ResidentResearchProject.STATUS_DRAFT},
             "thesis": {"status": thesis.status, "notes": thesis.notes} if thesis else {"status": ResidentThesis.STATUS_NOT_STARTED, "notes": ""},
@@ -318,6 +327,32 @@ class ResidentOnboardingStateView(APIView):
             actor=request.user,
             action="update",
             verb="ONBOARDING_RESUBMITTED" if was_correction else "ONBOARDING_COMPLETED",
+            target=profile,
+            metadata={"source": "resident_onboarding"},
+        )
+        return Response(get_resident_onboarding_state(request.user))
+
+
+class ResidentDeclarationView(APIView):
+    """Save the resident's declaration draft without submitting the profile."""
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        if request.user.role != "RESIDENT":
+            raise PermissionDenied("Resident onboarding is only available to residents.")
+        if not request.data.get("accepted"):
+            return Response({"detail": "Declaration must be accepted."}, status=400)
+        profile = _resident_profile(request.user)
+        if profile.review_status == ResidentProfile.REVIEW_APPROVED:
+            return Response({"detail": "Profile has already been approved."}, status=409)
+        profile.declaration_accepted = True
+        profile.declaration_accepted_at = timezone.now()
+        profile.save(update_fields=["declaration_accepted", "declaration_accepted_at", "updated_at"])
+        ActivityLog.log(
+            actor=request.user,
+            action="update",
+            verb="DECLARATION_ACCEPTED",
             target=profile,
             metadata={"source": "resident_onboarding"},
         )
