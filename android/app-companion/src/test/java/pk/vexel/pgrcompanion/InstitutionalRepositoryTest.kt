@@ -524,6 +524,20 @@ class InstitutionalRepositoryTest {
         assertEquals("Bearer access-1", request.getHeader("Authorization"))
     }
 
+    @Test fun `report details and scoped review queue use canonical endpoints`() = runBlocking {
+        tokens.save("access-1", "refresh-1")
+        server.enqueue(json("""{"resident":{"id":4},"status":"ON_TRACK"}"""))
+        server.enqueue(json("""{"supervisor":{"id":2},"assigned_residents":3}"""))
+        server.enqueue(json("""{"count":1,"next":null,"results":[{"id":9,"status":"PENDING"}]}"""))
+        assertEquals("ON_TRACK", repository.residentProgressReportDetail(4).getOrThrow().string("status"))
+        assertEquals(3, repository.supervisorWorkloadReportDetail(2).getOrThrow().string("assigned_residents")?.toInt())
+        assertEquals(9, repository.reviewQueue().getOrThrow().single().string("id")?.toInt())
+        assertEquals("/api/academics/reports/resident-progress/4/", server.takeRequest().path)
+        assertEquals("/api/academics/reports/supervisor-workload/2/", server.takeRequest().path)
+        assertEquals("/api/academics/review-queue/?page=1", server.takeRequest().path)
+        Unit
+    }
+
     @Test fun `all displayed report labels resolve to their canonical CSV exports`() = runBlocking {
         tokens.save("access-1", "refresh-1")
         val expected = mapOf(

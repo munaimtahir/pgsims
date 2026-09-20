@@ -293,6 +293,8 @@ interface InstitutionalApi {
     @GET("api/academics/reports/evaluations/") suspend fun adminEvaluationReport(): Response<JsonObject>
     @GET("api/academics/reports/resident-progress/") suspend fun adminResidentProgressReport(): Response<JsonObject>
     @GET("api/academics/reports/supervisor-workload/") suspend fun adminSupervisorWorkloadReport(): Response<JsonObject>
+    @GET("api/academics/reports/resident-progress/{id}/") suspend fun residentProgressReportDetail(@Path("id") id: Int): Response<JsonObject>
+    @GET("api/academics/reports/supervisor-workload/{id}/") suspend fun supervisorWorkloadReportDetail(@Path("id") id: Int): Response<JsonObject>
     @GET("api/academics/reports/data-quality/export.csv") suspend fun adminDataQualityCsv(): Response<ResponseBody>
     @GET("api/academics/reports/logbook/export.csv") suspend fun adminLogbookCsv(): Response<ResponseBody>
     @GET("api/academics/reports/evaluations/export.csv") suspend fun adminEvaluationCsv(): Response<ResponseBody>
@@ -569,6 +571,18 @@ class InstitutionalRepository internal constructor(
             "Resident progress" to runCatching { required(authorized { authorizedApi.adminResidentProgressReport() }, "the resident-progress report") },
             "Supervisor workload" to runCatching { required(authorized { authorizedApi.adminSupervisorWorkloadReport() }, "the supervisor workload report") },
         )
+    }
+
+    suspend fun residentProgressReportDetail(id: Int): Result<JsonObject> = withContext(Dispatchers.IO) {
+        runCatching { require(id > 0) { "Resident is required." }; required(authorized { authorizedApi.residentProgressReportDetail(id) }, "this resident-progress report") }
+    }
+
+    suspend fun supervisorWorkloadReportDetail(id: Int): Result<JsonObject> = withContext(Dispatchers.IO) {
+        runCatching { require(id > 0) { "Supervisor is required." }; required(authorized { authorizedApi.supervisorWorkloadReportDetail(id) }, "this supervisor workload report") }
+    }
+
+    suspend fun reviewQueue(): Result<List<JsonObject>> = withContext(Dispatchers.IO) {
+        runCatching { allPages("the academic review queue") { authorizedApi.adminReviewQueue(it) } }
     }
 
     suspend fun adminSetup(): List<Pair<String, Result<List<JsonObject>>>> = withContext(Dispatchers.IO) {
