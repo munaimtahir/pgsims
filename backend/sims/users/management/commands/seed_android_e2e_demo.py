@@ -42,6 +42,12 @@ ACCOUNTS = [
         "profile_payload": {},
     },
     {
+        "username": "android.demo.support",
+        "role": "SUPPORT_STAFF",
+        "full_name": "Android Demo Support Staff",
+        "profile_payload": {},
+    },
+    {
         "username": "android.demo.resident1",
         "role": "RESIDENT",
         "full_name": "Android Demo Resident One",

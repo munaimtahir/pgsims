@@ -42,6 +42,9 @@ already `GO` (`docs/implementation/20260626_update_0_universal_identity_dynamic_
 - Added canonical admin edit controls plus guarded lifecycle actions to end supervision assignments,
   close training records, and atomically change a resident's primary supervisor. The Android client
   exposes no arbitrary mutation path and has MockWebServer coverage for the new contract.
+- Added a distinct debuggable `staging` Android build type (`.staging` application-id suffix) with
+  an owner-overridable isolated staging base URL; it falls back to the documented HTTPS staging host.
+  The staging-only Android fixture command now also provisions the final `SUPPORT_STAFF` role.
 - Android gate after the changes: `:app-companion:testDebugUnitTest`, `lintDebug`, and
   `assembleDebug` pass.
 - `pgsims` emulator connected suite passes 51 tests with the existing 22 credential-gated
@@ -51,7 +54,7 @@ already `GO` (`docs/implementation/20260626_update_0_universal_identity_dynamic_
 
 1. Complete resident progress/report detail and cross-screen list/filter/error behavior.
 2. Complete supervisor generic review queue/workload/status parity and workflow refresh behavior.
-3. Add guarded staging-only synthetic four-role fixture preparation and cleanup tooling.
+3. Add guarded staging-only synthetic fixture cleanup tooling and certify all four fixture roles.
 4. Certify resident leave/evaluation edit-resubmit, notifications, onboarding/session, and
    offline lifecycle paths with authenticated four-role fixtures on `pgsims`.
 5. Add Android unit/instrumentation coverage for the remaining new contract and failure paths.
@@ -60,4 +63,5 @@ already `GO` (`docs/implementation/20260626_update_0_universal_identity_dynamic_
 
 ## Next Command
 
-Add report detail/filter/error parity without enabling seed/demo actions.
+Add report detail/filter/error parity without enabling seed/demo actions; staging build and all four
+fixture identities are available for the later authenticated gate.

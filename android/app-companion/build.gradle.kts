@@ -64,6 +64,20 @@ android {
     }
     buildTypes {
         debug { applicationIdSuffix = ".debug"; isDebuggable = true }
+        create("staging") {
+            initWith(getByName("debug"))
+            matchingFallbacks += listOf("debug")
+            applicationIdSuffix = ".staging"
+            versionNameSuffix = "-staging"
+            // This target is intentionally distinct from Play's production package. The public
+            // isolated staging endpoint is the safe default; operators can override it without
+            // committing an environment-specific value.
+            val stagingUrl = providers.gradleProperty("pgrCompanionStagingBaseUrl").orNull
+                ?: "https://staging.pgsims.alshifalab.pk/"
+            buildConfigField("String", "INSTITUTIONAL_API_BASE_URL", "\"${stagingUrl.trimEnd('/')}/\"")
+            buildConfigField("boolean", "FCM_ENABLED", "false")
+            isDebuggable = true
+        }
         release {
             isMinifyEnabled = true
             isShrinkResources = true
