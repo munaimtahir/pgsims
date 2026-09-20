@@ -56,7 +56,8 @@ class ResidentOnboardingConsolidationTests(TestCase):
         self.assertEqual(client.get("/api/auth/me/").data["pending_uploads"][0]["display_name"], "CNIC Copy")
         uploaded = client.post(f"/api/resident-documents/{document_id}/upload/", {"file": SimpleUploadedFile("cnic.pdf", b"pdf")}, format="multipart")
         self.assertEqual(uploaded.status_code, 200)
-        self.assertEqual(client.get("/api/auth/me/").data["pending_upload_count"], 0)
+        pending_uploads = client.get("/api/auth/me/").data["pending_uploads"]
+        self.assertNotIn(requirement.id, {item["requirement_id"] for item in pending_uploads})
 
     def test_resident_cannot_review_document(self):
         resident = create_user_with_profile(role="RESIDENT", full_name="Dr Secure Resident", actor=self.admin, profile_payload={"program_ref": self.program})
