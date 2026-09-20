@@ -417,6 +417,9 @@ private fun AdminSetup(repository: InstitutionalRepository) {
     var options by remember { mutableStateOf<JsonObject?>(null) }
     var pendingSupervisorLinks by remember { mutableStateOf<List<JsonObject>>(emptyList()) }
     var createFor by remember { mutableStateOf<AdminCollection?>(null) }
+    var editFor by remember { mutableStateOf<Pair<AdminCollection, JsonObject>?>(null) }
+    var lifecycleFor by remember { mutableStateOf<Pair<AdminCollection, JsonObject>?>(null) }
+    var changingPrimary by remember { mutableStateOf(false) }
     var resolvingPending by remember { mutableStateOf<JsonObject?>(null) }
     var reloadKey by remember { mutableIntStateOf(0) }
     LaunchedEffect(reloadKey) {
@@ -449,13 +452,24 @@ private fun AdminSetup(repository: InstitutionalRepository) {
                         Text("${rows.size} records loaded")
                         rows.take(3).forEach { row ->
                             val title = row.string("name") ?: row.string("title") ?: row.string("code") ?: row.string("id") ?: "Record"
-                            Text("• $title", style = MaterialTheme.typography.bodySmall)
+                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                Text("• $title", style = MaterialTheme.typography.bodySmall, modifier = Modifier.weight(1f))
+                                collection?.let { supported ->
+                                    TextButton(onClick = { editFor = supported to row }) { Text("Edit") }
+                                    if (supported.path in setOf("supervision/assignments", "academics/training-records")) {
+                                        TextButton(onClick = { lifecycleFor = supported to row }) { Text(if (supported.path == "supervision/assignments") "End" else "Close") }
+                                    }
+                                }
+                            }
                         }
                     },
                     { error -> Text(error.message ?: "Unavailable.", color = MaterialTheme.colorScheme.error) },
                 )
                 collection?.let { supported ->
-                    OutlinedButton(onClick = { createFor = supported }, modifier = Modifier.fillMaxWidth()) { Text("Add ${supported.label.removeSuffix("s")}") }
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        OutlinedButton(onClick = { createFor = supported }, modifier = Modifier.weight(1f)) { Text("Add ${supported.label.removeSuffix("s")}") }
+                        if (supported.path == "supervision/assignments") OutlinedButton(onClick = { changingPrimary = true }, modifier = Modifier.weight(1f)) { Text("Change primary") }
+                    }
                 }
             }
         }
@@ -469,6 +483,16 @@ private fun AdminSetup(repository: InstitutionalRepository) {
             onCreated = { createFor = null; loading = true; reloadKey++ },
         )
     }
+    editFor?.let { (collection, row) ->
+        AdminCreateDialog(
+            collection = collection, options = options, repository = repository, existing = row,
+            onDismiss = { editFor = null }, onCreated = { editFor = null; loading = true; reloadKey++ },
+        )
+    }
+    lifecycleFor?.let { (collection, row) ->
+        AdminLifecycleDialog(collection, row, repository, { lifecycleFor = null }) { lifecycleFor = null; loading = true; reloadKey++ }
+    }
+    if (changingPrimary) ChangePrimarySupervisorDialog(options, repository, { changingPrimary = false }) { changingPrimary = false; loading = true; reloadKey++ }
     resolvingPending?.let { pending ->
         ResolvePendingSupervisorDialog(
             pending = pending,
@@ -528,16 +552,19 @@ private fun AdminCreateDialog(
     collection: AdminCollection,
     options: JsonObject?,
     repository: InstitutionalRepository,
+    existing: JsonObject? = null,
     onDismiss: () -> Unit,
     onCreated: () -> Unit,
 ) {
     val scope = rememberCoroutineScope()
-    val values = remember(collection.path) { mutableStateMapOf<String, String>().apply { collection.fields.forEach { put(it.key, it.default) } } }
+    val values = remember(collection.path, existing?.string("id")) { mutableStateMapOf<String, String>().apply {
+        collection.fields.forEach { field -> put(field.key, existing?.string(field.key) ?: field.default) }
+    } }
     var busy by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
     AlertDialog(
         onDismissRequest = { if (!busy) onDismiss() },
-        title = { Text("Add ${collection.label}") },
+        title = { Text(if (existing == null) "Add ${collection.label}" else "Edit ${collection.label}") },
         text = {
             Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text("Values are sent only to the canonical PGR SIMS ${collection.label.lowercase()} API.", style = MaterialTheme.typography.bodySmall)
@@ -561,14 +588,75 @@ private fun AdminCreateDialog(
                 if (payload.isFailure) { error = payload.exceptionOrNull()?.message; return@TextButton }
                 busy = true; error = null
                 scope.launch {
-                    repository.adminCreate(collection.path, payload.getOrThrow(), collection.label).fold(
-                        { onCreated() }, { error = it.message ?: "Could not create this record."; busy = false },
+                    val id = existing?.string("id")?.toIntOrNull()
+                    val action = if (id == null) repository.adminCreate(collection.path, payload.getOrThrow(), collection.label)
+                        else repository.adminUpdate(collection.path, id, payload.getOrThrow(), collection.label)
+                    action.fold(
+                        { onCreated() }, { error = it.message ?: "Could not save this record."; busy = false },
                     )
                 }
             }, enabled = !busy) { Text(if (busy) "Saving…" else "Save") }
         },
         dismissButton = { TextButton(onClick = onDismiss, enabled = !busy) { Text("Cancel") } },
     )
+}
+
+@Composable
+private fun AdminLifecycleDialog(
+    collection: AdminCollection,
+    row: JsonObject,
+    repository: InstitutionalRepository,
+    onDismiss: () -> Unit,
+    onSaved: () -> Unit,
+) {
+    val scope = rememberCoroutineScope()
+    val action = if (collection.path == "supervision/assignments") "end" else "close"
+    var date by remember { mutableStateOf("") }
+    var notes by remember { mutableStateOf("") }
+    var busy by remember { mutableStateOf(false) }
+    var error by remember { mutableStateOf<String?>(null) }
+    val id = row.string("id")?.toIntOrNull()
+    AlertDialog(
+        onDismissRequest = { if (!busy) onDismiss() },
+        title = { Text(if (action == "end") "End supervision assignment" else "Close training record") },
+        text = { Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text("This is a canonical lifecycle action and cannot be undone from the app.", style = MaterialTheme.typography.bodySmall)
+            OutlinedTextField(date, { date = it }, label = { Text(if (action == "end") "End date (YYYY-MM-DD) *" else "Actual end date (YYYY-MM-DD)") }, modifier = Modifier.fillMaxWidth(), enabled = !busy)
+            OutlinedTextField(notes, { notes = it }, label = { Text(if (action == "end") "Reason for change" else "Closure notes") }, modifier = Modifier.fillMaxWidth(), enabled = !busy)
+            error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+        } },
+        confirmButton = { TextButton(onClick = {
+            if (action == "end" && date.isBlank()) { error = "End date is required."; return@TextButton }
+            busy = true; error = null
+            val body = buildJsonObject {
+                if (action == "end") { put("end_date", date); put("reason_for_change", notes) }
+                else { if (date.isNotBlank()) put("actual_end_date", date); put("status", "COMPLETED"); put("notes", notes) }
+            }
+            scope.launch { repository.adminAction(collection.path, id ?: 0, action, body, "this record").fold({ onSaved() }, { error = it.message ?: "Could not complete lifecycle action."; busy = false }) }
+        }, enabled = !busy && id != null) { Text(if (busy) "Saving…" else if (action == "end") "End assignment" else "Close record") } },
+        dismissButton = { TextButton(onClick = onDismiss, enabled = !busy) { Text("Cancel") } },
+    )
+}
+
+@Composable
+private fun ChangePrimarySupervisorDialog(options: JsonObject?, repository: InstitutionalRepository, onDismiss: () -> Unit, onSaved: () -> Unit) {
+    val scope = rememberCoroutineScope()
+    val residents = options?.objectList("residents").orEmpty(); val supervisors = options?.objectList("supervisors").orEmpty()
+    var residentId by remember { mutableStateOf<String?>(null) }; var supervisorId by remember { mutableStateOf<String?>(null) }
+    var startDate by remember { mutableStateOf("") }; var reason by remember { mutableStateOf("") }; var menu by remember { mutableStateOf<String?>(null) }
+    var busy by remember { mutableStateOf(false) }; var error by remember { mutableStateOf<String?>(null) }
+    fun label(rows: List<JsonObject>, id: String?) = rows.firstOrNull { it.string("id") == id }?.string("name") ?: "Select"
+    AlertDialog(onDismissRequest = { if (!busy) onDismiss() }, title = { Text("Change primary supervisor") }, text = { Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        TextButton(onClick = { menu = "resident" }, enabled = !busy) { Text("Resident: ${label(residents, residentId)}") }
+        DropdownMenu(expanded = menu == "resident", onDismissRequest = { menu = null }) { residents.forEach { row -> DropdownMenuItem(text = { Text(row.string("name") ?: "Resident") }, onClick = { residentId = row.string("id"); menu = null }) } }
+        TextButton(onClick = { menu = "supervisor" }, enabled = !busy) { Text("New supervisor: ${label(supervisors, supervisorId)}") }
+        DropdownMenu(expanded = menu == "supervisor", onDismissRequest = { menu = null }) { supervisors.forEach { row -> DropdownMenuItem(text = { Text(row.string("name") ?: "Supervisor") }, onClick = { supervisorId = row.string("id"); menu = null }) } }
+        OutlinedTextField(startDate, { startDate = it }, label = { Text("Start date (YYYY-MM-DD) *") }, modifier = Modifier.fillMaxWidth(), enabled = !busy)
+        OutlinedTextField(reason, { reason = it }, label = { Text("Reason for change") }, modifier = Modifier.fillMaxWidth(), enabled = !busy)
+        error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+    } }, confirmButton = { TextButton(onClick = {
+        busy = true; error = null; scope.launch { repository.changePrimarySupervisor(residentId?.toIntOrNull() ?: 0, supervisorId?.toIntOrNull() ?: 0, startDate, reason).fold({ onSaved() }, { error = it.message ?: "Could not change primary supervisor."; busy = false }) }
+    }, enabled = !busy && residentId != null && supervisorId != null && startDate.isNotBlank()) { Text(if (busy) "Saving…" else "Change primary") } }, dismissButton = { TextButton(onClick = onDismiss, enabled = !busy) { Text("Cancel") } })
 }
 
 @Composable

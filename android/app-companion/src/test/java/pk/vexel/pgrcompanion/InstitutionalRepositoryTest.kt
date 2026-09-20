@@ -571,6 +571,22 @@ class InstitutionalRepositoryTest {
         assertEquals(7, (Json.parseToJsonElement(resolve.body.readUtf8()) as JsonObject).string("supervisor_id")?.toInt())
     }
 
+    @Test fun `admin lifecycle actions and primary change use canonical guarded endpoints`() = runBlocking {
+        tokens.save("access-1", "refresh-1")
+        server.enqueue(json("""{"id":7,"status":"ENDED"}"""))
+        server.enqueue(json("""{"id":8,"assignment_type":"PRIMARY","status":"ACTIVE"}"""))
+        assertEquals("ENDED", repository.adminAction("supervision/assignments", 7, "end", Json.parseToJsonElement("""{"end_date":"2026-09-20","reason_for_change":"Synthetic"}""") as JsonObject, "assignment").getOrThrow().string("status"))
+        assertEquals("ACTIVE", repository.changePrimarySupervisor(4, 2, "2026-09-21", "Synthetic").getOrThrow().string("status"))
+        assertEquals("/api/supervision/assignments/7/end/", server.takeRequest().path)
+        val change = server.takeRequest()
+        assertEquals("/api/supervision/change-primary/", change.path)
+        val body = Json.parseToJsonElement(change.body.readUtf8()) as JsonObject
+        assertEquals(4, body.string("resident_id")?.toInt())
+        assertEquals(2, body.string("new_supervisor_id")?.toInt())
+        assertTrue(repository.changePrimarySupervisor(0, 2, "bad", "").isFailure)
+        Unit
+    }
+
     @Test fun `standard import requires a supported entity and uses dry-run before apply`() = runBlocking {
         tokens.save("access-1", "refresh-1")
         val file = File.createTempFile("pgr-import", ".csv").apply { writeText("email,full_name\ndemo@example.com,Demo\n") }

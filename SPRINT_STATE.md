@@ -39,6 +39,9 @@ already `GO` (`docs/implementation/20260626_update_0_universal_identity_dynamic_
 - Factory-reset only the dedicated `pgsims` AVD, which restarted as `emulator-5556` on Android 16.
   The fresh-device connected suite reports `OK (29 tests)`; the seven authenticated recovery tests
   remain intentionally credential-gated and skipped.
+- Added canonical admin edit controls plus guarded lifecycle actions to end supervision assignments,
+  close training records, and atomically change a resident's primary supervisor. The Android client
+  exposes no arbitrary mutation path and has MockWebServer coverage for the new contract.
 - Android gate after the changes: `:app-companion:testDebugUnitTest`, `lintDebug`, and
   `assembleDebug` pass.
 - `pgsims` emulator connected suite passes 51 tests with the existing 22 credential-gated
@@ -46,9 +49,9 @@ already `GO` (`docs/implementation/20260626_update_0_universal_identity_dynamic_
 
 ## Pending Work
 
-1. Add admin edit/end/close lifecycle controls.
-2. Complete resident progress/report detail and cross-screen list/filter/error behavior.
-3. Complete supervisor generic review queue/workload/status parity and workflow refresh behavior.
+1. Complete resident progress/report detail and cross-screen list/filter/error behavior.
+2. Complete supervisor generic review queue/workload/status parity and workflow refresh behavior.
+3. Add guarded staging-only synthetic four-role fixture preparation and cleanup tooling.
 4. Certify resident leave/evaluation edit-resubmit, notifications, onboarding/session, and
    offline lifecycle paths with authenticated four-role fixtures on `pgsims`.
 5. Add Android unit/instrumentation coverage for the remaining new contract and failure paths.
@@ -57,4 +60,4 @@ already `GO` (`docs/implementation/20260626_update_0_universal_identity_dynamic_
 
 ## Next Command
 
-Add canonical administrative edit/end/close controls without enabling seed/demo actions.
+Add report detail/filter/error parity without enabling seed/demo actions.

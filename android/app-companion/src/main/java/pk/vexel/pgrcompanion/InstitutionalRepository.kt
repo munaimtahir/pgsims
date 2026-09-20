@@ -229,6 +229,9 @@ interface InstitutionalApi {
         @Path("action") action: String,
         @Body body: JsonObject,
     ): Response<JsonObject>
+    @POST("api/supervision/change-primary/") suspend fun changePrimarySupervisor(
+        @Body body: JsonObject,
+    ): Response<JsonObject>
     @Multipart
     @POST("api/bulk/import/{entity}/{action}/") suspend fun bulkImport(
         @Path("entity") entity: String,
@@ -623,6 +626,26 @@ class InstitutionalRepository internal constructor(
                 (path == "academics/training-records" && action == "close")
             require(allowed) { "Unsupported administrative action." }
             required(authorized { authorizedApi.adminAction(path, id, action, body) }, label)
+        }
+    }
+
+    suspend fun changePrimarySupervisor(
+        residentId: Int,
+        supervisorId: Int,
+        startDate: String,
+        reason: String,
+    ): Result<JsonObject> = withContext(Dispatchers.IO) {
+        runCatching {
+            require(residentId > 0 && supervisorId > 0) { "Resident and supervisor are required." }
+            require(startDate.matches(Regex("\\d{4}-\\d{2}-\\d{2}"))) { "Start date must be YYYY-MM-DD." }
+            required(authorized {
+                authorizedApi.changePrimarySupervisor(buildJsonObject {
+                    put("resident_id", residentId)
+                    put("new_supervisor_id", supervisorId)
+                    put("start_date", startDate)
+                    put("reason_for_change", reason.trim())
+                })
+            }, "the primary supervisor change")
         }
     }
 
