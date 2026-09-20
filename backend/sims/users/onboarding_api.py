@@ -89,8 +89,11 @@ def get_resident_onboarding_state(user):
             defaults={"document_type": requirement.document_type, "title": requirement.display_name},
         )
         fulfillments.append(document)
-    pending = [d for d in fulfillments if d.status in {ResidentDocument.STATUS_DEFERRED, ResidentDocument.STATUS_REUPLOAD_REQUIRED}]
     required_documents = [d for d in fulfillments if d.requirement and d.requirement.is_required and d.requirement.stage == ResidentDocumentRequirement.STAGE_ONBOARDING]
+    pending = [
+        d for d in required_documents
+        if not d.file or d.status in {ResidentDocument.STATUS_NOT_STARTED, ResidentDocument.STATUS_DEFERRED, ResidentDocument.STATUS_REUPLOAD_REQUIRED}
+    ]
     pending_link = profile.pending_supervisor_assignments.filter(status=PendingSupervisorAssignment.STATUS_PENDING).first()
     training = ResidentTrainingRecord.objects.filter(resident_user=user, active=True).select_related(
         "program", "academic_session", "training_site", "department"
@@ -108,7 +111,7 @@ def get_resident_onboarding_state(user):
     return {
         "password_change_required": user.must_change_password,
         "profile_complete": user.is_profile_complete,
-        "onboarding_complete": bool(user.is_profile_complete and profile.declaration_accepted),
+        "onboarding_complete": bool(user.is_profile_complete and profile.declaration_accepted and not pending),
         "required_onboarding_fields": missing,
         "training_record_id": training.id if training else None,
         "supervisor_status": "ASSIGNED" if assignment else ("PENDING" if pending_link else profile.extra_data.get("supervisor_status", "NOT_STARTED")),
