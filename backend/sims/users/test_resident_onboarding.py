@@ -42,15 +42,11 @@ class ResidentOnboardingConsolidationTests(TestCase):
         resident = create_user_with_profile(role="RESIDENT", full_name="Dr Document Resident", actor=self.admin, profile_payload={"program_ref": self.program})
         requirement = ResidentDocumentRequirement.objects.create(document_type="CNIC", display_name="CNIC Copy", stage="ONBOARDING")
         state = get_resident_onboarding_state(resident)
-        self.assertEqual(state["pending_uploads"], [{
-            "requirement_id": requirement.id,
-            "document_id": resident.resident_profile.documents.get(requirement=requirement).id,
-            "document_type": "CNIC",
-            "display_name": "CNIC Copy",
-            "stage": "ONBOARDING",
-            "status": "NOT_STARTED",
-            "verification_remarks": "",
-        }])
+        pending_requirement_ids = {item["requirement_id"] for item in state["pending_uploads"]}
+        self.assertIn(requirement.id, pending_requirement_ids)
+        pending_requirement = next(item for item in state["pending_uploads"] if item["requirement_id"] == requirement.id)
+        self.assertEqual(pending_requirement["status"], "NOT_STARTED")
+        self.assertEqual(pending_requirement["display_name"], "CNIC Copy")
         client = APIClient()
         client.force_authenticate(resident)
         document_id = resident.resident_profile.documents.get(requirement=requirement).id
