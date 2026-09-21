@@ -1,5 +1,7 @@
 # Three-account demonstration — web and Android
 
+Populated and API-verified on the VPS on **2026-09-21**.
+
 Dataset: `DEMO-THREE-ACCOUNTS-V1`. Use only the existing `admin`, `supervisor`,
 and `resident` logins and their assigned profiles. Credentials are unchanged and
 are not recorded here. The resident remains assigned to the same supervisor.
@@ -32,15 +34,22 @@ output reports its actual ID and current state. Initial states are:
 
 | Feature | Example 1 | Example 2 | Example 3 | Example 4 |
 |---|---|---|---|---|
-| Logbook | Submitted | Submitted | Returned for revision | Verified |
-| Evaluation | Submitted | Submitted | Returned for revision | Approved |
-| Leave | Submitted | Submitted | Draft | Approved |
-| Rotation | Submitted | Submitted | Approved, ready to activate | Active, ready to complete |
-| Document | Pending review | Pending review | Reupload required | Verified |
+| Logbook | **34** — Submitted | **35** — Submitted | **36** — Returned for revision | **37** — Verified |
+| Evaluation | **22** — Submitted | **23** — Submitted | **24** — Returned for revision | **25** — Approved |
+| Leave | **22** — Submitted | **23** — Submitted | **24** — Draft | **25** — Approved |
+| Rotation | **7** — Submitted | **8** — Submitted | **9** — Approved, ready to activate | **10** — Active, ready to complete |
+| Document | **5** — Pending review | **6** — Pending review | **7** — Reupload required | **8** — Verified |
 
-Database IDs and final deployment evidence will be recorded after deployment.
+Numbers above are database IDs within each feature, not user/profile IDs.
+The existing resident profile is **36**, supervisor profile **3**, training record
+**11**, and primary assignment **4**. None was replaced or duplicated.
 Other existing records are retained; distinguish these examples using the dataset
 marker and the IDs, rather than assuming that every pending row belongs to this demo.
+
+Rotation dates: #7 September 23–29; #8 September 30–October 6; #9 October 12–18;
+#10 June 23–29, 2026 (a past active placement intentionally ready to complete).
+Leave dates: #22 October 7–8; #23 October 19–20; #24 October 21–22;
+#25 October 23–24, 2026. These avoid existing leave and each other.
 
 ## Presentation sequence
 
@@ -114,3 +123,28 @@ are not automatically imported by the seeder.
   staff actions, and live backup/restore are not part of this dataset.
 - Dataset presence does not certify all web/Android UI paths. Isolated handler tests
   and deployed read checks are reported separately from UI acceptance.
+
+## Verification and deployment
+
+- Seeder source commit: `822fab8`; fetched into the VPS checkout via Git.
+- Installed only the new command module in the running backend container. No
+  application restart, migrations, settings changes, or unrelated service changes.
+  Future image builds include the command from the committed source.
+- First apply: **20 created, 0 missing**. Second apply: **0 created, 20 retained**.
+- **15 isolated tests passed**, including real approval/revision handlers, unchanged
+  identities, repeatability, failed-transaction file cleanup, and import previews.
+- **120/120 authenticated HTTPS record reads passed**: 20 records × 3 roles ×
+  web (`pg.fmu.edu.pk`) and Android (`android.pgsims.alshifalab.pk`) API hosts.
+- Actual Android resident list feeds contain all four rotations, leaves, and
+  documents. Supervisor feeds contain both pending leaves, rotations, logbooks,
+  and evaluations. All seeded workflow states remained unchanged by verification.
+- User count remains **70**. All three demonstration accounts have complete
+  registry profiles and no forced password change. The supervisor's academic
+  pending queue now totals **9**, including **4 newly seeded** academic reviews.
+- Django system check and migration-drift check pass; identity gate passes;
+  production HTTPS health reports database OK.
+- No fresh browser click-through or installed-device rehearsal was performed.
+  API verification used short-lived in-memory access tokens without changing
+  passwords; it does not certify credential entry or the installed Android version.
+
+Detailed evidence: [implementation audit](docs/_audit/20260921_THREE_ACCOUNT_DEMO.md).
