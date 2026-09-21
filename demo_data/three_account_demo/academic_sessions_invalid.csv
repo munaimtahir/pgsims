@@ -1,0 +1,3 @@
+session_code,session_name,description,active
+,Missing session code,DEMO-THREE-ACCOUNTS-V1 deliberately invalid,true
+DEMO3-BAD,,DEMO-THREE-ACCOUNTS-V1 deliberately invalid,true

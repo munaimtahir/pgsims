@@ -1,0 +1,5 @@
+session_code,session_name,description,active
+DEMO3-S1,Demonstration session 1,DEMO-THREE-ACCOUNTS-V1 import example,true
+DEMO3-S2,Demonstration session 2,DEMO-THREE-ACCOUNTS-V1 import example,true
+DEMO3-S3,Demonstration session 3,DEMO-THREE-ACCOUNTS-V1 import example,true
+DEMO3-S4,Demonstration session 4,DEMO-THREE-ACCOUNTS-V1 import example,true
