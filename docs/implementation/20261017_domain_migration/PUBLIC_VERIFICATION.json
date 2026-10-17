@@ -1,0 +1,26 @@
+{
+  "http_redirect": 308,
+  "/login": 200,
+  "/static/admin/css/base.css": 200,
+  "health": {
+    "status": "healthy",
+    "checks": {
+      "database": "ok",
+      "cache": "ok",
+      "celery": "ok"
+    }
+  },
+  "api_health": {
+    "status": "ok",
+    "database": "ok",
+    "app": "pgms",
+    "version": "v0.12"
+  },
+  "anonymous_auth_me": 401,
+  "csrf_trusted": 200,
+  "csrf_untrusted": 403,
+  "cors_trusted": "https://pg.vexel.pk",
+  "cors_untrusted": null,
+  "media_directory": 404,
+  "protected_document_anonymous": 401
+}

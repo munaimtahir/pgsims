@@ -1,5 +1,9 @@
 # Frontend-Backend Truth Map — PGMS Clean-Room Foundation
 
+Production origin (2026-10-17): **https://pg.vexel.pk**. Browser API requests
+use same-origin `/api`; Django is proxied on port 8014 and Next.js on 8082.
+See `docs/implementation/20261017_domain_migration/REPORT.md` for deployment evidence.
+
 **Last independently verified**: 2026-08-02, a fresh from-scratch bidirectional audit (this
 document supersedes the 2026-07-23 version in full — every claim below was re-checked against
 current code, not carried over). Method: enumerated every `urlpatterns`/router registration in

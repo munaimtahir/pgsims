@@ -1,0 +1,6 @@
+notBefore=Oct 17 20:41:19 2026 GMT
+notAfter=Jan 15 20:41:18 2027 GMT
+issuer=C = US, O = Let's Encrypt, CN = YE1
+subject=CN = pg.vexel.pk
+X509v3 Subject Alternative Name:
+    DNS:pg.vexel.pk

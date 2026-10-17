@@ -1,0 +1,32 @@
+{
+  "backend": {
+    "tests": 1256,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "frontend": {
+    "tests": 421,
+    "suites": 49,
+    "failed": 0
+  },
+  "android_unit": {
+    "tests": 60,
+    "failed": 0,
+    "skipped": 0
+  },
+  "production_backend_image_regression": {
+    "tests": 36,
+    "failed": 0
+  },
+  "coverage_accounting": {
+    "tests": 11,
+    "failed": 0
+  },
+  "backend_coverage": {
+    "lines": 84.21582563373609,
+    "branches": 69.19014084507042
+  },
+  "deployed_source_commit": "b960af16f185400091bf884193bbc201d53a2c0b",
+  "tested_source_sha256": "15829bbedf7382370bfe93e8022e78344721e98c14f69fa7925f1033eaa6030f"
+}
