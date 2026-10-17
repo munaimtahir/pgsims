@@ -449,7 +449,7 @@ architecture.
 ## 7. Phase 5/7 — production environment hardening and smoke test, executed against the real pilot server
 
 The Docker stack on this machine (`pgsims_backend`/`pgsims_frontend`/`pgsims_db`/etc., serving
-`pg.fmu.edu.pk` / `pgsims.alshifalab.pk` via Caddy) was confirmed to be the actual pilot target,
+`pg.vexel.pk` / `pgsims.alshifalab.pk` via Caddy) was confirmed to be the actual pilot target,
 carrying no real data yet. Work done directly against it:
 
 **Real finding, fixed and verified live**: in production mode (`DEBUG=False`), `sims_project/

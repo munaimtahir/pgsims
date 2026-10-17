@@ -1,8 +1,8 @@
-# 2026-06-06 PG.FMU.EDU.PK Routing Update
+# 2026-06-06 PG.VEXEL.PK Routing Update
 
 ## Scope
 
-Added `pg.fmu.edu.pk` as a production hostname for the existing PGSIMS application while keeping `pgsims.alshifalab.pk` active as an alias.
+Added `pg.vexel.pk` as a production hostname for the existing PGSIMS application while keeping `pgsims.alshifalab.pk` active as an alias.
 
 ## Files Updated
 
@@ -20,10 +20,10 @@ Added `pg.fmu.edu.pk` as a production hostname for the existing PGSIMS applicati
 
 ## What Changed
 
-- Caddy now serves both `pg.fmu.edu.pk` and `pgsims.alshifalab.pk` from the same application stack.
+- Caddy now serves both `pg.vexel.pk` and `pgsims.alshifalab.pk` from the same application stack.
 - Django host allowlists now include the new domain by default.
 - CSRF and CORS origin examples/defaults now include both production domains.
-- Production frontend API defaults now point at `https://pg.fmu.edu.pk`.
+- Production frontend API defaults now point at `https://pg.vexel.pk`.
 - Added a regression test that checks the domain wiring across the canonical deployment files.
 
 ## Validation
@@ -45,8 +45,8 @@ cd /home/munaim/srv/apps/pgsims
 Then verify:
 
 ```bash
-curl -I https://pg.fmu.edu.pk/
+curl -I https://pg.vexel.pk/
 curl -I https://pgsims.alshifalab.pk/
-curl -I https://pg.fmu.edu.pk/api/health/
-curl -I https://pg.fmu.edu.pk/admin/
+curl -I https://pg.vexel.pk/api/health/
+curl -I https://pg.vexel.pk/admin/
 ```

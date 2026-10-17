@@ -12,7 +12,7 @@ without needing to re-derive any of this context.
 
 Confirmed with the user:
 - Use **production**, not a local/demo stack. Single canonical backend behind three web domains
-  (`pg.fmu.edu.pk`, `pgsims.alshifalab.pk`, `pgsims.pmc.edu.pk`) and API-only host
+  (`pg.vexel.pk`, `pgsims.alshifalab.pk`, `pgsims.pmc.edu.pk`) and API-only host
   `android.pgsims.alshifalab.pk` (what the Android release build talks to) — confirmed via
   `deploy/Caddyfile.pgsims`, `docs/_audit/20260606_PG_FMU_DOMAIN_ROUTING.md`,
   `docs/discovery/20260909_pgrsims_unified_platform_baseline/09_PRODUCTION_BASELINE.md`. All
@@ -58,10 +58,10 @@ Confirmed with the user:
 
 ## Step 2 — Web app screenshots (Playwright, since claude-in-chrome extension isn't connected)
 
-1. `mcp__playwright__browser_navigate` to `https://pg.fmu.edu.pk`, resize viewport to 1440x900 for
+1. `mcp__playwright__browser_navigate` to `https://pg.vexel.pk`, resize viewport to 1440x900 for
    consistent, presentation-friendly framing.
 2. Verify each of the 4 production logins via a plain `curl` POST to
-   `https://pg.fmu.edu.pk/api/auth/login/` first (fast, avoids wasted browser navigation on a
+   `https://pg.vexel.pk/api/auth/login/` first (fast, avoids wasted browser navigation on a
    role whose credentials don't work) before driving the browser.
 3. Per role, log in through the real `/login` UI (not by injecting tokens) and capture, using the
    route list already confirmed to exist under `frontend/app/`:

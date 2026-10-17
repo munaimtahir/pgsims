@@ -5,10 +5,10 @@ Date: 2026-06-26
 ## Domain/Page Checks
 
 ```text
-homepage/domain loads: https://pg.fmu.edu.pk/ -> HTTP/2 200
-login page loads: https://pg.fmu.edu.pk/login -> HTTP/2 200
-API route/proxy works: https://pg.fmu.edu.pk/api/ -> HTTP/2 401 unauthenticated
-static file works: https://pg.fmu.edu.pk/static/admin/css/base.css -> HTTP/2 200
+homepage/domain loads: https://pg.vexel.pk/ -> HTTP/2 200
+login page loads: https://pg.vexel.pk/login -> HTTP/2 200
+API route/proxy works: https://pg.vexel.pk/api/ -> HTTP/2 401 unauthenticated
+static file works: https://pg.vexel.pk/static/admin/css/base.css -> HTTP/2 200
 ```
 
 Protected route checks, unauthenticated:

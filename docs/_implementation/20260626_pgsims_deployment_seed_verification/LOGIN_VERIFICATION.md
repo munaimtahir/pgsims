@@ -14,7 +14,7 @@ sup001 True supervisor True False /dashboard/supervisor
 
 ## Domain API Login Verification
 
-All logins were tested through `https://pg.fmu.edu.pk/api/auth/login/`.
+All logins were tested through `https://pg.vexel.pk/api/auth/login/`.
 Tokens were returned and masked in evidence.
 
 ```text

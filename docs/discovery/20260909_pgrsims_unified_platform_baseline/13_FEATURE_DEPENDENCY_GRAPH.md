@@ -94,7 +94,7 @@ main branch (backend + frontend + Android source)
       ↓
 docker-compose.prod.yml stack (backend/frontend/db/redis/worker/beat) on vps-clone
       ↓
-Caddy reverse proxy (pgsims.alshifalab.pk / pg.fmu.edu.pk / api.* / android.*)
+Caddy reverse proxy (pgsims.alshifalab.pk / pg.vexel.pk / api.* / android.*)
 ```
 Currently 1 commit behind main (docs-only, non-blocking). No migration-bearing commits pending.
 The dangling `pgr.fmu.edu.pk` Caddy route is an orphaned edge — it depends on nothing in the

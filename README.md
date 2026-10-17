@@ -134,7 +134,7 @@ Create a `.env` file in the project root before starting Docker. For compose-bas
 # Required settings
 SECRET_KEY=your-secret-key-here
 DEBUG=False
-ALLOWED_HOSTS=localhost,127.0.0.1,pg.fmu.edu.pk,pgsims.alshifalab.pk
+ALLOWED_HOSTS=localhost,127.0.0.1,pg.vexel.pk,pgsims.alshifalab.pk
 
 # Database (use DATABASE_URL or individual settings)
 DATABASE_URL=postgresql://user:password@localhost:5432/sims_db

@@ -393,3 +393,11 @@ previously here predates that audit and the brick 9-12 work.
   keys, legacy roles) appear
 
 Run gates before considering any phase "done".
+
+## Canonical production domain
+
+The production web app is https://pg.vexel.pk. Use this hostname for deployment,
+Django allowed hosts, CSRF/CORS origins, links, and access verification. Read
+`docs/PROJECT_ENVIRONMENT_CONTEXT.md` before infrastructure changes. Preserve
+other applications in the shared Caddy configuration; never replace it with
+a standalone PGSIMS configuration.

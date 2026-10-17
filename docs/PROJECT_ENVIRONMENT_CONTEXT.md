@@ -137,3 +137,13 @@ On 2026-09-10, read-only checks through `ssh test` confirmed the VPS repository 
 and the maintained Caddy configuration at `/home/munaim/srv/proxy/caddy/Caddyfile`. The active
 system configuration is `/etc/caddy/Caddyfile`. No Caddy configuration was changed during this
 verification.
+
+## Production domain (2026-10-17)
+
+Canonical web address: **https://pg.vexel.pk**. DNS resolves to `34.46.17.200`
+(at migration preflight). The previous institutional hostname has been retired
+from PGSIMS routing and trusted origins. Existing alternative PGSIMS hostnames
+and dedicated Android/staging endpoints remain separate and unchanged.
+Production Compose: `docker/docker-compose.prod.yml`, project `docker`, with
+`--env-file .env`. The frontend intentionally uses same-origin `/api`.
+Use `ops/caddy_sync_reload.sh` to update only the shared PGSIMS site block.

@@ -416,18 +416,50 @@ class ResidentDashboardFallbackTest(APITestCase):
         self.assertEqual(response.data["thesis"]["status"], "NOT_STARTED")
 
 
+from unittest.mock import patch
+import pytest
+from django.db import IntegrityError
+from rest_framework.test import APITransactionTestCase, APIClient
 from concurrent.futures import ThreadPoolExecutor
 from threading import Barrier
-from unittest import skipUnless
-from unittest.mock import patch
-from django.db import connection, connections, IntegrityError
-from rest_framework.test import APITransactionTestCase, APIClient
+from django.db import connections
 
 
-@skipUnless(connection.vendor == "postgresql", "PostgreSQL concurrent unique-key gate runs separately")
+@pytest.mark.postgres
 class LeaveIdempotencyConcurrencyTest(APITransactionTestCase):
     setUp = LeaveRequestAPITest.setUp
 
+    def test_replay_inserts_exactly_once(self):
+        payload = LeaveRequestAPITest._leave_payload(self)
+        self.client.force_authenticate(self.resident_user)
+
+        created = self.client.post("/api/leaves/", payload, format="json")
+        replayed = self.client.post("/api/leaves/", payload, format="json")
+
+        self.assertEqual(created.status_code, 201)
+        self.assertEqual(replayed.status_code, 200)
+        self.assertEqual(created.data["id"], replayed.data["id"])
+        self.assertEqual(LeaveRequest.objects.count(), 1)
+
+
+class LeaveIdempotencyRollbackTest(APITestCase):
+    setUp = LeaveRequestAPITest.setUp
+
+    def test_unrelated_integrity_failure_rolls_back_and_is_not_a_replay(self):
+        from .views import LeaveRequestViewSet
+        original = LeaveRequestViewSet.perform_create
+        def fail(view, serializer):
+            original(view, serializer)
+            raise IntegrityError("synthetic post-save failure")
+        self.client.force_authenticate(self.resident_user)
+        with patch.object(LeaveRequestViewSet, "perform_create", fail):
+            with self.assertRaises(IntegrityError):
+                self.client.post("/api/leaves/", LeaveRequestAPITest._leave_payload(self), format="json")
+        self.assertEqual(LeaveRequest.objects.count(), 0)
+
+
+@pytest.mark.postgres
+class LeaveSimultaneousReplayTest(LeaveIdempotencyConcurrencyTest):
     def test_simultaneous_replay_inserts_exactly_once(self):
         from .views import LeaveRequestViewSet
         barrier = Barrier(2)
@@ -454,19 +486,3 @@ class LeaveIdempotencyConcurrencyTest(APITransactionTestCase):
         self.assertEqual(sorted(code for code, _ in results), [200, 201])
         self.assertEqual(len({pk for _, pk in results}), 1)
         self.assertEqual(LeaveRequest.objects.count(), 1)
-
-
-class LeaveIdempotencyRollbackTest(APITestCase):
-    setUp = LeaveRequestAPITest.setUp
-
-    def test_unrelated_integrity_failure_rolls_back_and_is_not_a_replay(self):
-        from .views import LeaveRequestViewSet
-        original = LeaveRequestViewSet.perform_create
-        def fail(view, serializer):
-            original(view, serializer)
-            raise IntegrityError("synthetic post-save failure")
-        self.client.force_authenticate(self.resident_user)
-        with patch.object(LeaveRequestViewSet, "perform_create", fail):
-            with self.assertRaises(IntegrityError):
-                self.client.post("/api/leaves/", LeaveRequestAPITest._leave_payload(self), format="json")
-        self.assertEqual(LeaveRequest.objects.count(), 0)

@@ -173,6 +173,17 @@ def _resident_onboarding_sections(user, profile, training):
     ]
 
 
+def _onboarding_date(field, value, *, required=False):
+    if not value:
+        if required:
+            raise serializers.ValidationError({field: "A date is required."})
+        return None
+    try:
+        return date.fromisoformat(value)
+    except (ValueError, TypeError):
+        raise serializers.ValidationError({field: "Enter a valid date in YYYY-MM-DD format."})
+
+
 def _set_resident_onboarding_field(user, field, value):
     profile = _resident_profile(user)
     if field in {"full_name", "phone", "email"}:
@@ -202,7 +213,7 @@ def _set_resident_onboarding_field(user, field, value):
             lookup = {"code": value}
         try:
             setattr(profile, field, model.objects.get(**lookup) if value else None)
-        except model.DoesNotExist:
+        except (model.DoesNotExist, ValueError, TypeError):
             raise serializers.ValidationError({field: f"Invalid {field.replace('_ref', '')}."})
         profile.save(update_fields=[field, "updated_at"])
         if field in {"program_ref", "hospital", "department_ref", "academic_session_ref"} and profile.program_ref:
@@ -218,7 +229,7 @@ def _set_resident_onboarding_field(user, field, value):
         training, _ = ResidentTrainingRecord.objects.get_or_create(resident_user=user, program=profile.program_ref, defaults={"start_date": timezone.now().date()})
         if field in {"training_start_date", "expected_end_date"}:
             from datetime import date
-            setattr(training, "start_date" if field == "training_start_date" else field, date.fromisoformat(value) if value else None)
+            setattr(training, "start_date" if field == "training_start_date" else field, _onboarding_date(field, value, required=field == "training_start_date"))
         else:
             setattr(training, field, value or "")
         training.save(update_fields=["start_date" if field == "training_start_date" else field, "updated_at"])
@@ -254,10 +265,10 @@ def _set_resident_onboarding_field(user, field, value):
         if value:
             from datetime import date
             if completion:
-                completion.completed_at = date.fromisoformat(str(value))
+                completion.completed_at = _onboarding_date(field, value)
                 completion.save(update_fields=["completed_at", "updated_at"])
             else:
-                ResidentWorkshopCompletion.objects.create(resident_training_record=training, workshop=workshop, completed_at=date.fromisoformat(str(value)), source=ResidentWorkshopCompletion.SOURCE_MANUAL)
+                ResidentWorkshopCompletion.objects.create(resident_training_record=training, workshop=workshop, completed_at=_onboarding_date(field, value), source=ResidentWorkshopCompletion.SOURCE_MANUAL)
         elif completion:
             completion.delete()
         return

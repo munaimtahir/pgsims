@@ -96,7 +96,7 @@ the original task text assumed. **Follow them, don't second-guess them.**
 
 5. I proposed the domain `android.pgsims.alshifalab.pk` → A record → the VM's public IP
    (`34.46.17.200`, confirmed via `curl -4 ifconfig.me` on the VM and cross-checked against how
-   `pg.fmu.edu.pk` already resolves). User confirmed DNS propagation:
+   `pg.vexel.pk` already resolves). User confirmed DNS propagation:
    > "DNS propagation of new domain http://android.pgsims.alshifalab.pk/ is complete and is
    > pointing towards server ip at 34.46.17.200 - please verify if its done"
    — verified, works (see §3).
@@ -149,7 +149,7 @@ the original task text assumed. **Follow them, don't second-guess them.**
   extremely careful: only touch `pgsims_*` containers, never `docker compose down` without
   `-f docker/docker-compose.yml` scoping to this project, never touch other apps' containers.
 - **pgsims_backend container (bound to `127.0.0.1:8014` on the VM) IS the real, live production
-  backend** serving `pg.fmu.edu.pk`, `pgsims.alshifalab.pk`, `pgsims.pmc.edu.pk`, and
+  backend** serving `pg.vexel.pk`, `pgsims.alshifalab.pk`, `pgsims.pmc.edu.pk`, and
   `api.pgsims.alshifalab.pk` (confirmed via the real Caddyfile's site blocks, which
   `reverse_proxy 127.0.0.1:8014`). It runs via `docker/docker-compose.yml` (the **base** compose
   file, not `docker-compose.prod.yml` — container names are `pgsims_backend`, `pgsims_db`,
@@ -184,7 +184,7 @@ the original task text assumed. **Follow them, don't second-guess them.**
   `sudo bash /home/munaim/srv/proxy/caddy/sync_live_caddy.sh`. A backup was taken automatically
   at `/etc/caddy/Caddyfile.bak.2026-09-03_025214`. Verified afterward: `android.pgsims.alshifalab.pk`
   serves HTTPS correctly (Let's Encrypt cert auto-issued since DNS was already live), and
-  `pg.fmu.edu.pk` / `api.pgsims.alshifalab.pk` still return 200 (other sites unaffected).
+  `pg.vexel.pk` / `api.pgsims.alshifalab.pk` still return 200 (other sites unaffected).
 - DNS: `android.pgsims.alshifalab.pk` → A record → `34.46.17.200` (the VM's public IP), set up by
   the user, confirmed propagated and working.
 - Demo/org data seeded **directly into the real production DB** (user-approved, see §2):
@@ -506,7 +506,7 @@ local `pytest`/`manage.py check` type usage on the sandbox — this is separate 
 - Discovered this sandbox has KVM/adb/emulator/keystore (unlike the report's sandbox).
 - User redirected backend work to the VM (`ssh test`, `/home/munaim/srv/apps/pgsims`) — see §2.
 - Explored VM: found `pgsims_backend` on `127.0.0.1:8014` is the REAL production backend (Caddy
-  fronts `pg.fmu.edu.pk` etc. straight to it). User confirmed OK to use it (no real data yet).
+  fronts `pg.vexel.pk` etc. straight to it). User confirmed OK to use it (no real data yet).
 - Rebuilt + redeployed `pgsims_backend` from commit `039d92e` (migration 0015 now applied).
 - Set up new domain `android.pgsims.alshifalab.pk` → `34.46.17.200` (user did DNS), added
   `ALLOWED_HOSTS` entry, added a Caddy vhost to the REAL source-of-truth Caddyfile

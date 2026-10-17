@@ -234,7 +234,7 @@ class SupervisorAssignmentForm(forms.Form):
         if specialty:
             # Filter by specialty
             self.fields["pgs"].queryset = self.fields["pgs"].queryset.filter(specialty=specialty)
-            self.fields["SUPERVISOR"].queryset = self.fields["SUPERVISOR"].queryset.filter(
+            self.fields["supervisor"].queryset = self.fields["supervisor"].queryset.filter(
                 specialty=specialty
             )
 

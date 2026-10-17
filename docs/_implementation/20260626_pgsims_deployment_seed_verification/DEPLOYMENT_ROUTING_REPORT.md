@@ -45,7 +45,7 @@ Note: PostgreSQL healthcheck logs include `FATAL: database "sims_user" does not 
 
 - Canonical project Caddyfile: `deploy/Caddyfile.pgsims`
 - Active system Caddyfile: `/etc/caddy/Caddyfile`
-- `pg.fmu.edu.pk` is present in both configs.
+- `pg.vexel.pk` is present in both configs.
 - Canonical config validates:
 
 ```text
@@ -72,21 +72,21 @@ Active Caddy routing:
 Conditional gap:
 
 - `deploy/Caddyfile.pgsims` contains a `/healthz*` backend handler.
-- Active `/etc/caddy/Caddyfile` lacks that handler, so `https://pg.fmu.edu.pk/healthz` returns Next.js `404`.
+- Active `/etc/caddy/Caddyfile` lacks that handler, so `https://pg.vexel.pk/healthz` returns Next.js `404`.
 - Attempted `/etc/caddy/Caddyfile` update was blocked because `sudo` requires an interactive password.
 
 ## Domain and HTTPS
 
-- DNS evidence: `pg.fmu.edu.pk -> 34.10.178.210`
+- DNS evidence: `pg.vexel.pk -> 34.10.178.210`
 - HTTPS works through Caddy.
 - Domain checks:
 
 ```text
-https://pg.fmu.edu.pk/        -> HTTP/2 200
-https://pg.fmu.edu.pk/login   -> HTTP/2 200
-https://pg.fmu.edu.pk/api/    -> HTTP/2 401 (expected unauthenticated API response)
-https://pg.fmu.edu.pk/static/admin/css/base.css -> HTTP/2 200
-https://pg.fmu.edu.pk/healthz -> HTTP/2 404 (conditional Caddy health route drift)
+https://pg.vexel.pk/        -> HTTP/2 200
+https://pg.vexel.pk/login   -> HTTP/2 200
+https://pg.vexel.pk/api/    -> HTTP/2 401 (expected unauthenticated API response)
+https://pg.vexel.pk/static/admin/css/base.css -> HTTP/2 200
+https://pg.vexel.pk/healthz -> HTTP/2 404 (conditional Caddy health route drift)
 ```
 
 ## Internal Service Checks

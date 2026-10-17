@@ -1,5 +1,8 @@
 """Minimal notification tests."""
+from datetime import time
+
 from django.test import TestCase
+from django.utils import timezone
 from rest_framework.test import APIClient
 from django.contrib.auth import get_user_model
 from sims.notifications.models import Notification
@@ -58,3 +61,32 @@ class NotificationBasicTests(TestCase):
         self.assertEqual(response.data["marked"], 1)
         self.assertIsNone(own.read_at)
         self.assertIsNone(other.read_at)
+
+    def test_preference_channel_and_quiet_hour_boundaries(self):
+        from sims.notifications.models import NotificationPreference
+
+        preference = NotificationPreference.for_user(self.user)
+        preference.email_enabled = False
+        preference.quiet_hours_start = time(9, 0)
+        preference.quiet_hours_end = time(17, 0)
+        preference.save()
+        noon = timezone.now().replace(hour=12, minute=0, second=0, microsecond=0)
+        self.assertFalse(preference.allows_channel(Notification.CHANNEL_EMAIL, noon))
+        self.assertFalse(preference.allows_channel(Notification.CHANNEL_IN_APP, noon))
+        self.assertTrue(preference.allows_channel(Notification.CHANNEL_IN_APP, noon.replace(hour=18)))
+
+        preference.email_enabled = True
+        preference.push_enabled = False
+        preference.quiet_hours_start = time(22, 0)
+        preference.quiet_hours_end = time(6, 0)
+        preference.save()
+        self.assertFalse(preference.allows_channel(Notification.CHANNEL_PUSH, noon))
+        self.assertFalse(preference.allows_channel(Notification.CHANNEL_IN_APP, noon.replace(hour=23)))
+        self.assertTrue(preference.allows_channel(Notification.CHANNEL_IN_APP, noon))
+
+    def test_mark_read_is_idempotent(self):
+        notification = Notification.objects.create(recipient=self.user, verb="v", title="T", body="B")
+        notification.mark_read()
+        first_read_at = notification.read_at
+        notification.mark_read()
+        self.assertEqual(notification.read_at, first_read_at)

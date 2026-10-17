@@ -3,6 +3,7 @@ import pytest
 import zipfile
 import json
 import hashlib
+from urllib.parse import parse_qs, urlparse
 from unittest.mock import patch, MagicMock
 from django.conf import settings
 from django.urls import reverse
@@ -51,7 +52,6 @@ def api_client(super_admin):
 @pytest.mark.django_db
 class TestBackupCenterServices:
     
-    @pytest.mark.skip(reason="Legacy/non-scope for Brick 7")
     @patch('sims.backup_center.services.subprocess.check_output')
     @patch('sims.backup_center.services.subprocess.run')
     def test_create_routine_backup(self, mock_run, mock_check, super_admin, tmp_path):
@@ -87,7 +87,6 @@ class TestBackupCenterServices:
                     assert manifest['media_included'] is True
                     assert 'academics.department' in manifest['table_counts']
 
-    @pytest.mark.skip(reason="Legacy/non-scope for Brick 7")
     def test_restore_proof_sqlite_preserves_ids_passwords_and_media(self, super_admin, tmp_path):
         with patch('sims.backup_center.services.settings.MEDIA_ROOT', tmp_path / 'media'):
             with patch.dict('sims.backup_center.services.settings.SIMS_SETTINGS', {'BACKUP_LOCATION': tmp_path / 'backups'}, clear=False):
@@ -356,7 +355,6 @@ class TestBackupCenterViews:
 
 
 @pytest.mark.django_db
-@pytest.mark.skip(reason="Google Drive connector is non-scope for Update 0")
 class TestGoogleDriveConnector:
     @pytest.fixture(autouse=True)
     def _drive_env(self, monkeypatch):
@@ -368,8 +366,12 @@ class TestGoogleDriveConnector:
         monkeypatch.setenv("GOOGLE_DRIVE_BACKUP_FOLDER_NAME", "PGSIMS Backups")
         monkeypatch.setenv("PGSIMS_BACKUP_ENCRYPTION_KEY", "test-key")
 
-    def test_connect_requires_super_admin(self, api_client, normal_admin_user):
-        api_client.force_authenticate(user=normal_admin_user)
+    def test_connect_requires_super_admin(self, api_client):
+        normal_admin = User.objects.create_user(
+            username="normal-admin", email="normal-admin@example.com",
+            password="password123", role="ADMIN",
+        )
+        api_client.force_authenticate(user=normal_admin)
         url = reverse("google-drive-connect")
         response = api_client.get(url)
         assert response.status_code == 403
@@ -387,7 +389,7 @@ class TestGoogleDriveConnector:
         api_client.force_authenticate(user=super_admin)
         provider = GoogleDriveBackupProvider()
         auth_url = provider.build_authorization_url(user_id=super_admin.id)
-        state = auth_url.split("state=")[1].split("&")[0]
+        state = parse_qs(urlparse(auth_url).query)["state"][0]
 
         mock_post.return_value = MagicMock(
             status_code=200,

@@ -3,7 +3,12 @@ source = sims
 branch = True
 omit =
     */migrations/*
+    */_legacy/*
     */tests/*
+    */tests.py
+    */test_*.py
+    */*_test.py
+    */conftest.py
     manage.py
     sims_project/settings.py
     sims_project/wsgi.py
@@ -16,15 +21,10 @@ omit =
 [report]
 exclude_lines =
     pragma: no cover
-    def __repr__
-    def __str__
-    raise AssertionError
-    raise NotImplementedError
     if __name__ == .__main__.:
     if TYPE_CHECKING:
     class .*\bProtocol\):
     @(abc\.)?abstractmethod
-    pass
 precision = 2
 skip_empty = True
 

@@ -7,7 +7,7 @@ Date: 2026-06-26
 PRIMARY PURPOSE: Verify existing PGSIMS deployment readiness and minimal seed state.
 IN-SCOPE: Docker runtime, Caddy/domain routing, data backup/cleanup, login/smoke verification.
 OUT-OF-SCOPE: new PGMS app, rebuild, new modules, feature work, broad refactors.
-SUCCESS CRITERIA: pg.fmu.edu.pk reachable, services healthy, sample users active and linked, evidence complete.
+SUCCESS CRITERIA: pg.vexel.pk reachable, services healthy, sample users active and linked, evidence complete.
 FALLBACK PLAN: fix only deployment blockers or document BLOCKED/CONDITIONAL GO.
 GUARDRAILS ACTIVE: G1-G20 enforced.
 
@@ -54,7 +54,7 @@ GUARDRAILS ACTIVE: G1-G20 enforced.
   - backend: `127.0.0.1:8014 -> 8014`
   - frontend: `127.0.0.1:8082 -> 3000`
 - Domain/routing assumption:
-  - `pg.fmu.edu.pk` resolves to `34.10.178.210`
+  - `pg.vexel.pk` resolves to `34.10.178.210`
   - Caddy terminates HTTPS and proxies `/api/*` and `/admin/*` to `127.0.0.1:8014`, frontend to `127.0.0.1:8082`
 
 ## PGMS Check

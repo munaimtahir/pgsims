@@ -149,9 +149,11 @@ def pg_dashboard(request):
         rotations_count = 0
 
     try:
-        from sims.logbook.models import LogbookEntry
+        from sims.training.models import LogbookEntry
 
-        logbook_entries_count = LogbookEntry.objects.filter(pg=request.user).count()
+        logbook_entries_count = LogbookEntry.objects.filter(
+            resident_training_record__resident_user=request.user
+        ).count()
     except Exception:
         logbook_entries_count = 0
 

@@ -1,7 +1,7 @@
 # Canonical Caddy config for PGSIMS
 # Source of truth: deploy/Caddyfile.pgsims
 
-pg.fmu.edu.pk, pgsims.alshifalab.pk {
+pg.vexel.pk, pgsims.alshifalab.pk, pgsims.pmc.edu.pk {
 	encode zstd gzip
 
 	log {

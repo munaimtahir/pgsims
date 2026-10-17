@@ -5,15 +5,15 @@ The following environment variables configure the PGMS / PGR SIMS clean-room pos
 ## Core Django Configuration
 - `SECRET_KEY`: Production-strength cryptographically secure key used for signing sessions and tokens.
 - `DEBUG`: Set to `False` in production (e.g. `DEBUG=False`).
-- `ALLOWED_HOSTS`: Comma-separated list of host/domain names that this Django site can serve (e.g. `ALLOWED_HOSTS=pg.fmu.edu.pk,localhost`).
-- `CSRF_TRUSTED_ORIGINS`: Comma-separated list of trusted origins for unsafe HTTP requests (e.g. `CSRF_TRUSTED_ORIGINS=https://pg.fmu.edu.pk`).
+- `ALLOWED_HOSTS`: Comma-separated list of host/domain names that this Django site can serve (e.g. `ALLOWED_HOSTS=pg.vexel.pk,localhost`).
+- `CSRF_TRUSTED_ORIGINS`: Comma-separated list of trusted origins for unsafe HTTP requests (e.g. `CSRF_TRUSTED_ORIGINS=https://pg.vexel.pk`).
 
 ## Database Connectivity
 - `DATABASE_URL`: Full PostgreSQL database connection string (e.g. `postgresql://sims_user:password@db:5432/sims_db`).
 - `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`: Individual database connection settings (fallback/override).
 
 ## Frontend & CORS
-- `CORS_ALLOWED_ORIGINS`: Comma-separated list of allowed origins for cross-origin AJAX queries (e.g. `CORS_ALLOWED_ORIGINS=https://pg.fmu.edu.pk`).
+- `CORS_ALLOWED_ORIGINS`: Comma-separated list of allowed origins for cross-origin AJAX queries (e.g. `CORS_ALLOWED_ORIGINS=https://pg.vexel.pk`).
 - `FRONTEND_PUBLIC_API_URL`: Root path or host for API calls made by Next.js components.
 
 ## Operational & Media Settings

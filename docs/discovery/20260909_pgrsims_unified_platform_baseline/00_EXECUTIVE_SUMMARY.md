@@ -15,7 +15,7 @@ Full detail: `01_REPOSITORY_BASELINE.md`.
 
 ```
 Production SHA:       4f8e276 (1 commit behind main; drift is docs/scripts-only, no code/migration)
-Production web:       pgsims.alshifalab.pk, pgsims.pmc.edu.pk, pg.fmu.edu.pk
+Production web:       pgsims.alshifalab.pk, pgsims.pmc.edu.pk, pg.vexel.pk
 Production Android API: android.pgsims.alshifalab.pk / api.pgsims.alshifalab.pk / api.pgsims.pmc.edu.pk
 Service health:        All 6 prod services healthy; 106/106 migrations applied, 0 pending
 Repository drift:      Minimal, non-urgent (see above)

@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 from django.test import SimpleTestCase
@@ -8,14 +9,31 @@ class DriftGuardTests(SimpleTestCase):
         self.repo_root = Path(__file__).resolve().parents[4]
 
     def _iter_py_files(self):
-        for path in self.repo_root.rglob("*.py"):
-            if any(part in {".venv", "node_modules", "__pycache__"} for part in path.parts):
-                continue
-            if "docs" in path.parts or "scripts" in path.parts:
-                continue
-            if path.name == "test_drift_guards.py":
-                continue
-            yield path
+        # The guards inspect authored Python only.  Generated reports and virtual
+        # environments can contain thousands of Python files, which makes this
+        # otherwise small check disproportionately expensive and nondeterministic.
+        excluded = {
+            ".venv", "venv", "node_modules", "__pycache__", ".git", ".gradle",
+            ".next", ".pytest_cache", ".mypy_cache", "build", "coverage",
+            "htmlcov", "output", "docs", "scripts", ".claude", ".gemini",
+            ".e2e_upload_tmp", ".idea",
+        }
+        # The clean-room guards apply to the maintained Django application.  Archived
+        # modules, migration history, and repository tooling have separate governance
+        # checks and must not turn this source guard into a repository-wide crawl.
+        source_root = self.repo_root / "backend" / "sims"
+        excluded.update({"_legacy", "migrations", "tests"})
+        for directory, directories, filenames in os.walk(source_root):
+            directories[:] = [name for name in directories if name not in excluded]
+            for name in filenames:
+                if (
+                    name.endswith(".py")
+                    and name != "test_drift_guards.py"
+                    and not name.startswith("test_")
+                    and not name.endswith("_test.py")
+                    and name != "tests.py"
+                ):
+                    yield Path(directory) / name
 
     def test_forbidden_notification_create_legacy_keys_not_used(self):
         violations = []

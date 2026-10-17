@@ -1,0 +1,45 @@
+// Manual source coverage. Unit-only evidence is a baseline, never a full acceptance gate.
+apply plugin: 'jacoco'
+
+jacoco { toolVersion = '0.8.12' }
+
+def coveredModules = [project(':app-companion'), project(':core:common')]
+
+def configureReport = { task, includeDevice ->
+    task.dependsOn coveredModules.collect { "${it.path}:testDebugUnitTest" }
+    if (includeDevice) {
+        task.dependsOn ':app-companion:connectedDebugAndroidTest'
+    }
+    task.sourceDirectories.from(coveredModules.collect { it.file('src/main/java') })
+    task.classDirectories.from(coveredModules.collect { module ->
+        files(
+            fileTree(dir: "${module.buildDir}/tmp/kotlin-classes/debug", excludes: [
+                '**/R.class', '**/R$*.class', '**/BuildConfig.class',
+                '**/*$$serializer.class'
+            ]),
+            fileTree(dir: "${module.buildDir}/intermediates/javac/debug/compileDebugJavaWithJavac/classes", excludes: [
+                '**/R.class', '**/R$*.class', '**/BuildConfig.class'
+            ])
+        )
+    })
+    task.executionData.from(coveredModules.collect { module ->
+        fileTree(dir: module.buildDir, includes: includeDevice ? [
+            'outputs/unit_test_code_coverage/debugUnitTest/*.exec',
+            'outputs/code_coverage/debugAndroidTest/connected/**/*.ec'
+        ] : ['outputs/unit_test_code_coverage/debugUnitTest/*.exec'])
+    })
+    task.reports {
+        xml.required = true
+        html.required = true
+        xml.outputLocation = rootProject.file("../output/coverage/android/${includeDevice ? 'coverage' : 'unit-coverage'}.xml")
+        html.outputLocation = rootProject.file("../output/coverage/android/${includeDevice ? 'html' : 'unit-html'}")
+    }
+    task.doFirst {
+        if (task.executionData.files.empty) {
+            throw new GradleException('No coverage execution data; refusing an empty report')
+        }
+    }
+}
+
+tasks.register('coverageUnitReport', JacocoReport) { task -> configureReport(task, false) }
+tasks.register('coverageReport', JacocoReport) { task -> configureReport(task, true) }

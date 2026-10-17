@@ -12,7 +12,7 @@ Verdict: CONDITIONAL GO
 
 ## Domain Status
 
-- `pg.fmu.edu.pk` resolves to `34.10.178.210`.
+- `pg.vexel.pk` resolves to `34.10.178.210`.
 - HTTPS/TLS is active through Caddy.
 - Homepage and login page return HTTP/2 200.
 

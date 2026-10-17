@@ -5,3 +5,5 @@ plugins {
     alias(libs.plugins.kotlin.serialization) apply false
     alias(libs.plugins.compose.compiler) apply false
 }
+
+apply(from = "coverage.gradle")

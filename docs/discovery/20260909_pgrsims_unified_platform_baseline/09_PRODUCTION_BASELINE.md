@@ -43,7 +43,7 @@ No deploy, migrate, restart, or data-mutating command was run.
 `lims.alshifalab.pk`, `consult.alshifalab.pk`, etc. Only PGR SIMS blocks are relevant here):
 
 - **Production web + resident-facing domains**: `pgsims.alshifalab.pk`, `pgsims.pmc.edu.pk`,
-  `pg.fmu.edu.pk` → `/static/*` and `/media/*` served directly from
+  `pg.vexel.pk` → `/static/*` and `/media/*` served directly from
   `backend/staticfiles`/`backend/media`; `/api/*` and `/admin/*` → `127.0.0.1:8014` (backend);
   everything else → `127.0.0.1:8082` (frontend). This matches `docker-compose.prod.yml`'s port
   mapping exactly.

@@ -801,3 +801,11 @@ Rules, binding for every agent (Claude, Gemini, Copilot, or otherwise) working i
 See `SPRINT_STATE.md` itself for its current content and the same maintenance rules restated in
 context. `CLAUDE.md` and `GEMINI.md` carry a pointer to this section — this file (`AGENTS.md`) is
 the authoritative statement of the rule.
+
+## Canonical production domain
+
+The production web app is https://pg.vexel.pk. Use this hostname for deployment,
+Django allowed hosts, CSRF/CORS origins, links, and access verification. Read
+`docs/PROJECT_ENVIRONMENT_CONTEXT.md` before infrastructure changes. Preserve
+other applications in the shared Caddy configuration; never replace it with
+a standalone PGSIMS configuration.

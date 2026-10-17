@@ -201,3 +201,11 @@ and step-wise pending work, so a fresh agent can resume mid-sprint after a usage
 no other context. This is a live, self-pruning document, not a history log — see `AGENTS.md` §26
 for the full binding rules (update-as-you-go, prune completed detail, one file per sprint, avoid
 extra commits just to update it) and `SPRINT_STATE.md` itself for the current sprint.
+
+## Canonical production domain
+
+The production web app is https://pg.vexel.pk. Use this hostname for deployment,
+Django allowed hosts, CSRF/CORS origins, links, and access verification. Read
+`docs/PROJECT_ENVIRONMENT_CONTEXT.md` before infrastructure changes. Preserve
+other applications in the shared Caddy configuration; never replace it with
+a standalone PGSIMS configuration.

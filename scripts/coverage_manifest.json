@@ -1,0 +1,1345 @@
+{
+  "minimum": 95,
+  "preferred": 99,
+  "target_profiles": {
+    "sprint_risk_reduction": {
+      "description": "Current coverage sprint: backend and frontend only; Android is explicitly deferred.",
+      "platforms": {
+        "backend": {
+          "metrics": {"lines": 85, "branches": 90.01},
+          "areas": {"*": {"lines": 80, "branches": 80}}
+        },
+        "frontend": {
+          "metrics": {"lines": 60, "branches": 50, "statements": 58, "functions": 55},
+          "areas": {
+            "identity": {"lines": 82, "branches": 76, "statements": 82, "functions": 72},
+            "onboarding": {"lines": 70, "branches": 50, "statements": 65, "functions": 55},
+            "directories": {"lines": 92, "branches": 90, "statements": 92, "functions": 92},
+            "training": {"lines": 85, "branches": 75, "statements": 85, "functions": 90},
+            "academics": {"lines": 55, "branches": 40, "statements": 55, "functions": 60},
+            "notifications": {"lines": 60, "statements": 60, "functions": 55},
+            "imports_reporting": {"lines": 50, "branches": 35, "statements": 50, "functions": 45},
+            "backup_integrations": {"lines": 70, "branches": 55, "statements": 70, "functions": 60},
+            "infrastructure": {"lines": 65, "branches": 60, "statements": 60, "functions": 55}
+          }
+        }
+      }
+    },
+    "phase_2_hardening": {
+      "description": "Post-sprint hardening toward release coverage.",
+      "platforms": {
+        "backend": {"metrics": {"lines": 92, "branches": 85}, "areas": {"*": {"lines": 90, "branches": 80}}},
+        "frontend": {"metrics": {"lines": 75, "branches": 65, "statements": 73, "functions": 70}, "areas": {"*": {"lines": 70, "branches": 60, "statements": 70, "functions": 65}}}
+      }
+    },
+    "phase_3_release_floor": {
+      "description": "Mandatory release-quality per-area floor, including Android after its Laptop coverage sprint.",
+      "platforms": {
+        "backend": {"metrics": {"lines": 95, "branches": 95}, "areas": {"*": {"lines": 95, "branches": 95}}},
+        "frontend": {"metrics": {"lines": 95, "branches": 95, "statements": 95, "functions": 95}, "areas": {"*": {"lines": 95, "branches": 95, "statements": 95, "functions": 95}}},
+        "android": {"metrics": {"lines": 95, "branches": 95, "methods": 95}, "areas": {"*": {"lines": 95, "branches": 95, "methods": 95}}}
+      }
+    },
+    "phase_4_preferred": {
+      "description": "Preferred 99% target for every executable metric in every applicable area.",
+      "platforms": {
+        "backend": {"metrics": {"lines": 99, "branches": 99}, "areas": {"*": {"lines": 99, "branches": 99}}},
+        "frontend": {"metrics": {"lines": 99, "branches": 99, "statements": 99, "functions": 99}, "areas": {"*": {"lines": 99, "branches": 99, "statements": 99, "functions": 99}}},
+        "android": {"metrics": {"lines": 99, "branches": 99, "methods": 99}, "areas": {"*": {"lines": 99, "branches": 99, "methods": 99}}}
+      }
+    }
+  },
+  "areas": [
+    "identity",
+    "onboarding",
+    "directories",
+    "training",
+    "academics",
+    "notifications",
+    "imports_reporting",
+    "backup_integrations",
+    "infrastructure",
+    "offline_recovery"
+  ],
+  "exclusions": {
+    "tests": "Test code is not application coverage",
+    "_legacy": "Forbidden archived modules are not maintained application code",
+    "migrations": "Generated schema code; custom transformations require separate verification",
+    "apps.py": "Declarative Django registration",
+    "generated": "Dependencies and compiler-generated artifacts are outside authored source"
+  },
+  "files": {
+    "android/app-companion/src/main/java/pk/vexel/pgrcompanion/AdminScreens.kt": {
+      "platform": "android",
+      "area": "directories"
+    },
+    "android/app-companion/src/main/java/pk/vexel/pgrcompanion/CompanionActivity.kt": {
+      "platform": "android",
+      "area": "infrastructure"
+    },
+    "android/app-companion/src/main/java/pk/vexel/pgrcompanion/CompanionApplication.kt": {
+      "platform": "android",
+      "area": "infrastructure"
+    },
+    "android/app-companion/src/main/java/pk/vexel/pgrcompanion/IdentityScreens.kt": {
+      "platform": "android",
+      "area": "identity"
+    },
+    "android/app-companion/src/main/java/pk/vexel/pgrcompanion/InstitutionalRepository.kt": {
+      "platform": "android",
+      "area": "infrastructure"
+    },
+    "android/app-companion/src/main/java/pk/vexel/pgrcompanion/InstitutionalScreen.kt": {
+      "platform": "android",
+      "area": "infrastructure"
+    },
+    "android/app-companion/src/main/java/pk/vexel/pgrcompanion/LogbookStatus.kt": {
+      "platform": "android",
+      "area": "academics"
+    },
+    "android/app-companion/src/main/java/pk/vexel/pgrcompanion/NotificationCenter.kt": {
+      "platform": "android",
+      "area": "notifications"
+    },
+    "android/app-companion/src/main/java/pk/vexel/pgrcompanion/OfflineDraftStore.kt": {
+      "platform": "android",
+      "area": "offline_recovery"
+    },
+    "android/app-companion/src/main/java/pk/vexel/pgrcompanion/OfflineDraftSyncWorker.kt": {
+      "platform": "android",
+      "area": "offline_recovery"
+    },
+    "android/app-companion/src/main/java/pk/vexel/pgrcompanion/OfflineUploadStore.kt": {
+      "platform": "android",
+      "area": "offline_recovery"
+    },
+    "android/app-companion/src/main/java/pk/vexel/pgrcompanion/Onboarding.kt": {
+      "platform": "android",
+      "area": "onboarding"
+    },
+    "android/app-companion/src/main/java/pk/vexel/pgrcompanion/OwnProfile.kt": {
+      "platform": "android",
+      "area": "directories"
+    },
+    "android/app-companion/src/main/java/pk/vexel/pgrcompanion/PgrFirebaseMessagingService.kt": {
+      "platform": "android",
+      "area": "backup_integrations"
+    },
+    "android/app-companion/src/main/java/pk/vexel/pgrcompanion/ProgressReporting.kt": {
+      "platform": "android",
+      "area": "imports_reporting"
+    },
+    "android/app-companion/src/main/java/pk/vexel/pgrcompanion/RecoveryQueue.kt": {
+      "platform": "android",
+      "area": "offline_recovery"
+    },
+    "android/app-companion/src/main/java/pk/vexel/pgrcompanion/ResidentAcademicScreens.kt": {
+      "platform": "android",
+      "area": "academics"
+    },
+    "android/app-companion/src/main/java/pk/vexel/pgrcompanion/ResidentWorkflowScreens.kt": {
+      "platform": "android",
+      "area": "academics"
+    },
+    "android/app-companion/src/main/java/pk/vexel/pgrcompanion/SharedRoleScreens.kt": {
+      "platform": "android",
+      "area": "infrastructure"
+    },
+    "android/app-companion/src/main/java/pk/vexel/pgrcompanion/SupervisorScreens.kt": {
+      "platform": "android",
+      "area": "directories"
+    },
+    "android/app-companion/src/main/java/pk/vexel/pgrcompanion/SupervisorWorkflowScreens.kt": {
+      "platform": "android",
+      "area": "training"
+    },
+    "android/core/common/src/main/java/pk/vexel/pgr/shared/PgrTheme.kt": {
+      "platform": "android",
+      "area": "infrastructure"
+    },
+    "backend/sims/__init__.py": {
+      "platform": "backend",
+      "area": "infrastructure"
+    },
+    "backend/sims/_devtools/truthmap_extract.py": {
+      "platform": "backend",
+      "area": "infrastructure"
+    },
+    "backend/sims/academics/__init__.py": {
+      "platform": "backend",
+      "area": "academics"
+    },
+    "backend/sims/academics/admin.py": {
+      "platform": "backend",
+      "area": "academics"
+    },
+    "backend/sims/academics/management/__init__.py": {
+      "platform": "backend",
+      "area": "academics"
+    },
+    "backend/sims/academics/management/commands/__init__.py": {
+      "platform": "backend",
+      "area": "academics"
+    },
+    "backend/sims/academics/management/commands/seed_pilot_academic_workflows.py": {
+      "platform": "backend",
+      "area": "academics"
+    },
+    "backend/sims/academics/management/commands/seed_pilot_academics.py": {
+      "platform": "backend",
+      "area": "academics"
+    },
+    "backend/sims/academics/models.py": {
+      "platform": "backend",
+      "area": "academics"
+    },
+    "backend/sims/academics/permissions.py": {
+      "platform": "backend",
+      "area": "academics"
+    },
+    "backend/sims/academics/reporting.py": {
+      "platform": "backend",
+      "area": "imports_reporting"
+    },
+    "backend/sims/academics/serializers.py": {
+      "platform": "backend",
+      "area": "academics"
+    },
+    "backend/sims/academics/services.py": {
+      "platform": "backend",
+      "area": "academics"
+    },
+    "backend/sims/academics/views.py": {
+      "platform": "backend",
+      "area": "academics"
+    },
+    "backend/sims/academics/workflow_urls.py": {
+      "platform": "backend",
+      "area": "academics"
+    },
+    "backend/sims/admin.py": {
+      "platform": "backend",
+      "area": "infrastructure"
+    },
+    "backend/sims/audit/__init__.py": {
+      "platform": "backend",
+      "area": "infrastructure"
+    },
+    "backend/sims/audit/models.py": {
+      "platform": "backend",
+      "area": "infrastructure"
+    },
+    "backend/sims/audit/serializers.py": {
+      "platform": "backend",
+      "area": "infrastructure"
+    },
+    "backend/sims/audit/signals.py": {
+      "platform": "backend",
+      "area": "infrastructure"
+    },
+    "backend/sims/audit/urls.py": {
+      "platform": "backend",
+      "area": "infrastructure"
+    },
+    "backend/sims/audit/utils.py": {
+      "platform": "backend",
+      "area": "infrastructure"
+    },
+    "backend/sims/audit/views.py": {
+      "platform": "backend",
+      "area": "infrastructure"
+    },
+    "backend/sims/backup_center/__init__.py": {
+      "platform": "backend",
+      "area": "backup_integrations"
+    },
+    "backend/sims/backup_center/admin.py": {
+      "platform": "backend",
+      "area": "backup_integrations"
+    },
+    "backend/sims/backup_center/encryption.py": {
+      "platform": "backend",
+      "area": "backup_integrations"
+    },
+    "backend/sims/backup_center/google_drive.py": {
+      "platform": "backend",
+      "area": "backup_integrations"
+    },
+    "backend/sims/backup_center/management/__init__.py": {
+      "platform": "backend",
+      "area": "backup_integrations"
+    },
+    "backend/sims/backup_center/management/commands/__init__.py": {
+      "platform": "backend",
+      "area": "backup_integrations"
+    },
+    "backend/sims/backup_center/management/commands/create_system_backup.py": {
+      "platform": "backend",
+      "area": "backup_integrations"
+    },
+    "backend/sims/backup_center/management/commands/download_google_drive_backup.py": {
+      "platform": "backend",
+      "area": "backup_integrations"
+    },
+    "backend/sims/backup_center/management/commands/google_drive_backup_health_check.py": {
+      "platform": "backend",
+      "area": "backup_integrations"
+    },
+    "backend/sims/backup_center/management/commands/google_drive_backup_status.py": {
+      "platform": "backend",
+      "area": "backup_integrations"
+    },
+    "backend/sims/backup_center/management/commands/restore_system_backup.py": {
+      "platform": "backend",
+      "area": "backup_integrations"
+    },
+    "backend/sims/backup_center/management/commands/upload_backup_to_google_drive.py": {
+      "platform": "backend",
+      "area": "backup_integrations"
+    },
+    "backend/sims/backup_center/management/commands/validate_system_backup.py": {
+      "platform": "backend",
+      "area": "backup_integrations"
+    },
+    "backend/sims/backup_center/management/commands/verify_google_drive_backup.py": {
+      "platform": "backend",
+      "area": "backup_integrations"
+    },
+    "backend/sims/backup_center/models.py": {
+      "platform": "backend",
+      "area": "backup_integrations"
+    },
+    "backend/sims/backup_center/providers.py": {
+      "platform": "backend",
+      "area": "backup_integrations"
+    },
+    "backend/sims/backup_center/serializers.py": {
+      "platform": "backend",
+      "area": "backup_integrations"
+    },
+    "backend/sims/backup_center/services.py": {
+      "platform": "backend",
+      "area": "backup_integrations"
+    },
+    "backend/sims/backup_center/urls.py": {
+      "platform": "backend",
+      "area": "backup_integrations"
+    },
+    "backend/sims/backup_center/views.py": {
+      "platform": "backend",
+      "area": "backup_integrations"
+    },
+    "backend/sims/bulk/__init__.py": {
+      "platform": "backend",
+      "area": "imports_reporting"
+    },
+    "backend/sims/bulk/admin.py": {
+      "platform": "backend",
+      "area": "imports_reporting"
+    },
+    "backend/sims/bulk/models.py": {
+      "platform": "backend",
+      "area": "imports_reporting"
+    },
+    "backend/sims/bulk/serializers.py": {
+      "platform": "backend",
+      "area": "imports_reporting"
+    },
+    "backend/sims/bulk/services.py": {
+      "platform": "backend",
+      "area": "imports_reporting"
+    },
+    "backend/sims/bulk/urls.py": {
+      "platform": "backend",
+      "area": "imports_reporting"
+    },
+    "backend/sims/bulk/userbase_engine.py": {
+      "platform": "backend",
+      "area": "imports_reporting"
+    },
+    "backend/sims/bulk/views.py": {
+      "platform": "backend",
+      "area": "imports_reporting"
+    },
+    "backend/sims/common_permissions.py": {
+      "platform": "backend",
+      "area": "infrastructure"
+    },
+    "backend/sims/context_processors.py": {
+      "platform": "backend",
+      "area": "infrastructure"
+    },
+    "backend/sims/domain/__init__.py": {
+      "platform": "backend",
+      "area": "infrastructure"
+    },
+    "backend/sims/domain/validators.py": {
+      "platform": "backend",
+      "area": "infrastructure"
+    },
+    "backend/sims/notifications/__init__.py": {
+      "platform": "backend",
+      "area": "notifications"
+    },
+    "backend/sims/notifications/admin.py": {
+      "platform": "backend",
+      "area": "notifications"
+    },
+    "backend/sims/notifications/models.py": {
+      "platform": "backend",
+      "area": "notifications"
+    },
+    "backend/sims/notifications/serializers.py": {
+      "platform": "backend",
+      "area": "notifications"
+    },
+    "backend/sims/notifications/services.py": {
+      "platform": "backend",
+      "area": "notifications"
+    },
+    "backend/sims/notifications/signals.py": {
+      "platform": "backend",
+      "area": "notifications"
+    },
+    "backend/sims/notifications/urls.py": {
+      "platform": "backend",
+      "area": "notifications"
+    },
+    "backend/sims/notifications/views.py": {
+      "platform": "backend",
+      "area": "notifications"
+    },
+    "backend/sims/rotations/__init__.py": {
+      "platform": "backend",
+      "area": "academics"
+    },
+    "backend/sims/rotations/admin.py": {
+      "platform": "backend",
+      "area": "academics"
+    },
+    "backend/sims/rotations/forms.py": {
+      "platform": "backend",
+      "area": "academics"
+    },
+    "backend/sims/rotations/models.py": {
+      "platform": "backend",
+      "area": "academics"
+    },
+    "backend/sims/rotations/services.py": {
+      "platform": "backend",
+      "area": "academics"
+    },
+    "backend/sims/rotations/urls.py": {
+      "platform": "backend",
+      "area": "academics"
+    },
+    "backend/sims/rotations/views.py": {
+      "platform": "backend",
+      "area": "academics"
+    },
+    "backend/sims/static/js/theme.js": {
+      "platform": "backend",
+      "area": "infrastructure"
+    },
+    "backend/sims/supervision/admin.py": {
+      "platform": "backend",
+      "area": "training"
+    },
+    "backend/sims/supervision/management/__init__.py": {
+      "platform": "backend",
+      "area": "training"
+    },
+    "backend/sims/supervision/management/commands/__init__.py": {
+      "platform": "backend",
+      "area": "training"
+    },
+    "backend/sims/supervision/management/commands/seed_pilot_supervision.py": {
+      "platform": "backend",
+      "area": "training"
+    },
+    "backend/sims/supervision/models.py": {
+      "platform": "backend",
+      "area": "training"
+    },
+    "backend/sims/supervision/permissions.py": {
+      "platform": "backend",
+      "area": "training"
+    },
+    "backend/sims/supervision/serializers.py": {
+      "platform": "backend",
+      "area": "training"
+    },
+    "backend/sims/supervision/services.py": {
+      "platform": "backend",
+      "area": "training"
+    },
+    "backend/sims/supervision/urls.py": {
+      "platform": "backend",
+      "area": "training"
+    },
+    "backend/sims/supervision/views.py": {
+      "platform": "backend",
+      "area": "training"
+    },
+    "backend/sims/training/__init__.py": {
+      "platform": "backend",
+      "area": "training"
+    },
+    "backend/sims/training/admin.py": {
+      "platform": "backend",
+      "area": "training"
+    },
+    "backend/sims/training/dashboard_serializers.py": {
+      "platform": "backend",
+      "area": "training"
+    },
+    "backend/sims/training/eligibility.py": {
+      "platform": "backend",
+      "area": "training"
+    },
+    "backend/sims/training/management/__init__.py": {
+      "platform": "backend",
+      "area": "training"
+    },
+    "backend/sims/training/management/commands/__init__.py": {
+      "platform": "backend",
+      "area": "training"
+    },
+    "backend/sims/training/management/commands/recompute_eligibility.py": {
+      "platform": "backend",
+      "area": "training"
+    },
+    "backend/sims/training/models.py": {
+      "platform": "backend",
+      "area": "training"
+    },
+    "backend/sims/training/serializers.py": {
+      "platform": "backend",
+      "area": "training"
+    },
+    "backend/sims/training/signals.py": {
+      "platform": "backend",
+      "area": "training"
+    },
+    "backend/sims/training/urls.py": {
+      "platform": "backend",
+      "area": "training"
+    },
+    "backend/sims/training/views.py": {
+      "platform": "backend",
+      "area": "training"
+    },
+    "backend/sims/users/__init__.py": {
+      "platform": "backend",
+      "area": "identity"
+    },
+    "backend/sims/users/admin.py": {
+      "platform": "backend",
+      "area": "identity"
+    },
+    "backend/sims/users/api_urls.py": {
+      "platform": "backend",
+      "area": "identity"
+    },
+    "backend/sims/users/api_user_urls.py": {
+      "platform": "backend",
+      "area": "identity"
+    },
+    "backend/sims/users/api_views.py": {
+      "platform": "backend",
+      "area": "identity"
+    },
+    "backend/sims/users/cases_dummy_urls.py": {
+      "platform": "backend",
+      "area": "identity"
+    },
+    "backend/sims/users/certificates_dummy_urls.py": {
+      "platform": "backend",
+      "area": "identity"
+    },
+    "backend/sims/users/data_quality.py": {
+      "platform": "backend",
+      "area": "identity"
+    },
+    "backend/sims/users/decorators.py": {
+      "platform": "backend",
+      "area": "identity"
+    },
+    "backend/sims/users/forms.py": {
+      "platform": "backend",
+      "area": "identity"
+    },
+    "backend/sims/users/logbook_dummy_urls.py": {
+      "platform": "backend",
+      "area": "academics"
+    },
+    "backend/sims/users/management/__init__.py": {
+      "platform": "backend",
+      "area": "identity"
+    },
+    "backend/sims/users/management/commands/__init__.py": {
+      "platform": "backend",
+      "area": "identity"
+    },
+    "backend/sims/users/management/commands/audit_onboarding_integrity.py": {
+      "platform": "backend",
+      "area": "onboarding"
+    },
+    "backend/sims/users/management/commands/backfill_home_affiliation.py": {
+      "platform": "backend",
+      "area": "identity"
+    },
+    "backend/sims/users/management/commands/bootstrap_urology_demo.py": {
+      "platform": "backend",
+      "area": "identity"
+    },
+    "backend/sims/users/management/commands/cleanup_pilot_runtime.py": {
+      "platform": "backend",
+      "area": "identity"
+    },
+    "backend/sims/users/management/commands/create_superadmin.py": {
+      "platform": "backend",
+      "area": "identity"
+    },
+    "backend/sims/users/management/commands/import_corrections_csv.py": {
+      "platform": "backend",
+      "area": "imports_reporting"
+    },
+    "backend/sims/users/management/commands/import_pilot_bundle.py": {
+      "platform": "backend",
+      "area": "imports_reporting"
+    },
+    "backend/sims/users/management/commands/import_trainees.py": {
+      "platform": "backend",
+      "area": "imports_reporting"
+    },
+    "backend/sims/users/management/commands/initialize_pgsims_baseline.py": {
+      "platform": "backend",
+      "area": "identity"
+    },
+    "backend/sims/users/management/commands/prepare_android_production_e2e.py": {
+      "platform": "backend",
+      "area": "identity"
+    },
+    "backend/sims/users/management/commands/preview_trainees.py": {
+      "platform": "backend",
+      "area": "identity"
+    },
+    "backend/sims/users/management/commands/recompute_data_quality.py": {
+      "platform": "backend",
+      "area": "identity"
+    },
+    "backend/sims/users/management/commands/reconcile_urology_supervisor_profiles.py": {
+      "platform": "backend",
+      "area": "identity"
+    },
+    "backend/sims/users/management/commands/repair_identity_profiles.py": {
+      "platform": "backend",
+      "area": "identity"
+    },
+    "backend/sims/users/management/commands/reset_demo_data.py": {
+      "platform": "backend",
+      "area": "identity"
+    },
+    "backend/sims/users/management/commands/reset_pilot_data.py": {
+      "platform": "backend",
+      "area": "identity"
+    },
+    "backend/sims/users/management/commands/seed_active_surface_baseline.py": {
+      "platform": "backend",
+      "area": "identity"
+    },
+    "backend/sims/users/management/commands/seed_android_e2e_demo.py": {
+      "platform": "backend",
+      "area": "identity"
+    },
+    "backend/sims/users/management/commands/seed_canonical_demo_accounts.py": {
+      "platform": "backend",
+      "area": "identity"
+    },
+    "backend/sims/users/management/commands/seed_demo_data.py": {
+      "platform": "backend",
+      "area": "identity"
+    },
+    "backend/sims/users/management/commands/seed_e2e.py": {
+      "platform": "backend",
+      "area": "identity"
+    },
+    "backend/sims/users/management/commands/seed_org_data.py": {
+      "platform": "backend",
+      "area": "identity"
+    },
+    "backend/sims/users/management/commands/seed_pilot_masters.py": {
+      "platform": "backend",
+      "area": "identity"
+    },
+    "backend/sims/users/management/commands/seed_three_account_demo.py": {
+      "platform": "backend",
+      "area": "identity"
+    },
+    "backend/sims/users/management/commands/seed_urology_workflow_demo.py": {
+      "platform": "backend",
+      "area": "identity"
+    },
+    "backend/sims/users/models.py": {
+      "platform": "backend",
+      "area": "identity"
+    },
+    "backend/sims/users/onboarding_api.py": {
+      "platform": "backend",
+      "area": "onboarding"
+    },
+    "backend/sims/users/permissions.py": {
+      "platform": "backend",
+      "area": "identity"
+    },
+    "backend/sims/users/serializers.py": {
+      "platform": "backend",
+      "area": "identity"
+    },
+    "backend/sims/users/services.py": {
+      "platform": "backend",
+      "area": "identity"
+    },
+    "backend/sims/users/signals.py": {
+      "platform": "backend",
+      "area": "identity"
+    },
+    "backend/sims/users/urls.py": {
+      "platform": "backend",
+      "area": "identity"
+    },
+    "backend/sims/users/userbase_serializers.py": {
+      "platform": "backend",
+      "area": "directories"
+    },
+    "backend/sims/users/userbase_urls.py": {
+      "platform": "backend",
+      "area": "directories"
+    },
+    "backend/sims/users/userbase_views.py": {
+      "platform": "backend",
+      "area": "directories"
+    },
+    "backend/sims/users/views.py": {
+      "platform": "backend",
+      "area": "identity"
+    },
+    "frontend/app/academics/data-quality/page.tsx": {
+      "platform": "frontend",
+      "area": "academics"
+    },
+    "frontend/app/academics/evaluation-templates/page.tsx": {
+      "platform": "frontend",
+      "area": "academics"
+    },
+    "frontend/app/academics/evaluations/[id]/page.tsx": {
+      "platform": "frontend",
+      "area": "academics"
+    },
+    "frontend/app/academics/evaluations/[id]/review/page.tsx": {
+      "platform": "frontend",
+      "area": "academics"
+    },
+    "frontend/app/academics/evaluations/new/page.tsx": {
+      "platform": "frontend",
+      "area": "academics"
+    },
+    "frontend/app/academics/evaluations/page.tsx": {
+      "platform": "frontend",
+      "area": "academics"
+    },
+    "frontend/app/academics/layout.tsx": {
+      "platform": "frontend",
+      "area": "academics"
+    },
+    "frontend/app/academics/leave-requests/[id]/page.tsx": {
+      "platform": "frontend",
+      "area": "academics"
+    },
+    "frontend/app/academics/leave-requests/new/page.tsx": {
+      "platform": "frontend",
+      "area": "academics"
+    },
+    "frontend/app/academics/leave-requests/page.tsx": {
+      "platform": "frontend",
+      "area": "academics"
+    },
+    "frontend/app/academics/logbook-categories/page.tsx": {
+      "platform": "frontend",
+      "area": "academics"
+    },
+    "frontend/app/academics/logbook/[id]/page.tsx": {
+      "platform": "frontend",
+      "area": "academics"
+    },
+    "frontend/app/academics/logbook/[id]/review/page.tsx": {
+      "platform": "frontend",
+      "area": "academics"
+    },
+    "frontend/app/academics/logbook/new/page.tsx": {
+      "platform": "frontend",
+      "area": "academics"
+    },
+    "frontend/app/academics/logbook/page.tsx": {
+      "platform": "frontend",
+      "area": "academics"
+    },
+    "frontend/app/academics/monitoring/page.tsx": {
+      "platform": "frontend",
+      "area": "academics"
+    },
+    "frontend/app/academics/my-progress/page.tsx": {
+      "platform": "frontend",
+      "area": "imports_reporting"
+    },
+    "frontend/app/academics/page.tsx": {
+      "platform": "frontend",
+      "area": "academics"
+    },
+    "frontend/app/academics/periods/page.tsx": {
+      "platform": "frontend",
+      "area": "academics"
+    },
+    "frontend/app/academics/reports/data-quality/page.tsx": {
+      "platform": "frontend",
+      "area": "imports_reporting"
+    },
+    "frontend/app/academics/reports/evaluations/page.tsx": {
+      "platform": "frontend",
+      "area": "imports_reporting"
+    },
+    "frontend/app/academics/reports/logbook/page.tsx": {
+      "platform": "frontend",
+      "area": "imports_reporting"
+    },
+    "frontend/app/academics/reports/resident-progress/[id]/page.tsx": {
+      "platform": "frontend",
+      "area": "imports_reporting"
+    },
+    "frontend/app/academics/reports/resident-progress/page.tsx": {
+      "platform": "frontend",
+      "area": "imports_reporting"
+    },
+    "frontend/app/academics/reports/supervisor-workload/[id]/page.tsx": {
+      "platform": "frontend",
+      "area": "imports_reporting"
+    },
+    "frontend/app/academics/reports/supervisor-workload/page.tsx": {
+      "platform": "frontend",
+      "area": "imports_reporting"
+    },
+    "frontend/app/academics/review-queue/page.tsx": {
+      "platform": "frontend",
+      "area": "academics"
+    },
+    "frontend/app/academics/rotation-assignments/[id]/page.tsx": {
+      "platform": "frontend",
+      "area": "academics"
+    },
+    "frontend/app/academics/rotation-assignments/new/page.tsx": {
+      "platform": "frontend",
+      "area": "academics"
+    },
+    "frontend/app/academics/rotation-assignments/page.tsx": {
+      "platform": "frontend",
+      "area": "academics"
+    },
+    "frontend/app/academics/rotation-templates/page.tsx": {
+      "platform": "frontend",
+      "area": "academics"
+    },
+    "frontend/app/academics/supervisor-workload/page.tsx": {
+      "platform": "frontend",
+      "area": "academics"
+    },
+    "frontend/app/academics/training-records/[id]/page.tsx": {
+      "platform": "frontend",
+      "area": "academics"
+    },
+    "frontend/app/academics/training-records/page.tsx": {
+      "platform": "frontend",
+      "area": "academics"
+    },
+    "frontend/app/academics/workflow-data-quality/page.tsx": {
+      "platform": "frontend",
+      "area": "academics"
+    },
+    "frontend/app/academics/workflow-overview/page.tsx": {
+      "platform": "frontend",
+      "area": "academics"
+    },
+    "frontend/app/admin/layout.tsx": {
+      "platform": "frontend",
+      "area": "infrastructure"
+    },
+    "frontend/app/admin/pending-supervisor-links/page.tsx": {
+      "platform": "frontend",
+      "area": "infrastructure"
+    },
+    "frontend/app/admins/[id]/page.tsx": {
+      "platform": "frontend",
+      "area": "infrastructure"
+    },
+    "frontend/app/admins/layout.tsx": {
+      "platform": "frontend",
+      "area": "infrastructure"
+    },
+    "frontend/app/admins/page.tsx": {
+      "platform": "frontend",
+      "area": "infrastructure"
+    },
+    "frontend/app/api/[...path]/route.ts": {
+      "platform": "frontend",
+      "area": "infrastructure"
+    },
+    "frontend/app/change-password/page.tsx": {
+      "platform": "frontend",
+      "area": "identity"
+    },
+    "frontend/app/complete-profile/page.tsx": {
+      "platform": "frontend",
+      "area": "onboarding"
+    },
+    "frontend/app/dashboard/change-password/page.tsx": {
+      "platform": "frontend",
+      "area": "identity"
+    },
+    "frontend/app/dashboard/layout.tsx": {
+      "platform": "frontend",
+      "area": "infrastructure"
+    },
+    "frontend/app/dashboard/page.tsx": {
+      "platform": "frontend",
+      "area": "infrastructure"
+    },
+    "frontend/app/dashboard/pg/departments/[id]/roster/page.tsx": {
+      "platform": "frontend",
+      "area": "directories"
+    },
+    "frontend/app/dashboard/pg/layout.tsx": {
+      "platform": "frontend",
+      "area": "infrastructure"
+    },
+    "frontend/app/dashboard/pg/page.tsx": {
+      "platform": "frontend",
+      "area": "infrastructure"
+    },
+    "frontend/app/dashboard/resident/documents/page.tsx": {
+      "platform": "frontend",
+      "area": "infrastructure"
+    },
+    "frontend/app/dashboard/resident/page.tsx": {
+      "platform": "frontend",
+      "area": "infrastructure"
+    },
+    "frontend/app/dashboard/resident/postings/page.tsx": {
+      "platform": "frontend",
+      "area": "infrastructure"
+    },
+    "frontend/app/dashboard/resident/progress/page.tsx": {
+      "platform": "frontend",
+      "area": "imports_reporting"
+    },
+    "frontend/app/dashboard/resident/research/page.tsx": {
+      "platform": "frontend",
+      "area": "infrastructure"
+    },
+    "frontend/app/dashboard/resident/schedule/page.tsx": {
+      "platform": "frontend",
+      "area": "infrastructure"
+    },
+    "frontend/app/dashboard/resident/thesis/page.tsx": {
+      "platform": "frontend",
+      "area": "infrastructure"
+    },
+    "frontend/app/dashboard/resident/workshops/page.tsx": {
+      "platform": "frontend",
+      "area": "infrastructure"
+    },
+    "frontend/app/dashboard/supervisor/page.tsx": {
+      "platform": "frontend",
+      "area": "infrastructure"
+    },
+    "frontend/app/dashboard/supervisor/research-approvals/page.tsx": {
+      "platform": "frontend",
+      "area": "infrastructure"
+    },
+    "frontend/app/dashboard/supervisor/residents/[id]/progress/page.tsx": {
+      "platform": "frontend",
+      "area": "imports_reporting"
+    },
+    "frontend/app/dashboard/utrmc/academics/page.tsx": {
+      "platform": "frontend",
+      "area": "academics"
+    },
+    "frontend/app/dashboard/utrmc/backup/page.tsx": {
+      "platform": "frontend",
+      "area": "backup_integrations"
+    },
+    "frontend/app/dashboard/utrmc/data-quality/page.tsx": {
+      "platform": "frontend",
+      "area": "infrastructure"
+    },
+    "frontend/app/dashboard/utrmc/departments/[id]/roster/page.tsx": {
+      "platform": "frontend",
+      "area": "directories"
+    },
+    "frontend/app/dashboard/utrmc/departments/page.tsx": {
+      "platform": "frontend",
+      "area": "directories"
+    },
+    "frontend/app/dashboard/utrmc/eligibility-monitoring/page.tsx": {
+      "platform": "frontend",
+      "area": "infrastructure"
+    },
+    "frontend/app/dashboard/utrmc/hospitals/page.tsx": {
+      "platform": "frontend",
+      "area": "directories"
+    },
+    "frontend/app/dashboard/utrmc/layout.tsx": {
+      "platform": "frontend",
+      "area": "infrastructure"
+    },
+    "frontend/app/dashboard/utrmc/matrix/page.tsx": {
+      "platform": "frontend",
+      "area": "infrastructure"
+    },
+    "frontend/app/dashboard/utrmc/onboarding/page.tsx": {
+      "platform": "frontend",
+      "area": "onboarding"
+    },
+    "frontend/app/dashboard/utrmc/page.tsx": {
+      "platform": "frontend",
+      "area": "infrastructure"
+    },
+    "frontend/app/dashboard/utrmc/postings/page.tsx": {
+      "platform": "frontend",
+      "area": "infrastructure"
+    },
+    "frontend/app/dashboard/utrmc/programs/page.tsx": {
+      "platform": "frontend",
+      "area": "infrastructure"
+    },
+    "frontend/app/dashboard/utrmc/supervision/page.tsx": {
+      "platform": "frontend",
+      "area": "training"
+    },
+    "frontend/app/dashboard/utrmc/supervisors/page.tsx": {
+      "platform": "frontend",
+      "area": "infrastructure"
+    },
+    "frontend/app/dashboard/utrmc/users/page.tsx": {
+      "platform": "frontend",
+      "area": "identity"
+    },
+    "frontend/app/forgot-password/page.tsx": {
+      "platform": "frontend",
+      "area": "identity"
+    },
+    "frontend/app/layout.tsx": {
+      "platform": "frontend",
+      "area": "infrastructure"
+    },
+    "frontend/app/login/page.tsx": {
+      "platform": "frontend",
+      "area": "identity"
+    },
+    "frontend/app/masters/layout.tsx": {
+      "platform": "frontend",
+      "area": "infrastructure"
+    },
+    "frontend/app/masters/page.tsx": {
+      "platform": "frontend",
+      "area": "infrastructure"
+    },
+    "frontend/app/page.tsx": {
+      "platform": "frontend",
+      "area": "infrastructure"
+    },
+    "frontend/app/profile/layout.tsx": {
+      "platform": "frontend",
+      "area": "infrastructure"
+    },
+    "frontend/app/profile/page.tsx": {
+      "platform": "frontend",
+      "area": "infrastructure"
+    },
+    "frontend/app/register/page.tsx": {
+      "platform": "frontend",
+      "area": "identity"
+    },
+    "frontend/app/reset-password/[uid]/[token]/page.tsx": {
+      "platform": "frontend",
+      "area": "identity"
+    },
+    "frontend/app/residents/[id]/page.tsx": {
+      "platform": "frontend",
+      "area": "infrastructure"
+    },
+    "frontend/app/residents/document-requirements/page.tsx": {
+      "platform": "frontend",
+      "area": "onboarding"
+    },
+    "frontend/app/residents/layout.tsx": {
+      "platform": "frontend",
+      "area": "infrastructure"
+    },
+    "frontend/app/residents/page.tsx": {
+      "platform": "frontend",
+      "area": "infrastructure"
+    },
+    "frontend/app/supervision/assignments/[id]/page.tsx": {
+      "platform": "frontend",
+      "area": "training"
+    },
+    "frontend/app/supervision/assignments/new/page.tsx": {
+      "platform": "frontend",
+      "area": "training"
+    },
+    "frontend/app/supervision/assignments/page.tsx": {
+      "platform": "frontend",
+      "area": "training"
+    },
+    "frontend/app/supervision/data-quality/page.tsx": {
+      "platform": "frontend",
+      "area": "training"
+    },
+    "frontend/app/supervision/import/page.tsx": {
+      "platform": "frontend",
+      "area": "imports_reporting"
+    },
+    "frontend/app/supervision/layout.tsx": {
+      "platform": "frontend",
+      "area": "training"
+    },
+    "frontend/app/supervision/page.tsx": {
+      "platform": "frontend",
+      "area": "training"
+    },
+    "frontend/app/supervisors/[id]/page.tsx": {
+      "platform": "frontend",
+      "area": "infrastructure"
+    },
+    "frontend/app/supervisors/layout.tsx": {
+      "platform": "frontend",
+      "area": "infrastructure"
+    },
+    "frontend/app/supervisors/page.tsx": {
+      "platform": "frontend",
+      "area": "infrastructure"
+    },
+    "frontend/app/support-staff/[id]/page.tsx": {
+      "platform": "frontend",
+      "area": "infrastructure"
+    },
+    "frontend/app/support-staff/layout.tsx": {
+      "platform": "frontend",
+      "area": "infrastructure"
+    },
+    "frontend/app/support-staff/page.tsx": {
+      "platform": "frontend",
+      "area": "infrastructure"
+    },
+    "frontend/app/unauthorized/page.tsx": {
+      "platform": "frontend",
+      "area": "identity"
+    },
+    "frontend/app/users/layout.tsx": {
+      "platform": "frontend",
+      "area": "identity"
+    },
+    "frontend/app/users/new/page.tsx": {
+      "platform": "frontend",
+      "area": "identity"
+    },
+    "frontend/app/users/page.tsx": {
+      "platform": "frontend",
+      "area": "identity"
+    },
+    "frontend/components/ReadonlyNotice.tsx": {
+      "platform": "frontend",
+      "area": "infrastructure"
+    },
+    "frontend/components/auth/ProtectedRoute.tsx": {
+      "platform": "frontend",
+      "area": "identity"
+    },
+    "frontend/components/backup/BackupList.tsx": {
+      "platform": "frontend",
+      "area": "backup_integrations"
+    },
+    "frontend/components/backup/CreateBackupModal.tsx": {
+      "platform": "frontend",
+      "area": "backup_integrations"
+    },
+    "frontend/components/backup/GoogleDrivePanel.tsx": {
+      "platform": "frontend",
+      "area": "backup_integrations"
+    },
+    "frontend/components/backup/RestoreModal.tsx": {
+      "platform": "frontend",
+      "area": "backup_integrations"
+    },
+    "frontend/components/directory/RoleDirectoryPage.tsx": {
+      "platform": "frontend",
+      "area": "directories"
+    },
+    "frontend/components/layout/DashboardLayout.tsx": {
+      "platform": "frontend",
+      "area": "infrastructure"
+    },
+    "frontend/components/layout/Sidebar.tsx": {
+      "platform": "frontend",
+      "area": "infrastructure"
+    },
+    "frontend/components/ui/DataTable.tsx": {
+      "platform": "frontend",
+      "area": "infrastructure"
+    },
+    "frontend/components/ui/DeferredWorkflowNotice.tsx": {
+      "platform": "frontend",
+      "area": "infrastructure"
+    },
+    "frontend/components/ui/EmptyState.tsx": {
+      "platform": "frontend",
+      "area": "infrastructure"
+    },
+    "frontend/components/ui/ErrorBanner.tsx": {
+      "platform": "frontend",
+      "area": "infrastructure"
+    },
+    "frontend/components/ui/ImportExportPanel.tsx": {
+      "platform": "frontend",
+      "area": "imports_reporting"
+    },
+    "frontend/components/ui/LoadingSkeleton.tsx": {
+      "platform": "frontend",
+      "area": "infrastructure"
+    },
+    "frontend/components/ui/MetricCard.tsx": {
+      "platform": "frontend",
+      "area": "infrastructure"
+    },
+    "frontend/components/ui/Modal.tsx": {
+      "platform": "frontend",
+      "area": "infrastructure"
+    },
+    "frontend/components/ui/PageHeader.tsx": {
+      "platform": "frontend",
+      "area": "infrastructure"
+    },
+    "frontend/components/ui/SectionCard.tsx": {
+      "platform": "frontend",
+      "area": "infrastructure"
+    },
+    "frontend/components/ui/SuccessBanner.tsx": {
+      "platform": "frontend",
+      "area": "infrastructure"
+    },
+    "frontend/components/ui/WorkflowStatusBadge.tsx": {
+      "platform": "frontend",
+      "area": "infrastructure"
+    },
+    "frontend/components/ui/index.ts": {
+      "platform": "frontend",
+      "area": "infrastructure"
+    },
+    "frontend/components/utrmc/BulkSetupWorkspace.tsx": {
+      "platform": "frontend",
+      "area": "imports_reporting"
+    },
+    "frontend/components/utrmc/FlexibleMappingImport.tsx": {
+      "platform": "frontend",
+      "area": "imports_reporting"
+    },
+    "frontend/lib/api/academics.ts": {
+      "platform": "frontend",
+      "area": "academics"
+    },
+    "frontend/lib/api/audit.ts": {
+      "platform": "frontend",
+      "area": "infrastructure"
+    },
+    "frontend/lib/api/auth.ts": {
+      "platform": "frontend",
+      "area": "identity"
+    },
+    "frontend/lib/api/bulk.ts": {
+      "platform": "frontend",
+      "area": "imports_reporting"
+    },
+    "frontend/lib/api/client.ts": {
+      "platform": "frontend",
+      "area": "infrastructure"
+    },
+    "frontend/lib/api/dataQuality.ts": {
+      "platform": "frontend",
+      "area": "imports_reporting"
+    },
+    "frontend/lib/api/index.ts": {
+      "platform": "frontend",
+      "area": "infrastructure"
+    },
+    "frontend/lib/api/leave.ts": {
+      "platform": "frontend",
+      "area": "academics"
+    },
+    "frontend/lib/api/masters.ts": {
+      "platform": "frontend",
+      "area": "infrastructure"
+    },
+    "frontend/lib/api/notifications.ts": {
+      "platform": "frontend",
+      "area": "notifications"
+    },
+    "frontend/lib/api/rotations.ts": {
+      "platform": "frontend",
+      "area": "academics"
+    },
+    "frontend/lib/api/supervision.ts": {
+      "platform": "frontend",
+      "area": "training"
+    },
+    "frontend/lib/api/userbase.ts": {
+      "platform": "frontend",
+      "area": "directories"
+    },
+    "frontend/lib/api/users.ts": {
+      "platform": "frontend",
+      "area": "identity"
+    },
+    "frontend/lib/auth/cookies.ts": {
+      "platform": "frontend",
+      "area": "identity"
+    },
+    "frontend/lib/auth/fetch.ts": {
+      "platform": "frontend",
+      "area": "identity"
+    },
+    "frontend/lib/navRegistry.ts": {
+      "platform": "frontend",
+      "area": "infrastructure"
+    },
+    "frontend/lib/rbac.ts": {
+      "platform": "frontend",
+      "area": "infrastructure"
+    },
+    "frontend/lib/ui/status.ts": {
+      "platform": "frontend",
+      "area": "infrastructure"
+    },
+    "frontend/lib/utils.ts": {
+      "platform": "frontend",
+      "area": "infrastructure"
+    },
+    "frontend/middleware.ts": {
+      "platform": "frontend",
+      "area": "infrastructure"
+    },
+    "frontend/store/authStore.ts": {
+      "platform": "frontend",
+      "area": "identity"
+    }
+  }
+}

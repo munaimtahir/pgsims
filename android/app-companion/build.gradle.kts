@@ -63,7 +63,16 @@ android {
         }
     }
     buildTypes {
-        debug { applicationIdSuffix = ".debug"; isDebuggable = true }
+        debug {
+            applicationIdSuffix = ".debug"
+            isDebuggable = true
+            val testBaseUrl = providers.gradleProperty("pgrCompanionTestBaseUrl").orNull
+            if (testBaseUrl != null) {
+                buildConfigField("String", "INSTITUTIONAL_API_BASE_URL", "\"${testBaseUrl.trimEnd('/')}/\"")
+            }
+            enableUnitTestCoverage = true
+            enableAndroidTestCoverage = true
+        }
         create("staging") {
             initWith(getByName("debug"))
             matchingFallbacks += listOf("debug")

@@ -134,7 +134,7 @@ are not automatically imported by the seeder.
 - **15 isolated tests passed**, including real approval/revision handlers, unchanged
   identities, repeatability, failed-transaction file cleanup, and import previews.
 - **120/120 authenticated HTTPS record reads passed**: 20 records × 3 roles ×
-  web (`pg.fmu.edu.pk`) and Android (`android.pgsims.alshifalab.pk`) API hosts.
+  web (`pg.vexel.pk`) and Android (`android.pgsims.alshifalab.pk`) API hosts.
 - Actual Android resident list feeds contain all four rotations, leaves, and
   documents. Supervisor feeds contain both pending leaves, rotations, logbooks,
   and evaluations. All seeded workflow states remained unchanged by verification.

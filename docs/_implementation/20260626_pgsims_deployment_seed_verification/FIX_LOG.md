@@ -23,7 +23,7 @@ Fixed deployment-blocking `next build` lint errors only:
 
 ## Caddy/Routing Fixes
 
-- No repo Caddy changes were needed: `deploy/Caddyfile.pgsims` already includes `pg.fmu.edu.pk` and `/healthz*`.
+- No repo Caddy changes were needed: `deploy/Caddyfile.pgsims` already includes `pg.vexel.pk` and `/healthz*`.
 - Active system Caddy config validates and routes app/API/static correctly.
 - Attempted active `/etc/caddy/Caddyfile` health-route correction was blocked by non-interactive `sudo`.
 - Remaining Caddy drift: active system Caddy lacks `/healthz*` handler, so `/healthz` returns frontend 404.

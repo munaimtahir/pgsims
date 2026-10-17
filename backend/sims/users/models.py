@@ -391,9 +391,11 @@ class User(AbstractUser):
                     resident_training__resident_user=self
                 ).count()
 
-            if apps.is_installed("sims.logbook"):
-                from sims.logbook.models import LogbookEntry
-                count += LogbookEntry.objects.filter(pg=self).count()
+            if apps.is_installed("sims.training"):
+                from sims.training.models import LogbookEntry
+                count += LogbookEntry.objects.filter(
+                    resident_training_record__resident_user=self
+                ).count()
 
             if apps.is_installed("sims.cases"):
                 from sims.cases.models import ClinicalCase

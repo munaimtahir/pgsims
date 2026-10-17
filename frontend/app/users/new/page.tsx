@@ -54,7 +54,7 @@ export default function NewUserPage() {
   const [supervisors, setSupervisors] = useState<Array<{ id: number; full_name?: string; username: string }>>([]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
-  const [created, setCreated] = useState<{ name: string; username: string } | null>(null);
+  const [created, setCreated] = useState<{ name: string; username: string; password: string } | null>(null);
 
   useEffect(() => {
     setForm((current) => ({ ...current, role: readInitialRole() }));
@@ -97,7 +97,7 @@ export default function NewUserPage() {
       };
 
       const user = await userbaseApi.users.create(payload);
-      setCreated({ name: form.full_name.trim(), username: user.username });
+      setCreated({ name: form.full_name.trim(), username: user.username, password: form.password || 'pgfmu123' });
       setForm({
         full_name: '',
         email: '',
@@ -118,7 +118,7 @@ export default function NewUserPage() {
     } catch (err: unknown) {
       const message =
         typeof err === 'object' && err !== null && 'response' in err
-          ? JSON.stringify((err as { response?: { data?: unknown } }).response?.data)
+          ? JSON.stringify((err as { response?: { data?: unknown } }).response?.data) || 'Unable to create user'
           : 'Unable to create user';
       setError(message);
     } finally {
@@ -294,7 +294,7 @@ export default function NewUserPage() {
           )}
 
           {error && <div className="rounded border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</div>}
-          {created && <div className="rounded border border-green-200 bg-green-50 p-4 text-sm text-green-700"><p className="font-semibold">Resident created successfully</p><p>Name: {created.name}</p><p>Username: {created.username}</p><p>Temporary Password: pgfmu123</p><p>Portal: /login</p><div className="mt-3 flex gap-2"><button type="button" className="pg-btn-primary" onClick={() => navigator.clipboard?.writeText(`${created.username}\npgfmu123`)}>Copy Credentials</button><button type="button" className="pg-button-secondary" onClick={() => window.print()}>Print Credentials</button></div></div>}
+          {created && <div className="rounded border border-green-200 bg-green-50 p-4 text-sm text-green-700"><p className="font-semibold">User created successfully</p><p>Name: {created.name}</p><p>Username: {created.username}</p><p>Temporary Password: {created.password}</p><p>Portal: /login</p><div className="mt-3 flex gap-2"><button type="button" className="pg-btn-primary" onClick={() => navigator.clipboard?.writeText(`${created.username}\n${created.password}`)}>Copy Credentials</button><button type="button" className="pg-button-secondary" onClick={() => window.print()}>Print Credentials</button></div></div>}
           <button className="pg-btn-primary" disabled={saving || !canSave} type="submit">
             {saving ? 'Creating...' : 'Create User'}
           </button>

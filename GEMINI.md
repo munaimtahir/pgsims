@@ -163,3 +163,11 @@ with no other context. Live, self-pruning document, not a history log: update it
 enough for a memoryless agent to act on, and replace the whole file's content (don't append) once
 a sprint's scope is fully satisfied. Full binding rules in `AGENTS.md` §26 — that file is
 authoritative; this is a pointer.
+
+## Canonical production domain
+
+The production web app is https://pg.vexel.pk. Use this hostname for deployment,
+Django allowed hosts, CSRF/CORS origins, links, and access verification. Read
+`docs/PROJECT_ENVIRONMENT_CONTEXT.md` before infrastructure changes. Preserve
+other applications in the shared Caddy configuration; never replace it with
+a standalone PGSIMS configuration.
