@@ -42,7 +42,9 @@ actual migration and fresh verification.
   This corrects drift in the former shared site, where health fell through to the
   frontend and media was served directly.
 - Added backend Docker context exclusions for runtime credentials, media, logs,
-  databases, virtual environments and generated files.
+  databases, virtual environments and generated files. Production cache backend,
+  login throttling and file-logging settings are passed explicitly by Compose,
+  preserving effective settings formerly supplied by the image dotenv file.
 - Reviewed existing onboarding validation, form-field correction, canonical
   logbook queries, frontend credential/error handling and coverage tooling/tests.
   Restored simultaneous leave-replay coverage alongside the supplied sequential
